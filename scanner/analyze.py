@@ -12,6 +12,7 @@ from . import indicators as ind
 from . import scoring
 from . import levels as lv
 from . import trendlines as tl
+from . import supply as sp
 
 
 def analyze(frames: dict[str, pd.DataFrame], meta: dict) -> dict:
@@ -24,6 +25,7 @@ def analyze(frames: dict[str, pd.DataFrame], meta: dict) -> dict:
     rsi = ind.momentum_rsi(d)
     trendline = tl.detect(d, frames)
     levels = lv.analyze_levels(d)          # 차트용 지지/저항 레벨 + 피보/밸류영역
+    supply = sp.analyze_supply(d)          # 기간분리 매물대 + 미실현손익 추정
 
     module_scores = {
         "trend": trend["score"], "rsi": rsi["score"], "sr": sr["score"],
@@ -47,14 +49,15 @@ def analyze(frames: dict[str, pd.DataFrame], meta: dict) -> dict:
     verdict_txt = _verdict_text(label, sr, entry, trendline, vetoed)
 
     terms = []
-    for blk in (regime, trend, rsi, sr, volume, trendline, risk):
+    for blk in (regime, trend, rsi, sr, volume, trendline, supply, risk):
         terms += blk.get("terms", [])
     terms.append("정규화점수")
 
     return {
         "code": meta["code"], "name": meta["name"], "ccy": meta["ccy"],
         "regime": regime, "trend": trend, "rsi": rsi, "sr": sr,
-        "volume": volume, "trendline": trendline, "levels": levels, "risk": risk,
+        "volume": volume, "trendline": trendline, "levels": levels,
+        "supply": supply, "risk": risk,
         "module_scores": module_scores, "weights": norm["weights"],
         "norm": norm["score"], "verdict_label": label, "gauge": gauge,
         "verdict": verdict_txt, "entry": entry, "vetoed": vetoed, "terms": terms,

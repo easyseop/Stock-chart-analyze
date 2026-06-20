@@ -64,6 +64,14 @@ SR_MIN_TOUCHES = 2       # '강한 선'으로 인정할 최소 터치 횟수
 FIB_LEVELS = [0.236, 0.382, 0.5, 0.618, 0.786]
 VALUE_AREA_PCT = 0.70    # 밸류영역(거래량 비중)
 
+# 기간분리 매물대 + 미실현손익 추정 (거래량 분포 = 평단가 분포 근사)
+SHORT_PROFILE_DAYS = 63    # 단기 평단(최근 3개월)
+LONG_PROFILE_DAYS = 252    # 장기 평단(최근 1년)
+PROFILE_BINS = 24          # 매물대 가격 구간 수
+OVERHEAD_HEAVY = 0.50      # 머리 위 물량 비율 ≥ → '무거움'(저항 큼)
+OVERHEAD_LIGHT = 0.25      # ≤ → '가벼움'(상승 쉬움)
+PNL_BAND = 0.10            # 추정 미실현손익 ±10% 밖이면 이익/손실 쏠림으로 판단
+
 # 추세선
 TREND_LOOKBACK = 180     # 추세선 탐색 구간(일)
 TREND_NEAR = 0.02        # 추세선 근접/터치 판정 ±2%

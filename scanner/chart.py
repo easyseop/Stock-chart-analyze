@@ -18,7 +18,7 @@ C = {
     "box": "#3b82f6", "resist": "#ef4444", "defense": "#dc2626",
     "poc": "#0ea5e9", "entry": "#2563eb", "stop": "#ef4444",
     "target": "#16a34a", "up": "#16a34a", "down": "#ef4444",
-    "sup": "#0d9488", "fib": "#a855f7",
+    "sup": "#0d9488", "fib": "#a855f7", "avg": "#b45309", "prof": "#0ea5e9",
 }
 
 
@@ -132,6 +132,23 @@ def build_figure(result: dict, frames: dict, lookback: int = 140):
     _trendline(fig, result["trendline"], "down", C["resist"])
     _trendline(fig, result["trendline"], "up", C["target"])
 
+    # 매물대 분포(장기) 가로 히스토그램 + 추정 평단가
+    sup = result["supply"]
+    prof = sup["long"]
+    centers, vols = prof["centers"], prof["vol"]
+    mask = (centers >= y_lo) & (centers <= y_hi)
+    maxv = float(vols.max()) or 1.0
+    spacing = (centers[1] - centers[0]) if len(centers) > 1 else (y_hi - y_lo)
+    fig.add_trace(go.Bar(
+        x=list(vols[mask]), y=list(centers[mask]), orientation="h",
+        xaxis="x3", yaxis="y", width=spacing * 0.85,
+        marker=dict(color=C["prof"], opacity=0.16),
+        hoverinfo="skip", showlegend=False, name="매물대"))
+    pnl = sup["pnl"]
+    _level(fig, x_last, pnl["avg_cost"],
+           f"추정평단 ({pnl['pnl']*100:+.1f}%)", C["avg"],
+           term="미실현손익", dash="dashdot", width=1.6)
+
     # 거래량 (양봉 초록/음봉 빨강)
     vcolors = [C["up"] if c >= o else C["down"]
                for c, o in zip(d["Close"], d["Open"])]
@@ -146,7 +163,10 @@ def build_figure(result: dict, frames: dict, lookback: int = 140):
         template="plotly_white", height=720, width=1100,
         xaxis_rangeslider_visible=False, hovermode="x unified",
         legend=dict(orientation="h", yanchor="bottom", y=1.02, x=0),
-        margin=dict(l=60, r=110, t=70, b=40))
+        margin=dict(l=60, r=110, t=70, b=40),
+        # 매물대 가로 히스토그램용 보조 x축 — 좌측 약 22% 폭만 차지하게 스케일
+        xaxis3=dict(overlaying="x", anchor="y", side="top",
+                    range=[0, maxv * 4.5], visible=False))
     fig.update_yaxes(tickformat=f2, row=1, col=1)
     fig.update_xaxes(range=[x[0], x[-1]])   # 추세선이 축을 좌측으로 늘이지 않게
     return fig

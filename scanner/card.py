@@ -57,6 +57,14 @@ def render(result: dict) -> str:
     va = lv["value_area"]
     out.append(f"매물대     : VAL {f(va['val'])} · POC {f(va['poc'])} · "
                f"VAH {f(va['vah'])}")
+    # 매물대 심리 — 기간분리 평단 + 미실현손익 추정
+    sup = r["supply"]
+    p = sup["pnl"]
+    out.append(f"평단심리   : 추정평단 {f(p['avg_cost'])} "
+               f"(현재 {p['pnl']*100:+.1f}%, {p['mood']})")
+    out.append(f"           머리위물량 {p['overhead']*100:.0f}% [{p['head']}] · "
+               f"단기평단 {f(sup['short_poc'])}({sup['short_role']}) · "
+               f"장기평단 {f(sup['long_poc'])}({sup['long_role']})")
     out.append(line)
     # 박스권 / 방어선 — 항상 노출
     conf = ("·".join(sr["confluence"]) + " 겹침" if sr["confluence"] else "단독")
@@ -88,7 +96,8 @@ def render(result: dict) -> str:
 CSV_FIELDS = ["code", "name", "norm", "verdict", "action", "gauge", "regime_flag",
               "trend", "rsi", "sr", "volume", "trendline", "trend_state",
               "entry", "stop", "target",
-              "box_low", "box_high", "defense", "defense_strength"]
+              "box_low", "box_high", "defense", "defense_strength",
+              "avg_cost", "est_pnl", "overhead", "short_poc", "long_poc"]
 
 
 def to_row(result: dict) -> dict:
@@ -106,4 +115,9 @@ def to_row(result: dict) -> dict:
         "box_high": round(r["sr"]["box_high"], 2),
         "defense": round(r["sr"]["defense"], 2),
         "defense_strength": r["sr"]["defense_strength"],
+        "avg_cost": round(r["supply"]["pnl"]["avg_cost"], 2),
+        "est_pnl": round(r["supply"]["pnl"]["pnl"] * 100, 1),
+        "overhead": round(r["supply"]["pnl"]["overhead"] * 100, 1),
+        "short_poc": round(r["supply"]["short_poc"], 2),
+        "long_poc": round(r["supply"]["long_poc"], 2),
     }
