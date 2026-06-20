@@ -12,9 +12,36 @@ import config
 OHLCV = ["Open", "High", "Low", "Close", "Volume"]
 
 
+def _is_korean(code: str) -> bool:
+    """KRX 종목코드 판별(6자리 숫자, 끝자리 영문 우선주 포함: 005935)."""
+    c = code.strip()
+    return len(c) == 6 and c[:5].isdigit()
+
+
 def fetch_daily(code: str, start: str = config.FETCH_START) -> pd.DataFrame:
-    """일봉 OHLCV 수집. 네트워크/심볼 오류는 호출측에서 처리하도록 예외 전파."""
+    """일봉 OHLCV 수집. 네트워크/심볼 오류는 호출측에서 처리하도록 예외 전파.
+
+    한국(KRX) 종목은 야후 파이낸스 티커(`.KS`/`.KQ`)로 받는다.
+    기본/KRX 소스는 실행 환경의 egress 정책(naver 차단)·KRX 안티봇(LOGOUT)으로
+    막히는 경우가 있어, 야후 경유가 가장 안정적이다(미국주와 동일 소스).
+    """
     import FinanceDataReader as fdr  # 지연 임포트(오프라인 테스트 시 불필요)
+
+    if _is_korean(code):
+        # KOSPI(.KS) 먼저, 없으면 KOSDAQ(.KQ) 시도. 야후 소스 강제.
+        last_err = None
+        for suffix in (".KS", ".KQ"):
+            try:
+                df = fdr.DataReader(f"YAHOO:{code}{suffix}", start)
+            except Exception as e:  # 심볼 불일치 등은 다음 접미사로
+                last_err = e
+                continue
+            if df is not None and len(df):
+                df = df[[c for c in OHLCV if c in df.columns]].copy()
+                return clean(df)
+        if last_err is not None:
+            raise last_err
+        raise ValueError(f"데이터 없음: {code}")
 
     df = fdr.DataReader(code, start)
     if df is None or len(df) == 0:
