@@ -39,6 +39,14 @@ class Trade:
     trigger: str       # 진입을 유발한 신호
 
 
+TRANSITION = "하락추세선 상향돌파"   # '전환 후보' 트리거 식별값
+
+
+def trigger_kind(t: "Trade") -> str:
+    """진입 신호 분류: 'transition'(전환 후보) | 'normal'(일반 매수)."""
+    return "transition" if t.trigger == TRANSITION else "normal"
+
+
 def is_entry(res: dict) -> bool:
     """차트 신호가 '진입'인가(하락추세 veto 제외)."""
     if res["vetoed"]:
@@ -150,6 +158,24 @@ def summarize(trades: list[Trade]) -> Stats:
     return s
 
 
+def summarize_by_trigger(trades: list[Trade]) -> dict:
+    """신호 유형별 통계: {'transition': Stats, 'normal': Stats}."""
+    trans = [t for t in trades if trigger_kind(t) == "transition"]
+    norm = [t for t in trades if trigger_kind(t) == "normal"]
+    return {"transition": summarize(trans), "normal": summarize(norm)}
+
+
+def equity_curve(trades: list[Trade]) -> tuple[list, list]:
+    """진입일순 누적 R 자산곡선. (x=청산일, y=누적R)."""
+    ts = sorted(trades, key=lambda t: t.entry_date)
+    xs, ys, cum = [], [], 0.0
+    for t in ts:
+        cum += t.r
+        xs.append(t.exit_date)
+        ys.append(round(cum, 3))
+    return xs, ys
+
+
 def _fmt_stats(name: str, s: Stats) -> str:
     if s.n == 0:
         return f"[{name}] 거래 없음"
@@ -189,6 +215,15 @@ def run(frames_map: dict[str, dict], metas: dict[str, dict],
     total = summarize(all_trades)
     print(_fmt_stats("전체 통합", total))
     print("=" * 64)
+
+    # ── 신호 유형별 (핵심: 전환 후보가 일반 매수보다 나은가?) ──
+    by_trig = summarize_by_trigger(all_trades)
+    print("◆ 신호 유형별 — '전환 후보'가 일반 매수보다 나은가?")
+    print(_fmt_stats("전환 후보 (하락추세선 상향돌파)", by_trig["transition"]))
+    print("-" * 64)
+    print(_fmt_stats("일반 매수 (매수/적극매수 신호)", by_trig["normal"]))
+    print("=" * 64)
     print("주의: 표본이 적어 통계적 신뢰구간이 넓다(참고용). 슬리피지·수수료·세금 미반영.")
     print("     해석은 승률보다 '기대값(R)·최대낙폭'을 우선으로 본다.")
-    return {"per_code": per_code, "all": all_trades, "total": total}
+    return {"per_code": per_code, "all": all_trades, "total": total,
+            "by_trigger": by_trig}

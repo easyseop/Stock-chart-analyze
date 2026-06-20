@@ -74,20 +74,23 @@ def run(demo: bool = False, csv_path: str | None = None,
     if charts:
         print(f"차트 저장: {chart_dir}/ ({len(charts)}개)")
 
-    if dashboard:
-        if results:
-            from scanner import dashboard as dashmod
-            path = dashmod.build(results, frames_map, out_path=dashboard_path)
-            print(f"대시보드 저장: {path} ({len(results)}종목)")
-        else:
-            print("분석 결과가 없어 대시보드를 생성하지 않음", file=sys.stderr)
-
+    bt_result = None
     if backtest:
         if frames_map:
             from scanner import backtest as bt
-            bt.run(frames_map, metas)
+            bt_result = bt.run(frames_map, metas)
         else:
             print("데이터가 없어 백테스트를 실행하지 않음", file=sys.stderr)
+
+    if dashboard:
+        if results:
+            from scanner import dashboard as dashmod
+            path = dashmod.build(results, frames_map, out_path=dashboard_path,
+                                 backtest=bt_result, metas=metas)
+            print(f"대시보드 저장: {path} ({len(results)}종목"
+                  f"{', 백테스트 포함' if bt_result else ''})")
+        else:
+            print("분석 결과가 없어 대시보드를 생성하지 않음", file=sys.stderr)
 
     return results
 
