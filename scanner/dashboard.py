@@ -196,14 +196,27 @@ def build(results: list[dict], frames_map: dict[str, dict],
     if backtest:
         bt_tab, bt_panel = _bt_views(backtest, metas or {}, experiment)
 
+    _TFS = [("D", "일봉"), ("W", "주봉"), ("M", "월봉")]
     tabs, panels = [], []
     for bucket, r in ordered:
         code = r["code"]
-        fig = chart.build_figure(r, frames_map[code])
-        fig.update_layout(autosize=True, width=None, height=680)
-        div = fig.to_html(include_plotlyjs=False, full_html=False,
-                          div_id=f"plot-{code}",
-                          config={"displaylogo": False, "responsive": True})
+        # 일/주/월 차트를 모두 생성 (증권창처럼 전환). 기본은 일봉만 표시.
+        charts_html = []
+        tfbtns = []
+        for tf, tflabel in _TFS:
+            fig = chart.build_figure(r, frames_map[code], tf=tf)
+            fig.update_layout(autosize=True, width=None, height=680)
+            cdiv = fig.to_html(include_plotlyjs=False, full_html=False,
+                               div_id=f"plot-{code}-{tf}",
+                               config={"displaylogo": False, "responsive": True})
+            disp = "block" if tf == "D" else "none"
+            charts_html.append(
+                f'<div class="tfchart" id="tf-{code}-{tf}" style="display:{disp}">'
+                f'{cdiv}</div>')
+            on = " active" if tf == "D" else ""
+            tfbtns.append(
+                f'<button class="tfbtn{on}" id="tfb-{code}-{tf}" '
+                f'onclick="switchTf(\'{code}\',\'{tf}\')">{tflabel}</button>')
         active = " active" if code == first_code else ""
         gauge = html.escape(r["gauge"])
         tabs.append(
@@ -213,7 +226,10 @@ def build(results: list[dict], frames_map: dict[str, dict],
             f'<span class="sub">{html.escape(code)} · {r["norm"]:+.0f}</span></button>')
         panels.append(
             f'<section class="panel{active}" id="panel-{code}">'
-            f'{_card_html(r)}<div class="chart">{div}</div></section>')
+            f'{_card_html(r)}'
+            f'<div class="tfbar">{"".join(tfbtns)}'
+            f'<span class="tfhint">← 증권창처럼 일/주/월 전환 (추세는 프레임마다 다름)</span></div>'
+            f'<div class="chart">{"".join(charts_html)}</div></section>')
 
     # 버킷 헤더를 탭 목록 사이에 끼워 재구성 (+ 맨 위 백테스트 탭)
     tab_html = [bt_tab] if bt_tab else []
@@ -236,12 +252,14 @@ def build(results: list[dict], frames_map: dict[str, dict],
     default_on = "{" + ",".join(
         f'"{k}":{"true" if on else "false"}' for k, _l, on in chart.GROUPS) + "}"
 
+    first_plot = ("plot-__bt__" if backtest
+                  else (f"plot-{first_code}-D" if first_code else ""))
     doc = _TEMPLATE.format(
         tabs="\n".join(tab_html),
         toggles="\n".join(btns),
         panels="\n".join(panels),
         default_on=default_on,
-        first=first_code or "")
+        first_plot=first_plot)
     with open(out_path, "w", encoding="utf-8") as fp:
         fp.write(doc)
     return out_path
@@ -318,6 +336,12 @@ _TEMPLATE = """<!DOCTYPE html>
   .chart {{ background:#fff; border:1px solid #e2e8f0; border-radius:10px;
            margin-top:12px; padding:4px; }}
   .hint {{ font-size:11px; color:var(--mut); margin:6px 2px 0; }}
+  .tfbar {{ display:flex; align-items:center; gap:6px; margin-top:12px; }}
+  .tfbtn {{ border:1px solid #cbd5e1; background:#fff; color:#475569;
+           border-radius:8px; padding:6px 16px; cursor:pointer; font-size:13px;
+           font-weight:600; }}
+  .tfbtn.active {{ background:#0f172a; border-color:#0f172a; color:#fff; }}
+  .tfhint {{ font-size:11px; color:var(--mut); margin-left:6px; }}
 </style></head><body>
 <header>
   <h1>심리 신호 대시보드 <span style="color:#38bdf8;font-size:13px">차트만으로 읽는 군중심리</span></h1>
@@ -336,10 +360,11 @@ _TEMPLATE = """<!DOCTYPE html>
 </div>
 <script>
   var STATE = {default_on};
-  var ACTIVE = "{first}";
+  var ACTIVE_PLOT = "{first_plot}";   // 현재 보이는 차트 div id
+  var CUR_TF = {{}};                   // 종목별 현재 타임프레임
 
-  function applyAll(code) {{
-    var gd = document.getElementById("plot-" + code);
+  function applyAll(plotId) {{
+    var gd = document.getElementById(plotId);
     if (!gd || !gd.data) return;
     Object.keys(STATE).forEach(function(group) {{
       var idx = [];
@@ -349,6 +374,11 @@ _TEMPLATE = """<!DOCTYPE html>
     Plotly.Plots.resize(gd);
   }}
 
+  function plotIdFor(code) {{
+    if (code === "__bt__") return "plot-__bt__";
+    return "plot-" + code + "-" + (CUR_TF[code] || "D");
+  }}
+
   function showStock(code) {{
     document.querySelectorAll(".tab").forEach(function(t) {{
       t.classList.toggle("active", t.dataset.code === code);
@@ -356,21 +386,33 @@ _TEMPLATE = """<!DOCTYPE html>
     document.querySelectorAll(".panel").forEach(function(p) {{
       p.classList.toggle("active", p.id === "panel-" + code);
     }});
-    ACTIVE = code;
-    applyAll(code);
+    ACTIVE_PLOT = plotIdFor(code);
+    applyAll(ACTIVE_PLOT);
+  }}
+
+  function switchTf(code, tf) {{
+    CUR_TF[code] = tf;
+    ["D", "W", "M"].forEach(function(t) {{
+      var c = document.getElementById("tf-" + code + "-" + t);
+      if (c) c.style.display = (t === tf) ? "block" : "none";
+      var b = document.getElementById("tfb-" + code + "-" + t);
+      if (b) b.classList.toggle("active", t === tf);
+    }});
+    ACTIVE_PLOT = "plot-" + code + "-" + tf;
+    applyAll(ACTIVE_PLOT);
   }}
 
   function toggleGroup(btn) {{
     var group = btn.dataset.group;
     STATE[group] = !STATE[group];
     btn.classList.toggle("on", STATE[group]);
-    var gd = document.getElementById("plot-" + ACTIVE);
+    var gd = document.getElementById(ACTIVE_PLOT);
     if (!gd || !gd.data) return;
     var idx = [];
     gd.data.forEach(function(t, i) {{ if (t.legendgroup === group) idx.push(i); }});
     if (idx.length) Plotly.restyle(gd, {{visible: STATE[group]}}, idx);
   }}
 
-  window.addEventListener("load", function() {{ if (ACTIVE) applyAll(ACTIVE); }});
+  window.addEventListener("load", function() {{ if (ACTIVE_PLOT) applyAll(ACTIVE_PLOT); }});
 </script>
 </body></html>"""

@@ -24,6 +24,8 @@ def analyze(frames: dict[str, pd.DataFrame], meta: dict) -> dict:
     volume = ind.volume_surge(d, sr)
     rsi = ind.momentum_rsi(d)
     trendline = tl.detect(d, frames)
+    # 거래량 동반 확인: 거래량 없는 하락추세선 돌파는 '가짜 돌파'로 격하(백테스트 검증)
+    trendline = tl.apply_volume_filter(trendline, volume.get("mult", 0.0))
     levels = lv.analyze_levels(d)          # 차트용 지지/저항 레벨 + 피보/밸류영역
     supply = sp.analyze_supply(d)          # 기간분리 매물대 + 미실현손익 추정
 
@@ -65,9 +67,11 @@ def analyze(frames: dict[str, pd.DataFrame], meta: dict) -> dict:
 
 
 def _verdict_text(label, sr, entry, trendline, vetoed) -> str:
-    # 추세 전환 후보는 최우선으로 알림
+    # 추세 전환 후보는 최우선으로 알림 (거래량 동반 확인된 돌파만)
     if trendline["state"] == "하락추세선 상향돌파":
-        return "하락추세선 상향 돌파 → 추세 전환 후보 (확인 후 분할 진입)"
+        return "하락추세선 상향 돌파(거래량 동반) → 추세 전환 후보 (확인 후 분할 진입)"
+    if trendline["state"] == "하락추세선 돌파(거래 미동반)":
+        return "하락추세선 돌파했으나 거래량 미동반 → 가짜 돌파 의심, 관망"
     if vetoed:
         return "하락추세선 아래 — 추세 전환 전까지 관망/회피"
     if trendline["state"] == "하락추세선 임박":

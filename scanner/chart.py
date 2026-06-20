@@ -11,6 +11,7 @@ import os
 
 import pandas as pd
 
+import config
 import glossary
 
 # 색상 팔레트
@@ -60,8 +61,12 @@ def _hline(fig, x0, x1, y, label, color, group, term=None, dash="solid",
         showlegend=False), row=1, col=1)
 
 
-def _trendline(fig, tl: dict, which: str, color: str):
-    """추세선(사선) 그리기. which='down'|'up'."""
+def _trendline(fig, tl: dict, which: str, color: str, avg_delta=None, project=0):
+    """추세선(사선) 그리기 + 미래 연장(점선).
+
+    실선=과거 피벗→현재, 점선=현재→미래 N봉(추세 지속 시 선이 갈 자리).
+    트레이딩 단말처럼 '앞으로 추세선이 어디서 만날지'를 보여준다.
+    """
     import plotly.graph_objects as go
 
     seg = tl.get(which)
@@ -69,26 +74,59 @@ def _trendline(fig, tl: dict, which: str, color: str):
         return
     label = "하락추세선" if which == "down" else "상승추세선"
     visible = True if "trend" in _DEFAULT_ON else False
+    x_now, y_now = seg["x1"], seg["y1"]
+    # 실선: 과거 피벗 → 현재
     fig.add_trace(go.Scatter(
-        x=[seg["x0"], seg["x1"]], y=[seg["y0"], seg["y1"]], mode="lines",
+        x=[seg["x0"], x_now], y=[seg["y0"], y_now], mode="lines",
         line=dict(color=color, width=2, dash="longdash"),
         legendgroup="trend", name=label, visible=visible,
         hovertext=f"{label}<br>{glossary.lookup('추세선')}",
         hoverinfo="text", showlegend=False), row=1, col=1)
+    # 점선: 현재 → 미래 연장 (추세 지속 시 예상 경로)
+    if project and avg_delta is not None and "slope" in seg:
+        xf = x_now + avg_delta * project
+        yf = y_now + seg["slope"] * project
+        fig.add_trace(go.Scatter(
+            x=[x_now, xf], y=[y_now, yf], mode="lines",
+            line=dict(color=color, width=1.3, dash="dot"),
+            legendgroup="trend", name=f"{label} 연장", visible=visible,
+            hovertext=f"{label} 미래 연장<br>추세 지속 시 선이 갈 자리(예상)",
+            hoverinfo="text", showlegend=False), row=1, col=1)
 
 
-def build_figure(result: dict, frames: dict, lookback: int = 140):
-    """analyze() 결과 + 프레임 → plotly Figure."""
+# 타임프레임별 표시 봉 수 · 미래연장 봉 수 · MA 색
+_LOOKBACK = {"D": 140, "W": 120, "M": 96}
+_PROJECT = {"D": 12, "W": 10, "M": 6}
+_TF_LABEL = {"D": "일봉", "W": "주봉", "M": "월봉"}
+_MA_COLORS = ["#f59e0b", "#8b5cf6", "#64748b", "#0891b2"]
+
+
+def build_figure(result: dict, frames: dict, tf: str = "D", lookback: int = None):
+    """analyze() 결과 + 프레임 → plotly Figure (타임프레임 tf='D'|'W'|'M').
+
+    캔들·이평선·추세선은 해당 타임프레임으로 다시 계산하고,
+    수평 가격선(박스·방어선·POC·진입/손절/목표·매물대)은 일봉 분석값을
+    그대로 겹쳐 그린다(절대 가격이라 모든 프레임에서 유효).
+    """
     import plotly.graph_objects as go
     from plotly.subplots import make_subplots
+    from . import trendlines as tlmod
 
-    full = frames["D"]
+    tf = tf if tf in frames else "D"
+    lookback = lookback or _LOOKBACK.get(tf, 140)
+    project = _PROJECT.get(tf, 12)
+    full = frames[tf]
     d = full.iloc[-lookback:]
     # pandas Timestamp는 kaleido(PNG) 직렬화가 안 되므로 파이썬 datetime으로 변환
     x = list(d.index.to_pydatetime())
     x0, x1 = x[0], x[-1]
+    avg_delta = (x[-1] - x[0]) / max(1, len(x) - 1)   # 봉 간격(미래연장용)
+    x_future = x1 + avg_delta * project
     sr, risk = result["sr"], result["risk"]
     f2 = ".0f" if result["ccy"] == "KRW" else ".2f"
+
+    # 추세선: 일봉은 분석결과(거래량필터 반영), 주/월봉은 그 프레임에서 재검출
+    trendline = result["trendline"] if tf == "D" else tlmod.detect(full)
 
     fig = make_subplots(rows=2, cols=1, shared_xaxes=True,
                         row_heights=[0.76, 0.24], vertical_spacing=0.03,
@@ -100,13 +138,13 @@ def build_figure(result: dict, frames: dict, lookback: int = 140):
         name="가격", increasing_line_color=C["up"], decreasing_line_color=C["down"],
         showlegend=False), row=1, col=1)
 
-    # 이동평균선
-    for p, key in [(20, "ma20"), (60, "ma60"), (120, "ma120")]:
+    # 이동평균선 (타임프레임별 기간, 가장 짧은 건 생략해 깔끔하게)
+    for i, p in enumerate(config.MA_PERIODS[tf][1:]):
         ma = full["Close"].rolling(p).mean().iloc[-lookback:]
         fig.add_trace(go.Scatter(
             x=x, y=ma, name=f"MA{p}", mode="lines",
             legendgroup="ma", visible=("ma" in _DEFAULT_ON),
-            line=dict(color=C[key], width=1.1),
+            line=dict(color=_MA_COLORS[i % len(_MA_COLORS)], width=1.1),
             hovertext=f"MA{p}", hoverinfo="text", showlegend=False), row=1, col=1)
 
     # 박스권 음영 (항상 표시, 옅음)
@@ -159,9 +197,9 @@ def build_figure(result: dict, frames: dict, lookback: int = 140):
     _hline(fig, x0, x1, risk["target"], "목표(1:2)", C["target"],
            group="trade", term="손익비", dash="dash")
 
-    # 추세선 (하락=빨강, 상승=초록) — 그룹 'trend'
-    _trendline(fig, result["trendline"], "down", C["resist"])
-    _trendline(fig, result["trendline"], "up", C["target"])
+    # 추세선 (하락=빨강, 상승=초록) — 그룹 'trend', 미래 연장 점선 포함
+    _trendline(fig, trendline, "down", C["resist"], avg_delta, project)
+    _trendline(fig, trendline, "up", C["target"], avg_delta, project)
 
     # 매물대 분포(장기) 가로 히스토그램 + 추정 평단가 — 그룹 'supply'
     sup = result["supply"]
@@ -188,9 +226,10 @@ def build_figure(result: dict, frames: dict, lookback: int = 140):
                          name="거래량", hoverinfo="skip",
                          showlegend=False), row=2, col=1)
 
-    title = (f"{result['name']} {result['code']}　|　{result['gauge']} "
-             f"정규화 {result['norm']:+.0f}　|　{result['verdict_label']}　"
-             f"({result['regime']['reason']})")
+    tl_dir = trendline.get("reason", "")
+    title = (f"{result['name']} {result['code']} · {_TF_LABEL.get(tf, tf)}"
+             f"　|　{result['gauge']} 정규화 {result['norm']:+.0f}"
+             f"　|　{result['verdict_label']}　({tl_dir})")
     fig.update_layout(
         title=dict(text=title, font=dict(size=15)),
         template="plotly_white", height=720, width=1100,
@@ -201,7 +240,8 @@ def build_figure(result: dict, frames: dict, lookback: int = 140):
         xaxis3=dict(overlaying="x", anchor="y", side="top",
                     range=[0, maxv * 4.5], visible=False))
     fig.update_yaxes(tickformat=f2, row=1, col=1)
-    fig.update_xaxes(range=[x[0], x[-1]])   # 추세선이 축을 좌측으로 늘이지 않게
+    # 우측에 미래연장 여백 확보(추세선 점선이 보이도록), 좌측은 표시구간으로 고정
+    fig.update_xaxes(range=[x[0], x_future])
     return fig
 
 

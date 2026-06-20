@@ -128,6 +128,29 @@ def detect(df: pd.DataFrame, frames: dict | None = None,
             "reason": f"{state}", "terms": ["추세선"]}
 
 
+def apply_volume_filter(tlres: dict, vol_mult: float) -> dict:
+    """하락추세선 '상향 돌파'에 거래량 동반 조건을 적용한다(백테스트 검증).
+
+    거래량 미동반 돌파는 가짜 돌파가 많아(기대값 음) → '거래 미동반 돌파'로 격하해
+    매수 점수를 빼고 관망으로 돌린다. 거래량을 동반하면 그대로 전환 후보로 인정.
+    """
+    if tlres.get("state") != "하락추세선 상향돌파":
+        tlres.setdefault("volume_confirmed", None)   # 돌파 아님 → 해당없음
+        return tlres
+    if vol_mult >= config.VOLUME_CONFIRM_MULT:
+        tlres["volume_confirmed"] = True
+        tlres["note"] += f" (거래량 {vol_mult:.1f}배 동반 ✓)"
+        return tlres
+    # 거래량 미동반 → 격하
+    tlres["state"] = "하락추세선 돌파(거래 미동반)"
+    tlres["score"] = 0
+    tlres["note"] = (f"하락추세선 돌파했으나 거래량 미동반({vol_mult:.1f}배) "
+                     f"→ 가짜 돌파 의심(관망)")
+    tlres["reason"] = tlres["state"]
+    tlres["volume_confirmed"] = False
+    return tlres
+
+
 def _empty():
     return {"state": "추세선 불명확", "score": 0, "note": "데이터 부족",
             "confirmed_down": False, "down": None, "up": None,
