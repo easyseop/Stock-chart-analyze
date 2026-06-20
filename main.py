@@ -26,9 +26,11 @@ def _frames_demo(scenario):
 
 
 def run(demo: bool = False, csv_path: str | None = None,
-        chart: bool = False, png: bool = False, chart_dir: str = "charts"):
+        chart: bool = False, png: bool = False, chart_dir: str = "charts",
+        dashboard: bool = False, dashboard_path: str = "dashboard.html"):
     results = []
     charts = []
+    frames_map = {}
 
     if demo:
         scenarios = [("uptrend", "데모-상승추세"), ("box", "데모-횡보박스"),
@@ -44,6 +46,7 @@ def run(demo: bool = False, csv_path: str | None = None,
             frames = _frames_demo(scenario) if demo else _frames_real(meta["code"])
             res = analyze(frames, meta)
             results.append(res)
+            frames_map[res["code"]] = frames
             print(card.render(res))
             print()
             if chart:
@@ -68,6 +71,14 @@ def run(demo: bool = False, csv_path: str | None = None,
     if charts:
         print(f"차트 저장: {chart_dir}/ ({len(charts)}개)")
 
+    if dashboard:
+        if results:
+            from scanner import dashboard as dashmod
+            path = dashmod.build(results, frames_map, out_path=dashboard_path)
+            print(f"대시보드 저장: {path} ({len(results)}종목)")
+        else:
+            print("분석 결과가 없어 대시보드를 생성하지 않음", file=sys.stderr)
+
     return results
 
 
@@ -81,9 +92,14 @@ def main():
     ap.add_argument("--png", action="store_true",
                     help="차트를 PNG로도 저장(kaleido+chrome 필요)")
     ap.add_argument("--chart-dir", default="charts", help="차트 저장 폴더")
+    ap.add_argument("--dashboard", action="store_true",
+                    help="5종목 단일 페이지 대시보드(HTML) 생성 — 토글·전환후보 분류")
+    ap.add_argument("--dashboard-path", default="dashboard.html",
+                    help="대시보드 저장 경로")
     args = ap.parse_args()
     run(demo=args.demo, csv_path=args.csv, chart=args.chart,
-        png=args.png, chart_dir=args.chart_dir)
+        png=args.png, chart_dir=args.chart_dir,
+        dashboard=args.dashboard, dashboard_path=args.dashboard_path)
 
 
 if __name__ == "__main__":

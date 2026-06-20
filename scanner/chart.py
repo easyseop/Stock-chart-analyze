@@ -1,7 +1,8 @@
-"""신호 차트 시각화 (plotly) — v1.5.
+"""신호 차트 시각화 (plotly) — v1.6.
 
 캔들 + 박스권/방어선/POC/이평선 + 진입·손절·목표 선 + 거래량.
-핵심 선에는 마우스오버 시 용어 설명(glossary)이 뜬다.
+모든 보조선을 '그룹(legendgroup)'으로 묶어 대시보드에서 켜고 끌 수 있다.
+호버는 'closest'(가장 가까운 한 요소만)로 단순화 — 정보가 쏟아지지 않게.
 HTML(인터랙티브) 저장이 기본, PNG 저장은 옵션(kaleido+chrome 필요).
 """
 from __future__ import annotations
@@ -21,21 +22,42 @@ C = {
     "sup": "#0d9488", "fib": "#a855f7", "avg": "#b45309", "prof": "#0ea5e9",
 }
 
+# 토글 그룹(대시보드 버튼과 1:1). (key, 라벨, 기본표시여부)
+GROUPS = [
+    ("ma",     "이평선",    True),
+    ("level",  "핵심선",    True),   # 박스상단·방어선·POC
+    ("trade",  "매매선",    True),   # 진입·손절·목표
+    ("trend",  "추세선",    True),
+    ("sr",     "지지/저항", False),  # 스윙 군집(강도선)
+    ("fib",    "피보나치",  False),
+    ("supply", "매물대",    False),  # 분포 + 추정평단
+]
+_DEFAULT_ON = {k for k, _, on in GROUPS if on}
 
-def _level(fig, x_last, y, label, color, term=None, dash="solid", width=1.4):
-    """수평선 + (옵션) 마우스오버 용어 설명 마커."""
+
+def _hline(fig, x0, x1, y, label, color, group, term=None, dash="solid",
+           width=1.4, show_label=True, hover=True):
+    """수평선을 '토글 가능한 trace'로 추가. (add_hline 대신 사용)
+
+    라벨은 우측 끝점 텍스트로 붙여 선과 함께 켜고 꺼진다.
+    """
     import plotly.graph_objects as go
 
-    fig.add_hline(y=y, line=dict(color=color, dash=dash, width=width),
-                  annotation_text=label, annotation_position="right",
-                  annotation_font=dict(color=color, size=11), row=1, col=1)
+    visible = True if group in _DEFAULT_ON else False
     desc = glossary.lookup(term) if term else ""
-    hover = f"<b>{label}</b>" + (f"<br>{desc}" if desc else "")
+    htext = f"<b>{label}</b>" + (f"<br>{desc}" if desc else "")
     fig.add_trace(go.Scatter(
-        x=[x_last], y=[y], mode="markers",
-        marker=dict(color=color, size=9, line=dict(color="white", width=1)),
-        name=label, hovertext=hover, hoverinfo="text", showlegend=False),
-        row=1, col=1)
+        x=[x0, x1], y=[y, y],
+        mode="lines+text" if show_label else "lines",
+        line=dict(color=color, dash=dash, width=width),
+        text=[None, " " + label] if show_label else None,
+        textposition="middle right",
+        textfont=dict(color=color, size=10),
+        cliponaxis=False,
+        legendgroup=group, name=label, visible=visible,
+        hovertext=htext if hover else None,
+        hoverinfo="text" if hover else "skip",
+        showlegend=False), row=1, col=1)
 
 
 def _trendline(fig, tl: dict, which: str, color: str):
@@ -46,11 +68,13 @@ def _trendline(fig, tl: dict, which: str, color: str):
     if not seg or "x0" not in seg:
         return
     label = "하락추세선" if which == "down" else "상승추세선"
+    visible = True if "trend" in _DEFAULT_ON else False
     fig.add_trace(go.Scatter(
         x=[seg["x0"], seg["x1"]], y=[seg["y0"], seg["y1"]], mode="lines",
         line=dict(color=color, width=2, dash="longdash"),
-        name=label, hovertext=f"{label}<br>{glossary.lookup('추세선')}",
-        hoverinfo="text"), row=1, col=1)
+        legendgroup="trend", name=label, visible=visible,
+        hovertext=f"{label}<br>{glossary.lookup('추세선')}",
+        hoverinfo="text", showlegend=False), row=1, col=1)
 
 
 def build_figure(result: dict, frames: dict, lookback: int = 140):
@@ -62,7 +86,7 @@ def build_figure(result: dict, frames: dict, lookback: int = 140):
     d = full.iloc[-lookback:]
     # pandas Timestamp는 kaleido(PNG) 직렬화가 안 되므로 파이썬 datetime으로 변환
     x = list(d.index.to_pydatetime())
-    x_last = x[-1]
+    x0, x1 = x[0], x[-1]
     sr, risk = result["sr"], result["risk"]
     f2 = ".0f" if result["ccy"] == "KRW" else ".2f"
 
@@ -79,10 +103,13 @@ def build_figure(result: dict, frames: dict, lookback: int = 140):
     # 이동평균선
     for p, key in [(20, "ma20"), (60, "ma60"), (120, "ma120")]:
         ma = full["Close"].rolling(p).mean().iloc[-lookback:]
-        fig.add_trace(go.Scatter(x=x, y=ma, name=f"MA{p}", mode="lines",
-                                 line=dict(color=C[key], width=1.1)), row=1, col=1)
+        fig.add_trace(go.Scatter(
+            x=x, y=ma, name=f"MA{p}", mode="lines",
+            legendgroup="ma", visible=("ma" in _DEFAULT_ON),
+            line=dict(color=C[key], width=1.1),
+            hovertext=f"MA{p}", hoverinfo="text", showlegend=False), row=1, col=1)
 
-    # 박스권 음영
+    # 박스권 음영 (항상 표시, 옅음)
     fig.add_hrect(y0=sr["box_low"], y1=sr["box_high"], fillcolor=C["box"],
                   opacity=0.06, line_width=0, row=1, col=1)
 
@@ -93,46 +120,50 @@ def build_figure(result: dict, frames: dict, lookback: int = 140):
     y_hi = float(d["High"].max()) * 1.04
     vis = lambda y: y_lo <= y <= y_hi
 
-    # 매물대 밸류영역(VAL~VAH) 음영 — 거래량 70%가 쌓인 '평단가 밀집' 구간
+    # 매물대 밸류영역(VAL~VAH) 음영 (항상 표시, 옅음)
     fig.add_hrect(y0=va["val"], y1=va["vah"], fillcolor=C["poc"],
                   opacity=0.05, line_width=0, row=1, col=1)
 
-    # 강도순 수평 지지/저항 (스윙 피벗 군집) — 강할수록 굵게
+    # 강도순 수평 지지/저항 (스윙 피벗 군집) — 강할수록 굵게. 그룹 'sr'
     for lvl in [l for l in lv["strong"] if vis(l["price"])][:6]:
         w = min(0.8 + lvl["strength"] * 0.5, 3.0)
         col = C["resist"] if lvl["price"] > lv["price"] else C["sup"]
-        fig.add_hline(y=lvl["price"], line=dict(color=col, width=w, dash="dot"),
-                      opacity=0.5, row=1, col=1)
         fig.add_trace(go.Scatter(
-            x=[x_last], y=[lvl["price"]], mode="markers",
-            marker=dict(color=col, size=6, opacity=0.6),
+            x=[x0, x1], y=[lvl["price"], lvl["price"]], mode="lines",
+            line=dict(color=col, width=w, dash="dot"), opacity=0.55,
+            legendgroup="sr", name="지지/저항", visible=("sr" in _DEFAULT_ON),
             hovertext=f"지지/저항 {lvl['price']:,.2f}<br>터치 {lvl['touches']}회 "
                       f"· 강도 {lvl['strength']}<br>{glossary.lookup('강도점수')}",
             hoverinfo="text", showlegend=False), row=1, col=1)
 
-    # 피보나치 되돌림 (옅은 선)
+    # 피보나치 되돌림 — 그룹 'fib'
     for fl in [f for f in lv["fib"]["levels"] if vis(f["price"])]:
-        fig.add_hline(y=fl["price"], line=dict(color=C["fib"], width=0.8, dash="dot"),
-                      opacity=0.45, annotation_text=f"피보 {fl['ratio']:.3f}",
-                      annotation_position="left",
-                      annotation_font=dict(color=C["fib"], size=9), row=1, col=1)
+        _hline(fig, x0, x1, fl["price"], f"피보 {fl['ratio']:.3f}", C["fib"],
+               group="fib", dash="dot", width=0.8, hover=False)
 
-    # 핵심 수평선 (마우스오버 용어 포함)
+    # 핵심 수평선 (박스상단·방어선·POC) — 그룹 'level'
     conf = ("·".join(sr["confluence"]) if sr["confluence"] else "단독")
-    _level(fig, x_last, sr["box_high"], "저항(박스상단)", C["resist"], term="박스권")
-    _level(fig, x_last, sr["defense"],
+    _hline(fig, x0, x1, sr["box_high"], "저항(박스상단)", C["resist"],
+           group="level", term="박스권")
+    _hline(fig, x0, x1, sr["defense"],
            f"핵심방어선 ({sr['defense_strength']}·{conf})", C["defense"],
-           term="방어선", width=2.0)
-    _level(fig, x_last, va["poc"], "POC(평단가 밀집)", C["poc"], term="POC", dash="dot")
-    _level(fig, x_last, result["entry"], "진입", C["entry"], dash="dash")
-    _level(fig, x_last, risk["stop"], "손절", C["stop"], term="ATR손절", dash="dash")
-    _level(fig, x_last, risk["target"], "목표(1:2)", C["target"], term="손익비", dash="dash")
+           group="level", term="방어선", width=2.0)
+    _hline(fig, x0, x1, va["poc"], "POC(평단가 밀집)", C["poc"],
+           group="level", term="POC", dash="dot")
 
-    # 추세선 (하락=빨강, 상승=초록) — 사선
+    # 매매선 (진입·손절·목표) — 그룹 'trade'
+    _hline(fig, x0, x1, result["entry"], "진입", C["entry"],
+           group="trade", dash="dash")
+    _hline(fig, x0, x1, risk["stop"], "손절", C["stop"],
+           group="trade", term="ATR손절", dash="dash", width=1.8)
+    _hline(fig, x0, x1, risk["target"], "목표(1:2)", C["target"],
+           group="trade", term="손익비", dash="dash")
+
+    # 추세선 (하락=빨강, 상승=초록) — 그룹 'trend'
     _trendline(fig, result["trendline"], "down", C["resist"])
     _trendline(fig, result["trendline"], "up", C["target"])
 
-    # 매물대 분포(장기) 가로 히스토그램 + 추정 평단가
+    # 매물대 분포(장기) 가로 히스토그램 + 추정 평단가 — 그룹 'supply'
     sup = result["supply"]
     prof = sup["long"]
     centers, vols = prof["centers"], prof["vol"]
@@ -142,18 +173,20 @@ def build_figure(result: dict, frames: dict, lookback: int = 140):
     fig.add_trace(go.Bar(
         x=list(vols[mask]), y=list(centers[mask]), orientation="h",
         xaxis="x3", yaxis="y", width=spacing * 0.85,
+        legendgroup="supply", visible=("supply" in _DEFAULT_ON),
         marker=dict(color=C["prof"], opacity=0.16),
         hoverinfo="skip", showlegend=False, name="매물대"))
     pnl = sup["pnl"]
-    _level(fig, x_last, pnl["avg_cost"],
+    _hline(fig, x0, x1, pnl["avg_cost"],
            f"추정평단 ({pnl['pnl']*100:+.1f}%)", C["avg"],
-           term="미실현손익", dash="dashdot", width=1.6)
+           group="supply", term="미실현손익", dash="dashdot", width=1.6)
 
     # 거래량 (양봉 초록/음봉 빨강)
     vcolors = [C["up"] if c >= o else C["down"]
                for c, o in zip(d["Close"], d["Open"])]
     fig.add_trace(go.Bar(x=x, y=d["Volume"], marker_color=vcolors,
-                         name="거래량", showlegend=False), row=2, col=1)
+                         name="거래량", hoverinfo="skip",
+                         showlegend=False), row=2, col=1)
 
     title = (f"{result['name']} {result['code']}　|　{result['gauge']} "
              f"정규화 {result['norm']:+.0f}　|　{result['verdict_label']}　"
@@ -161,9 +194,9 @@ def build_figure(result: dict, frames: dict, lookback: int = 140):
     fig.update_layout(
         title=dict(text=title, font=dict(size=15)),
         template="plotly_white", height=720, width=1100,
-        xaxis_rangeslider_visible=False, hovermode="x unified",
-        legend=dict(orientation="h", yanchor="bottom", y=1.02, x=0),
-        margin=dict(l=60, r=110, t=70, b=40),
+        xaxis_rangeslider_visible=False, hovermode="closest",
+        showlegend=False,
+        margin=dict(l=60, r=120, t=70, b=40),
         # 매물대 가로 히스토그램용 보조 x축 — 좌측 약 22% 폭만 차지하게 스케일
         xaxis3=dict(overlaying="x", anchor="y", side="top",
                     range=[0, maxv * 4.5], visible=False))
