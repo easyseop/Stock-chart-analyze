@@ -28,12 +28,13 @@ def verdict(norm_score: float) -> tuple[str, str]:
     +50 → 적극 매수, −50 → 적극 매도 (양끝 포함).
     """
     x = norm_score
-    if x >= 50:
+    s, w = config.VERDICT_STRONG, config.VERDICT_WEAK
+    if x >= s:
         return "적극 매수", "🟢 강세"
-    if x >= 20:
+    if x >= w:
         return "매수 관심", "🟢"
-    if x > -20:
+    if x > -w:
         return "관망", "⚪ 중립"
-    if x > -50:
+    if x > -s:
         return "매도 관심", "🔴"
     return "적극 매도/회피", "🔴 공포"

@@ -22,8 +22,7 @@ def _frames_real(code):
 
 def _frames_demo(scenario):
     from tests.sample_data import make
-    d = make(scenario)
-    return {"D": d, "W": data.resample(d, "W"), "M": data.resample(d, "M")}
+    return data.frames_from_daily(make(scenario))
 
 
 def run(demo: bool = False, csv_path: str | None = None):
@@ -48,13 +47,16 @@ def run(demo: bool = False, csv_path: str | None = None):
             print(f"[{meta.get('name','?')} {meta.get('code','?')}] "
                   f"분석 실패: {type(e).__name__}: {e}\n", file=sys.stderr)
 
-    if csv_path and results:
-        with open(csv_path, "w", newline="", encoding="utf-8-sig") as fp:
-            w = csv.DictWriter(fp, fieldnames=card.CSV_FIELDS)
-            w.writeheader()
-            for r in results:
-                w.writerow(card.to_row(r))
-        print(f"CSV 저장: {csv_path}")
+    if csv_path:
+        if results:
+            with open(csv_path, "w", newline="", encoding="utf-8-sig") as fp:
+                w = csv.DictWriter(fp, fieldnames=card.CSV_FIELDS)
+                w.writeheader()
+                for r in results:
+                    w.writerow(card.to_row(r))
+            print(f"CSV 저장: {csv_path} ({len(results)}종목)")
+        else:
+            print(f"분석 결과가 없어 CSV를 생성하지 않음: {csv_path}", file=sys.stderr)
 
     return results
 

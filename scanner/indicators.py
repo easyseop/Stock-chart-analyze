@@ -108,16 +108,19 @@ def trend(frames: dict[str, pd.DataFrame]) -> dict:
     aligned_up = all(vals[i] > vals[i + 1] for i in range(len(vals) - 1))
     aligned_dn = all(vals[i] < vals[i + 1] for i in range(len(vals) - 1))
 
-    # 골든/데드크로스 (20선이 60선 돌파) — 최근 5봉 내
+    # 골든/데드크로스 (20선이 60선 돌파) — 최근 CROSS_LOOKBACK봉 내 '실제 교차'만
     ma20 = close.rolling(20).mean()
     ma60 = close.rolling(60).mean()
     cross = ""
-    if len(ma20.dropna()) > 5:
-        diff = (ma20 - ma60)
-        recent = diff.iloc[-5:]
-        if (recent.iloc[0] <= 0) and (recent.iloc[-1] > 0):
+    if ma60.notna().sum() > config.CROSS_LOOKBACK:  # 가드는 더 긴 ma60 기준
+        diff = ma20 - ma60
+        win = diff.iloc[-(config.CROSS_LOOKBACK + 1):]
+        prev = win.shift(1)
+        crossed_up = ((prev <= 0) & (win > 0)).any()   # 음→양 전환이 구간 내 발생
+        crossed_dn = ((prev >= 0) & (win < 0)).any()
+        if crossed_up:
             cross = "골든크로스"
-        elif (recent.iloc[0] >= 0) and (recent.iloc[-1] < 0):
+        elif crossed_dn:
             cross = "데드크로스"
 
     # 다중 시간프레임 정렬
@@ -176,14 +179,19 @@ def poc(df: pd.DataFrame, bins: int = config.POC_BINS,
         lookback: int = config.POC_LOOKBACK) -> float:
     """매물대 POC: 최근 구간 종가를 가격대로 나눠 거래량 합이 최대인 구간 중심."""
     seg = df.iloc[-lookback:]
-    lo, hi = seg["Close"].min(), seg["Close"].max()
+    lo, hi = float(seg["Low"].min()), float(seg["High"].max())
     if hi <= lo:
         return float(seg["Close"].iloc[-1])
     edges = np.linspace(lo, hi, bins + 1)
-    idx = np.clip(np.digitize(seg["Close"], edges) - 1, 0, bins - 1)
     vol = np.zeros(bins)
-    for i, v in zip(idx, seg["Volume"].values):
-        vol[i] += v
+    # 각 봉의 거래량을 그 봉이 오르내린 [Low, High] 범위의 구간들에 고르게 분산
+    # (종가 한 점에 몰아넣지 않음 → 매물대 정의에 충실)
+    for low, high, v in zip(seg["Low"].values, seg["High"].values,
+                            seg["Volume"].values):
+        b0 = int(np.clip(np.digitize(low, edges) - 1, 0, bins - 1))
+        b1 = int(np.clip(np.digitize(high, edges) - 1, 0, bins - 1))
+        span = b1 - b0 + 1
+        vol[b0:b1 + 1] += v / span
     b = int(vol.argmax())
     return float((edges[b] + edges[b + 1]) / 2)
 
@@ -194,9 +202,12 @@ def detect_box(df: pd.DataFrame) -> dict:
     경계는 '직전까지 형성된' 박스로 산출(현재 봉 제외) → 현 시점의 이탈을 잡는다.
     """
     k = config.BOX_EXCLUDE_LAST
+    usable = df.iloc[:-k] if k > 0 else df   # 현재 봉(들) 제외 후
     best = None
     for n in config.BOX_WINDOWS:
-        seg = df.iloc[-(n + k):-k] if k > 0 else df.iloc[-n:]
+        seg = usable.iloc[-n:]               # 남은 데이터의 마지막 n봉
+        if len(seg) < 2:                     # 짧은 이력(신규 상장 등) 가드
+            continue
         lo, hi = float(seg["Low"].min()), float(seg["High"].max())
         rng = (hi - lo) / lo if lo > 0 else 1.0
         # 경계 터치 수 (±NEAR_PCT 이내 종가 봉)
@@ -204,10 +215,16 @@ def detect_box(df: pd.DataFrame) -> dict:
         touch_hi = (seg["Close"] >= hi * (1 - config.NEAR_PCT)).sum()
         touches = int(touch_lo + touch_hi)
         cand = {"n": n, "low": lo, "high": hi, "range": rng, "touches": touches}
-        # 우선순위: 좁은 박스(rng<MAX) 우선, 그 안에서 터치 많은 쪽
-        score = (1 if rng < config.BOX_RANGE_MAX else 0, touches)
+        # 우선순위: 좁은 박스 우선 → 터치 밀도(터치/봉수, 창 길이 보정) 높은 쪽
+        density = touches / len(seg)
+        score = (1 if rng < config.BOX_RANGE_MAX else 0, density)
         if best is None or score > best[0]:
             best = (score, cand)
+    if best is None:                         # 모든 창이 너무 짧으면 전체로 폴백
+        seg = usable if len(usable) >= 2 else df
+        lo, hi = float(seg["Low"].min()), float(seg["High"].max())
+        return {"n": len(seg), "low": lo, "high": hi,
+                "range": (hi - lo) / lo if lo > 0 else 1.0, "touches": 0}
     return best[1]
 
 
@@ -229,10 +246,11 @@ def support_resistance(df: pd.DataFrame, ma: dict[int, float]) -> dict:
     defense_strength = "강함" if len(confl) >= 2 else ("보통" if confl else "약함")
 
     near = config.NEAR_PCT
-    pos_low = abs(price - box_low) / box_low <= near
-    pos_high = abs(price - box_high) / box_high <= near
     broke_down = price < box_low * (1 - near)         # 박스 하단 이탈
     broke_up = price > box_high * (1 + near)           # 박스 상단 돌파
+    # 근접은 '선 안쪽(미돌파/미이탈)'에서만 — 이미 뚫은 가격을 임박으로 오판하지 않게
+    pos_low = box_low * (1 - near) <= price <= box_low * (1 + near)
+    pos_high = box_high * (1 - near) <= price <= box_high
 
     rebound = df["Close"].iloc[-1] > df["Open"].iloc[-1]  # 당일 양봉(반등)
 
@@ -247,24 +265,32 @@ def support_resistance(df: pd.DataFrame, ma: dict[int, float]) -> dict:
     else:
         score, pos, note = 0, "중단", "박스 중단, 방향 미정"
 
-    pct_to_high = (box_high - price) / price * 100
+    # 상단 대비 현재가 위치(+면 상단 위로 돌파, -면 아래)
+    pct_vs_high = (price - box_high) / box_high * 100
     return {
         "score": score, "reason": note, "terms": ["박스권", "방어선", "POC"],
         "position": pos, "rebound_candle": rebound,
         "box_low": box_low, "box_high": box_high, "poc": poc_price,
         "defense": box_low, "defense_strength": defense_strength,
-        "confluence": confl, "price": price, "pct_to_high": pct_to_high,
+        "confluence": confl, "price": price, "pct_vs_high": pct_vs_high,
     }
 
 
 def _is_round_number(x: float) -> bool:
-    """라운드 넘버(심리적 가격대) 근접 여부 — 자릿수 기준 ±1% 이내."""
+    """라운드 넘버(심리적 가격대) 근접 여부.
+
+    자릿수 단위(10^n)와 그 절반(5×10^(n-1)) 배수에 ±0.5% 이내일 때만 인정.
+    (예: 80,000·75,000은 O, 76,000·82,000은 X) — 과도한 라운드 판정 방지.
+    """
     if x <= 0:
         return False
     import math
-    step = 10 ** (math.floor(math.log10(x)) - 1) * 5  # 대략적 라운드 간격
-    nearest = round(x / step) * step
-    return abs(x - nearest) / x <= 0.01
+    mag = 10 ** math.floor(math.log10(x))     # 선두 자릿수 크기
+    for step in (mag, mag / 2):
+        nearest = round(x / step) * step
+        if abs(x - nearest) / x <= 0.005:
+            return True
+    return False
 
 
 # ════════════════════════════════════════════════════════════
@@ -325,8 +351,12 @@ def risk_levels(df: pd.DataFrame, entry: float, defense: float, ccy: str) -> dic
     acct = config.ACCOUNT_SIZE.get(ccy, 10000.0)
     budget = acct * config.RISK_PER_TRADE
     shares = int(budget // risk_per_share) if risk_per_share > 0 else 0
+    # 1% 리스크 예산으로 1주도 못 사면(손절폭 > 예산) 경고 플래그
+    underfunded = risk_per_share > budget
 
-    return {"atr": a, "atr_stop": atr_stop, "stop": stop, "target": target,
+    return {"atr": a, "atr_stop": atr_stop, "defense_stop": defense_stop,
+            "stop": stop, "target": target,
             "rr": rr, "risk_per_share": risk_per_share,
-            "shares": shares, "account": acct, "ccy": ccy,
+            "shares": shares, "underfunded": underfunded,
+            "account": acct, "ccy": ccy,
             "terms": ["ATR손절", "손익비"]}

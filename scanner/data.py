@@ -44,15 +44,20 @@ def resample(df_daily: pd.DataFrame, rule: str,
     out = df_daily.resample(code).agg(agg).dropna(subset=["Close"])
 
     if drop_unclosed and len(out) > 1:
-        # 마지막 구간 라벨(주 금요일/월말)이 데이터 마지막 날보다 미래면 미완성 봉
-        last_label = out.index[-1]
-        last_data = df_daily.index[-1]
-        if last_label > last_data:
+        # 마지막 구간의 라벨(그 주 금요일/그 달 말일)이 '오늘'보다 미래면
+        # 아직 끝나지 않은 구간 → 미완성 봉이므로 제거.
+        # (마지막 거래일과 비교하면 월말·금요일이 휴장일 때 완성된 봉도 잘못 버림)
+        period_end = out.index[-1]
+        if period_end > pd.Timestamp.now().normalize():
             out = out.iloc[:-1]
     return out
 
 
-def build_frames(code: str) -> dict[str, pd.DataFrame]:
-    """일/주/월 3개 시간프레임 데이터셋 생성."""
-    d = fetch_daily(code)
+def frames_from_daily(d: pd.DataFrame) -> dict[str, pd.DataFrame]:
+    """일봉 → 일/주/월 3개 시간프레임 데이터셋. (실데이터·데모 공용)"""
     return {"D": d, "W": resample(d, "W"), "M": resample(d, "M")}
+
+
+def build_frames(code: str) -> dict[str, pd.DataFrame]:
+    """일/주/월 3개 시간프레임 데이터셋 생성(실데이터 수집)."""
+    return frames_from_daily(fetch_daily(code))
