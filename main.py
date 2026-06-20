@@ -25,8 +25,10 @@ def _frames_demo(scenario):
     return data.frames_from_daily(make(scenario))
 
 
-def run(demo: bool = False, csv_path: str | None = None):
+def run(demo: bool = False, csv_path: str | None = None,
+        chart: bool = False, png: bool = False, chart_dir: str = "charts"):
     results = []
+    charts = []
 
     if demo:
         scenarios = [("uptrend", "데모-상승추세"), ("box", "데모-횡보박스"),
@@ -43,6 +45,10 @@ def run(demo: bool = False, csv_path: str | None = None):
             results.append(res)
             print(card.render(res))
             print()
+            if chart:
+                from scanner import chart as chartmod
+                path = chartmod.save(res, frames, out_dir=chart_dir, png=png)
+                charts.append(path)
         except Exception as e:
             print(f"[{meta.get('name','?')} {meta.get('code','?')}] "
                   f"분석 실패: {type(e).__name__}: {e}\n", file=sys.stderr)
@@ -58,6 +64,9 @@ def run(demo: bool = False, csv_path: str | None = None):
         else:
             print(f"분석 결과가 없어 CSV를 생성하지 않음: {csv_path}", file=sys.stderr)
 
+    if charts:
+        print(f"차트 저장: {chart_dir}/ ({len(charts)}개)")
+
     return results
 
 
@@ -66,8 +75,14 @@ def main():
     ap.add_argument("--demo", action="store_true",
                     help="합성 데이터로 데모(네트워크 불필요)")
     ap.add_argument("--csv", metavar="PATH", help="결과 CSV 저장 경로")
+    ap.add_argument("--chart", action="store_true",
+                    help="종목별 차트(HTML) 생성 — 박스권·방어선·진입/손절 선")
+    ap.add_argument("--png", action="store_true",
+                    help="차트를 PNG로도 저장(kaleido+chrome 필요)")
+    ap.add_argument("--chart-dir", default="charts", help="차트 저장 폴더")
     args = ap.parse_args()
-    run(demo=args.demo, csv_path=args.csv)
+    run(demo=args.demo, csv_path=args.csv, chart=args.chart,
+        png=args.png, chart_dir=args.chart_dir)
 
 
 if __name__ == "__main__":

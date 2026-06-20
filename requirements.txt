@@ -3,3 +3,6 @@
 finance-datareader>=0.9.50
 pandas>=2.0
 numpy>=1.24
+# v1.5 시각화(--chart). PNG 저장(--png)은 kaleido + chrome 추가 필요:
+#   pip install kaleido && plotly_get_chrome -y
+plotly>=6.0

@@ -33,8 +33,14 @@ pip install -r requirements.txt
 ```bash
 python main.py                 # config.STOCKS 전체 스캔(실데이터, 네트워크 필요)
 python main.py --csv out.csv   # 결과 CSV 저장
-python main.py --demo          # 합성 데이터로 데모(네트워크 불필요)
+python main.py --chart         # 종목별 차트(HTML) — 박스권·방어선·진입/손절 선
+python main.py --chart --png   # 차트를 PNG로도 저장(kaleido+chrome 필요)
+python main.py --demo --chart  # 합성 데이터로 데모(네트워크 불필요)
 ```
+
+차트(`--chart`)는 캔들 위에 박스권 음영·핵심방어선·저항·POC·이평선과
+진입/손절/목표 선을 그리고, **핵심 선에 마우스를 올리면 용어 설명**이 뜬다.
+`charts/<code>.html`로 저장되며 브라우저에서 열면 인터랙티브하게 확대·툴팁 확인 가능.
 
 `--demo`는 네트워크가 막힌 환경에서 파이프라인 로직을 확인하기 위한 모드다.
 실데이터 신호를 보려면 FinanceDataReader가 외부(야후/KRX)에 접속 가능한 환경에서 실행해야 한다.
@@ -69,14 +75,15 @@ scanner/
   scoring.py         국면 가중치 → 100점 정규화 → 판정
   analyze.py         종목 1개 분석 파이프라인
   card.py            신호 카드 렌더 + CSV
+  chart.py           차트 시각화(plotly) + 용어 마우스오버
 tests/sample_data.py 오프라인 데모용 합성 OHLCV
 main.py              CLI
 docs/                기획·설계·결정 문서
 ```
 
 ## 로드맵
-- **v1** (현재): 국면·추세·RSI·지지저항/박스/방어선·거래대금·ATR → 신호 카드(텍스트/CSV)
-- **v1.5**: 박스권·방어선·신호 차트 시각화(plotly) + 용어 마우스오버
+- **v1**: 국면·추세·RSI·지지저항/박스/방어선·거래대금·ATR → 신호 카드(텍스트/CSV)
+- **v1.5** (현재): 박스권·방어선·신호 차트 시각화(plotly) + 용어 마우스오버 ✅
 - **v2**: 일목균형표, 상대강도, 차트패턴, 간단 백테스트
 
 ## 한계 및 주의 (정직 고지)
