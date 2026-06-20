@@ -32,7 +32,8 @@ def run(demo: bool = False, csv_path: str | None = None,
 
     if demo:
         scenarios = [("uptrend", "데모-상승추세"), ("box", "데모-횡보박스"),
-                     ("breakdown", "데모-박스이탈"), ("downtrend", "데모-하락추세")]
+                     ("breakdown", "데모-박스이탈"), ("downtrend", "데모-하락추세"),
+                     ("reversal", "데모-추세전환")]
         jobs = [({"code": f"DEMO_{s.upper()}", "name": name, "ccy": "USD"}, s)
                 for s, name in scenarios]
     else:

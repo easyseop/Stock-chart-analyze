@@ -41,6 +41,22 @@ def render(result: dict) -> str:
     out.append(f"모멘텀    : {r['rsi']['reason']}  [{r['rsi']['score']:+d}]")
     out.append(f"지지/저항 : {sr['reason']}  [{sr['score']:+d}]")
     out.append(f"거래대금  : {r['volume']['reason']}  [{r['volume']['score']:+d}]")
+    tl = r["trendline"]
+    out.append(f"추세선    : {tl['note']}  [{tl['score']:+d}]")
+    out.append(line)
+    # 주요 지지/저항 (강도순) + 피보
+    lv = r["levels"]
+    if lv["nearest_resistance"]:
+        nr = lv["nearest_resistance"]
+        out.append(f"위 저항    : {f(nr['price'])} "
+                   f"(터치 {nr['touches']}회·강도 {nr['strength']})")
+    if lv["nearest_support"]:
+        ns = lv["nearest_support"]
+        out.append(f"아래 지지  : {f(ns['price'])} "
+                   f"(터치 {ns['touches']}회·강도 {ns['strength']})")
+    va = lv["value_area"]
+    out.append(f"매물대     : VAL {f(va['val'])} · POC {f(va['poc'])} · "
+               f"VAH {f(va['vah'])}")
     out.append(line)
     # 박스권 / 방어선 — 항상 노출
     conf = ("·".join(sr["confluence"]) + " 겹침" if sr["confluence"] else "단독")
@@ -70,7 +86,8 @@ def render(result: dict) -> str:
 
 
 CSV_FIELDS = ["code", "name", "norm", "verdict", "action", "gauge", "regime_flag",
-              "trend", "rsi", "sr", "volume", "entry", "stop", "target",
+              "trend", "rsi", "sr", "volume", "trendline", "trend_state",
+              "entry", "stop", "target",
               "box_low", "box_high", "defense", "defense_strength"]
 
 
@@ -82,6 +99,7 @@ def to_row(result: dict) -> dict:
         "regime_flag": r["regime"]["flag"],
         "trend": r["trend"]["score"], "rsi": r["rsi"]["score"],
         "sr": r["sr"]["score"], "volume": r["volume"]["score"],
+        "trendline": r["trendline"]["score"], "trend_state": r["trendline"]["state"],
         "entry": round(r["entry"], 2), "stop": round(r["risk"]["stop"], 2),
         "target": round(r["risk"]["target"], 2),
         "box_low": round(r["sr"]["box_low"], 2),

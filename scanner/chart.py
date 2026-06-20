@@ -18,6 +18,7 @@ C = {
     "box": "#3b82f6", "resist": "#ef4444", "defense": "#dc2626",
     "poc": "#0ea5e9", "entry": "#2563eb", "stop": "#ef4444",
     "target": "#16a34a", "up": "#16a34a", "down": "#ef4444",
+    "sup": "#0d9488", "fib": "#a855f7",
 }
 
 
@@ -35,6 +36,21 @@ def _level(fig, x_last, y, label, color, term=None, dash="solid", width=1.4):
         marker=dict(color=color, size=9, line=dict(color="white", width=1)),
         name=label, hovertext=hover, hoverinfo="text", showlegend=False),
         row=1, col=1)
+
+
+def _trendline(fig, tl: dict, which: str, color: str):
+    """추세선(사선) 그리기. which='down'|'up'."""
+    import plotly.graph_objects as go
+
+    seg = tl.get(which)
+    if not seg or "x0" not in seg:
+        return
+    label = "하락추세선" if which == "down" else "상승추세선"
+    fig.add_trace(go.Scatter(
+        x=[seg["x0"], seg["x1"]], y=[seg["y0"], seg["y1"]], mode="lines",
+        line=dict(color=color, width=2, dash="longdash"),
+        name=label, hovertext=f"{label}<br>{glossary.lookup('추세선')}",
+        hoverinfo="text"), row=1, col=1)
 
 
 def build_figure(result: dict, frames: dict, lookback: int = 140):
@@ -70,16 +86,51 @@ def build_figure(result: dict, frames: dict, lookback: int = 140):
     fig.add_hrect(y0=sr["box_low"], y1=sr["box_high"], fillcolor=C["box"],
                   opacity=0.06, line_width=0, row=1, col=1)
 
+    lv = result["levels"]
+    va = lv["value_area"]
+    # 보이는 가격 범위(여백 8%) — 화면 밖 선이 축을 늘이지 않게 필터
+    y_lo = float(d["Low"].min()) * 0.96
+    y_hi = float(d["High"].max()) * 1.04
+    vis = lambda y: y_lo <= y <= y_hi
+
+    # 매물대 밸류영역(VAL~VAH) 음영 — 거래량 70%가 쌓인 '평단가 밀집' 구간
+    fig.add_hrect(y0=va["val"], y1=va["vah"], fillcolor=C["poc"],
+                  opacity=0.05, line_width=0, row=1, col=1)
+
+    # 강도순 수평 지지/저항 (스윙 피벗 군집) — 강할수록 굵게
+    for lvl in [l for l in lv["strong"] if vis(l["price"])][:6]:
+        w = min(0.8 + lvl["strength"] * 0.5, 3.0)
+        col = C["resist"] if lvl["price"] > lv["price"] else C["sup"]
+        fig.add_hline(y=lvl["price"], line=dict(color=col, width=w, dash="dot"),
+                      opacity=0.5, row=1, col=1)
+        fig.add_trace(go.Scatter(
+            x=[x_last], y=[lvl["price"]], mode="markers",
+            marker=dict(color=col, size=6, opacity=0.6),
+            hovertext=f"지지/저항 {lvl['price']:,.2f}<br>터치 {lvl['touches']}회 "
+                      f"· 강도 {lvl['strength']}<br>{glossary.lookup('강도점수')}",
+            hoverinfo="text", showlegend=False), row=1, col=1)
+
+    # 피보나치 되돌림 (옅은 선)
+    for fl in [f for f in lv["fib"]["levels"] if vis(f["price"])]:
+        fig.add_hline(y=fl["price"], line=dict(color=C["fib"], width=0.8, dash="dot"),
+                      opacity=0.45, annotation_text=f"피보 {fl['ratio']:.3f}",
+                      annotation_position="left",
+                      annotation_font=dict(color=C["fib"], size=9), row=1, col=1)
+
     # 핵심 수평선 (마우스오버 용어 포함)
     conf = ("·".join(sr["confluence"]) if sr["confluence"] else "단독")
     _level(fig, x_last, sr["box_high"], "저항(박스상단)", C["resist"], term="박스권")
     _level(fig, x_last, sr["defense"],
            f"핵심방어선 ({sr['defense_strength']}·{conf})", C["defense"],
            term="방어선", width=2.0)
-    _level(fig, x_last, sr["poc"], "POC(매물대)", C["poc"], term="POC", dash="dot")
+    _level(fig, x_last, va["poc"], "POC(평단가 밀집)", C["poc"], term="POC", dash="dot")
     _level(fig, x_last, result["entry"], "진입", C["entry"], dash="dash")
     _level(fig, x_last, risk["stop"], "손절", C["stop"], term="ATR손절", dash="dash")
     _level(fig, x_last, risk["target"], "목표(1:2)", C["target"], term="손익비", dash="dash")
+
+    # 추세선 (하락=빨강, 상승=초록) — 사선
+    _trendline(fig, result["trendline"], "down", C["resist"])
+    _trendline(fig, result["trendline"], "up", C["target"])
 
     # 거래량 (양봉 초록/음봉 빨강)
     vcolors = [C["up"] if c >= o else C["down"]
@@ -97,6 +148,7 @@ def build_figure(result: dict, frames: dict, lookback: int = 140):
         legend=dict(orientation="h", yanchor="bottom", y=1.02, x=0),
         margin=dict(l=60, r=110, t=70, b=40))
     fig.update_yaxes(tickformat=f2, row=1, col=1)
+    fig.update_xaxes(range=[x[0], x[-1]])   # 추세선이 축을 좌측으로 늘이지 않게
     return fig
 
 

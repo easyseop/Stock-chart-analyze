@@ -16,8 +16,8 @@ def make(scenario: str = "uptrend", n: int = 800, seed: int = 0,
     """
     rng = np.random.default_rng(seed)
     dates = pd.bdate_range("2021-01-01", periods=n)
-    drift = {"uptrend": 0.0015, "downtrend": -0.0015,
-             "box": 0.0, "breakdown": 0.0}[scenario]
+    drift = {"uptrend": 0.0015, "downtrend": -0.0015, "box": 0.0,
+             "breakdown": 0.0, "reversal": -0.0015}[scenario]
     vol = 0.008  # 노이즈를 낮춰 추세 시나리오에서 ADX가 추세장으로 잡히게
     rets = rng.normal(drift, vol, n)
 
@@ -39,6 +39,12 @@ def make(scenario: str = "uptrend", n: int = 800, seed: int = 0,
             else:  # 마지막 5봉 급락 → 박스 하단 이탈
                 price.append(price[-1] * (1 - 0.03))
         close = np.array(price)
+    elif scenario == "reversal":
+        # 장기 하락 후 '최근 10봉'에서 하락추세선을 막 상향 돌파(추세 전환 순간)
+        close = start_price * np.exp(np.cumsum(rets))
+        turn = n - 10
+        for i in range(turn, n):
+            close[i] = close[i - 1] * (1 + abs(rng.normal(0.02, 0.006)))
     else:
         close = start_price * np.exp(np.cumsum(rets))
 
