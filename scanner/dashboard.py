@@ -24,8 +24,9 @@ _BUCKETS = [
 
 
 def _bucket(result: dict) -> str:
+    from scanner import trendlines as tl
     state = result["trendline"]["state"]
-    if state in ("하락추세선 상향돌파", "하락추세선 임박"):
+    if state in tl.TRANSITION_STATES or state == "하락추세선 임박":
         return "transition"
     if state in ("하락추세 지속", "상승추세선 이탈"):
         return "avoid"
@@ -224,12 +225,19 @@ def build(results: list[dict], frames_map: dict[str, dict],
             f'onclick="showStock(\'{code}\')">'
             f'<span class="g">{gauge}</span> {html.escape(r["name"])} '
             f'<span class="sub">{html.escape(code)} · {r["norm"]:+.0f}</span></button>')
+        vtext = html.escape(r.get("verdict", ""))
+        summary = (
+            f'<div class="summary">{html.escape(r["gauge"])} '
+            f'<b>{html.escape(r["name"])} {html.escape(r["code"])}</b> · '
+            f'정규화 {r["norm"]:+.0f}<span class="vtext">{vtext}</span></div>')
         panels.append(
             f'<section class="panel{active}" id="panel-{code}">'
-            f'{_card_html(r)}'
+            f'{summary}'
             f'<div class="tfbar">{"".join(tfbtns)}'
             f'<span class="tfhint">← 증권창처럼 일/주/월 전환 (추세는 프레임마다 다름)</span></div>'
-            f'<div class="chart">{"".join(charts_html)}</div></section>')
+            f'<div class="chart">{"".join(charts_html)}</div>'
+            f'<details class="cardbox"><summary>📋 상세 신호 카드 (펼치기/접기)</summary>'
+            f'{_card_html(r)}</details></section>')
 
     # 버킷 헤더를 탭 목록 사이에 끼워 재구성 (+ 맨 위 백테스트 탭)
     tab_html = [bt_tab] if bt_tab else []
@@ -342,6 +350,15 @@ _TEMPLATE = """<!DOCTYPE html>
            font-weight:600; }}
   .tfbtn.active {{ background:#0f172a; border-color:#0f172a; color:#fff; }}
   .tfhint {{ font-size:11px; color:var(--mut); margin-left:6px; }}
+  .summary {{ background:#fff; border:1px solid #e2e8f0; border-radius:10px;
+             padding:11px 14px; font-size:15px; }}
+  .summary .vtext {{ display:block; font-size:12px; color:var(--mut);
+                    margin-top:3px; font-weight:400; }}
+  .cardbox {{ margin-top:12px; }}
+  .cardbox > summary {{ cursor:pointer; font-size:13px; font-weight:600;
+             color:#334155; padding:8px 12px; background:#fff;
+             border:1px solid #e2e8f0; border-radius:8px; list-style:revert; }}
+  .cardbox[open] > summary {{ border-radius:8px 8px 0 0; margin-bottom:-1px; }}
 </style></head><body>
 <header>
   <h1>심리 신호 대시보드 <span style="color:#38bdf8;font-size:13px">차트만으로 읽는 군중심리</span></h1>

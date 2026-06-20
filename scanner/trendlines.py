@@ -12,6 +12,12 @@ import pandas as pd
 import config
 from .levels import swing_points
 
+# 전환 후보(매수 검토 대상) 상태 — 대시보드/백테스트가 공유(문자열 드리프트 방지)
+TRANSITION_CONFIRMED = "추세 전환 확정"      # 돌파 + 안착 + 상승추세선 형성
+TRANSITION_PENDING = "돌파 후 횡보·전환대기"  # 돌파 + 안착(상승추세선은 아직)
+BREAKOUT_UNCONFIRMED = "하락추세선 돌파(미확인)"  # 갓 돌파 — 되밀림 위험
+TRANSITION_STATES = {TRANSITION_CONFIRMED, TRANSITION_PENDING}
+
 
 def _fit_through(p0: dict, p1: dict):
     """두 피벗을 잇는 직선 (slope, intercept) — x는 봉 위치(pos)."""
@@ -94,8 +100,26 @@ def detect(df: pd.DataFrame, frames: dict | None = None,
         recently_below = any(closes[i] < _line_value(slope, b, i)
                              for i in range(max(0, last_pos - lookN), last_pos))
         if price > dn and recently_below:
-            state, score, note = ("하락추세선 상향돌파", 2,
-                                  "하락추세선 상향 돌파 → 추세 전환 후보 ⭐")
+            # 돌파만으론 부족(되밀림 위험) → 안착(횡보)·상승추세선 형성까지 등급화
+            held = 0                                  # 현재부터 거꾸로 '선 위' 연속 봉 수
+            for i in range(last_pos, -1, -1):
+                if closes[i] > _line_value(slope, b, i):
+                    held += 1
+                else:
+                    break
+            has_uptrend = bool(up and up["slope"] > 0
+                               and price >= up["now"] * (1 - near))
+            if held >= config.TRANSITION_MIN_HOLD and has_uptrend:
+                state, score, note = (TRANSITION_CONFIRMED, 2,
+                    f"하락추세선 돌파 후 {held}봉 안착 + 상승추세선(저점 높아짐) 형성 "
+                    "→ 추세 전환 확정 ⭐")
+            elif held >= config.TRANSITION_MIN_HOLD:
+                state, score, note = (TRANSITION_PENDING, 1,
+                    f"하락추세선 돌파 후 {held}봉 안착(횡보) "
+                    "→ 상승추세 전환 대기(상승추세선 미형성)")
+            else:
+                state, score, note = (BREAKOUT_UNCONFIRMED, 0,
+                    f"하락추세선 갓 돌파({held}봉) → 되밀림 위험, 안착 확인 필요")
         elif dn * (1 - near) <= price <= dn:
             state, score, note = ("하락추세선 임박", 1,
                                   "하락추세선 바로 아래 → 하락 추세가 끝나갈 가능성")
@@ -114,7 +138,10 @@ def detect(df: pd.DataFrame, frames: dict | None = None,
                                   "상승추세선 위 (저점 높아짐) → 추세 양호")
 
     # 현재 활성 추세선의 가격값(선이 '지금' 어디 있는지) + 현재가와의 거리
-    if state.startswith("하락") and down:
+    if state == TRANSITION_CONFIRMED and up:        # 전환확정 → 새 상승추세선(지지)
+        level, slope_sign = up["now"], "상승(↗)"
+    elif (state in (TRANSITION_PENDING, BREAKOUT_UNCONFIRMED)
+          or state.startswith("하락")) and down:    # 돌파/임박/지속 → 깬 하락선
         level, slope_sign = down["now"], "하락(↘)"
     elif state.startswith("상승") and up:
         level, slope_sign = up["now"], "상승(↗)"
@@ -134,18 +161,19 @@ def apply_volume_filter(tlres: dict, vol_mult: float) -> dict:
     거래량 미동반 돌파는 가짜 돌파가 많아(기대값 음) → '거래 미동반 돌파'로 격하해
     매수 점수를 빼고 관망으로 돌린다. 거래량을 동반하면 그대로 전환 후보로 인정.
     """
-    if tlres.get("state") != "하락추세선 상향돌파":
-        tlres.setdefault("volume_confirmed", None)   # 돌파 아님 → 해당없음
+    # 거래량 확인은 '추세 전환 확정'(최상위 매수 신호)에만 적용
+    if tlres.get("state") != TRANSITION_CONFIRMED:
+        tlres.setdefault("volume_confirmed", None)   # 대상 아님 → 해당없음
         return tlres
     if vol_mult >= config.VOLUME_CONFIRM_MULT:
         tlres["volume_confirmed"] = True
         tlres["note"] += f" (거래량 {vol_mult:.1f}배 동반 ✓)"
         return tlres
-    # 거래량 미동반 → 격하
-    tlres["state"] = "하락추세선 돌파(거래 미동반)"
-    tlres["score"] = 0
-    tlres["note"] = (f"하락추세선 돌파했으나 거래량 미동반({vol_mult:.1f}배) "
-                     f"→ 가짜 돌파 의심(관망)")
+    # 거래량 미동반 → '전환대기'로 격하(가짜 전환 위험)
+    tlres["state"] = TRANSITION_PENDING
+    tlres["score"] = 1
+    tlres["note"] = (f"추세 전환 형태이나 거래량 미동반({vol_mult:.1f}배) "
+                     f"→ 거래량 확인 후 판단(전환 대기)")
     tlres["reason"] = tlres["state"]
     tlres["volume_confirmed"] = False
     return tlres

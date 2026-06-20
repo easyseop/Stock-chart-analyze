@@ -39,12 +39,13 @@ class Trade:
     trigger: str       # 진입을 유발한 신호
 
 
-TRANSITION = "하락추세선 상향돌파"   # '전환 후보' 트리거 식별값
+from scanner import trendlines as _tl
+TRANSITION = _tl.TRANSITION_CONFIRMED   # '전환 후보' 트리거 식별값
 
 
 def trigger_kind(t: "Trade") -> str:
     """진입 신호 분류: 'transition'(전환 후보) | 'normal'(일반 매수)."""
-    return "transition" if t.trigger == TRANSITION else "normal"
+    return "transition" if t.trigger in _tl.TRANSITION_STATES else "normal"
 
 
 def is_entry(res: dict) -> bool:
@@ -53,7 +54,7 @@ def is_entry(res: dict) -> bool:
         return False
     state = res["trendline"]["state"]
     label = res["verdict_label"]
-    return (state == "하락추세선 상향돌파"
+    return (state in _tl.TRANSITION_STATES
             or label.startswith("매수") or label.startswith("적극 매수"))
 
 
@@ -84,9 +85,8 @@ def simulate(code: str, frames: dict, meta: dict,
             continue
         risk = fill - stop
         target = fill + config.RR_TARGET * risk
-        trigger = (res["trendline"]["state"]
-                   if res["trendline"]["state"] == TRANSITION
-                   else res["verdict_label"])
+        _st = res["trendline"]["state"]
+        trigger = _st if _st in _tl.TRANSITION_STATES else res["verdict_label"]
 
         exit_i, exit_px, reason = _walk_forward(d, ei, fill, stop, max_hold)
         r = (exit_px - fill) / risk
@@ -153,7 +153,7 @@ def collect_signals(code: str, frames: dict, meta: dict,
             continue
         exit_i, exit_px, reason = _walk_forward(d, ei, fill, stop, max_hold)
         r = (exit_px - fill) / (fill - stop)
-        kind = ("transition" if res["trendline"]["state"] == TRANSITION
+        kind = ("transition" if res["trendline"]["state"] in _tl.TRANSITION_STATES
                 else "normal")
         dist = res["trendline"].get("dist_pct")
         sigs.append(Signal(

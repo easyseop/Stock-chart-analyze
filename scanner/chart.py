@@ -37,16 +37,17 @@ _DEFAULT_ON = {k for k, _, on in GROUPS if on}
 
 
 def _hline(fig, x0, x1, y, label, color, group, term=None, dash="solid",
-           width=1.4, show_label=True, hover=True):
+           width=1.4, show_label=True, hover=True, vfmt=",.2f"):
     """수평선을 '토글 가능한 trace'로 추가. (add_hline 대신 사용)
 
     라벨은 우측 끝점 텍스트로 붙여 선과 함께 켜고 꺼진다.
+    hover 시 그 선의 '가격'을 같이 보여준다.
     """
     import plotly.graph_objects as go
 
     visible = True if group in _DEFAULT_ON else False
     desc = glossary.lookup(term) if term else ""
-    htext = f"<b>{label}</b>" + (f"<br>{desc}" if desc else "")
+    htext = f"<b>{label}</b><br>가격 {format(y, vfmt)}" + (f"<br>{desc}" if desc else "")
     fig.add_trace(go.Scatter(
         x=[x0, x1], y=[y, y],
         mode="lines+text" if show_label else "lines",
@@ -124,6 +125,7 @@ def build_figure(result: dict, frames: dict, tf: str = "D", lookback: int = None
     x_future = x1 + avg_delta * project
     sr, risk = result["sr"], result["risk"]
     f2 = ".0f" if result["ccy"] == "KRW" else ".2f"
+    vfmt = ",.0f" if result["ccy"] == "KRW" else ",.2f"   # 호버 가격 표기
 
     # 추세선: 일봉은 분석결과(거래량필터 반영), 주/월봉은 그 프레임에서 재검출
     trendline = result["trendline"] if tf == "D" else tlmod.detect(full)
@@ -177,25 +179,25 @@ def build_figure(result: dict, frames: dict, tf: str = "D", lookback: int = None
     # 피보나치 되돌림 — 그룹 'fib'
     for fl in [f for f in lv["fib"]["levels"] if vis(f["price"])]:
         _hline(fig, x0, x1, fl["price"], f"피보 {fl['ratio']:.3f}", C["fib"],
-               group="fib", dash="dot", width=0.8, hover=False)
+               group="fib", dash="dot", width=0.8, vfmt=vfmt)
 
     # 핵심 수평선 (박스상단·방어선·POC) — 그룹 'level'
     conf = ("·".join(sr["confluence"]) if sr["confluence"] else "단독")
     _hline(fig, x0, x1, sr["box_high"], "저항(박스상단)", C["resist"],
-           group="level", term="박스권")
+           group="level", term="박스권", vfmt=vfmt)
     _hline(fig, x0, x1, sr["defense"],
            f"핵심방어선 ({sr['defense_strength']}·{conf})", C["defense"],
-           group="level", term="방어선", width=2.0)
+           group="level", term="방어선", width=2.0, vfmt=vfmt)
     _hline(fig, x0, x1, va["poc"], "POC(평단가 밀집)", C["poc"],
-           group="level", term="POC", dash="dot")
+           group="level", term="POC", dash="dot", vfmt=vfmt)
 
     # 매매선 (진입·손절·목표) — 그룹 'trade'
-    _hline(fig, x0, x1, result["entry"], "진입", C["entry"],
-           group="trade", dash="dash")
+    _hline(fig, x0, x1, result["entry"], "진입(기준가)", C["entry"],
+           group="trade", dash="dash", vfmt=vfmt)
     _hline(fig, x0, x1, risk["stop"], "손절", C["stop"],
-           group="trade", term="ATR손절", dash="dash", width=1.8)
+           group="trade", term="ATR손절", dash="dash", width=1.8, vfmt=vfmt)
     _hline(fig, x0, x1, risk["target"], "목표(1:2)", C["target"],
-           group="trade", term="손익비", dash="dash")
+           group="trade", term="손익비", dash="dash", vfmt=vfmt)
 
     # 추세선 (하락=빨강, 상승=초록) — 그룹 'trend', 미래 연장 점선 포함
     _trendline(fig, trendline, "down", C["resist"], avg_delta, project)
@@ -217,7 +219,7 @@ def build_figure(result: dict, frames: dict, tf: str = "D", lookback: int = None
     pnl = sup["pnl"]
     _hline(fig, x0, x1, pnl["avg_cost"],
            f"추정평단 ({pnl['pnl']*100:+.1f}%)", C["avg"],
-           group="supply", term="미실현손익", dash="dashdot", width=1.6)
+           group="supply", term="미실현손익", dash="dashdot", width=1.6, vfmt=vfmt)
 
     # 거래량 (양봉 초록/음봉 빨강)
     vcolors = [C["up"] if c >= o else C["down"]
@@ -240,6 +242,9 @@ def build_figure(result: dict, frames: dict, tf: str = "D", lookback: int = None
         xaxis3=dict(overlaying="x", anchor="y", side="top",
                     range=[0, maxv * 4.5], visible=False))
     fig.update_yaxes(tickformat=f2, row=1, col=1)
+    # 일봉은 주말 빈칸을 제거해 캔들이 겹치지 않고 넓게 보이도록(거래일만 표시)
+    if tf == "D":
+        fig.update_xaxes(rangebreaks=[dict(bounds=["sat", "mon"])])
     # 우측에 미래연장 여백 확보(추세선 점선이 보이도록), 좌측은 표시구간으로 고정
     fig.update_xaxes(range=[x[0], x_future])
     return fig

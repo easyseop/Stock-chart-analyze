@@ -67,11 +67,14 @@ def analyze(frames: dict[str, pd.DataFrame], meta: dict) -> dict:
 
 
 def _verdict_text(label, sr, entry, trendline, vetoed) -> str:
-    # 추세 전환 후보는 최우선으로 알림 (거래량 동반 확인된 돌파만)
-    if trendline["state"] == "하락추세선 상향돌파":
-        return "하락추세선 상향 돌파(거래량 동반) → 추세 전환 후보 (확인 후 분할 진입)"
-    if trendline["state"] == "하락추세선 돌파(거래 미동반)":
-        return "하락추세선 돌파했으나 거래량 미동반 → 가짜 돌파 의심, 관망"
+    # 추세 전환 후보는 최우선으로 알림 (돌파+안착+상승추세선+거래량 동반까지 확인)
+    st = trendline["state"]
+    if st == tl.TRANSITION_CONFIRMED:
+        return "추세 전환 확정(돌파+안착+상승추세선+거래량) → 전환 매수 후보 (분할 진입)"
+    if st == tl.TRANSITION_PENDING:
+        return "돌파 후 횡보 안착 — 상승추세선/거래량 확인 시 전환 매수"
+    if st == tl.BREAKOUT_UNCONFIRMED:
+        return "하락추세선 갓 돌파 — 되밀림 위험, 안착 확인 전 관망"
     if vetoed:
         return "하락추세선 아래 — 추세 전환 전까지 관망/회피"
     if trendline["state"] == "하락추세선 임박":
