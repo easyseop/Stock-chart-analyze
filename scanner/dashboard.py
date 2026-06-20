@@ -64,8 +64,34 @@ def _stat_card(title: str, s, accent: str, note: str = "") -> str:
         + '</div>')
 
 
-def _bt_views(backtest: dict, metas: dict) -> tuple[str, str]:
-    """백테스트 탭 버튼 + 패널(요약 카드 · 자산곡선 · 종목표) HTML."""
+def _exp_table(experiment: dict) -> str:
+    """돌파 확인 필터 실험 비교표 HTML."""
+    if not experiment or not experiment.get("rows"):
+        return ""
+    rows = []
+    for name, s in experiment["rows"]:
+        if s.n == 0:
+            rows.append(f'<tr><td>{html.escape(name)}</td>'
+                        f'<td colspan="5" class="dim">신호 없음</td></tr>')
+            continue
+        ecls = "pos" if s.expectancy > 0 else "neg"
+        hl = ' style="background:#f0fdf4"' if s.expectancy > 0 else ""
+        rows.append(
+            f'<tr{hl}><td>{html.escape(name)}</td>'
+            f'<td>{s.n}</td><td>{s.win_rate*100:.0f}%</td>'
+            f'<td class="{ecls}">{s.expectancy:+.2f}R</td>'
+            f'<td>{_pf(s)}</td><td>{s.max_dd_r:.0f}R</td></tr>')
+    return (
+        '<div class="bt-sec">돌파 확인 필터 실험 — 전환 후보의 기대값을 양(+)으로 '
+        '끌어올릴 수 있나? (신호를 독립 거래로 측정)</div>'
+        '<table class="bttable"><thead><tr>'
+        '<th>전략</th><th>거래</th><th>승률</th><th>기대값</th>'
+        '<th>PF</th><th>최대낙폭</th></tr></thead><tbody>'
+        + "".join(rows) + '</tbody></table>')
+
+
+def _bt_views(backtest: dict, metas: dict, experiment: dict | None = None) -> tuple[str, str]:
+    """백테스트 탭 버튼 + 패널(요약 카드 · 자산곡선 · 종목표 · 필터실험) HTML."""
     import plotly.graph_objects as go
     from scanner import backtest as btmod
 
@@ -141,6 +167,7 @@ def _bt_views(backtest: dict, metas: dict) -> tuple[str, str]:
         f'<div class="btgrid">{cards}</div>'
         f'<div class="chart">{eq_div}</div>'
         f'{table}'
+        f'{_exp_table(experiment)}'
         '<div class="hint">표본이 작아 종목별 편차가 큼 · 슬리피지·수수료·세금 미반영 · '
         '참고용. R 합계×1% ≈ 계좌 수익률(1%리스크 가정).</div>'
         '</section>')
@@ -149,11 +176,12 @@ def _bt_views(backtest: dict, metas: dict) -> tuple[str, str]:
 
 def build(results: list[dict], frames_map: dict[str, dict],
           out_path: str = "dashboard.html", backtest: dict | None = None,
-          metas: dict | None = None) -> str:
+          metas: dict | None = None, experiment: dict | None = None) -> str:
     """결과들 → 단일 대시보드 HTML 저장. 경로 반환.
 
     frames_map: code -> frames(dict) (차트 그리기에 필요한 OHLCV)
     backtest:   scanner.backtest.run() 결과 dict(있으면 백테스트 탭 추가)
+    experiment: scanner.backtest.experiment() 결과 dict(필터 비교표)
     """
     # 버킷별로 정렬(전환 후보 → 관망 → 회피), 버킷 내 점수 내림차순
     ordered = []
@@ -166,7 +194,7 @@ def build(results: list[dict], frames_map: dict[str, dict],
     bt_tab, bt_panel = ("", "")
     first_code = "__bt__" if backtest else (ordered[0][1]["code"] if ordered else None)
     if backtest:
-        bt_tab, bt_panel = _bt_views(backtest, metas or {})
+        bt_tab, bt_panel = _bt_views(backtest, metas or {}, experiment)
 
     tabs, panels = [], []
     for bucket, r in ordered:
@@ -272,6 +300,8 @@ _TEMPLATE = """<!DOCTYPE html>
   .bttable th:first-child, .bttable td:first-child {{ text-align:left; }}
   .bttable th {{ background:#f8fafc; color:var(--mut); font-size:12px; }}
   .bttable .dim {{ color:var(--mut); }}
+  .bt-sec {{ font-size:13px; font-weight:700; color:var(--ink);
+            margin:18px 2px 2px; }}
   .main {{ flex:1 1 auto; min-width:0; }}
   .toolbar {{ display:flex; flex-wrap:wrap; gap:7px; align-items:center;
              background:#fff; border:1px solid #e2e8f0; border-radius:10px;

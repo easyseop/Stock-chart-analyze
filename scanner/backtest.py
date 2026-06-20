@@ -84,24 +84,11 @@ def simulate(code: str, frames: dict, meta: dict,
             continue
         risk = fill - stop
         target = fill + config.RR_TARGET * risk
-        trigger = res["trendline"]["state"] if res["trendline"]["state"] == "하락추세선 상향돌파" else res["verdict_label"]
+        trigger = (res["trendline"]["state"]
+                   if res["trendline"]["state"] == TRANSITION
+                   else res["verdict_label"])
 
-        # 보유 구간 워크포워드
-        exit_i, exit_px, reason = None, None, None
-        for j in range(ei, min(ei + max_hold, n)):
-            lo = float(d["Low"].iloc[j])
-            hi = float(d["High"].iloc[j])
-            if lo <= stop:                      # 손절 우선(보수적)
-                exit_i, exit_px, reason = j, stop, "stop"
-                break
-            if hi >= target:
-                exit_i, exit_px, reason = j, target, "target"
-                break
-        if exit_i is None:                      # 시간 손절(종가)
-            exit_i = min(ei + max_hold, n) - 1
-            exit_px = float(d["Close"].iloc[exit_i])
-            reason = "time"
-
+        exit_i, exit_px, reason = _walk_forward(d, ei, fill, stop, max_hold)
         r = (exit_px - fill) / risk
         trades.append(Trade(
             code=code, entry_date=d.index[ei], entry=fill, stop=stop,
@@ -109,6 +96,132 @@ def simulate(code: str, frames: dict, meta: dict,
             reason=reason, r=r, trigger=trigger))
         i = exit_i + 1                          # 청산 후 재탐색(중복 진입 금지)
     return trades
+
+
+def _walk_forward(d, ei: int, fill: float, stop: float,
+                  max_hold: int) -> tuple[int, float, str]:
+    """진입(ei) 이후 손절/목표/시간 청산까지 진행. (exit_idx, exit_px, reason)."""
+    n = len(d)
+    risk = fill - stop
+    target = fill + config.RR_TARGET * risk
+    for j in range(ei, min(ei + max_hold, n)):
+        if float(d["Low"].iloc[j]) <= stop:     # 손절 우선(보수적)
+            return j, stop, "stop"
+        if float(d["High"].iloc[j]) >= target:
+            return j, target, "target"
+    exit_i = min(ei + max_hold, n) - 1
+    return exit_i, float(d["Close"].iloc[exit_i]), "time"
+
+
+# ─────────────────────────────────────────────────────────────
+# 돌파 확인 필터 실험 — 신호를 한 번 수집해 필터별로 비교
+# ─────────────────────────────────────────────────────────────
+@dataclass
+class Signal:
+    code: str
+    date: "pd.Timestamp"
+    kind: str          # transition | normal
+    r: float
+    reason: str
+    vol_mult: float    # 진입봉 거래대금 / 평균
+    rsi: float
+    dist_pct: float    # 추세선 대비 거리(%) — 돌파폭 근사
+
+
+def collect_signals(code: str, frames: dict, meta: dict,
+                    warmup: int = 520, max_hold: int = 60) -> list[Signal]:
+    """매 봉 분석해 모든 진입 신호를 '독립 거래'로 수집(중복 보유 허용).
+
+    필터 실험용: 같은 신호 풀에 여러 필터를 적용해 공정 비교한다.
+    (메인 simulate의 '한 번에 한 포지션' 규칙과 달리 신호 품질 자체를 본다.)
+    """
+    d = frames["D"]
+    n = len(d)
+    sigs: list[Signal] = []
+    for i in range(warmup, n - 1):
+        sub = d.iloc[:i + 1]
+        try:
+            res = analyze(data.frames_from_daily(sub), meta)
+        except Exception:
+            continue
+        if not is_entry(res):
+            continue
+        ei = i + 1
+        fill = float(d["Open"].iloc[ei])
+        stop = float(res["risk"]["stop"])
+        if fill <= stop:
+            continue
+        exit_i, exit_px, reason = _walk_forward(d, ei, fill, stop, max_hold)
+        r = (exit_px - fill) / (fill - stop)
+        kind = ("transition" if res["trendline"]["state"] == TRANSITION
+                else "normal")
+        dist = res["trendline"].get("dist_pct")
+        sigs.append(Signal(
+            code=code, date=d.index[ei], kind=kind, r=r, reason=reason,
+            vol_mult=float(res["volume"].get("mult", 0.0)),
+            rsi=float(res["rsi"].get("rsi", 50.0)),
+            dist_pct=float(dist) if dist is not None else 0.0))
+    return sigs
+
+
+# 실험할 필터 전략 (이름, 신호 판정 함수). '전환후보' 개선이 목표.
+STRATEGIES = [
+    ("전환후보 — 필터 없음",
+     lambda s: s.kind == "transition"),
+    ("전환후보 + 거래량≥1.5배",
+     lambda s: s.kind == "transition" and s.vol_mult >= 1.5),
+    ("전환후보 + RSI<70 (과열 회피)",
+     lambda s: s.kind == "transition" and s.rsi < 70),
+    ("전환후보 + RSI 45~65 (눌림)",
+     lambda s: s.kind == "transition" and 45 <= s.rsi <= 65),
+    ("전환후보 + 돌파폭≥1%",
+     lambda s: s.kind == "transition" and s.dist_pct >= 1.0),
+    ("전환후보 콤보 (거래량≥1.3 & RSI<70)",
+     lambda s: s.kind == "transition" and s.vol_mult >= 1.3 and s.rsi < 70),
+    ("(참고) 일반매수 — 필터 없음",
+     lambda s: s.kind == "normal"),
+    ("(참고) 전체 — 필터 없음",
+     lambda s: True),
+]
+
+
+def summarize_signals(sigs: list[Signal]) -> Stats:
+    reasons = {}
+    for s in sigs:
+        reasons[s.reason] = reasons.get(s.reason, 0) + 1
+    return _summarize_rs([s.r for s in sigs], reasons)
+
+
+def experiment(frames_map: dict[str, dict], metas: dict,
+               warmup: int = 520, max_hold: int = 60) -> dict:
+    """필터별 비교 실험. 결과 dict 반환 + 표 출력.
+
+    주의: 신호를 '독립 거래'로 보므로 같은 종목에서 동시 보유가 생길 수 있다
+    (필터 효과 비교가 목적 — 포지션 관리가 아니라 신호 품질을 측정).
+    """
+    sigs: list[Signal] = []
+    for code, frames in frames_map.items():
+        sigs += collect_signals(code, frames, metas[code], warmup, max_hold)
+
+    rows = [(name, summarize_signals([s for s in sigs if pred(s)]))
+            for name, pred in STRATEGIES]
+
+    print("=" * 78)
+    print("◆ 돌파 확인 필터 실험 — '전환 후보'의 기대값을 양(+)으로 끌어올릴 수 있나?")
+    print("  (신호를 독립 거래로 측정 · R=리스크단위 · 슬리피지/수수료 미반영)")
+    print("=" * 78)
+    print(f"  {'전략':<34}{'거래':>5}{'승률':>7}{'기대값':>9}{'PF':>7}{'최대DD':>8}")
+    print("-" * 78)
+    for name, s in rows:
+        if s.n == 0:
+            print(f"  {name:<34}{'0':>5}{'-':>7}{'-':>9}{'-':>7}{'-':>8}")
+            continue
+        pf = "∞" if s.profit_factor == float("inf") else f"{s.profit_factor:.2f}"
+        mark = " ←양(+)" if s.expectancy > 0 else ""
+        print(f"  {name:<34}{s.n:>5}{s.win_rate*100:>6.1f}%"
+              f"{s.expectancy:>+8.2f}R{pf:>7}{s.max_dd_r:>7.0f}R{mark}")
+    print("=" * 78)
+    return {"signals": sigs, "rows": rows}
 
 
 @dataclass
@@ -126,11 +239,11 @@ class Stats:
     by_reason: dict = field(default_factory=dict)
 
 
-def summarize(trades: list[Trade]) -> Stats:
-    s = Stats(n=len(trades))
-    if not trades:
+def _summarize_rs(rs: list[float], reasons: dict | None = None) -> Stats:
+    """R 손익 리스트 → 통계."""
+    s = Stats(n=len(rs))
+    if not rs:
         return s
-    rs = [t.r for t in trades]
     wins = [r for r in rs if r > 0]
     losses = [r for r in rs if r <= 0]
     s.wins, s.losses = len(wins), len(losses)
@@ -143,19 +256,21 @@ def summarize(trades: list[Trade]) -> Stats:
     pain = -sum(losses)
     s.profit_factor = (gain / pain) if pain > 0 else float("inf")
 
-    # R 기준 자산곡선의 최대낙폭
-    eq, peak, dd = 0.0, 0.0, 0.0
+    eq, peak, dd = 0.0, 0.0, 0.0   # R 기준 자산곡선의 최대낙폭
     for r in rs:
         eq += r
         peak = max(peak, eq)
         dd = min(dd, eq - peak)
     s.max_dd_r = dd
+    s.by_reason = reasons or {}
+    return s
 
+
+def summarize(trades: list[Trade]) -> Stats:
     reasons = {}
     for t in trades:
         reasons[t.reason] = reasons.get(t.reason, 0) + 1
-    s.by_reason = reasons
-    return s
+    return _summarize_rs([t.r for t in trades], reasons)
 
 
 def summarize_by_trigger(trades: list[Trade]) -> dict:
