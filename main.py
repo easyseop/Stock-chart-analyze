@@ -33,6 +33,7 @@ def run(demo: bool = False, csv_path: str | None = None,
     charts = []
     frames_map = {}
     metas = {}
+    bench_map = {}
 
     if demo:
         scenarios = [("uptrend", "데모-상승추세"), ("box", "데모-횡보박스"),
@@ -46,9 +47,11 @@ def run(demo: bool = False, csv_path: str | None = None,
     for meta, scenario in jobs:
         try:
             frames = _frames_demo(scenario) if demo else _frames_real(meta["code"])
-            res = analyze(frames, meta)
+            bench = None if demo else data.fetch_benchmark(meta.get("ccy", "USD"))
+            res = analyze(frames, meta, bench=bench)
             results.append(res)
             frames_map[res["code"]] = frames
+            bench_map[res["code"]] = bench
             metas[res["code"]] = meta
             print(card.render(res))
             print()
@@ -78,8 +81,8 @@ def run(demo: bool = False, csv_path: str | None = None,
     if backtest:
         if frames_map:
             from scanner import backtest as bt
-            bt_result = bt.run(frames_map, metas)
-            exp_result = bt.experiment(frames_map, metas)
+            bt_result = bt.run(frames_map, metas, bench_map=bench_map)
+            exp_result = bt.experiment(frames_map, metas, bench_map=bench_map)
         else:
             print("데이터가 없어 백테스트를 실행하지 않음", file=sys.stderr)
 

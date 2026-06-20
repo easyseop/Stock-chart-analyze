@@ -88,3 +88,24 @@ def frames_from_daily(d: pd.DataFrame) -> dict[str, pd.DataFrame]:
 def build_frames(code: str) -> dict[str, pd.DataFrame]:
     """일/주/월 3개 시간프레임 데이터셋 생성(실데이터 수집)."""
     return frames_from_daily(fetch_daily(code))
+
+
+_BENCH_CACHE: dict[str, pd.DataFrame] = {}
+
+
+def fetch_benchmark(ccy: str, start: str = config.FETCH_START):
+    """통화별 비교 지수(일봉) 수집 + 캐시. 실패 시 None(상대강도/시장방향 생략)."""
+    sym = config.BENCHMARKS.get(ccy)
+    if not sym:
+        return None
+    if sym in _BENCH_CACHE:
+        return _BENCH_CACHE[sym]
+    import FinanceDataReader as fdr
+    try:
+        df = fdr.DataReader(f"YAHOO:{sym}", start)
+        df = df[[c for c in OHLCV if c in df.columns]].copy()
+        df = clean(df)
+    except Exception:
+        df = None
+    _BENCH_CACHE[sym] = df
+    return df

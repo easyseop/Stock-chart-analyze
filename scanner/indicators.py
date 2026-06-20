@@ -173,6 +173,81 @@ def momentum_rsi(df: pd.DataFrame) -> dict:
 
 
 # ════════════════════════════════════════════════════════════
+# 1-3b. 상대강도(RS) · 신고가 · 시장방향 — 모멘텀/추세추종 계열
+# ════════════════════════════════════════════════════════════
+def relative_strength(df: pd.DataFrame, bench, lookback: int = config.RS_LOOKBACK) -> dict:
+    """지수 대비 상대강도. 같은 기간 종목수익률 − 지수수익률(아웃퍼폼)로 ±2 점수.
+
+    RS 라인(종목/지수 비율)도 반환해 차트에 쓴다. bench 없으면 0점(데이터 없음).
+    """
+    if bench is None or "Close" not in bench:
+        return {"score": 0, "reason": "상대강도: 지수 데이터 없음", "terms": ["상대강도"],
+                "rs_line": None, "rel": None}
+    # 공통 날짜로 정렬
+    b = bench["Close"].reindex(df.index).ffill()
+    rs_line = (df["Close"] / b).dropna()
+    if len(rs_line) <= lookback:
+        return {"score": 0, "reason": "상대강도: 데이터 부족", "terms": ["상대강도"],
+                "rs_line": rs_line, "rel": None}
+    rel = float(rs_line.iloc[-1] / rs_line.iloc[-lookback] - 1.0)   # 기간 상대수익차
+    if rel >= config.RS_STRONG:
+        score, note = 2, "지수 대비 강한 아웃퍼폼"
+    elif rel >= config.RS_WEAK:
+        score, note = 1, "지수 대비 우위"
+    elif rel <= -config.RS_STRONG:
+        score, note = -2, "지수 대비 심한 언더퍼폼"
+    elif rel <= -config.RS_WEAK:
+        score, note = -1, "지수 대비 열위"
+    else:
+        score, note = 0, "지수와 비슷"
+    return {"score": score, "rel": rel, "rs_line": rs_line,
+            "reason": f"상대강도 {rel*100:+.1f}%/{lookback}일 ({note})",
+            "terms": ["상대강도"]}
+
+
+def new_high(df: pd.DataFrame, lookback: int = config.NEWHIGH_LOOKBACK) -> dict:
+    """52주(기본) 신고가 근접도. 고가 갱신권일수록 강한 모멘텀(+2)."""
+    seg = df.iloc[-lookback:]
+    hi = float(seg["High"].max())
+    price = float(df["Close"].iloc[-1])
+    pct = (price - hi) / hi if hi > 0 else 0.0     # 보통 ≤0 (고가 대비)
+    if price >= hi * (1 - config.NEWHIGH_NEAR):
+        score, note = 2, "52주 신고가권(강한 모멘텀)"
+    elif pct >= -config.NEWHIGH_MID:
+        score, note = 1, "고가권"
+    elif pct <= -0.50:
+        score, note = -2, "고가 대비 −50%↓ 심한 침체"
+    elif pct <= -config.NEWHIGH_FAR:
+        score, note = -1, "고가 대비 −25%↓ 침체"
+    else:
+        score, note = 0, "중간권"
+    return {"score": score, "high52": hi, "pct_from_high": pct * 100,
+            "reason": f"52주고가 대비 {pct*100:+.1f}% ({note})",
+            "terms": ["신고가"]}
+
+
+def market_trend(bench, ma_period: int = config.MARKET_MA) -> dict:
+    """시장(지수) 방향. 지수>MA & MA상승 → +2 등. bench 없으면 0점."""
+    if bench is None or "Close" not in bench or len(bench) < ma_period + 2:
+        return {"score": 0, "reason": "시장방향: 지수 데이터 없음", "terms": ["시장방향"],
+                "direction": "?"}
+    close = bench["Close"]
+    ma = close.rolling(ma_period).mean()
+    above = close.iloc[-1] > ma.iloc[-1]
+    rising = ma.iloc[-1] > ma.iloc[-2]
+    if above and rising:
+        score, note, d = 2, "상승장(지수>MA·MA상승)", "상승"
+    elif above:
+        score, note, d = 1, "지수 MA 위", "상승"
+    elif (not above) and (not rising):
+        score, note, d = -2, "하락장(지수<MA·MA하락)", "하락"
+    else:
+        score, note, d = -1, "지수 MA 아래", "하락"
+    return {"score": score, "direction": d,
+            "reason": f"시장 {note}", "terms": ["시장방향"]}
+
+
+# ════════════════════════════════════════════════════════════
 # 1-4. 지지/저항 + 매물대(POC) + 박스권/방어선
 # ════════════════════════════════════════════════════════════
 def poc(df: pd.DataFrame, bins: int = config.POC_BINS,

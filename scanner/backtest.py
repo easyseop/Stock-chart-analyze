@@ -58,7 +58,7 @@ def is_entry(res: dict) -> bool:
             or label.startswith("매수") or label.startswith("적극 매수"))
 
 
-def simulate(code: str, frames: dict, meta: dict,
+def simulate(code: str, frames: dict, meta: dict, bench=None,
              warmup: int = 520, max_hold: int = 60) -> list[Trade]:
     """한 종목 시점별 워크포워드 시뮬레이션."""
     d = frames["D"]
@@ -67,8 +67,9 @@ def simulate(code: str, frames: dict, meta: dict,
     i = warmup
     while i < n - 1:
         sub = d.iloc[:i + 1]
+        bsub = bench.loc[:sub.index[-1]] if bench is not None else None
         try:
-            res = analyze(data.frames_from_daily(sub), meta)
+            res = analyze(data.frames_from_daily(sub), meta, bench=bsub)
         except Exception:
             i += 1
             continue
@@ -128,7 +129,7 @@ class Signal:
     dist_pct: float    # 추세선 대비 거리(%) — 돌파폭 근사
 
 
-def collect_signals(code: str, frames: dict, meta: dict,
+def collect_signals(code: str, frames: dict, meta: dict, bench=None,
                     warmup: int = 520, max_hold: int = 60) -> list[Signal]:
     """매 봉 분석해 모든 진입 신호를 '독립 거래'로 수집(중복 보유 허용).
 
@@ -140,8 +141,9 @@ def collect_signals(code: str, frames: dict, meta: dict,
     sigs: list[Signal] = []
     for i in range(warmup, n - 1):
         sub = d.iloc[:i + 1]
+        bsub = bench.loc[:sub.index[-1]] if bench is not None else None
         try:
-            res = analyze(data.frames_from_daily(sub), meta)
+            res = analyze(data.frames_from_daily(sub), meta, bench=bsub)
         except Exception:
             continue
         if not is_entry(res):
@@ -192,16 +194,19 @@ def summarize_signals(sigs: list[Signal]) -> Stats:
     return _summarize_rs([s.r for s in sigs], reasons)
 
 
-def experiment(frames_map: dict[str, dict], metas: dict,
+def experiment(frames_map: dict[str, dict], metas: dict, bench_map: dict | None = None,
                warmup: int = 520, max_hold: int = 60) -> dict:
     """필터별 비교 실험. 결과 dict 반환 + 표 출력.
 
     주의: 신호를 '독립 거래'로 보므로 같은 종목에서 동시 보유가 생길 수 있다
     (필터 효과 비교가 목적 — 포지션 관리가 아니라 신호 품질을 측정).
     """
+    bench_map = bench_map or {}
     sigs: list[Signal] = []
     for code, frames in frames_map.items():
-        sigs += collect_signals(code, frames, metas[code], warmup, max_hold)
+        sigs += collect_signals(code, frames, metas[code],
+                                bench=bench_map.get(code),
+                                warmup=warmup, max_hold=max_hold)
 
     rows = [(name, summarize_signals([s for s in sigs if pred(s)]))
             for name, pred in STRATEGIES]
@@ -310,12 +315,15 @@ def _fmt_stats(name: str, s: Stats) -> str:
 
 
 def run(frames_map: dict[str, dict], metas: dict[str, dict],
+        bench_map: dict | None = None,
         warmup: int = 520, max_hold: int = 60) -> dict:
     """종목별 + 전체 통합 백테스트. 결과 dict 반환 + 보고서 출력."""
+    bench_map = bench_map or {}
     all_trades: list[Trade] = []
     per_code = {}
     for code, frames in frames_map.items():
-        ts = simulate(code, frames, metas[code], warmup=warmup, max_hold=max_hold)
+        ts = simulate(code, frames, metas[code], bench=bench_map.get(code),
+                      warmup=warmup, max_hold=max_hold)
         per_code[code] = ts
         all_trades += ts
 

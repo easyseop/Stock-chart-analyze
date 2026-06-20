@@ -226,10 +226,14 @@ def build(results: list[dict], frames_map: dict[str, dict],
             f'<span class="g">{gauge}</span> {html.escape(r["name"])} '
             f'<span class="sub">{html.escape(code)} · {r["norm"]:+.0f}</span></button>')
         vtext = html.escape(r.get("verdict", ""))
+        mkt = html.escape(r.get("market", {}).get("reason", ""))
+        rsr = html.escape(r.get("rs", {}).get("reason", ""))
         summary = (
             f'<div class="summary">{html.escape(r["gauge"])} '
             f'<b>{html.escape(r["name"])} {html.escape(r["code"])}</b> · '
-            f'정규화 {r["norm"]:+.0f}<span class="vtext">{vtext}</span></div>')
+            f'정규화 {r["norm"]:+.0f}'
+            f'<span class="badge">{mkt}</span><span class="badge">{rsr}</span>'
+            f'<span class="vtext">{vtext}</span></div>')
         panels.append(
             f'<section class="panel{active}" id="panel-{code}">'
             f'{summary}'
@@ -354,6 +358,9 @@ _TEMPLATE = """<!DOCTYPE html>
              padding:11px 14px; font-size:15px; }}
   .summary .vtext {{ display:block; font-size:12px; color:var(--mut);
                     margin-top:3px; font-weight:400; }}
+  .summary .badge {{ display:inline-block; font-size:11px; color:#334155;
+                    background:#f1f5f9; border-radius:6px; padding:2px 8px;
+                    margin-left:6px; font-weight:500; }}
   .cardbox {{ margin-top:12px; }}
   .cardbox > summary {{ cursor:pointer; font-size:13px; font-weight:600;
              color:#334155; padding:8px 12px; background:#fff;

@@ -15,7 +15,7 @@ from . import trendlines as tl
 from . import supply as sp
 
 
-def analyze(frames: dict[str, pd.DataFrame], meta: dict) -> dict:
+def analyze(frames: dict[str, pd.DataFrame], meta: dict, bench=None) -> dict:
     d = frames["D"]
 
     regime = ind.regime(d)
@@ -23,6 +23,9 @@ def analyze(frames: dict[str, pd.DataFrame], meta: dict) -> dict:
     sr = ind.support_resistance(d, trend["ma"])
     volume = ind.volume_surge(d, sr)
     rsi = ind.momentum_rsi(d)
+    rs = ind.relative_strength(d, bench)      # 지수 대비 상대강도(모멘텀)
+    newhigh = ind.new_high(d)                 # 52주 신고가 근접도
+    market = ind.market_trend(bench)          # 시장(지수) 방향
     trendline = tl.detect(d, frames)
     # 거래량 동반 확인: 거래량 없는 하락추세선 돌파는 '가짜 돌파'로 격하(백테스트 검증)
     trendline = tl.apply_volume_filter(trendline, volume.get("mult", 0.0))
@@ -30,8 +33,9 @@ def analyze(frames: dict[str, pd.DataFrame], meta: dict) -> dict:
     supply = sp.analyze_supply(d)          # 기간분리 매물대 + 미실현손익 추정
 
     module_scores = {
-        "trend": trend["score"], "rsi": rsi["score"], "sr": sr["score"],
-        "volume": volume["score"], "trendline": trendline["score"],
+        "trend": trend["score"], "rs": rs["score"], "newhigh": newhigh["score"],
+        "market": market["score"], "volume": volume["score"], "sr": sr["score"],
+        "rsi": rsi["score"], "trendline": trendline["score"],
     }
     norm = scoring.normalize(module_scores, regime["flag"])
     label, gauge = scoring.verdict(norm["score"])
@@ -51,13 +55,15 @@ def analyze(frames: dict[str, pd.DataFrame], meta: dict) -> dict:
     verdict_txt = _verdict_text(label, sr, entry, trendline, vetoed)
 
     terms = []
-    for blk in (regime, trend, rsi, sr, volume, trendline, supply, risk):
+    for blk in (regime, trend, rs, newhigh, market, rsi, sr, volume,
+                trendline, supply, risk):
         terms += blk.get("terms", [])
     terms.append("정규화점수")
 
     return {
         "code": meta["code"], "name": meta["name"], "ccy": meta["ccy"],
         "regime": regime, "trend": trend, "rsi": rsi, "sr": sr,
+        "rs": rs, "newhigh": newhigh, "market": market,
         "volume": volume, "trendline": trendline, "levels": levels,
         "supply": supply, "risk": risk,
         "module_scores": module_scores, "weights": norm["weights"],

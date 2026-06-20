@@ -190,6 +190,10 @@ def build_figure(result: dict, frames: dict, tf: str = "D", lookback: int = None
            group="level", term="방어선", width=2.0, vfmt=vfmt)
     _hline(fig, x0, x1, va["poc"], "POC(평단가 밀집)", C["poc"],
            group="level", term="POC", dash="dot", vfmt=vfmt)
+    nh = result.get("newhigh", {})
+    if nh.get("high52") and vis(nh["high52"]):
+        _hline(fig, x0, x1, nh["high52"], "52주 고가", C["target"],
+               group="level", term="신고가", dash="dot", vfmt=vfmt)
 
     # 매매선 (진입·손절·목표) — 그룹 'trade'
     _hline(fig, x0, x1, result["entry"], "진입(기준가)", C["entry"],

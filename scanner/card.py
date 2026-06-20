@@ -38,6 +38,9 @@ def render(result: dict) -> str:
     out.append(line)
     out.append(f"국면      : {r['regime']['reason']}  방향 {r['regime']['direction']}")
     out.append(f"추세      : {r['trend']['reason']}  [{r['trend']['score']:+d}]")
+    out.append(f"시장방향  : {r['market']['reason']}  [{r['market']['score']:+d}]")
+    out.append(f"상대강도  : {r['rs']['reason']}  [{r['rs']['score']:+d}]")
+    out.append(f"신고가    : {r['newhigh']['reason']}  [{r['newhigh']['score']:+d}]")
     out.append(f"모멘텀    : {r['rsi']['reason']}  [{r['rsi']['score']:+d}]")
     out.append(f"지지/저항 : {sr['reason']}  [{sr['score']:+d}]")
     out.append(f"거래대금  : {r['volume']['reason']}  [{r['volume']['score']:+d}]")
@@ -97,7 +100,8 @@ def render(result: dict) -> str:
 
 
 CSV_FIELDS = ["code", "name", "norm", "verdict", "action", "gauge", "regime_flag",
-              "trend", "rsi", "sr", "volume", "trendline", "trend_state",
+              "trend", "rs", "newhigh", "market", "rsi", "sr", "volume",
+              "trendline", "trend_state",
               "trend_line", "trend_dist_pct", "entry", "stop", "target",
               "box_low", "box_high", "defense", "defense_strength",
               "avg_cost", "est_pnl", "overhead", "short_poc", "long_poc"]
@@ -109,7 +113,9 @@ def to_row(result: dict) -> dict:
         "code": r["code"], "name": r["name"], "norm": r["norm"],
         "verdict": r["verdict_label"], "action": r["verdict"], "gauge": r["gauge"],
         "regime_flag": r["regime"]["flag"],
-        "trend": r["trend"]["score"], "rsi": r["rsi"]["score"],
+        "trend": r["trend"]["score"], "rs": r["rs"]["score"],
+        "newhigh": r["newhigh"]["score"], "market": r["market"]["score"],
+        "rsi": r["rsi"]["score"],
         "sr": r["sr"]["score"], "volume": r["volume"]["score"],
         "trendline": r["trendline"]["score"], "trend_state": r["trendline"]["state"],
         "trend_line": round(r["trendline"]["level"], 2) if r["trendline"]["level"] else "",
