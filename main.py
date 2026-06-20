@@ -27,10 +27,12 @@ def _frames_demo(scenario):
 
 def run(demo: bool = False, csv_path: str | None = None,
         chart: bool = False, png: bool = False, chart_dir: str = "charts",
-        dashboard: bool = False, dashboard_path: str = "dashboard.html"):
+        dashboard: bool = False, dashboard_path: str = "dashboard.html",
+        backtest: bool = False):
     results = []
     charts = []
     frames_map = {}
+    metas = {}
 
     if demo:
         scenarios = [("uptrend", "데모-상승추세"), ("box", "데모-횡보박스"),
@@ -47,6 +49,7 @@ def run(demo: bool = False, csv_path: str | None = None,
             res = analyze(frames, meta)
             results.append(res)
             frames_map[res["code"]] = frames
+            metas[res["code"]] = meta
             print(card.render(res))
             print()
             if chart:
@@ -79,6 +82,13 @@ def run(demo: bool = False, csv_path: str | None = None,
         else:
             print("분석 결과가 없어 대시보드를 생성하지 않음", file=sys.stderr)
 
+    if backtest:
+        if frames_map:
+            from scanner import backtest as bt
+            bt.run(frames_map, metas)
+        else:
+            print("데이터가 없어 백테스트를 실행하지 않음", file=sys.stderr)
+
     return results
 
 
@@ -96,10 +106,13 @@ def main():
                     help="5종목 단일 페이지 대시보드(HTML) 생성 — 토글·전환후보 분류")
     ap.add_argument("--dashboard-path", default="dashboard.html",
                     help="대시보드 저장 경로")
+    ap.add_argument("--backtest", action="store_true",
+                    help="차트 전용 리스크 관리 백테스트(R 단위 기대값·최대낙폭)")
     args = ap.parse_args()
     run(demo=args.demo, csv_path=args.csv, chart=args.chart,
         png=args.png, chart_dir=args.chart_dir,
-        dashboard=args.dashboard, dashboard_path=args.dashboard_path)
+        dashboard=args.dashboard, dashboard_path=args.dashboard_path,
+        backtest=args.backtest)
 
 
 if __name__ == "__main__":
