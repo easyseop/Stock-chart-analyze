@@ -1,0 +1,5 @@
+# 심리 신호 스캐너 v1 의존성
+# 지표(ADX/RSI/ATR 등)는 외부 라이브러리 없이 pandas로 직접 계산한다.
+finance-datareader>=0.9.50
+pandas>=2.0
+numpy>=1.24
