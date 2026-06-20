@@ -42,7 +42,10 @@ def render(result: dict) -> str:
     out.append(f"지지/저항 : {sr['reason']}  [{sr['score']:+d}]")
     out.append(f"거래대금  : {r['volume']['reason']}  [{r['volume']['score']:+d}]")
     tl = r["trendline"]
-    out.append(f"추세선    : {tl['note']}  [{tl['score']:+d}]")
+    tl_txt = tl["note"]
+    if tl["level"] is not None:
+        tl_txt += f"  →선 {f(tl['level'])} ({tl['dist_pct']:+.1f}%)"
+    out.append(f"추세선    : {tl_txt}  [{tl['score']:+d}]")
     out.append(line)
     # 주요 지지/저항 (강도순) + 피보
     lv = r["levels"]
@@ -95,7 +98,7 @@ def render(result: dict) -> str:
 
 CSV_FIELDS = ["code", "name", "norm", "verdict", "action", "gauge", "regime_flag",
               "trend", "rsi", "sr", "volume", "trendline", "trend_state",
-              "entry", "stop", "target",
+              "trend_line", "trend_dist_pct", "entry", "stop", "target",
               "box_low", "box_high", "defense", "defense_strength",
               "avg_cost", "est_pnl", "overhead", "short_poc", "long_poc"]
 
@@ -109,6 +112,8 @@ def to_row(result: dict) -> dict:
         "trend": r["trend"]["score"], "rsi": r["rsi"]["score"],
         "sr": r["sr"]["score"], "volume": r["volume"]["score"],
         "trendline": r["trendline"]["score"], "trend_state": r["trendline"]["state"],
+        "trend_line": round(r["trendline"]["level"], 2) if r["trendline"]["level"] else "",
+        "trend_dist_pct": round(r["trendline"]["dist_pct"], 1) if r["trendline"]["dist_pct"] is not None else "",
         "entry": round(r["entry"], 2), "stop": round(r["risk"]["stop"], 2),
         "target": round(r["risk"]["target"], 2),
         "box_low": round(r["sr"]["box_low"], 2),

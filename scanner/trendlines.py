@@ -113,12 +113,23 @@ def detect(df: pd.DataFrame, frames: dict | None = None,
             state, score, note = ("상승추세 유지", 1,
                                   "상승추세선 위 (저점 높아짐) → 추세 양호")
 
+    # 현재 활성 추세선의 가격값(선이 '지금' 어디 있는지) + 현재가와의 거리
+    if state.startswith("하락") and down:
+        level, slope_sign = down["now"], "하락(↘)"
+    elif state.startswith("상승") and up:
+        level, slope_sign = up["now"], "상승(↗)"
+    else:
+        level, slope_sign = None, "-"
+    dist_pct = (price - level) / level * 100 if level else None
+
     return {"state": state, "score": score, "note": note,
             "confirmed_down": confirmed_down, "down": down, "up": up,
+            "level": level, "slope_sign": slope_sign, "dist_pct": dist_pct,
             "reason": f"{state}", "terms": ["추세선"]}
 
 
 def _empty():
     return {"state": "추세선 불명확", "score": 0, "note": "데이터 부족",
             "confirmed_down": False, "down": None, "up": None,
+            "level": None, "slope_sign": "-", "dist_pct": None,
             "reason": "추세선 불명확", "terms": ["추세선"]}
