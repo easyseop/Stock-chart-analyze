@@ -36,12 +36,32 @@ def save(rows: list[dict], path: str = DEFAULT_PATH) -> None:
             w.writerow({k: r.get(k, "") for k in FIELDS})
 
 
+def _krx_rows(market: str, n_take: int, seen: set) -> list[dict]:
+    """KOSPI/KOSDAQ 상장목록을 시총 내림차순으로(0=전체) rows 생성."""
+    import FinanceDataReader as fdr
+    kdf = fdr.StockListing(market)
+    cap = next((c for c in ("Marcap", "MarketCap", "Amount") if c in kdf.columns), None)
+    if cap:
+        kdf = kdf.sort_values(cap, ascending=False)   # 큰 종목 먼저(백필 우선순위)
+    codecol = "Code" if "Code" in kdf.columns else kdf.columns[0]
+    out, taken = [], 0
+    for _, r in kdf.iterrows():
+        code = str(r.get(codecol, "")).strip().zfill(6)
+        if len(code) == 6 and code[:5].isdigit() and code not in seen:
+            seen.add(code)
+            out.append({"code": code, "name": str(r.get("Name", code)), "ccy": "KRW"})
+            taken += 1
+            if n_take and taken >= n_take:
+                break
+    return out
+
+
 def build(path: str = DEFAULT_PATH, sp500: bool = True,
-          kospi_top: int = 200) -> list[dict]:
-    """S&P500 + KOSPI 시총 상위 kospi_top 종목으로 유니버스 구성·저장."""
+          kospi_top: int = 0, kosdaq_top: int = 0) -> list[dict]:
+    """유니버스 구성·저장. S&P500 + KOSPI + KOSDAQ(각 시총순, 0=전체)."""
     import FinanceDataReader as fdr
     rows: list[dict] = []
-    seen = set()
+    seen: set = set()
 
     if sp500:
         df = fdr.StockListing("S&P500")
@@ -52,23 +72,7 @@ def build(path: str = DEFAULT_PATH, sp500: bool = True,
                 rows.append({"code": code, "name": str(r.get("Name", code)),
                              "ccy": "USD"})
 
-    if kospi_top:
-        kdf = fdr.StockListing("KOSPI")
-        # 시가총액 컬럼이 있으면 상위로 정렬
-        capcol = next((c for c in ("Marcap", "MarketCap", "Amount") if c in kdf.columns), None)
-        if capcol:
-            kdf = kdf.sort_values(capcol, ascending=False)
-        codecol = "Code" if "Code" in kdf.columns else kdf.columns[0]
-        taken = 0
-        for _, r in kdf.iterrows():
-            code = str(r.get(codecol, "")).strip().zfill(6)
-            if len(code) == 6 and code[:5].isdigit() and code not in seen:
-                seen.add(code)
-                rows.append({"code": code, "name": str(r.get("Name", code)),
-                             "ccy": "KRW"})
-                taken += 1
-                if taken >= kospi_top:
-                    break
-
+    rows += _krx_rows("KOSPI", kospi_top, seen)
+    rows += _krx_rows("KOSDAQ", kosdaq_top, seen)
     save(rows, path)
     return rows

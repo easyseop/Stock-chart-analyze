@@ -1,0 +1,32 @@
+name: lookup
+
+# 수시 즉석 조회: 티커/코드를 입력하면 그 종목을 바로 받아 분석.
+# 결과 = 실행 로그(신호 카드) + 상세 차트 HTML(아티팩트로 다운로드). Pages는 안 건드림.
+on:
+  workflow_dispatch:
+    inputs:
+      ticker:
+        description: "티커 또는 한국 6자리 코드 (예: AAPL, NVDA, 005930)"
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  lookup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -r requirements.txt
+      - name: 즉석 조회
+        run: python main.py --ticker "${{ inputs.ticker }}"
+      - name: 상세 차트 업로드(다운로드용)
+        uses: actions/upload-artifact@v4
+        with:
+          name: lookup-${{ inputs.ticker }}
+          path: lookup_*.html
+          if-no-files-found: warn

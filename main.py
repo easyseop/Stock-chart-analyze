@@ -153,6 +153,11 @@ def main():
     ap.add_argument("--build-universe", type=int, metavar="KOSPI_TOP", nargs="?",
                     const=200, default=None,
                     help="S&P500 + KOSPI 시총상위 N으로 유니버스 자동 구성(기본 200)")
+    ap.add_argument("--build-universe-max", action="store_true",
+                    help="최대 유니버스: S&P500 + KOSPI 전체 + KOSDAQ 전체(~3,300종목)")
+    ap.add_argument("--ticker", metavar="SYM",
+                    help="티커/코드 즉석 조회(수시) — 바로 받아 카드+상세HTML 생성")
+    ap.add_argument("--ccy", default=None, help="--ticker 통화(USD/KRW). 미지정 시 자동")
     ap.add_argument("--universe-scan", type=int, metavar="N", default=0,
                     help="분석/백테스트 대상을 워치리스트 대신 유니버스 앞 N종목으로(대량 검증)")
     ap.add_argument("--screener", action="store_true",
@@ -160,9 +165,16 @@ def main():
     ap.add_argument("--screener-dir", default="public", help="스크리너 출력 폴더")
     args = ap.parse_args()
 
-    if args.build_universe is not None:
+    if args.ticker:
+        _lookup(args.ticker, args.ccy)
+        return
+
+    if args.build_universe_max or args.build_universe is not None:
         from scanner import universe
-        rows = universe.build(args.universe, kospi_top=args.build_universe)
+        if args.build_universe_max:
+            rows = universe.build(args.universe, kospi_top=0, kosdaq_top=0)
+        else:
+            rows = universe.build(args.universe, kospi_top=args.build_universe)
         us = sum(1 for r in rows if r["ccy"] == "USD")
         kr = sum(1 for r in rows if r["ccy"] == "KRW")
         print(f"유니버스 구성: {len(rows)}종목 (미국 {us} · 한국 {kr}) → {args.universe}")
@@ -178,6 +190,28 @@ def main():
         backtest=args.backtest, use_cache=args.cache,
         universe_scan=args.universe_scan, universe_path=args.universe,
         screener=args.screener, screener_dir=args.screener_dir)
+
+
+def _lookup(ticker: str, ccy: str | None):
+    """티커/코드 즉석 조회: 실데이터 받아 카드 출력 + 상세 차트 HTML 1장 생성."""
+    from scanner import data, card, screener
+    from scanner.analyze import analyze
+    code = ticker.strip().upper()
+    if not ccy:
+        ccy = "KRW" if (len(code) == 6 and code[:5].isdigit()) else "USD"
+    meta = {"code": code, "name": code, "ccy": ccy}
+    try:
+        frames = data.build_frames(code)
+    except Exception as e:
+        print(f"[{code}] 데이터 수집 실패: {type(e).__name__}: {e}", file=sys.stderr)
+        return
+    bench = data.fetch_benchmark(ccy)
+    res = analyze(frames, meta, bench=bench)
+    print(card.render(res))
+    out = f"lookup_{code}.html"
+    with open(out, "w", encoding="utf-8") as fp:
+        fp.write(screener._detail(res, frames))
+    print(f"\n상세 차트(일/주/월·토글): {out}")
 
 
 def _manage_cache(backfill_n: int, do_update: bool, universe_path: str):
