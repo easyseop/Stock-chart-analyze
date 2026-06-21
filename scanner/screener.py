@@ -293,6 +293,11 @@ _LOOKUP_TMPL = """<!DOCTYPE html><html lang="ko"><head>
   .stat{font-size:14px;margin-top:12px;padding:12px;border-radius:8px;background:#f8fafc;
     border:1px solid #e2e8f0;display:none}
   .stat.on{display:block}
+  .pbar{height:12px;background:#e2e8f0;border-radius:999px;overflow:hidden;margin-top:12px;display:none}
+  .pbar.on{display:block}
+  .pfill{height:100%;width:0;background:#2563eb;transition:width .5s ease;border-radius:999px}
+  .pfill.anim{background-image:linear-gradient(90deg,#2563eb,#60a5fa,#2563eb);background-size:200% 100%;animation:flow 1.2s linear infinite}
+  @keyframes flow{0%{background-position:0 0}100%{background-position:-200% 0}}
   details summary{cursor:pointer;font-weight:600;color:#334155}
   code{background:#f1f5f9;padding:1px 5px;border-radius:4px}
 </style></head><body>
@@ -304,6 +309,7 @@ _LOOKUP_TMPL = """<!DOCTYPE html><html lang="ko"><head>
     <input id="tk" placeholder="예: AAPL, NVDA, 005930" autocapitalize="characters">
     <button class="go" id="go" onclick="run()">수집하기 (워크플로 실행)</button>
     <div class="stat" id="st"></div>
+    <div class="pbar" id="pb"><div class="pfill" id="pf"></div></div>
     <div class="hint">미국 티커 또는 한국 6자리 코드. 누르면 GitHub Actions의 lookup 워크플로가
       돌아 그 종목을 분석합니다(약 1~2분). 끝나면 결과 링크가 떠요.</div>
   </div>
@@ -325,6 +331,9 @@ _LOOKUP_TMPL = """<!DOCTYPE html><html lang="ko"><head>
       st=document.getElementById('st'), go=document.getElementById('go');
   pat.value=localStorage.getItem('ghpat')||"";
   function show(m){st.className='stat on';st.innerHTML=m;}
+  function bar(p,c,anim){var pb=document.getElementById('pb'),pf=document.getElementById('pf');
+    pb.className='pbar on';pf.style.width=p+'%';if(c)pf.style.background=c;
+    pf.className='pfill'+(anim?' anim':'');}
   async function defaultBranch(){
     try{var r=await fetch('https://api.github.com/repos/'+REPO);
       return (await r.json()).default_branch||'main';}catch(e){return 'main';}
@@ -334,7 +343,7 @@ _LOOKUP_TMPL = """<!DOCTYPE html><html lang="ko"><head>
     if(!t){show('티커를 입력하세요.');return;}
     if(!p){show('먼저 아래 토큰을 입력하세요(최초 1회).');return;}
     localStorage.setItem('ghpat',p);
-    go.disabled=true; show('실행 요청 중...');
+    go.disabled=true; show('실행 요청 중...'); bar(12,null,true);
     var ref=await defaultBranch();
     var r=await fetch('https://api.github.com/repos/'+REPO+'/actions/workflows/'+WF+'/dispatches',{
       method:'POST',
@@ -344,11 +353,11 @@ _LOOKUP_TMPL = """<!DOCTYPE html><html lang="ko"><head>
     });
     go.disabled=false;
     if(r.status===204){
-      show('✅ <b>'+t+'</b> 수집 시작! 1~2분 후 결과를 봅니다...');
+      show('✅ <b>'+t+'</b> 수집 시작! 1~2분 후 결과를 봅니다...'); bar(30,null,true);
       setTimeout(function(){track(p,t);},6000);
     }else{
       var e=await r.text();
-      show('❌ 실패 ('+r.status+'). 토큰/권한 확인.<br><small>'+e.slice(0,160)+'</small>');
+      show('❌ 실패 ('+r.status+'). 토큰/권한 확인.<br><small>'+e.slice(0,160)+'</small>'); bar(100,'#dc2626',false);
     }
   }
   async function track(p,t){
@@ -356,12 +365,14 @@ _LOOKUP_TMPL = """<!DOCTYPE html><html lang="ko"><head>
       var r=await fetch('https://api.github.com/repos/'+REPO+'/actions/workflows/'+WF+'/runs?per_page=1',
         {headers:{'Authorization':'Bearer '+p,'Accept':'application/vnd.github+json'}});
       var run=(await r.json()).workflow_runs[0];
-      if(!run){show('실행 대기 중...');setTimeout(function(){track(p,t);},5000);return;}
+      if(!run){show('실행 대기 중...');bar(35,null,true);setTimeout(function(){track(p,t);},5000);return;}
       if(run.status!=='completed'){
-        show('⏳ <b>'+t+'</b> 분석 중... ('+run.status+') · <a href="'+run.html_url+'" target=_blank>진행 보기</a>');
+        show('⏳ <b>'+t+'</b> 수집·분석 중... ('+run.status+') · <a href="'+run.html_url+'" target=_blank>로그</a>');
+        bar(run.status==='queued'?45:75,null,true);
         setTimeout(function(){track(p,t);},5000);
       }else{
         var ok=run.conclusion==='success';
+        bar(100,ok?'#16a34a':'#dc2626',false);
         show((ok?'✅ 완료!':'⚠️ '+run.conclusion)+' <b>'+t+'</b><br>'
           +'<a href="'+run.html_url+'" target=_blank>결과/차트(아티팩트) 보기 &rarr;</a>'
           +'<div class=hint>로그에 신호 카드, 하단 Artifacts에 상세차트 HTML.</div>');
