@@ -28,7 +28,7 @@ def _frames_demo(scenario):
 def run(demo: bool = False, csv_path: str | None = None,
         chart: bool = False, png: bool = False, chart_dir: str = "charts",
         dashboard: bool = False, dashboard_path: str = "dashboard.html",
-        backtest: bool = False):
+        backtest: bool = False, use_cache: bool = False):
     results = []
     charts = []
     frames_map = {}
@@ -46,7 +46,13 @@ def run(demo: bool = False, csv_path: str | None = None,
 
     for meta, scenario in jobs:
         try:
-            frames = _frames_demo(scenario) if demo else _frames_real(meta["code"])
+            if demo:
+                frames = _frames_demo(scenario)
+            elif use_cache:
+                from scanner import cache
+                frames = cache.frames(meta["code"], refresh=True)
+            else:
+                frames = _frames_real(meta["code"])
             bench = None if demo else data.fetch_benchmark(meta.get("ccy", "USD"))
             res = analyze(frames, meta, bench=bench)
             results.append(res)
@@ -116,11 +122,48 @@ def main():
                     help="대시보드 저장 경로")
     ap.add_argument("--backtest", action="store_true",
                     help="차트 전용 리스크 관리 백테스트(R 단위 기대값·최대낙폭)")
+    ap.add_argument("--cache", action="store_true",
+                    help="로컬 증분 캐시(data_cache/) 사용 — 신규 봉만 받아 빠름")
+    ap.add_argument("--backfill", type=int, metavar="N", default=0,
+                    help="아직 캐시 없는 종목을 최대 N개까지 전체이력 백필(하루 N개씩 분산용)")
+    ap.add_argument("--update", action="store_true",
+                    help="캐시된 모든 종목을 증분 갱신(신규 봉만)")
     args = ap.parse_args()
+
+    if args.backfill or args.update:
+        _manage_cache(args.backfill, args.update)
+        return
+
     run(demo=args.demo, csv_path=args.csv, chart=args.chart,
         png=args.png, chart_dir=args.chart_dir,
         dashboard=args.dashboard, dashboard_path=args.dashboard_path,
-        backtest=args.backtest)
+        backtest=args.backtest, use_cache=args.cache)
+
+
+def _manage_cache(backfill_n: int, do_update: bool):
+    """캐시 백필/증분 갱신 (분석 없이 데이터만)."""
+    from scanner import cache
+    if backfill_n:
+        todo = [s for s in config.STOCKS
+                if s.get("code") and not cache.is_cached(s["code"])][:backfill_n]
+        print(f"백필 대상 {len(todo)}종목(전체이력 1회 수집)…")
+        for s in todo:
+            try:
+                d = cache.update(s["code"])
+                print(f"  ✓ {s['code']:8} {len(d)}행")
+            except Exception as e:
+                print(f"  ✗ {s['code']:8} 실패: {type(e).__name__}: {e}",
+                      file=sys.stderr)
+    if do_update:
+        codes = cache.cached_codes()
+        print(f"증분 갱신 {len(codes)}종목(신규 봉만)…")
+        for code in codes:
+            try:
+                cache.update(code)
+            except Exception as e:
+                print(f"  ✗ {code} 실패: {e}", file=sys.stderr)
+    print(f"캐시 현황: {len(cache.cached_codes())}종목 · "
+          f"{cache.total_size_mb():.2f} MB ({cache.CACHE_DIR}/)")
 
 
 if __name__ == "__main__":
