@@ -29,7 +29,8 @@ def run(demo: bool = False, csv_path: str | None = None,
         chart: bool = False, png: bool = False, chart_dir: str = "charts",
         dashboard: bool = False, dashboard_path: str = "dashboard.html",
         backtest: bool = False, use_cache: bool = False,
-        universe_scan: int = 0, universe_path: str = "universe.csv"):
+        universe_scan: int = 0, universe_path: str = "universe.csv",
+        screener: bool = False, screener_dir: str = "public"):
     results = []
     charts = []
     frames_map = {}
@@ -44,8 +45,12 @@ def run(demo: bool = False, csv_path: str | None = None,
                 for s, name in scenarios]
     elif universe_scan:
         from scanner import universe
-        uni = [s for s in universe.load(universe_path) if s.get("code")]
-        jobs = [(s, None) for s in uni[:universe_scan]]
+        uni = [s for s in universe.load(universe_path) if s.get("code")][:universe_scan]
+        if use_cache:
+            # 캐시된 종목만 렌더(빌드 중 대량 재수집 방지 — 수집은 --backfill/--update가 담당)
+            from scanner import cache
+            uni = [s for s in uni if cache.is_cached(s["code"])]
+        jobs = [(s, None) for s in uni]
     else:
         jobs = [(s, None) for s in config.STOCKS if s.get("code")]
 
@@ -55,7 +60,8 @@ def run(demo: bool = False, csv_path: str | None = None,
                 frames = _frames_demo(scenario)
             elif use_cache:
                 from scanner import cache
-                frames = cache.frames(meta["code"], refresh=True)
+                # 대량 스크리너(universe_scan)는 캐시만 읽음(네트워크 0). 워치리스트는 증분 갱신.
+                frames = cache.frames(meta["code"], refresh=not universe_scan)
             else:
                 frames = _frames_real(meta["code"])
             bench = None if demo else data.fetch_benchmark(meta.get("ccy", "USD"))
@@ -108,6 +114,15 @@ def run(demo: bool = False, csv_path: str | None = None,
         else:
             print("분석 결과가 없어 대시보드를 생성하지 않음", file=sys.stderr)
 
+    if screener:
+        if results:
+            from scanner import screener as scrmod
+            out = scrmod.build(results, frames_map, out_dir=screener_dir, metas=metas)
+            print(f"스크리너 저장: {out}/index.html ({len(results)}종목) "
+                  f"+ {out}/stocks/*.html")
+        else:
+            print("분석 결과가 없어 스크리너를 생성하지 않음", file=sys.stderr)
+
     return results
 
 
@@ -140,6 +155,9 @@ def main():
                     help="S&P500 + KOSPI 시총상위 N으로 유니버스 자동 구성(기본 200)")
     ap.add_argument("--universe-scan", type=int, metavar="N", default=0,
                     help="분석/백테스트 대상을 워치리스트 대신 유니버스 앞 N종목으로(대량 검증)")
+    ap.add_argument("--screener", action="store_true",
+                    help="대량 종목 스크리너(가벼운 표 index + 종목별 상세 페이지) 생성")
+    ap.add_argument("--screener-dir", default="public", help="스크리너 출력 폴더")
     args = ap.parse_args()
 
     if args.build_universe is not None:
@@ -158,7 +176,8 @@ def main():
         png=args.png, chart_dir=args.chart_dir,
         dashboard=args.dashboard, dashboard_path=args.dashboard_path,
         backtest=args.backtest, use_cache=args.cache,
-        universe_scan=args.universe_scan, universe_path=args.universe)
+        universe_scan=args.universe_scan, universe_path=args.universe,
+        screener=args.screener, screener_dir=args.screener_dir)
 
 
 def _manage_cache(backfill_n: int, do_update: bool, universe_path: str):
