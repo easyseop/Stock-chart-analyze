@@ -55,6 +55,7 @@ def analyze(frames: dict[str, pd.DataFrame], meta: dict, bench=None) -> dict:
 
     verdict_txt = _verdict_text(label, sr, entry, trendline, vetoed)
     trend_oneline = _one_line_trend(trend, regime, trendline)
+    stage, stage_label = _transition_stage(trendline)
 
     # 고점 확장 / 추격 경고: 52주 고가 근접 + (과열 또는 20일선 과대이격)
     ma20 = trend.get("ma", {}).get(20)
@@ -80,7 +81,23 @@ def analyze(frames: dict[str, pd.DataFrame], meta: dict, bench=None) -> dict:
         "norm": norm["score"], "verdict_label": label, "gauge": gauge,
         "verdict": verdict_txt, "entry": entry, "vetoed": vetoed, "terms": terms,
         "trend_oneline": trend_oneline, "chase": chase, "chase_note": chase_note,
+        "transition_stage": stage, "transition_label": stage_label,
     }
+
+
+def _transition_stage(tl_res) -> tuple[int, str]:
+    """하락→상승 '전환' 진행 단계(클수록 전환 확정에 가까움). 우선 정렬용.
+
+    4 전환 확정 / 3 돌파후 횡보(대기) / 2 갓 돌파(미확인) / 1 임박 / 0 해당없음.
+    """
+    st = tl_res["state"]
+    table = {
+        tl.TRANSITION_CONFIRMED: (4, "④ 전환 확정 ⭐"),
+        tl.TRANSITION_PENDING:   (3, "③ 돌파후 횡보(대기)"),
+        tl.BREAKOUT_UNCONFIRMED: (2, "② 갓 돌파(미확인)"),
+        "하락추세선 임박":        (1, "① 임박(저항 근접)"),
+    }
+    return table.get(st, (0, ""))
 
 
 def _one_line_trend(trend, regime, tl_res) -> str:

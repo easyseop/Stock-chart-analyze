@@ -64,14 +64,17 @@ def _rows(results: list[dict]) -> str:
         nh_txt = f"{nh:+.0f}%" if nh is not None else "-"
         mk = r.get("market", {}).get("direction", "-")
         tone = html.escape(r.get("trend_oneline", ""))
+        stg = r.get("transition_stage", 0)
+        stg_lab = html.escape(r.get("transition_label", ""))
         vd = html.escape(r.get("verdict", ""))
         if r.get("chase"):
             vd = "🔺추격주의 · " + vd
         out.append(
-            f'<tr class="b-{b}" data-bucket="{b}">'
+            f'<tr class="b-{b}" data-bucket="{b}" data-stage="{stg}">'
             f'<td>{html.escape(r["gauge"])}</td>'
             f'<td class="nm"><a href="stocks/{code}.html">'
             f'{html.escape(r["name"])}</a><span class="cd">{html.escape(code)}</span></td>'
+            f'<td data-v="{stg}" class="num stg">{stg_lab}</td>'
             f'<td>{tone}</td>'
             f'<td data-v="{r["norm"]:.1f}" class="num sc">{r["norm"]:+.0f}</td>'
             f'<td>{html.escape(mk)}</td>'
@@ -82,14 +85,17 @@ def _rows(results: list[dict]) -> str:
 
 
 def _index(results: list[dict]) -> str:
-    # 점수 내림차순 기본 정렬
-    results = sorted(results, key=lambda r: r["norm"], reverse=True)
+    # 기본 정렬: 전환 단계 높은 순(하락→상승 전환 임박/확정) → 그다음 점수
+    results = sorted(results,
+                     key=lambda r: (r.get("transition_stage", 0), r["norm"]),
+                     reverse=True)
     counts = {k: sum(1 for r in results if _bucket(r) == k) for k, _ in _BUCKETS}
+    tcount = sum(1 for r in results if r.get("transition_stage", 0) > 0)
     chips = "".join(
         f'<button class="chip" onclick="flt(\'{k}\')">{_BUCKET_KO[k]} {counts[k]}</button>'
         for k, _ in _BUCKETS)
     return _INDEX_TMPL.format(
-        n=len(results), rows=_rows(results), chips=chips)
+        n=len(results), rows=_rows(results), chips=chips, tcount=tcount)
 
 
 def build(results: list[dict], frames_map: dict[str, dict],
@@ -127,6 +133,7 @@ _INDEX_TMPL = """<!DOCTYPE html><html lang="ko"><head>
   td.vd{{text-align:left;color:#475569;max-width:360px}}
   td.sc{{font-weight:700}}
   .num{{font-variant-numeric:tabular-nums}}
+  td.stg{{text-align:left;color:#16a34a;font-weight:600;font-size:12px}}
   .nm a{{color:#1d4ed8;text-decoration:none;font-weight:600}}
   .nm .cd{{color:#94a3b8;font-size:11px;margin-left:6px}}
   tr.b-transition td.sc{{color:#16a34a}}
@@ -135,16 +142,21 @@ _INDEX_TMPL = """<!DOCTYPE html><html lang="ko"><head>
 </style></head><body>
 <header><h1>종목 스크리너 <span style="color:#38bdf8;font-size:13px">차트 신호 랭킹</span></h1>
 <p>{n}종목 · 헤더 클릭=정렬 · 칩=필터 · 종목명 클릭=상세 차트(일/주/월)</p></header>
-<div class="bar"><button class="chip on" onclick="flt('all')">전체</button>{chips}</div>
+<div class="bar">
+  <button class="chip" onclick="flt('all')">전체</button>
+  <button class="chip on" onclick="fltStage()">🔄 전환후보 {tcount}</button>
+  {chips}
+</div>
 <table id="t"><thead><tr>
   <th onclick="srt(0,false)">신호</th>
   <th onclick="srt(1,false)">종목</th>
-  <th onclick="srt(2,false)">추세</th>
-  <th onclick="srt(3,true)">점수▼</th>
-  <th onclick="srt(4,false)">시장</th>
-  <th onclick="srt(5,true)">RS</th>
-  <th onclick="srt(6,true)">신고가</th>
-  <th onclick="srt(7,false)">판정</th>
+  <th onclick="srt(2,true)">전환단계▼</th>
+  <th onclick="srt(3,false)">추세</th>
+  <th onclick="srt(4,true)">점수</th>
+  <th onclick="srt(5,false)">시장</th>
+  <th onclick="srt(6,true)">RS</th>
+  <th onclick="srt(7,true)">신고가</th>
+  <th onclick="srt(8,false)">판정</th>
 </tr></thead><tbody id="tb">{rows}</tbody></table>
 <script>
   var tb=document.getElementById('tb');
@@ -157,13 +169,30 @@ _INDEX_TMPL = """<!DOCTYPE html><html lang="ko"><head>
     }});
     rows.forEach(function(r){{tb.appendChild(r);}});
   }}
-  function flt(b){{
+  function setOn(btn){{
     document.querySelectorAll('.chip').forEach(function(c){{c.classList.remove('on');}});
-    event.target.classList.add('on');
+    if(btn) btn.classList.add('on');
+  }}
+  function flt(b){{
+    setOn(typeof event!=='undefined'?event.target:null);
     tb.querySelectorAll('tr').forEach(function(r){{
       r.style.display=(b==='all'||r.dataset.bucket===b)?'':'none';
     }});
   }}
+  function fltStage(){{
+    setOn(typeof event!=='undefined'?event.target:null);
+    tb.querySelectorAll('tr').forEach(function(r){{
+      r.style.display=(parseInt(r.dataset.stage||'0')>0)?'':'none';
+    }});
+  }}
+  // 첫 화면: '전환 후보'(하락→상승 전환 단계)만 우선 표시
+  window.addEventListener('load',function(){{
+    var any=false;
+    tb.querySelectorAll('tr').forEach(function(r){{if(parseInt(r.dataset.stage||'0')>0)any=true;}});
+    if(any){{tb.querySelectorAll('tr').forEach(function(r){{
+      r.style.display=(parseInt(r.dataset.stage||'0')>0)?'':'none';}});}}
+    else{{setOn(document.querySelectorAll('.chip')[0]);}}
+  }});
 </script></body></html>"""
 
 
