@@ -5,11 +5,15 @@
 """
 from __future__ import annotations
 
+import socket
 import time
 
 import pandas as pd
 
 import config
+
+# 네트워크 행(hang) 방지: 모든 소켓 작업에 전역 타임아웃(대량 수집 시 멈춤 차단)
+socket.setdefaulttimeout(30)
 
 OHLCV = ["Open", "High", "Low", "Close", "Volume"]
 

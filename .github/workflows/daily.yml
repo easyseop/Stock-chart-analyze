@@ -9,8 +9,8 @@ on:
   workflow_dispatch:
     inputs:
       backfill:
-        description: "이번 실행에서 새로 백필할 종목 수(0=안 함)"
-        default: "200"
+        description: "이번 실행에서 새로 백필할 종목 수(0=안 함). 수동 실행 때만 사용."
+        default: "100"
 
 permissions:
   contents: read
@@ -24,6 +24,7 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 120          # 2시간 하드 캡(레이트리밋으로 늘어져도 안전 종료)
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -39,9 +40,10 @@ jobs:
           restore-keys: |
             data-cache-
 
-      - name: 백필(신규) + 증분 갱신
+      # 스케줄 자동 실행: backfill 입력이 없으므로 0(빠름). 수동 실행 때만 백필.
+      - name: 백필(수동 시) + 증분 갱신
         run: |
-          python main.py --backfill "${{ github.event.inputs.backfill || '200' }}"
+          python main.py --backfill "${{ github.event.inputs.backfill || '0' }}"
           python main.py --update
 
       - name: 대시보드 생성(워치리스트 + 백테스트)
