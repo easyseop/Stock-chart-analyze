@@ -54,6 +54,15 @@ def analyze(frames: dict[str, pd.DataFrame], meta: dict, bench=None) -> dict:
             label, gauge = "회피(하락추세)", "🔴 하락추세"
 
     verdict_txt = _verdict_text(label, sr, entry, trendline, vetoed)
+    trend_oneline = _one_line_trend(trend, regime, trendline)
+
+    # 고점 확장 / 추격 경고: 52주 고가 근접 + (과열 또는 20일선 과대이격)
+    ma20 = trend.get("ma", {}).get(20)
+    stretch = (price / ma20 - 1) if ma20 else 0.0
+    near_high = newhigh["score"] == 2
+    chase = near_high and (rsi.get("rsi", 50) >= 70 or stretch >= 0.12)
+    chase_note = (f"🔺 고점 확장(52주고가 근접·MA20 +{stretch*100:.0f}%) "
+                  "— 추격 주의, 눌림 대기 권장" if chase else "")
 
     terms = []
     for blk in (regime, trend, rs, newhigh, market, rsi, sr, volume,
@@ -70,7 +79,23 @@ def analyze(frames: dict[str, pd.DataFrame], meta: dict, bench=None) -> dict:
         "module_scores": module_scores, "weights": norm["weights"],
         "norm": norm["score"], "verdict_label": label, "gauge": gauge,
         "verdict": verdict_txt, "entry": entry, "vetoed": vetoed, "terms": terms,
+        "trend_oneline": trend_oneline, "chase": chase, "chase_note": chase_note,
     }
+
+
+def _one_line_trend(trend, regime, tl_res) -> str:
+    """추세선·국면·이평배열을 종합한 '한눈 추세' 한 줄."""
+    arr = trend.get("arrangement", "")
+    st = tl_res["state"]
+    if st in tl.TRANSITION_STATES or st in (tl.BREAKOUT_UNCONFIRMED, "하락추세선 임박"):
+        return "🔄 전환 시도"
+    if tl_res.get("confirmed_down") or st == "하락추세 지속" or arr == "역배열":
+        return "📉 하락추세"
+    if st == "상승추세 유지" or arr == "정배열":
+        return "📈 상승추세"
+    if regime["flag"] == "횡보장":
+        return "↔️ 횡보"
+    return "↔️ 횡보/혼조"
 
 
 def _verdict_text(label, sr, entry, trendline, vetoed) -> str:

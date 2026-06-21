@@ -24,7 +24,7 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  TARGET: "200"           # 스크리너/백필 대상 종목 수
+  TARGET: "300"           # 스크리너/백필 대상 종목 수(유니버스 703 중)
   CHUNK: "50"             # 한 실행당 백필 묶음(레이트리밋 회피)
 
 jobs:

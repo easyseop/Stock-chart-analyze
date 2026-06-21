@@ -63,16 +63,21 @@ def _rows(results: list[dict]) -> str:
         nh = r.get("newhigh", {}).get("pct_from_high")
         nh_txt = f"{nh:+.0f}%" if nh is not None else "-"
         mk = r.get("market", {}).get("direction", "-")
+        tone = html.escape(r.get("trend_oneline", ""))
+        vd = html.escape(r.get("verdict", ""))
+        if r.get("chase"):
+            vd = "🔺추격주의 · " + vd
         out.append(
             f'<tr class="b-{b}" data-bucket="{b}">'
             f'<td>{html.escape(r["gauge"])}</td>'
             f'<td class="nm"><a href="stocks/{code}.html">'
             f'{html.escape(r["name"])}</a><span class="cd">{html.escape(code)}</span></td>'
+            f'<td>{tone}</td>'
             f'<td data-v="{r["norm"]:.1f}" class="num sc">{r["norm"]:+.0f}</td>'
             f'<td>{html.escape(mk)}</td>'
             f'<td data-v="{rs if rs is not None else -999}" class="num">{rs_txt}</td>'
             f'<td data-v="{nh if nh is not None else -999}" class="num">{nh_txt}</td>'
-            f'<td class="vd">{html.escape(r.get("verdict", ""))}</td></tr>')
+            f'<td class="vd">{vd}</td></tr>')
     return "".join(out)
 
 
@@ -134,11 +139,12 @@ _INDEX_TMPL = """<!DOCTYPE html><html lang="ko"><head>
 <table id="t"><thead><tr>
   <th onclick="srt(0,false)">신호</th>
   <th onclick="srt(1,false)">종목</th>
-  <th onclick="srt(2,true)">점수▼</th>
-  <th onclick="srt(3,false)">시장</th>
-  <th onclick="srt(4,true)">RS</th>
-  <th onclick="srt(5,true)">신고가</th>
-  <th onclick="srt(6,false)">판정</th>
+  <th onclick="srt(2,false)">추세</th>
+  <th onclick="srt(3,true)">점수▼</th>
+  <th onclick="srt(4,false)">시장</th>
+  <th onclick="srt(5,true)">RS</th>
+  <th onclick="srt(6,true)">신고가</th>
+  <th onclick="srt(7,false)">판정</th>
 </tr></thead><tbody id="tb">{rows}</tbody></table>
 <script>
   var tb=document.getElementById('tb');

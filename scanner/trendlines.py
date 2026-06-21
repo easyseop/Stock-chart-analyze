@@ -30,10 +30,45 @@ def _line_value(slope, intercept, pos):
     return slope * pos + intercept
 
 
-def _recent_pivots(pts, kind, n_take=4):
-    """가장 최근 스윙 피벗들(kind='H' or 'L')을 시간순으로."""
-    sel = [p for p in pts if p["kind"] == kind]
-    return sorted(sel, key=lambda p: p["pos"])[-n_take:]
+def _best_line(pts, kind: str, near: float, min_span: int, min_touches: int):
+    """여러 스윙 피벗을 가장 잘 지나는 추세선(최소 터치·최소 길이·미관통).
+
+    kind='H'(하락저항선: 기울기<0, 고점이 선 위로 안 뚫림),
+    kind='L'(상승지지선: 기울기>0, 저점이 선 아래로 안 뚫림).
+    반환: (slope, intercept, p0, p1, touches) 또는 None.
+    """
+    P = sorted([p for p in pts if p["kind"] == kind], key=lambda p: p["pos"])
+    best = None
+    for i in range(len(P)):
+        for j in range(i + 1, len(P)):
+            p0, p1 = P[i], P[j]
+            span = p1["pos"] - p0["pos"]
+            if span < min_span:
+                continue
+            slope = (p1["price"] - p0["price"]) / span
+            if kind == "H" and slope >= 0:
+                continue
+            if kind == "L" and slope <= 0:
+                continue
+            b = p0["price"] - slope * p0["pos"]
+            valid, touches = True, 0
+            for p in P:
+                lv = slope * p["pos"] + b
+                dev = (p["price"] - lv) / lv if lv else 0.0
+                if kind == "H" and dev > near:        # 고점이 저항선 위로 관통 → 무효
+                    valid = False
+                    break
+                if kind == "L" and dev < -near:       # 저점이 지지선 아래로 관통 → 무효
+                    valid = False
+                    break
+                if abs(dev) <= near:
+                    touches += 1
+            if not valid or touches < min_touches:
+                continue
+            cand = (touches, span)                    # 터치 많고 길수록 우선
+            if best is None or cand > best[0]:
+                best = (cand, (slope, b, p0, p1, touches))
+    return best[1] if best else None
 
 
 def detect(df: pd.DataFrame, frames: dict | None = None,
@@ -51,37 +86,22 @@ def detect(df: pd.DataFrame, frames: dict | None = None,
     near = config.TREND_NEAR
     pts = swing_points(seg)
 
-    # ── 하락추세선: 최근 '낮아지는 고점'들을 잇는다 ──
-    highs = _recent_pivots(pts, "H")
-    down = None
-    if len(highs) >= 2:
-        h_prev, h_last = highs[-2], highs[-1]
-        if h_last["price"] < h_prev["price"]:            # 낮아진 고점
-            slope, b = _fit_through(h_prev, h_last)
-            dn_now = _line_value(slope, b, last_pos)
-            touches = sum(1 for p in highs
-                          if abs(p["price"] - _line_value(slope, b, p["pos"]))
-                          / p["price"] <= near)
-            down = {"slope": slope, "now": float(dn_now), "touches": touches,
-                    "p0": h_prev, "p1": h_last,
-                    "x0": dates[h_prev["pos"]], "y0": h_prev["price"],
-                    "x1": dates[last_pos], "y1": float(dn_now)}
+    mt, ms = config.TREND_MIN_TOUCHES, config.TREND_MIN_SPAN
 
-    # ── 상승추세선: 최근 '높아지는 저점'들을 잇는다 ──
-    lows = _recent_pivots(pts, "L")
-    up = None
-    if len(lows) >= 2:
-        l_prev, l_last = lows[-2], lows[-1]
-        if l_last["price"] > l_prev["price"]:            # 높아진 저점
-            slope, b = _fit_through(l_prev, l_last)
-            up_now = _line_value(slope, b, last_pos)
-            touches = sum(1 for p in lows
-                          if abs(p["price"] - _line_value(slope, b, p["pos"]))
-                          / p["price"] <= near)
-            up = {"slope": slope, "now": float(up_now), "touches": touches,
-                  "p0": l_prev, "p1": l_last,
-                  "x0": dates[l_prev["pos"]], "y0": l_prev["price"],
-                  "x1": dates[last_pos], "y1": float(up_now)}
+    def _seg(fit):
+        slope, b, p0, p1, touches = fit
+        now = _line_value(slope, b, last_pos)
+        return {"slope": slope, "now": float(now), "touches": touches,
+                "p0": p0, "p1": p1,
+                "x0": dates[p0["pos"]], "y0": p0["price"],
+                "x1": dates[last_pos], "y1": float(now)}
+
+    # ── 하락추세선(저항): 낮아지는 고점들을 최적합(3터치↑·길이↑·미관통) ──
+    fit_d = _best_line(pts, "H", near, ms, mt)
+    down = _seg(fit_d) if fit_d else None
+    # ── 상승추세선(지지): 높아지는 저점들을 최적합 ──
+    fit_u = _best_line(pts, "L", near, ms, mt)
+    up = _seg(fit_u) if fit_u else None
 
     closes = seg["Close"].values
 
@@ -148,6 +168,14 @@ def detect(df: pd.DataFrame, frames: dict | None = None,
     else:
         level, slope_sign = None, "-"
     dist_pct = (price - level) / level * 100 if level else None
+
+    # 거리 필터: 현재가에서 너무 먼(낡은) 선은 매매에 무의미 → 참고없음으로 강등.
+    # 단, 돌파/임박 등 '선 근처' 신호는 정의상 가까우니 제외.
+    if (level is not None and abs(dist_pct) > config.TREND_MAX_DIST * 100
+            and state in ("하락추세 지속", "상승추세 유지", "상승추세선 이탈")):
+        state, score, confirmed_down = "추세선 불명확", 0, False
+        note = f"추세선이 현재가에서 {dist_pct:+.0f}%로 멀어 참고 안 함(낡은 선)"
+        level, dist_pct = None, None
 
     return {"state": state, "score": score, "note": note,
             "confirmed_down": confirmed_down, "down": down, "up": up,
