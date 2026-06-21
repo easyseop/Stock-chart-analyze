@@ -272,6 +272,9 @@ def build(results: list[dict], frames_map: dict[str, dict],
         panels="\n".join(panels),
         default_on=default_on,
         first_plot=first_plot)
+    out_dir = os.path.dirname(out_path)
+    if out_dir:
+        os.makedirs(out_dir, exist_ok=True)
     with open(out_path, "w", encoding="utf-8") as fp:
         fp.write(doc)
     return out_path

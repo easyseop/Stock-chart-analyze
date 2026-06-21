@@ -1,0 +1,62 @@
+name: daily-scan
+
+# 매 거래일 장 마감 후 자동 실행(서버 불필요). UTC 기준.
+#   22:00 UTC ≈ 미국장 마감(16:00~17:00 ET) 직후. 한국장(06:30 UTC 마감)도 함께 갱신.
+# 수동 실행(workflow_dispatch) 시 backfill 개수를 지정할 수 있다.
+on:
+  schedule:
+    - cron: "0 22 * * 1-5"
+  workflow_dispatch:
+    inputs:
+      backfill:
+        description: "이번 실행에서 새로 백필할 종목 수(0=안 함)"
+        default: "200"
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -r requirements.txt
+
+      # 데이터 캐시 영속화(런너는 매번 초기화 → 누적 캐시를 복원/저장)
+      - uses: actions/cache@v4
+        with:
+          path: data_cache
+          key: data-cache-${{ github.run_id }}
+          restore-keys: |
+            data-cache-
+
+      - name: 백필(신규) + 증분 갱신
+        run: |
+          python main.py --backfill "${{ github.event.inputs.backfill || '200' }}"
+          python main.py --update
+
+      - name: 대시보드 생성(워치리스트 + 백테스트)
+        run: python main.py --cache --dashboard --backtest --dashboard-path public/index.html
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: public
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - id: deploy
+        uses: actions/deploy-pages@v4

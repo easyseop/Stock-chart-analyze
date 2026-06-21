@@ -28,7 +28,8 @@ def _frames_demo(scenario):
 def run(demo: bool = False, csv_path: str | None = None,
         chart: bool = False, png: bool = False, chart_dir: str = "charts",
         dashboard: bool = False, dashboard_path: str = "dashboard.html",
-        backtest: bool = False, use_cache: bool = False):
+        backtest: bool = False, use_cache: bool = False,
+        universe_scan: int = 0, universe_path: str = "universe.csv"):
     results = []
     charts = []
     frames_map = {}
@@ -41,6 +42,10 @@ def run(demo: bool = False, csv_path: str | None = None,
                      ("reversal", "데모-추세전환")]
         jobs = [({"code": f"DEMO_{s.upper()}", "name": name, "ccy": "USD"}, s)
                 for s, name in scenarios]
+    elif universe_scan:
+        from scanner import universe
+        uni = [s for s in universe.load(universe_path) if s.get("code")]
+        jobs = [(s, None) for s in uni[:universe_scan]]
     else:
         jobs = [(s, None) for s in config.STOCKS if s.get("code")]
 
@@ -133,6 +138,8 @@ def main():
     ap.add_argument("--build-universe", type=int, metavar="KOSPI_TOP", nargs="?",
                     const=200, default=None,
                     help="S&P500 + KOSPI 시총상위 N으로 유니버스 자동 구성(기본 200)")
+    ap.add_argument("--universe-scan", type=int, metavar="N", default=0,
+                    help="분석/백테스트 대상을 워치리스트 대신 유니버스 앞 N종목으로(대량 검증)")
     args = ap.parse_args()
 
     if args.build_universe is not None:
@@ -150,7 +157,8 @@ def main():
     run(demo=args.demo, csv_path=args.csv, chart=args.chart,
         png=args.png, chart_dir=args.chart_dir,
         dashboard=args.dashboard, dashboard_path=args.dashboard_path,
-        backtest=args.backtest, use_cache=args.cache)
+        backtest=args.backtest, use_cache=args.cache,
+        universe_scan=args.universe_scan, universe_path=args.universe)
 
 
 def _manage_cache(backfill_n: int, do_update: bool, universe_path: str):
