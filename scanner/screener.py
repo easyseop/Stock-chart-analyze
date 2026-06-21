@@ -392,9 +392,11 @@ _LOOKUP_TMPL = """<!DOCTYPE html><html lang="ko"><head>
       }else{
         var ok=run.conclusion==='success';
         bar(100,ok?'#16a34a':'#dc2626',false);
-        show((ok?'✅ 완료!':'⚠️ '+run.conclusion)+' <b>'+t+'</b><br>'
-          +'<a href="'+run.html_url+'" target=_blank>결과/차트(아티팩트) 보기 &rarr;</a>'
-          +'<div class=hint>로그에 신호 카드, 하단 Artifacts에 상세차트 HTML.</div>');
+        show((ok?'✅ 완료! <b>'+t+'</b> 스크리너에 추가됨':'⚠️ '+run.conclusion+' <b>'+t+'</b>')+'<br>'
+          +'<a href="index.html">스크리너에서 보기 &rarr;</a> · '
+          +'<a href="stocks/'+t+'.html">상세 차트 &rarr;</a> · '
+          +'<a href="'+run.html_url+'" target=_blank>로그</a>'
+          +'<div class=hint>안 보이면 새로고침(배포 반영 1~2분).</div>');
       }
     }catch(e){show('상태 조회 오류: '+e);}
   }

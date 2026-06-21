@@ -30,7 +30,8 @@ def run(demo: bool = False, csv_path: str | None = None,
         dashboard: bool = False, dashboard_path: str = "dashboard.html",
         backtest: bool = False, use_cache: bool = False,
         universe_scan: int = 0, universe_path: str = "universe.csv",
-        screener: bool = False, screener_dir: str = "public"):
+        screener: bool = False, screener_dir: str = "public",
+        scan_cached: bool = False):
     results = []
     charts = []
     frames_map = {}
@@ -43,6 +44,16 @@ def run(demo: bool = False, csv_path: str | None = None,
                      ("reversal", "데모-추세전환")]
         jobs = [({"code": f"DEMO_{s.upper()}", "name": name, "ccy": "USD"}, s)
                 for s, name in scenarios]
+    elif scan_cached:
+        # 캐시된 모든 종목을 스크리너 대상으로(즉석조회로 추가된 것까지 자동 포함)
+        from scanner import cache, universe
+        umap = {s["code"]: s for s in universe.load(universe_path) if s.get("code")}
+        jobs = []
+        for code in cache.cached_codes():
+            m = umap.get(code) or {
+                "code": code, "name": code,
+                "ccy": "KRW" if (len(code) == 6 and code[:5].isdigit()) else "USD"}
+            jobs.append((m, None))
     elif universe_scan:
         from scanner import universe
         uni = [s for s in universe.load(universe_path) if s.get("code")][:universe_scan]
@@ -60,8 +71,9 @@ def run(demo: bool = False, csv_path: str | None = None,
                 frames = _frames_demo(scenario)
             elif use_cache:
                 from scanner import cache
-                # 대량 스크리너(universe_scan)는 캐시만 읽음(네트워크 0). 워치리스트는 증분 갱신.
-                frames = cache.frames(meta["code"], refresh=not universe_scan)
+                # 대량 모드(universe_scan/scan_cached)는 캐시만 읽음(네트워크 0). 워치리스트는 증분 갱신.
+                frames = cache.frames(meta["code"],
+                                      refresh=not (universe_scan or scan_cached))
             else:
                 frames = _frames_real(meta["code"])
             bench = None if demo else data.fetch_benchmark(meta.get("ccy", "USD"))
@@ -165,7 +177,21 @@ def main():
     ap.add_argument("--screener", action="store_true",
                     help="대량 종목 스크리너(가벼운 표 index + 종목별 상세 페이지) 생성")
     ap.add_argument("--screener-dir", default="public", help="스크리너 출력 폴더")
+    ap.add_argument("--scan-cached", action="store_true",
+                    help="캐시된 모든 종목을 스크리너 대상으로(즉석조회 추가분 포함)")
+    ap.add_argument("--add", metavar="SYM",
+                    help="티커/코드를 캐시에 추가·갱신(즉석조회를 스크리너에 영구 반영)")
     args = ap.parse_args()
+
+    if args.add:
+        from scanner import cache
+        code = args.add.strip().upper()
+        try:
+            d = cache.update(code)
+            print(f"캐시 추가/갱신: {code} ({len(d)}행) · 총 {len(cache.cached_codes())}종목")
+        except Exception as e:
+            print(f"[{code}] 캐시 추가 실패: {type(e).__name__}: {e}", file=sys.stderr)
+        return
 
     if args.ticker:
         _lookup(args.ticker, args.ccy)
@@ -193,7 +219,8 @@ def main():
         dashboard=args.dashboard, dashboard_path=args.dashboard_path,
         backtest=args.backtest, use_cache=args.cache,
         universe_scan=args.universe_scan, universe_path=args.universe,
-        screener=args.screener, screener_dir=args.screener_dir)
+        screener=args.screener, screener_dir=args.screener_dir,
+        scan_cached=args.scan_cached)
 
 
 def _lookup(ticker: str, ccy: str | None):

@@ -144,9 +144,19 @@ def detect(df: pd.DataFrame, frames: dict | None = None,
             state, score, note = ("하락추세선 임박", 1,
                                   "하락추세선 바로 아래 → 하락 추세가 끝나갈 가능성")
         elif price < dn:
-            state, score, note = ("하락추세 지속", -2,
-                                  "하락추세선 아래 (고점 낮아짐) → 매수 자제/회피")
-            confirmed_down = True
+            # 52주 고가 근처거나 MA60 위면 '상승 중 눌림'일 뿐 하락추세 아님(veto 오발 방지)
+            ma60 = (float(seg["Close"].rolling(60).mean().iloc[-1])
+                    if n >= 60 else None)
+            hi52 = float(df["High"].iloc[-252:].max())
+            near_high = price >= hi52 * (1 - 0.10)      # 52주 고가 -10% 이내
+            above_mid = bool(ma60 and price >= ma60)
+            if near_high or above_mid:
+                state, score, note = ("하락추세선 아래(눌림)", 0,
+                    "하락추세선 아래지만 52주고가 근처/MA60 위 → 상승 중 눌림(하락추세 아님)")
+            else:
+                state, score, note = ("하락추세 지속", -2,
+                    "하락추세선 아래 + 고가 멀고 MA60도 하회 → 하락추세, 매수 자제/회피")
+                confirmed_down = True
 
     if state == "추세선 불명확" and up and up["slope"] > 0:
         un = up["now"]

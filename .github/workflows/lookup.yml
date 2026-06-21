@@ -1,7 +1,7 @@
 name: lookup
 
-# 수시 즉석 조회: 티커/코드를 입력하면 그 종목을 바로 받아 분석.
-# 결과 = 실행 로그(신호 카드) + 상세 차트 HTML(아티팩트로 다운로드). Pages는 안 건드림.
+# 수시 즉석 조회: 티커/코드 입력 → 캐시에 추가 → 스크리너 재생성 → Pages 배포.
+# 결과: 그 종목이 스크리너 목록과 상세차트에 영구 반영됨(+ 로그에 신호 카드).
 on:
   workflow_dispatch:
     inputs:
@@ -11,22 +11,47 @@ on:
 
 permissions:
   contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages          # daily-scan과 Pages 배포 직렬화(동시 배포 충돌 방지)
+  cancel-in-progress: false
 
 jobs:
-  lookup:
+  build:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
       - run: pip install -r requirements.txt
-      - name: 즉석 조회
-        run: python main.py --ticker "${{ inputs.ticker }}"
-      - name: 상세 차트 업로드(다운로드용)
-        uses: actions/upload-artifact@v4
+
+      - uses: actions/cache@v4         # daily-scan과 같은 캐시 공유(키 동일)
         with:
-          name: lookup-${{ inputs.ticker }}
-          path: lookup_*.html
-          if-no-files-found: warn
+          path: data_cache
+          key: data-cache-${{ github.run_id }}
+          restore-keys: |
+            data-cache-
+
+      - name: 캐시에 추가(신호 카드 로그)
+        run: python main.py --add "${{ inputs.ticker }}"
+
+      - name: 스크리너 재생성(캐시 전체 — 추가분 포함)
+        run: python main.py --cache --scan-cached --screener --screener-dir public
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: public
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - id: deploy
+        uses: actions/deploy-pages@v4

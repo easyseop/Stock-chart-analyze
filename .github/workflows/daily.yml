@@ -20,7 +20,7 @@ permissions:
   id-token: write
 
 concurrency:
-  group: daily-scan
+  group: pages          # lookup과 Pages 배포 직렬화(동시 배포 충돌 방지)
   cancel-in-progress: false
 
 env:
@@ -50,8 +50,8 @@ jobs:
           python main.py --backfill "${{ github.event.inputs.backfill || env.CHUNK }}"
           python main.py --update
 
-      - name: 스크리너 생성(캐시된 종목만, 네트워크 0)
-        run: python main.py --cache --universe-scan "${{ env.TARGET }}" --screener --screener-dir public
+      - name: 스크리너 생성(캐시 전체 — 즉석조회 추가분 포함, 네트워크 0)
+        run: python main.py --cache --scan-cached --screener --screener-dir public
 
       - name: 진행 현황(로그용)
         run: |
