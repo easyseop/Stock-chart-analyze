@@ -76,11 +76,34 @@ def fetch_daily(code: str, start: str = config.FETCH_START) -> pd.DataFrame:
             raise last_err
         raise ValueError(f"데이터 없음: {code}")
 
-    df = _read(code, start)
+    # 미국주: 야후 우선, 실패/차단(레이트리밋) 시 Stooq 폴백
+    df = None
+    try:
+        df = _read(code, start)
+    except Exception:
+        df = None
+    if df is None or len(df) == 0:
+        df = _read_stooq(code, start)
     if df is None or len(df) == 0:
         raise ValueError(f"데이터 없음: {code}")
     df = df[[c for c in OHLCV if c in df.columns]].copy()
     return clean(df)
+
+
+def _read_stooq(code: str, start: str):
+    """Stooq 폴백(미국·글로벌 주식. 야후가 막힐 때 대안. 한국주는 미지원)."""
+    import warnings
+    import FinanceDataReader as fdr
+    dt = time.time() - _last_req[0]
+    if dt < config.REQUEST_DELAY:
+        time.sleep(config.REQUEST_DELAY - dt)
+    _last_req[0] = time.time()
+    try:
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            return fdr.DataReader(code, start, data_source="stooq")
+    except Exception:
+        return None
 
 
 def clean(df: pd.DataFrame) -> pd.DataFrame:
