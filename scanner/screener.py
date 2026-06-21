@@ -109,7 +109,17 @@ def build(results: list[dict], frames_map: dict[str, dict],
             fp.write(_detail(r, frames_map[code]))
     with open(os.path.join(out_dir, "index.html"), "w", encoding="utf-8") as fp:
         fp.write(_index(results))
+    with open(os.path.join(out_dir, "lookup.html"), "w", encoding="utf-8") as fp:
+        fp.write(_REPO and _trigger_page())   # 웹 즉석 조회(워크플로 트리거) 페이지
     return out_dir
+
+
+# 저장소 정보(워크플로 트리거 대상). 다른 저장소면 여기만 바꾸면 됨.
+_REPO = "easyseop/Stock-chart-analyze"
+
+
+def _trigger_page() -> str:
+    return _LOOKUP_TMPL.replace("__REPO__", _REPO)
 
 
 _INDEX_TMPL = """<!DOCTYPE html><html lang="ko"><head>
@@ -146,6 +156,7 @@ _INDEX_TMPL = """<!DOCTYPE html><html lang="ko"><head>
   <button class="chip" onclick="flt('all')">전체</button>
   <button class="chip on" onclick="fltStage()">🔄 전환후보 {tcount}</button>
   {chips}
+  <a class="chip" href="lookup.html" style="margin-left:auto;background:#0f172a;color:#fff;border-color:#0f172a;text-decoration:none">➕ 티커 즉석 조회</a>
 </div>
 <table id="t"><thead><tr>
   <th onclick="srt(0,false)">신호</th>
@@ -259,4 +270,103 @@ _DETAIL_TMPL = """<!DOCTYPE html><html lang="ko"><head>
     if(idx.length)Plotly.restyle(gd,{{visible:STATE[g]}},idx);
   }}
   window.addEventListener("load",apply);
+</script></body></html>"""
+
+
+_LOOKUP_TMPL = """<!DOCTYPE html><html lang="ko"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>티커 즉석 조회</title>
+<style>
+  body{margin:0;font-family:-apple-system,'Segoe UI','Noto Sans KR',sans-serif;
+    background:#f1f5f9;color:#1e293b}
+  header{background:#0f172a;color:#fff;padding:14px 20px}
+  header h1{margin:0;font-size:17px} header a{color:#7dd3fc;font-size:13px;text-decoration:none}
+  .wrap{max-width:620px;margin:0 auto;padding:18px}
+  .card{background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:18px;margin-bottom:14px}
+  label{display:block;font-size:13px;font-weight:600;margin:10px 0 4px;color:#334155}
+  input{width:100%;box-sizing:border-box;padding:11px 12px;border:1px solid #cbd5e1;
+    border-radius:8px;font-size:15px}
+  button.go{width:100%;margin-top:14px;padding:13px;border:0;border-radius:10px;
+    background:#2563eb;color:#fff;font-size:16px;font-weight:700;cursor:pointer}
+  button.go:disabled{background:#94a3b8}
+  .hint{font-size:12px;color:#64748b;line-height:1.6;margin-top:6px}
+  .stat{font-size:14px;margin-top:12px;padding:12px;border-radius:8px;background:#f8fafc;
+    border:1px solid #e2e8f0;display:none}
+  .stat.on{display:block}
+  details summary{cursor:pointer;font-weight:600;color:#334155}
+  code{background:#f1f5f9;padding:1px 5px;border-radius:4px}
+</style></head><body>
+<header><a href="index.html">&larr; 스크리너</a>
+<h1>티커 즉석 조회 <span style="color:#38bdf8;font-size:13px">웹에서 바로 수집</span></h1></header>
+<div class="wrap">
+  <div class="card">
+    <label>티커 / 코드</label>
+    <input id="tk" placeholder="예: AAPL, NVDA, 005930" autocapitalize="characters">
+    <button class="go" id="go" onclick="run()">수집하기 (워크플로 실행)</button>
+    <div class="stat" id="st"></div>
+    <div class="hint">미국 티커 또는 한국 6자리 코드. 누르면 GitHub Actions의 lookup 워크플로가
+      돌아 그 종목을 분석합니다(약 1~2분). 끝나면 결과 링크가 떠요.</div>
+  </div>
+  <div class="card">
+    <details><summary>최초 1회: 내 GitHub 토큰 입력 (브라우저에만 저장)</summary>
+    <label>GitHub 토큰 (PAT)</label>
+    <input id="pat" type="password" placeholder="github_pat_...">
+    <div class="hint">웹에서 워크플로를 켜려면 토큰이 필요합니다. <b>이 토큰은 당신 브라우저에만
+      저장</b>(localStorage)되고 어디에도 전송/공개되지 않습니다(깃허브 API 호출에만 사용).<br>
+      만드는 법: GitHub &rarr; Settings &rarr; Developer settings &rarr;
+      <b>Fine-grained tokens</b> &rarr; 이 저장소만 선택 &rarr; 권한
+      <code>Actions: Read and write</code> 부여 &rarr; 생성한 토큰을 여기 붙여넣기.</div>
+    </details>
+  </div>
+</div>
+<script>
+  var REPO="__REPO__", WF="lookup.yml";
+  var pat=document.getElementById('pat'), tk=document.getElementById('tk'),
+      st=document.getElementById('st'), go=document.getElementById('go');
+  pat.value=localStorage.getItem('ghpat')||"";
+  function show(m){st.className='stat on';st.innerHTML=m;}
+  async function defaultBranch(){
+    try{var r=await fetch('https://api.github.com/repos/'+REPO);
+      return (await r.json()).default_branch||'main';}catch(e){return 'main';}
+  }
+  async function run(){
+    var t=tk.value.trim().toUpperCase(), p=pat.value.trim();
+    if(!t){show('티커를 입력하세요.');return;}
+    if(!p){show('먼저 아래 토큰을 입력하세요(최초 1회).');return;}
+    localStorage.setItem('ghpat',p);
+    go.disabled=true; show('실행 요청 중...');
+    var ref=await defaultBranch();
+    var r=await fetch('https://api.github.com/repos/'+REPO+'/actions/workflows/'+WF+'/dispatches',{
+      method:'POST',
+      headers:{'Authorization':'Bearer '+p,'Accept':'application/vnd.github+json',
+        'X-GitHub-Api-Version':'2022-11-28'},
+      body:JSON.stringify({ref:ref,inputs:{ticker:t}})
+    });
+    go.disabled=false;
+    if(r.status===204){
+      show('✅ <b>'+t+'</b> 수집 시작! 1~2분 후 결과를 봅니다...');
+      setTimeout(function(){track(p,t);},6000);
+    }else{
+      var e=await r.text();
+      show('❌ 실패 ('+r.status+'). 토큰/권한 확인.<br><small>'+e.slice(0,160)+'</small>');
+    }
+  }
+  async function track(p,t){
+    try{
+      var r=await fetch('https://api.github.com/repos/'+REPO+'/actions/workflows/'+WF+'/runs?per_page=1',
+        {headers:{'Authorization':'Bearer '+p,'Accept':'application/vnd.github+json'}});
+      var run=(await r.json()).workflow_runs[0];
+      if(!run){show('실행 대기 중...');setTimeout(function(){track(p,t);},5000);return;}
+      if(run.status!=='completed'){
+        show('⏳ <b>'+t+'</b> 분석 중... ('+run.status+') · <a href="'+run.html_url+'" target=_blank>진행 보기</a>');
+        setTimeout(function(){track(p,t);},5000);
+      }else{
+        var ok=run.conclusion==='success';
+        show((ok?'✅ 완료!':'⚠️ '+run.conclusion)+' <b>'+t+'</b><br>'
+          +'<a href="'+run.html_url+'" target=_blank>결과/차트(아티팩트) 보기 &rarr;</a>'
+          +'<div class=hint>로그에 신호 카드, 하단 Artifacts에 상세차트 HTML.</div>');
+      }
+    }catch(e){show('상태 조회 오류: '+e);}
+  }
+  tk.addEventListener('keydown',function(e){if(e.key==='Enter')run();});
 </script></body></html>"""
