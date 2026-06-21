@@ -85,6 +85,8 @@ def _rows(results: list[dict]) -> str:
 
 
 def _index(results: list[dict]) -> str:
+    import datetime
+    from scanner import cache, universe
     # 기본 정렬: 전환 단계 높은 순(하락→상승 전환 임박/확정) → 그다음 점수
     results = sorted(results,
                      key=lambda r: (r.get("transition_stage", 0), r["norm"]),
@@ -94,8 +96,17 @@ def _index(results: list[dict]) -> str:
     chips = "".join(
         f'<button class="chip" onclick="flt(\'{k}\')">{_BUCKET_KO[k]} {counts[k]}</button>'
         for k, _ in _BUCKETS)
+    # 수집 진행률(캐시된 종목 / 유니버스 전체)
+    try:
+        cached = len(cache.cached_codes())
+        uni = len([s for s in universe.load() if s.get("code")]) or 1
+    except Exception:
+        cached, uni = len(results), max(len(results), 1)
+    pct = min(100, round(cached / uni * 100))
+    updated = datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M UTC")
     return _INDEX_TMPL.format(
-        n=len(results), rows=_rows(results), chips=chips, tcount=tcount)
+        n=len(results), rows=_rows(results), chips=chips, tcount=tcount,
+        cached=cached, uni=uni, pct=pct, updated=updated)
 
 
 def build(results: list[dict], frames_map: dict[str, dict],
@@ -149,9 +160,17 @@ _INDEX_TMPL = """<!DOCTYPE html><html lang="ko"><head>
   tr.b-transition td.sc{{color:#16a34a}}
   tr.b-avoid td.sc{{color:#dc2626}}
   .pos{{color:#16a34a}}.neg{{color:#dc2626}}
+  .prog{{padding:8px 16px 0}}
+  .ptxt{{font-size:12px;color:#475569;margin-bottom:4px}}
+  .pbarw{{height:10px;background:#e2e8f0;border-radius:999px;overflow:hidden}}
+  .pfillw{{height:100%;background:linear-gradient(90deg,#16a34a,#22c55e);border-radius:999px}}
 </style></head><body>
 <header><h1>종목 스크리너 <span style="color:#38bdf8;font-size:13px">차트 신호 랭킹</span></h1>
-<p>{n}종목 · 헤더 클릭=정렬 · 칩=필터 · 종목명 클릭=상세 차트(일/주/월)</p></header>
+<p>{n}종목 표시 · 헤더 클릭=정렬 · 칩=필터 · 종목명 클릭=상세 차트(일/주/월)</p></header>
+<div class="prog">
+  <div class="ptxt">📥 수집 진행 <b>{cached}/{uni}</b> ({pct}%) · 갱신 {updated}</div>
+  <div class="pbarw"><div class="pfillw" style="width:{pct}%"></div></div>
+</div>
 <div class="bar">
   <button class="chip" onclick="flt('all')">전체</button>
   <button class="chip on" onclick="fltStage()">🔄 전환후보 {tcount}</button>
