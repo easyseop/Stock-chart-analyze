@@ -155,25 +155,29 @@ def detect(df: pd.DataFrame, frames: dict | None = None,
             "reason": f"{state}", "terms": ["추세선"]}
 
 
-def apply_volume_filter(tlres: dict, vol_mult: float) -> dict:
-    """하락추세선 '상향 돌파'에 거래량 동반 조건을 적용한다(백테스트 검증).
+def apply_confirm_filter(tlres: dict, vol_mult: float, rsi_val: float) -> dict:
+    """'추세 전환 확정'에 콤보 확인(거래량 동반 + RSI 과열 회피)을 적용한다.
 
-    거래량 미동반 돌파는 가짜 돌파가 많아(기대값 음) → '거래 미동반 돌파'로 격하해
-    매수 점수를 빼고 관망으로 돌린다. 거래량을 동반하면 그대로 전환 후보로 인정.
+    백테스트 검증: 거래량≥1.3배 & RSI<70 콤보가 전환 후보 기대값 최고(+0.23R, PF 1.40).
+    둘 다 충족해야 '확정', 미충족이면 '전환 대기'로 격하(가짜 전환·추격 위험).
     """
-    # 거래량 확인은 '추세 전환 확정'(최상위 매수 신호)에만 적용
     if tlres.get("state") != TRANSITION_CONFIRMED:
         tlres.setdefault("volume_confirmed", None)   # 대상 아님 → 해당없음
         return tlres
-    if vol_mult >= config.VOLUME_CONFIRM_MULT:
+    vol_ok = vol_mult >= config.TRANSITION_VOL_MULT
+    rsi_ok = rsi_val < config.TRANSITION_RSI_MAX
+    if vol_ok and rsi_ok:
         tlres["volume_confirmed"] = True
-        tlres["note"] += f" (거래량 {vol_mult:.1f}배 동반 ✓)"
+        tlres["note"] += f" (거래량 {vol_mult:.1f}배·RSI {rsi_val:.0f} 확인 ✓)"
         return tlres
-    # 거래량 미동반 → '전환대기'로 격하(가짜 전환 위험)
+    miss = []
+    if not vol_ok:
+        miss.append(f"거래량 {vol_mult:.1f}배<{config.TRANSITION_VOL_MULT}")
+    if not rsi_ok:
+        miss.append(f"RSI {rsi_val:.0f}≥{config.TRANSITION_RSI_MAX}(과열)")
     tlres["state"] = TRANSITION_PENDING
     tlres["score"] = 1
-    tlres["note"] = (f"추세 전환 형태이나 거래량 미동반({vol_mult:.1f}배) "
-                     f"→ 거래량 확인 후 판단(전환 대기)")
+    tlres["note"] = f"추세 전환 형태이나 확인 미충족({' · '.join(miss)}) → 전환 대기"
     tlres["reason"] = tlres["state"]
     tlres["volume_confirmed"] = False
     return tlres

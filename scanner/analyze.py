@@ -27,8 +27,9 @@ def analyze(frames: dict[str, pd.DataFrame], meta: dict, bench=None) -> dict:
     newhigh = ind.new_high(d)                 # 52주 신고가 근접도
     market = ind.market_trend(bench)          # 시장(지수) 방향
     trendline = tl.detect(d, frames)
-    # 거래량 동반 확인: 거래량 없는 하락추세선 돌파는 '가짜 돌파'로 격하(백테스트 검증)
-    trendline = tl.apply_volume_filter(trendline, volume.get("mult", 0.0))
+    # 전환 확정 콤보 게이트: 거래량 동반 + RSI 과열 회피(둘 다)일 때만 '확정'(백테스트 검증)
+    trendline = tl.apply_confirm_filter(trendline, volume.get("mult", 0.0),
+                                        rsi.get("rsi", 50.0))
     levels = lv.analyze_levels(d)          # 차트용 지지/저항 레벨 + 피보/밸류영역
     supply = sp.analyze_supply(d)          # 기간분리 매물대 + 미실현손익 추정
 
