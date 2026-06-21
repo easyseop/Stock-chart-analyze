@@ -128,10 +128,23 @@ def main():
                     help="아직 캐시 없는 종목을 최대 N개까지 전체이력 백필(하루 N개씩 분산용)")
     ap.add_argument("--update", action="store_true",
                     help="캐시된 모든 종목을 증분 갱신(신규 봉만)")
+    ap.add_argument("--universe", metavar="PATH", default="universe.csv",
+                    help="유니버스 파일(code,name,ccy) — 백필/갱신 대상")
+    ap.add_argument("--build-universe", type=int, metavar="KOSPI_TOP", nargs="?",
+                    const=200, default=None,
+                    help="S&P500 + KOSPI 시총상위 N으로 유니버스 자동 구성(기본 200)")
     args = ap.parse_args()
 
+    if args.build_universe is not None:
+        from scanner import universe
+        rows = universe.build(args.universe, kospi_top=args.build_universe)
+        us = sum(1 for r in rows if r["ccy"] == "USD")
+        kr = sum(1 for r in rows if r["ccy"] == "KRW")
+        print(f"유니버스 구성: {len(rows)}종목 (미국 {us} · 한국 {kr}) → {args.universe}")
+        return
+
     if args.backfill or args.update:
-        _manage_cache(args.backfill, args.update)
+        _manage_cache(args.backfill, args.update, args.universe)
         return
 
     run(demo=args.demo, csv_path=args.csv, chart=args.chart,
@@ -140,11 +153,12 @@ def main():
         backtest=args.backtest, use_cache=args.cache)
 
 
-def _manage_cache(backfill_n: int, do_update: bool):
-    """캐시 백필/증분 갱신 (분석 없이 데이터만)."""
-    from scanner import cache
+def _manage_cache(backfill_n: int, do_update: bool, universe_path: str):
+    """캐시 백필/증분 갱신 (분석 없이 데이터만). 대상 = 유니버스."""
+    from scanner import cache, universe
+    uni = universe.load(universe_path)
     if backfill_n:
-        todo = [s for s in config.STOCKS
+        todo = [s for s in uni
                 if s.get("code") and not cache.is_cached(s["code"])][:backfill_n]
         print(f"백필 대상 {len(todo)}종목(전체이력 1회 수집)…")
         for s in todo:

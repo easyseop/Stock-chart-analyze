@@ -5,11 +5,42 @@
 """
 from __future__ import annotations
 
+import time
+
 import pandas as pd
 
 import config
 
 OHLCV = ["Open", "High", "Low", "Close", "Volume"]
+
+_last_req = [0.0]   # 마지막 요청 시각(throttle용)
+
+
+def _read(sym: str, start: str):
+    """야후 읽기 + 안전장치: 요청 throttle + 429/네트워크 오류 지수 백오프 재시도.
+
+    심볼 없음(빈 결과)은 재시도하지 않고 그대로 반환(낭비 방지).
+    """
+    import FinanceDataReader as fdr
+    last_err = None
+    for attempt in range(config.MAX_RETRIES + 1):
+        dt = time.time() - _last_req[0]          # 요청 간 최소 간격 확보
+        if dt < config.REQUEST_DELAY:
+            time.sleep(config.REQUEST_DELAY - dt)
+        _last_req[0] = time.time()
+        try:
+            return fdr.DataReader(sym, start)
+        except Exception as e:
+            last_err = e
+            msg = str(e).lower()
+            transient = ("429" in msg or "too many" in msg or "timed out" in msg
+                         or "timeout" in msg or "connection" in msg
+                         or "temporarily" in msg)
+            if transient and attempt < config.MAX_RETRIES:
+                time.sleep(config.RETRY_BACKOFF_BASE * (2 ** attempt))
+                continue
+            raise
+    raise last_err
 
 
 def _is_korean(code: str) -> bool:
@@ -25,14 +56,12 @@ def fetch_daily(code: str, start: str = config.FETCH_START) -> pd.DataFrame:
     기본/KRX 소스는 실행 환경의 egress 정책(naver 차단)·KRX 안티봇(LOGOUT)으로
     막히는 경우가 있어, 야후 경유가 가장 안정적이다(미국주와 동일 소스).
     """
-    import FinanceDataReader as fdr  # 지연 임포트(오프라인 테스트 시 불필요)
-
     if _is_korean(code):
         # KOSPI(.KS) 먼저, 없으면 KOSDAQ(.KQ) 시도. 야후 소스 강제.
         last_err = None
         for suffix in (".KS", ".KQ"):
             try:
-                df = fdr.DataReader(f"YAHOO:{code}{suffix}", start)
+                df = _read(f"YAHOO:{code}{suffix}", start)
             except Exception as e:  # 심볼 불일치 등은 다음 접미사로
                 last_err = e
                 continue
@@ -43,7 +72,7 @@ def fetch_daily(code: str, start: str = config.FETCH_START) -> pd.DataFrame:
             raise last_err
         raise ValueError(f"데이터 없음: {code}")
 
-    df = fdr.DataReader(code, start)
+    df = _read(code, start)
     if df is None or len(df) == 0:
         raise ValueError(f"데이터 없음: {code}")
     df = df[[c for c in OHLCV if c in df.columns]].copy()
@@ -100,9 +129,8 @@ def fetch_benchmark(ccy: str, start: str = config.FETCH_START):
         return None
     if sym in _BENCH_CACHE:
         return _BENCH_CACHE[sym]
-    import FinanceDataReader as fdr
     try:
-        df = fdr.DataReader(f"YAHOO:{sym}", start)
+        df = _read(f"YAHOO:{sym}", start)
         df = df[[c for c in OHLCV if c in df.columns]].copy()
         df = clean(df)
     except Exception:
