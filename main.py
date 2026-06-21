@@ -155,6 +155,8 @@ def main():
                     help="S&P500 + KOSPI 시총상위 N으로 유니버스 자동 구성(기본 200)")
     ap.add_argument("--build-universe-max", action="store_true",
                     help="최대 유니버스: S&P500 + KOSPI 전체 + KOSDAQ 전체(~3,300종목)")
+    ap.add_argument("--build-universe-us", action="store_true",
+                    help="미국 전용 유니버스(S&P500). 자동 수집은 미장만, 한국주는 수시 조회")
     ap.add_argument("--ticker", metavar="SYM",
                     help="티커/코드 즉석 조회(수시) — 바로 받아 카드+상세HTML 생성")
     ap.add_argument("--ccy", default=None, help="--ticker 통화(USD/KRW). 미지정 시 자동")
@@ -169,9 +171,11 @@ def main():
         _lookup(args.ticker, args.ccy)
         return
 
-    if args.build_universe_max or args.build_universe is not None:
+    if args.build_universe_us or args.build_universe_max or args.build_universe is not None:
         from scanner import universe
-        if args.build_universe_max:
+        if args.build_universe_us:
+            rows = universe.build(args.universe)                      # 미국 전용
+        elif args.build_universe_max:
             rows = universe.build(args.universe, kospi_top=0, kosdaq_top=0)
         else:
             rows = universe.build(args.universe, kospi_top=args.build_universe)

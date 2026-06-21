@@ -57,8 +57,8 @@ def _krx_rows(market: str, n_take: int, seen: set) -> list[dict]:
 
 
 def build(path: str = DEFAULT_PATH, sp500: bool = True,
-          kospi_top: int = 0, kosdaq_top: int = 0) -> list[dict]:
-    """유니버스 구성·저장. S&P500 + KOSPI + KOSDAQ(각 시총순, 0=전체)."""
+          kospi_top=None, kosdaq_top=None) -> list[dict]:
+    """유니버스 구성·저장. kospi_top/kosdaq_top: None=제외, 0=전체, N=시총상위N."""
     import FinanceDataReader as fdr
     rows: list[dict] = []
     seen: set = set()
@@ -72,7 +72,9 @@ def build(path: str = DEFAULT_PATH, sp500: bool = True,
                 rows.append({"code": code, "name": str(r.get("Name", code)),
                              "ccy": "USD"})
 
-    rows += _krx_rows("KOSPI", kospi_top, seen)
-    rows += _krx_rows("KOSDAQ", kosdaq_top, seen)
+    if kospi_top is not None:
+        rows += _krx_rows("KOSPI", kospi_top, seen)
+    if kosdaq_top is not None:
+        rows += _krx_rows("KOSDAQ", kosdaq_top, seen)
     save(rows, path)
     return rows
