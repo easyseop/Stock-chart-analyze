@@ -285,6 +285,12 @@ _LOOKUP_TMPL = """<!DOCTYPE html><html lang="ko"><head>
     if(!t){show('티커를 입력하세요.');return;}
     if(!p){show('먼저 아래 토큰을 입력하세요(최초 1회).');return;}
     localStorage.setItem('ghpat',p);
+    // 이미 진행 중인 같은 종목이면 중복 실행하지 말고 이어서 추적(게이지 초기화 방지)
+    var act=loadActive();
+    if(act&&act.t===t){
+      show('⏳ <b>'+t+'</b> 이미 수집 중 — 이어서 확인합니다.'); bar(45,null,true);
+      track(p,t); return;
+    }
     go.disabled=true; show('실행 요청 중...'); bar(12,null,true);
     var ref=await defaultBranch();
     var r=await fetch('https://api.github.com/repos/'+REPO+'/actions/workflows/'+WF+'/dispatches',{
@@ -295,6 +301,7 @@ _LOOKUP_TMPL = """<!DOCTYPE html><html lang="ko"><head>
     });
     go.disabled=false;
     if(r.status===204){
+      saveActive(t);   // 진행 상태 저장 → 새로고침/재방문해도 이어서 추적
       show('✅ <b>'+t+'</b> 수집 시작! 1~2분 후 결과를 봅니다...'); bar(30,null,true);
       setTimeout(function(){track(p,t);},6000);
     }else{
@@ -313,6 +320,7 @@ _LOOKUP_TMPL = """<!DOCTYPE html><html lang="ko"><head>
         bar(run.status==='queued'?45:75,null,true);
         setTimeout(function(){track(p,t);},5000);
       }else{
+        clearActive();   // 끝났으니 진행 상태 해제
         var ok=run.conclusion==='success';
         bar(100,ok?'#16a34a':'#dc2626',false);
         show((ok?'✅ 완료! <b>'+t+'</b> 스크리너에 추가됨':'⚠️ '+run.conclusion+' <b>'+t+'</b>')+'<br>'
@@ -323,5 +331,22 @@ _LOOKUP_TMPL = """<!DOCTYPE html><html lang="ko"><head>
       }
     }catch(e){show('상태 조회 오류: '+e);}
   }
+  // 진행 상태를 브라우저에 저장 → 새로고침/재방문해도 게이지·상태 유지(초기화 방지)
+  function saveActive(t){localStorage.setItem('lookup_active',JSON.stringify({t:t,ts:Date.now()}));}
+  function clearActive(){localStorage.removeItem('lookup_active');}
+  function loadActive(){
+    var a=localStorage.getItem('lookup_active'); if(!a)return null;
+    try{a=JSON.parse(a);}catch(e){clearActive();return null;}
+    if(Date.now()-a.ts>20*60*1000){clearActive();return null;}  // 20분 지나면 만료
+    return a;
+  }
   tk.addEventListener('keydown',function(e){if(e.key==='Enter')run();});
+  // 페이지 열릴 때 진행 중이던 조회가 있으면 자동으로 이어서 추적
+  window.addEventListener('load',function(){
+    var a=loadActive(); if(!a)return;
+    var p=localStorage.getItem('ghpat')||'';
+    tk.value=a.t;
+    show('⏳ <b>'+a.t+'</b> 이전 수집 이어보는 중...'); bar(40,null,true);
+    if(p)track(p,a.t); else show('토큰을 입력하면 <b>'+a.t+'</b> 진행 상태를 이어볼 수 있어요.');
+  });
 </script></body></html>"""
