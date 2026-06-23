@@ -31,7 +31,7 @@ def _detail(result: dict, frames: dict) -> str:
         fig.update_layout(autosize=True, width=None, height=640)
         div = fig.to_html(include_plotlyjs=False, full_html=False,
                           div_id=f"plot-{code}-{tf}",
-                          config={"displaylogo": False, "responsive": True})
+                          config={"displaylogo": False, "responsive": True, "scrollZoom": True})
         disp = "block" if tf == "D" else "none"
         charts.append(f'<div class="tfchart" id="tf-{code}-{tf}" '
                       f'style="display:{disp}">{div}</div>')

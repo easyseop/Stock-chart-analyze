@@ -240,7 +240,7 @@ def build_figure(result: dict, frames: dict, tf: str = "D", lookback: int = None
         title=dict(text=title, font=dict(size=15)),
         template="plotly_white", height=720, width=1100,
         xaxis_rangeslider_visible=False, hovermode="closest",
-        showlegend=False,
+        showlegend=False, dragmode="pan",   # 드래그=이동, 핀치/휠=확대축소, 더블탭=원위치
         margin=dict(l=60, r=120, t=70, b=40),
         # 매물대 가로 히스토그램용 보조 x축 — 좌측 약 22% 폭만 차지하게 스케일
         xaxis3=dict(overlaying="x", anchor="y", side="top",

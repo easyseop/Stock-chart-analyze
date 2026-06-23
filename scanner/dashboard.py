@@ -133,7 +133,7 @@ def _bt_views(backtest: dict, metas: dict, experiment: dict | None = None) -> tu
     fig.update_yaxes(title_text="누적 R")
     eq_div = fig.to_html(include_plotlyjs=False, full_html=False,
                          div_id="plot-__bt__",
-                         config={"displaylogo": False, "responsive": True})
+                         config={"displaylogo": False, "responsive": True, "scrollZoom": True})
 
     # 종목별 표
     rows = []
@@ -209,7 +209,7 @@ def build(results: list[dict], frames_map: dict[str, dict],
             fig.update_layout(autosize=True, width=None, height=680)
             cdiv = fig.to_html(include_plotlyjs=False, full_html=False,
                                div_id=f"plot-{code}-{tf}",
-                               config={"displaylogo": False, "responsive": True})
+                               config={"displaylogo": False, "responsive": True, "scrollZoom": True})
             disp = "block" if tf == "D" else "none"
             charts_html.append(
                 f'<div class="tfchart" id="tf-{code}-{tf}" style="display:{disp}">'
