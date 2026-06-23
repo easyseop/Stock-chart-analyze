@@ -9,48 +9,15 @@ from __future__ import annotations
 import html
 import os
 
-from scanner import card, chart
+from scanner import card, lwc
 from scanner.dashboard import _BUCKETS, _bucket
 
-PLOTLY = "https://cdn.plot.ly/plotly-2.35.2.min.js"
-_TFS = [("D", "일봉"), ("W", "주봉"), ("M", "월봉")]
 _BUCKET_KO = {"transition": "🟢전환", "watch": "⚪관망", "avoid": "🔴회피"}
 
 
-def _card_html(result: dict) -> str:
-    text = card.render(result).split("\n용어:")[0]
-    return f'<pre class="card">{html.escape(text)}</pre>'
-
-
 def _detail(result: dict, frames: dict) -> str:
-    """종목별 상세 페이지(일/주/월 토글 + 지표 토글 + 카드)."""
-    code = result["code"]
-    charts, tfbtns = [], []
-    for tf, label in _TFS:
-        fig = chart.build_figure(result, frames, tf=tf)
-        fig.update_layout(autosize=True, width=None, height=640)
-        div = fig.to_html(include_plotlyjs=False, full_html=False,
-                          div_id=f"plot-{code}-{tf}",
-                          config={"displaylogo": False, "responsive": True, "scrollZoom": True})
-        disp = "block" if tf == "D" else "none"
-        charts.append(f'<div class="tfchart" id="tf-{code}-{tf}" '
-                      f'style="display:{disp}">{div}</div>')
-        on = " active" if tf == "D" else ""
-        tfbtns.append(f'<button class="tfbtn{on}" id="tfb-{tf}" '
-                      f'onclick="switchTf(\'{tf}\')">{label}</button>')
-    toggles = "".join(
-        f'<button class="toggle{" on" if on else ""}" data-group="{k}" '
-        f'onclick="tg(this)">{html.escape(lab)}</button>'
-        for k, lab, on in chart.GROUPS)
-    default_on = "{" + ",".join(
-        f'"{k}":{"true" if on else "false"}' for k, _l, on in chart.GROUPS) + "}"
-    title = (f'{html.escape(result["name"])} {html.escape(code)} · '
-             f'{html.escape(result["gauge"])} 정규화 {result["norm"]:+.0f}')
-    return _DETAIL_TMPL.format(
-        title=title, code=code, plotly=PLOTLY, toggles=toggles,
-        tfbtns="".join(tfbtns), charts="".join(charts),
-        card=_card_html(result), default_on=default_on,
-        verdict=html.escape(result.get("verdict", "")))
+    """종목별 상세 페이지 — lightweight-charts(모바일 핀치/팬 부드러움)."""
+    return lwc.detail(result, frames)
 
 
 def _rows(results: list[dict]) -> str:
@@ -245,75 +212,6 @@ _INDEX_TMPL = """<!DOCTYPE html><html lang="ko"><head>
       r.style.display=(parseInt(r.dataset.stage||'0')>0)?'':'none';}});}}
     else{{setOn(document.querySelectorAll('.chip')[0]);}}
   }});
-</script></body></html>"""
-
-
-_DETAIL_TMPL = """<!DOCTYPE html><html lang="ko"><head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>{title}</title>
-<script src="{plotly}" charset="utf-8"></script>
-<style>
-  body{{margin:0;font-family:-apple-system,'Segoe UI','Noto Sans KR',sans-serif;
-    background:#f1f5f9;color:#1e293b}}
-  header{{background:#0f172a;color:#fff;padding:12px 18px}}
-  header a{{color:#7dd3fc;font-size:13px;text-decoration:none}}
-  header h1{{margin:4px 0 0;font-size:16px}}
-  .vt{{font-size:12px;color:#94a3b8;margin-top:3px}}
-  .wrap{{padding:14px}}
-  .toolbar,.tfbar{{display:flex;flex-wrap:wrap;gap:7px;align-items:center;
-    background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:9px 11px;
-    margin-bottom:10px}}
-  .toggle{{border:1px solid #cbd5e1;background:#f8fafc;color:#64748b;border-radius:999px;
-    padding:5px 12px;cursor:pointer;font-size:12px}}
-  .toggle.on{{background:#2563eb;border-color:#2563eb;color:#fff}}
-  .tfbtn{{border:1px solid #cbd5e1;background:#fff;color:#475569;border-radius:8px;
-    padding:6px 16px;cursor:pointer;font-size:13px;font-weight:600}}
-  .tfbtn.active{{background:#0f172a;border-color:#0f172a;color:#fff}}
-  .chart{{background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:4px}}
-  .card{{background:#0f172a;color:#e2e8f0;padding:14px 16px;border-radius:10px;
-    font-size:12px;line-height:1.5;white-space:pre;overflow:auto;margin-top:12px;
-    font-family:'D2Coding','Menlo','Consolas',monospace}}
-  details>summary{{cursor:pointer;font-size:13px;font-weight:600;color:#334155;
-    padding:8px 12px;background:#fff;border:1px solid #e2e8f0;border-radius:8px;margin-top:12px}}
-  @media(max-width:640px){{.wrap{{padding:8px}}header h1{{font-size:14px}}
-    .toolbar,.tfbar{{padding:7px 8px}} .toggle,.tfbtn{{padding:5px 10px;font-size:12px}}
-    .card{{font-size:11px}}}}
-</style></head><body>
-<header><a href="../index.html">← 스크리너 목록</a><h1>{title}</h1>
-<div class="vt">{verdict}</div></header>
-<div class="wrap">
-  <div class="toolbar"><span style="font-size:12px;color:#64748b">지표</span>{toggles}</div>
-  <div class="tfbar">{tfbtns}<span style="font-size:11px;color:#64748b;margin-left:6px">
-    ← 일/주/월 전환(추세는 프레임마다 다름)</span></div>
-  <div class="chart">{charts}</div>
-  <details><summary>📋 상세 신호 카드</summary>{card}</details>
-</div>
-<script>
-  var STATE={default_on}, CODE="{code}", TF="D";
-  function pid(){{return "plot-"+CODE+"-"+TF;}}
-  function apply(){{
-    var gd=document.getElementById(pid()); if(!gd||!gd.data)return;
-    Object.keys(STATE).forEach(function(g){{
-      var idx=[];gd.data.forEach(function(t,i){{if(t.legendgroup===g)idx.push(i);}});
-      if(idx.length)Plotly.restyle(gd,{{visible:STATE[g]}},idx);
-    }});
-    Plotly.Plots.resize(gd);
-  }}
-  function switchTf(tf){{
-    TF=tf;
-    ["D","W","M"].forEach(function(t){{
-      var c=document.getElementById("tf-"+CODE+"-"+t);if(c)c.style.display=(t===tf)?"block":"none";
-      var b=document.getElementById("tfb-"+t);if(b)b.classList.toggle("active",t===tf);
-    }});
-    apply();
-  }}
-  function tg(btn){{
-    var g=btn.dataset.group;STATE[g]=!STATE[g];btn.classList.toggle("on",STATE[g]);
-    var gd=document.getElementById(pid());if(!gd||!gd.data)return;
-    var idx=[];gd.data.forEach(function(t,i){{if(t.legendgroup===g)idx.push(i);}});
-    if(idx.length)Plotly.restyle(gd,{{visible:STATE[g]}},idx);
-  }}
-  window.addEventListener("load",apply);
 </script></body></html>"""
 
 

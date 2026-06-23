@@ -181,7 +181,13 @@ def main():
                     help="캐시된 모든 종목을 스크리너 대상으로(즉석조회 추가분 포함)")
     ap.add_argument("--add", metavar="SYM",
                     help="티커/코드를 캐시에 추가·갱신(즉석조회를 스크리너에 영구 반영)")
+    ap.add_argument("--prune", metavar="SPEC",
+                    help="캐시 정리: 'korean'=한국 6자리 전부 / 'CODE[,CODE]'=지정 종목")
     args = ap.parse_args()
+
+    if args.prune:
+        _prune(args.prune)
+        return
 
     if args.add:
         from scanner import cache
@@ -221,6 +227,23 @@ def main():
         universe_scan=args.universe_scan, universe_path=args.universe,
         screener=args.screener, screener_dir=args.screener_dir,
         scan_cached=args.scan_cached)
+
+
+def _prune(spec: str):
+    """캐시 정리: 한국 6자리(자동 수집 대상 아님) 또는 지정 코드 삭제."""
+    from scanner import cache
+    cached = cache.cached_codes()
+    if spec.strip().lower() == "korean":
+        targets = [c for c in cached if len(c) == 6 and c.isdigit()]
+    else:
+        want = {s.strip().upper() for s in spec.split(",") if s.strip()}
+        targets = [c for c in cached if c in want]
+    if not targets:
+        print(f"정리 대상 없음(spec={spec!r}). 캐시 {len(cached)}종목 유지.")
+        return
+    n = sum(1 for c in targets if cache.remove(c))
+    print(f"캐시 정리: {n}종목 삭제 ({', '.join(targets)}) · "
+          f"남은 {len(cache.cached_codes())}종목")
 
 
 def _lookup(ticker: str, ccy: str | None):

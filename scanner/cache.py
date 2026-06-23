@@ -79,6 +79,15 @@ def frames(code: str, refresh: bool = True) -> dict:
     return datamod.frames_from_daily(d)
 
 
+def remove(code: str) -> bool:
+    """캐시 파일 삭제. 삭제했으면 True."""
+    p = _path(code)
+    if os.path.exists(p):
+        os.remove(p)
+        return True
+    return False
+
+
 def total_size_mb() -> float:
     if not os.path.isdir(CACHE_DIR):
         return 0.0

@@ -13,6 +13,9 @@ on:
       backfill:
         description: "이번 실행에서 백필할 묶음 크기"
         default: "50"
+      prune:
+        description: "캐시 정리(수동 전용): 'korean'=한국 6자리 전부 / 'CODE,CODE'=지정. 비우면 정리 안 함"
+        default: ""
 
 permissions:
   contents: read
@@ -44,6 +47,10 @@ jobs:
           key: data-cache-${{ github.run_id }}
           restore-keys: |
             data-cache-
+
+      - name: 캐시 정리(수동 입력 시에만 — 한국 잔재/지정 종목 삭제)
+        if: ${{ github.event.inputs.prune != '' }}
+        run: python main.py --prune "${{ github.event.inputs.prune }}"
 
       - name: 백필 한 묶음 + 증분 갱신
         run: |
