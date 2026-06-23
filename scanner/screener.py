@@ -9,10 +9,30 @@ from __future__ import annotations
 import html
 import os
 
-from scanner import card, lwc
+from scanner import card, lwc, names_ko
 from scanner.dashboard import _BUCKETS, _bucket
 
 _BUCKET_KO = {"transition": "🟢전환", "watch": "⚪관망", "avoid": "🔴회피"}
+
+# 전환단계 칸 마우스오버 설명(뜻 + 판정 기준)
+_STAGE_TIP = {
+    4: ("④ 전환 확정 — 하락추세선을 거래량 동반 돌파 → 되눌림 후 안착 → "
+        "위로 상승추세선까지 형성. 셋 다 충족된 가장 강한 하락→상승 전환 신호."),
+    3: ("③ 돌파후 횡보(대기) — 하락추세선은 넘었고 그 위에서 다지는 중. "
+        "상승추세선/거래량이 확인되면 ④ 전환 확정으로 올라감."),
+    2: ("② 갓 돌파(미확인) — 하락추세선을 막 넘었지만 되밀릴 수 있어 안착 미확인. 관망."),
+    1: ("① 임박 — 아직 하락추세선 아래지만 저항에 바짝 근접. 돌파하면 전환 시작."),
+    0: "전환 신호 없음(추세 전환 단계에 해당하지 않음).",
+}
+# 신호 칸 마우스오버 설명(종합 점수 −100~+100 기준)
+_GAUGE_TIP = {
+    "🟢 강세": "종합점수 +50 이상 — 적극 매수 구간(여러 지표 강세 정렬).",
+    "🟢 관심": "종합점수 +20~+50 — 매수 관심(지지 확인 후 진입).",
+    "⚪ 중립": "종합점수 −20~+20 — 관망(방향성 신호 부족).",
+    "🔴 주의": "종합점수 −50~−20 — 매도 관심/비중 축소.",
+    "🔴 공포": "종합점수 −50 이하 — 적극 회피/청산.",
+    "🔴 하락추세": "하락추세선 아래 — 추세 전환 전까지 회피.",
+}
 
 
 def _detail(result: dict, frames: dict) -> str:
@@ -36,12 +56,19 @@ def _rows(results: list[dict]) -> str:
         vd = html.escape(r.get("verdict", ""))
         if r.get("chase"):
             vd = "🔺추격주의 · " + vd
+        gauge = r["gauge"]
+        gtip = html.escape(_GAUGE_TIP.get(gauge, ""), quote=True)
+        stip = html.escape(_STAGE_TIP.get(stg, ""), quote=True)
+        ko = names_ko.ko(code)
+        ko_html = (f'<span class="ko">{html.escape(ko)}</span>' if ko else "")
         out.append(
             f'<tr class="b-{b}" data-bucket="{b}" data-stage="{stg}">'
-            f'<td data-label="신호">{html.escape(r["gauge"])}</td>'
+            f'<td data-label="신호" title="{gtip}">{html.escape(gauge)}</td>'
             f'<td class="nm"><a href="stocks/{code}.html">'
-            f'{html.escape(r["name"])}</a><span class="cd">{html.escape(code)}</span></td>'
-            f'<td data-label="전환단계" data-v="{stg}" class="num stg">{stg_lab}</td>'
+            f'{html.escape(r["name"])}</a>{ko_html}'
+            f'<span class="cd">{html.escape(code)}</span></td>'
+            f'<td data-label="전환단계" data-v="{stg}" class="num stg" '
+            f'title="{stip}">{stg_lab}</td>'
             f'<td data-label="추세">{tone}</td>'
             f'<td data-label="점수" data-v="{r["norm"]:.1f}" class="num sc">{r["norm"]:+.0f}</td>'
             f'<td data-label="시장">{html.escape(mk)}</td>'
@@ -123,7 +150,12 @@ _INDEX_TMPL = """<!DOCTYPE html><html lang="ko"><head>
   .num{{font-variant-numeric:tabular-nums}}
   td.stg{{text-align:left;color:#16a34a;font-weight:600;font-size:12px}}
   .nm a{{color:#1d4ed8;text-decoration:none;font-weight:600}}
+  .nm .ko{{color:#475569;font-size:12px;margin-left:6px}}
   .nm .cd{{color:#94a3b8;font-size:11px;margin-left:6px}}
+  .legend{{margin:0 16px 4px;background:#fff;border:1px solid #e2e8f0;border-radius:10px}}
+  .legend summary{{cursor:pointer;padding:9px 13px;font-size:13px;font-weight:600;color:#334155}}
+  .legend .lc{{padding:4px 15px 13px;font-size:12.5px;color:#475569;line-height:1.75}}
+  .legend b{{color:#0f172a}}
   tr.b-transition td.sc{{color:#16a34a}}
   tr.b-avoid td.sc{{color:#dc2626}}
   .pos{{color:#16a34a}}.neg{{color:#dc2626}}
@@ -160,6 +192,18 @@ _INDEX_TMPL = """<!DOCTYPE html><html lang="ko"><head>
   <div class="ptxt">📥 수집 진행 <b>{cached}/{uni}</b> ({pct}%) · 갱신 {updated}</div>
   <div class="pbarw"><div class="pfillw" style="width:{pct}%"></div></div>
 </div>
+<details class="legend"><summary>❔ 전환단계·신호가 무슨 뜻인가요? (판정 기준)</summary>
+<div class="lc">
+<b>전환단계</b>(하락→상승 전환이 얼마나 진행됐나, 클수록 강함):<br>
+&nbsp;<b>④ 전환 확정 ⭐</b> — 하락추세선을 <b>거래량 동반 돌파</b> → 되눌림 후 <b>안착</b> →
+ 위로 <b>상승추세선</b>까지 형성. 셋 다 충족된 가장 강한 신호.<br>
+&nbsp;<b>③ 돌파후 횡보(대기)</b> — 추세선은 넘었고 그 위에서 다지는 중. 상승추세선·거래량 확인되면 ④로.<br>
+&nbsp;<b>② 갓 돌파(미확인)</b> — 막 넘었지만 되밀릴 수 있어 안착 미확인 → 관망.<br>
+&nbsp;<b>① 임박</b> — 아직 추세선 아래지만 저항에 근접. 돌파하면 전환 시작.<br>
+<b>신호</b>(종합점수 −100~+100): <b>🟢 강세</b> +50↑ 적극 · <b>🟢 관심</b> +20~50 ·
+ <b>⚪ 중립</b> −20~+20 관망 · <b>🔴 주의</b> −50~−20 · <b>🔴 공포</b> −50↓ 회피.<br>
+<span style="color:#94a3b8">※ 표의 각 칸에 마우스를 올리면(데스크톱) 같은 설명이 떠요.</span>
+</div></details>
 <div class="bar">
   <button class="chip" onclick="flt('all')">전체</button>
   <button class="chip on" onclick="fltStage()">🔄 전환후보 {tcount}</button>

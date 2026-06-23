@@ -32,9 +32,9 @@ def verdict(norm_score: float) -> tuple[str, str]:
     if x >= s:
         return "적극 매수", "🟢 강세"
     if x >= w:
-        return "매수 관심", "🟢"
+        return "매수 관심", "🟢 관심"
     if x > -w:
         return "관망", "⚪ 중립"
     if x > -s:
-        return "매도 관심", "🔴"
+        return "매도 관심", "🔴 주의"
     return "적극 매도/회피", "🔴 공포"
