@@ -346,7 +346,34 @@ def run(frames_map: dict[str, dict], metas: dict[str, dict],
     print("-" * 64)
     print(_fmt_stats("일반 매수 (매수/적극매수 신호)", by_trig["normal"]))
     print("=" * 64)
-    print("주의: 표본이 적어 통계적 신뢰구간이 넓다(참고용). 슬리피지·수수료·세금 미반영.")
-    print("     해석은 승률보다 '기대값(R)·최대낙폭'을 우선으로 본다.")
+
+    # ── 표본외(Out-of-Sample) 검증: 시간순 70/30 분할 ──
+    #    앞 70%(과거)에서 보이던 엣지가 뒤 30%(미래)에서도 유지되나? 과적합 점검.
+    oos = oos_split(all_trades)
+    print("◆ 표본외(OOS) 검증 — 시간순 70/30 분할(과적합·미래 일반화 점검)")
+    print(_fmt_stats("앞 70% (인샘플·과거)", oos["train"]))
+    print("-" * 64)
+    print(_fmt_stats("뒤 30% (표본외·미래)", oos["test"]))
+    if oos["train"].n and oos["test"].n:
+        drop = oos["train"].expectancy - oos["test"].expectancy
+        verdict = ("표본외에서도 양(+) 유지 → 비교적 견고"
+                   if oos["test"].expectancy > 0
+                   else "표본외에서 엣지 소멸 → 과적합/생존편향 의심, 신뢰 낮음")
+        print(f"  · 기대값 변화: {oos['train'].expectancy:+.2f}R → "
+              f"{oos['test'].expectancy:+.2f}R (Δ{-drop:+.2f}R) · {verdict}")
+    print("=" * 64)
+    print("주의(신뢰도 한계):")
+    print("  · 생존편향 — S&P500은 '살아남아 성공한 기업'만 모은 집합이라 과거가 실제보다")
+    print("    좋게 나온다. 상장폐지·편출된 종목은 표본에 없다(엣지 과대평가 가능).")
+    print("  · 표본·기간이 제한적이고 슬리피지·수수료·세금·어닝갭은 미반영.")
+    print("  · 해석은 승률보다 '기대값(R)·최대낙폭'과 위 표본외 결과를 우선으로 본다.")
     return {"per_code": per_code, "all": all_trades, "total": total,
-            "by_trigger": by_trig}
+            "by_trigger": by_trig, "oos": oos}
+
+
+def oos_split(trades: list[Trade], train_frac: float = 0.7) -> dict:
+    """진입일 기준 시간순 분할 → 앞부분(인샘플)/뒷부분(표본외) 통계."""
+    ts = sorted(trades, key=lambda t: t.entry_date)
+    k = int(len(ts) * train_frac)
+    return {"train": summarize(ts[:k]), "test": summarize(ts[k:]),
+            "cut": ts[k].entry_date if 0 < k < len(ts) else None}

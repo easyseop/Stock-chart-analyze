@@ -183,10 +183,24 @@ def main():
                     help="티커/코드를 캐시에 추가·갱신(즉석조회를 스크리너에 영구 반영)")
     ap.add_argument("--prune", metavar="SPEC",
                     help="캐시 정리: 'korean'=한국 6자리 전부 / 'CODE[,CODE]'=지정 종목")
+    ap.add_argument("--update-hourly", type=int, metavar="N", default=0,
+                    help="전환후보 상위 N종목의 시간봉(60분) 캐시 갱신(best-effort, yfinance)")
+    ap.add_argument("--update-earnings", action="store_true",
+                    help="캐시 종목의 다음 실적발표일 갱신(best-effort, yfinance, 하루 1회)")
     args = ap.parse_args()
 
     if args.prune:
         _prune(args.prune)
+        return
+
+    if args.update_hourly:
+        _update_hourly(args.update_hourly)
+        return
+
+    if args.update_earnings:
+        from scanner import cache, earnings
+        n = earnings.refresh(cache.cached_codes())
+        print(f"어닝 캐시 갱신: {n}종목 발표일 확보 / 캐시 {len(cache.cached_codes())}종목")
         return
 
     if args.add:
@@ -246,6 +260,36 @@ def _prune(spec: str):
           f"남은 {len(cache.cached_codes())}종목")
 
 
+def _update_hourly(n: int):
+    """전환후보 상위 N종목의 시간봉 캐시를 갱신(best-effort).
+
+    캐시된 일봉으로 분석(네트워크 0)해 전환단계·점수 상위를 고르고, 그 종목만
+    yfinance에서 60분봉을 받는다. yfinance 없거나 실패해도 조용히 건너뛴다.
+    """
+    from scanner import cache, universe, intraday
+    from scanner.analyze import analyze
+    umap = {s["code"]: s for s in universe.load() if s.get("code")}
+    ranked = []
+    for code in cache.cached_codes():
+        if len(code) == 6 and code[:5].isdigit():
+            continue                              # 미국주만(yfinance 시간봉)
+        try:
+            frames = cache.frames(code, refresh=False)
+            meta = umap.get(code) or {"code": code, "name": code, "ccy": "USD"}
+            res = analyze(frames, meta)           # bench 없음 OK(RS/시장 0점 처리)
+            ranked.append((res.get("transition_stage", 0), res["norm"], code))
+        except Exception:
+            continue
+    ranked.sort(reverse=True)
+    targets = [c for _s, _n, c in ranked[:n]]
+    ok = 0
+    for code in targets:
+        if intraday.update(code) is not None:
+            ok += 1
+    print(f"시간봉 갱신 시도 {len(targets)}종목 · 성공 {ok} "
+          f"(캐시 {len(intraday.cached_codes())}종목)")
+
+
 def _lookup(ticker: str, ccy: str | None):
     """티커/코드 즉석 조회: 실데이터 받아 카드 출력 + 상세 차트 HTML 1장 생성."""
     from scanner import data, card, screener
@@ -262,10 +306,16 @@ def _lookup(ticker: str, ccy: str | None):
     bench = data.fetch_benchmark(ccy)
     res = analyze(frames, meta, bench=bench)
     print(card.render(res))
+    # 시간봉(미국주만, best-effort) — 있으면 상세 차트에 '시간봉' 탭 추가
+    if ccy != "KRW":
+        from scanner import intraday
+        h = intraday.update(code)
+        if h is not None and len(h) >= config.MA_PERIODS["H"][-1] + 5:
+            frames = {**frames, "H": h}
     out = f"lookup_{code}.html"
     with open(out, "w", encoding="utf-8") as fp:
         fp.write(screener._detail(res, frames))
-    print(f"\n상세 차트(일/주/월·토글): {out}")
+    print(f"\n상세 차트(시간/일/주/월·토글): {out}")
 
 
 def _manage_cache(backfill_n: int, do_update: bool, universe_path: str):

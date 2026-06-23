@@ -49,7 +49,10 @@ jobs:
 
       - uses: actions/cache@v4
         with:
-          path: data_cache
+          path: |
+            data_cache
+            data_cache_h
+            earnings_cache.json
           key: data-cache-${{ github.run_id }}
           restore-keys: |
             data-cache-
@@ -65,6 +68,15 @@ jobs:
             python main.py --backfill "${{ github.event.inputs.backfill || env.CHUNK }}"
           fi
           python main.py --update
+
+      # 어닝 발표일은 마감후 1회만 갱신(하루 1회 충분). 실패해도 무시.
+      - name: 어닝 발표일 갱신(마감후/수동, best-effort)
+        if: ${{ github.event.schedule == '0 22 * * 1-5' || github.event_name == 'workflow_dispatch' }}
+        run: python main.py --update-earnings || true
+
+      # 시간봉은 매 실행 전환후보 상위 80종목만(best-effort) — 실패해도 무시.
+      - name: 시간봉(60분) 갱신(전환후보 상위, best-effort)
+        run: python main.py --update-hourly 80 || true
 
       - name: 스크리너 생성(캐시 전체 — 즉석조회 추가분 포함, 네트워크 0)
         run: python main.py --cache --scan-cached --screener --screener-dir public

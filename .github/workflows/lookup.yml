@@ -31,13 +31,19 @@ jobs:
 
       - uses: actions/cache@v4         # daily-scan과 같은 캐시 공유(키 동일)
         with:
-          path: data_cache
+          path: |
+            data_cache
+            data_cache_h
+            earnings_cache.json
           key: data-cache-${{ github.run_id }}
           restore-keys: |
             data-cache-
 
       - name: 캐시에 추가(신호 카드 로그)
         run: python main.py --add "${{ inputs.ticker }}"
+
+      - name: 시간봉(60분) 갱신(전환후보 상위, best-effort)
+        run: python main.py --update-hourly 120 || true
 
       - name: 스크리너 재생성(캐시 전체 — 추가분 포함)
         run: python main.py --cache --scan-cached --screener --screener-dir public

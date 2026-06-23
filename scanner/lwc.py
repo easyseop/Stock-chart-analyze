@@ -17,8 +17,9 @@ from scanner import trendlines as tlmod
 
 LWC_CDN = ("https://unpkg.com/lightweight-charts@4.2.0/dist/"
            "lightweight-charts.standalone.production.js")
-_LOOKBACK = {"D": 180, "W": 160, "M": 120}
-_PROJECT = {"D": 12, "W": 10, "M": 6}
+_LOOKBACK = {"H": 320, "D": 180, "W": 160, "M": 120}
+_PROJECT = {"H": 16, "D": 12, "W": 10, "M": 6}
+_TF_LABELS = [("H", "시간봉"), ("D", "일봉"), ("W", "주봉"), ("M", "월봉")]
 _MA_COLORS = ["#f59e0b", "#8b5cf6", "#64748b"]
 # LWC에서 다루는 토글 그룹(매물대 히스토그램은 LWC 미지원 → 제외)
 GROUPS = [("ma", "이평선", True), ("level", "핵심선", True),
@@ -31,21 +32,29 @@ def _d(ts) -> str:
     return pd.Timestamp(ts).strftime("%Y-%m-%d")
 
 
+def _tfn(tf):
+    """타임프레임별 LWC 시간 인코더. 시간봉은 epoch초(시각 구분), 그 외는 날짜문자열."""
+    if tf == "H":
+        return lambda t: int(pd.Timestamp(t).timestamp())
+    return _d
+
+
 def _payload(result: dict, frames: dict, tf: str) -> dict:
     full = frames[tf]
     lb = _LOOKBACK.get(tf, 180)
     d = full.iloc[-lb:]
+    T = _tfn(tf)
     up, dn = chart.C["up"], chart.C["down"]
-    candles = [{"time": _d(t), "open": float(o), "high": float(h),
+    candles = [{"time": T(t), "open": float(o), "high": float(h),
                 "low": float(l), "close": float(c)}
                for t, o, h, l, c in zip(d.index, d["Open"], d["High"],
                                         d["Low"], d["Close"])]
-    vol = [{"time": _d(t), "value": float(v), "color": (up if c >= o else dn)}
+    vol = [{"time": T(t), "value": float(v), "color": (up if c >= o else dn)}
            for t, v, c, o in zip(d.index, d["Volume"], d["Close"], d["Open"])]
     mas = []
     for i, p in enumerate(config.MA_PERIODS[tf][1:]):
         s = full["Close"].rolling(p).mean().iloc[-lb:]
-        pts = [{"time": _d(t), "value": float(v)}
+        pts = [{"time": T(t), "value": float(v)}
                for t, v in zip(s.index, s) if pd.notna(v)]
         mas.append({"color": _MA_COLORS[i % 3], "data": pts})
 
@@ -85,22 +94,33 @@ def _payload(result: dict, frames: dict, tf: str) -> dict:
             continue
         x1 = pd.Timestamp(seg["x1"])
         trend.append({"color": color, "dash": 0, "data": [
-            {"time": _d(seg["x0"]), "value": float(seg["y0"])},
-            {"time": _d(x1), "value": float(seg["y1"])}]})
+            {"time": T(seg["x0"]), "value": float(seg["y0"])},
+            {"time": T(x1), "value": float(seg["y1"])}]})
         xf = x1 + avg_delta * proj
         yf = float(seg["y1"]) + float(seg.get("slope", 0)) * proj
         trend.append({"color": color, "dash": 2, "data": [
-            {"time": _d(x1), "value": float(seg["y1"])},
-            {"time": _d(xf), "value": yf}]})
+            {"time": T(x1), "value": float(seg["y1"])},
+            {"time": T(xf), "value": yf}]})
 
     return {"candles": candles, "vol": vol, "mas": mas,
             "lines": lines, "trend": trend}
 
 
 def detail(result: dict, frames: dict) -> str:
-    """lightweight-charts 상세 페이지 HTML."""
+    """lightweight-charts 상세 페이지 HTML. frames에 'H'(시간봉)가 있으면 탭 추가."""
     code = result["code"]
-    data = {tf: _payload(result, frames, tf) for tf in ("D", "W", "M")}
+    # 표시할 타임프레임: 항상 일/주/월, 시간봉은 데이터 있을 때만(없으면 탭 미표시)
+    tfs = [tf for tf, _lab in _TF_LABELS if tf in frames]
+    default_tf = "D"
+    labels = dict(_TF_LABELS)
+    data = {tf: _payload(result, frames, tf) for tf in tfs}
+    tfbtns = "".join(
+        f'<button class="tfbtn{" active" if tf == default_tf else ""}" '
+        f'id="tfb-{tf}" onclick="sw(\'{tf}\')">{labels[tf]}</button>' for tf in tfs)
+    _hide = ' style="display:none"'
+    ccs = "".join(
+        f'<div class="cc" id="c-{tf}"{"" if tf == default_tf else _hide}></div>'
+        for tf in tfs)
     toggles = "".join(
         f'<button class="toggle{" on" if on else ""}" data-group="{k}" '
         f'onclick="tg(this)">{html.escape(lab)}</button>'
@@ -111,7 +131,8 @@ def detail(result: dict, frames: dict) -> str:
              f'{html.escape(result["gauge"])} 정규화 {result["norm"]:+.0f}')
     card_txt = card.render(result).split("\n용어:")[0]
     return _TMPL.format(
-        title=title, cdn=LWC_CDN, toggles=toggles,
+        title=title, cdn=LWC_CDN, toggles=toggles, tfbtns=tfbtns, ccs=ccs,
+        tfs=json.dumps(tfs), first=default_tf,
         data=json.dumps(data), default_on=default_on, precision=precision,
         verdict=html.escape(result.get("verdict", "")),
         card=html.escape(card_txt))
@@ -151,18 +172,13 @@ _TMPL = """<!DOCTYPE html><html lang="ko"><head>
 <div class="vt">{verdict}</div></header>
 <div class="wrap">
   <div class="bar"><span style="font-size:12px;color:#64748b">지표</span>{toggles}</div>
-  <div class="bar"><button class="tfbtn active" id="tfb-D" onclick="sw('D')">일봉</button>
-    <button class="tfbtn" id="tfb-W" onclick="sw('W')">주봉</button>
-    <button class="tfbtn" id="tfb-M" onclick="sw('M')">월봉</button>
+  <div class="bar">{tfbtns}
     <span style="font-size:11px;color:#64748b;margin-left:6px">핀치=확대/축소 · 드래그=이동</span></div>
-  <div class="chart">
-    <div class="cc" id="c-D"></div><div class="cc" id="c-W" style="display:none"></div>
-    <div class="cc" id="c-M" style="display:none"></div>
-  </div>
+  <div class="chart">{ccs}</div>
   <details><summary>📋 상세 신호 카드</summary><pre class="card">{card}</pre></details>
 </div>
 <script>
-  var DATA={data}, STATE={default_on}, PREC={precision}, CUR='D', CH={{}};
+  var DATA={data}, STATE={default_on}, PREC={precision}, TFS={tfs}, CUR='{first}', CH={{}};
   var LS=LightweightCharts.LineStyle;
   var STY=[LS.Solid,LS.Dotted,LS.Dashed];
   function build(tf){{
@@ -172,7 +188,7 @@ _TMPL = """<!DOCTYPE html><html lang="ko"><head>
       layout:{{background:{{color:'#fff'}},textColor:'#334155',fontSize:11}},
       grid:{{vertLines:{{color:'#f1f5f9'}},horzLines:{{color:'#f1f5f9'}}}},
       rightPriceScale:{{borderColor:'#e2e8f0'}},
-      timeScale:{{borderColor:'#e2e8f0',timeVisible:false}},
+      timeScale:{{borderColor:'#e2e8f0',timeVisible:tf==='H',secondsVisible:false}},
       crosshair:{{mode:LightweightCharts.CrosshairMode.Normal}},
       handleScroll:true,handleScale:true
     }});
@@ -213,10 +229,10 @@ _TMPL = """<!DOCTYPE html><html lang="ko"><head>
   function tg(btn){{var g=btn.dataset.group;STATE[g]=!STATE[g];
     btn.classList.toggle('on',STATE[g]);apply(CUR);}}
   function sw(tf){{CUR=tf;
-    ['D','W','M'].forEach(function(t){{
+    TFS.forEach(function(t){{
       document.getElementById('c-'+t).style.display=(t===tf)?'block':'none';
       document.getElementById('tfb-'+t).classList.toggle('active',t===tf);}});
     if(!CH[tf])build(tf); else {{CH[tf].chart.timeScale().fitContent();}}
   }}
-  window.addEventListener('load',function(){{build('D');}});
+  window.addEventListener('load',function(){{build(CUR);}});
 </script></body></html>"""

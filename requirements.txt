@@ -6,3 +6,5 @@ numpy>=1.24
 # v1.5 시각화(--chart). PNG 저장(--png)은 kaleido + chrome 추가 필요:
 #   pip install kaleido && plotly_get_chrome -y
 plotly>=6.0
+# 시간봉(60분) + 어닝 발표일 — best-effort(미설치/실패해도 일봉 흐름엔 영향 없음)
+yfinance>=0.2.40
