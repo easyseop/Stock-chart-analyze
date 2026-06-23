@@ -164,6 +164,17 @@ _INDEX_TMPL = """<!DOCTYPE html><html lang="ko"><head>
   .ptxt{{font-size:12px;color:#475569;margin-bottom:4px}}
   .pbarw{{height:10px;background:#e2e8f0;border-radius:999px;overflow:hidden}}
   .pfillw{{height:100%;background:linear-gradient(90deg,#16a34a,#22c55e);border-radius:999px}}
+  .tw{{overflow-x:auto;-webkit-overflow-scrolling:touch}}
+  @media(max-width:640px){{
+    header h1{{font-size:15px}} header p{{font-size:11px}}
+    .chip{{padding:6px 11px;font-size:12px}}
+    table{{font-size:12px}} th,td{{padding:7px 7px}}
+    /* 좁은 화면: 추세·시장·RS·신고가 숨기고 신호/종목/전환단계/점수/판정만 */
+    th:nth-child(4),td:nth-child(4),th:nth-child(6),td:nth-child(6),
+    th:nth-child(7),td:nth-child(7),th:nth-child(8),td:nth-child(8){{display:none}}
+    td.vd{{max-width:150px;white-space:normal}}
+    td.nm .cd{{display:block;margin:0}}
+  }}
 </style></head><body>
 <header><h1>종목 스크리너 <span style="color:#38bdf8;font-size:13px">차트 신호 랭킹</span></h1>
 <p>{n}종목 표시 · 헤더 클릭=정렬 · 칩=필터 · 종목명 클릭=상세 차트(일/주/월)</p></header>
@@ -177,7 +188,7 @@ _INDEX_TMPL = """<!DOCTYPE html><html lang="ko"><head>
   {chips}
   <a class="chip" href="lookup.html" style="margin-left:auto;background:#0f172a;color:#fff;border-color:#0f172a;text-decoration:none">➕ 티커 즉석 조회</a>
 </div>
-<table id="t"><thead><tr>
+<div class="tw"><table id="t"><thead><tr>
   <th onclick="srt(0,false)">신호</th>
   <th onclick="srt(1,false)">종목</th>
   <th onclick="srt(2,true)">전환단계▼</th>
@@ -187,7 +198,7 @@ _INDEX_TMPL = """<!DOCTYPE html><html lang="ko"><head>
   <th onclick="srt(6,true)">RS</th>
   <th onclick="srt(7,true)">신고가</th>
   <th onclick="srt(8,false)">판정</th>
-</tr></thead><tbody id="tb">{rows}</tbody></table>
+</tr></thead><tbody id="tb">{rows}</tbody></table></div>
 <script>
   var tb=document.getElementById('tb');
   function srt(col,num){{
@@ -253,6 +264,9 @@ _DETAIL_TMPL = """<!DOCTYPE html><html lang="ko"><head>
     font-family:'D2Coding','Menlo','Consolas',monospace}}
   details>summary{{cursor:pointer;font-size:13px;font-weight:600;color:#334155;
     padding:8px 12px;background:#fff;border:1px solid #e2e8f0;border-radius:8px;margin-top:12px}}
+  @media(max-width:640px){{.wrap{{padding:8px}}header h1{{font-size:14px}}
+    .toolbar,.tfbar{{padding:7px 8px}} .toggle,.tfbtn{{padding:5px 10px;font-size:12px}}
+    .card{{font-size:11px}}}}
 </style></head><body>
 <header><a href="../index.html">← 스크리너 목록</a><h1>{title}</h1>
 <div class="vt">{verdict}</div></header>
