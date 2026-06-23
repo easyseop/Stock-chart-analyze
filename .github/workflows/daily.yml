@@ -57,10 +57,6 @@ jobs:
           restore-keys: |
             data-cache-
 
-      - name: 캐시 정리(수동 입력 시에만 — 한국 잔재/지정 종목 삭제)
-        if: ${{ github.event.inputs.prune != '' }}
-        run: python main.py --prune "${{ github.event.inputs.prune }}"
-
       # 백필은 마감후(22:00 UTC) 또는 수동 실행에서만 — 장중 실행은 가격 갱신만(빠름)
       - name: 백필(마감후/수동) + 증분 갱신(매 실행, 오늘 가격 반영)
         run: |
@@ -68,6 +64,11 @@ jobs:
             python main.py --backfill "${{ github.event.inputs.backfill || env.CHUNK }}"
           fi
           python main.py --update
+
+      # 캐시 정리는 백필 '후'에 — illiquid:N(거래대금 상위만)은 캐시가 채워진 뒤 평가해야 정확.
+      - name: 캐시 정리(수동 입력 시에만 — korean / illiquid:N / 종목코드)
+        if: ${{ github.event.inputs.prune != '' }}
+        run: python main.py --prune "${{ github.event.inputs.prune }}"
 
       # 어닝 발표일은 마감후 1회만 갱신(하루 1회 충분). 실패해도 무시.
       - name: 어닝 발표일 갱신(마감후/수동, best-effort)

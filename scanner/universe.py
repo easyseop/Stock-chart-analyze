@@ -78,3 +78,54 @@ def build(path: str = DEFAULT_PATH, sp500: bool = True,
         rows += _krx_rows("KOSDAQ", kosdaq_top, seen)
     save(rows, path)
     return rows
+
+
+# NASDAQ 공식 심볼 디렉터리(보통주 전체 — ETF/잡주 제외용 플래그 포함)
+_NASDAQ_LISTED = "https://www.nasdaqtrader.com/dynamic/SymDir/nasdaqlisted.txt"
+_OTHER_LISTED = "https://www.nasdaqtrader.com/dynamic/SymDir/otherlisted.txt"
+import re as _re
+_SYM_RE = _re.compile(r"^[A-Z]{1,5}$")              # 보통주 티커(워런트·우선주 접미 제외)
+_NAME_SKIP = _re.compile(
+    r"\b(ETF|ETN|Fund|Trust|Warrant|Unit|Preferred|Depositary|Notes?|"
+    r"Right|Acquisition|SPAC|Index)\b|%", _re.IGNORECASE)
+
+
+def _fetch_symbol_file(url: str) -> list[list[str]]:
+    import urllib.request
+    data = urllib.request.urlopen(url, timeout=30).read().decode("latin-1")
+    out = []
+    for line in data.splitlines():
+        if "|" in line and not line.startswith("File Creation"):
+            out.append(line.split("|"))
+    return out[1:] if out else []   # 첫 줄은 헤더
+
+
+def build_us_all(path: str = DEFAULT_PATH) -> list[dict]:
+    """NASDAQ+NYSE 등 미국 보통주 전체 유니버스(ETF·테스트·잡주 제외)를 구성·저장.
+
+    이후 백필로 전부 수집한 뒤 --prune 'illiquid:N' 으로 거래대금 상위 N만 남긴다.
+    """
+    rows: list[dict] = []
+    seen: set = set()
+
+    def add(sym, name, etf, test):
+        sym = (sym or "").strip().upper()
+        if etf == "Y" or test == "Y" or sym in seen:
+            return
+        if not _SYM_RE.match(sym) or _NAME_SKIP.search(name or ""):
+            return
+        seen.add(sym)
+        nm = (name or sym).split(" - ")[0].split(",")[0].strip()[:48]
+        rows.append({"code": sym, "name": nm or sym, "ccy": "USD"})
+
+    # nasdaqlisted: Symbol|Name|Market Cat|Test|Financial|RoundLot|ETF|NextShares
+    for r in _fetch_symbol_file(_NASDAQ_LISTED):
+        if len(r) >= 8:
+            add(r[0], r[1], r[6], r[3])
+    # otherlisted: ACT Symbol|Name|Exchange|CQS|ETF|RoundLot|Test|NASDAQ Symbol
+    for r in _fetch_symbol_file(_OTHER_LISTED):
+        if len(r) >= 7:
+            add(r[0], r[1], r[4], r[6])
+
+    save(rows, path)
+    return rows

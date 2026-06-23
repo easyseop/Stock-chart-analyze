@@ -169,6 +169,8 @@ def main():
                     help="최대 유니버스: S&P500 + KOSPI 전체 + KOSDAQ 전체(~3,300종목)")
     ap.add_argument("--build-universe-us", action="store_true",
                     help="미국 전용 유니버스(S&P500). 자동 수집은 미장만, 한국주는 수시 조회")
+    ap.add_argument("--build-universe-us-all", action="store_true",
+                    help="미국 보통주 전체(NASDAQ+NYSE, ETF/잡주 제외 ~5천). 백필 후 --prune illiquid:N으로 거래대금 상위만 유지")
     ap.add_argument("--ticker", metavar="SYM",
                     help="티커/코드 즉석 조회(수시) — 바로 받아 카드+상세HTML 생성")
     ap.add_argument("--ccy", default=None, help="--ticker 통화(USD/KRW). 미지정 시 자동")
@@ -217,6 +219,13 @@ def main():
         _lookup(args.ticker, args.ccy)
         return
 
+    if args.build_universe_us_all:
+        from scanner import universe
+        rows = universe.build_us_all(args.universe)
+        print(f"미국 보통주 유니버스: {len(rows)}종목 → {args.universe} "
+              f"(백필 후 --prune 'illiquid:2000'으로 거래대금 상위만 유지)")
+        return
+
     if args.build_universe_us or args.build_universe_max or args.build_universe is not None:
         from scanner import universe
         if args.build_universe_us:
@@ -244,10 +253,14 @@ def main():
 
 
 def _prune(spec: str):
-    """캐시 정리: 한국 6자리(자동 수집 대상 아님) 또는 지정 코드 삭제."""
+    """캐시 정리: 'korean' / 'illiquid:N'(거래대금 상위 N만 유지) / 'CODE,CODE'."""
     from scanner import cache
+    spec = spec.strip()
+    if spec.lower().startswith("illiquid:"):
+        _prune_illiquid(int(spec.split(":", 1)[1]))
+        return
     cached = cache.cached_codes()
-    if spec.strip().lower() == "korean":
+    if spec.lower() == "korean":
         targets = [c for c in cached if len(c) == 6 and c.isdigit()]
     else:
         want = {s.strip().upper() for s in spec.split(",") if s.strip()}
@@ -258,6 +271,36 @@ def _prune(spec: str):
     n = sum(1 for c in targets if cache.remove(c))
     print(f"캐시 정리: {n}종목 삭제 ({', '.join(targets)}) · "
           f"남은 {len(cache.cached_codes())}종목")
+
+
+def _prune_illiquid(keep: int):
+    """거래대금(가격×거래량, 최근 60일 평균) 상위 keep개만 남기고 캐시·유니버스 정리.
+
+    백필 완료 후 1회 실행 권장(미수집 종목이 많으면 그만큼만 평가됨).
+    """
+    import pandas as pd
+    from scanner import cache, universe
+    cached = cache.cached_codes()
+    scored = []
+    for code in cached:
+        d = cache.load(code)
+        if d is None or len(d) < 20:
+            scored.append((0.0, code))
+            continue
+        tail = d.iloc[-60:]
+        turnover = float((tail["Close"] * tail["Volume"]).mean())
+        scored.append((turnover, code))
+    scored.sort(reverse=True)
+    keep_codes = {c for _t, c in scored[:keep]}
+    drop = [c for _t, c in scored[keep:]]
+    removed = sum(1 for c in drop if cache.remove(c))
+    # 유니버스도 상위 keep으로 재작성 → 이후 백필이 잡주를 다시 안 받음
+    umap = {s["code"]: s for s in universe.load() if s.get("code")}
+    new_rows = [umap.get(c) or {"code": c, "name": c, "ccy": "USD"}
+                for _t, c in scored[:keep]]
+    universe.save(new_rows)
+    print(f"거래대금 상위 {keep}종목 유지 · {removed}종목 캐시 삭제 · "
+          f"유니버스 {len(new_rows)}종목으로 재작성 (남은 캐시 {len(cache.cached_codes())})")
 
 
 def _update_hourly(n: int):
