@@ -175,8 +175,13 @@ _TMPL = """<!DOCTYPE html><html lang="ko"><head>
     font-family:'D2Coding','Menlo','Consolas',monospace}}
   details>summary{{cursor:pointer;font-weight:600;color:#334155;padding:8px 12px;
     background:#fff;border:1px solid #e2e8f0;border-radius:8px;margin-top:12px}}
+  .lc{{background:#fff;border:1px solid #e2e8f0;border-top:0;border-radius:0 0 8px 8px;
+    padding:10px 14px;font-size:12.5px;color:#475569;line-height:1.85}}
+  .lc b{{color:#0f172a}}
+  .dot{{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:2px;
+    vertical-align:middle}}
   @media(max-width:640px){{.wrap{{padding:8px}}header h1{{font-size:14px}}
-    .toggle,.tfbtn{{padding:5px 10px;font-size:12px}}.card{{font-size:11px}}}}
+    .toggle,.tfbtn{{padding:5px 10px;font-size:12px}}.card{{font-size:11px}}.lc{{font-size:11.5px}}}}
 </style></head><body>
 <header><a href="../index.html">← 스크리너 목록</a><h1>{title}</h1>
 <div class="vt">{verdict}</div></header>
@@ -185,6 +190,24 @@ _TMPL = """<!DOCTYPE html><html lang="ko"><head>
   <div class="bar">{tfbtns}
     <span style="font-size:11px;color:#64748b;margin-left:6px">핀치=확대/축소 · 드래그=이동</span></div>
   <div class="chart">{ccs}</div>
+  <details class="lines"><summary>❔ 차트의 선들이 무슨 뜻인가요? (진입·지지/저항)</summary>
+  <div class="lc">
+  <b>매매선</b>(파란 토글):<br>
+  &nbsp;<span class="dot" style="background:#2563eb"></span><b>진입</b> — <b>"여기서 사라"는 매수 기준가</b>.
+   고점권이면 <b>저항 돌파가</b>(돌파해야 매수), 그 외엔 현재가. ※저항·지지가 진입 기준으로 잡힌 게
+   아니라, 가격 구조로 저항·지지를 먼저 잡고 거기서 진입가를 끌어낸 것.<br>
+  &nbsp;<span class="dot" style="background:#ef4444"></span><b>손절</b> — 진입−2×ATR. 종가로 이 아래면 정리.<br>
+  &nbsp;<span class="dot" style="background:#16a34a"></span><b>목표</b> — 손익비 1:2 목표가.<br>
+  <b>핵심선</b>(파란 토글):<br>
+  &nbsp;<span class="dot" style="background:#ef4444"></span><b>저항</b> — 박스 상단·매도벽 ·
+  &nbsp;<span class="dot" style="background:#f59e0b"></span><b>방어선</b> — 깨지면 안 되는 핵심 지지 ·
+  &nbsp;<span class="dot" style="background:#8b5cf6"></span><b>POC</b> — 거래 최다 가격대 ·
+  &nbsp;<span class="dot" style="background:#16a34a"></span><b>52주고가</b><br>
+  <b>지지/저항</b>(기본 꺼짐): 과거 스윙 고·저점에서 만든 보조 레벨(가격 위는 저항=빨강, 아래는 지지=초록).
+   핵심선보다 <b>얇은 점선</b>이라 구분돼요. 너무 많으면 토글로 끄세요.<br>
+  <b>피보나치</b>(기본 꺼짐): 고점→저점 되돌림 비율(38.2·50·61.8%) 회색 선.<br>
+  <b>추세선</b>(사선): 빨강=하락추세선(고점 잇기) · 초록=상승추세선(저점 잇기), 점선은 미래 연장.
+  </div></details>
   <details><summary>📋 상세 신호 카드</summary><pre class="card">{card}</pre></details>
 </div>
 <script>

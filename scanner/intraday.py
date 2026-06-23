@@ -44,13 +44,13 @@ def load(code: str) -> pd.DataFrame | None:
 
 
 def _fetch(code: str) -> pd.DataFrame | None:
-    """yfinance 60분봉 수집(약 4개월). 실패/미설치 시 None(예외 안 던짐)."""
+    """yfinance 60분봉 수집(약 6개월, yfinance 유효 period). 실패/미설치 시 None."""
     try:
         import yfinance as yf
     except Exception:
         return None
     try:
-        df = yf.download(code, period="4mo", interval="60m",
+        df = yf.download(code, period="6mo", interval="60m",
                          progress=False, auto_adjust=False)
         if df is None or len(df) == 0:
             return None
