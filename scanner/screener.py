@@ -71,16 +71,16 @@ def _rows(results: list[dict]) -> str:
             vd = "🔺추격주의 · " + vd
         out.append(
             f'<tr class="b-{b}" data-bucket="{b}" data-stage="{stg}">'
-            f'<td>{html.escape(r["gauge"])}</td>'
+            f'<td data-label="신호">{html.escape(r["gauge"])}</td>'
             f'<td class="nm"><a href="stocks/{code}.html">'
             f'{html.escape(r["name"])}</a><span class="cd">{html.escape(code)}</span></td>'
-            f'<td data-v="{stg}" class="num stg">{stg_lab}</td>'
-            f'<td>{tone}</td>'
-            f'<td data-v="{r["norm"]:.1f}" class="num sc">{r["norm"]:+.0f}</td>'
-            f'<td>{html.escape(mk)}</td>'
-            f'<td data-v="{rs if rs is not None else -999}" class="num">{rs_txt}</td>'
-            f'<td data-v="{nh if nh is not None else -999}" class="num">{nh_txt}</td>'
-            f'<td class="vd">{vd}</td></tr>')
+            f'<td data-label="전환단계" data-v="{stg}" class="num stg">{stg_lab}</td>'
+            f'<td data-label="추세">{tone}</td>'
+            f'<td data-label="점수" data-v="{r["norm"]:.1f}" class="num sc">{r["norm"]:+.0f}</td>'
+            f'<td data-label="시장">{html.escape(mk)}</td>'
+            f'<td data-label="RS" data-v="{rs if rs is not None else -999}" class="num">{rs_txt}</td>'
+            f'<td data-label="신고가" data-v="{nh if nh is not None else -999}" class="num">{nh_txt}</td>'
+            f'<td data-label="판정" class="vd">{vd}</td></tr>')
     return "".join(out)
 
 
@@ -165,15 +165,26 @@ _INDEX_TMPL = """<!DOCTYPE html><html lang="ko"><head>
   .pbarw{{height:10px;background:#e2e8f0;border-radius:999px;overflow:hidden}}
   .pfillw{{height:100%;background:linear-gradient(90deg,#16a34a,#22c55e);border-radius:999px}}
   .tw{{overflow-x:auto;-webkit-overflow-scrolling:touch}}
+  /* 모바일: 표를 '카드 리스트'로 (한 종목 = 카드 한 장) */
   @media(max-width:640px){{
     header h1{{font-size:15px}} header p{{font-size:11px}}
     .chip{{padding:6px 11px;font-size:12px}}
-    table{{font-size:12px}} th,td{{padding:7px 7px}}
-    /* 좁은 화면: 추세·시장·RS·신고가 숨기고 신호/종목/전환단계/점수/판정만 */
-    th:nth-child(4),td:nth-child(4),th:nth-child(6),td:nth-child(6),
-    th:nth-child(7),td:nth-child(7),th:nth-child(8),td:nth-child(8){{display:none}}
-    td.vd{{max-width:150px;white-space:normal}}
-    td.nm .cd{{display:block;margin:0}}
+    .tw{{overflow:visible}}
+    thead{{display:none}}
+    table,tbody,tr,td{{display:block;width:auto}}
+    tr{{background:#fff;border:1px solid #e2e8f0;border-radius:12px;
+       margin:8px 12px;padding:6px 13px}}
+    tr.b-transition{{border-left:4px solid #16a34a}}
+    tr.b-avoid{{border-left:4px solid #dc2626}}
+    td{{display:flex;justify-content:space-between;gap:12px;align-items:center;
+       text-align:right;border:0;padding:5px 0;font-size:13px}}
+    td::before{{content:attr(data-label);color:#94a3b8;font-size:12px;
+       font-weight:600;text-align:left}}
+    td.nm{{display:block;text-align:left;border-bottom:1px solid #f1f5f9;
+       padding-bottom:6px;margin-bottom:4px}}
+    td.nm a{{font-size:16px}} td.nm .cd{{margin-left:6px}}
+    td.vd{{max-width:none;white-space:normal;text-align:right}}
+    td[data-v="0"].stg,td[data-v=""].stg{{display:none}}
   }}
 </style></head><body>
 <header><h1>종목 스크리너 <span style="color:#38bdf8;font-size:13px">차트 신호 랭킹</span></h1>
