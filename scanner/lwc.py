@@ -110,10 +110,20 @@ def detail(result: dict, frames: dict) -> str:
     """lightweight-charts 상세 페이지 HTML. frames에 'H'(시간봉)가 있으면 탭 추가."""
     code = result["code"]
     # 표시할 타임프레임: 항상 일/주/월, 시간봉은 데이터 있을 때만(없으면 탭 미표시)
-    tfs = [tf for tf, _lab in _TF_LABELS if tf in frames]
     default_tf = "D"
     labels = dict(_TF_LABELS)
-    data = {tf: _payload(result, frames, tf) for tf in tfs}
+    # 프레임별 페이로드 생성 — 한 프레임이 깨져도(예: 시간봉 데이터 이상) 그 탭만
+    # 건너뛰고 나머지는 정상 렌더(빌드 전체가 죽지 않도록 방어).
+    data = {}
+    for tf, _lab in _TF_LABELS:
+        if tf not in frames:
+            continue
+        try:
+            data[tf] = _payload(result, frames, tf)
+        except Exception:
+            if tf == default_tf:
+                raise            # 일봉은 필수 — 실패하면 상위에서 처리
+    tfs = [tf for tf, _lab in _TF_LABELS if tf in data]
     tfbtns = "".join(
         f'<button class="tfbtn{" active" if tf == default_tf else ""}" '
         f'id="tfb-{tf}" onclick="sw(\'{tf}\')">{labels[tf]}</button>' for tf in tfs)

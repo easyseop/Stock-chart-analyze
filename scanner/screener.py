@@ -119,8 +119,12 @@ def build(results: list[dict], frames_map: dict[str, dict],
         if h is not None and len(h) >= h_min:
             frames = {**frames, "H": h}          # 충분하면 '시간봉' 탭 추가
         path = os.path.join(out_dir, "stocks", f"{code}.html")
+        try:
+            page = _detail(r, frames)
+        except Exception:                        # 한 종목 실패가 전체 빌드를 막지 않도록
+            page = _detail(r, {k: v for k, v in frames.items() if k != "H"})
         with open(path, "w", encoding="utf-8") as fp:
-            fp.write(_detail(r, frames))
+            fp.write(page)
     with open(os.path.join(out_dir, "index.html"), "w", encoding="utf-8") as fp:
         fp.write(_index(results))
     with open(os.path.join(out_dir, "lookup.html"), "w", encoding="utf-8") as fp:

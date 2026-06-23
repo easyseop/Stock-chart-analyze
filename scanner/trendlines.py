@@ -76,7 +76,8 @@ def detect(df: pd.DataFrame, frames: dict | None = None,
     """추세선 상태 판정."""
     lookback = lookback or config.TREND_LOOKBACK
     win = df.iloc[-lookback:]
-    dates = list(win.index.to_pydatetime())   # 차트 그리기용 실제 날짜
+    # 차트 그리기용 실제 날짜 — 인덱스가 DatetimeIndex가 아니어도 안전하게 변환
+    dates = list(pd.to_datetime(win.index).to_pydatetime())
     seg = win.reset_index(drop=True)
     n = len(seg)
     if n < 2 * config.SWING_K + 5:

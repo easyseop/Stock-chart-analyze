@@ -36,7 +36,9 @@ def load(code: str) -> pd.DataFrame | None:
     if not os.path.exists(p):
         return None
     try:
-        return pd.read_csv(p, index_col=0, parse_dates=True)
+        df = pd.read_csv(p, index_col=0, parse_dates=True)
+        df.index = pd.to_datetime(df.index)      # 인덱스 datetime 보장
+        return df
     except Exception:
         return None
 
