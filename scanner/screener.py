@@ -87,7 +87,8 @@ def _rows(results: list[dict]) -> str:
             f'<td data-label="시장">{html.escape(mk)}</td>'
             f'<td data-label="RS" data-v="{rs if rs is not None else -999}" class="num">{rs_txt}</td>'
             f'<td data-label="신고가" data-v="{nh if nh is not None else -999}" class="num">{nh_txt}</td>'
-            f'<td data-label="판정" class="vd">{vd}</td></tr>')
+            f'<td data-label="판정" class="vd">{vd}</td>'
+            f'<td class="brk"></td></tr>')
     return "".join(out)
 
 
@@ -202,30 +203,50 @@ _INDEX_TMPL = """<!DOCTYPE html><html lang="ko"><head>
   .search input:focus{{outline:none;border-color:#2563eb}}
   .qn{{font-size:12px;color:#64748b;white-space:nowrap}}
   .tw{{overflow-x:auto;-webkit-overflow-scrolling:touch}}
-  /* 모바일: 표를 '카드 리스트'로 (한 종목 = 카드 한 장) */
+  td.brk{{display:none}}   /* 모바일 카드에서만 줄바꿈용으로 사용 */
+  /* 모바일: 증권사 앱 스타일 카드 (한 종목 = 카드 한 장) */
   @media(max-width:640px){{
-    header h1{{font-size:15px}} header p{{font-size:11px}}
+    header h1{{font-size:15px}} header p{{display:none}}
     .chip{{padding:6px 11px;font-size:12px}}
     .tw{{overflow:visible}}
     thead{{display:none}}
-    table,tbody,tr,td{{display:block;width:auto}}
-    tr{{background:#fff;border:1px solid #e2e8f0;border-radius:12px;
-       margin:8px 12px;padding:6px 13px}}
+    table,tbody{{display:block}}
+    tr{{display:flex;flex-wrap:wrap;align-items:center;gap:7px 7px;position:relative;
+       background:#fff;border:1px solid #e2e8f0;border-radius:14px;
+       margin:10px 12px;padding:13px 14px;box-shadow:0 1px 3px rgba(15,23,42,.05)}}
     tr.b-transition{{border-left:4px solid #16a34a}}
     tr.b-uptrend{{border-left:4px solid #38bdf8}}
     tr.b-avoid{{border-left:4px solid #dc2626}}
-    td{{display:flex;justify-content:space-between;gap:12px;align-items:center;
-       text-align:right;border:0;padding:5px 0;font-size:13px}}
-    td::before{{content:attr(data-label);color:#94a3b8;font-size:12px;
-       font-weight:600;text-align:left}}
-    td.nm{{display:block;text-align:left;border-bottom:1px solid #f1f5f9;
-       padding-bottom:6px;margin-bottom:4px}}
-    td.nm a{{font-size:16px}} td.nm .cd{{margin-left:6px}}
-    td.nm .ko{{display:block;margin:2px 0 0;font-size:12px}}
-    td.vd{{display:block;text-align:left;white-space:normal;font-size:12px;
-       color:#475569;margin-top:5px;padding-top:6px;border-top:1px solid #f1f5f9}}
-    td.vd::before{{display:block;margin-bottom:2px}}
+    tr.rec{{background:#fffdf5;border-color:#f1c453}}
+    td{{display:block;border:0;padding:0;font-size:13px;text-align:left}}
+    td::before{{content:attr(data-label);display:block;color:#94a3b8;font-size:10px;
+       font-weight:700;margin-bottom:1px}}
+    /* 종목명: 맨 위 전체폭, 크게 */
+    td.nm{{order:1;flex-basis:100%}}
+    td.nm::before{{display:none}}
+    td.nm a{{font-size:17px;font-weight:700;line-height:1.25}}
+    td.nm .ko{{display:inline;margin-left:6px;font-size:12px;color:#64748b}}
+    td.nm .cd{{display:block;margin:2px 0 0;font-size:11px}}
+    /* 신호·전환단계·추세: 상태 태그(흐름대로 칩) */
+    td[data-label="신호"],td.stg,td[data-label="추세"]{{order:2;flex:0 0 auto;
+       background:#f1f5f9;border-radius:999px;padding:5px 11px;font-size:12px;font-weight:700}}
+    td[data-label="신호"]::before,td.stg::before,td[data-label="추세"]::before{{display:none}}
+    td.stg{{color:#16a34a}}
     td[data-v="0"].stg,td[data-v=""].stg{{display:none}}
+    /* 메트릭 줄바꿈 강제(태그와 분리) */
+    td.brk{{display:block;order:4;flex-basis:100%;height:0;padding:0;margin:0}}
+    td.brk::before{{display:none}}
+    /* 점수·시장·RS·신고가: 인라인 메트릭 한 줄 'label 값' */
+    td[data-label="점수"],td[data-label="시장"],td[data-label="RS"],td[data-label="신고가"]{{
+       order:5;flex:0 0 auto;font-size:13.5px;font-weight:700;color:#0f172a;
+       background:#f8fafc;border-radius:8px;padding:4px 9px;white-space:nowrap}}
+    td[data-label="점수"]::before,td[data-label="시장"]::before,
+    td[data-label="RS"]::before,td[data-label="신고가"]::before{{
+       display:inline;font-size:11px;color:#94a3b8;font-weight:600;margin:0 4px 0 0}}
+    /* 판정: 맨 아래 전체폭, 옅게 */
+    td.vd{{order:9;flex-basis:100%;color:#475569;font-size:12px;line-height:1.5;
+       border-top:1px solid #f1f5f9;padding-top:8px;margin-top:2px}}
+    td.vd::before{{display:none}}
   }}
 </style></head><body>
 <header><h1>종목 스크리너 <span style="color:#38bdf8;font-size:13px">차트 신호 랭킹</span></h1>
