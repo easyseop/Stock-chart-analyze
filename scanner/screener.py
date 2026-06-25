@@ -423,7 +423,7 @@ _LOOKUP_TMPL = """<!DOCTYPE html><html lang="ko"><head>
       var s=x.done?(x.ok===false?'⚠️ 실패':'✅ 완료'):'⏳ 수집중';
       return '<div class="hist-item"><a class="t" href="stocks/'+x.t+'.html">'+x.t+'</a>'
         +'<span class="s">'+s+' · <a href="stocks/'+x.t+'.html" style="color:#1d4ed8">상세</a></span>'
-        +'<span class="x" title="삭제" onclick="delHist(\''+x.t+'\')">&times;</span></div>';
+        +'<span class="x" title="삭제" onclick="delHist(\\''+x.t+'\\')">&times;</span></div>';
     }).join('');
   }
   function bar(p,c,anim){var pb=document.getElementById('pb'),pf=document.getElementById('pf');

@@ -13,10 +13,27 @@ import config
 REC_MIN = 4   # 가이드 체크리스트 6개 중 4개 이상이면 '진입 추천'
 
 
-def rec_n(r: dict) -> int:
-    """진입 추천 점수 = 체크리스트 6개 중 충족 개수(0~6). 하락추세 veto면 0."""
-    if r.get("vetoed"):
-        return 0
+def _overextended(r: dict) -> bool:
+    """이미 너무 올라 '타점이 멀다'(추격)인가 — 추천에서 제외하는 기준.
+
+    ① 추격주의 플래그, ② 20일선 대비 과대이격(+15%↑), ③ 손절폭이 너무 큼(진입의 12%↑
+    = 손절을 멀리 둬야 함 = R:R 나쁨/이미 솟구침).
+    """
+    if r.get("chase"):
+        return True
+    price = (r.get("sr") or {}).get("price")
+    ma20 = ((r.get("trend") or {}).get("ma") or {}).get(20)
+    if price and ma20 and (price / ma20 - 1) >= 0.15:
+        return True
+    risk = r.get("risk") or {}
+    entry = r.get("entry") or price
+    stop = risk.get("stop")
+    if entry and stop and entry > 0 and (entry - stop) / entry >= 0.12:
+        return True
+    return False
+
+
+def _checklist(r: dict) -> int:
     stage = r.get("transition_stage", 0)
     rs = (r.get("rs") or {}).get("rel")
     mk = (r.get("market") or {}).get("direction", "")
@@ -34,6 +51,17 @@ def rec_n(r: dict) -> int:
         n += 1
     if r.get("norm", 0) >= config.VERDICT_WEAK:
         n += 1
+    return n
+
+
+def rec_n(r: dict) -> int:
+    """진입 추천 점수(0~6). 하락추세 veto=0. 이미 솟구쳐 타점이 먼(추격) 종목은
+    추천선(4) 아래로 강등 — '이미 상승해서 타점 애매한 건 추천 안 함'."""
+    if r.get("vetoed"):
+        return 0
+    n = _checklist(r)
+    if _overextended(r):
+        return min(n, REC_MIN - 1)   # 과열/타점부적합 → 추천에서 제외(최대 3)
     return n
 
 
