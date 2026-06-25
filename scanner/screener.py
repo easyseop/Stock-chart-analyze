@@ -75,7 +75,8 @@ def _rows(results: list[dict]) -> str:
         out.append(
             f'<tr class="b-{b}{" rec" if recd else ""}" data-bucket="{b}" '
             f'data-stage="{stg}" data-rec="{rec}">'
-            f'<td data-label="신호" title="{gtip}">{star}{html.escape(gauge)}</td>'
+            f'<td data-label="신호" title="{gtip}">'
+            f'<span class="sig">{star}{html.escape(gauge)}</span></td>'
             f'<td class="nm"><a href="stocks/{code}.html">'
             f'{html.escape(r["name"])}</a>{ko_html}'
             f'<span class="cd">{html.escape(code)}</span></td>'
@@ -184,7 +185,8 @@ _INDEX_TMPL = """<!DOCTYPE html><html lang="ko"><head>
   tr.b-uptrend td.sc{{color:#0284c7}}
   tr.b-avoid td.sc{{color:#dc2626}}
   tr.rec{{background:#fffbeb}}
-  .star{{font-size:11px;font-weight:700;color:#d97706;margin-right:4px}}
+  .sig{{display:inline-flex;align-items:center;gap:5px}}
+  .star{{font-size:11px;font-weight:700;color:#d97706}}
   .rec-chip{{background:#fef3c7;border-color:#f59e0b;color:#92400e;font-weight:700}}
   .rec-chip.on{{background:#f59e0b;border-color:#f59e0b;color:#fff}}
   .pos{{color:#16a34a}}.neg{{color:#dc2626}}
