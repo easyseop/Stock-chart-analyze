@@ -178,11 +178,12 @@ _INDEX_TMPL = """<!DOCTYPE html><html lang="ko"><head>
   .ptxt{{font-size:12px;color:#475569;margin-bottom:4px}}
   .pbarw{{height:10px;background:#e2e8f0;border-radius:999px;overflow:hidden}}
   .pfillw{{height:100%;background:linear-gradient(90deg,#16a34a,#22c55e);border-radius:999px}}
-  .search{{padding:8px 16px 0;display:flex;align-items:center;gap:8px}}
-  .search input{{flex:1;box-sizing:border-box;padding:11px 14px;border:1px solid #cbd5e1;
-    border-radius:10px;font-size:15px;background:#fff}}
+  .search{{position:sticky;top:0;z-index:9;padding:8px 16px;display:flex;
+    align-items:center;gap:8px;background:#f1f5f9;border-bottom:1px solid #e2e8f0}}
+  .search input{{flex:1;box-sizing:border-box;padding:12px 14px;border:1px solid #cbd5e1;
+    border-radius:10px;font-size:16px;background:#fff}}
   .search input:focus{{outline:none;border-color:#2563eb}}
-  .qn{{font-size:12px;color:#94a3b8;white-space:nowrap}}
+  .qn{{font-size:12px;color:#64748b;white-space:nowrap}}
   .tw{{overflow-x:auto;-webkit-overflow-scrolling:touch}}
   /* 모바일: 표를 '카드 리스트'로 (한 종목 = 카드 한 장) */
   @media(max-width:640px){{
@@ -202,7 +203,10 @@ _INDEX_TMPL = """<!DOCTYPE html><html lang="ko"><head>
     td.nm{{display:block;text-align:left;border-bottom:1px solid #f1f5f9;
        padding-bottom:6px;margin-bottom:4px}}
     td.nm a{{font-size:16px}} td.nm .cd{{margin-left:6px}}
-    td.vd{{max-width:none;white-space:normal;text-align:right}}
+    td.nm .ko{{display:block;margin:2px 0 0;font-size:12px}}
+    td.vd{{display:block;text-align:left;white-space:normal;font-size:12px;
+       color:#475569;margin-top:5px;padding-top:6px;border-top:1px solid #f1f5f9}}
+    td.vd::before{{display:block;margin-bottom:2px}}
     td[data-v="0"].stg,td[data-v=""].stg{{display:none}}
   }}
 </style></head><body>

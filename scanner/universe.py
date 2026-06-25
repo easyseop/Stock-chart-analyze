@@ -100,6 +100,22 @@ def _fetch_symbol_file(url: str) -> list[list[str]]:
     return out[1:] if out else []   # 첫 줄은 헤더
 
 
+_NAME_TAIL = _re.compile(
+    r"\s*-?\s*(Common Stock|Ordinary Shares?|Common Shares?|Class\s+[A-Z]\b.*|"
+    r"American Depositary Shares?.*|Depositary Shares?.*|"
+    r"\(.*?\))\s*$", _re.IGNORECASE)
+
+
+def _clean_name(name: str, sym: str) -> str:
+    """표시용 종목명 정리 — 'Common Stock'·'Class A'·괄호설명 등 꼬리표 제거."""
+    nm = (name or sym).split(" - ")[0]
+    prev = None
+    while nm != prev:                       # 'Inc. Class A Common Stock'처럼 중첩 제거
+        prev = nm
+        nm = _NAME_TAIL.sub("", nm).strip().rstrip(",").strip()
+    return (nm or sym)[:42]
+
+
 def build_us_all(path: str = DEFAULT_PATH) -> list[dict]:
     """NASDAQ+NYSE 등 미국 보통주 전체 유니버스(ETF·테스트·잡주 제외)를 구성·저장.
 
@@ -115,8 +131,7 @@ def build_us_all(path: str = DEFAULT_PATH) -> list[dict]:
         if not _SYM_RE.match(sym) or _NAME_SKIP.search(name or ""):
             return
         seen.add(sym)
-        nm = (name or sym).split(" - ")[0].split(",")[0].strip()[:48]
-        rows.append({"code": sym, "name": nm or sym, "ccy": "USD"})
+        rows.append({"code": sym, "name": _clean_name(name, sym), "ccy": "USD"})
 
     # nasdaqlisted: Symbol|Name|Market Cat|Test|Financial|RoundLot|ETF|NextShares
     for r in _fetch_symbol_file(_NASDAQ_LISTED):
