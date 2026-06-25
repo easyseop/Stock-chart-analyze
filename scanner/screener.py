@@ -178,6 +178,11 @@ _INDEX_TMPL = """<!DOCTYPE html><html lang="ko"><head>
   .ptxt{{font-size:12px;color:#475569;margin-bottom:4px}}
   .pbarw{{height:10px;background:#e2e8f0;border-radius:999px;overflow:hidden}}
   .pfillw{{height:100%;background:linear-gradient(90deg,#16a34a,#22c55e);border-radius:999px}}
+  .search{{padding:8px 16px 0;display:flex;align-items:center;gap:8px}}
+  .search input{{flex:1;box-sizing:border-box;padding:11px 14px;border:1px solid #cbd5e1;
+    border-radius:10px;font-size:15px;background:#fff}}
+  .search input:focus{{outline:none;border-color:#2563eb}}
+  .qn{{font-size:12px;color:#94a3b8;white-space:nowrap}}
   .tw{{overflow-x:auto;-webkit-overflow-scrolling:touch}}
   /* 모바일: 표를 '카드 리스트'로 (한 종목 = 카드 한 장) */
   @media(max-width:640px){{
@@ -206,6 +211,11 @@ _INDEX_TMPL = """<!DOCTYPE html><html lang="ko"><head>
 <div class="prog">
   <div class="ptxt">📥 수집 진행 <b>{cached}/{uni}</b> ({pct}%) · 갱신 {updated}</div>
   <div class="pbarw"><div class="pfillw" style="width:{pct}%"></div></div>
+</div>
+<div class="search">
+  <input id="q" type="search" inputmode="search" autocomplete="off"
+    placeholder="🔍 종목 검색 (티커·영문명·한글명)" oninput="search(this.value)">
+  <span id="qn" class="qn"></span>
 </div>
 <details class="legend"><summary>❔ 전환단계·신호가 무슨 뜻인가요? (판정 기준)</summary>
 <div class="lc">
@@ -263,6 +273,21 @@ _INDEX_TMPL = """<!DOCTYPE html><html lang="ko"><head>
     tb.querySelectorAll('tr').forEach(function(r){{
       r.style.display=(parseInt(r.dataset.stage||'0')>0)?'':'none';
     }});
+  }}
+  // 검색: 티커·영문명·한글명으로 필터(칩 필터는 해제하고 전체에서 찾음)
+  function search(v){{
+    v=(v||'').trim().toLowerCase();
+    var qn=document.getElementById('qn');
+    if(!v){{ setOn(document.querySelectorAll('.chip')[0]);
+      tb.querySelectorAll('tr').forEach(function(r){{r.style.display='';}});
+      qn.textContent=''; return; }}
+    setOn(null);
+    var hit=0;
+    tb.querySelectorAll('tr').forEach(function(r){{
+      var t=r.querySelector('.nm').textContent.toLowerCase();
+      var ok=t.indexOf(v)>=0; r.style.display=ok?'':'none'; if(ok)hit++;
+    }});
+    qn.textContent=hit+'개';
   }}
   // 첫 화면: '전환 후보'(하락→상승 전환 단계)만 우선 표시
   window.addEventListener('load',function(){{
@@ -363,23 +388,28 @@ _LOOKUP_TMPL = """<!DOCTYPE html><html lang="ko"><head>
     if(r.status===204){
       saveActive(t);   // 진행 상태 저장 → 새로고침/재방문해도 이어서 추적
       show('✅ <b>'+t+'</b> 수집 시작! 1~2분 후 결과를 봅니다...'); bar(30,null,true);
-      setTimeout(function(){track(p,t);},6000);
+      setTimeout(function(){startTrack(p,t);},6000);
     }else{
       var e=await r.text();
       show('❌ 실패 ('+r.status+'). 토큰/권한 확인.<br><small>'+e.slice(0,160)+'</small>'); bar(100,'#dc2626',false);
     }
   }
-  async function track(p,t){
+  // 추적 루프는 한 번에 하나만(모바일 백그라운드 복귀 시 중복 방지) — 세대 토큰으로 관리
+  var TGEN=0;
+  function startTrack(p,t){ TGEN++; track(p,t,TGEN); }
+  async function track(p,t,gen){
+    if(gen!==TGEN)return;            // 더 최신 추적이 시작됐으면 이 루프는 종료
     try{
       var r=await fetch('https://api.github.com/repos/'+REPO+'/actions/workflows/'+WF+'/runs?per_page=1',
         {headers:{'Authorization':'Bearer '+p,'Accept':'application/vnd.github+json'}});
       var run=(await r.json()).workflow_runs[0];
-      if(!run){show('실행 대기 중...');bar(35,null,true);setTimeout(function(){track(p,t);},5000);return;}
+      if(!run){show('실행 대기 중...');bar(35,null,true);setTimeout(function(){track(p,t,gen);},5000);return;}
       if(run.status!=='completed'){
         show('⏳ <b>'+t+'</b> 수집·분석 중... ('+run.status+') · <a href="'+run.html_url+'" target=_blank>로그</a>');
         bar(run.status==='queued'?45:75,null,true);
-        setTimeout(function(){track(p,t);},5000);
+        setTimeout(function(){track(p,t,gen);},5000);
       }else{
+        TGEN++;          // 완료 → 진행 중인 루프 모두 무효화
         clearActive();   // 끝났으니 진행 상태 해제
         var ok=run.conclusion==='success';
         bar(100,ok?'#16a34a':'#dc2626',false);
@@ -401,14 +431,19 @@ _LOOKUP_TMPL = """<!DOCTYPE html><html lang="ko"><head>
     return a;
   }
   tk.addEventListener('keydown',function(e){if(e.key==='Enter')run();});
-  // 페이지 열릴 때 진행 중이던 조회가 있으면 자동으로 이어서 추적
-  window.addEventListener('load',function(){
+  // 진행 중이던 조회가 있으면 이어서 추적(모바일은 백그라운드에서 타이머가 멈추므로
+  // 화면 복귀(visibilitychange/focus) 때마다 다시 살린다 → 게이지가 안 뜨던 문제 해결)
+  function resume(){
     var a=loadActive(); if(!a)return;
     var p=localStorage.getItem('ghpat')||'';
-    tk.value=a.t;
-    show('⏳ <b>'+a.t+'</b> 이전 수집 이어보는 중...'); bar(40,null,true);
-    if(p)track(p,a.t); else show('토큰을 입력하면 <b>'+a.t+'</b> 진행 상태를 이어볼 수 있어요.');
-  });
+    if(tk)tk.value=a.t;
+    show('⏳ <b>'+a.t+'</b> 진행 확인 중...'); bar(40,null,true);
+    if(p)startTrack(p,a.t);
+    else show('토큰을 입력하면 <b>'+a.t+'</b> 진행 상태를 이어볼 수 있어요.');
+  }
+  window.addEventListener('load',resume);
+  window.addEventListener('focus',resume);
+  document.addEventListener('visibilitychange',function(){if(!document.hidden)resume();});
 </script></body></html>"""
 
 
