@@ -21,9 +21,12 @@ def _overextended(r: dict) -> bool:
     """
     if r.get("chase"):
         return True
+    nh = (r.get("newhigh") or {}).get("pct_from_high")
+    if nh is not None and nh >= -4:          # 52주 신고가 −4% 이내 = 이미 다 옴(전환 초입 아님)
+        return True
     price = (r.get("sr") or {}).get("price")
     ma20 = ((r.get("trend") or {}).get("ma") or {}).get(20)
-    if price and ma20 and (price / ma20 - 1) >= 0.15:
+    if price and ma20 and (price / ma20 - 1) >= 0.12:   # 20일선 +12%↑ 과대이격
         return True
     risk = r.get("risk") or {}
     entry = r.get("entry") or price
@@ -45,7 +48,7 @@ def _checklist(r: dict) -> int:
         n += 1
     if rs is not None and rs > 0:
         n += 1
-    if nh is not None and -20 <= nh <= -3:
+    if nh is not None and -40 <= nh <= -8:   # 바닥서 올라왔지만 신고가까진 방 남음(전환 초입)
         n += 1
     if not r.get("chase"):
         n += 1
@@ -79,8 +82,13 @@ def _headline(r: dict, rec: int) -> tuple[str, str]:
         return "#dc2626", "🔴 하락추세 — 신규 매수 회피. 보유 중이면 손절 점검."
     if r.get("chase"):
         return "#d97706", "🔺 추격 주의 — 이미 과열/고점 확장. 눌림 대기."
+    nh = (r.get("newhigh") or {}).get("pct_from_high")
+    near_high = nh is not None and nh >= -4
     if rec >= REC_MIN:
         return "#16a34a", f"⭐ 진입 추천 (체크리스트 {rec}/6) — 조건 양호, 분할 진입 검토."
+    if near_high and stage >= 2:
+        return "#d97706", ("🔺 이미 신고가 근접 — 전환 초입은 지났음(추격권). "
+                           "눌림 대기 권장.")
     if stage >= 3:
         return "#16a34a", "🟢 전환 후보 — 돌파·거래량 확인되면 진입."
     if pos == "고점권":
