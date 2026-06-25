@@ -154,11 +154,13 @@ _TMPL = """<!DOCTYPE html><html lang="ko"><head>
 <title>{title}</title>
 <script src="{cdn}"></script>
 <style>
+  *{{box-sizing:border-box}}
   body{{margin:0;font-family:-apple-system,'Segoe UI','Noto Sans KR',sans-serif;
-    background:#f1f5f9;color:#1e293b}}
+    background:#f1f5f9;color:#1e293b;overflow-x:hidden}}
   header{{background:#0f172a;color:#fff;padding:12px 16px}}
   header a{{color:#7dd3fc;font-size:13px;text-decoration:none}}
-  header h1{{margin:4px 0 0;font-size:16px}} .vt{{font-size:12px;color:#94a3b8;margin-top:3px}}
+  header h1{{margin:4px 0 0;font-size:16px;overflow-wrap:anywhere}}
+  .vt{{font-size:12px;color:#94a3b8;margin-top:3px;overflow-wrap:anywhere}}
   .wrap{{padding:12px}}
   .bar{{display:flex;flex-wrap:wrap;gap:7px;align-items:center;background:#fff;
     border:1px solid #e2e8f0;border-radius:10px;padding:9px 10px;margin-bottom:10px}}

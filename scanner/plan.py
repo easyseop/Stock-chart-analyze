@@ -153,8 +153,11 @@ def plan_html(r: dict) -> str:
     rs = (r.get("rs") or {}).get("rel")
     rs_txt = f"{rs*100:+.0f}%" if rs is not None else "-"
     mk = (r.get("market") or {}).get("direction", "-")
+    rel = (r.get("trendline") or {}).get("reliability")
+    rel_txt = f" · 추세선신뢰 {html.escape(rel)}" if rel else ""
     why = (f"신호 {html.escape(r['gauge'])} · 전환단계 "
-           f"{html.escape(r.get('transition_label') or '–')} · RS {rs_txt} · 시장 {html.escape(mk)}")
+           f"{html.escape(r.get('transition_label') or '–')} · RS {rs_txt} · 시장 {html.escape(mk)}"
+           f"{rel_txt}")
 
     return _TMPL.format(
         color=color, head=html.escape(head), why=why,
@@ -189,7 +192,8 @@ PLAN_CSS = """
     border-left:5px solid #16a34a;background:#f8fafc}
   .plan-t{font-weight:800;font-size:15px;color:#0f172a}
   .plan-head{font-weight:700;font-size:13.5px}
-  .plan-why{padding:7px 14px;font-size:12px;color:#64748b;border-bottom:1px solid #f1f5f9}
+  .plan-why{padding:7px 14px;font-size:12px;color:#64748b;border-bottom:1px solid #f1f5f9;
+    overflow-wrap:anywhere}
   .plan-tb{width:100%;border-collapse:collapse}
   .plan-tb th{width:54px;text-align:left;vertical-align:top;padding:10px 0 10px 14px;
     color:#64748b;font-size:13px;font-weight:700}

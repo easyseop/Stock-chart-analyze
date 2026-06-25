@@ -30,12 +30,13 @@ def _line_value(slope, intercept, pos):
     return slope * pos + intercept
 
 
-def _best_line(pts, kind: str, near: float, min_span: int, min_touches: int):
-    """여러 스윙 피벗을 가장 잘 지나는 추세선(최소 터치·최소 길이·미관통).
+def _best_line(pts, kind: str, near: float, min_span: int, min_touches: int,
+               n_bars: int):
+    """여러 스윙 피벗을 가장 잘 지나는 추세선(터치·길이·최근성·정밀도 종합).
 
     kind='H'(하락저항선: 기울기<0, 고점이 선 위로 안 뚫림),
     kind='L'(상승지지선: 기울기>0, 저점이 선 아래로 안 뚫림).
-    반환: (slope, intercept, p0, p1, touches) 또는 None.
+    반환: dict{slope,b,p0,p1,touches,span,recency,tight,quality} 또는 None.
     """
     P = sorted([p for p in pts if p["kind"] == kind], key=lambda p: p["pos"])
     best = None
@@ -51,7 +52,7 @@ def _best_line(pts, kind: str, near: float, min_span: int, min_touches: int):
             if kind == "L" and slope <= 0:
                 continue
             b = p0["price"] - slope * p0["pos"]
-            valid, touches = True, 0
+            valid, touches, devs, last_touch = True, 0, [], 0
             for p in P:
                 lv = slope * p["pos"] + b
                 dev = (p["price"] - lv) / lv if lv else 0.0
@@ -63,12 +64,32 @@ def _best_line(pts, kind: str, near: float, min_span: int, min_touches: int):
                     break
                 if abs(dev) <= near:
                     touches += 1
+                    devs.append(abs(dev))
+                    last_touch = max(last_touch, p["pos"])
             if not valid or touches < min_touches:
                 continue
-            cand = (touches, span)                    # 터치 많고 길수록 우선
-            if best is None or cand > best[0]:
-                best = (cand, (slope, b, p0, p1, touches))
+            recency = last_touch / n_bars                  # 0~1, 최근 터치일수록 큼
+            avg_dev = (sum(devs) / len(devs)) if devs else near
+            tight = 1 - min(avg_dev / near, 1.0)           # 1=선에 딱 붙음
+            # 종합 품질: 터치(주) + 길이 + 최근성 + 정밀도
+            quality = touches + (span / n_bars) * 2 + recency * 1.5 + tight * 0.8
+            if best is None or quality > best[0]:
+                best = (quality, {"slope": slope, "b": b, "p0": p0, "p1": p1,
+                                  "touches": touches, "span": span,
+                                  "recency": recency, "tight": tight,
+                                  "quality": quality})
     return best[1] if best else None
+
+
+def _reliability(f: dict, n_bars: int) -> tuple[str, int]:
+    """추세선 신뢰도 라벨(강/보통/약) + 0~100 점수."""
+    s = (min(f["touches"], 6) / 6 * 40            # 터치 최대 40
+         + min(f["span"] / n_bars, 1) * 25        # 길이 최대 25
+         + f["recency"] * 20                       # 최근성 최대 20
+         + f["tight"] * 15)                        # 정밀도 최대 15
+    s = int(round(s))
+    label = "강" if s >= 70 else ("보통" if s >= 50 else "약")
+    return label, s
 
 
 def detect(df: pd.DataFrame, frames: dict | None = None,
@@ -85,23 +106,26 @@ def detect(df: pd.DataFrame, frames: dict | None = None,
     price = float(seg["Close"].iloc[-1])
     last_pos = n - 1
     near = config.TREND_NEAR
-    pts = swing_points(seg)
+    pts = swing_points(seg, config.TREND_SWING_K)
 
     mt, ms = config.TREND_MIN_TOUCHES, config.TREND_MIN_SPAN
 
     def _seg(fit):
-        slope, b, p0, p1, touches = fit
+        slope, b = fit["slope"], fit["b"]
+        p0, p1 = fit["p0"], fit["p1"]
         now = _line_value(slope, b, last_pos)
-        return {"slope": slope, "now": float(now), "touches": touches,
-                "p0": p0, "p1": p1,
+        rel_label, rel_score = _reliability(fit, n)
+        return {"slope": slope, "now": float(now), "touches": fit["touches"],
+                "span": fit["span"], "reliability": rel_label,
+                "rel_score": rel_score, "p0": p0, "p1": p1,
                 "x0": dates[p0["pos"]], "y0": p0["price"],
                 "x1": dates[last_pos], "y1": float(now)}
 
-    # ── 하락추세선(저항): 낮아지는 고점들을 최적합(3터치↑·길이↑·미관통) ──
-    fit_d = _best_line(pts, "H", near, ms, mt)
+    # ── 하락추세선(저항): 낮아지는 고점들을 최적합(3터치↑·길이↑·최근성·정밀도) ──
+    fit_d = _best_line(pts, "H", near, ms, mt, n)
     down = _seg(fit_d) if fit_d else None
     # ── 상승추세선(지지): 높아지는 저점들을 최적합 ──
-    fit_u = _best_line(pts, "L", near, ms, mt)
+    fit_u = _best_line(pts, "L", near, ms, mt, n)
     up = _seg(fit_u) if fit_u else None
 
     closes = seg["Close"].values
@@ -117,10 +141,13 @@ def detect(df: pd.DataFrame, frames: dict | None = None,
         b = down["p1"]["price"] - slope * down["p1"]["pos"]   # 절편
         dn = down["now"]
         # 최근 N봉 내에 '선 아래'였다가 현재 '선 위'면 갓 돌파한 것
-        lookN = max(3, 2 * config.SWING_K + 4)
+        lookN = max(3, 2 * config.TREND_SWING_K + 4)
         recently_below = any(closes[i] < _line_value(slope, b, i)
                              for i in range(max(0, last_pos - lookN), last_pos))
-        if price > dn and recently_below:
+        brk_pct = (price - dn) / dn * 100             # 돌파 강도(선 대비 %)
+        rel = down.get("reliability", "")
+        # 0.5% 미만 돌파는 노이즈 → '임박'으로(진짜 돌파만 전환 후보로)
+        if price > dn * (1 + config.TREND_BREAK_MIN) and recently_below:
             # 돌파만으론 부족(되밀림 위험) → 안착(횡보)·상승추세선 형성까지 등급화
             held = 0                                  # 현재부터 거꾸로 '선 위' 연속 봉 수
             for i in range(last_pos, -1, -1):
@@ -130,20 +157,21 @@ def detect(df: pd.DataFrame, frames: dict | None = None,
                     break
             has_uptrend = bool(up and up["slope"] > 0
                                and price >= up["now"] * (1 - near))
+            bk = f"+{brk_pct:.1f}%·선신뢰 {rel}"
             if held >= config.TRANSITION_MIN_HOLD and has_uptrend:
                 state, score, note = (TRANSITION_CONFIRMED, 2,
-                    f"하락추세선 돌파 후 {held}봉 안착 + 상승추세선(저점 높아짐) 형성 "
+                    f"하락추세선 돌파({bk}) 후 {held}봉 안착 + 상승추세선 형성 "
                     "→ 추세 전환 확정 ⭐")
             elif held >= config.TRANSITION_MIN_HOLD:
                 state, score, note = (TRANSITION_PENDING, 1,
-                    f"하락추세선 돌파 후 {held}봉 안착(횡보) "
+                    f"하락추세선 돌파({bk}) 후 {held}봉 안착(횡보) "
                     "→ 상승추세 전환 대기(상승추세선 미형성)")
             else:
                 state, score, note = (BREAKOUT_UNCONFIRMED, 0,
-                    f"하락추세선 갓 돌파({held}봉) → 되밀림 위험, 안착 확인 필요")
-        elif dn * (1 - near) <= price <= dn:
+                    f"하락추세선 갓 돌파({bk}, {held}봉) → 되밀림 위험, 안착 확인 필요")
+        elif dn * (1 - near) <= price <= dn * (1 + config.TREND_BREAK_MIN):
             state, score, note = ("하락추세선 임박", 1,
-                                  "하락추세선 바로 아래 → 하락 추세가 끝나갈 가능성")
+                                  f"하락추세선 바로 근처(선신뢰 {rel}) → 하락 추세가 끝나갈 가능성")
         elif price < dn:
             # 52주 고가 근처거나 MA60 위면 '상승 중 눌림'일 뿐 하락추세 아님(veto 오발 방지)
             ma60 = (float(seg["Close"].rolling(60).mean().iloc[-1])
@@ -168,16 +196,18 @@ def detect(df: pd.DataFrame, frames: dict | None = None,
             state, score, note = ("상승추세 유지", 1,
                                   "상승추세선 위 (저점 높아짐) → 추세 양호")
 
-    # 현재 활성 추세선의 가격값(선이 '지금' 어디 있는지) + 현재가와의 거리
+    # 현재 활성 추세선의 가격값(선이 '지금' 어디 있는지) + 현재가와의 거리 + 신뢰도
     if state == TRANSITION_CONFIRMED and up:        # 전환확정 → 새 상승추세선(지지)
-        level, slope_sign = up["now"], "상승(↗)"
+        level, slope_sign, active = up["now"], "상승(↗)", up
     elif (state in (TRANSITION_PENDING, BREAKOUT_UNCONFIRMED)
           or state.startswith("하락")) and down:    # 돌파/임박/지속 → 깬 하락선
-        level, slope_sign = down["now"], "하락(↘)"
+        level, slope_sign, active = down["now"], "하락(↘)", down
     elif state.startswith("상승") and up:
-        level, slope_sign = up["now"], "상승(↗)"
+        level, slope_sign, active = up["now"], "상승(↗)", up
     else:
-        level, slope_sign = None, "-"
+        level, slope_sign, active = None, "-", None
+    reliability = active.get("reliability") if active else None
+    rel_score = active.get("rel_score") if active else None
     dist_pct = (price - level) / level * 100 if level else None
 
     # 거리 필터: 현재가에서 너무 먼(낡은) 선은 매매에 무의미 → 참고없음으로 강등.
@@ -191,6 +221,7 @@ def detect(df: pd.DataFrame, frames: dict | None = None,
     return {"state": state, "score": score, "note": note,
             "confirmed_down": confirmed_down, "down": down, "up": up,
             "level": level, "slope_sign": slope_sign, "dist_pct": dist_pct,
+            "reliability": reliability, "rel_score": rel_score,
             "reason": f"{state}", "terms": ["추세선"]}
 
 
@@ -226,4 +257,5 @@ def _empty():
     return {"state": "추세선 불명확", "score": 0, "note": "데이터 부족",
             "confirmed_down": False, "down": None, "up": None,
             "level": None, "slope_sign": "-", "dist_pct": None,
+            "reliability": None, "rel_score": None,
             "reason": "추세선 불명확", "terms": ["추세선"]}
