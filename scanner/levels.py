@@ -18,16 +18,22 @@ import config
 # 1. 스윙 피벗
 # ────────────────────────────────────────────────────────────
 def swing_points(df: pd.DataFrame, k: int = None) -> list[dict]:
-    """국소 고점/저점. High[i]가 좌우 k봉의 최대면 스윙고점, Low[i]가 최소면 스윙저점."""
-    k = k or config.SWING_K
+    """국소 고점/저점 + 그 봉의 거래량. High[i]가 좌우 k봉의 최대면 스윙고점, 최소면 저점.
+
+    k는 지지/저항용 SR_SWING_K(기본 5) — 폭이 넓을수록 잔물결을 빼고 의미있는 변곡만.
+    """
+    k = k or config.SR_SWING_K
     highs, lows = df["High"].values, df["Low"].values
+    vols = df["Volume"].values if "Volume" in df else [0.0] * len(df)
     n = len(df)
     pts = []
     for i in range(k, n - k):
         if highs[i] == highs[i - k:i + k + 1].max():
-            pts.append({"pos": i, "price": float(highs[i]), "kind": "H"})
+            pts.append({"pos": i, "price": float(highs[i]), "kind": "H",
+                        "vol": float(vols[i])})
         if lows[i] == lows[i - k:i + k + 1].min():
-            pts.append({"pos": i, "price": float(lows[i]), "kind": "L"})
+            pts.append({"pos": i, "price": float(lows[i]), "kind": "L",
+                        "vol": float(vols[i])})
     return pts
 
 
@@ -50,16 +56,24 @@ def cluster_levels(pts: list[dict], n_bars: int,
             cur = [p]
     clusters.append(cur)
 
+    # 거래량 가중 기준값(전체 스윙 거래량 중앙값) — 거래 몰린 변곡일수록 강한 벽
+    all_vols = [m.get("vol", 0.0) for m in pts if m.get("vol", 0.0) > 0]
+    med_vol = float(np.median(all_vols)) if all_vols else 0.0
+
     levels = []
     for c in clusters:
         prices = [m["price"] for m in c]
         last_pos = max(m["pos"] for m in c)
         touches = len(c)
         recency = last_pos / n_bars                     # 0~1, 최근일수록 큼
-        strength = touches + recency                    # 터치 + 최근성
+        avg_vol = float(np.mean([m.get("vol", 0.0) for m in c]))
+        vol_factor = min(avg_vol / med_vol, 3.0) if med_vol > 0 else 1.0
+        # 강도 = 터치(주) + 최근성 + 거래량가중(거래 몰린 가격일수록 가산)
+        strength = touches + recency + (vol_factor - 1) * 0.6
         levels.append({
             "price": float(np.mean(prices)), "touches": touches,
             "last_pos": last_pos, "recency": round(recency, 2),
+            "vol_factor": round(vol_factor, 2),
             "strength": round(strength, 2),
         })
     return sorted(levels, key=lambda l: l["strength"], reverse=True)
