@@ -12,7 +12,8 @@ import os
 from scanner import card, earnings, intraday, lwc, names_ko
 from scanner.dashboard import _BUCKETS, _bucket
 
-_BUCKET_KO = {"transition": "🟢전환", "watch": "⚪관망", "avoid": "🔴회피"}
+_BUCKET_KO = {"transition": "🟢전환후보", "uptrend": "📈상승추세",
+              "watch": "⚪관망", "avoid": "🔴회피"}
 
 # 전환단계 칸 마우스오버 설명(뜻 + 판정 기준)
 _STAGE_TIP = {
@@ -91,7 +92,8 @@ def _index(results: list[dict]) -> str:
     counts = {k: sum(1 for r in results if _bucket(r) == k) for k, _ in _BUCKETS}
     tcount = sum(1 for r in results if r.get("transition_stage", 0) > 0)
     chips = "".join(
-        f'<button class="chip" onclick="flt(\'{k}\')">{_BUCKET_KO[k]} {counts[k]}</button>'
+        f'<button class="chip{" on" if k == "transition" else ""}" '
+        f'onclick="flt(\'{k}\')">{_BUCKET_KO[k]} {counts[k]}</button>'
         for k, _ in _BUCKETS)
     # 수집 진행률(캐시된 종목 / 유니버스 전체)
     try:
@@ -172,6 +174,7 @@ _INDEX_TMPL = """<!DOCTYPE html><html lang="ko"><head>
   .legend .lc{{padding:4px 15px 13px;font-size:12.5px;color:#475569;line-height:1.75}}
   .legend b{{color:#0f172a}}
   tr.b-transition td.sc{{color:#16a34a}}
+  tr.b-uptrend td.sc{{color:#0284c7}}
   tr.b-avoid td.sc{{color:#dc2626}}
   .pos{{color:#16a34a}}.neg{{color:#dc2626}}
   .prog{{padding:8px 16px 0}}
@@ -195,6 +198,7 @@ _INDEX_TMPL = """<!DOCTYPE html><html lang="ko"><head>
     tr{{background:#fff;border:1px solid #e2e8f0;border-radius:12px;
        margin:8px 12px;padding:6px 13px}}
     tr.b-transition{{border-left:4px solid #16a34a}}
+    tr.b-uptrend{{border-left:4px solid #38bdf8}}
     tr.b-avoid{{border-left:4px solid #dc2626}}
     td{{display:flex;justify-content:space-between;gap:12px;align-items:center;
        text-align:right;border:0;padding:5px 0;font-size:13px}}
@@ -230,12 +234,14 @@ _INDEX_TMPL = """<!DOCTYPE html><html lang="ko"><head>
 &nbsp;<b>② 갓 돌파(미확인)</b> — 막 넘었지만 되밀릴 수 있어 안착 미확인 → 관망.<br>
 &nbsp;<b>① 임박</b> — 아직 추세선 아래지만 저항에 근접. 돌파하면 전환 시작.<br>
 <b>신호</b>(종합점수 −100~+100): <b>🟢 강세</b> +50↑ 적극 · <b>🟢 관심</b> +20~50 ·
- <b>⚪ 중립</b> −20~+20 관망 · <b>🔴 주의</b> −50~−20 · <b>🔴 공포</b> −50↓ 회피.<br>
-<span style="color:#94a3b8">※ 표의 각 칸에 마우스를 올리면(데스크톱) 같은 설명이 떠요.</span>
+ <b>⚪ 중립</b> −20~+20 · <b>🔴 주의</b> −50~−20 · <b>🔴 공포</b> −50↓.<br>
+<b>위쪽 칩(그룹)</b>은 <b>점수와 다른 '추세 상태' 축</b>이에요:
+ <b>🟢전환후보</b>=하락→상승 전환 진행(①~④) · <b>📈상승추세</b>=전환은 끝났고 이미 강세 ·
+ <b>⚪관망</b>=방향 미정(중립) · <b>🔴회피</b>=하락추세.<br>
+<span style="color:#94a3b8">※ 그래서 "신호 🟢강세"인데 "전환후보"가 아닐 수 있어요(점수는 강한데 전환 셋업은 아닌 경우). 칩은 추세 상태, 신호는 점수 — 다른 축이에요.</span>
 </div></details>
 <div class="bar">
   <button class="chip" onclick="flt('all')">전체</button>
-  <button class="chip on" onclick="fltStage()">🔄 전환후보 {tcount}</button>
   {chips}
   <a class="chip" href="guide.html" style="margin-left:auto;text-decoration:none">📘 매매 가이드</a>
   <a class="chip" href="lookup.html" style="background:#0f172a;color:#fff;border-color:#0f172a;text-decoration:none">➕ 티커 즉석 조회</a>
@@ -293,13 +299,14 @@ _INDEX_TMPL = """<!DOCTYPE html><html lang="ko"><head>
     }});
     qn.textContent=hit+'개';
   }}
-  // 첫 화면: '전환 후보'(하락→상승 전환 단계)만 우선 표시
+  // 첫 화면: '전환 후보' 그룹만 우선 표시(전환단계 ①~④)
   window.addEventListener('load',function(){{
     var any=false;
-    tb.querySelectorAll('tr').forEach(function(r){{if(parseInt(r.dataset.stage||'0')>0)any=true;}});
-    if(any){{tb.querySelectorAll('tr').forEach(function(r){{
-      r.style.display=(parseInt(r.dataset.stage||'0')>0)?'':'none';}});}}
-    else{{setOn(document.querySelectorAll('.chip')[0]);}}
+    tb.querySelectorAll('tr').forEach(function(r){{
+      var ok=r.dataset.bucket==='transition'; if(ok)any=true;
+      r.style.display=ok?'':'none';}});
+    if(!any){{tb.querySelectorAll('tr').forEach(function(r){{r.style.display='';}});
+      setOn(document.querySelectorAll('.chip')[0]);}}
   }});
 </script></body></html>"""
 

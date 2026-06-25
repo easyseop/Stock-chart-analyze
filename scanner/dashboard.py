@@ -15,21 +15,27 @@ import os
 from scanner import card, chart
 
 
-# 분류: 추세선 state 기준 (사용자 핵심 관심 = 하락→상승 전환 후보)
+# 분류(4그룹): 전환후보 = 추세전환 진행(①~④), 상승추세 = 이미 강세(점수↑),
+#   관망 = 방향 미정(중립), 회피 = 하락추세. '신호(점수)'와 별개의 '추세 상태' 축.
 _BUCKETS = [
-    ("transition", "🟢 전환 후보 (하락추세선 돌파·임박)"),
+    ("transition", "🟢 전환 후보 (하락→상승 전환 ①~④)"),
+    ("uptrend",    "📈 상승추세 (이미 강세)"),
     ("watch",      "⚪ 관망 (방향 미정)"),
-    ("avoid",      "🔴 회피 (하락추세 지속·상승추세 이탈)"),
+    ("avoid",      "🔴 회피 (하락추세·상승추세 이탈)"),
 ]
 
 
 def _bucket(result: dict) -> str:
-    from scanner import trendlines as tl
+    import config
     state = result["trendline"]["state"]
-    if state in tl.TRANSITION_STATES or state == "하락추세선 임박":
+    # ① 전환 진행 중(임박~확정)이면 최우선 — 전환단계와 일관되게(갓 돌파도 전환)
+    if result.get("transition_stage", 0) > 0:
         return "transition"
-    if state in ("하락추세 지속", "상승추세선 이탈"):
+    if state in ("하락추세 지속", "상승추세선 이탈") or result.get("vetoed"):
         return "avoid"
+    # 전환 셋업은 아니지만 종합점수가 강하면(관심+ 이상) '이미 상승추세'
+    if result.get("norm", 0) >= config.VERDICT_WEAK:
+        return "uptrend"
     return "watch"
 
 
