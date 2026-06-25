@@ -113,6 +113,7 @@ def _index(results: list[dict]) -> str:
     updated = datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M UTC")
     return _INDEX_TMPL.format(
         n=len(results), rows=_rows(results), chips=chips, rcount=rcount,
+        recmin=REC_MIN,
         cached=cached, uni=uni, pct=pct, updated=updated)
 
 
@@ -302,7 +303,7 @@ _INDEX_TMPL = """<!DOCTYPE html><html lang="ko"><head>
   function fltRec(){{
     setOn(typeof event!=='undefined'?event.target:document.querySelector('.rec-chip'));
     tb.querySelectorAll('tr').forEach(function(r){{
-      r.style.display=(parseInt(r.dataset.rec||'0')>=4)?'':'none';
+      r.style.display=(parseInt(r.dataset.rec||'0')>={recmin})?'':'none';
     }});
   }}
   // 검색: 티커·영문명·한글명으로 필터(칩 필터는 해제하고 전체에서 찾음)
@@ -324,7 +325,7 @@ _INDEX_TMPL = """<!DOCTYPE html><html lang="ko"><head>
   window.addEventListener('load',function(){{
     var rec=0,trans=0;
     tb.querySelectorAll('tr').forEach(function(r){{
-      if(parseInt(r.dataset.rec||'0')>=4)rec++;
+      if(parseInt(r.dataset.rec||'0')>={recmin})rec++;
       if(r.dataset.bucket==='transition')trans++;}});
     if(rec){{fltRec();}}
     else if(trans){{setOn(document.querySelector('.rec-chip'));

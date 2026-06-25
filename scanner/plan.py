@@ -10,7 +10,7 @@ import html
 
 import config
 
-REC_MIN = 4   # 가이드 체크리스트 6개 중 4개 이상이면 '진입 추천'
+REC_MIN = 6   # 6개 조건 '전부' 충족해야 진입 추천(엄선 — 추격/과열은 별도 제외)
 
 
 def _overextended(r: dict) -> bool:
