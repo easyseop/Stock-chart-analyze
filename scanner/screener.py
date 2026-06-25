@@ -41,11 +41,43 @@ def _detail(result: dict, frames: dict) -> str:
     return lwc.detail(result, frames)
 
 
+def _rec_n(r: dict) -> int:
+    """진입 추천 점수 = 가이드 체크리스트 6개 중 충족 개수(0~6). 하락추세 veto면 0."""
+    if r.get("vetoed"):
+        return 0
+    import config
+    stage = r.get("transition_stage", 0)
+    rs = (r.get("rs") or {}).get("rel")
+    mk = (r.get("market") or {}).get("direction", "")
+    nh = (r.get("newhigh") or {}).get("pct_from_high")
+    n = 0
+    if stage >= 3:                          # ① 전환단계 ③④ (돌파후 안착~확정)
+        n += 1
+    if "상승" in mk:                        # ② 시장 상승
+        n += 1
+    if rs is not None and rs > 0:           # ③ RS 플러스
+        n += 1
+    if nh is not None and -20 <= nh <= -3:  # ④ 신고가 근접(−20~−3%)
+        n += 1
+    if not r.get("chase"):                  # ⑤ 추격주의 없음
+        n += 1
+    if r.get("norm", 0) >= config.VERDICT_WEAK:  # ⑥ 신호 관심 이상(+20)
+        n += 1
+    return n
+
+
+REC_MIN = 4   # 6개 중 4개 이상이면 '진입 추천'
+
+
 def _rows(results: list[dict]) -> str:
     out = []
     for r in results:
         b = _bucket(r)
         code = r["code"]
+        rec = _rec_n(r)
+        recd = rec >= REC_MIN
+        star = (f'<span class="star" title="진입 추천 — 체크리스트 {rec}/6 충족">'
+                f'⭐{rec}</span>') if recd else ""
         rs = r.get("rs", {}).get("rel")
         rs_txt = f"{rs*100:+.0f}%" if rs is not None else "-"
         nh = r.get("newhigh", {}).get("pct_from_high")
@@ -66,8 +98,9 @@ def _rows(results: list[dict]) -> str:
         ko = names_ko.ko(code)
         ko_html = (f'<span class="ko">{html.escape(ko)}</span>' if ko else "")
         out.append(
-            f'<tr class="b-{b}" data-bucket="{b}" data-stage="{stg}">'
-            f'<td data-label="신호" title="{gtip}">{html.escape(gauge)}</td>'
+            f'<tr class="b-{b}{" rec" if recd else ""}" data-bucket="{b}" '
+            f'data-stage="{stg}" data-rec="{rec}">'
+            f'<td data-label="신호" title="{gtip}">{star}{html.escape(gauge)}</td>'
             f'<td class="nm"><a href="stocks/{code}.html">'
             f'{html.escape(r["name"])}</a>{ko_html}'
             f'<span class="cd">{html.escape(code)}</span></td>'
@@ -85,15 +118,14 @@ def _rows(results: list[dict]) -> str:
 def _index(results: list[dict]) -> str:
     import datetime
     from scanner import cache, universe
-    # 기본 정렬: 전환 단계 높은 순(하락→상승 전환 임박/확정) → 그다음 점수
+    # 기본 정렬: 진입 추천 점수 → 전환 단계 → 종합점수 (추천 종목이 맨 위로)
     results = sorted(results,
-                     key=lambda r: (r.get("transition_stage", 0), r["norm"]),
+                     key=lambda r: (_rec_n(r), r.get("transition_stage", 0), r["norm"]),
                      reverse=True)
     counts = {k: sum(1 for r in results if _bucket(r) == k) for k, _ in _BUCKETS}
-    tcount = sum(1 for r in results if r.get("transition_stage", 0) > 0)
+    rcount = sum(1 for r in results if _rec_n(r) >= REC_MIN)
     chips = "".join(
-        f'<button class="chip{" on" if k == "transition" else ""}" '
-        f'onclick="flt(\'{k}\')">{_BUCKET_KO[k]} {counts[k]}</button>'
+        f'<button class="chip" onclick="flt(\'{k}\')">{_BUCKET_KO[k]} {counts[k]}</button>'
         for k, _ in _BUCKETS)
     # 수집 진행률(캐시된 종목 / 유니버스 전체)
     try:
@@ -104,7 +136,7 @@ def _index(results: list[dict]) -> str:
     pct = min(100, round(cached / uni * 100))
     updated = datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M UTC")
     return _INDEX_TMPL.format(
-        n=len(results), rows=_rows(results), chips=chips, tcount=tcount,
+        n=len(results), rows=_rows(results), chips=chips, rcount=rcount,
         cached=cached, uni=uni, pct=pct, updated=updated)
 
 
@@ -176,6 +208,10 @@ _INDEX_TMPL = """<!DOCTYPE html><html lang="ko"><head>
   tr.b-transition td.sc{{color:#16a34a}}
   tr.b-uptrend td.sc{{color:#0284c7}}
   tr.b-avoid td.sc{{color:#dc2626}}
+  tr.rec{{background:#fffbeb}}
+  .star{{font-size:11px;font-weight:700;color:#d97706;margin-right:4px}}
+  .rec-chip{{background:#fef3c7;border-color:#f59e0b;color:#92400e;font-weight:700}}
+  .rec-chip.on{{background:#f59e0b;border-color:#f59e0b;color:#fff}}
   .pos{{color:#16a34a}}.neg{{color:#dc2626}}
   .prog{{padding:8px 16px 0}}
   .ptxt{{font-size:12px;color:#475569;margin-bottom:4px}}
@@ -241,6 +277,7 @@ _INDEX_TMPL = """<!DOCTYPE html><html lang="ko"><head>
 <span style="color:#94a3b8">※ 그래서 "신호 🟢강세"인데 "전환후보"가 아닐 수 있어요(점수는 강한데 전환 셋업은 아닌 경우). 칩은 추세 상태, 신호는 점수 — 다른 축이에요.</span>
 </div></details>
 <div class="bar">
+  <button class="chip rec-chip on" onclick="fltRec()">⭐ 진입 추천 {rcount}</button>
   <button class="chip" onclick="flt('all')">전체</button>
   {chips}
   <a class="chip" href="guide.html" style="margin-left:auto;text-decoration:none">📘 매매 가이드</a>
@@ -284,6 +321,13 @@ _INDEX_TMPL = """<!DOCTYPE html><html lang="ko"><head>
       r.style.display=(parseInt(r.dataset.stage||'0')>0)?'':'none';
     }});
   }}
+  // ⭐ 진입 추천: 체크리스트 4/6 이상만 표시(가장 손쉬운 후보 추리기)
+  function fltRec(){{
+    setOn(typeof event!=='undefined'?event.target:document.querySelector('.rec-chip'));
+    tb.querySelectorAll('tr').forEach(function(r){{
+      r.style.display=(parseInt(r.dataset.rec||'0')>=4)?'':'none';
+    }});
+  }}
   // 검색: 티커·영문명·한글명으로 필터(칩 필터는 해제하고 전체에서 찾음)
   function search(v){{
     v=(v||'').trim().toLowerCase();
@@ -299,14 +343,22 @@ _INDEX_TMPL = """<!DOCTYPE html><html lang="ko"><head>
     }});
     qn.textContent=hit+'개';
   }}
-  // 첫 화면: '전환 후보' 그룹만 우선 표시(전환단계 ①~④)
+  // 첫 화면: ⭐진입 추천(체크리스트 4/6+)만 우선. 없으면 전환후보, 그래도 없으면 전체.
   window.addEventListener('load',function(){{
-    var any=false;
+    var rec=0,trans=0;
     tb.querySelectorAll('tr').forEach(function(r){{
-      var ok=r.dataset.bucket==='transition'; if(ok)any=true;
-      r.style.display=ok?'':'none';}});
-    if(!any){{tb.querySelectorAll('tr').forEach(function(r){{r.style.display='';}});
-      setOn(document.querySelectorAll('.chip')[0]);}}
+      if(parseInt(r.dataset.rec||'0')>=4)rec++;
+      if(r.dataset.bucket==='transition')trans++;}});
+    if(rec){{fltRec();}}
+    else if(trans){{setOn(document.querySelector('.rec-chip'));
+      document.querySelector('.rec-chip').classList.remove('on');
+      var tc=Array.prototype.find.call(document.querySelectorAll('.chip'),
+        function(c){{return c.textContent.indexOf('전환후보')>=0;}});
+      setOn(tc);
+      tb.querySelectorAll('tr').forEach(function(r){{
+        r.style.display=(r.dataset.bucket==='transition')?'':'none';}});}}
+    else{{setOn(document.querySelector('.chip:nth-child(2)'));
+      tb.querySelectorAll('tr').forEach(function(r){{r.style.display='';}});}}
   }});
 </script></body></html>"""
 
