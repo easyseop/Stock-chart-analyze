@@ -10,7 +10,7 @@ on:
         required: true
 
 permissions:
-  contents: read
+  contents: write       # universe.csv에 즉석조회 종목을 영구 등록(커밋)
   pages: write
   id-token: write
 
@@ -39,8 +39,20 @@ jobs:
           restore-keys: |
             data-cache-
 
-      - name: 캐시에 추가(신호 카드 로그)
+      - name: 캐시에 추가 + 유니버스 영구등록(신호 카드 로그)
         run: python main.py --add "${{ inputs.ticker }}"
+
+      - name: 유니버스 변경 커밋(즉석조회 종목 영구 보존 — 캐시 리셋에도 안 사라짐)
+        run: |
+          if ! git diff --quiet -- universe.csv; then
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git add universe.csv
+            git commit -m "lookup: ${{ inputs.ticker }} 유니버스 등록"
+            git push || echo "push 실패(권한/충돌) — 캐시엔 이미 추가됨"
+          else
+            echo "유니버스 변경 없음(이미 등록된 종목)"
+          fi
 
       - name: 시간봉(60분) 갱신(전환후보 상위, best-effort)
         run: python main.py --update-hourly 120 || true

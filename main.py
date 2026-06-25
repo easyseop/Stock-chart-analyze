@@ -212,11 +212,14 @@ def main():
         return
 
     if args.add:
-        from scanner import cache
+        from scanner import cache, universe
         code = args.add.strip().upper()
         try:
             d = cache.update(code)
-            print(f"캐시 추가/갱신: {code} ({len(d)}행) · 총 {len(cache.cached_codes())}종목")
+            # 유니버스(git 추적)에도 영구 등록 → 캐시 리셋에도 안 사라짐
+            added = universe.add_one(code)
+            print(f"캐시 추가/갱신: {code} ({len(d)}행) · 총 {len(cache.cached_codes())}종목"
+                  f"{' · 유니버스 영구등록' if added else ''}")
         except Exception as e:
             print(f"[{code}] 캐시 추가 실패: {type(e).__name__}: {e}", file=sys.stderr)
         return

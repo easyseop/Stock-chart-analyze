@@ -36,6 +36,25 @@ def save(rows: list[dict], path: str = DEFAULT_PATH) -> None:
             w.writerow({k: r.get(k, "") for k in FIELDS})
 
 
+def add_one(code: str, name: str | None = None, ccy: str | None = None,
+            path: str = DEFAULT_PATH) -> bool:
+    """티커를 유니버스에 영구 등록(중복이면 무시). 새로 추가했으면 True.
+
+    즉석조회 종목이 캐시 리셋에도 사라지지 않도록 git 추적되는 universe.csv에 남긴다.
+    """
+    code = code.strip().upper()
+    if not code:
+        return False
+    rows = load(path)
+    if any(r.get("code", "").upper() == code for r in rows):
+        return False
+    if ccy is None:
+        ccy = "KRW" if (len(code) == 6 and code[:5].isdigit()) else "USD"
+    rows.append({"code": code, "name": (name or code), "ccy": ccy})
+    save(rows, path)
+    return True
+
+
 def _krx_rows(market: str, n_take: int, seen: set) -> list[dict]:
     """KOSPI/KOSDAQ 상장목록을 시총 내림차순으로(0=전체) rows 생성."""
     import FinanceDataReader as fdr
