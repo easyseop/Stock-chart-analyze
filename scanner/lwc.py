@@ -12,7 +12,7 @@ import json
 import pandas as pd
 
 import config
-from scanner import card, chart
+from scanner import card, chart, plan
 from scanner import trendlines as tlmod
 
 LWC_CDN = ("https://unpkg.com/lightweight-charts@4.2.0/dist/"
@@ -142,7 +142,8 @@ def detail(result: dict, frames: dict) -> str:
     card_txt = card.render(result).split("\n용어:")[0]
     return _TMPL.format(
         title=title, cdn=LWC_CDN, toggles=toggles, tfbtns=tfbtns, ccs=ccs,
-        tfs=json.dumps(tfs), first=default_tf,
+        tfs=json.dumps(tfs), first=default_tf, plan=plan.plan_html(result),
+        plan_css=plan.PLAN_CSS,
         data=json.dumps(data), default_on=default_on, precision=precision,
         verdict=html.escape(result.get("verdict", "")),
         card=html.escape(card_txt))
@@ -182,10 +183,12 @@ _TMPL = """<!DOCTYPE html><html lang="ko"><head>
     vertical-align:middle}}
   @media(max-width:640px){{.wrap{{padding:8px}}header h1{{font-size:14px}}
     .toggle,.tfbtn{{padding:5px 10px;font-size:12px}}.card{{font-size:11px}}.lc{{font-size:11.5px}}}}
+{plan_css}
 </style></head><body>
 <header><a href="../index.html">← 스크리너 목록</a><h1>{title}</h1>
 <div class="vt">{verdict}</div></header>
 <div class="wrap">
+  {plan}
   <div class="bar"><span style="font-size:12px;color:#64748b">지표</span>{toggles}</div>
   <div class="bar">{tfbtns}
     <span style="font-size:11px;color:#64748b;margin-left:6px">핀치=확대/축소 · 드래그=이동</span></div>

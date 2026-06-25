@@ -185,6 +185,8 @@ def main():
                     help="티커/코드를 캐시에 추가·갱신(즉석조회를 스크리너에 영구 반영)")
     ap.add_argument("--prune", metavar="SPEC",
                     help="캐시 정리: 'korean'=한국 6자리 전부 / 'CODE[,CODE]'=지정 종목")
+    ap.add_argument("--update-top", type=int, metavar="N", default=0,
+                    help="전환후보 상위 N종목의 일봉만 증분 갱신(장중용 — 전체보다 빠름)")
     ap.add_argument("--update-hourly", type=int, metavar="N", default=0,
                     help="전환후보 상위 N종목의 시간봉(60분) 캐시 갱신(best-effort, yfinance)")
     ap.add_argument("--update-earnings", action="store_true",
@@ -193,6 +195,10 @@ def main():
 
     if args.prune:
         _prune(args.prune)
+        return
+
+    if args.update_top:
+        _update_top(args.update_top)
         return
 
     if args.update_hourly:
@@ -303,19 +309,15 @@ def _prune_illiquid(keep: int):
           f"유니버스 {len(new_rows)}종목으로 재작성 (남은 캐시 {len(cache.cached_codes())})")
 
 
-def _update_hourly(n: int):
-    """전환후보 상위 N종목의 시간봉 캐시를 갱신(best-effort).
-
-    캐시된 일봉으로 분석(네트워크 0)해 전환단계·점수 상위를 고르고, 그 종목만
-    yfinance에서 60분봉을 받는다. yfinance 없거나 실패해도 조용히 건너뛴다.
-    """
-    from scanner import cache, universe, intraday
+def _rank_cached(n: int, us_only: bool = False) -> list[str]:
+    """캐시된 일봉으로 분석(네트워크 0)해 전환단계·점수 상위 N종목 코드 반환."""
+    from scanner import cache, universe
     from scanner.analyze import analyze
     umap = {s["code"]: s for s in universe.load() if s.get("code")}
     ranked = []
     for code in cache.cached_codes():
-        if len(code) == 6 and code[:5].isdigit():
-            continue                              # 미국주만(yfinance 시간봉)
+        if us_only and len(code) == 6 and code[:5].isdigit():
+            continue
         try:
             frames = cache.frames(code, refresh=False)
             meta = umap.get(code) or {"code": code, "name": code, "ccy": "USD"}
@@ -324,7 +326,31 @@ def _update_hourly(n: int):
         except Exception:
             continue
     ranked.sort(reverse=True)
-    targets = [c for _s, _n, c in ranked[:n]]
+    return [c for _s, _n, c in ranked[:n]]
+
+
+def _update_top(n: int):
+    """전환후보 상위 N종목의 '일봉'만 증분 갱신(장중용 — 전체 5천 갱신보다 훨씬 빠름)."""
+    from scanner import cache
+    targets = _rank_cached(n)
+    ok = 0
+    for code in targets:
+        try:
+            cache.update(code)
+            ok += 1
+        except Exception:
+            pass
+    print(f"장중 일봉 갱신(상위 {len(targets)}종목) · 성공 {ok}")
+
+
+def _update_hourly(n: int):
+    """전환후보 상위 N종목의 시간봉 캐시를 갱신(best-effort).
+
+    캐시된 일봉으로 분석(네트워크 0)해 전환단계·점수 상위를 고르고, 그 종목만
+    yfinance에서 60분봉을 받는다. yfinance 없거나 실패해도 조용히 건너뛴다.
+    """
+    from scanner import intraday
+    targets = _rank_cached(n, us_only=True)
     ok = 0
     for code in targets:
         if intraday.update(code) is not None:

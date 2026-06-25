@@ -57,13 +57,16 @@ jobs:
           restore-keys: |
             data-cache-
 
-      # 백필은 마감후(22:00 UTC) 또는 수동 실행에서만 — 장중 실행은 가격 갱신만(빠름)
-      - name: 백필(마감후/수동) + 증분 갱신(매 실행, 오늘 가격 반영)
+      # 마감후/수동 = 전체 동기화(백필 + 전 종목 증분). 장중 = 전환후보 상위만(빠름).
+      #   → 5천 종목을 매 실행 전부 받던 부하 제거(장중은 핵심 300종목만 일봉 갱신).
+      - name: 데이터 갱신 (마감후=전체 / 장중=상위만)
         run: |
           if [ "${{ github.event.schedule }}" = "0 22 * * 1-5" ] || [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             python main.py --backfill "${{ github.event.inputs.backfill || env.CHUNK }}"
+            python main.py --update
+          else
+            python main.py --update-top 300
           fi
-          python main.py --update
 
       # 캐시 정리는 백필 '후'에 — illiquid:N(거래대금 상위만)은 캐시가 채워진 뒤 평가해야 정확.
       - name: 캐시 정리(수동 입력 시에만 — korean / illiquid:N / 종목코드)

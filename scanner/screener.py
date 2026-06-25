@@ -41,32 +41,7 @@ def _detail(result: dict, frames: dict) -> str:
     return lwc.detail(result, frames)
 
 
-def _rec_n(r: dict) -> int:
-    """진입 추천 점수 = 가이드 체크리스트 6개 중 충족 개수(0~6). 하락추세 veto면 0."""
-    if r.get("vetoed"):
-        return 0
-    import config
-    stage = r.get("transition_stage", 0)
-    rs = (r.get("rs") or {}).get("rel")
-    mk = (r.get("market") or {}).get("direction", "")
-    nh = (r.get("newhigh") or {}).get("pct_from_high")
-    n = 0
-    if stage >= 3:                          # ① 전환단계 ③④ (돌파후 안착~확정)
-        n += 1
-    if "상승" in mk:                        # ② 시장 상승
-        n += 1
-    if rs is not None and rs > 0:           # ③ RS 플러스
-        n += 1
-    if nh is not None and -20 <= nh <= -3:  # ④ 신고가 근접(−20~−3%)
-        n += 1
-    if not r.get("chase"):                  # ⑤ 추격주의 없음
-        n += 1
-    if r.get("norm", 0) >= config.VERDICT_WEAK:  # ⑥ 신호 관심 이상(+20)
-        n += 1
-    return n
-
-
-REC_MIN = 4   # 6개 중 4개 이상이면 '진입 추천'
+from scanner.plan import rec_n as _rec_n, REC_MIN
 
 
 def _rows(results: list[dict]) -> str:
