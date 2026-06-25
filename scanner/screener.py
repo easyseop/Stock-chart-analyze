@@ -331,6 +331,12 @@ _LOOKUP_TMPL = """<!DOCTYPE html><html lang="ko"><head>
   @keyframes flow{0%{background-position:0 0}100%{background-position:-200% 0}}
   details summary{cursor:pointer;font-weight:600;color:#334155}
   code{background:#f1f5f9;padding:1px 5px;border-radius:4px}
+  .hist-item{display:flex;align-items:center;gap:10px;padding:9px 2px;
+    border-bottom:1px solid #f1f5f9;font-size:14px}
+  .hist-item:last-child{border-bottom:0}
+  .hist-item a.t{font-weight:700;color:#1d4ed8;text-decoration:none}
+  .hist-item .s{font-size:12px;color:#64748b;margin-left:auto}
+  .hist-item .x{color:#cbd5e1;cursor:pointer;font-size:18px;line-height:1}
 </style></head><body>
 <header><a href="index.html">&larr; 스크리너</a>
 <h1>티커 즉석 조회 <span style="color:#38bdf8;font-size:13px">웹에서 바로 수집</span></h1></header>
@@ -343,6 +349,11 @@ _LOOKUP_TMPL = """<!DOCTYPE html><html lang="ko"><head>
     <div class="pbar" id="pb"><div class="pfill" id="pf"></div></div>
     <div class="hint">미국 티커 또는 한국 6자리 코드. 누르면 GitHub Actions의 lookup 워크플로가
       돌아 그 종목을 분석합니다(약 1~2분). 끝나면 결과 링크가 떠요.</div>
+  </div>
+  <div class="card" id="histcard" style="display:none">
+    <div style="font-weight:700;margin-bottom:6px">📋 즉석조회한 종목 <span id="histn" style="color:#94a3b8;font-weight:400;font-size:13px"></span></div>
+    <div id="hist"></div>
+    <div style="text-align:right;margin-top:6px"><span id="histclear" onclick="clearHist()" style="font-size:12px;color:#94a3b8;cursor:pointer">목록 비우기</span></div>
   </div>
   <div class="card">
     <details><summary>최초 1회: 내 GitHub 토큰 입력 (브라우저에만 저장)</summary>
@@ -362,6 +373,25 @@ _LOOKUP_TMPL = """<!DOCTYPE html><html lang="ko"><head>
       st=document.getElementById('st'), go=document.getElementById('go');
   pat.value=localStorage.getItem('ghpat')||"";
   function show(m){st.className='stat on';st.innerHTML=m;}
+  // 즉석조회 누적 이력(브라우저 저장) — 조회한 종목이 목록으로 쌓이고, 수집중은 ⏳
+  var HIST=[]; try{HIST=JSON.parse(localStorage.getItem('lookup_hist')||'[]');}catch(e){HIST=[];}
+  function saveHist(){localStorage.setItem('lookup_hist',JSON.stringify(HIST.slice(0,40)));}
+  function pushHist(t){HIST=HIST.filter(function(h){return h.t!==t;});
+    HIST.unshift({t:t,done:false,ts:Date.now()});saveHist();renderHist();}
+  function markDone(t,ok){for(var i=0;i<HIST.length;i++){if(HIST[i].t===t){HIST[i].done=true;HIST[i].ok=ok!==false;}}saveHist();renderHist();}
+  function delHist(t){HIST=HIST.filter(function(h){return h.t!==t;});saveHist();renderHist();}
+  function clearHist(){if(confirm('즉석조회 목록을 비울까요?')){HIST=[];saveHist();renderHist();}}
+  function renderHist(){
+    var c=document.getElementById('histcard'),h=document.getElementById('hist');
+    document.getElementById('histn').textContent=HIST.length?'('+HIST.length+')':'';
+    if(!HIST.length){c.style.display='none';return;} c.style.display='';
+    h.innerHTML=HIST.map(function(x){
+      var s=x.done?(x.ok===false?'⚠️ 실패':'✅ 완료'):'⏳ 수집중';
+      return '<div class="hist-item"><a class="t" href="stocks/'+x.t+'.html">'+x.t+'</a>'
+        +'<span class="s">'+s+' · <a href="stocks/'+x.t+'.html" style="color:#1d4ed8">상세</a></span>'
+        +'<span class="x" title="삭제" onclick="delHist(\''+x.t+'\')">&times;</span></div>';
+    }).join('');
+  }
   function bar(p,c,anim){var pb=document.getElementById('pb'),pf=document.getElementById('pf');
     pb.className='pbar on';pf.style.width=p+'%';if(c)pf.style.background=c;
     pf.className='pfill'+(anim?' anim':'');}
@@ -390,7 +420,7 @@ _LOOKUP_TMPL = """<!DOCTYPE html><html lang="ko"><head>
     });
     go.disabled=false;
     if(r.status===204){
-      saveActive(t);   // 진행 상태 저장 → 새로고침/재방문해도 이어서 추적
+      saveActive(t); pushHist(t);   // 진행 상태 저장 + 이력에 추가(수집중)
       show('✅ <b>'+t+'</b> 수집 시작! 1~2분 후 결과를 봅니다...'); bar(30,null,true);
       setTimeout(function(){startTrack(p,t);},6000);
     }else{
@@ -416,6 +446,7 @@ _LOOKUP_TMPL = """<!DOCTYPE html><html lang="ko"><head>
         TGEN++;          // 완료 → 진행 중인 루프 모두 무효화
         clearActive();   // 끝났으니 진행 상태 해제
         var ok=run.conclusion==='success';
+        markDone(t,ok);  // 이력 상태 갱신(완료/실패)
         bar(100,ok?'#16a34a':'#dc2626',false);
         show((ok?'✅ 완료! <b>'+t+'</b> 스크리너에 추가됨':'⚠️ '+run.conclusion+' <b>'+t+'</b>')+'<br>'
           +'<a href="index.html">스크리너에서 보기 &rarr;</a> · '
@@ -445,7 +476,7 @@ _LOOKUP_TMPL = """<!DOCTYPE html><html lang="ko"><head>
     if(p)startTrack(p,a.t);
     else show('토큰을 입력하면 <b>'+a.t+'</b> 진행 상태를 이어볼 수 있어요.');
   }
-  window.addEventListener('load',resume);
+  window.addEventListener('load',function(){renderHist();resume();});
   window.addEventListener('focus',resume);
   document.addEventListener('visibilitychange',function(){if(!document.hidden)resume();});
 </script></body></html>"""
