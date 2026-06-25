@@ -57,13 +57,17 @@ def analyze(frames: dict[str, pd.DataFrame], meta: dict, bench=None) -> dict:
     trend_oneline = _one_line_trend(trend, regime, trendline)
     stage, stage_label = _transition_stage(trendline)
 
-    # 고점 확장 / 추격 경고: 52주 고가 근접 + (과열 또는 20일선 과대이격)
+    # 고점 확장 / 추격 경고 + 최근 급등(타점이 멀어졌는지)
     ma20 = trend.get("ma", {}).get(20)
-    stretch = (price / ma20 - 1) if ma20 else 0.0
+    stretch = (price / ma20 - 1) if ma20 else 0.0          # 20일선 대비 이격
+    low10 = float(d["Low"].iloc[-10:].min())
+    runup10 = (price / low10 - 1) if low10 else 0.0        # 최근 10봉 저점 대비 급등폭
     near_high = newhigh["score"] == 2
-    chase = near_high and (rsi.get("rsi", 50) >= 70 or stretch >= 0.12)
-    chase_note = (f"🔺 고점 확장(52주고가 근접·MA20 +{stretch*100:.0f}%) "
-                  "— 추격 주의, 눌림 대기 권장" if chase else "")
+    # 추격: (신고가근접+과열/이격) 또는 그냥 큰 이격/급등 — 신고가 점수와 무관하게도 잡음
+    chase = (near_high and (rsi.get("rsi", 50) >= 70 or stretch >= 0.08)
+             or stretch >= 0.13 or runup10 >= 0.20)
+    chase_note = (f"🔺 이미 많이 올라 타점이 멂(MA20 +{stretch*100:.0f}% · "
+                  f"최근저점 대비 +{runup10*100:.0f}%) — 눌림 대기 권장" if chase else "")
 
     terms = []
     for blk in (regime, trend, rs, newhigh, market, rsi, sr, volume,
@@ -80,6 +84,7 @@ def analyze(frames: dict[str, pd.DataFrame], meta: dict, bench=None) -> dict:
         "module_scores": module_scores, "weights": norm["weights"],
         "norm": norm["score"], "verdict_label": label, "gauge": gauge,
         "verdict": verdict_txt, "entry": entry, "vetoed": vetoed, "terms": terms,
+        "ext": {"ma20_stretch": stretch, "runup10": runup10},
         "trend_oneline": trend_oneline, "chase": chase, "chase_note": chase_note,
         "transition_stage": stage, "transition_label": stage_label,
     }

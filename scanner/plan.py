@@ -22,18 +22,62 @@ def _overextended(r: dict) -> bool:
     if r.get("chase"):
         return True
     nh = (r.get("newhigh") or {}).get("pct_from_high")
-    if nh is not None and nh >= -4:          # 52주 신고가 −4% 이내 = 이미 다 옴(전환 초입 아님)
+    if nh is not None and nh >= -6:          # 52주 신고가 −6% 이내 = 이미 다 옴(전환 초입 아님)
         return True
-    price = (r.get("sr") or {}).get("price")
-    ma20 = ((r.get("trend") or {}).get("ma") or {}).get(20)
-    if price and ma20 and (price / ma20 - 1) >= 0.12:   # 20일선 +12%↑ 과대이격
+    ext = r.get("ext") or {}
+    if ext.get("ma20_stretch", 0) >= 0.10:   # 20일선 +10%↑ 과대이격
+        return True
+    if ext.get("runup10", 0) >= 0.16:        # 최근 10봉 저점 대비 +16%↑ 급등(타점 멂)
         return True
     risk = r.get("risk") or {}
+    price = (r.get("sr") or {}).get("price")
     entry = r.get("entry") or price
     stop = risk.get("stop")
     if entry and stop and entry > 0 and (entry - stop) / entry >= 0.12:
         return True
     return False
+
+
+def _support_below(r: dict):
+    """현재가 바로 아래의 가장 가까운 강한 지지(상승추세선/방어선/지지선) 가격."""
+    sr = r.get("sr") or {}
+    price = sr.get("price")
+    cands = []
+    up = (r.get("trendline") or {}).get("up")
+    if up and up.get("slope", 0) > 0 and up.get("now"):
+        cands.append(up["now"])               # 상승추세선(동적 지지)
+    if sr.get("defense"):
+        cands.append(sr["defense"])           # 방어선
+    for lv in (r.get("levels") or {}).get("strong", []):
+        cands.append(lv["price"])             # 강한 지지선
+    cands = [c for c in cands if c and price and c < price]
+    return max(cands) if cands else None
+
+
+def timing(r: dict) -> str:
+    """'지금이 타점인가/주시인가'를 한 줄로. 사용자 핵심: 지금 살 자리 vs 기다릴 자리."""
+    if r.get("vetoed"):
+        return ""
+    sr = r.get("sr") or {}
+    price = sr.get("price")
+    pos = sr.get("position")
+    stage = r.get("transition_stage", 0)
+    if stage <= 0 and r.get("norm", 0) < config.VERDICT_WEAK:
+        return ""                              # 전환·강세 후보 아니면 타이밍 의미 없음
+    if pos == "고점권" and sr.get("box_high") and price:
+        g = (sr["box_high"] - price) / price * 100
+        return f"⏳ 저항 돌파 대기 (저항까지 +{g:.1f}%)"
+    if _overextended(r):
+        return "👀 타점 위(이미 급등) — 눌림 대기·주시"
+    sup = _support_below(r)
+    if sup and price:
+        gap = (price - sup) / sup * 100
+        if gap <= 4:
+            return f"🎯 지금 타점권 (지지 {sup:,.2f} 바로 위 +{gap:.1f}%)"
+        if gap <= 10:
+            return f"👀 타점 근처 (지지까지 −{gap:.1f}%, 눌리면 진입) — 주시"
+        return f"👀 타점 위 +{gap:.1f}% — 눌림 대기·주시"
+    return ""
 
 
 def _checklist(r: dict) -> int:
@@ -80,15 +124,13 @@ def _headline(r: dict, rec: int) -> tuple[str, str]:
     pos = r["sr"]["position"]
     if r.get("vetoed"):
         return "#dc2626", "🔴 하락추세 — 신규 매수 회피. 보유 중이면 손절 점검."
-    if r.get("chase"):
-        return "#d97706", "🔺 추격 주의 — 이미 과열/고점 확장. 눌림 대기."
-    nh = (r.get("newhigh") or {}).get("pct_from_high")
-    near_high = nh is not None and nh >= -4
     if rec >= REC_MIN:
         return "#16a34a", f"⭐ 진입 추천 (체크리스트 {rec}/6) — 조건 양호, 분할 진입 검토."
-    if near_high and stage >= 2:
-        return "#d97706", ("🔺 이미 신고가 근접 — 전환 초입은 지났음(추격권). "
-                           "눌림 대기 권장.")
+    if r.get("chase") or _overextended(r):
+        ext = r.get("ext") or {}
+        return "#d97706", (
+            f"🔺 이미 많이 올라 타점이 멂(MA20 +{ext.get('ma20_stretch',0)*100:.0f}% · "
+            f"최근저점 +{ext.get('runup10',0)*100:.0f}%) — 전환이어도 지금 진입은 추격. 눌림 대기.")
     if stage >= 3:
         return "#16a34a", "🟢 전환 후보 — 돌파·거래량 확인되면 진입."
     if pos == "고점권":
@@ -159,8 +201,10 @@ def plan_html(r: dict) -> str:
            f"{html.escape(r.get('transition_label') or '–')} · RS {rs_txt} · 시장 {html.escape(mk)}"
            f"{rel_txt}")
 
+    tm = timing(r)
+    tm_html = f'<div class="plan-timing">{html.escape(tm)}</div>' if tm else ""
     return _TMPL.format(
-        color=color, head=html.escape(head), why=why,
+        color=color, head=html.escape(head), why=why, timing=tm_html,
         entry=f(entry), entry_desc=entry_desc, entry_src=entry_src,
         stop=f(risk["stop"]), stop_desc=stop_desc,
         target=f(risk["target"]), rr=f"{risk['rr']:.0f}",
@@ -172,6 +216,7 @@ _TMPL = """<div class="plan">
     <span class="plan-t">📋 매매 전략</span>
     <span class="plan-head" style="color:{color}">{head}</span>
   </div>
+  {timing}
   <div class="plan-why">{why}</div>
   <table class="plan-tb">
     <tr><th>진입</th><td><b class="big">{entry}</b><div class="d">{entry_desc}</div>
@@ -192,6 +237,8 @@ PLAN_CSS = """
     border-left:5px solid #16a34a;background:#f8fafc}
   .plan-t{font-weight:800;font-size:15px;color:#0f172a}
   .plan-head{font-weight:700;font-size:13.5px}
+  .plan-timing{margin:10px 14px 0;padding:9px 12px;border-radius:9px;font-size:14px;
+    font-weight:700;background:#ecfdf5;color:#065f46;border:1px solid #a7f3d0}
   .plan-why{padding:7px 14px;font-size:12px;color:#64748b;border-bottom:1px solid #f1f5f9;
     overflow-wrap:anywhere}
   .plan-tb{width:100%;border-collapse:collapse}

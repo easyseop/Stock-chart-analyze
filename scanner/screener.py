@@ -41,7 +41,7 @@ def _detail(result: dict, frames: dict) -> str:
     return lwc.detail(result, frames)
 
 
-from scanner.plan import rec_n as _rec_n, REC_MIN
+from scanner.plan import rec_n as _rec_n, REC_MIN, timing as _timing
 
 
 def _rows(results: list[dict]) -> str:
@@ -62,7 +62,10 @@ def _rows(results: list[dict]) -> str:
         stg = r.get("transition_stage", 0)
         stg_lab = html.escape(r.get("transition_label", ""))
         vd = html.escape(r.get("verdict", ""))
-        if r.get("chase"):
+        tm = _timing(r)
+        if tm:
+            vd = f'<b>{html.escape(tm)}</b><br>' + vd
+        elif r.get("chase"):
             vd = "🔺추격주의 · " + vd
         edays = earnings.days_until(code)        # 네트워크 0(캐시만)
         if edays is not None and 0 <= edays <= earnings.NEAR_DAYS:
