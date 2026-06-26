@@ -205,12 +205,33 @@ def plan_html(r: dict) -> str:
 
     tm = timing(r)
     tm_html = f'<div class="plan-timing">{html.escape(tm)}</div>' if tm else ""
+    zones_html = _zones_html(r, f)
     return _TMPL.format(
         color=color, head=html.escape(head), why=why, timing=tm_html,
+        zones=zones_html,
         entry=f(entry), entry_desc=entry_desc, entry_src=entry_src,
         stop=f(risk["stop"]), stop_desc=stop_desc,
         target=f(risk["target"]), rr=f"{risk['rr']:.0f}",
         pos_desc=pos_desc, rules=rules_html)
+
+
+def _zones_html(r: dict, f) -> str:
+    """반등 예상 구간(컨플루언스) 카드 섹션."""
+    zones = (r.get("levels") or {}).get("bounce_zones") or []
+    if not zones:
+        return ""
+    ords = ["1차", "2차", "3차", "4차"]
+    rows = []
+    for i, z in enumerate(zones[:3]):
+        rng = (f"{f(z['low'])}~{f(z['high'])}" if z["high"] - z["low"] > 1e-9
+               else f(z["center"]))
+        rows.append(
+            f'<li><b>{ords[i]}</b> {rng} '
+            f'<span class="zd">({z["dist_pct"]:+.1f}%)</span> · '
+            f'{html.escape(z["label"])} <span class="zn">×{z["n_types"]}</span></li>')
+    return ('<div class="plan-zones"><div class="zh">📍 반등 예상 구간 '
+            '<span class="zhs">(지지 겹침 — 깨지면 다음 구간)</span></div>'
+            f'<ul>{"".join(rows)}</ul></div>')
 
 
 _TMPL = """<div class="plan">
@@ -219,6 +240,7 @@ _TMPL = """<div class="plan">
     <span class="plan-head" style="color:{color}">{head}</span>
   </div>
   {timing}
+  {zones}
   <div class="plan-why">{why}</div>
   <table class="plan-tb">
     <tr><th>진입</th><td><b class="big">{entry}</b><div class="d">{entry_desc}</div>
@@ -241,9 +263,16 @@ PLAN_CSS = """
   .plan-head{font-weight:700;font-size:13.5px}
   .plan-timing{margin:10px 14px 0;padding:9px 12px;border-radius:9px;font-size:14px;
     font-weight:700;background:#ecfdf5;color:#065f46;border:1px solid #a7f3d0}
+  .plan-zones{margin:10px 14px 0;padding:9px 12px;border-radius:9px;background:#eff6ff;
+    border:1px solid #bfdbfe}
+  .plan-zones .zh{font-size:13px;font-weight:700;color:#1e40af;margin-bottom:4px}
+  .plan-zones .zhs{font-weight:400;font-size:11px;color:#60a5fa}
+  .plan-zones ul{margin:0;padding-left:16px} .plan-zones li{font-size:13px;margin:3px 0;color:#1e293b}
+  .plan-zones .zd{color:#64748b;font-size:11px} .plan-zones .zn{color:#2563eb;font-weight:700;font-size:11px}
   .plan-why{padding:7px 14px;font-size:12px;color:#64748b;border-bottom:1px solid #f1f5f9;
     overflow-wrap:anywhere}
-  .plan-tb{width:100%;border-collapse:collapse}
+  .plan-tb{width:100%;border-collapse:collapse;table-layout:fixed}
+  .plan-tb td,.plan-zones li{overflow-wrap:anywhere;word-break:break-word}
   .plan-tb th{width:54px;text-align:left;vertical-align:top;padding:10px 0 10px 14px;
     color:#64748b;font-size:13px;font-weight:700}
   .plan-tb td{padding:10px 14px 10px 6px;border-bottom:1px solid #f5f7fa;font-size:13.5px}

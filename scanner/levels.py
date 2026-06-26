@@ -162,8 +162,69 @@ def value_area(df: pd.DataFrame, bins: int = None, lookback: int = None,
 # ────────────────────────────────────────────────────────────
 # 통합
 # ────────────────────────────────────────────────────────────
+def confluence_zones(price: float, strong: list, va: dict, fib: dict,
+                     rounds: list, recent_low: float | None,
+                     below: bool = True, tol: float = 0.012) -> list[dict]:
+    """여러 지지요소(지지선·매물대·라운드·피보·최근저점)가 겹치는 '반등 예상 구간'.
+
+    각 요소를 가격으로 모은 뒤 ±tol 안에 든 것들을 한 구간으로 묶고, 서로 다른
+    '종류'가 몇 개 겹치는지(컨플루언스)로 점수를 매긴다. 종류가 많이 겹칠수록 강함.
+    below=True면 현재가 아래(반등 예상), False면 위(저항)만 본다.
+    """
+    items = []  # (price, type)
+    for l in strong:
+        items.append((l["price"], "지지선"))
+    for key, lab in (("poc", "매물대(POC)"), ("val", "매물대(VAL)"),
+                     ("vah", "매물대(VAH)")):
+        if va.get(key):
+            items.append((va[key], lab))
+    for r in rounds:
+        items.append((r, "라운드"))
+    for fl in fib.get("levels", []):
+        items.append((fl["price"], f"피보{fl['ratio']:.3f}"))
+    if recent_low:
+        items.append((recent_low, "최근저점"))
+
+    # 방향 필터(아래/위)
+    items = [(p, t) for p, t in items
+             if p > 0 and (p < price if below else p > price)]
+    items.sort(key=lambda x: x[0])
+
+    # ±tol 군집화
+    zones, cur = [], []
+    for p, t in items:
+        if cur and abs(p - cur[-1][0]) / cur[-1][0] <= tol:
+            cur.append((p, t))
+        else:
+            if cur:
+                zones.append(cur)
+            cur = [(p, t)]
+    if cur:
+        zones.append(cur)
+
+    out = []
+    for z in zones:
+        types = sorted({t for _p, t in z})           # 겹친 지지 '종류'
+        prices = [p for p, _t in z]
+        ctr = float(np.mean(prices))
+        out.append({
+            "center": ctr, "low": float(min(prices)), "high": float(max(prices)),
+            "types": types, "n_types": len(types),
+            "dist_pct": (ctr - price) / price * 100,
+            "label": " + ".join(_short_type(t) for t in types),
+        })
+    # 컨플루언스(종류 수) 높고, 현재가에 가까운 순
+    out.sort(key=lambda z: (-z["n_types"], abs(z["dist_pct"])))
+    return out
+
+
+def _short_type(t: str) -> str:
+    return {"지지선": "지지선", "라운드": "라운드", "최근저점": "전저점"}.get(
+        t, t.replace("매물대", "매물").replace("피보", "피보"))
+
+
 def analyze_levels(df: pd.DataFrame) -> dict:
-    """모든 기준을 합쳐 지지/저항 레벨 + 현재가 기준 최근접 강한 선 반환."""
+    """모든 기준을 합쳐 지지/저항 레벨 + 반등 예상 구간(컨플루언스) 반환."""
     lookback = config.SR_LOOKBACK
     seg = df.iloc[-lookback:]
     n = len(seg)
@@ -180,8 +241,16 @@ def analyze_levels(df: pd.DataFrame) -> dict:
     nearest_sup = max(supports, key=lambda l: l["price"], default=None)
     nearest_res = min(resists, key=lambda l: l["price"], default=None)
 
+    # 최근 횡보 박스 하단(단기 수요구간) — 최근 20봉 저점
+    recent_low = float(df["Low"].iloc[-20:].min()) if len(df) >= 20 else None
+    zones_below = confluence_zones(price, strong, va, fib, rounds, recent_low,
+                                   below=True)
+    # 종류 2개 이상 겹치는 구간만 '의미있는 반등 예상 구간'
+    bounce = [z for z in zones_below if z["n_types"] >= 2][:3]
+
     return {
         "levels": levels, "strong": strong, "fib": fib, "value_area": va,
         "rounds": rounds, "nearest_support": nearest_sup,
         "nearest_resistance": nearest_res, "price": price,
+        "bounce_zones": bounce,
     }
