@@ -9,6 +9,15 @@ name: daily-scan
 #   ※ 미국 서머타임(3~11월) 기준 개장 22:30·마감 05:00(KST). UTC 크론은 양 계절을
 #     포괄하도록 배치(겨울엔 한 시간씩 밀려도 장중/마감 무렵에 걸침).
 on:
+  # 코드(파이썬·설정·이 워크플로)를 푸시하면 자동으로 재빌드·배포(데이터 갱신 없이 ~1~2분).
+  #   → 코드 바꿀 때마다 수동으로 Run workflow 할 필요 없음.
+  push:
+    branches: ["claude/korean-text-review-o3wmsv", "main"]
+    paths:
+      - "scanner/**"
+      - "main.py"
+      - "config.py"
+      - ".github/workflows/daily.yml"
   schedule:
     - cron: "30 13 * * 1-5"   # 미 개장 직후(여름) — 오늘 가격 반영 시작
     - cron: "0 17 * * 1-5"    # 장중 갱신
@@ -62,11 +71,11 @@ jobs:
           restore-keys: |
             data-cache-
 
-      # 갱신 범위: 마감후 스케줄=전체 / 장중 스케줄=상위300 /
+      # 갱신 범위: push(코드변경)=none(재배포만) / 마감후 스케줄=전체 / 장중 스케줄=상위300 /
       #   수동(dispatch)=입력값(none=재배포만·top=상위300·full=전체). none이면 데이터 안 받음 → 1~2분.
       - name: 데이터 갱신 (범위별)
         env:
-          MODE: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.update || (github.event.schedule == '0 22 * * 1-5' && 'full' || 'top') }}
+          MODE: ${{ github.event_name == 'push' && 'none' || (github.event_name == 'workflow_dispatch' && github.event.inputs.update || (github.event.schedule == '0 22 * * 1-5' && 'full' || 'top')) }}
         run: |
           echo "갱신 모드: $MODE"
           if [ "$MODE" = "full" ]; then
@@ -88,9 +97,9 @@ jobs:
         if: ${{ github.event.schedule == '0 22 * * 1-5' || (github.event_name == 'workflow_dispatch' && github.event.inputs.update == 'full') }}
         run: python main.py --update-earnings || true
 
-      # 시간봉: 데이터 갱신을 하는 실행에서만(재배포만=none이면 건너뜀). 상위 80종목.
+      # 시간봉: 데이터 갱신을 하는 실행에서만(push/none이면 건너뜀). 상위 80종목.
       - name: 시간봉(60분) 갱신(전환후보 상위, best-effort)
-        if: ${{ github.event_name != 'workflow_dispatch' || github.event.inputs.update != 'none' }}
+        if: ${{ github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && github.event.inputs.update != 'none') }}
         run: python main.py --update-hourly 80 || true
 
       - name: 스크리너 생성(캐시 전체 — 즉석조회 추가분 포함, 네트워크 0)
