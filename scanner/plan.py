@@ -22,12 +22,12 @@ def _overextended(r: dict) -> bool:
     if r.get("chase"):
         return True
     nh = (r.get("newhigh") or {}).get("pct_from_high")
-    if nh is not None and nh >= -6:          # 52주 신고가 −6% 이내 = 이미 다 옴(전환 초입 아님)
+    if nh is not None and nh >= -8:          # 52주 신고가 −8% 이내 = 이미 다 옴(전환 초입 아님)
         return True
     ext = r.get("ext") or {}
-    if ext.get("ma20_stretch", 0) >= 0.10:   # 20일선 +10%↑ 과대이격
+    if ext.get("ma20_stretch", 0) >= 0.08:   # 20일선 +8%↑ 과대이격
         return True
-    if ext.get("runup10", 0) >= 0.16:        # 최근 10봉 저점 대비 +16%↑ 급등(타점 멂)
+    if ext.get("runup10", 0) >= 0.13:        # 최근 10봉 저점 대비 +13%↑ 급등(타점 멂)
         return True
     risk = r.get("risk") or {}
     price = (r.get("sr") or {}).get("price")
@@ -68,12 +68,14 @@ def timing(r: dict) -> str:
         g = (sr["box_high"] - price) / price * 100
         return f"⏳ 저항 돌파 대기 (저항까지 +{g:.1f}%)"
     if _overextended(r):
-        return "👀 타점 위(이미 급등) — 눌림 대기·주시"
+        return "👀 타점 위(이미 급등/고점) — 눌림 대기·주시"
+    nh = (r.get("newhigh") or {}).get("pct_from_high")
+    room = nh is not None and nh <= -12       # 신고가까지 12%+ 남음 = 올라갈 방 충분
     sup = _support_below(r)
     if sup and price:
         gap = (price - sup) / sup * 100
-        if gap <= 4:
-            return f"🎯 지금 타점권 (지지 {sup:,.2f} 바로 위 +{gap:.1f}%)"
+        if gap <= 4 and room:
+            return f"🎯 지금 타점권 (지지 {sup:,.2f} 바로 위 +{gap:.1f}% · 신고가까지 {nh:.0f}%)"
         if gap <= 10:
             return f"👀 타점 근처 (지지까지 −{gap:.1f}%, 눌리면 진입) — 주시"
         return f"👀 타점 위 +{gap:.1f}% — 눌림 대기·주시"
@@ -92,7 +94,7 @@ def _checklist(r: dict) -> int:
         n += 1
     if rs is not None and rs > 0:
         n += 1
-    if nh is not None and -40 <= nh <= -8:   # 바닥서 올라왔지만 신고가까진 방 남음(전환 초입)
+    if nh is not None and -50 <= nh <= -15:  # 많이 빠졌다 도는 중 — 신고가까지 방 충분(초입)
         n += 1
     if not r.get("chase"):
         n += 1
