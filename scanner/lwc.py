@@ -155,8 +155,9 @@ _TMPL = """<!DOCTYPE html><html lang="ko"><head>
 <script src="{cdn}"></script>
 <style>
   *{{box-sizing:border-box}}
-  body{{margin:0;font-family:-apple-system,'Segoe UI','Noto Sans KR',sans-serif;
-    background:#f1f5f9;color:#1e293b;overflow-x:hidden}}
+  html,body{{margin:0;overflow-x:clip;width:100%;max-width:100vw}}
+  body{{font-family:-apple-system,'Segoe UI','Noto Sans KR',sans-serif;
+    background:#f1f5f9;color:#1e293b}}
   header{{background:#0f172a;color:#fff;padding:12px 16px}}
   header a{{color:#7dd3fc;font-size:13px;text-decoration:none}}
   header h1{{margin:4px 0 0;font-size:16px;overflow-wrap:anywhere}}
@@ -201,11 +202,11 @@ _TMPL = """<!DOCTYPE html><html lang="ko"><head>
   &nbsp;<span class="dot" style="background:#2563eb"></span><b>진입</b> — <b>"여기서 사라"는 매수 기준가</b>.
    고점권이면 <b>저항 돌파가</b>(돌파해야 매수), 그 외엔 현재가. ※저항·지지가 진입 기준으로 잡힌 게
    아니라, 가격 구조로 저항·지지를 먼저 잡고 거기서 진입가를 끌어낸 것.<br>
-  &nbsp;<span class="dot" style="background:#ef4444"></span><b>손절</b> — 진입−2×ATR. 종가로 이 아래면 정리.<br>
+  &nbsp;<span class="dot" style="background:#ef4444"></span><b>손절</b> — <b>내가 실제로 파는 가격</b>(손실 한정). 방어선 약간 아래 또는 진입−2×ATR 중 가까운 쪽.<br>
   &nbsp;<span class="dot" style="background:#16a34a"></span><b>목표</b> — 손익비 1:2 목표가.<br>
   <b>핵심선</b>(파란 토글):<br>
   &nbsp;<span class="dot" style="background:#ef4444"></span><b>저항</b> — 박스 상단·매도벽 ·
-  &nbsp;<span class="dot" style="background:#f59e0b"></span><b>방어선</b> — 깨지면 안 되는 핵심 지지 ·
+  &nbsp;<span class="dot" style="background:#f59e0b"></span><b>방어선</b> — 추세 유지 마지노선(지지 구조). <b>종가로 깨지면 추세 훼손→손절 실행.</b> 방어선=벽 / 손절=빠져나오는 문 ·
   &nbsp;<span class="dot" style="background:#8b5cf6"></span><b>POC</b> — 거래 최다 가격대 ·
   &nbsp;<span class="dot" style="background:#16a34a"></span><b>52주고가</b><br>
   <b>지지/저항</b>(기본 꺼짐): 과거 스윙 고·저점에서 만든 보조 레벨(가격 위는 저항=빨강, 아래는 지지=초록).

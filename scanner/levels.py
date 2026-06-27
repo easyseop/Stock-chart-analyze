@@ -241,16 +241,21 @@ def analyze_levels(df: pd.DataFrame) -> dict:
     nearest_sup = max(supports, key=lambda l: l["price"], default=None)
     nearest_res = min(resists, key=lambda l: l["price"], default=None)
 
-    # 최근 횡보 박스 하단(단기 수요구간) — 최근 20봉 저점
+    # 최근 횡보 박스 하단/상단(단기 수급구간)
     recent_low = float(df["Low"].iloc[-20:].min()) if len(df) >= 20 else None
+    recent_high = float(df["High"].iloc[-20:].max()) if len(df) >= 20 else None
     zones_below = confluence_zones(price, strong, va, fib, rounds, recent_low,
                                    below=True)
-    # 종류 2개 이상 겹치는 구간만 '의미있는 반등 예상 구간'
+    zones_above = confluence_zones(price, strong, va, fib, rounds, recent_high,
+                                   below=False)
+    # 종류 2개 이상 겹치는 구간만(반등=아래, 저항=위). 저항은 거리순.
     bounce = [z for z in zones_below if z["n_types"] >= 2][:3]
+    res_z = sorted([z for z in zones_above if z["n_types"] >= 2],
+                   key=lambda z: abs(z["dist_pct"]))[:3]
 
     return {
         "levels": levels, "strong": strong, "fib": fib, "value_area": va,
         "rounds": rounds, "nearest_support": nearest_sup,
         "nearest_resistance": nearest_res, "price": price,
-        "bounce_zones": bounce,
+        "bounce_zones": bounce, "resist_zones": res_z,
     }

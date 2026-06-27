@@ -163,11 +163,14 @@ def plan_html(r: dict) -> str:
         entry_desc = f"<b>현재가 {f(price)}</b> 분할 매수(지지 확인하며)."
     entry_src = ("진입가 = 고점권이면 ‘저항(박스 상단)’, 그 외엔 ‘현재가’에서 자동 산출.")
 
-    # 손절 설명
+    # 손절 설명 — 방어선(지지 구조)과 손절선(실제 매도가)을 명확히 구분
     ds = sr.get("defense_strength", "")
-    stop_desc = (f"방어선 <b>{f(sr['defense'])}</b>({ds}) 종가 이탈 시 정리. "
-                 f"<span class='dim'>ATR손절 {f(risk['atr_stop'])} · "
-                 f"방어선손절 {f(risk['defense_stop'])} 중 가까운 쪽 채택.</span>")
+    stop_desc = (
+        f"= <b>실제 파는 가격.</b> 방어선 {f(sr['defense'])} 약간 아래 또는 "
+        f"ATR손절 {f(risk['atr_stop'])} 중 가까운 쪽 자동 채택.<br>"
+        f"<span class='dim'>※ <b>방어선 {f(sr['defense'])}</b>({ds}) = 추세가 살아있는 "
+        f"마지노선(지지 구조). 이게 <b>종가로 깨지면 추세 훼손</b> → 그때 손절 실행. "
+        f"방어선=벽, 손절=내가 빠져나오는 문.</span>")
 
     # 비중
     shares = risk.get("shares", 0)
@@ -215,23 +218,34 @@ def plan_html(r: dict) -> str:
         pos_desc=pos_desc, rules=rules_html)
 
 
-def _zones_html(r: dict, f) -> str:
-    """반등 예상 구간(컨플루언스) 카드 섹션."""
-    zones = (r.get("levels") or {}).get("bounce_zones") or []
-    if not zones:
-        return ""
-    ords = ["1차", "2차", "3차", "4차"]
-    rows = []
-    for i, z in enumerate(zones[:3]):
-        rng = (f"{f(z['low'])}~{f(z['high'])}" if z["high"] - z["low"] > 1e-9
-               else f(z["center"]))
-        rows.append(
-            f'<li><b>{ords[i]}</b> {rng} '
+def _zone_li(tag: str, z: dict, f) -> str:
+    rng = (f"{f(z['low'])}~{f(z['high'])}" if z["high"] - z["low"] > 1e-9
+           else f(z["center"]))
+    return (f'<li><b>{tag}</b> {rng} '
             f'<span class="zd">({z["dist_pct"]:+.1f}%)</span> · '
             f'{html.escape(z["label"])} <span class="zn">×{z["n_types"]}</span></li>')
-    return ('<div class="plan-zones"><div class="zh">📍 반등 예상 구간 '
-            '<span class="zhs">(지지 겹침 — 깨지면 다음 구간)</span></div>'
-            f'<ul>{"".join(rows)}</ul></div>')
+
+
+def _zones_html(r: dict, f) -> str:
+    """가격 지도 — 위=저항/목표, 가운데=현재가·손절, 아래=반등 예상(깨지면 다음)."""
+    lv = r.get("levels") or {}
+    bounce = lv.get("bounce_zones") or []
+    res = lv.get("resist_zones") or []
+    price = (r.get("sr") or {}).get("price")
+    stop = (r.get("risk") or {}).get("stop")
+    if not bounce and not res:
+        return ""
+    res_li = "".join(_zone_li(f"R{i+1}", z, f) for i, z in enumerate(res[:3]))
+    bnc_li = "".join(_zone_li(["1차", "2차", "3차"][i], z, f)
+                     for i, z in enumerate(bounce[:3]))
+    res_html = (f'<div class="pm-up">⬆ 저항/목표<ul>{res_li}</ul></div>'
+                if res_li else "")
+    bnc_html = (f'<div class="pm-dn">⬇ 반등 예상 <span class="zhs">(깨지면 다음 구간)</span>'
+                f'<ul>{bnc_li}</ul></div>' if bnc_li else "")
+    now = (f'<div class="pm-now">── 현재가 <b>{f(price)}</b>'
+           f'{" · 손절 " + f(stop) if stop else ""} ──</div>')
+    return (f'<div class="pmap"><div class="pm-h">📈 가격 지도</div>'
+            f'{res_html}{now}{bnc_html}</div>')
 
 
 _TMPL = """<div class="plan">
@@ -263,12 +277,17 @@ PLAN_CSS = """
   .plan-head{font-weight:700;font-size:13.5px}
   .plan-timing{margin:10px 14px 0;padding:9px 12px;border-radius:9px;font-size:14px;
     font-weight:700;background:#ecfdf5;color:#065f46;border:1px solid #a7f3d0}
-  .plan-zones{margin:10px 14px 0;padding:9px 12px;border-radius:9px;background:#eff6ff;
-    border:1px solid #bfdbfe}
-  .plan-zones .zh{font-size:13px;font-weight:700;color:#1e40af;margin-bottom:4px}
-  .plan-zones .zhs{font-weight:400;font-size:11px;color:#60a5fa}
-  .plan-zones ul{margin:0;padding-left:16px} .plan-zones li{font-size:13px;margin:3px 0;color:#1e293b}
-  .plan-zones .zd{color:#64748b;font-size:11px} .plan-zones .zn{color:#2563eb;font-weight:700;font-size:11px}
+  .pmap{margin:10px 14px 0;border:1px solid #e2e8f0;border-radius:11px;overflow:hidden}
+  .pm-h{padding:8px 12px;font-size:13px;font-weight:800;color:#0f172a;background:#f8fafc;
+    border-bottom:1px solid #eef2f7}
+  .pm-up{padding:8px 12px;background:#fef2f2;color:#991b1b;font-size:12px;font-weight:700}
+  .pm-dn{padding:8px 12px;background:#eff6ff;color:#1e40af;font-size:12px;font-weight:700}
+  .pm-now{padding:7px 12px;text-align:center;font-size:13px;color:#334155;
+    background:#fff;border-top:1px solid #eef2f7;border-bottom:1px solid #eef2f7}
+  .pmap ul{margin:4px 0 0;padding-left:16px} .pmap li{font-size:13px;margin:3px 0;
+    color:#1e293b;font-weight:600;overflow-wrap:anywhere}
+  .pmap .zhs{font-weight:400;font-size:11px} .pmap .zd{color:#64748b;font-size:11px;font-weight:400}
+  .pmap .zn{color:#2563eb;font-weight:700;font-size:11px}
   .plan-why{padding:7px 14px;font-size:12px;color:#64748b;border-bottom:1px solid #f1f5f9;
     overflow-wrap:anywhere}
   .plan-tb{width:100%;border-collapse:collapse;table-layout:fixed}
