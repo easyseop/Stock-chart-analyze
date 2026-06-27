@@ -12,7 +12,7 @@ on:
   # 코드(파이썬·설정·이 워크플로)를 푸시하면 자동으로 재빌드·배포(데이터 갱신 없이 ~1~2분).
   #   → 코드 바꿀 때마다 수동으로 Run workflow 할 필요 없음.
   push:
-    branches: ["claude/korean-text-review-o3wmsv", "main"]
+    branches: ["claude/korean-text-review-o3wmsv"]   # 기본 브랜치만(중복 실행 방지)
     paths:
       - "scanner/**"
       - "main.py"
