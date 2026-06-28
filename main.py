@@ -185,6 +185,10 @@ def main():
                     help="티커/코드를 캐시에 추가·갱신(즉석조회를 스크리너에 영구 반영)")
     ap.add_argument("--fix-names", action="store_true",
                     help="유니버스에서 이름 미확보(name=code) 종목의 실제 종목명 보정")
+    ap.add_argument("--add-krx-top", metavar="KOSPI:KOSDAQ",
+                    help="KOSPI/KOSDAQ 시총 상위 N종목을 유니버스에 추가(예: '200:100')")
+    ap.add_argument("--update-kr", action="store_true",
+                    help="캐시된 한국주(6자리) 일봉 전부 증분 갱신(한국 장중용)")
     ap.add_argument("--prune", metavar="SPEC",
                     help="캐시 정리: 'korean'=한국 6자리 전부 / 'CODE[,CODE]'=지정 종목")
     ap.add_argument("--update-top", type=int, metavar="N", default=0,
@@ -217,6 +221,34 @@ def main():
         from scanner import universe
         n = universe.fix_names()
         print(f"유니버스 종목명 보정: {n}종목 이름 확보(코드→실제명)")
+        return
+
+    if args.add_krx_top:
+        from scanner import universe
+        try:
+            ko, kq = (args.add_krx_top.split(":") + ["0"])[:2]
+            ko, kq = int(ko), int(kq)
+        except ValueError:
+            print("형식 오류 — 'KOSPI:KOSDAQ' (예: 200:100)", file=sys.stderr)
+            return
+        added = universe.add_krx_top(ko, kq)
+        rows = universe.load()
+        kr = sum(1 for r in rows if r.get("ccy") == "KRW")
+        print(f"한국주 추가: +{added}종목(KOSPI 상위 {ko}·KOSDAQ 상위 {kq}) · "
+              f"유니버스 한국주 총 {kr} / 전체 {len(rows)}")
+        return
+
+    if args.update_kr:
+        from scanner import cache
+        kr = [c for c in cache.cached_codes() if len(c) == 6 and c[:5].isdigit()]
+        ok = 0
+        for code in kr:
+            try:
+                cache.update(code)
+                ok += 1
+            except Exception:
+                pass
+        print(f"한국주 일봉 갱신: {ok}/{len(kr)}종목")
         return
 
     if args.add:

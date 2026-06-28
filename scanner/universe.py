@@ -101,6 +101,21 @@ def fix_names(path: str = DEFAULT_PATH) -> int:
     return fixed
 
 
+def add_krx_top(kospi_top: int = 200, kosdaq_top: int = 100,
+                path: str = DEFAULT_PATH) -> int:
+    """KOSPI/KOSDAQ 시총 상위 N종목을 기존 유니버스에 추가(미국주 보존·중복 제외).
+
+    한국 우량주가 자동 수집 대상에 들어오도록 universe.csv에 영구 등록한다. 추가된 수 반환.
+    """
+    rows = load(path)
+    seen = {str(r.get("code", "")).upper() for r in rows}
+    before = len(rows)
+    rows += _krx_rows("KOSPI", kospi_top, seen)
+    rows += _krx_rows("KOSDAQ", kosdaq_top, seen)
+    save(rows, path)
+    return len(rows) - before
+
+
 def _krx_rows(market: str, n_take: int, seen: set) -> list[dict]:
     """KOSPI/KOSDAQ 상장목록을 시총 내림차순으로(0=전체) rows 생성."""
     import FinanceDataReader as fdr

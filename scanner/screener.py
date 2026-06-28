@@ -235,6 +235,10 @@ _INDEX_TMPL = """<!DOCTYPE html><html lang="ko"><head>
   .pl.up{{color:#16a34a}} .pl.dn{{color:#dc2626}}
   tr.held{{background:#fffdf3}}
   .pos{{color:#16a34a}}.neg{{color:#dc2626}}
+  .notice{{margin:8px 16px 0;background:#fff;border:1px solid #e2e8f0;border-radius:10px}}
+  .notice>summary{{cursor:pointer;padding:9px 13px;font-size:13px;font-weight:600;color:#334155}}
+  .notice .nc{{padding:2px 15px 12px;font-size:12.5px;color:#475569;line-height:1.8}}
+  .notice .nc b{{color:#0f172a}} .notice .ndim{{color:#94a3b8;font-size:11.5px}}
   .prog{{padding:8px 16px 0}}
   .ptxt{{font-size:12px;color:#475569;margin-bottom:4px}}
   .pbarw{{height:10px;background:#e2e8f0;border-radius:999px;overflow:hidden}}
@@ -296,9 +300,17 @@ _INDEX_TMPL = """<!DOCTYPE html><html lang="ko"><head>
 <header><h1>종목 스크리너 <span style="color:#38bdf8;font-size:13px">차트 신호 랭킹</span></h1>
 <p>{n}종목 표시 · 헤더 클릭=정렬 · 칩=필터 · 종목명 클릭=상세 차트(일/주/월)</p></header>
 <div class="prog">
-  <div class="ptxt">📥 수집 진행 <b>{cached}/{uni}</b> ({pct}%) · 갱신 {updated}</div>
+  <div class="ptxt">📥 수집 진행 <b>{cached}/{uni}</b> ({pct}%) · 마지막 갱신 {updated}</div>
   <div class="pbarw"><div class="pfillw" style="width:{pct}%"></div></div>
 </div>
+<details class="notice"><summary>🕐 차트 데이터는 언제 갱신되나요?</summary>
+<div class="nc">
+<b>🇺🇸 미국주</b> — 미 장중 <b>30분마다</b>(대략 밤 22:30~새벽 05:00 KST) 가격 갱신.<br>
+<b>🇰🇷 한국주</b> — 한국 장중 <b>30분마다</b>(09:00~15:30 KST) 가격 갱신.<br>
+<b>📅 매일 마감 후</b> — 전체 종목 갱신 + 새 종목 백필(미수집분 채움).<br>
+<b>💼 내 종목 · ➕ 즉석조회 종목</b>도 위 장중 갱신에 함께 포함돼요(한국주는 한국 장중, 미국주는 미 장중).<br>
+<span class="ndim">※ 시간은 GitHub Actions 스케줄 기준이라 ±5~10분 차이날 수 있어요. 페이지 상단 "마지막 갱신"이 실제 반영 시각.</span>
+</div></details>
 <div class="search">
   <input id="q" type="search" inputmode="search" autocomplete="off"
     placeholder="🔍 종목 검색 (티커·영문명·한글명)" oninput="search(this.value)">
@@ -483,6 +495,8 @@ _LOOKUP_TMPL = """<!DOCTYPE html><html lang="ko"><head>
     background:#2563eb;color:#fff;font-size:16px;font-weight:700;cursor:pointer}
   button.go:disabled{background:#94a3b8}
   .hint{font-size:12px;color:#64748b;line-height:1.6;margin-top:6px}
+  .tkchk{font-size:13px;margin-top:7px;min-height:18px;font-weight:600}
+  .tkchk.ok{color:#16a34a} .tkchk.bad{color:#dc2626}
   .stat{font-size:14px;margin-top:12px;padding:12px;border-radius:8px;background:#f8fafc;
     border:1px solid #e2e8f0;display:none}
   .stat.on{display:block}
@@ -505,7 +519,9 @@ _LOOKUP_TMPL = """<!DOCTYPE html><html lang="ko"><head>
 <div class="wrap">
   <div class="card">
     <label>티커 / 코드</label>
-    <input id="tk" placeholder="예: AAPL, NVDA, 005930" autocapitalize="characters">
+    <input id="tk" placeholder="예: AAPL, NVDA, 005930" autocapitalize="characters"
+      oninput="validate(this.value)">
+    <div id="tkchk" class="tkchk"></div>
     <button class="go" id="go" onclick="run()">수집하기 (워크플로 실행)</button>
     <div class="stat" id="st"></div>
     <div class="pbar" id="pb"><div class="pfill" id="pf"></div></div>
@@ -535,6 +551,23 @@ _LOOKUP_TMPL = """<!DOCTYPE html><html lang="ko"><head>
       st=document.getElementById('st'), go=document.getElementById('go');
   pat.value=localStorage.getItem('ghpat')||"";
   function show(m){st.className='stat on';st.innerHTML=m;}
+  // 형식 검증: 미국 영문 티커(1~6자) 또는 한국 6자리 코드만. 한글/오타는 수집 전에 거른다.
+  var US_RE=/^[A-Z][A-Z.\-]{0,5}$/, KR_RE=/^[0-9]{6}$/, HANGUL=/[ㄱ-ㅣ가-힣]/;
+  function classify(v){
+    v=(v||'').trim().toUpperCase();
+    if(!v) return {ok:null,msg:''};
+    if(HANGUL.test(v)) return {ok:false,msg:'❌ 한글은 안 돼요 — 영문 티커(예: AAPL) 또는 한국 6자리 코드(예: 005930)'};
+    if(KR_RE.test(v)) return {ok:true,t:v,msg:'✅ 한국 코드 '+v+' — 수집하면 실제 종목명이 확인돼요'};
+    if(US_RE.test(v)) return {ok:true,t:v,msg:'✅ 미국 티커 '+v+' — 수집하면 실제 종목명이 확인돼요'};
+    return {ok:false,msg:'❌ 형식 오류 — 미국 티커는 영문 1~6자, 한국은 숫자 6자리. ("'+v+'"는 종목 코드가 아니에요)'};
+  }
+  function validate(v){
+    var c=classify(v), el=document.getElementById('tkchk');
+    el.className='tkchk'+(c.ok===true?' ok':(c.ok===false?' bad':''));
+    el.textContent=c.msg;
+    go.disabled=(c.ok===false);
+    return c;
+  }
   // 즉석조회 누적 이력(브라우저 저장) — 조회한 종목이 목록으로 쌓이고, 수집중은 ⏳
   var HIST=[]; try{HIST=JSON.parse(localStorage.getItem('lookup_hist')||'[]');}catch(e){HIST=[];}
   function saveHist(){localStorage.setItem('lookup_hist',JSON.stringify(HIST.slice(0,40)));}
@@ -564,6 +597,8 @@ _LOOKUP_TMPL = """<!DOCTYPE html><html lang="ko"><head>
   async function run(){
     var t=tk.value.trim().toUpperCase(), p=pat.value.trim();
     if(!t){show('티커를 입력하세요.');return;}
+    var c=validate(t);                       // 수집 전 형식 검증(한글/오타 차단)
+    if(c.ok===false){show(c.msg);return;}
     if(!p){show('먼저 아래 토큰을 입력하세요(최초 1회).');return;}
     localStorage.setItem('ghpat',p);
     // 이미 진행 중인 같은 종목이면 중복 실행하지 말고 이어서 추적(게이지 초기화 방지)

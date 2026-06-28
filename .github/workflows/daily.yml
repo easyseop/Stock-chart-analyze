@@ -20,7 +20,8 @@ on:
       - "config.py"
       - ".github/workflows/daily.yml"
   schedule:
-    - cron: "*/30 13-20 * * 1-5"  # 미 장중 '30분마다' 증분 갱신 — 보유/후보 종목 지표 최신화
+    - cron: "*/30 0-6 * * 1-5"    # 한국 장중(09~15:30 KST) 30분마다 — 한국주 갱신
+    - cron: "*/30 13-20 * * 1-5"  # 미 장중 30분마다 증분 갱신 — 보유/후보 종목 지표 최신화
     - cron: "0 22 * * 1-5"        # 마감 후: 백필 + 일일 정리(메인, 전체)
   workflow_dispatch:
     inputs:
@@ -74,13 +75,15 @@ jobs:
       #   수동(dispatch)=입력값(none=재배포만·top=상위300·full=전체). none이면 데이터 안 받음 → 1~2분.
       - name: 데이터 갱신 (범위별)
         env:
-          MODE: ${{ github.event_name == 'push' && 'none' || (github.event_name == 'workflow_dispatch' && github.event.inputs.update || (github.event.schedule == '0 22 * * 1-5' && 'full' || 'top')) }}
+          MODE: ${{ github.event_name == 'push' && 'none' || (github.event_name == 'workflow_dispatch' && github.event.inputs.update || (github.event.schedule == '0 22 * * 1-5' && 'full' || (github.event.schedule == '*/30 0-6 * * 1-5' && 'kr' || 'top'))) }}
         run: |
           echo "갱신 모드: $MODE"
           if [ "$MODE" = "full" ]; then
             python main.py --backfill "${{ github.event.inputs.backfill || env.CHUNK }}"
             python main.py --update
             python main.py --fix-names || true   # 즉석조회 종목명 보정(코드→실제명, best-effort)
+          elif [ "$MODE" = "kr" ]; then
+            python main.py --update-kr   # 한국 장중: 한국주(우량주+즉석조회) 일봉 갱신
           elif [ "$MODE" = "top" ]; then
             python main.py --update-top 600   # 미국 유니버스 전체 포함(보유 종목도 갱신)
           else
