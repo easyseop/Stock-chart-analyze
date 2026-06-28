@@ -125,6 +125,38 @@ def rec_n(r: dict) -> int:
     return n
 
 
+def _group(r: dict) -> tuple[str, str]:
+    """카드용 '상태 그룹'(칩 축과 동일): 전환후보/상승추세/관망/회피 — 전환단계와 다른 축."""
+    if r.get("vetoed"):
+        return "회피", "🔴"
+    tone = r.get("trend_oneline", "")
+    if r.get("transition_stage", 0) >= 1 or tone == "🔄 전환 시도":
+        return "전환후보", "🟢"
+    if tone == "📈 상승추세":
+        return "상승추세", "📈"
+    if tone == "📉 하락추세":
+        return "회피", "🔴"
+    return "관망", "⚪"
+
+
+def _context_note(r: dict, group: str, mk: str):
+    """'전환후보인데 시장 하락' 같은 헷갈리는 조합을 한 줄로 해석. (텍스트, 종류) 반환."""
+    down = "하락" in mk
+    up = "상승" in mk
+    if group == "전환후보":
+        if down:
+            return ("⚠️ <b>전환후보 + 시장 하락</b> — 종목은 바닥에서 도는 중이지만 시장이 "
+                    "안 받쳐주면 <b>전환 실패(되돌림) 위험</b>이 큼. <b>진입추천은 시장이 상승일 "
+                    "때만</b> 나오므로 지금은 <b>관찰만</b>, 시장이 돌면 1순위 후보.", "warn")
+        if up:
+            return ("✅ <b>전환후보 + 시장 상승</b> — 개별 전환을 시장이 받쳐주는 좋은 조합. "
+                    "단계 ③·④와 거래량 확인되면 진입 검토.", "good")
+    if group == "상승추세" and down:
+        return ("⚠️ <b>상승추세지만 시장 하락</b> — 종목은 강하나 시장 역풍. 비중·손절 보수적으로.",
+                "warn")
+    return None
+
+
 def _fmt(v, ccy: str) -> str:
     if v is None:
         return "-"
@@ -231,19 +263,27 @@ def plan_html(r: dict) -> str:
 
     rs = (r.get("rs") or {}).get("rel")
     rs_txt = f"{rs*100:+.0f}%" if rs is not None else "-"
+    rs_cls = "pos" if (rs is not None and rs > 0) else ("neg" if rs is not None else "")
     mk = (r.get("market") or {}).get("direction", "-")
+    mk_cls = "pos" if "상승" in mk else ("neg" if "하락" in mk else "")
     rel = (r.get("trendline") or {}).get("reliability")
     rel_txt = f" · 추세선신뢰 {html.escape(rel)}" if rel else ""
-    why = (f"신호 {html.escape(r['gauge'])} · 전환단계 "
-           f"{html.escape(r.get('transition_label') or '–')} · RS {rs_txt} · 시장 {html.escape(mk)}"
-           f"{rel_txt}")
+    group, gem = _group(r)
+    # 두 축을 분리해 표기: '상태 그룹'(전환후보/상승추세/관망/회피) vs '전환단계'(①~④)
+    why = (f"상태 <b>{gem}{group}</b> · 전환단계 "
+           f"{html.escape(r.get('transition_label') or '–')} · 신호 {html.escape(r['gauge'])} · "
+           f"RS <span class='{rs_cls}'>{rs_txt}</span> · "
+           f"시장 <span class='{mk_cls}'>{html.escape(mk)}</span>{rel_txt}")
+
+    note = _context_note(r, group, mk)
+    note_html = (f'<div class="plan-note {note[1]}">{note[0]}</div>' if note else "")
 
     tm = timing(r)
     tm_html = f'<div class="plan-timing">{html.escape(tm)}</div>' if tm else ""
     zones_html = _zones_html(r, f)
     return _TMPL.format(
         color=color, head=html.escape(head), why=why, timing=tm_html,
-        zones=zones_html,
+        note=note_html, zones=zones_html,
         entry=f(entry), entry_desc=entry_desc, entry_src=entry_src,
         stop=f(risk["stop"]), stop_desc=stop_desc, stop_more=stop_more,
         target=f(risk["target"]), rr=f"{risk['rr']:.0f}",
@@ -286,6 +326,7 @@ _TMPL = """<div class="plan">
     <span class="plan-head" style="color:{color}">{head}</span>
   </div>
   {timing}
+  {note}
   {zones}
   <table class="plan-tb">
     <tr><th>진입</th><td><b class="big">{entry}</b> <span class="d">{entry_desc}</span></td></tr>
@@ -315,6 +356,12 @@ PLAN_CSS = """
   .plan-head{font-weight:700;font-size:13.5px}
   .plan-timing{margin:10px 14px 0;padding:9px 12px;border-radius:9px;font-size:14px;
     font-weight:700;background:#ecfdf5;color:#065f46;border:1px solid #a7f3d0}
+  .plan-note{margin:10px 14px 0;padding:9px 12px;border-radius:9px;font-size:12.5px;
+    line-height:1.65;overflow-wrap:anywhere}
+  .plan-note.warn{background:#fffbeb;color:#92400e;border:1px solid #fde68a}
+  .plan-note.good{background:#eff6ff;color:#1e40af;border:1px solid #bfdbfe}
+  .plan-note b{font-weight:800}
+  .plan .pos{color:#16a34a;font-weight:700} .plan .neg{color:#dc2626;font-weight:700}
   .pmap{margin:10px 14px 0;border:1px solid #e2e8f0;border-radius:11px;overflow:hidden}
   .pm-h{padding:8px 12px;font-size:13px;font-weight:800;color:#0f172a;background:#f8fafc;
     border-bottom:1px solid #eef2f7}
