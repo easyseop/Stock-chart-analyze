@@ -125,6 +125,13 @@ def _index(results: list[dict]) -> str:
     chips = "".join(
         f'<button class="chip" onclick="flt(\'{k}\')">{_BUCKET_KO[k]} {counts[k]}</button>'
         for k, _ in _BUCKETS)
+    # 전환단계 ①~④ 각각 필터
+    stage_lab = {1: "①임박", 2: "②갓돌파", 3: "③횡보", 4: "④확정"}
+    scnt = {s: sum(1 for r in results if r.get("transition_stage", 0) == s)
+            for s in (1, 2, 3, 4)}
+    stage_chips = "".join(
+        f'<button class="chip stagechip" onclick="fltStageN({s})">{stage_lab[s]} {scnt[s]}</button>'
+        for s in (1, 2, 3, 4) if scnt[s])
     # 수집 진행률(캐시된 종목 / 유니버스 전체)
     try:
         cached = len(cache.cached_codes())
@@ -135,7 +142,7 @@ def _index(results: list[dict]) -> str:
     updated = datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M UTC")
     return _INDEX_TMPL.format(
         n=len(results), rows=_rows(results), chips=chips, rcount=rcount,
-        recmin=REC_MIN,
+        recmin=REC_MIN, stage_chips=stage_chips,
         cached=cached, uni=uni, pct=pct, updated=updated)
 
 
@@ -211,6 +218,9 @@ _INDEX_TMPL = """<!DOCTYPE html><html lang="ko"><head>
   .star{{font-size:11px;font-weight:700;color:#d97706}}
   .rec-chip{{background:#fef3c7;border-color:#f59e0b;color:#92400e;font-weight:700}}
   .rec-chip.on{{background:#f59e0b;border-color:#f59e0b;color:#fff}}
+  .bar2{{padding-top:0}} .barlbl{{font-size:12px;color:#94a3b8;font-weight:600;align-self:center}}
+  .stagechip{{background:#ecfdf5;border-color:#a7f3d0;color:#065f46;font-size:12px}}
+  .stagechip.on{{background:#16a34a;border-color:#16a34a;color:#fff}}
   .pos{{color:#16a34a}}.neg{{color:#dc2626}}
   .prog{{padding:8px 16px 0}}
   .ptxt{{font-size:12px;color:#475569;margin-bottom:4px}}
@@ -300,8 +310,10 @@ _INDEX_TMPL = """<!DOCTYPE html><html lang="ko"><head>
   <button class="chip rec-chip on" onclick="fltRec()">⭐ 진입 추천 {rcount}</button>
   <button class="chip" onclick="flt('all')">전체</button>
   {chips}
-  <a class="chip" href="guide.html" style="margin-left:auto;text-decoration:none">📘 매매 가이드</a>
-  <a class="chip" href="lookup.html" style="background:#0f172a;color:#fff;border-color:#0f172a;text-decoration:none">➕ 티커 즉석 조회</a>
+</div>
+<div class="bar bar2"><span class="barlbl">전환단계</span>{stage_chips}
+  <a class="chip" href="guide.html" style="text-decoration:none">📘 가이드</a>
+  <a class="chip" href="lookup.html" style="background:#0f172a;color:#fff;border-color:#0f172a;text-decoration:none">➕ 즉석조회</a>
 </div>
 <div class="tw"><table id="t"><thead><tr>
   <th onclick="srt(0,false)">신호</th>
@@ -339,6 +351,13 @@ _INDEX_TMPL = """<!DOCTYPE html><html lang="ko"><head>
     setOn(typeof event!=='undefined'?event.target:null);
     tb.querySelectorAll('tr').forEach(function(r){{
       r.style.display=(parseInt(r.dataset.stage||'0')>0)?'':'none';
+    }});
+  }}
+  // 전환단계 ①~④ 각각 필터
+  function fltStageN(n){{
+    setOn(typeof event!=='undefined'?event.target:null);
+    tb.querySelectorAll('tr').forEach(function(r){{
+      r.style.display=(parseInt(r.dataset.stage||'0')===n)?'':'none';
     }});
   }}
   // ⭐ 진입 추천: 체크리스트 4/6 이상만 표시(가장 손쉬운 후보 추리기)

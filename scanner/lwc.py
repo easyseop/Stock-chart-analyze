@@ -67,6 +67,7 @@ def _payload(result: dict, frames: dict, tf: str) -> dict:
         lines.append({"price": round(float(p), 4), "title": title,
                       "color": color, "group": group, "dash": dash})
 
+    L(price, "● 현재가", "#0f172a", "level")          # 현재가 — 굵고 진하게(항상 보이게)
     L(sr["box_high"], "저항", chart.C["resist"], "level")
     L(sr["defense"], "방어선", chart.C["defense"], "level")
     L(va["poc"], "POC", chart.C["poc"], "level", 1)
@@ -87,6 +88,11 @@ def _payload(result: dict, frames: dict, tf: str) -> dict:
     dates = list(d.index)
     avg_delta = (dates[-1] - dates[0]) / max(1, len(dates) - 1)
     proj = _PROJECT.get(tf, 12)
+    # 미래 연장선이 화면 밖(음수 등)으로 폭주해 Y축이 망가지지 않도록 가시범위로 클램프
+    lo = float(d["Low"].min())
+    hi = float(d["High"].max())
+    pad = (hi - lo) * 0.05
+    clamp = lambda v: max(lo - pad, min(hi + pad, v))
     trend = []
     for which, color in (("down", chart.C["resist"]), ("up", chart.C["target"])):
         seg = tl.get(which) if tl else None
@@ -97,7 +103,7 @@ def _payload(result: dict, frames: dict, tf: str) -> dict:
             {"time": T(seg["x0"]), "value": float(seg["y0"])},
             {"time": T(x1), "value": float(seg["y1"])}]})
         xf = x1 + avg_delta * proj
-        yf = float(seg["y1"]) + float(seg.get("slope", 0)) * proj
+        yf = clamp(float(seg["y1"]) + float(seg.get("slope", 0)) * proj)
         trend.append({"color": color, "dash": 2, "data": [
             {"time": T(x1), "value": float(seg["y1"])},
             {"time": T(xf), "value": yf}]})

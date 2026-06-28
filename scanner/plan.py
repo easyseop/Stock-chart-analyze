@@ -153,15 +153,20 @@ def plan_html(r: dict) -> str:
     color, head = _headline(r, rec)
     f = lambda v: _fmt(v, ccy)
 
-    # 진입 설명 — 진입가가 '어디서' 나오는지 명시
-    if pos == "고점권":
-        entry_desc = (f"박스 상단(저항) <b>{f(sr['box_high'])}</b> 기준 — "
-                      f"여기를 <b>거래량 동반 돌파+종가 안착</b>하면 매수.")
-    elif pos in ("저항돌파", "박스이탈"):
-        entry_desc = f"돌파 직후 — 되눌림(눌림목) 확인하며 <b>현재가 {f(price)}</b> 분할."
+    # 진입 설명 — 타이밍과 일치(지금 vs 눌림 대기 vs 돌파 대기)
+    kind = r.get("entry_kind", "now")
+    if kind == "breakout":
+        entry_desc = (f"<b>지금 사는 게 아님.</b> 저항 <b>{f(sr['box_high'])}</b>를 "
+                      f"거래량 동반 돌파+종가 안착하면 매수.")
+        entry_src = "진입가 = 저항 돌파 자리(고점권이라 돌파 확인 후)."
+    elif kind == "pullback":
+        entry_desc = (f"<b>지금 말고</b> — 이미 급등(현재가 {f(price)})이라 "
+                      f"<b>1차 반등구간 {f(entry)}까지 눌릴 때</b> 매수.")
+        entry_src = "진입가 = 이미 올라 타점이 멂 → 1차 반등(지지 겹침) 구간에서."
     else:
-        entry_desc = f"<b>현재가 {f(price)}</b> 분할 매수(지지 확인하며)."
-    entry_src = ("진입가 = 고점권이면 ‘저항(박스 상단)’, 그 외엔 ‘현재가’에서 자동 산출.")
+        entry_desc = (f"<b>지금 매수 가능</b> — 지지 바로 위라 현재가 {f(price)} 분할 "
+                      f"(지지 확인하며).")
+        entry_src = "진입가 = 지지 근처(타점권)라 현재가에서 분할."
 
     # 손절 설명 — 방어선(지지 구조)과 손절선(실제 매도가)을 명확히 구분
     ds = sr.get("defense_strength", "")

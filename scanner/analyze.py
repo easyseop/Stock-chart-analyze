@@ -41,9 +41,27 @@ def analyze(frames: dict[str, pd.DataFrame], meta: dict, bench=None) -> dict:
     norm = scoring.normalize(module_scores, regime["flag"])
     label, gauge = scoring.verdict(norm["score"])
 
-    # 진입 기준가: 저항 임박(고점권)이면 '돌파 시 매수' → 박스 상단, 그 외 현재가
+    # 과대이격/급등 판정(진입 타점 결정에 사용) — 이미 많이 오른 종목은 '현재가'가 아니라
+    # 1차 반등구간을 진입 타점으로(타이밍과 일치).
     price = float(d["Close"].iloc[-1])
-    entry = sr["box_high"] if sr["position"] == "고점권" else price
+    ma20 = trend.get("ma", {}).get(20)
+    stretch = (price / ma20 - 1) if ma20 else 0.0
+    low10 = float(d["Low"].iloc[-10:].min())
+    runup10 = (price / low10 - 1) if low10 else 0.0
+    nh_pct = newhigh.get("pct_from_high")
+    over_ext = (stretch >= 0.08 or runup10 >= 0.13
+                or (nh_pct is not None and nh_pct >= -8))
+    bz = levels.get("bounce_zones") or []
+
+    if sr["position"] == "고점권":
+        entry = sr["box_high"]                       # 저항 돌파 시 매수
+        entry_kind = "breakout"
+    elif over_ext and bz:
+        entry = bz[0]["center"]                      # 이미 급등 → 1차 반등구간에서 매수
+        entry_kind = "pullback"
+    else:
+        entry = price                                # 지지 근처 → 현재가 분할
+        entry_kind = "now"
     risk = ind.risk_levels(d, entry, sr["defense"], meta["ccy"])
 
     # ── 하락추세 veto: 하락추세 지속이면 매수 신호를 막는다(사용자 원칙) ──
@@ -57,11 +75,7 @@ def analyze(frames: dict[str, pd.DataFrame], meta: dict, bench=None) -> dict:
     trend_oneline = _one_line_trend(trend, regime, trendline)
     stage, stage_label = _transition_stage(trendline)
 
-    # 고점 확장 / 추격 경고 + 최근 급등(타점이 멀어졌는지)
-    ma20 = trend.get("ma", {}).get(20)
-    stretch = (price / ma20 - 1) if ma20 else 0.0          # 20일선 대비 이격
-    low10 = float(d["Low"].iloc[-10:].min())
-    runup10 = (price / low10 - 1) if low10 else 0.0        # 최근 10봉 저점 대비 급등폭
+    # 고점 확장 / 추격 경고 + 최근 급등(타점이 멀어졌는지) — 위에서 구한 값 재사용
     near_high = newhigh["score"] == 2
     # 추격: (신고가근접+과열/이격) 또는 그냥 큰 이격/급등 — 신고가 점수와 무관하게도 잡음
     chase = (near_high and (rsi.get("rsi", 50) >= 70 or stretch >= 0.08)
@@ -83,7 +97,8 @@ def analyze(frames: dict[str, pd.DataFrame], meta: dict, bench=None) -> dict:
         "supply": supply, "risk": risk,
         "module_scores": module_scores, "weights": norm["weights"],
         "norm": norm["score"], "verdict_label": label, "gauge": gauge,
-        "verdict": verdict_txt, "entry": entry, "vetoed": vetoed, "terms": terms,
+        "verdict": verdict_txt, "entry": entry, "entry_kind": entry_kind,
+        "vetoed": vetoed, "terms": terms,
         "ext": {"ma20_stretch": stretch, "runup10": runup10},
         "trend_oneline": trend_oneline, "chase": chase, "chase_note": chase_note,
         "transition_stage": stage, "transition_label": stage_label,
