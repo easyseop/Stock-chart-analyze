@@ -67,13 +67,19 @@ def timing(r: dict) -> str:
     if pos == "고점권" and sr.get("box_high") and price:
         g = (sr["box_high"] - price) / price * 100
         return f"⏳ 저항 돌파 대기 (저항까지 +{g:.1f}%)"
-    if _overextended(r):
+    if r.get("entry_kind") in ("pullback", "wait"):
         bz = (r.get("levels") or {}).get("bounce_zones") or []
+        tgt, lab = (None, "")
         if bz and price:
-            c = bz[0]["center"]
-            g = (price - c) / price * 100
-            return f"👀 눌림 대기 — 1차 반등 {c:,.2f}(−{g:.1f}%)까지 빠지면 진입"
-        return "👀 타점 위(이미 급등) — 눌림 대기·주시"
+            tgt, lab = bz[0]["center"], "1차 반등"
+        else:
+            sup = _support_below(r)
+            if sup:
+                tgt, lab = sup, "지지"
+        if tgt and price:
+            g = (price - tgt) / price * 100
+            return f"👀 눌림 대기 — {lab} {tgt:,.2f}(−{g:.1f}%)까지 빠지면 진입"
+        return "👀 진입 보류 — 받칠 지지 확인 후(추격 금지)"
     nh = (r.get("newhigh") or {}).get("pct_from_high")
     room = nh is not None and nh <= -12       # 신고가까지 12%+ 남음 = 올라갈 방 충분
     sup = _support_below(r)
@@ -133,12 +139,15 @@ def _headline(r: dict, rec: int) -> tuple[str, str]:
         return "#dc2626", "🔴 하락추세 — 신규 매수 회피. 보유 중이면 손절 점검."
     if rec >= REC_MIN:
         return "#16a34a", f"⭐ 진입 추천 (체크리스트 {rec}/6) — 조건 양호, 분할 진입 검토."
-    if r.get("chase") or _overextended(r):
+    if r.get("entry_kind") in ("pullback", "wait"):
         ext = r.get("ext") or {}
-        hot = (r.get("chase") or ext.get("ma20_stretch", 0) >= 0.08
-               or ext.get("runup10", 0) >= 0.13)
-        if hot:
+        strong = (r.get("chase") or ext.get("ma20_stretch", 0) >= 0.10
+                  or ext.get("runup10", 0) >= 0.18)
+        mild = (ext.get("ma20_stretch", 0) >= 0.08 or ext.get("runup10", 0) >= 0.13)
+        if strong:
             return "#d97706", "🔺 이미 급등 — 지금 진입은 추격. 눌림(반등구간) 대기."
+        if mild:
+            return "#d97706", "🔺 단기 반등 후 — 지금 추격은 주의. 눌림 대기."
         return "#d97706", "🔺 고점권(52주 고가 근처) — 신규 추격 주의, 눌림 대기."
     if stage >= 3:
         return "#16a34a", "🟢 전환 후보 — 돌파·거래량 확인되면 진입."
@@ -162,23 +171,28 @@ def plan_html(r: dict) -> str:
 
     # 진입 설명 — 타이밍과 일치(지금 vs 눌림 대기 vs 돌파 대기). 한 줄로 핵심만.
     kind = r.get("entry_kind", "now")
+    has_bz = bool((r.get("levels") or {}).get("bounce_zones"))
     if kind == "breakout":
         entry_desc = f"저항 {f(sr['box_high'])} 돌파+안착 시 <b>지금 아님</b>"
         entry_src = "고점권이라 저항 돌파 자리에서 매수(돌파 확인 후)."
     elif kind == "pullback":
-        entry_desc = f"1차 반등 {f(entry)}까지 눌릴 때 <b>지금 아님</b>"
-        entry_src = "이미 올라 타점이 멂 → 1차 반등(지지 겹침) 구간에서."
-    elif r.get("chase") or _overextended(r):
-        # 현재가지만 이미 고점권/급등 → 받칠 반등구간이 명확치 않음. '지금 가능' 금지.
-        entry_desc = "이미 고점권 — <b>신규 추격 보류</b>, 눌림·되돌림 확인 후"
-        entry_src = "고점권이라 현재가 신규 진입은 추격 → 관망/대기."
+        tgt = "1차 반등구간" if has_bz else "아래 지지"
+        entry_desc = f"{tgt} {f(entry)}까지 눌릴 때 <b>지금 아님</b>"
+        entry_src = ("이미 올라 타점이 멂 → "
+                     + ("1차 반등(지지 겹침) 구간에서." if has_bz else "현재가 아래 가까운 지지에서."))
+    elif kind == "wait":
+        # 이미 올랐는데 받칠 지지가 안 잡힘 → 진입가 미정. '현재가=진입' 오해 방지.
+        entry_desc = "받칠 지지 불명확 — <b>진입 보류</b>(관망)"
+        entry_src = ("표시된 값은 현재가일 뿐 '지금 사라'가 아님. 눌림 받칠 지지가 "
+                     "잡힐 때까지 신규 진입 보류.")
     else:
         entry_desc = f"지지 바로 위 → 현재가 분할 <b>지금 가능</b>"
         entry_src = "지지 근처(타점권)라 현재가에서 분할."
 
-    # 손절 설명 — 핵심만. 방어선 vs 손절 구분은 '자세히'로.
+    # 손절 설명 — 핵심만(실제 손절가 기준). 방어선 vs 손절 구분은 '자세히'로.
     ds = sr.get("defense_strength", "")
-    stop_desc = f"방어선 {f(sr['defense'])} 종가 이탈 시 전량"
+    stop_pct = (entry - risk["stop"]) / entry * 100 if entry else 0
+    stop_desc = f"종가 이탈 시 전량 (진입 −{stop_pct:.0f}%)"
     stop_more = (
         f"<b>손절</b> {f(risk['stop'])} = 실제 파는 가격(방어선 약간 아래 또는 "
         f"ATR손절 {f(risk['atr_stop'])} 중 가까운 쪽).<br>"
@@ -199,15 +213,15 @@ def plan_html(r: dict) -> str:
         rules.append(f"<b>매수</b>: 저항 {f(sr['box_high'])}를 평소 1.5배↑ 거래량으로 "
                      f"돌파+종가 안착 → 진입")
     elif kind == "pullback":
-        rules.append(f"<b>매수</b>: 이미 급등 — <b>1차 반등 {f(entry)}까지 눌리면</b> 분할 진입 "
-                     f"(지금 추격 금지)")
+        tgt = "1차 반등구간" if has_bz else "아래 지지"
+        rules.append(f"<b>매수</b>: 이미 올라 추격 금지 — <b>{tgt} {f(entry)}까지 눌리면</b> 분할 진입")
+    elif kind == "wait":
+        rules.append("<b>매수</b>: 진입 보류 — 받칠 지지가 잡히고 거기서 지지 확인될 때까지 관망")
     elif r.get("transition_stage", 0) >= 2:
         rules.append("<b>매수</b>: 돌파선 위에서 되눌림 후 안착(상승추세선 형성) 확인 → 분할 진입")
-    elif r.get("chase") or _overextended(r):
-        rules.append("<b>매수</b>: 이미 고점권 — 신규 추격 금지. 눌림(반등구간) 확인 후 분할")
     else:
         rules.append(f"<b>매수</b>: 현재가 부근 지지 확인 후 분할 (적극 진입은 신호 강화 시)")
-    rules.append(f"<b>손절</b>: 방어선 {f(sr['defense'])} 종가 이탈 → 전량 정리(무조건)")
+    rules.append(f"<b>손절</b>: {f(risk['stop'])} 종가 이탈 → 전량 정리(무조건)")
     rules.append(f"<b>목표</b>: 1차 {f(risk['target'])}(손익비 1:{risk['rr']:.0f}) 도달 시 "
                  f"일부 익절 + 손절을 진입가로 올리기")
     if r.get("vetoed"):

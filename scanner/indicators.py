@@ -404,13 +404,18 @@ def volume_surge(df: pd.DataFrame, sr: dict) -> dict:
 # ════════════════════════════════════════════════════════════
 # 1-6. ATR 손절 / 비중 (점수 X, 리스크 산출)
 # ════════════════════════════════════════════════════════════
-def risk_levels(df: pd.DataFrame, entry: float, defense: float, ccy: str) -> dict:
+def risk_levels(df: pd.DataFrame, entry: float, defense: float, ccy: str,
+                prefer_atr: bool = False) -> dict:
     a = float(atr(df).iloc[-1])
     atr_stop = entry - config.ATR_STOP_MULT * a
     defense_stop = defense * (1 - config.DEFENSE_STOP_BUFFER)  # 방어선 약간 아래
 
     # 손절 선택
-    if config.STOP_MODE == "atr":
+    if prefer_atr:
+        # 진입가가 '지지선 위'에 잡힌 눌림 매수면, 손절은 그 지지 아래 ATR 여유까지
+        # (방어선=진입가라 '방어선 약간 아래'로 잡으면 손절폭이 0에 수렴 → 비정상).
+        stop = atr_stop
+    elif config.STOP_MODE == "atr":
         stop = atr_stop
     elif config.STOP_MODE == "defense":
         stop = defense_stop

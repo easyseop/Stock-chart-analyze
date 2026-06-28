@@ -49,9 +49,14 @@ def analyze(frames: dict[str, pd.DataFrame], meta: dict, bench=None) -> dict:
     low10 = float(d["Low"].iloc[-10:].min())
     runup10 = (price / low10 - 1) if low10 else 0.0
     nh_pct = newhigh.get("pct_from_high")
-    over_ext = (stretch >= 0.08 or runup10 >= 0.13
+    # 추격(이미 많이 올라 타점이 멂)도 과대이격에 포함 → 진입타점 판정의 단일 기준.
+    near_high = newhigh["score"] == 2
+    chase = (near_high and (rsi.get("rsi", 50) >= 70 or stretch >= 0.08)
+             or stretch >= 0.13 or runup10 >= 0.20)
+    over_ext = (chase or stretch >= 0.08 or runup10 >= 0.13
                 or (nh_pct is not None and nh_pct >= -8))
     bz = levels.get("bounce_zones") or []
+    sup_below = _support_below(price, sr, levels, trend)   # 현재가 바로 아래 가까운 지지
 
     if sr["position"] == "고점권":
         entry = sr["box_high"]                       # 저항 돌파 시 매수
@@ -59,10 +64,18 @@ def analyze(frames: dict[str, pd.DataFrame], meta: dict, bench=None) -> dict:
     elif over_ext and bz:
         entry = bz[0]["center"]                      # 이미 급등 → 1차 반등구간에서 매수
         entry_kind = "pullback"
+    elif over_ext and sup_below:
+        entry = sup_below                            # 반등구간 없으면 가까운 지지를 눌림 목표로
+        entry_kind = "pullback"
+    elif over_ext:
+        entry = price                                # 받칠 지지조차 없음 → 진입 보류(타점 미정)
+        entry_kind = "wait"
     else:
         entry = price                                # 지지 근처 → 현재가 분할
         entry_kind = "now"
-    risk = ind.risk_levels(d, entry, sr["defense"], meta["ccy"])
+    # 눌림 매수(진입가가 지지 위)면 손절은 그 지지 아래 ATR 여유로(방어선 hug 방지)
+    risk = ind.risk_levels(d, entry, sr["defense"], meta["ccy"],
+                           prefer_atr=(entry_kind in ("pullback", "wait")))
 
     # ── 하락추세 veto: 하락추세 지속이면 매수 신호를 막는다(사용자 원칙) ──
     vetoed = False
@@ -75,11 +88,7 @@ def analyze(frames: dict[str, pd.DataFrame], meta: dict, bench=None) -> dict:
     trend_oneline = _one_line_trend(trend, regime, trendline)
     stage, stage_label = _transition_stage(trendline)
 
-    # 고점 확장 / 추격 경고 + 최근 급등(타점이 멀어졌는지) — 위에서 구한 값 재사용
-    near_high = newhigh["score"] == 2
-    # 추격: (신고가근접+과열/이격) 또는 그냥 큰 이격/급등 — 신고가 점수와 무관하게도 잡음
-    chase = (near_high and (rsi.get("rsi", 50) >= 70 or stretch >= 0.08)
-             or stretch >= 0.13 or runup10 >= 0.20)
+    # 추격 경고 문구(near_high·chase는 위에서 이미 계산 — 진입타점 단일 기준으로 사용)
     chase_note = (f"🔺 이미 많이 올라 타점이 멂(MA20 +{stretch*100:.0f}% · "
                   f"최근저점 대비 +{runup10*100:.0f}%) — 눌림 대기 권장" if chase else "")
 
@@ -103,6 +112,22 @@ def analyze(frames: dict[str, pd.DataFrame], meta: dict, bench=None) -> dict:
         "trend_oneline": trend_oneline, "chase": chase, "chase_note": chase_note,
         "transition_stage": stage, "transition_label": stage_label,
     }
+
+
+def _support_below(price, sr, levels, trend):
+    """현재가 바로 아래의 가장 가까운 강한 지지(상승추세선/방어선/강한 지지선)."""
+    cands = []
+    up = (trend or {}).get("trendline_up") or {}
+    # 방어선(박스 하단 등)
+    if sr.get("defense"):
+        cands.append(sr["defense"])
+    # 강한 지지 레벨
+    for lv in (levels or {}).get("strong", []):
+        p = lv.get("price") if isinstance(lv, dict) else lv
+        if p:
+            cands.append(p)
+    cands = [c for c in cands if c and price and c < price]
+    return max(cands) if cands else None
 
 
 def _transition_stage(tl_res) -> tuple[int, str]:
