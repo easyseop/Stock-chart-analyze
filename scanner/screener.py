@@ -44,6 +44,22 @@ def _detail(result: dict, frames: dict) -> str:
 from scanner.plan import rec_n as _rec_n, REC_MIN, timing as _timing
 
 
+def _sign(v) -> str:
+    """양수=pos(초록)·음수=neg(빨강) 클래스."""
+    try:
+        return "pos" if float(v) >= 0 else "neg"
+    except (TypeError, ValueError):
+        return ""
+
+
+def _mkt_cls(mk: str) -> str:
+    if "상승" in mk:
+        return "pos"
+    if "하락" in mk:
+        return "neg"
+    return ""
+
+
 def _rows(results: list[dict]) -> str:
     out = []
     for r in results:
@@ -86,9 +102,11 @@ def _rows(results: list[dict]) -> str:
             f'<td data-label="전환단계" data-v="{stg}" class="num stg" '
             f'title="{stip}">{stg_lab}</td>'
             f'<td data-label="추세">{tone}</td>'
-            f'<td data-label="점수" data-v="{r["norm"]:.1f}" class="num sc">{r["norm"]:+.0f}</td>'
-            f'<td data-label="시장">{html.escape(mk)}</td>'
-            f'<td data-label="RS" data-v="{rs if rs is not None else -999}" class="num">{rs_txt}</td>'
+            f'<td data-label="점수" data-v="{r["norm"]:.1f}" '
+            f'class="num sc {_sign(r["norm"])}">{r["norm"]:+.0f}</td>'
+            f'<td data-label="시장"><span class="{_mkt_cls(mk)}">{html.escape(mk)}</span></td>'
+            f'<td data-label="RS" data-v="{rs if rs is not None else -999}" '
+            f'class="num {_sign(rs) if rs is not None else ""}">{rs_txt}</td>'
             f'<td data-label="신고가" data-v="{nh if nh is not None else -999}" class="num">{nh_txt}</td>'
             f'<td data-label="판정" class="vd">{vd}</td>'
             f'<td class="brk"></td></tr>')
@@ -186,9 +204,8 @@ _INDEX_TMPL = """<!DOCTYPE html><html lang="ko"><head>
   .legend summary{{cursor:pointer;padding:9px 13px;font-size:13px;font-weight:600;color:#334155}}
   .legend .lc{{padding:4px 15px 13px;font-size:12.5px;color:#475569;line-height:1.75}}
   .legend b{{color:#0f172a}}
-  tr.b-transition td.sc{{color:#16a34a}}
-  tr.b-uptrend td.sc{{color:#0284c7}}
-  tr.b-avoid td.sc{{color:#dc2626}}
+  td.sc.pos,.num.pos,span.pos{{color:#16a34a}}   /* 양수=초록 */
+  td.sc.neg,.num.neg,span.neg{{color:#dc2626}}   /* 음수=빨강 */
   tr.rec{{background:#fffbeb}}
   .sig{{display:inline-flex;align-items:center;gap:5px}}
   .star{{font-size:11px;font-weight:700;color:#d97706}}
@@ -247,9 +264,10 @@ _INDEX_TMPL = """<!DOCTYPE html><html lang="ko"><head>
     td[data-label="RS"]::before,td[data-label="신고가"]::before{{
        display:inline;font-size:11px;color:#94a3b8;font-weight:600;margin:0 4px 0 0}}
     /* 판정: 맨 아래 전체폭, 옅게 */
-    td.vd{{order:9;flex-basis:100%;color:#475569;font-size:12px;line-height:1.5;
-       border-top:1px solid #f1f5f9;padding-top:8px;margin-top:2px}}
+    td.vd{{order:9;flex-basis:100%;color:#94a3b8;font-size:11.5px;line-height:1.45;
+       border-top:1px solid #f1f5f9;padding-top:7px;margin-top:2px}}
     td.vd::before{{display:none}}
+    td.vd b{{color:#475569}}
   }}
 </style></head><body>
 <header><h1>종목 스크리너 <span style="color:#38bdf8;font-size:13px">차트 신호 랭킹</span></h1>

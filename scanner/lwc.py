@@ -172,8 +172,10 @@ _TMPL = """<!DOCTYPE html><html lang="ko"><head>
     padding:6px 16px;cursor:pointer;font-size:13px;font-weight:600}}
   .tfbtn.active{{background:#0f172a;border-color:#0f172a;color:#fff}}
   .chart{{position:relative;background:#fff;border:1px solid #e2e8f0;border-radius:10px;
-    padding:4px}}
+    padding:4px;overflow:hidden;max-width:100%}}
   .cc{{width:100%;max-width:100%;height:62vh;min-height:360px;overflow:hidden}}
+  .cc table,.cc canvas{{max-width:100%}}
+  .wrap>*{{max-width:100%}}
   .card{{background:#0f172a;color:#e2e8f0;padding:14px 16px;border-radius:10px;
     font-size:12px;line-height:1.5;white-space:pre;overflow:auto;margin-top:12px;
     font-family:'D2Coding','Menlo','Consolas',monospace}}
