@@ -207,9 +207,10 @@ _TMPL = """<!DOCTYPE html><html lang="ko"><head>
   <details class="lines"><summary>❔ 차트의 선들이 무슨 뜻인가요? (진입·지지/저항)</summary>
   <div class="lc">
   <b>매매선</b>(파란 토글):<br>
-  &nbsp;<span class="dot" style="background:#2563eb"></span><b>진입</b> — <b>"여기서 사라"는 매수 기준가</b>.
-   고점권이면 <b>저항 돌파가</b>(돌파해야 매수), 그 외엔 현재가. ※저항·지지가 진입 기준으로 잡힌 게
-   아니라, 가격 구조로 저항·지지를 먼저 잡고 거기서 진입가를 끌어낸 것.<br>
+  &nbsp;<span class="dot" style="background:#2563eb"></span><b>진입</b> — 매수 기준가. <b>다만 카드 위쪽
+   '판정·타이밍'에 따라 뜻이 달라요</b>: <b>지금 가능</b>=여기서 분할 / <b>눌림 대기</b>=그 가격까지
+   빠질 때(지금 아님) / <b>회피</b>=참고용 현재가(<b>여기서 사라는 뜻 아님</b>). 고점권이면 저항 돌파가.
+   ※진입선만 보지 말고 <b>카드의 판정·타이밍과 같이</b> 보세요.<br>
   &nbsp;<span class="dot" style="background:#ef4444"></span><b>손절</b> — <b>내가 실제로 파는 가격</b>(손실 한정). 방어선 약간 아래 또는 진입−2×ATR 중 가까운 쪽.<br>
   &nbsp;<span class="dot" style="background:#16a34a"></span><b>목표</b> — 손익비 1:2 목표가.<br>
   <b>핵심선</b>(파란 토글):<br>

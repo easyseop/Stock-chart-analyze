@@ -57,8 +57,13 @@ def analyze(frames: dict[str, pd.DataFrame], meta: dict, bench=None) -> dict:
                 or (nh_pct is not None and nh_pct >= -8))
     bz = levels.get("bounce_zones") or []
     sup_below = _support_below(price, sr, levels, trend)   # 현재가 바로 아래 가까운 지지
+    downtrend = bool(trendline.get("confirmed_down")
+                     or trendline.get("state") == "하락추세 지속")
 
-    if sr["position"] == "고점권":
+    if sr["position"] == "박스이탈" or (config.DOWNTREND_VETO and downtrend):
+        entry = price                                # 방어선 이탈/하락추세 → 매수 자리 아님
+        entry_kind = "avoid"
+    elif sr["position"] == "고점권":
         entry = sr["box_high"]                       # 저항 돌파 시 매수
         entry_kind = "breakout"
     elif over_ext and bz:

@@ -58,6 +58,8 @@ def timing(r: dict) -> str:
     """'지금이 타점인가/주시인가'를 한 줄로. 사용자 핵심: 지금 살 자리 vs 기다릴 자리."""
     if r.get("vetoed"):
         return ""
+    if r.get("entry_kind") == "avoid":
+        return "🚫 신규 매수 회피 — 방어선 이탈/하락추세 (반등은 추격 금지)"
     sr = r.get("sr") or {}
     price = sr.get("price")
     pos = sr.get("position")
@@ -127,7 +129,7 @@ def rec_n(r: dict) -> int:
 
 def _group(r: dict) -> tuple[str, str]:
     """카드용 '상태 그룹'(칩 축과 동일): 전환후보/상승추세/관망/회피 — 전환단계와 다른 축."""
-    if r.get("vetoed"):
+    if r.get("vetoed") or r.get("entry_kind") == "avoid" or r.get("sr", {}).get("position") == "박스이탈":
         return "회피", "🔴"
     tone = r.get("trend_oneline", "")
     if r.get("transition_stage", 0) >= 1 or tone == "🔄 전환 시도":
@@ -169,6 +171,8 @@ def _headline(r: dict, rec: int) -> tuple[str, str]:
     pos = r["sr"]["position"]
     if r.get("vetoed"):
         return "#dc2626", "🔴 하락추세 — 신규 매수 회피. 보유 중이면 손절 점검."
+    if r.get("entry_kind") == "avoid" or pos == "박스이탈":
+        return "#dc2626", "🔴 방어선 이탈(하락) — 신규 매수 회피. 반등 나와도 추격 금지."
     if rec >= REC_MIN:
         return "#16a34a", f"⭐ 진입 추천 (체크리스트 {rec}/6) — 조건 양호, 분할 진입 검토."
     if r.get("entry_kind") in ("pullback", "wait"):
@@ -204,7 +208,11 @@ def plan_html(r: dict) -> str:
     # 진입 설명 — 타이밍과 일치(지금 vs 눌림 대기 vs 돌파 대기). 한 줄로 핵심만.
     kind = r.get("entry_kind", "now")
     has_bz = bool((r.get("levels") or {}).get("bounce_zones"))
-    if kind == "breakout":
+    if kind == "avoid":
+        entry_desc = "<b>신규 매수 회피</b> — 방어선 아래(하락추세). 표시값은 참고용 현재가"
+        entry_src = ("방어선 이탈/하락추세 = 매수 자리 아님. '여기서 사라'가 아니라 "
+                     "방어선 회복 전까지 관망. 보유 중이면 반등에 비중 축소.")
+    elif kind == "breakout":
         entry_desc = f"저항 {f(sr['box_high'])} 돌파+안착 시 <b>지금 아님</b>"
         entry_src = "고점권이라 저항 돌파 자리에서 매수(돌파 확인 후)."
     elif kind == "pullback":
@@ -224,7 +232,13 @@ def plan_html(r: dict) -> str:
     # 손절 설명 — 핵심만(실제 손절가 기준). 방어선 vs 손절 구분은 '자세히'로.
     ds = sr.get("defense_strength", "")
     stop_pct = (entry - risk["stop"]) / entry * 100 if entry else 0
-    stop_desc = f"종가 이탈 시 전량 (진입 −{stop_pct:.0f}%)"
+    if kind == "avoid":
+        stop_desc = "참고용 — 하락추세/방어선 이탈이라 신규 매매 대상 아님"
+    elif stop_pct >= 18:
+        stop_desc = (f"종가 이탈 시 전량 (진입 −{stop_pct:.0f}%) "
+                     f"<b>※손절폭 과대 — 변동성 큼, 매매 신중</b>")
+    else:
+        stop_desc = f"종가 이탈 시 전량 (진입 −{stop_pct:.0f}%)"
     stop_more = (
         f"<b>손절</b> {f(risk['stop'])} = 실제 파는 가격(방어선 약간 아래 또는 "
         f"ATR손절 {f(risk['atr_stop'])} 중 가까운 쪽).<br>"
@@ -241,7 +255,10 @@ def plan_html(r: dict) -> str:
 
     # If-Then 규칙
     rules = []
-    if pos == "고점권":
+    if kind == "avoid":
+        rules.append("<b>회피</b>: 방어선 이탈/하락추세 — 신규 매수 금지. "
+                     "보유 시 반등마다 비중 축소(추격 금지)")
+    elif pos == "고점권":
         rules.append(f"<b>매수</b>: 저항 {f(sr['box_high'])}를 평소 1.5배↑ 거래량으로 "
                      f"돌파+종가 안착 → 진입")
     elif kind == "pullback":
