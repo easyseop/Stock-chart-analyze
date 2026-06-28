@@ -55,6 +55,52 @@ def add_one(code: str, name: str | None = None, ccy: str | None = None,
     return True
 
 
+def resolve_name(code: str, ccy: str | None = None) -> str | None:
+    """티커의 실제 종목명을 best-effort로 조회(즉석조회를 이름으로 검색 가능하게).
+
+    한국주(6자리): FinanceDataReader KRX 상장목록에서 매칭. 미국주: yfinance info.
+    실패하면 None(호출측에서 코드명 폴백). 네트워크/예외 모두 무시.
+    """
+    code = code.strip().upper()
+    if ccy is None:
+        ccy = "KRW" if (len(code) == 6 and code[:5].isdigit()) else "USD"
+    try:
+        if ccy == "KRW":
+            import FinanceDataReader as fdr
+            df = fdr.StockListing("KRX")
+            col = "Code" if "Code" in df.columns else df.columns[0]
+            ncol = "Name" if "Name" in df.columns else None
+            if ncol is not None:
+                hit = df[df[col].astype(str).str.zfill(6) == code]
+                if len(hit):
+                    nm = str(hit.iloc[0][ncol]).strip()
+                    return nm or None
+        else:
+            import yfinance as yf
+            info = yf.Ticker(code).info or {}
+            nm = (info.get("shortName") or info.get("longName") or "").strip()
+            return nm or None
+    except Exception:
+        return None
+    return None
+
+
+def fix_names(path: str = DEFAULT_PATH) -> int:
+    """name이 code와 같은(=이름 미확보) 행들의 실제 종목명을 채운다. 채운 개수 반환."""
+    rows = load(path)
+    fixed = 0
+    for r in rows:
+        code = str(r.get("code", "")).strip()
+        if code and str(r.get("name", "")).strip().upper() == code.upper():
+            nm = resolve_name(code, r.get("ccy"))
+            if nm and nm.upper() != code.upper():
+                r["name"] = nm
+                fixed += 1
+    if fixed:
+        save(rows, path)
+    return fixed
+
+
 def _krx_rows(market: str, n_take: int, seen: set) -> list[dict]:
     """KOSPI/KOSDAQ 상장목록을 시총 내림차순으로(0=전체) rows 생성."""
     import FinanceDataReader as fdr

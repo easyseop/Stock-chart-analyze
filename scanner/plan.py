@@ -68,7 +68,12 @@ def timing(r: dict) -> str:
         g = (sr["box_high"] - price) / price * 100
         return f"⏳ 저항 돌파 대기 (저항까지 +{g:.1f}%)"
     if _overextended(r):
-        return "👀 타점 위(이미 급등/고점) — 눌림 대기·주시"
+        bz = (r.get("levels") or {}).get("bounce_zones") or []
+        if bz and price:
+            c = bz[0]["center"]
+            g = (price - c) / price * 100
+            return f"👀 눌림 대기 — 1차 반등 {c:,.2f}(−{g:.1f}%)까지 빠지면 진입"
+        return "👀 타점 위(이미 급등) — 눌림 대기·주시"
     nh = (r.get("newhigh") or {}).get("pct_from_high")
     room = nh is not None and nh <= -12       # 신고가까지 12%+ 남음 = 올라갈 방 충분
     sup = _support_below(r)
@@ -130,9 +135,11 @@ def _headline(r: dict, rec: int) -> tuple[str, str]:
         return "#16a34a", f"⭐ 진입 추천 (체크리스트 {rec}/6) — 조건 양호, 분할 진입 검토."
     if r.get("chase") or _overextended(r):
         ext = r.get("ext") or {}
-        return "#d97706", (
-            f"🔺 이미 많이 올라 타점이 멂(MA20 +{ext.get('ma20_stretch',0)*100:.0f}% · "
-            f"최근저점 +{ext.get('runup10',0)*100:.0f}%) — 전환이어도 지금 진입은 추격. 눌림 대기.")
+        hot = (r.get("chase") or ext.get("ma20_stretch", 0) >= 0.08
+               or ext.get("runup10", 0) >= 0.13)
+        if hot:
+            return "#d97706", "🔺 이미 급등 — 지금 진입은 추격. 눌림(반등구간) 대기."
+        return "#d97706", "🔺 고점권(52주 고가 근처) — 신규 추격 주의, 눌림 대기."
     if stage >= 3:
         return "#16a34a", "🟢 전환 후보 — 돌파·거래량 확인되면 진입."
     if pos == "고점권":
@@ -153,29 +160,30 @@ def plan_html(r: dict) -> str:
     color, head = _headline(r, rec)
     f = lambda v: _fmt(v, ccy)
 
-    # 진입 설명 — 타이밍과 일치(지금 vs 눌림 대기 vs 돌파 대기)
+    # 진입 설명 — 타이밍과 일치(지금 vs 눌림 대기 vs 돌파 대기). 한 줄로 핵심만.
     kind = r.get("entry_kind", "now")
     if kind == "breakout":
-        entry_desc = (f"<b>지금 사는 게 아님.</b> 저항 <b>{f(sr['box_high'])}</b>를 "
-                      f"거래량 동반 돌파+종가 안착하면 매수.")
-        entry_src = "진입가 = 저항 돌파 자리(고점권이라 돌파 확인 후)."
+        entry_desc = f"저항 {f(sr['box_high'])} 돌파+안착 시 <b>지금 아님</b>"
+        entry_src = "고점권이라 저항 돌파 자리에서 매수(돌파 확인 후)."
     elif kind == "pullback":
-        entry_desc = (f"<b>지금 말고</b> — 이미 급등(현재가 {f(price)})이라 "
-                      f"<b>1차 반등구간 {f(entry)}까지 눌릴 때</b> 매수.")
-        entry_src = "진입가 = 이미 올라 타점이 멂 → 1차 반등(지지 겹침) 구간에서."
+        entry_desc = f"1차 반등 {f(entry)}까지 눌릴 때 <b>지금 아님</b>"
+        entry_src = "이미 올라 타점이 멂 → 1차 반등(지지 겹침) 구간에서."
+    elif r.get("chase") or _overextended(r):
+        # 현재가지만 이미 고점권/급등 → 받칠 반등구간이 명확치 않음. '지금 가능' 금지.
+        entry_desc = "이미 고점권 — <b>신규 추격 보류</b>, 눌림·되돌림 확인 후"
+        entry_src = "고점권이라 현재가 신규 진입은 추격 → 관망/대기."
     else:
-        entry_desc = (f"<b>지금 매수 가능</b> — 지지 바로 위라 현재가 {f(price)} 분할 "
-                      f"(지지 확인하며).")
-        entry_src = "진입가 = 지지 근처(타점권)라 현재가에서 분할."
+        entry_desc = f"지지 바로 위 → 현재가 분할 <b>지금 가능</b>"
+        entry_src = "지지 근처(타점권)라 현재가에서 분할."
 
-    # 손절 설명 — 방어선(지지 구조)과 손절선(실제 매도가)을 명확히 구분
+    # 손절 설명 — 핵심만. 방어선 vs 손절 구분은 '자세히'로.
     ds = sr.get("defense_strength", "")
-    stop_desc = (
-        f"= <b>실제 파는 가격.</b> 방어선 {f(sr['defense'])} 약간 아래 또는 "
-        f"ATR손절 {f(risk['atr_stop'])} 중 가까운 쪽 자동 채택.<br>"
-        f"<span class='dim'>※ <b>방어선 {f(sr['defense'])}</b>({ds}) = 추세가 살아있는 "
-        f"마지노선(지지 구조). 이게 <b>종가로 깨지면 추세 훼손</b> → 그때 손절 실행. "
-        f"방어선=벽, 손절=내가 빠져나오는 문.</span>")
+    stop_desc = f"방어선 {f(sr['defense'])} 종가 이탈 시 전량"
+    stop_more = (
+        f"<b>손절</b> {f(risk['stop'])} = 실제 파는 가격(방어선 약간 아래 또는 "
+        f"ATR손절 {f(risk['atr_stop'])} 중 가까운 쪽).<br>"
+        f"<b>방어선</b> {f(sr['defense'])}({ds}) = 추세가 살아있는 마지노선(지지 구조). "
+        f"종가로 깨지면 추세 훼손 → 그때 손절 실행. <b>방어선=벽, 손절=빠져나오는 문.</b>")
 
     # 비중
     shares = risk.get("shares", 0)
@@ -190,8 +198,13 @@ def plan_html(r: dict) -> str:
     if pos == "고점권":
         rules.append(f"<b>매수</b>: 저항 {f(sr['box_high'])}를 평소 1.5배↑ 거래량으로 "
                      f"돌파+종가 안착 → 진입")
+    elif kind == "pullback":
+        rules.append(f"<b>매수</b>: 이미 급등 — <b>1차 반등 {f(entry)}까지 눌리면</b> 분할 진입 "
+                     f"(지금 추격 금지)")
     elif r.get("transition_stage", 0) >= 2:
         rules.append("<b>매수</b>: 돌파선 위에서 되눌림 후 안착(상승추세선 형성) 확인 → 분할 진입")
+    elif r.get("chase") or _overextended(r):
+        rules.append("<b>매수</b>: 이미 고점권 — 신규 추격 금지. 눌림(반등구간) 확인 후 분할")
     else:
         rules.append(f"<b>매수</b>: 현재가 부근 지지 확인 후 분할 (적극 진입은 신호 강화 시)")
     rules.append(f"<b>손절</b>: 방어선 {f(sr['defense'])} 종가 이탈 → 전량 정리(무조건)")
@@ -218,7 +231,7 @@ def plan_html(r: dict) -> str:
         color=color, head=html.escape(head), why=why, timing=tm_html,
         zones=zones_html,
         entry=f(entry), entry_desc=entry_desc, entry_src=entry_src,
-        stop=f(risk["stop"]), stop_desc=stop_desc,
+        stop=f(risk["stop"]), stop_desc=stop_desc, stop_more=stop_more,
         target=f(risk["target"]), rr=f"{risk['rr']:.0f}",
         pos_desc=pos_desc, rules=rules_html)
 
@@ -260,15 +273,21 @@ _TMPL = """<div class="plan">
   </div>
   {timing}
   {zones}
-  <div class="plan-why">{why}</div>
   <table class="plan-tb">
-    <tr><th>진입</th><td><b class="big">{entry}</b><div class="d">{entry_desc}</div>
-      <div class="src">{entry_src}</div></td></tr>
-    <tr><th>손절</th><td><b class="big">{stop}</b><div class="d">{stop_desc}</div></td></tr>
+    <tr><th>진입</th><td><b class="big">{entry}</b> <span class="d">{entry_desc}</span></td></tr>
+    <tr><th>손절</th><td><b class="big">{stop}</b> <span class="d">{stop_desc}</span></td></tr>
     <tr><th>목표</th><td><b class="big">{target}</b> <span class="dim">손익비 1:{rr}</span></td></tr>
-    <tr><th>비중</th><td>{pos_desc}</td></tr>
   </table>
-  <div class="plan-rules"><div class="rh">규칙 (If-Then)</div><ul>{rules}</ul></div>
+  <details class="plan-more">
+    <summary>자세히 — 근거·비중·규칙</summary>
+    <div class="pm-body">
+      <div class="plan-why">{why}</div>
+      <div class="mrow"><span class="ml">진입 근거</span> {entry_src}</div>
+      <div class="mrow"><span class="ml">손절·방어선</span> {stop_more}</div>
+      <div class="mrow"><span class="ml">비중</span> {pos_desc}</div>
+      <div class="plan-rules"><div class="rh">규칙 (If-Then)</div><ul>{rules}</ul></div>
+    </div>
+  </details>
   <div class="plan-warn">⚠️ 차트 기준 일반 가이드 · 투자권유 아님. 실적·뉴스·갭은 별도 확인.</div>
 </div>"""
 
@@ -295,16 +314,26 @@ PLAN_CSS = """
   .pmap .zn{color:#2563eb;font-weight:700;font-size:11px}
   .plan-why{padding:7px 14px;font-size:12px;color:#64748b;border-bottom:1px solid #f1f5f9;
     overflow-wrap:anywhere}
-  .plan-tb{width:100%;border-collapse:collapse;table-layout:fixed}
+  .plan-tb{width:100%;border-collapse:collapse;table-layout:fixed;margin-top:4px}
   .plan-tb td,.plan-zones li{overflow-wrap:anywhere;word-break:break-word}
-  .plan-tb th{width:54px;text-align:left;vertical-align:top;padding:10px 0 10px 14px;
+  .plan-tb th{width:50px;text-align:left;vertical-align:baseline;padding:11px 0 11px 14px;
     color:#64748b;font-size:13px;font-weight:700}
-  .plan-tb td{padding:10px 14px 10px 6px;border-bottom:1px solid #f5f7fa;font-size:13.5px}
-  .plan-tb .big{font-size:17px;color:#0f172a}
-  .plan-tb .d{font-size:12.5px;color:#475569;margin-top:3px;line-height:1.6}
-  .plan-tb .src{font-size:11px;color:#94a3b8;margin-top:3px}
+  .plan-tb td{padding:11px 14px 11px 6px;border-bottom:1px solid #f5f7fa;font-size:13.5px;
+    vertical-align:baseline}
+  .plan-tb .big{font-size:18px;color:#0f172a}
+  .plan-tb .d{font-size:12.5px;color:#475569}
   .plan .dim{color:#94a3b8;font-weight:400;font-size:11.5px}
-  .plan-rules{padding:10px 14px}
+  .plan-more{border-top:1px solid #f1f5f9}
+  .plan-more>summary{padding:9px 14px;font-size:12.5px;font-weight:700;color:#475569;
+    cursor:pointer;list-style:none;background:#fbfcfe}
+  .plan-more>summary::-webkit-details-marker{display:none}
+  .plan-more>summary::before{content:"▸ ";color:#94a3b8}
+  .plan-more[open]>summary::before{content:"▾ "}
+  .pm-body{padding:2px 0 6px}
+  .pm-body .plan-why{border-bottom:none}
+  .mrow{padding:6px 14px;font-size:12px;color:#475569;line-height:1.6;overflow-wrap:anywhere}
+  .mrow .ml{display:inline-block;font-weight:700;color:#334155;margin-right:4px}
+  .plan-rules{padding:8px 14px}
   .plan-rules .rh{font-weight:700;font-size:13px;color:#334155;margin-bottom:4px}
   .plan-rules ul{margin:0;padding-left:18px} .plan-rules li{margin:4px 0;font-size:13px}
   .plan-warn{padding:8px 14px;background:#fffbeb;color:#92400e;font-size:11.5px}

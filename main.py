@@ -183,6 +183,8 @@ def main():
                     help="캐시된 모든 종목을 스크리너 대상으로(즉석조회 추가분 포함)")
     ap.add_argument("--add", metavar="SYM",
                     help="티커/코드를 캐시에 추가·갱신(즉석조회를 스크리너에 영구 반영)")
+    ap.add_argument("--fix-names", action="store_true",
+                    help="유니버스에서 이름 미확보(name=code) 종목의 실제 종목명 보정")
     ap.add_argument("--prune", metavar="SPEC",
                     help="캐시 정리: 'korean'=한국 6자리 전부 / 'CODE[,CODE]'=지정 종목")
     ap.add_argument("--update-top", type=int, metavar="N", default=0,
@@ -211,14 +213,23 @@ def main():
         print(f"어닝 캐시 갱신: {n}종목 발표일 확보 / 캐시 {len(cache.cached_codes())}종목")
         return
 
+    if args.fix_names:
+        from scanner import universe
+        n = universe.fix_names()
+        print(f"유니버스 종목명 보정: {n}종목 이름 확보(코드→실제명)")
+        return
+
     if args.add:
         from scanner import cache, universe
         code = args.add.strip().upper()
         try:
             d = cache.update(code)
+            # 실제 종목명 best-effort 조회 → 이름으로 검색 가능하게(즉석조회 종목)
+            nm = universe.resolve_name(code)
             # 유니버스(git 추적)에도 영구 등록 → 캐시 리셋에도 안 사라짐
-            added = universe.add_one(code)
-            print(f"캐시 추가/갱신: {code} ({len(d)}행) · 총 {len(cache.cached_codes())}종목"
+            added = universe.add_one(code, name=nm)
+            print(f"캐시 추가/갱신: {code}{f' ({nm})' if nm else ''} ({len(d)}행) · "
+                  f"총 {len(cache.cached_codes())}종목"
                   f"{' · 유니버스 영구등록' if added else ''}")
         except Exception as e:
             print(f"[{code}] 캐시 추가 실패: {type(e).__name__}: {e}", file=sys.stderr)

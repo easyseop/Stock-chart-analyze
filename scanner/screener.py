@@ -91,14 +91,19 @@ def _rows(results: list[dict]) -> str:
         stip = html.escape(_STAGE_TIP.get(stg, ""), quote=True)
         ko = names_ko.ko(code)
         ko_html = (f'<span class="ko">{html.escape(ko)}</span>' if ko else "")
+        price = (r.get("sr") or {}).get("price")
+        price_attr = f"{price:.4f}" if price is not None else ""
         out.append(
             f'<tr class="b-{b}{" rec" if recd else ""}" data-bucket="{b}" '
-            f'data-stage="{stg}" data-rec="{rec}">'
+            f'data-stage="{stg}" data-rec="{rec}" data-code="{code}" '
+            f'data-price="{price_attr}" data-ccy="{r.get("ccy","USD")}">'
             f'<td data-label="신호" title="{gtip}">'
             f'<span class="sig">{star}{html.escape(gauge)}</span></td>'
-            f'<td class="nm"><a href="stocks/{code}.html">'
+            f'<td class="nm"><button class="hold" onclick="toggleHold(event,\'{code}\')" '
+            f'title="내 종목(매수) 담기">☆</button><a href="stocks/{code}.html">'
             f'{html.escape(r["name"])}</a>{ko_html}'
-            f'<span class="cd">{html.escape(code)}</span></td>'
+            f'<span class="cd">{html.escape(code)}</span>'
+            f'<span class="pl" data-code="{code}"></span></td>'
             f'<td data-label="전환단계" data-v="{stg}" class="num stg" '
             f'title="{stip}">{stg_lab}</td>'
             f'<td data-label="추세">{tone}</td>'
@@ -221,6 +226,14 @@ _INDEX_TMPL = """<!DOCTYPE html><html lang="ko"><head>
   .bar2{{padding-top:0}} .barlbl{{font-size:12px;color:#94a3b8;font-weight:600;align-self:center}}
   .stagechip{{background:#ecfdf5;border-color:#a7f3d0;color:#065f46;font-size:12px}}
   .stagechip.on{{background:#16a34a;border-color:#16a34a;color:#fff}}
+  .holdchip{{background:#fffbeb;border-color:#f59e0b;color:#92400e;font-weight:700}}
+  .holdchip.on{{background:#f59e0b;border-color:#f59e0b;color:#fff}}
+  .hold{{border:0;background:none;cursor:pointer;font-size:16px;color:#cbd5e1;padding:0 6px 0 0;
+    line-height:1;vertical-align:middle}}
+  .hold.on{{color:#f59e0b}}
+  .pl{{font-size:11.5px;font-weight:700;margin-left:7px;white-space:nowrap}}
+  .pl.up{{color:#16a34a}} .pl.dn{{color:#dc2626}}
+  tr.held{{background:#fffdf3}}
   .pos{{color:#16a34a}}.neg{{color:#dc2626}}
   .prog{{padding:8px 16px 0}}
   .ptxt{{font-size:12px;color:#475569;margin-bottom:4px}}
@@ -312,6 +325,7 @@ _INDEX_TMPL = """<!DOCTYPE html><html lang="ko"><head>
   {chips}
 </div>
 <div class="bar bar2"><span class="barlbl">전환단계</span>{stage_chips}
+  <button class="chip holdchip" id="holdchip" onclick="fltHold()" style="display:none">💼 내 종목 <span id="holdn">0</span></button>
   <a class="chip" href="guide.html" style="text-decoration:none">📘 가이드</a>
   <a class="chip" href="lookup.html" style="background:#0f172a;color:#fff;border-color:#0f172a;text-decoration:none">➕ 즉석조회</a>
 </div>
@@ -382,8 +396,58 @@ _INDEX_TMPL = """<!DOCTYPE html><html lang="ko"><head>
     }});
     qn.textContent=hit+'개';
   }}
+  // 💼 내 종목(매수/즐겨찾기) — 브라우저 localStorage에만 저장. 매수가 넣으면 손익(P/L) 표시.
+  function loadHold(){{try{{return JSON.parse(localStorage.getItem('holdings')||'{{}}');}}catch(e){{return {{}};}}}}
+  function saveHold(h){{localStorage.setItem('holdings',JSON.stringify(h));}}
+  function toggleHold(e,code){{
+    e.preventDefault();e.stopPropagation();
+    var h=loadHold();
+    if(h[code]){{ if(confirm(code+' 을(를) 내 종목에서 뺄까요?')){{delete h[code];}} }}
+    else{{
+      var row=tb.querySelector('tr[data-code="'+code+'"]');
+      var cur=row?parseFloat(row.dataset.price):NaN;
+      var v=prompt(code+' 매수가 입력(손익 표시) · 비우면 즐겨찾기만'
+        +(isFinite(cur)?'\\n현재가 '+cur:''),'');
+      if(v===null)return;                  // 취소
+      var buy=v?parseFloat(v.replace(/[^0-9.]/g,'')):0;
+      h[code]={{buy:isFinite(buy)?buy:0,ts:Date.now()}};
+    }}
+    saveHold(h);renderHold();
+  }}
+  function renderHold(){{
+    var h=loadHold(),keys=Object.keys(h);
+    document.getElementById('holdn').textContent=keys.length;
+    document.getElementById('holdchip').style.display=keys.length?'':'none';
+    tb.querySelectorAll('tr').forEach(function(r){{
+      var code=r.dataset.code,on=!!h[code];
+      r.classList.toggle('held',on);
+      var btn=r.querySelector('.hold');
+      if(btn){{btn.textContent=on?'★':'☆';btn.classList.toggle('on',on);}}
+      var pl=r.querySelector('.pl[data-code="'+code+'"]');
+      if(pl){{
+        pl.className='pl';pl.innerHTML='';
+        if(on&&h[code].buy){{
+          var cur=parseFloat(r.dataset.price);
+          if(isFinite(cur)){{
+            var pct=(cur/h[code].buy-1)*100;
+            pl.classList.add(pct>=0?'up':'dn');
+            pl.innerHTML=(pct>=0?'+':'')+pct.toFixed(1)+'% '
+              +'<span style="color:#94a3b8;font-weight:400">@'+h[code].buy+'</span>';
+          }}
+        }}
+      }}
+    }});
+  }}
+  function fltHold(){{
+    setOn(typeof event!=='undefined'?event.target:null);
+    var h=loadHold();
+    tb.querySelectorAll('tr').forEach(function(r){{
+      r.style.display=h[r.dataset.code]?'':'none';
+    }});
+  }}
   // 첫 화면: ⭐진입 추천(체크리스트 4/6+)만 우선. 없으면 전환후보, 그래도 없으면 전체.
   window.addEventListener('load',function(){{
+    renderHold();
     var rec=0,trans=0;
     tb.querySelectorAll('tr').forEach(function(r){{
       if(parseInt(r.dataset.rec||'0')>={recmin})rec++;
