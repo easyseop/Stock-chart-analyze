@@ -829,6 +829,11 @@ _PAPER_TMPL = """<!DOCTYPE html><html lang="ko"><head>
   </div>
 
   <div class="card">
+    <h2>📈 수익률 추이</h2>
+    <div id="chart"></div>
+  </div>
+
+  <div class="card">
     <h2>💡 추천 — 지금 진입 검토 <span class="cnt" id="nown"></span></h2>
     <div id="picksNow"></div>
     <h2 style="margin-top:14px">👀 곧 올 자리 · 전환 임박 (관찰) <span class="cnt" id="watchn"></span></h2>
@@ -849,6 +854,16 @@ _PAPER_TMPL = """<!DOCTYPE html><html lang="ko"><head>
   <div class="card">
     <h2>🧾 매매일지</h2>
     <div id="log"></div>
+  </div>
+
+  <div class="card">
+    <h2>💾 백업 / 복원 <span class="cnt">다른 기기로 옮기기</span></h2>
+    <div class="sub" style="margin:0 0 8px">서버 없이 여러 기기에서 쓰는 법: 이 기기에서 <b>백업코드 복사</b> → 다른 기기 모의투자 페이지에서 <b>붙여넣고 복원</b>.</div>
+    <textarea id="ioarea" rows="3" style="width:100%;box-sizing:border-box;border:1px solid #cbd5e1;border-radius:8px;padding:9px;font-size:12px" placeholder="백업코드가 여기 표시됩니다 / 복원할 코드를 여기 붙여넣으세요"></textarea>
+    <div style="display:flex;gap:8px;margin-top:8px">
+      <button onclick="exportData()" style="flex:1;padding:10px;border:0;border-radius:8px;background:#334155;color:#fff;font-weight:700;cursor:pointer">📤 백업코드 복사</button>
+      <button onclick="importData()" style="flex:1;padding:10px;border:1px solid #cbd5e1;border-radius:8px;background:#fff;font-weight:700;cursor:pointer">📥 복원</button>
+    </div>
   </div>
 </div>
 <script>
@@ -871,7 +886,48 @@ _PAPER_TMPL = """<!DOCTYPE html><html lang="ko"><head>
     document.getElementById('sumv').innerHTML=won(total)+' <span class="'+cls+'" style="font-size:18px">'+sign+pct.toFixed(2)+'%</span>';
     document.getElementById('sumsub').innerHTML='현금 '+won(a.cash)+' · 주식 '+won(stock)
       +' · 평가손익 <span class="'+cls+'">'+sign+won(pl)+'</span> · 시작금 '+won(a.start);
-    renderHolds(a); renderLog(a);
+    renderHolds(a); renderLog(a); renderChart(snapshot(total));
+  }
+  // 수익률 추이: 방문할 때마다 하루 1점씩 총평가액 스냅샷 저장 → equity curve
+  function loadHist(){try{return JSON.parse(localStorage.getItem('paper_hist'))||[];}catch(e){return [];}}
+  function snapshot(total){
+    var h=loadHist(), today=new Date().toISOString().slice(0,10);
+    if(h.length&&h[h.length-1].d===today){h[h.length-1].v=total;}
+    else{h.push({d:today,v:total});}
+    if(h.length>180)h=h.slice(-180);
+    localStorage.setItem('paper_hist',JSON.stringify(h));
+    return h;
+  }
+  function renderChart(h){
+    var el=document.getElementById('chart');
+    if(!h||h.length<2){el.innerHTML='<div class="muted">매일 방문하면 점이 하루 1개씩 쌓여 수익률 곡선이 그려져요 (현재 '+((h&&h.length)||1)+'일째).</div>';return;}
+    var vs=h.map(function(x){return x.v;});
+    var mn=Math.min.apply(null,vs.concat([START])), mx=Math.max.apply(null,vs.concat([START]));
+    var W=600,H=140,pad=10,rng=(mx-mn)||1;
+    function X(i){return pad+i*(W-2*pad)/(h.length-1);}
+    function Y(v){return pad+(H-2*pad)*(1-(v-mn)/rng);}
+    var pts=h.map(function(x,i){return X(i).toFixed(1)+','+Y(x.v).toFixed(1);}).join(' ');
+    var last=vs[vs.length-1], up=last>=START, col=up?'#16a34a':'#dc2626', bY=Y(START).toFixed(1);
+    el.innerHTML='<svg viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="none" style="width:100%;height:140px">'
+      +'<line x1="'+pad+'" y1="'+bY+'" x2="'+(W-pad)+'" y2="'+bY+'" stroke="#cbd5e1" stroke-dasharray="4 4"/>'
+      +'<polyline points="'+pts+'" fill="none" stroke="'+col+'" stroke-width="2" stroke-linejoin="round"/></svg>'
+      +'<div class="sub">최근 '+h.length+'일 · 점선=시작금 '+won(START)+'</div>';
+  }
+  // 백업/복원: 서버 없이 다른 기기로 이전(base64로 직렬화)
+  function exportData(){
+    var blob={a:load(),h:loadHist()};
+    var s=btoa(unescape(encodeURIComponent(JSON.stringify(blob))));
+    var t=document.getElementById('ioarea'); t.value=s; t.focus(); t.select();
+    try{document.execCommand('copy');}catch(e){}
+    alert('백업코드를 복사했어요. 다른 기기 모의투자 페이지의 복원칸에 붙여넣고 "복원"을 누르세요.');
+  }
+  function importData(){
+    var s=(document.getElementById('ioarea').value||'').trim(); if(!s){alert('복원할 백업코드를 붙여넣으세요.');return;}
+    try{var blob=JSON.parse(decodeURIComponent(escape(atob(s))));
+      if(blob.a&&blob.a.pos)save(blob.a);
+      if(blob.h)localStorage.setItem('paper_hist',JSON.stringify(blob.h));
+      render(); alert('복원 완료!');
+    }catch(e){alert('복원 실패 — 백업코드가 올바른지 확인하세요.');}
   }
   function renderHolds(a){
     var codes=Object.keys(a.pos), h=document.getElementById('holds');
