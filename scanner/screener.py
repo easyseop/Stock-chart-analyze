@@ -123,6 +123,42 @@ def _rows(results: list[dict]) -> str:
     return "".join(out)
 
 
+def _rec_card(p: dict, kind: str) -> str:
+    """홈 추천 카드 한 장(모의투자 큐레이션과 동일 — 진입 논리 포함)."""
+    ccy = p["ccy"]
+    fp = (lambda v: f"{v:,.0f}원") if ccy == "KRW" else (lambda v: f"${v:,.2f}")
+    vc = "up" if "타당" in p["verdict"] else ("dn" if "회피" in p["verdict"] else "")
+    stage = f'<span class="rtag">{html.escape(p["stage"])}</span>' if p["stage"] else ""
+    return (
+        f'<div class="rc {kind}">'
+        f'<div class="rch"><a href="stocks/{p["code"]}.html">{html.escape(p["name"])}</a>'
+        f'<span class="rtag">{html.escape(p["sig"])}</span>{stage}'
+        f'<span class="rvd {vc}">{html.escape(p["verdict"])}</span></div>'
+        f'<div class="rth">💡 나라면: {p["thesis"]}</div>'
+        f'<div class="rlv">진입 <b>{fp(p["entry"])}</b> · 손절 {fp(p["stop"])} · '
+        f'목표 {fp(p["target"])}</div></div>')
+
+
+def _recommend_html(results: list[dict]) -> str:
+    """홈 상단 '너라면 살 종목?' 추천 — 모의투자와 같은 큐레이션을 표 위에 노출."""
+    picks = _paper_picks(results)
+    now = "".join(_rec_card(p, "now") for p in picks["now"])
+    watch = "".join(_rec_card(p, "watch") for p in picks["watch"])
+    now_sec = (f'<div class="rsec">🟢 지금 진입 검토 <b>{len(picks["now"])}</b></div>{now}'
+               if now else
+               '<div class="rsec">🟢 지금 진입 검토 <b>0</b></div>'
+               '<div class="rmuted">지금 바로 살 자리는 없음(시장 하락 등) — '
+               '아래 곧 올 자리 위주로 주시.</div>')
+    watch_sec = (f'<div class="rsec" style="margin-top:12px">👀 곧 올 자리·전환 임박 '
+                 f'<b>{len(picks["watch"])}</b></div>{watch}' if watch else "")
+    return (f'<details class="reco" open>'
+            f'<summary>💡 너라면 살 종목? — 큐레이션 추천 (진입 논리 포함)</summary>'
+            f'<div class="rbody">{now_sec}{watch_sec}'
+            f'<div class="rmuted">⚠️ 차트 기준 추천 · 투자권유 아님. 종목 눌러 상세 확인 · '
+            f'<a href="paper.html" style="color:#15803d;font-weight:700">💰 모의투자로 연습</a></div>'
+            f'</div></details>')
+
+
 def _index(results: list[dict]) -> str:
     import datetime
     from scanner import cache, universe
@@ -159,6 +195,7 @@ def _index(results: list[dict]) -> str:
     return _INDEX_TMPL.format(
         n=len(results), rows=_rows(results), chips=chips, rcount=rcount,
         recmin=REC_MIN, stage_chips=stage_chips, region_chips=region_chips,
+        reco=_recommend_html(results),
         cached=cached, uni=uni, pct=pct, updated=updated)
 
 
@@ -220,9 +257,11 @@ def _paper_picks(results: list[dict]) -> dict:
         stage = r.get("transition_stage", 0)
         kind = r.get("entry_kind", "now")
         item = _pick_item(r, th)
+        # 지금 진입 가능(now)이고 신호가 약하지 않으면 추천 노출 — '너라면 살 종목'.
+        #   (kind==now은 이미 과열·하락추세·돌파대기 제외 = 지지 근처 '지금 분할' 자리)
         is_now = th["now"] and (
             rec >= REC_MIN or (tm and "🎯" in tm)
-            or (kind == "now" and stage >= 3 and r.get("norm", 0) >= config.VERDICT_WEAK))
+            or (kind == "now" and r.get("norm", 0) >= config.VERDICT_WEAK))
         is_watch = (not th["now"]) and (
             kind in ("pullback", "breakout") or stage in (1, 2))
         if is_now:
@@ -231,8 +270,22 @@ def _paper_picks(results: list[dict]) -> dict:
             watch.append((stage, r.get("norm", 0), item))
     now.sort(key=lambda x: (x[0], x[1]), reverse=True)
     watch.sort(key=lambda x: (x[0], x[1]), reverse=True)
-    return {"now": [i for _a, _b, i in now[:16]],
-            "watch": [i for _a, _b, i in watch[:16]]}
+
+    def _dedup(rows, seen, n):
+        out = []
+        for _a, _b, i in rows:
+            if i["name"] in seen:
+                continue
+            seen.add(i["name"])
+            out.append(i)
+            if len(out) >= n:
+                break
+        return out
+
+    seen = set()
+    now_p = _dedup(now, seen, 16)
+    watch_p = _dedup(watch, seen, 16)
+    return {"now": now_p, "watch": watch_p}
 
 
 def _paper_page(results: list[dict]) -> str:
@@ -313,6 +366,22 @@ _INDEX_TMPL = """<!DOCTYPE html><html lang="ko"><head>
   .notice>summary{{cursor:pointer;padding:9px 13px;font-size:13px;font-weight:600;color:#334155}}
   .notice .nc{{padding:2px 15px 12px;font-size:12.5px;color:#475569;line-height:1.8}}
   .notice .nc b{{color:#0f172a}} .notice .ndim{{color:#94a3b8;font-size:11.5px}}
+  .reco{{margin:10px 16px 0;background:#fff;border:1px solid #e2e8f0;border-radius:12px}}
+  .reco>summary{{cursor:pointer;padding:11px 14px;font-size:14px;font-weight:800;color:#0f172a}}
+  .rbody{{padding:4px 14px 12px}}
+  .rsec{{font-size:13px;font-weight:800;color:#334155;margin:8px 0 7px}}
+  .rsec b{{color:#2563eb}}
+  .rc{{border:1px solid #e2e8f0;border-radius:10px;padding:10px 11px;margin-bottom:8px}}
+  .rc.now{{border-left:4px solid #16a34a}} .rc.watch{{border-left:4px solid #f59e0b}}
+  .rch{{display:flex;align-items:center;gap:6px;flex-wrap:wrap}}
+  .rch a{{font-size:14.5px;font-weight:700;color:#0f172a;text-decoration:none}}
+  .rtag{{font-size:11px;font-weight:700;padding:2px 7px;border-radius:999px;background:#f1f5f9;color:#475569}}
+  .rvd{{font-size:12px;font-weight:800;margin-left:auto}}
+  .rvd.up{{color:#16a34a}} .rvd.dn{{color:#dc2626}}
+  .rth{{font-size:12.5px;color:#334155;line-height:1.6;margin:6px 0 5px}}
+  .rth b{{color:#0f172a}}
+  .rlv{{font-size:12px;color:#475569}} .rlv b{{color:#0f172a}}
+  .rmuted{{font-size:12px;color:#94a3b8;padding:4px 0}}
   .prog{{padding:8px 16px 0}}
   .ptxt{{font-size:12px;color:#475569;margin-bottom:4px}}
   .pbarw{{height:10px;background:#e2e8f0;border-radius:999px;overflow:hidden}}
@@ -414,6 +483,7 @@ _INDEX_TMPL = """<!DOCTYPE html><html lang="ko"><head>
   {region_chips}
   {chips}
 </div>
+{reco}
 <div class="bar bar2"><span class="barlbl">전환단계</span>{stage_chips}
   <button class="chip holdchip" id="holdchip" onclick="fltHold()" style="display:none">💼 내 종목 <span id="holdn">0</span></button>
   <a class="chip" href="paper.html" style="background:#15803d;color:#fff;border-color:#15803d;text-decoration:none">💰 모의투자</a>
