@@ -93,15 +93,19 @@ def _rows(results: list[dict]) -> str:
         ko_html = (f'<span class="ko">{html.escape(ko)}</span>' if ko else "")
         price = (r.get("sr") or {}).get("price")
         price_attr = f"{price:.4f}" if price is not None else ""
+        ccy = r.get("ccy", "USD")
+        region = "kr" if ccy == "KRW" else "us"
+        flag = "🇰🇷" if region == "kr" else "🇺🇸"
         out.append(
             f'<tr class="b-{b}{" rec" if recd else ""}" data-bucket="{b}" '
             f'data-stage="{stg}" data-rec="{rec}" data-code="{code}" '
-            f'data-price="{price_attr}" data-ccy="{r.get("ccy","USD")}">'
+            f'data-price="{price_attr}" data-ccy="{ccy}" data-region="{region}">'
             f'<td data-label="신호" title="{gtip}">'
             f'<span class="sig">{star}{html.escape(gauge)}</span></td>'
             f'<td class="nm"><button class="hold" onclick="toggleHold(event,\'{code}\')" '
-            f'title="내 종목(매수) 담기">☆</button><a href="stocks/{code}.html">'
-            f'{html.escape(r["name"])}</a>{ko_html}'
+            f'title="내 종목(매수) 담기">☆</button>'
+            f'<span class="rgn" title="{"국내(한국)" if region=="kr" else "해외(미국)"}">{flag}</span>'
+            f'<a href="stocks/{code}.html">{html.escape(r["name"])}</a>{ko_html}'
             f'<span class="cd">{html.escape(code)}</span>'
             f'<span class="pl" data-code="{code}"></span></td>'
             f'<td data-label="전환단계" data-v="{stg}" class="num stg" '
@@ -137,6 +141,12 @@ def _index(results: list[dict]) -> str:
     stage_chips = "".join(
         f'<button class="chip stagechip" onclick="fltStageN({s})">{stage_lab[s]} {scnt[s]}</button>'
         for s in (1, 2, 3, 4) if scnt[s])
+    # 국내(한국)/해외(미국) 구분 필터
+    n_us = sum(1 for r in results if r.get("ccy") != "KRW")
+    n_kr = sum(1 for r in results if r.get("ccy") == "KRW")
+    region_chips = (
+        f'<button class="chip rgnchip" onclick="fltRegion(\'us\')">🇺🇸 해외 {n_us}</button>'
+        f'<button class="chip rgnchip" onclick="fltRegion(\'kr\')">🇰🇷 국내 {n_kr}</button>')
     # 수집 진행률(캐시된 종목 / 유니버스 전체)
     try:
         cached = len(cache.cached_codes())
@@ -147,7 +157,7 @@ def _index(results: list[dict]) -> str:
     updated = datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M UTC")
     return _INDEX_TMPL.format(
         n=len(results), rows=_rows(results), chips=chips, rcount=rcount,
-        recmin=REC_MIN, stage_chips=stage_chips,
+        recmin=REC_MIN, stage_chips=stage_chips, region_chips=region_chips,
         cached=cached, uni=uni, pct=pct, updated=updated)
 
 
@@ -228,6 +238,9 @@ _INDEX_TMPL = """<!DOCTYPE html><html lang="ko"><head>
   .stagechip.on{{background:#16a34a;border-color:#16a34a;color:#fff}}
   .holdchip{{background:#fffbeb;border-color:#f59e0b;color:#92400e;font-weight:700}}
   .holdchip.on{{background:#f59e0b;border-color:#f59e0b;color:#fff}}
+  .rgnchip{{background:#f8fafc;font-weight:700}}
+  .rgnchip.on{{background:#334155;border-color:#334155;color:#fff}}
+  .rgn{{font-size:12px;margin-right:4px;vertical-align:middle}}
   .hold{{border:0;background:none;cursor:pointer;font-size:16px;color:#cbd5e1;padding:0 6px 0 0;
     line-height:1;vertical-align:middle}}
   .hold.on{{color:#f59e0b}}
@@ -337,6 +350,7 @@ _INDEX_TMPL = """<!DOCTYPE html><html lang="ko"><head>
 <div class="bar">
   <button class="chip rec-chip on" onclick="fltRec()">⭐ 진입 추천 {rcount}</button>
   <button class="chip" onclick="flt('all')">전체</button>
+  {region_chips}
   {chips}
 </div>
 <div class="bar bar2"><span class="barlbl">전환단계</span>{stage_chips}
@@ -380,6 +394,13 @@ _INDEX_TMPL = """<!DOCTYPE html><html lang="ko"><head>
     setOn(typeof event!=='undefined'?event.target:null);
     tb.querySelectorAll('tr').forEach(function(r){{
       r.style.display=(parseInt(r.dataset.stage||'0')>0)?'':'none';
+    }});
+  }}
+  // 국내(한국)/해외(미국) 필터
+  function fltRegion(rg){{
+    setOn(typeof event!=='undefined'?event.target:null);
+    tb.querySelectorAll('tr').forEach(function(r){{
+      r.style.display=(r.dataset.region===rg)?'':'none';
     }});
   }}
   // 전환단계 ①~④ 각각 필터
