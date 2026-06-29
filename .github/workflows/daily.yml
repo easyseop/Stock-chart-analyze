@@ -75,7 +75,7 @@ jobs:
       #   수동(dispatch)=입력값(none=재배포만·top=상위300·full=전체). none이면 데이터 안 받음 → 1~2분.
       - name: 데이터 갱신 (범위별)
         env:
-          MODE: ${{ github.event_name == 'push' && 'full' || (github.event_name == 'workflow_dispatch' && github.event.inputs.update || (github.event.schedule == '0 22 * * 1-5' && 'full' || (github.event.schedule == '*/30 0-6 * * 1-5' && 'kr' || 'top'))) }}
+          MODE: ${{ github.event_name == 'push' && 'none' || (github.event_name == 'workflow_dispatch' && github.event.inputs.update || (github.event.schedule == '0 22 * * 1-5' && 'full' || (github.event.schedule == '*/30 0-6 * * 1-5' && 'kr' || 'top'))) }}
         run: |
           echo "갱신 모드: $MODE"
           if [ "$MODE" = "full" ]; then
