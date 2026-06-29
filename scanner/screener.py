@@ -41,7 +41,8 @@ def _detail(result: dict, frames: dict) -> str:
     return lwc.detail(result, frames)
 
 
-from scanner.plan import rec_n as _rec_n, REC_MIN, timing as _timing
+from scanner.plan import (rec_n as _rec_n, REC_MIN, timing as _timing,
+                          thesis as _plan_thesis)
 
 
 def _sign(v) -> str:
@@ -186,7 +187,67 @@ def build(results: list[dict], frames_map: dict[str, dict],
         fp.write(_REPO and _trigger_page())   # 웹 즉석 조회(워크플로 트리거) 페이지
     with open(os.path.join(out_dir, "guide.html"), "w", encoding="utf-8") as fp:
         fp.write(_GUIDE_HTML)                  # 매매 가이드(읽기 전용 안내)
+    with open(os.path.join(out_dir, "paper.html"), "w", encoding="utf-8") as fp:
+        fp.write(_paper_page(results))         # 모의투자(페이퍼 트레이딩)
     return out_dir
+
+
+# ── 모의투자(페이퍼 트레이딩) 페이지 ──────────────────────────────
+def _pick_item(r: dict, th: dict) -> dict:
+    risk = r.get("risk") or {}
+    p = (r.get("sr") or {}).get("price")
+    return {
+        "code": r["code"], "name": r["name"], "ccy": r.get("ccy", "USD"),
+        "price": round(float(p), 4) if p else 0,
+        "sig": r["gauge"], "stage": r.get("transition_label") or "",
+        "verdict": th["verdict"], "thesis": th["thesis"],
+        "entry": round(float(r.get("entry") or 0), 4),
+        "stop": round(float((risk.get("stop") or 0)), 4),
+        "target": round(float((risk.get("target") or 0)), 4),
+    }
+
+
+def _paper_picks(results: list[dict]) -> dict:
+    """추천 큐레이션: '지금 진입 검토'(now) vs '곧 올 자리·전환 임박'(watch)."""
+    import config
+    now, watch = [], []
+    for r in results:
+        if r.get("vetoed") or r.get("entry_kind") == "avoid":
+            continue
+        th = _plan_thesis(r)
+        rec = _rec_n(r)
+        tm = _timing(r)
+        stage = r.get("transition_stage", 0)
+        kind = r.get("entry_kind", "now")
+        item = _pick_item(r, th)
+        is_now = th["now"] and (
+            rec >= REC_MIN or (tm and "🎯" in tm)
+            or (kind == "now" and stage >= 3 and r.get("norm", 0) >= config.VERDICT_WEAK))
+        is_watch = (not th["now"]) and (
+            kind in ("pullback", "breakout") or stage in (1, 2))
+        if is_now:
+            now.append((rec, r.get("norm", 0), item))
+        elif is_watch:
+            watch.append((stage, r.get("norm", 0), item))
+    now.sort(key=lambda x: (x[0], x[1]), reverse=True)
+    watch.sort(key=lambda x: (x[0], x[1]), reverse=True)
+    return {"now": [i for _a, _b, i in now[:16]],
+            "watch": [i for _a, _b, i in watch[:16]]}
+
+
+def _paper_page(results: list[dict]) -> str:
+    import json
+    prices = {}
+    for r in results:
+        p = (r.get("sr") or {}).get("price")
+        if p is None:
+            continue
+        prices[r["code"]] = [r["name"], round(float(p), 4), r.get("ccy", "USD")]
+    picks = _paper_picks(results)
+    return (_PAPER_TMPL
+            .replace("__PRICES__", json.dumps(prices, ensure_ascii=False))
+            .replace("__PICKS__", json.dumps(picks, ensure_ascii=False))
+            .replace("__FX__", "1380"))
 
 
 # 저장소 정보(워크플로 트리거 대상). 다른 저장소면 여기만 바꾸면 됨.
@@ -355,6 +416,7 @@ _INDEX_TMPL = """<!DOCTYPE html><html lang="ko"><head>
 </div>
 <div class="bar bar2"><span class="barlbl">전환단계</span>{stage_chips}
   <button class="chip holdchip" id="holdchip" onclick="fltHold()" style="display:none">💼 내 종목 <span id="holdn">0</span></button>
+  <a class="chip" href="paper.html" style="background:#15803d;color:#fff;border-color:#15803d;text-decoration:none">💰 모의투자</a>
   <a class="chip" href="guide.html" style="text-decoration:none">📘 가이드</a>
   <a class="chip" href="lookup.html" style="background:#0f172a;color:#fff;border-color:#0f172a;text-decoration:none">➕ 즉석조회</a>
 </div>
@@ -700,6 +762,195 @@ _LOOKUP_TMPL = """<!DOCTYPE html><html lang="ko"><head>
   window.addEventListener('load',function(){renderHist();resume();});
   window.addEventListener('focus',resume);
   document.addEventListener('visibilitychange',function(){if(!document.hidden)resume();});
+</script></body></html>"""
+
+
+_PAPER_TMPL = """<!DOCTYPE html><html lang="ko"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>모의투자</title>
+<style>
+  body{margin:0;font-family:-apple-system,'Segoe UI','Noto Sans KR',sans-serif;
+    background:#f1f5f9;color:#1e293b}
+  header{background:#0f172a;color:#fff;padding:13px 18px}
+  header a{color:#7dd3fc;font-size:13px;text-decoration:none}
+  header h1{margin:4px 0 0;font-size:17px}
+  .wrap{max-width:720px;margin:0 auto;padding:14px}
+  .card{background:#fff;border:1px solid #e2e8f0;border-radius:13px;padding:15px;margin-bottom:13px}
+  .sumv{font-size:30px;font-weight:800;letter-spacing:-.5px}
+  .sub{font-size:13px;color:#64748b;margin-top:5px;line-height:1.7}
+  .up{color:#16a34a}.dn{color:#dc2626}
+  h2{font-size:15px;margin:2px 0 10px;color:#0f172a;display:flex;align-items:center;gap:7px}
+  h2 .cnt{font-size:12px;color:#94a3b8;font-weight:600}
+  .pick{border:1px solid #e2e8f0;border-radius:11px;padding:11px 12px;margin-bottom:9px}
+  .pick.now{border-left:4px solid #16a34a}
+  .pick.watch{border-left:4px solid #f59e0b}
+  .pick .ph{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+  .pick .nm{font-size:15px;font-weight:700}
+  .pick .nm a{color:#0f172a;text-decoration:none}
+  .pick .tag{font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;background:#f1f5f9;color:#475569}
+  .pick .vd{font-size:12.5px;font-weight:800;margin:7px 0 4px}
+  .pick .th{font-size:12.5px;color:#334155;line-height:1.65}
+  .pick .lv{font-size:12px;color:#475569;margin-top:7px;display:flex;gap:12px;flex-wrap:wrap}
+  .pick .lv b{color:#0f172a}
+  .pick .buy{margin-top:9px;width:100%;padding:9px;border:0;border-radius:9px;
+    background:#15803d;color:#fff;font-size:14px;font-weight:700;cursor:pointer}
+  .pick.watch .buy{background:#fff;color:#b45309;border:1px solid #fcd34d}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th,td{padding:8px 6px;border-bottom:1px solid #eef2f7;text-align:right}
+  th{color:#64748b;font-size:11px;font-weight:700}
+  td.l,th.l{text-align:left}
+  .sell{padding:5px 10px;border:1px solid #fca5a5;background:#fff;color:#dc2626;
+    border-radius:7px;font-size:12px;font-weight:700;cursor:pointer}
+  .srch input{width:100%;box-sizing:border-box;padding:11px 12px;border:1px solid #cbd5e1;
+    border-radius:9px;font-size:16px}
+  .res{margin-top:8px} .res .r{display:flex;align-items:center;gap:8px;padding:7px 4px;
+    border-bottom:1px solid #f1f5f9;font-size:13px}
+  .res .r .bu{margin-left:auto;padding:5px 12px;border:0;border-radius:7px;background:#15803d;
+    color:#fff;font-weight:700;cursor:pointer;font-size:12px}
+  .logi{font-size:12.5px;padding:6px 2px;border-bottom:1px solid #f1f5f9;display:flex;gap:8px}
+  .logi .b{color:#16a34a;font-weight:700}.logi .s{color:#dc2626;font-weight:700}
+  .logi .tm{color:#94a3b8;margin-left:auto;font-size:11px}
+  .muted{color:#94a3b8;font-size:12.5px;text-align:center;padding:14px}
+  .rst{font-size:12px;color:#94a3b8;cursor:pointer;text-decoration:underline}
+  .warn{font-size:11.5px;color:#92400e;background:#fffbeb;border:1px solid #fde68a;
+    border-radius:9px;padding:9px 11px;margin-bottom:13px;line-height:1.6}
+  .flag{font-size:12px;margin-right:2px}
+</style></head><body>
+<header><a href="index.html">&larr; 스크리너</a>
+<h1>💰 모의투자 <span style="color:#86efac;font-size:13px">가상자금 페이퍼 트레이딩</span></h1></header>
+<div class="wrap">
+  <div class="warn">⚠️ <b>가상 거래</b>입니다(실제 주문 아님). 가격은 <b>30분마다 갱신되는 종가 기준</b>(실시간 아님)이고,
+    해외주는 <b>환율 __FX__원/$ 가정</b>으로 원화 환산해요. 데이터는 이 브라우저에만 저장됩니다.</div>
+
+  <div class="card">
+    <div class="sumv" id="sumv">–</div>
+    <div class="sub" id="sumsub"></div>
+    <div style="text-align:right;margin-top:6px"><span class="rst" onclick="reset()">초기화(1,000만원)</span></div>
+  </div>
+
+  <div class="card">
+    <h2>💡 추천 — 지금 진입 검토 <span class="cnt" id="nown"></span></h2>
+    <div id="picksNow"></div>
+    <h2 style="margin-top:14px">👀 곧 올 자리 · 전환 임박 (관찰) <span class="cnt" id="watchn"></span></h2>
+    <div id="picksWatch"></div>
+  </div>
+
+  <div class="card">
+    <h2>📊 보유 종목</h2>
+    <div id="holds"></div>
+  </div>
+
+  <div class="card srch">
+    <h2>🛒 직접 매수 (종목 검색)</h2>
+    <input id="q" type="search" placeholder="🔍 티커·종목명 (예: 삼성, AAPL)" oninput="search(this.value)">
+    <div class="res" id="res"></div>
+  </div>
+
+  <div class="card">
+    <h2>🧾 매매일지</h2>
+    <div id="log"></div>
+  </div>
+</div>
+<script>
+  var FX=__FX__, PRICES=__PRICES__, PICKS=__PICKS__, START=10000000;
+  function load(){var a;try{a=JSON.parse(localStorage.getItem('paper_v1'));}catch(e){a=null;}
+    if(!a||!a.pos){a={cash:START,start:START,pos:{},log:[]};}return a;}
+  function save(a){localStorage.setItem('paper_v1',JSON.stringify(a));}
+  function won(v){return Math.round(v).toLocaleString('ko-KR')+'원';}
+  function fmtP(p,c){return c==='USD'?('$'+p.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})):(Math.round(p).toLocaleString('ko-KR')+'원');}
+  function krw(p,c){return c==='USD'?p*FX:p;}
+  function flag(c){return c==='KRW'?'🇰🇷':'🇺🇸';}
+  function curPrice(code,fallback){var s=PRICES[code];return s?s[1]:fallback;}
+
+  function render(){
+    var a=load();
+    var stock=0;
+    for(var code in a.pos){var p=a.pos[code];stock+=krw(curPrice(code,p.avg),p.ccy)*p.q;}
+    var total=a.cash+stock, pl=total-a.start, pct=a.start?pl/a.start*100:0;
+    var cls=pl>=0?'up':'dn', sign=pl>=0?'+':'';
+    document.getElementById('sumv').innerHTML=won(total)+' <span class="'+cls+'" style="font-size:18px">'+sign+pct.toFixed(2)+'%</span>';
+    document.getElementById('sumsub').innerHTML='현금 '+won(a.cash)+' · 주식 '+won(stock)
+      +' · 평가손익 <span class="'+cls+'">'+sign+won(pl)+'</span> · 시작금 '+won(a.start);
+    renderHolds(a); renderLog(a);
+  }
+  function renderHolds(a){
+    var codes=Object.keys(a.pos), h=document.getElementById('holds');
+    if(!codes.length){h.innerHTML='<div class="muted">보유 종목 없음 — 위 추천이나 검색에서 매수해보세요.</div>';return;}
+    var rows='<table><tr><th class=l>종목</th><th>수량</th><th>평단</th><th>현재가</th><th>평가손익</th><th></th></tr>';
+    codes.forEach(function(code){var p=a.pos[code];var cur=curPrice(code,p.avg);
+      var plp=(cur/p.avg-1)*100, plv=(krw(cur,p.ccy)-krw(p.avg,p.ccy))*p.q;
+      var cls=plv>=0?'up':'dn',sg=plv>=0?'+':'';
+      rows+='<tr><td class=l><span class=flag>'+flag(p.ccy)+'</span><a href="stocks/'+code+'.html" style="color:#1d4ed8;text-decoration:none">'+p.name+'</a></td>'
+        +'<td>'+p.q+'</td><td>'+fmtP(p.avg,p.ccy)+'</td><td>'+fmtP(cur,p.ccy)+'</td>'
+        +'<td class="'+cls+'">'+sg+won(plv)+'<br><span style=font-size:11px>'+sg+plp.toFixed(1)+'%</span></td>'
+        +'<td><button class=sell onclick="sellP(\\''+code+'\\')">매도</button></td></tr>';
+    });
+    h.innerHTML=rows+'</table>';
+  }
+  function renderLog(a){
+    var l=document.getElementById('log');
+    if(!a.log.length){l.innerHTML='<div class="muted">거래 내역 없음.</div>';return;}
+    l.innerHTML=a.log.slice(0,40).map(function(x){
+      var d=new Date(x.t), ds=(d.getMonth()+1)+'/'+d.getDate()+' '+('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2);
+      return '<div class=logi><span class="'+(x.type==='buy'?'b':'s')+'">'+(x.type==='buy'?'매수':'매도')+'</span>'
+        +'<span>'+flag(x.ccy)+' '+x.name+' '+x.q+'주 @ '+fmtP(x.price,x.ccy)+'</span>'
+        +'<span class=tm>'+won(x.amt)+' · '+ds+'</span></div>';
+    }).join('');
+  }
+  function pickCard(p,kind){
+    var lv='<b>진입</b> '+fmtP(p.entry,p.ccy)+' · <b>손절</b> '+fmtP(p.stop,p.ccy)+' · <b>목표</b> '+fmtP(p.target,p.ccy);
+    var vc=p.verdict.indexOf('타당')>=0?'up':(p.verdict.indexOf('회피')>=0?'dn':'');
+    return '<div class="pick '+kind+'"><div class=ph><span class=flag>'+flag(p.ccy)+'</span>'
+      +'<span class=nm><a href="stocks/'+p.code+'.html">'+p.name+'</a></span>'
+      +'<span class=tag>'+p.sig+'</span>'+(p.stage?'<span class=tag>'+p.stage+'</span>':'')+'</div>'
+      +'<div class="vd '+vc+'">'+p.verdict+'</div>'
+      +'<div class=th>💡 나라면: '+p.thesis+'</div>'
+      +'<div class=lv>'+lv+'</div>'
+      +'<button class=buy onclick="buyP(\\''+p.code+'\\')">'+(kind==='now'?'💰 매수':'💰 그래도 매수')+'</button></div>';
+  }
+  function renderPicks(){
+    document.getElementById('picksNow').innerHTML=PICKS.now.length?PICKS.now.map(function(p){return pickCard(p,'now');}).join(''):'<div class=muted>지금 진입 타당한 종목 없음(시장 하락 등). 관찰 목록을 보세요.</div>';
+    document.getElementById('picksWatch').innerHTML=PICKS.watch.length?PICKS.watch.map(function(p){return pickCard(p,'watch');}).join(''):'<div class=muted>관찰 대상 없음.</div>';
+    document.getElementById('nown').textContent=PICKS.now.length+'개';
+    document.getElementById('watchn').textContent=PICKS.watch.length+'개';
+  }
+  function buyP(code){
+    var s=PRICES[code]; if(!s){alert('가격 정보 없음');return;}
+    var name=s[0],price=s[1],ccy=s[2], per=krw(price,ccy);
+    var a=load();
+    var max=Math.floor(a.cash/per);
+    var v=prompt(name+' 매수\\n현재가 '+fmtP(price,ccy)+' (1주 ≈ '+won(per)+')\\n현금 '+won(a.cash)+' → 최대 '+max+'주\\n\\n살 수량:', Math.min(max,1)||'');
+    if(!v)return; var q=parseInt(v); if(!(q>0)){return;}
+    var cost=Math.round(per*q);
+    if(cost>a.cash){alert('현금 부족: 필요 '+won(cost)+' / 보유 '+won(a.cash));return;}
+    a.cash-=cost;
+    var p=a.pos[code]||{q:0,avg:0,ccy:ccy,name:name};
+    p.avg=(p.avg*p.q+price*q)/(p.q+q); p.q+=q; p.name=name; a.pos[code]=p;
+    a.log.unshift({t:Date.now(),type:'buy',code:code,name:name,q:q,price:price,ccy:ccy,amt:cost});
+    save(a); render();
+  }
+  function sellP(code){
+    var a=load(); var p=a.pos[code]; if(!p)return;
+    var price=curPrice(code,p.avg), per=krw(price,p.ccy);
+    var v=prompt(p.name+' 매도\\n보유 '+p.q+'주 · 현재가 '+fmtP(price,p.ccy)+'\\n\\n팔 수량(비우면 전량):', p.q);
+    if(v===null)return; var q=v?parseInt(v):p.q; if(!(q>0)||q>p.q){return;}
+    var proceeds=Math.round(per*q);
+    a.cash+=proceeds; p.q-=q; if(p.q<=0)delete a.pos[code];
+    a.log.unshift({t:Date.now(),type:'sell',code:code,name:p.name,q:q,price:price,ccy:p.ccy,amt:proceeds});
+    save(a); render();
+  }
+  function search(v){
+    v=(v||'').trim().toLowerCase(); var res=document.getElementById('res');
+    if(!v){res.innerHTML='';return;}
+    var hits=[],n=0;
+    for(var code in PRICES){var s=PRICES[code];
+      if(code.toLowerCase().indexOf(v)>=0||s[0].toLowerCase().indexOf(v)>=0){
+        hits.push('<div class=r><span class=flag>'+flag(s[2])+'</span><a href="stocks/'+code+'.html" style="color:#1d4ed8;text-decoration:none">'+s[0]+'</a> <span style=color:#94a3b8;font-size:11px>'+code+' · '+fmtP(s[1],s[2])+'</span><button class=bu onclick="buyP(\\''+code+'\\')">매수</button></div>');
+        if(++n>=20)break;}}
+    res.innerHTML=hits.length?hits.join(''):'<div class=muted>검색 결과 없음</div>';
+  }
+  function reset(){if(confirm('모의투자를 초기화할까요? (보유·현금·일지 모두 삭제, 1,000만원으로)')){save({cash:START,start:START,pos:{},log:[]});render();}}
+  renderPicks(); render();
 </script></body></html>"""
 
 

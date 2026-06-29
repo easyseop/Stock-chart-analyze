@@ -165,6 +165,53 @@ def _fmt(v, ccy: str) -> str:
     return f"{v:,.0f}원" if ccy == "KRW" else f"${v:,.2f}"
 
 
+def thesis(r: dict) -> dict:
+    """'나라면 이렇게 진입한다' — 진입 기준(가격·시점)과 그게 타당한지 판정.
+
+    반환: {now: 지금진입타당?, verdict: 한줄판정, thesis: 진입논리, rr, stop_pct}.
+    """
+    ccy = r["ccy"]
+    f = lambda v: _fmt(v, ccy)
+    sr = r.get("sr") or {}
+    risk = r.get("risk") or {}
+    price = sr.get("price")
+    entry = r.get("entry")
+    kind = r.get("entry_kind", "now")
+    stop = risk.get("stop")
+    target = risk.get("target")
+    rr = risk.get("rr", 2)
+    stp = (entry - stop) / entry * 100 if (entry and stop) else 0
+
+    if r.get("vetoed") or kind == "avoid":
+        return {"now": False, "verdict": "🚫 회피",
+                "thesis": "하락추세/방어선 이탈 — 신규 진입 부적합. 반등 나와도 추격 금지."}
+    if kind == "breakout":
+        return {"now": False, "verdict": "⏳ 돌파 대기",
+                "thesis": (f"저항 {f(sr.get('box_high'))} 돌파+종가 안착 확인되면 진입. "
+                           f"지금은 미돌파라 부적합 → 대기. 진입 시 손절 {f(stop)}·"
+                           f"목표 {f(target)}(손익비 1:{rr:.0f}).")}
+    if kind == "pullback":
+        return {"now": False, "verdict": "⏳ 눌림 대기",
+                "thesis": (f"이미 올라 지금 추격은 부적합. <b>{f(entry)}까지 눌리면</b> 진입 타당 "
+                           f"— 손절 {f(stop)}(−{stp:.0f}%)·목표 {f(target)}(손익비 1:{rr:.0f}).")}
+    if kind == "wait":
+        return {"now": False, "verdict": "👀 관찰",
+                "thesis": "이미 올랐는데 받칠 지지가 불명확 — 지지 형성될 때까지 관찰."}
+    # kind == "now"
+    rec = rec_n(r)
+    tm = timing(r)
+    strong = rec >= REC_MIN or (tm and "🎯" in tm)
+    if strong:
+        size = "적정" if stp <= 12 else "다소 큼(비중 축소)"
+        return {"now": True, "verdict": "✅ 지금 진입 타당",
+                "thesis": (f"현재가 {f(price)}가 지지 바로 위 타점권 → <b>지금 분할 진입 타당</b>. "
+                           f"손절 {f(stop)}(−{stp:.0f}%)·목표 {f(target)}(손익비 1:{rr:.0f}). "
+                           f"손절폭 {stp:.0f}% — {size}.")}
+    return {"now": True, "verdict": "△ 조건부(신호 약함)",
+            "thesis": (f"지지 근처라 현재가 {f(price)} 분할은 가능하나 신호가 약함 — "
+                       f"소액·분할로만. 손절 {f(stop)}·목표 {f(target)}.")}
+
+
 def _headline(r: dict, rec: int) -> tuple[str, str]:
     """(색, 한 줄 결론)."""
     stage = r.get("transition_stage", 0)
