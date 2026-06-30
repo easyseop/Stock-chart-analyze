@@ -292,10 +292,12 @@ def _paper_picks(results: list[dict]) -> dict:
         #   혼조·횡보·단기 하락 중(예: NXPI)인데 점수만 높은 건 제외.
         arr = (r.get("trend") or {}).get("arrangement")
         clean = (arr == "정배열") or stage >= 3
+        # 깨끗한 셋업(정배열/전환③④)이 아니면 '지금 진입' 안 함 — 🎯 타점권 경로도 포함.
+        #   (rec 6/6은 이미 전환단계 포함이라 통과) 혼조·하락 중(NXPI·COCO)은 전부 제외.
         is_now = th["now"] and (stop_pct < 0.12) and (
-            rec >= REC_MIN or (tm and "🎯" in tm)
-            or (kind == "now" and clean
-                and r.get("norm", 0) >= config.VERDICT_WEAK))
+            rec >= REC_MIN
+            or (clean and ((tm and "🎯" in tm)
+                           or (kind == "now" and r.get("norm", 0) >= config.VERDICT_WEAK))))
         is_watch = ((not th["now"]) and (stop_pct < 0.15) and (not far_pull)
                     and (kind in ("pullback", "breakout") or stage in (1, 2)))
         if is_now:
