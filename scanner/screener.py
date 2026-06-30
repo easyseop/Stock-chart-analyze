@@ -134,13 +134,13 @@ def _rec_card(p: dict, kind: str) -> str:
         f'<div class="rch"><a href="stocks/{p["code"]}.html">{html.escape(p["name"])}</a>'
         f'<span class="rtag">{html.escape(p["sig"])}</span>{stage}'
         f'<span class="rvd {vc}">{html.escape(p["verdict"])}</span></div>'
-        f'<div class="rth">💡 나라면: {p["thesis"]}</div>'
+        f'<div class="rth">🤖 클로드라면: {p["thesis"]}</div>'
         f'<div class="rlv">진입 <b>{fp(p["entry"])}</b> · 손절 {fp(p["stop"])} · '
         f'목표 {fp(p["target"])}</div></div>')
 
 
 def _recommend_html(results: list[dict]) -> str:
-    """홈 상단 '너라면 살 종목?' 추천 — 모의투자와 같은 큐레이션을 표 위에 노출."""
+    """홈 상단 '클로드라면 살 종목' 추천 — 모의투자와 같은 큐레이션을 표 위에 노출."""
     picks = _paper_picks(results)
     now = "".join(_rec_card(p, "now") for p in picks["now"])
     watch = "".join(_rec_card(p, "watch") for p in picks["watch"])
@@ -152,7 +152,7 @@ def _recommend_html(results: list[dict]) -> str:
     watch_sec = (f'<div class="rsec" style="margin-top:12px">👀 곧 올 자리·전환 임박 '
                  f'<b>{len(picks["watch"])}</b></div>{watch}' if watch else "")
     return (f'<details class="reco" open>'
-            f'<summary>💡 너라면 살 종목? — 큐레이션 추천 (진입 논리 포함)</summary>'
+            f'<summary>🤖 클로드라면 살 종목 — AI 큐레이션 추천 (진입 논리 포함)</summary>'
             f'<div class="rbody">{now_sec}{watch_sec}'
             f'<div class="rmuted">⚠️ 차트 기준 추천 · 투자권유 아님. 종목 눌러 상세 확인 · '
             f'<a href="paper.html" style="color:#15803d;font-weight:700">💰 모의투자로 연습</a></div>'
@@ -1035,7 +1035,7 @@ _PAPER_TMPL = """<!DOCTYPE html><html lang="ko"><head>
       +'<span class=nm><a href="stocks/'+p.code+'.html">'+p.name+'</a></span>'
       +'<span class=tag>'+p.sig+'</span>'+(p.stage?'<span class=tag>'+p.stage+'</span>':'')+'</div>'
       +'<div class="vd '+vc+'">'+p.verdict+'</div>'
-      +'<div class=th>💡 나라면: '+p.thesis+'</div>'
+      +'<div class=th>🤖 클로드라면: '+p.thesis+'</div>'
       +'<div class=lv>'+lv+'</div>'
       +'<button class=buy onclick="buyP(\\''+p.code+'\\')">'+(kind==='now'?'💰 매수':'💰 그래도 매수')+'</button></div>';
   }
