@@ -549,19 +549,24 @@ _INDEX_TMPL = """<!DOCTYPE html><html lang="ko"><head>
       r.style.display=(parseInt(r.dataset.rec||'0')>={recmin})?'':'none';
     }});
   }}
-  // 검색: 티커·영문명·한글명으로 필터(칩 필터는 해제하고 전체에서 찾음)
-  function search(v){{
+  // 검색: 티커·영문명·한글명. 성능 위해 검색 인덱스를 한 번만 만들고(매 글자마다 DOM
+  //   재조회 안 함), 입력은 디바운스. 검색 중엔 추천·안내·필터바를 숨겨 결과를 위로.
+  var IDX=null, _stmr=null;
+  function buildIdx(){{ IDX=[].slice.call(tb.querySelectorAll('tr')).map(function(r){{
+    var nm=r.querySelector('.nm'); return [r,(nm?nm.textContent:'').toLowerCase()]; }}); }}
+  function search(v){{ clearTimeout(_stmr); _stmr=setTimeout(function(){{doSearch(v);}},120); }}
+  function doSearch(v){{
+    if(!IDX) buildIdx();
     v=(v||'').trim().toLowerCase();
-    var qn=document.getElementById('qn');
+    var qn=document.getElementById('qn'), on=!!v;
+    // 검색 중 화면 정리: 추천·안내·범례·필터바 숨김 → 결과가 검색창 바로 아래로
+    document.querySelectorAll('.reco,.notice,.legend,.bar').forEach(function(e){{e.style.display=on?'none':'';}});
     if(!v){{ setOn(document.querySelectorAll('.chip')[0]);
-      tb.querySelectorAll('tr').forEach(function(r){{r.style.display='';}});
+      for(var i=0;i<IDX.length;i++) IDX[i][0].style.display='';
       qn.textContent=''; return; }}
-    setOn(null);
-    var hit=0;
-    tb.querySelectorAll('tr').forEach(function(r){{
-      var t=r.querySelector('.nm').textContent.toLowerCase();
-      var ok=t.indexOf(v)>=0; r.style.display=ok?'':'none'; if(ok)hit++;
-    }});
+    setOn(null); var hit=0;
+    for(var i=0;i<IDX.length;i++){{ var ok=IDX[i][1].indexOf(v)>=0;
+      IDX[i][0].style.display=ok?'':'none'; if(ok) hit++; }}
     qn.textContent=hit+'개';
   }}
   // 💼 내 종목(매수/즐겨찾기) — 브라우저 localStorage에만 저장. 매수가 넣으면 손익(P/L) 표시.
