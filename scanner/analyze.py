@@ -48,6 +48,10 @@ def analyze(frames: dict[str, pd.DataFrame], meta: dict, bench=None) -> dict:
     stretch = (price / ma20 - 1) if ma20 else 0.0
     low10 = float(d["Low"].iloc[-10:].min())
     runup10 = (price / low10 - 1) if low10 else 0.0
+    # 유동성(20일 평균 거래대금) + 장기 이격(MA120 대비) — 추천 품질 필터에 사용
+    turnover = float((d["Close"].iloc[-20:] * d["Volume"].iloc[-20:]).mean())
+    ma120 = trend.get("ma", {}).get(120)
+    stretch_lt = (price / ma120 - 1) if ma120 else 0.0
     nh_pct = newhigh.get("pct_from_high")
     # 추격(이미 많이 올라 타점이 멂)도 과대이격에 포함 → 진입타점 판정의 단일 기준.
     near_high = newhigh["score"] == 2
@@ -113,7 +117,9 @@ def analyze(frames: dict[str, pd.DataFrame], meta: dict, bench=None) -> dict:
         "norm": norm["score"], "verdict_label": label, "gauge": gauge,
         "verdict": verdict_txt, "entry": entry, "entry_kind": entry_kind,
         "vetoed": vetoed, "terms": terms,
-        "ext": {"ma20_stretch": stretch, "runup10": runup10},
+        "ext": {"ma20_stretch": stretch, "runup10": runup10,
+                "ma120_stretch": stretch_lt},
+        "turnover": turnover,
         "trend_oneline": trend_oneline, "chase": chase, "chase_note": chase_note,
         "transition_stage": stage, "transition_label": stage_label,
     }

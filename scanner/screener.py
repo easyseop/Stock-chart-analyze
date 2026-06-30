@@ -229,6 +229,12 @@ def build(results: list[dict], frames_map: dict[str, dict],
     return out_dir
 
 
+# '이미 폭등' 추천 제외 기준(조절용): 지수 대비 3개월 상대강도(RS) 또는 120일선 대비
+#   이 비율 이상 오른 종목은 추천(지금 진입·관찰)에서 전면 제외. 0.40 = +40%.
+#   더 엄격히 하려면 0.30, 더 느슨히 하려면 0.50 등으로.
+BLOWOFF = 0.40
+
+
 # ── 모의투자(페이퍼 트레이딩) 페이지 ──────────────────────────────
 def _pick_item(r: dict, th: dict) -> dict:
     risk = r.get("risk") or {}
@@ -245,11 +251,27 @@ def _pick_item(r: dict, th: dict) -> dict:
 
 
 def _paper_picks(results: list[dict]) -> dict:
-    """추천 큐레이션: '지금 진입 검토'(now) vs '곧 올 자리·전환 임박'(watch)."""
+    """추천 큐레이션: '지금 진입 검토'(now) vs '곧 올 자리·전환 임박'(watch).
+
+    품질 게이트(사용자 검토 반영): ① 저유동성(거래 불가 잡주) 제외, ② 장기 폭등(이미
+    많이 오른 추격)은 '지금 진입'에서 제외, ③ 손절폭 과대(R:R 나쁨)는 '지금 진입' 제외.
+    """
     import config
     now, watch = [], []
     for r in results:
         if r.get("vetoed") or r.get("entry_kind") == "avoid":
+            continue
+        # ① 유동성: 20일 평균 거래대금 낮으면(잡주, 거래 불가) 추천 자체에서 제외
+        ccy = r.get("ccy", "USD")
+        turn = r.get("turnover", 0) or 0
+        liq_min = 10_000_000 if ccy != "KRW" else 5_000_000_000   # $10M / 50억원
+        if turn < liq_min:
+            continue
+        # ② '이미 폭등' 하드 제외(now·watch 모두): 추천 안 함.
+        #   기준 = 지수 대비 3개월 상대강도(RS) +BLOWOFF↑  또는  120일선 대비 +BLOWOFF↑
+        ext = r.get("ext") or {}
+        rs_rel = (r.get("rs") or {}).get("rel") or 0
+        if rs_rel >= BLOWOFF or ext.get("ma120_stretch", 0) >= BLOWOFF:
             continue
         th = _plan_thesis(r)
         rec = _rec_n(r)
@@ -257,9 +279,11 @@ def _paper_picks(results: list[dict]) -> dict:
         stage = r.get("transition_stage", 0)
         kind = r.get("entry_kind", "now")
         item = _pick_item(r, th)
-        # 지금 진입 가능(now)이고 신호가 약하지 않으면 추천 노출 — '너라면 살 종목'.
-        #   (kind==now은 이미 과열·하락추세·돌파대기 제외 = 지지 근처 '지금 분할' 자리)
-        is_now = th["now"] and (
+        # ③ 손절폭 과대(진입의 12%↑) = R:R 나쁨 → '지금 진입'에서만 제외(관찰은 허용)
+        entry = r.get("entry") or 0
+        stop = (r.get("risk") or {}).get("stop") or 0
+        wide = bool(entry) and (entry - stop) / entry >= 0.12
+        is_now = th["now"] and (not wide) and (
             rec >= REC_MIN or (tm and "🎯" in tm)
             or (kind == "now" and r.get("norm", 0) >= config.VERDICT_WEAK))
         is_watch = (not th["now"]) and (

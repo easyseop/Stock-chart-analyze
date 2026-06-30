@@ -207,9 +207,9 @@ def thesis(r: dict) -> dict:
                 "thesis": (f"현재가 {f(price)}가 지지 바로 위 타점권 → <b>지금 분할 진입 타당</b>. "
                            f"손절 {f(stop)}(−{stp:.0f}%)·목표 {f(target)}(손익비 1:{rr:.0f}). "
                            f"손절폭 {stp:.0f}% — {size}.")}
-    return {"now": True, "verdict": "△ 조건부(신호 약함)",
-            "thesis": (f"지지 근처라 현재가 {f(price)} 분할은 가능하나 신호가 약함 — "
-                       f"소액·분할로만. 손절 {f(stop)}·목표 {f(target)}.")}
+    return {"now": True, "verdict": "△ 조건부(확신 보통)",
+            "thesis": (f"지지 근처라 현재가 {f(price)} 분할 가능하나 만점 셋업은 아님 "
+                       f"(체크리스트 미충족) — 소액·분할로만. 손절 {f(stop)}·목표 {f(target)}.")}
 
 
 def _headline(r: dict, rec: int) -> tuple[str, str]:
