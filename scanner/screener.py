@@ -448,8 +448,8 @@ _INDEX_TMPL = """<!DOCTYPE html><html lang="ko"><head>
 </div>
 <details class="notice"><summary>🕐 차트 데이터는 언제 갱신되나요?</summary>
 <div class="nc">
-<b>🇺🇸 미국주</b> — 미 장중 <b>30분마다</b>(대략 밤 22:30~새벽 05:00 KST) 가격 갱신.<br>
-<b>🇰🇷 한국주</b> — 한국 장중 <b>30분마다</b>(09:00~15:30 KST) 가격 갱신.<br>
+<b>🇺🇸 미국주</b> — 미 장중 <b>15분마다</b>(대략 밤 22:30~새벽 05:00 KST) 가격 갱신.<br>
+<b>🇰🇷 한국주</b> — 한국 장중 <b>15분마다</b>(09:00~15:30 KST) 가격 갱신.<br>
 <b>📅 매일 마감 후</b> — 전체 종목 갱신 + 새 종목 백필(미수집분 채움).<br>
 <b>💼 내 종목 · ➕ 즉석조회 종목</b>도 위 장중 갱신에 함께 포함돼요(한국주는 한국 장중, 미국주는 미 장중).<br>
 <span class="ndim">※ 시간은 GitHub Actions 스케줄 기준이라 ±5~10분 차이날 수 있어요. 페이지 상단 "마지막 갱신"이 실제 반영 시각.</span>
@@ -483,13 +483,13 @@ _INDEX_TMPL = """<!DOCTYPE html><html lang="ko"><head>
   {region_chips}
   {chips}
 </div>
-{reco}
 <div class="bar bar2"><span class="barlbl">전환단계</span>{stage_chips}
   <button class="chip holdchip" id="holdchip" onclick="fltHold()" style="display:none">💼 내 종목 <span id="holdn">0</span></button>
   <a class="chip" href="paper.html" style="background:#15803d;color:#fff;border-color:#15803d;text-decoration:none">💰 모의투자</a>
   <a class="chip" href="guide.html" style="text-decoration:none">📘 가이드</a>
   <a class="chip" href="lookup.html" style="background:#0f172a;color:#fff;border-color:#0f172a;text-decoration:none">➕ 즉석조회</a>
 </div>
+{reco}
 <div class="tw"><table id="t"><thead><tr>
   <th onclick="srt(0,false)">신호</th>
   <th onclick="srt(1,false)">종목</th>
