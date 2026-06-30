@@ -42,7 +42,7 @@ def _detail(result: dict, frames: dict) -> str:
 
 
 from scanner.plan import (rec_n as _rec_n, REC_MIN, timing as _timing,
-                          thesis as _plan_thesis)
+                          thesis as _plan_thesis, junk as _plan_junk)
 
 
 def _sign(v) -> str:
@@ -259,6 +259,8 @@ def _paper_picks(results: list[dict]) -> dict:
     now, watch = [], []
     for r in results:
         if r.get("vetoed") or r.get("entry_kind") == "avoid":
+            continue
+        if _plan_junk(r):              # 동전주($1·1000원 미만)·심한 부실(−85%↓) 제외
             continue
         # ① 유동성: 20일 평균 거래대금 낮으면(잡주, 거래 불가) 추천 자체에서 제외
         ccy = r.get("ccy", "USD")

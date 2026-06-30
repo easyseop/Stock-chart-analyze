@@ -44,6 +44,22 @@ def _overextended(r: dict) -> bool:
     return False
 
 
+def junk(r: dict) -> bool:
+    """추천 부적합 잡주 — 동전주(가격 하한 미만) 또는 심한 부실(고가 대비 −85%↓).
+
+    GPUS 같은 −90% 동전주(상폐·상습 병합)를 모든 추천에서 거른다.
+    """
+    ccy = r.get("ccy")
+    price = (r.get("sr") or {}).get("price")
+    floor = config.PRICE_MIN_KRW if ccy == "KRW" else config.PRICE_MIN_USD
+    if price is not None and price < floor:
+        return True
+    nh = (r.get("newhigh") or {}).get("pct_from_high")
+    if nh is not None and nh <= config.DEEP_LOSS_PCT:
+        return True
+    return False
+
+
 def _support_below(r: dict):
     """현재가 바로 아래의 가장 가까운 강한 지지(상승추세선/방어선/지지선) 가격."""
     sr = r.get("sr") or {}
@@ -125,7 +141,7 @@ def _checklist(r: dict) -> int:
 def rec_n(r: dict) -> int:
     """진입 추천 점수(0~6). 하락추세 veto=0. 이미 솟구쳐 타점이 먼(추격) 종목은
     추천선(4) 아래로 강등 — '이미 상승해서 타점 애매한 건 추천 안 함'."""
-    if r.get("vetoed"):
+    if r.get("vetoed") or junk(r):    # 하락추세 veto / 동전주·부실주 → 추천 제외
         return 0
     n = _checklist(r)
     if _overextended(r):
