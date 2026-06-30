@@ -288,9 +288,14 @@ def _paper_picks(results: list[dict]) -> dict:
         # ④ 과도한 눌림: 눌림 목표가 현재가보다 25%+ 아래 = '곧 올 자리' 아님(대폭락 대기)
         far_pull = (kind == "pullback" and price
                     and (price - entry) / price >= 0.25)
+        # '지금 진입'(조건부 포함)은 깨끗한 셋업만 — 정배열(상승 정렬) 또는 전환 ③④.
+        #   혼조·횡보·단기 하락 중(예: NXPI)인데 점수만 높은 건 제외.
+        arr = (r.get("trend") or {}).get("arrangement")
+        clean = (arr == "정배열") or stage >= 3
         is_now = th["now"] and (stop_pct < 0.12) and (
             rec >= REC_MIN or (tm and "🎯" in tm)
-            or (kind == "now" and r.get("norm", 0) >= config.VERDICT_WEAK))
+            or (kind == "now" and clean
+                and r.get("norm", 0) >= config.VERDICT_WEAK))
         is_watch = ((not th["now"]) and (stop_pct < 0.15) and (not far_pull)
                     and (kind in ("pullback", "breakout") or stage in (1, 2)))
         if is_now:
