@@ -280,15 +280,19 @@ def _paper_picks(results: list[dict]) -> dict:
         stage = r.get("transition_stage", 0)
         kind = r.get("entry_kind", "now")
         item = _pick_item(r, th)
-        # ③ 손절폭 과대(진입의 12%↑) = R:R 나쁨 → '지금 진입'에서만 제외(관찰은 허용)
+        # ③ 손절폭 과대 = R:R 나쁨. 지금진입은 12%↑ 제외, 관찰은 15%↑ 제외.
         entry = r.get("entry") or 0
         stop = (r.get("risk") or {}).get("stop") or 0
-        wide = bool(entry) and (entry - stop) / entry >= 0.12
-        is_now = th["now"] and (not wide) and (
+        price = (r.get("sr") or {}).get("price") or 0
+        stop_pct = (entry - stop) / entry if entry else 0
+        # ④ 과도한 눌림: 눌림 목표가 현재가보다 25%+ 아래 = '곧 올 자리' 아님(대폭락 대기)
+        far_pull = (kind == "pullback" and price
+                    and (price - entry) / price >= 0.25)
+        is_now = th["now"] and (stop_pct < 0.12) and (
             rec >= REC_MIN or (tm and "🎯" in tm)
             or (kind == "now" and r.get("norm", 0) >= config.VERDICT_WEAK))
-        is_watch = (not th["now"]) and (
-            kind in ("pullback", "breakout") or stage in (1, 2))
+        is_watch = ((not th["now"]) and (stop_pct < 0.15) and (not far_pull)
+                    and (kind in ("pullback", "breakout") or stage in (1, 2)))
         if is_now:
             now.append((rec, r.get("norm", 0), item))
         elif is_watch:

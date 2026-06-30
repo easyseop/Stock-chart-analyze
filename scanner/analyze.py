@@ -82,9 +82,10 @@ def analyze(frames: dict[str, pd.DataFrame], meta: dict, bench=None) -> dict:
     else:
         entry = price                                # 지지 근처 → 현재가 분할
         entry_kind = "now"
-    # 눌림 매수(진입가가 지지 위)면 손절은 그 지지 아래 ATR 여유로(방어선 hug 방지)
+    # 손절은 변동성(ATR) 기준으로 — 지지/박스에 '바짝' 붙여 잡으면 노이즈에 휩쓸림(휩쏘).
+    #   모든 매수 타점(now/pullback/wait/breakout)에 적용, 회피만 제외.
     risk = ind.risk_levels(d, entry, sr["defense"], meta["ccy"],
-                           prefer_atr=(entry_kind in ("pullback", "wait")))
+                           prefer_atr=(entry_kind != "avoid"))
 
     # ── 하락추세 veto: 하락추세 지속이면 매수 신호를 막는다(사용자 원칙) ──
     vetoed = False
