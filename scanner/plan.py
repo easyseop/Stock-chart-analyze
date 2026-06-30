@@ -29,6 +29,12 @@ def _overextended(r: dict) -> bool:
         return True
     if ext.get("runup10", 0) >= 0.13:        # 최근 10봉 저점 대비 +13%↑ 급등(타점 멂)
         return True
+    # 장기 폭등(이미 많이 오른 추격) — 품질 게이트와 동일 기준
+    if ext.get("ma120_stretch", 0) >= config.BLOWOFF_RATIO:
+        return True
+    rs = (r.get("rs") or {}).get("rel")
+    if rs is not None and rs >= config.BLOWOFF_RATIO:
+        return True
     risk = r.get("risk") or {}
     price = (r.get("sr") or {}).get("price")
     entry = r.get("entry") or price

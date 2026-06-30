@@ -229,10 +229,9 @@ def build(results: list[dict], frames_map: dict[str, dict],
     return out_dir
 
 
-# '이미 폭등' 추천 제외 기준(조절용): 지수 대비 3개월 상대강도(RS) 또는 120일선 대비
-#   이 비율 이상 오른 종목은 추천(지금 진입·관찰)에서 전면 제외. 0.40 = +40%.
-#   더 엄격히 하려면 0.30, 더 느슨히 하려면 0.50 등으로.
-BLOWOFF = 0.40
+# '이미 폭등' 추천 제외 기준 — config 단일 출처(조절은 config.BLOWOFF_RATIO).
+import config as _cfg
+BLOWOFF = _cfg.BLOWOFF_RATIO
 
 
 # ── 모의투자(페이퍼 트레이딩) 페이지 ──────────────────────────────
@@ -264,7 +263,7 @@ def _paper_picks(results: list[dict]) -> dict:
         # ① 유동성: 20일 평균 거래대금 낮으면(잡주, 거래 불가) 추천 자체에서 제외
         ccy = r.get("ccy", "USD")
         turn = r.get("turnover", 0) or 0
-        liq_min = 10_000_000 if ccy != "KRW" else 5_000_000_000   # $10M / 50억원
+        liq_min = config.LIQ_MIN_USD if ccy != "KRW" else config.LIQ_MIN_KRW
         if turn < liq_min:
             continue
         # ② '이미 폭등' 하드 제외(now·watch 모두): 추천 안 함.
