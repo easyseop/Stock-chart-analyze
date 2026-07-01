@@ -144,15 +144,15 @@ def _recommend_html(results: list[dict]) -> str:
     picks = _paper_picks(results)
     now = "".join(_rec_card(p, "now") for p in picks["now"])
     watch = "".join(_rec_card(p, "watch") for p in picks["watch"])
-    now_sec = (f'<div class="rsec">🟢 지금 진입 검토 <b>{len(picks["now"])}</b></div>{now}'
+    now_sec = (f'<div class="rsec">🟢 지금 진입 — 전환 확정·저점 <b>{len(picks["now"])}</b></div>{now}'
                if now else
-               '<div class="rsec">🟢 지금 진입 검토 <b>0</b></div>'
-               '<div class="rmuted">지금 바로 살 자리는 없음(시장 하락 등) — '
-               '아래 곧 올 자리 위주로 주시.</div>')
-    watch_sec = (f'<div class="rsec" style="margin-top:12px">👀 곧 올 자리·전환 임박 '
+               '<div class="rsec">🟢 지금 진입 — 전환 확정·저점 <b>0</b></div>'
+               '<div class="rmuted">지금 바로 들어갈 전환 확정(저점) 종목 없음 — '
+               '아래 곧 올 자리(전환 임박) 주시.</div>')
+    watch_sec = (f'<div class="rsec" style="margin-top:12px">👀 곧 올 자리 — 전환 임박·눌림 대기 '
                  f'<b>{len(picks["watch"])}</b></div>{watch}' if watch else "")
     return (f'<details class="reco" open>'
-            f'<summary>🤖 클로드라면 살 종목 — AI 큐레이션 추천 (진입 논리 포함)</summary>'
+            f'<summary>🤖 클로드라면 살 전환 후보 — 하락→상승 저점 매수 (진입 논리)</summary>'
             f'<div class="rbody">{now_sec}{watch_sec}'
             f'<div class="rmuted">⚠️ 차트 기준 추천 · 투자권유 아님. 종목 눌러 상세 확인 · '
             f'<a href="paper.html" style="color:#15803d;font-weight:700">💰 모의투자로 연습</a></div>'
@@ -290,18 +290,17 @@ def _paper_picks(results: list[dict]) -> dict:
                     and (price - entry) / price >= 0.25)
         # '지금 진입'(조건부 포함)은 깨끗한 셋업만 — 정배열(상승 정렬) 또는 전환 ③④.
         #   혼조·횡보·단기 하락 중(예: NXPI)인데 점수만 높은 건 제외.
-        arr = (r.get("trend") or {}).get("arrangement")
-        clean = (arr == "정배열") or stage >= 3
-        # '이미 많이 오른'(최근 3개월 +기준↑) = 고점 추격 → '지금 진입'에서 제외.
+        # '이미 많이 오른'(최근 3개월 +기준↑) = 고점 추격 → 제외.
         already_ran = ext.get("runup63", 0) >= config.RECENT_RUNUP_MAX
-        # 깨끗한 셋업(정배열/전환③④)이 아니면 '지금 진입' 안 함 — 🎯 타점권 경로도 포함.
-        #   (rec 6/6은 이미 전환단계 포함이라 통과) 혼조·하락 중(NXPI·COCO)은 전부 제외.
-        is_now = th["now"] and (stop_pct < 0.12) and (not already_ran) and (
-            rec >= REC_MIN
-            or (clean and ((tm and "🎯" in tm)
-                           or (kind == "now" and r.get("norm", 0) >= config.VERDICT_WEAK))))
-        is_watch = ((not th["now"]) and (stop_pct < 0.15) and (not far_pull)
-                    and (kind in ("pullback", "breakout") or stage in (1, 2)))
+        # ★ 핵심(사용자 원칙): 하락→상승 '전환 후보'만 추천. 이미 상승추세(정배열)는 제외.
+        #   전환단계 = ①임박 ②갓돌파 ③돌파후 횡보 ④전환 확정. 저점에서 도는 종목들.
+        #   • 지금 진입  = 전환 확정/대기(③·④)이고 지금이 살 자리(과열·추격 아님, 지지 근처).
+        #   • 곧 올 자리 = 전환 임박·갓돌파(①·②) 또는 ③·④인데 눌림/돌파 대기.
+        is_now = (th["now"] and stage >= 3 and (stop_pct < 0.12)
+                  and (not already_ran))
+        is_watch = ((not is_now) and (stop_pct < 0.15) and (not far_pull)
+                    and (stage in (1, 2)
+                         or (stage >= 3 and kind in ("pullback", "breakout"))))
         if is_now:
             now.append((rec, r.get("norm", 0), item))
         elif is_watch:
@@ -947,9 +946,9 @@ _PAPER_TMPL = """<!DOCTYPE html><html lang="ko"><head>
   </div>
 
   <div class="card">
-    <h2>💡 추천 — 지금 진입 검토 <span class="cnt" id="nown"></span></h2>
+    <h2>💡 지금 진입 — 전환 확정·저점 <span class="cnt" id="nown"></span></h2>
     <div id="picksNow"></div>
-    <h2 style="margin-top:14px">👀 곧 올 자리 · 전환 임박 (관찰) <span class="cnt" id="watchn"></span></h2>
+    <h2 style="margin-top:14px">👀 곧 올 자리 — 전환 임박·눌림 대기 <span class="cnt" id="watchn"></span></h2>
     <div id="picksWatch"></div>
   </div>
 
