@@ -52,6 +52,9 @@ def analyze(frames: dict[str, pd.DataFrame], meta: dict, bench=None) -> dict:
     turnover = float((d["Close"].iloc[-20:] * d["Volume"].iloc[-20:]).mean())
     ma120 = trend.get("ma", {}).get(120)
     stretch_lt = (price / ma120 - 1) if ma120 else 0.0
+    # 최근 3개월(63거래일) 상승폭 — '이미 많이 올랐나'(고점 추격) 판정용
+    price63 = float(d["Close"].iloc[-63]) if len(d) >= 63 else price
+    runup63 = (price / price63 - 1) if price63 else 0.0
     nh_pct = newhigh.get("pct_from_high")
     # 추격(이미 많이 올라 타점이 멂)도 과대이격에 포함 → 진입타점 판정의 단일 기준.
     near_high = newhigh["score"] == 2
@@ -119,7 +122,7 @@ def analyze(frames: dict[str, pd.DataFrame], meta: dict, bench=None) -> dict:
         "verdict": verdict_txt, "entry": entry, "entry_kind": entry_kind,
         "vetoed": vetoed, "terms": terms,
         "ext": {"ma20_stretch": stretch, "runup10": runup10,
-                "ma120_stretch": stretch_lt},
+                "ma120_stretch": stretch_lt, "runup63": runup63},
         "turnover": turnover,
         "trend_oneline": trend_oneline, "chase": chase, "chase_note": chase_note,
         "transition_stage": stage, "transition_label": stage_label,
