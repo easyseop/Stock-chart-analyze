@@ -1,0 +1,199 @@
+<!DOCTYPE html><html lang="ko"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>티커 즉석 조회</title>
+<style>
+  body{margin:0;font-family:-apple-system,'Segoe UI','Noto Sans KR',sans-serif;
+    background:#f1f5f9;color:#1e293b}
+  header{background:#0f172a;color:#fff;padding:14px 20px}
+  header h1{margin:0;font-size:17px} header a{color:#7dd3fc;font-size:13px;text-decoration:none}
+  .wrap{max-width:620px;margin:0 auto;padding:18px}
+  .card{background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:18px;margin-bottom:14px}
+  label{display:block;font-size:13px;font-weight:600;margin:10px 0 4px;color:#334155}
+  input{width:100%;box-sizing:border-box;padding:11px 12px;border:1px solid #cbd5e1;
+    border-radius:8px;font-size:15px}
+  button.go{width:100%;margin-top:14px;padding:13px;border:0;border-radius:10px;
+    background:#2563eb;color:#fff;font-size:16px;font-weight:700;cursor:pointer}
+  button.go:disabled{background:#94a3b8}
+  .hint{font-size:12px;color:#64748b;line-height:1.6;margin-top:6px}
+  .tkchk{font-size:13px;margin-top:7px;min-height:18px;font-weight:600}
+  .tkchk.ok{color:#16a34a} .tkchk.bad{color:#dc2626}
+  .stat{font-size:14px;margin-top:12px;padding:12px;border-radius:8px;background:#f8fafc;
+    border:1px solid #e2e8f0;display:none}
+  .stat.on{display:block}
+  .pbar{height:12px;background:#e2e8f0;border-radius:999px;overflow:hidden;margin-top:12px;display:none}
+  .pbar.on{display:block}
+  .pfill{height:100%;width:0;background:#2563eb;transition:width .5s ease;border-radius:999px}
+  .pfill.anim{background-image:linear-gradient(90deg,#2563eb,#60a5fa,#2563eb);background-size:200% 100%;animation:flow 1.2s linear infinite}
+  @keyframes flow{0%{background-position:0 0}100%{background-position:-200% 0}}
+  details summary{cursor:pointer;font-weight:600;color:#334155}
+  code{background:#f1f5f9;padding:1px 5px;border-radius:4px}
+  .hist-item{display:flex;align-items:center;gap:10px;padding:9px 2px;
+    border-bottom:1px solid #f1f5f9;font-size:14px}
+  .hist-item:last-child{border-bottom:0}
+  .hist-item a.t{font-weight:700;color:#1d4ed8;text-decoration:none}
+  .hist-item .s{font-size:12px;color:#64748b;margin-left:auto}
+  .hist-item .x{color:#cbd5e1;cursor:pointer;font-size:18px;line-height:1}
+</style></head><body>
+<header><a href="index.html">&larr; 스크리너</a>
+<h1>티커 즉석 조회 <span style="color:#38bdf8;font-size:13px">웹에서 바로 수집</span></h1></header>
+<div class="wrap">
+  <div class="card">
+    <label>티커 / 코드</label>
+    <input id="tk" placeholder="예: AAPL, NVDA, 005930" autocapitalize="characters"
+      oninput="validate(this.value)">
+    <div id="tkchk" class="tkchk"></div>
+    <button class="go" id="go" onclick="run()">수집하기 (워크플로 실행)</button>
+    <div class="stat" id="st"></div>
+    <div class="pbar" id="pb"><div class="pfill" id="pf"></div></div>
+    <div class="hint">미국 티커 또는 한국 6자리 코드. 누르면 GitHub Actions의 lookup 워크플로가
+      돌아 그 종목을 분석합니다(약 1~2분). 끝나면 결과 링크가 떠요.</div>
+  </div>
+  <div class="card" id="histcard" style="display:none">
+    <div style="font-weight:700;margin-bottom:6px">📋 즉석조회한 종목 <span id="histn" style="color:#94a3b8;font-weight:400;font-size:13px"></span></div>
+    <div id="hist"></div>
+    <div style="text-align:right;margin-top:6px"><span id="histclear" onclick="clearHist()" style="font-size:12px;color:#94a3b8;cursor:pointer">목록 비우기</span></div>
+  </div>
+  <div class="card">
+    <details><summary>최초 1회: 내 GitHub 토큰 입력 (브라우저에만 저장)</summary>
+    <label>GitHub 토큰 (PAT)</label>
+    <input id="pat" type="password" placeholder="github_pat_...">
+    <div class="hint">웹에서 워크플로를 켜려면 토큰이 필요합니다. <b>이 토큰은 당신 브라우저에만
+      저장</b>(localStorage)되고 어디에도 전송/공개되지 않습니다(깃허브 API 호출에만 사용).<br>
+      만드는 법: GitHub &rarr; Settings &rarr; Developer settings &rarr;
+      <b>Fine-grained tokens</b> &rarr; 이 저장소만 선택 &rarr; 권한
+      <code>Actions: Read and write</code> 부여 &rarr; 생성한 토큰을 여기 붙여넣기.</div>
+    </details>
+  </div>
+</div>
+<script>
+  var REPO="__REPO__", WF="lookup.yml";
+  var pat=document.getElementById('pat'), tk=document.getElementById('tk'),
+      st=document.getElementById('st'), go=document.getElementById('go');
+  pat.value=localStorage.getItem('ghpat')||"";
+  function show(m){st.className='stat on';st.innerHTML=m;}
+  // 형식 검증: 미국 영문 티커(1~6자) 또는 한국 6자리 코드만. 한글/오타는 수집 전에 거른다.
+  var US_RE=/^[A-Z][A-Z.\-]{0,5}$/, KR_RE=/^[0-9]{6}$/, HANGUL=/[ㄱ-ㅣ가-힣]/;
+  function classify(v){
+    v=(v||'').trim().toUpperCase();
+    if(!v) return {ok:null,msg:''};
+    if(HANGUL.test(v)) return {ok:false,msg:'❌ 한글은 안 돼요 — 영문 티커(예: AAPL) 또는 한국 6자리 코드(예: 005930)'};
+    if(KR_RE.test(v)) return {ok:true,t:v,msg:'✅ 한국 코드 '+v+' — 수집하면 실제 종목명이 확인돼요'};
+    if(US_RE.test(v)) return {ok:true,t:v,msg:'✅ 미국 티커 '+v+' — 수집하면 실제 종목명이 확인돼요'};
+    return {ok:false,msg:'❌ 형식 오류 — 미국 티커는 영문 1~6자, 한국은 숫자 6자리. ("'+v+'"는 종목 코드가 아니에요)'};
+  }
+  function validate(v){
+    var c=classify(v), el=document.getElementById('tkchk');
+    el.className='tkchk'+(c.ok===true?' ok':(c.ok===false?' bad':''));
+    el.textContent=c.msg;
+    go.disabled=(c.ok===false);
+    return c;
+  }
+  // 즉석조회 누적 이력(브라우저 저장) — 조회한 종목이 목록으로 쌓이고, 수집중은 ⏳
+  var HIST=[]; try{HIST=JSON.parse(localStorage.getItem('lookup_hist')||'[]');}catch(e){HIST=[];}
+  function saveHist(){localStorage.setItem('lookup_hist',JSON.stringify(HIST.slice(0,40)));}
+  function pushHist(t){HIST=HIST.filter(function(h){return h.t!==t;});
+    HIST.unshift({t:t,done:false,ts:Date.now()});saveHist();renderHist();}
+  function markDone(t,ok){for(var i=0;i<HIST.length;i++){if(HIST[i].t===t){HIST[i].done=true;HIST[i].ok=ok!==false;}}saveHist();renderHist();}
+  function delHist(t){HIST=HIST.filter(function(h){return h.t!==t;});saveHist();renderHist();}
+  function clearHist(){if(confirm('즉석조회 목록을 비울까요?')){HIST=[];saveHist();renderHist();}}
+  function renderHist(){
+    var c=document.getElementById('histcard'),h=document.getElementById('hist');
+    document.getElementById('histn').textContent=HIST.length?'('+HIST.length+')':'';
+    if(!HIST.length){c.style.display='none';return;} c.style.display='';
+    h.innerHTML=HIST.map(function(x){
+      var s=x.done?(x.ok===false?'⚠️ 실패':'✅ 완료'):'⏳ 수집중';
+      return '<div class="hist-item"><a class="t" href="stocks/'+x.t+'.html">'+x.t+'</a>'
+        +'<span class="s">'+s+' · <a href="stocks/'+x.t+'.html" style="color:#1d4ed8">상세</a></span>'
+        +'<span class="x" title="삭제" onclick="delHist(\''+x.t+'\')">&times;</span></div>';
+    }).join('');
+  }
+  function bar(p,c,anim){var pb=document.getElementById('pb'),pf=document.getElementById('pf');
+    pb.className='pbar on';pf.style.width=p+'%';if(c)pf.style.background=c;
+    pf.className='pfill'+(anim?' anim':'');}
+  async function defaultBranch(){
+    try{var r=await fetch('https://api.github.com/repos/'+REPO);
+      return (await r.json()).default_branch||'main';}catch(e){return 'main';}
+  }
+  async function run(){
+    var t=tk.value.trim().toUpperCase(), p=pat.value.trim();
+    if(!t){show('티커를 입력하세요.');return;}
+    var c=validate(t);                       // 수집 전 형식 검증(한글/오타 차단)
+    if(c.ok===false){show(c.msg);return;}
+    if(!p){show('먼저 아래 토큰을 입력하세요(최초 1회).');return;}
+    localStorage.setItem('ghpat',p);
+    // 이미 진행 중인 같은 종목이면 중복 실행하지 말고 이어서 추적(게이지 초기화 방지)
+    var act=loadActive();
+    if(act&&act.t===t){
+      show('⏳ <b>'+t+'</b> 이미 수집 중 — 이어서 확인합니다.'); bar(45,null,true);
+      track(p,t); return;
+    }
+    go.disabled=true; show('실행 요청 중...'); bar(12,null,true);
+    var ref=await defaultBranch();
+    var r=await fetch('https://api.github.com/repos/'+REPO+'/actions/workflows/'+WF+'/dispatches',{
+      method:'POST',
+      headers:{'Authorization':'Bearer '+p,'Accept':'application/vnd.github+json',
+        'X-GitHub-Api-Version':'2022-11-28'},
+      body:JSON.stringify({ref:ref,inputs:{ticker:t}})
+    });
+    go.disabled=false;
+    if(r.status===204){
+      saveActive(t); pushHist(t);   // 진행 상태 저장 + 이력에 추가(수집중)
+      show('✅ <b>'+t+'</b> 수집 시작! 1~2분 후 결과를 봅니다...'); bar(30,null,true);
+      setTimeout(function(){startTrack(p,t);},6000);
+    }else{
+      var e=await r.text();
+      show('❌ 실패 ('+r.status+'). 토큰/권한 확인.<br><small>'+e.slice(0,160)+'</small>'); bar(100,'#dc2626',false);
+    }
+  }
+  // 추적 루프는 한 번에 하나만(모바일 백그라운드 복귀 시 중복 방지) — 세대 토큰으로 관리
+  var TGEN=0;
+  function startTrack(p,t){ TGEN++; track(p,t,TGEN); }
+  async function track(p,t,gen){
+    if(gen!==TGEN)return;            // 더 최신 추적이 시작됐으면 이 루프는 종료
+    try{
+      var r=await fetch('https://api.github.com/repos/'+REPO+'/actions/workflows/'+WF+'/runs?per_page=1',
+        {headers:{'Authorization':'Bearer '+p,'Accept':'application/vnd.github+json'}});
+      var run=(await r.json()).workflow_runs[0];
+      if(!run){show('실행 대기 중...');bar(35,null,true);setTimeout(function(){track(p,t,gen);},5000);return;}
+      if(run.status!=='completed'){
+        show('⏳ <b>'+t+'</b> 수집·분석 중... ('+run.status+') · <a href="'+run.html_url+'" target=_blank>로그</a>');
+        bar(run.status==='queued'?45:75,null,true);
+        setTimeout(function(){track(p,t,gen);},5000);
+      }else{
+        TGEN++;          // 완료 → 진행 중인 루프 모두 무효화
+        clearActive();   // 끝났으니 진행 상태 해제
+        var ok=run.conclusion==='success';
+        markDone(t,ok);  // 이력 상태 갱신(완료/실패)
+        bar(100,ok?'#16a34a':'#dc2626',false);
+        show((ok?'✅ 완료! <b>'+t+'</b> 스크리너에 추가됨':'⚠️ '+run.conclusion+' <b>'+t+'</b>')+'<br>'
+          +'<a href="index.html">스크리너에서 보기 &rarr;</a> · '
+          +'<a href="stocks/'+t+'.html">상세 차트 &rarr;</a> · '
+          +'<a href="'+run.html_url+'" target=_blank>로그</a>'
+          +'<div class=hint>안 보이면 새로고침(배포 반영 1~2분).</div>');
+      }
+    }catch(e){show('상태 조회 오류: '+e);}
+  }
+  // 진행 상태를 브라우저에 저장 → 새로고침/재방문해도 게이지·상태 유지(초기화 방지)
+  function saveActive(t){localStorage.setItem('lookup_active',JSON.stringify({t:t,ts:Date.now()}));}
+  function clearActive(){localStorage.removeItem('lookup_active');}
+  function loadActive(){
+    var a=localStorage.getItem('lookup_active'); if(!a)return null;
+    try{a=JSON.parse(a);}catch(e){clearActive();return null;}
+    if(Date.now()-a.ts>20*60*1000){clearActive();return null;}  // 20분 지나면 만료
+    return a;
+  }
+  tk.addEventListener('keydown',function(e){if(e.key==='Enter')run();});
+  // 진행 중이던 조회가 있으면 이어서 추적(모바일은 백그라운드에서 타이머가 멈추므로
+  // 화면 복귀(visibilitychange/focus) 때마다 다시 살린다 → 게이지가 안 뜨던 문제 해결)
+  function resume(){
+    var a=loadActive(); if(!a)return;
+    var p=localStorage.getItem('ghpat')||'';
+    if(tk)tk.value=a.t;
+    show('⏳ <b>'+a.t+'</b> 진행 확인 중...'); bar(40,null,true);
+    if(p)startTrack(p,a.t);
+    else show('토큰을 입력하면 <b>'+a.t+'</b> 진행 상태를 이어볼 수 있어요.');
+  }
+  window.addEventListener('load',function(){renderHist();resume();});
+  window.addEventListener('focus',resume);
+  document.addEventListener('visibilitychange',function(){if(!document.hidden)resume();});
+</script></body></html>

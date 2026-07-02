@@ -22,6 +22,7 @@ on:
       - "config.py"
       - ".github/workflows/daily.yml"
   schedule:
+    # ※ 주기를 바꾸면 config.UPDATE_INTERVAL_MIN(홈 안내문 표시값)도 함께 바꿀 것.
     - cron: "*/15 0-6 * * 1-5"    # 한국 장중(09~15:30 KST) 15분마다 — 한국주 갱신
     - cron: "*/15 13-20 * * 1-5"  # 미 장중 15분마다 증분 갱신 — 보유/후보 종목 지표 최신화
     - cron: "0 22 * * 1-5"        # 마감 후: 백필 + 일일 정리(메인, 전체)
@@ -127,3 +128,14 @@ jobs:
     steps:
       - id: deploy
         uses: actions/deploy-pages@v4
+      # 배포 후 라이브 스모크체크 — 페이지가 실제로 뜨고 핵심 섹션이 있는지 확인.
+      #   (빌드 전 gates.audit = 사전 차단, 이 단계 = 사후 검증. 실패 시 워크플로가
+      #    빨간불이 되어 배포 사고를 바로 알 수 있음)
+      - name: 라이브 스모크체크
+        run: |
+          sleep 15
+          URL="${{ steps.deploy.outputs.page_url }}"
+          curl -sf "${URL}?cb=${{ github.run_id }}" -o /tmp/live.html
+          grep -q "마지막 갱신" /tmp/live.html
+          grep -q "클로드라면" /tmp/live.html
+          echo "라이브 정상: $URL"
