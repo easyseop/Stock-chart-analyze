@@ -42,7 +42,7 @@ def _detail(result: dict, frames: dict) -> str:
 
 
 from scanner.plan import (rec_n as _rec_n, REC_MIN, timing as _timing,
-                          thesis as _plan_thesis, junk as _plan_junk)
+                          thesis as _plan_thesis)
 
 
 def _sign(v) -> str:
@@ -203,6 +203,10 @@ def build(results: list[dict], frames_map: dict[str, dict],
           out_dir: str = "public", metas: dict | None = None) -> str:
     """스크리너(index.html) + 종목별 상세(stocks/*.html) 생성. out_dir 반환."""
     import config
+    from scanner import gates
+    # 자가검증(불변식): 모순·잡주·폭등·손절폭 위반이 있으면 여기서 빌드 실패 →
+    # 나쁜 추천이 배포되는 일 자체를 막는다(지난 회귀: NXPI·KRC·GPUS·DB하이텍·AES).
+    gates.audit(results, _paper_picks(results))
     os.makedirs(os.path.join(out_dir, "stocks"), exist_ok=True)
     h_min = config.MA_PERIODS["H"][-1] + 5
     for r in results:
@@ -229,12 +233,8 @@ def build(results: list[dict], frames_map: dict[str, dict],
     return out_dir
 
 
-# '이미 폭등' 추천 제외 기준 — config 단일 출처(조절은 config.BLOWOFF_RATIO).
-import config as _cfg
-BLOWOFF = _cfg.BLOWOFF_RATIO
-
-
 # ── 모의투자(페이퍼 트레이딩) 페이지 ──────────────────────────────
+# 추천 판정·품질 게이트는 전부 scanner/gates.py(단일 출처) — 여기엔 조건 없음.
 def _pick_item(r: dict, th: dict) -> dict:
     risk = r.get("risk") or {}
     p = (r.get("sr") or {}).get("price")
@@ -250,61 +250,23 @@ def _pick_item(r: dict, th: dict) -> dict:
 
 
 def _paper_picks(results: list[dict]) -> dict:
-    """추천 큐레이션: '지금 진입 검토'(now) vs '곧 올 자리·전환 임박'(watch).
+    """추천 큐레이션: '지금 진입'(now) vs '곧 올 자리'(watch).
 
-    품질 게이트(사용자 검토 반영): ① 저유동성(거래 불가 잡주) 제외, ② 장기 폭등(이미
-    많이 오른 추격)은 '지금 진입'에서 제외, ③ 손절폭 과대(R:R 나쁨)는 '지금 진입' 제외.
+    판정은 전부 gates.classify(단일 출처)에 위임 — 여기서 조건을 추가하지 말 것.
+    (과거 이 함수 안의 OR-분기 인라인 게이트가 우회 구멍의 원인이었음: NXPI·KRC)
     """
     import config
+    from scanner import gates
     now, watch = [], []
     for r in results:
-        if r.get("vetoed") or r.get("entry_kind") == "avoid":
+        c = gates.classify(r)
+        if c["group"] is None:
             continue
-        if _plan_junk(r):              # 동전주($1·1000원 미만)·심한 부실(−85%↓) 제외
-            continue
-        # ① 유동성: 20일 평균 거래대금 낮으면(잡주, 거래 불가) 추천 자체에서 제외
-        ccy = r.get("ccy", "USD")
-        turn = r.get("turnover", 0) or 0
-        liq_min = config.LIQ_MIN_USD if ccy != "KRW" else config.LIQ_MIN_KRW
-        if turn < liq_min:
-            continue
-        # ② '이미 폭등' 하드 제외(now·watch 모두): 추천 안 함.
-        #   기준 = 지수 대비 3개월 상대강도(RS) +BLOWOFF↑  또는  120일선 대비 +BLOWOFF↑
-        ext = r.get("ext") or {}
-        rs_rel = (r.get("rs") or {}).get("rel") or 0
-        if rs_rel >= BLOWOFF or ext.get("ma120_stretch", 0) >= BLOWOFF:
-            continue
-        th = _plan_thesis(r)
-        rec = _rec_n(r)
-        tm = _timing(r)
-        stage = r.get("transition_stage", 0)
-        kind = r.get("entry_kind", "now")
-        item = _pick_item(r, th)
-        # ③ 손절폭 과대 = R:R 나쁨. 지금진입은 12%↑ 제외, 관찰은 15%↑ 제외.
-        entry = r.get("entry") or 0
-        stop = (r.get("risk") or {}).get("stop") or 0
-        price = (r.get("sr") or {}).get("price") or 0
-        stop_pct = (entry - stop) / entry if entry else 0
-        # ④ 과도한 눌림: 눌림 목표가 현재가보다 25%+ 아래 = '곧 올 자리' 아님(대폭락 대기)
-        far_pull = (kind == "pullback" and price
-                    and (price - entry) / price >= 0.25)
-        # '지금 진입'(조건부 포함)은 깨끗한 셋업만 — 정배열(상승 정렬) 또는 전환 ③④.
-        #   혼조·횡보·단기 하락 중(예: NXPI)인데 점수만 높은 건 제외.
-        # '이미 많이 오른'(최근 3개월 +기준↑) = 고점 추격 → 제외.
-        already_ran = ext.get("runup63", 0) >= config.RECENT_RUNUP_MAX
-        # ★ 핵심(사용자 원칙): 하락→상승 '전환 후보'만 추천. 이미 상승추세(정배열)는 제외.
-        #   전환단계 = ①임박 ②갓돌파 ③돌파후 횡보 ④전환 확정. 저점에서 도는 종목들.
-        #   • 지금 진입  = 전환 확정/대기(③·④)이고 지금이 살 자리(과열·추격 아님, 지지 근처).
-        #   • 곧 올 자리 = 전환 임박·갓돌파(①·②) 또는 ③·④인데 눌림/돌파 대기.
-        is_now = (th["now"] and stage >= 3 and (stop_pct < 0.12)
-                  and (not already_ran))
-        is_watch = ((not is_now) and (stop_pct < 0.15) and (not far_pull)
-                    and (stage in (1, 2)
-                         or (stage >= 3 and kind in ("pullback", "breakout"))))
-        if is_now:
-            now.append((rec, r.get("norm", 0), item))
-        elif is_watch:
-            watch.append((stage, r.get("norm", 0), item))
+        item = _pick_item(r, _plan_thesis(r))
+        if c["group"] == "now":
+            now.append((_rec_n(r), r.get("norm", 0), item))
+        else:
+            watch.append((r.get("transition_stage", 0), r.get("norm", 0), item))
     now.sort(key=lambda x: (x[0], x[1]), reverse=True)
     watch.sort(key=lambda x: (x[0], x[1]), reverse=True)
 
@@ -320,8 +282,8 @@ def _paper_picks(results: list[dict]) -> dict:
         return out
 
     seen = set()
-    now_p = _dedup(now, seen, 16)
-    watch_p = _dedup(watch, seen, 16)
+    now_p = _dedup(now, seen, config.PICKS_MAX)
+    watch_p = _dedup(watch, seen, config.PICKS_MAX)
     return {"now": now_p, "watch": watch_p}
 
 
