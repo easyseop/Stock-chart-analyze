@@ -192,7 +192,8 @@
     return '<div class="pick '+kind+'"><div class=ph><span class=flag>'+flag(p.ccy)+'</span>'
       +'<span class=nm><a href="stocks/'+p.code+'.html">'+p.name+'</a></span>'
       +'<span class=tag>'+p.sig+'</span>'+(p.stage?'<span class=tag>'+p.stage+'</span>':'')
-      +(p.range_pos!=null?'<span class=tag style="background:#eff6ff;color:#1d4ed8">📍 저점권 '+p.range_pos+'%</span>':'')+'</div>'
+      +(p.range_pos!=null?'<span class=tag style="background:#eff6ff;color:#1d4ed8">📍 저점권 '+p.range_pos+'%</span>':'')
+      +(p.freshness?'<span class=tag style="'+(p.fresh?'background:#fff7ed;color:#c2410c':'background:#f1f5f9;color:#64748b')+'">'+p.freshness+'</span>':'')+'</div>'
       +'<div class="vd '+vc+'">'+p.verdict+'</div>'
       +'<div class=th>🤖 클로드라면: '+p.thesis+'</div>'
       +'<div class=lv>'+lv+'</div>'

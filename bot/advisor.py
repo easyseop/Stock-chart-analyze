@@ -76,9 +76,14 @@ def check_buy_signals(sigs: list[dict], state: dict, dry_run: bool) -> int:
             continue
         rp = s.get("range_pos")
         rp_txt = f" · 📍저점권 {rp*100:.0f}%" if rp is not None else ""
+        gap = s.get("break_gap")
+        fresh_txt = ("\n🔥 갓 전환 — 추세선 위 "
+                     f"+{gap*100:.1f}%" if s.get("fresh") and gap is not None
+                     else ("\n↗ 돌파후 진행(승률↓ 참고)" if s.get("fresh") is False
+                           and s.get("stage", 0) >= 3 else ""))
         text = (
             f"🟢 <b>매수 제안</b> — {s['name']}({s['code']})\n"
-            f"단계 {s.get('stage', 0)}{rp_txt}\n"
+            f"단계 {s.get('stage', 0)}{rp_txt}{fresh_txt}\n"
             f"진입 <b>{_fmt(s['entry'], s['ccy'])}</b> · "
             f"손절 {_fmt(s['stop'], s['ccy'])} · "
             f"목표 {_fmt(s['target'], s['ccy'])}\n"

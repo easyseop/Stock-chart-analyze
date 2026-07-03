@@ -142,6 +142,15 @@ def _rec_card(p: dict, kind: str) -> str:
     low_tag = (f'<span class="rtag" style="background:#eff6ff;color:#1d4ed8" '
                f'title="52주 저가~고가 범위에서 현재가 위치(낮을수록 저점)">'
                f'📍 저점권 {rp}%</span>')
+    fl = p.get("freshness")
+    if fl:
+        style = ("background:#fff7ed;color:#c2410c" if p.get("fresh")
+                 else "background:#f1f5f9;color:#64748b")
+        gap = p.get("break_gap")
+        gap_txt = f" +{gap}%" if (gap is not None and gap >= 0) else ""
+        low_tag += (f'<span class="rtag" style="{style}" '
+                    f'title="하락추세선 대비 현재가 위치 — 갓 깬 것이 신선한 전환">'
+                    f'{html.escape(fl)}{gap_txt}</span>')
     return (
         f'<div class="rc {kind}">'
         f'<div class="rch"><a href="stocks/{p["code"]}.html">{html.escape(p["name"])}</a>'
@@ -327,8 +336,11 @@ def _signals_json(results: list[dict]) -> str:
             "shares_1pct": risk.get("shares", 0),      # 계좌 1% 리스크 기준 수량
             "range_pos": round(float(r.get("range_pos", 0.5)), 4),
             "norm": round(float(r.get("norm", 0)), 1),
+            "fresh": _freshness(r)[0],           # 갓 전환(추세선 부근) 여부 — 우선순위↑
+            "break_gap": (round(r["break_gap"], 4)
+                          if r.get("break_gap") is not None else None),
         })
-    sigs.sort(key=lambda s: (s["group"], -s["stage"], -s["norm"]))
+    sigs.sort(key=lambda s: (s["group"], not s["fresh"], -s["stage"], -s["norm"]))
     return json.dumps({
         "version": 1,
         "generated_at": now_utc.strftime("%Y-%m-%dT%H:%M:%SZ"),
@@ -339,9 +351,31 @@ def _signals_json(results: list[dict]) -> str:
 
 # ── 모의투자(페이퍼 트레이딩) 페이지 ──────────────────────────────
 # 추천 판정·품질 게이트는 전부 scanner/gates.py(단일 출처) — 여기엔 조건 없음.
+def _freshness(r: dict) -> tuple[bool, str]:
+    """돌파 신선도(사용자 원칙): 추세선을 '갓' 깨고 도는 후보 우선.
+
+    (신선 여부, 태그) — 신선=추세선 부근에서 막 도는 중(우선), 비신선=깨고
+    한참 올라 횡보(승률↓, 강등). break_gap 불명이면 보수적으로 비신선.
+    """
+    import config
+    stage = r.get("transition_stage", 0)
+    gap = r.get("break_gap")
+    if stage == 1:
+        return True, "⏳ 돌파 임박"
+    if stage == 2:
+        return True, "🔥 갓 돌파"
+    if stage >= 3:
+        if gap is not None and gap <= config.FRESH_BREAK_MAX:
+            return True, "🔥 갓 전환(추세선 부근)"
+        return False, "↗ 돌파후 진행(승률↓)"
+    return False, ""
+
+
 def _pick_item(r: dict, th: dict) -> dict:
     risk = r.get("risk") or {}
     p = (r.get("sr") or {}).get("price")
+    fresh, fresh_label = _freshness(r)
+    gap = r.get("break_gap")
     return {
         "code": r["code"], "name": r["name"], "ccy": r.get("ccy", "USD"),
         "price": round(float(p), 4) if p else 0,
@@ -351,6 +385,8 @@ def _pick_item(r: dict, th: dict) -> dict:
         "stop": round(float((risk.get("stop") or 0)), 4),
         "target": round(float((risk.get("target") or 0)), 4),
         "range_pos": round(float(r.get("range_pos", 0.5)) * 100),  # 52주 범위 내 %
+        "fresh": fresh, "freshness": fresh_label,
+        "break_gap": round(gap * 100, 1) if gap is not None else None,
     }
 
 
@@ -368,16 +404,20 @@ def _paper_picks(results: list[dict]) -> dict:
         if c["group"] is None:
             continue
         item = _pick_item(r, _plan_thesis(r))
+        # 정렬 1순위 = 돌파 신선도(사용자 원칙: 갓 깨고 도는 후보 우선,
+        #   깨고 한참 올라 횡보는 승률↓ → 뒤로)
         if c["group"] == "now":
-            now.append((_rec_n(r), r.get("norm", 0), item))
+            now.append((item["fresh"], _rec_n(r), r.get("norm", 0), item))
         else:
-            watch.append((r.get("transition_stage", 0), r.get("norm", 0), item))
-    now.sort(key=lambda x: (x[0], x[1]), reverse=True)
-    watch.sort(key=lambda x: (x[0], x[1]), reverse=True)
+            watch.append((item["fresh"], r.get("transition_stage", 0),
+                          r.get("norm", 0), item))
+    now.sort(key=lambda x: (x[0], x[1], x[2]), reverse=True)
+    watch.sort(key=lambda x: (x[0], x[1], x[2]), reverse=True)
 
     def _dedup(rows, seen, n):
         out = []
-        for _a, _b, i in rows:
+        for row in rows:
+            i = row[-1]
             if i["name"] in seen:
                 continue
             seen.add(i["name"])
