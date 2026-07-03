@@ -181,6 +181,25 @@ def _context_note(r: dict, group: str, mk: str):
     return None
 
 
+def freshness(r: dict) -> tuple[bool, str]:
+    """돌파 신선도(사용자 원칙): 추세선을 '갓' 깨고 도는 후보 우선.
+
+    (신선 여부, 태그). 신선=추세선 부근에서 막 도는 중 / 비신선=깨고 한참 올라
+    횡보(승률↓). break_gap 불명이면 보수적으로 비신선. screener·lwc 공용.
+    """
+    stage = r.get("transition_stage", 0)
+    gap = r.get("break_gap")
+    if stage == 1:
+        return True, "⏳ 돌파 임박"
+    if stage == 2:
+        return True, "🔥 갓 돌파"
+    if stage >= 3:
+        if gap is not None and gap <= config.FRESH_BREAK_MAX:
+            return True, "🔥 갓 전환(추세선 부근)"
+        return False, "↗ 돌파후 진행(승률↓)"
+    return False, ""
+
+
 def _fmt(v, ccy: str) -> str:
     if v is None:
         return "-"
@@ -367,9 +386,25 @@ def plan_html(r: dict) -> str:
     tm = timing(r)
     tm_html = f'<div class="plan-timing">{html.escape(tm)}</div>' if tm else ""
     zones_html = _zones_html(r, f)
+    # 저점권·돌파신선도 태그 — 홈/모의투자 추천 카드와 동일 기준(일관성)
+    tags = []
+    rp = r.get("range_pos")
+    if rp is not None:
+        tags.append(f'<span class="ptag" style="background:#eff6ff;color:#1d4ed8">'
+                    f'📍 저점권 {rp*100:.0f}%</span>')
+    fresh, flabel = freshness(r)
+    if flabel:
+        gap = r.get("break_gap")
+        gap_txt = (f" +{gap*100:.1f}%" if fresh and gap is not None and gap >= 0
+                   else "")
+        style = ("background:#fff7ed;color:#c2410c" if fresh
+                 else "background:#f1f5f9;color:#64748b")
+        tags.append(f'<span class="ptag" style="{style}">'
+                    f'{html.escape(flabel)}{gap_txt}</span>')
+    tags_html = (f'<div class="plan-tags">{"".join(tags)}</div>' if tags else "")
     return _TMPL.format(
         color=color, head=html.escape(head), why=why, timing=tm_html,
-        note=note_html, zones=zones_html,
+        tags=tags_html, note=note_html, zones=zones_html,
         entry=f(entry), entry_desc=entry_desc, entry_src=entry_src,
         stop=f(risk["stop"]), stop_desc=stop_desc, stop_more=stop_more,
         target=f(risk["target"]), rr=f"{risk['rr']:.0f}",
@@ -411,6 +446,7 @@ _TMPL = """<div class="plan">
     <span class="plan-t">📋 매매 전략</span>
     <span class="plan-head" style="color:{color}">{head}</span>
   </div>
+  {tags}
   {timing}
   {note}
   {zones}
@@ -442,6 +478,8 @@ PLAN_CSS = """
   .plan-head{font-weight:700;font-size:13.5px}
   .plan-timing{margin:10px 14px 0;padding:9px 12px;border-radius:9px;font-size:14px;
     font-weight:700;background:#ecfdf5;color:#065f46;border:1px solid #a7f3d0}
+  .plan-tags{margin:10px 14px 0;display:flex;gap:6px;flex-wrap:wrap}
+  .ptag{font-size:12px;font-weight:700;padding:3px 9px;border-radius:999px}
   .plan-note{margin:10px 14px 0;padding:9px 12px;border-radius:9px;font-size:12.5px;
     line-height:1.65;overflow-wrap:anywhere}
   .plan-note.warn{background:#fffbeb;color:#92400e;border:1px solid #fde68a}

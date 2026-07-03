@@ -81,6 +81,9 @@ def check_buy_signals(sigs: list[dict], state: dict, dry_run: bool) -> int:
                      f"+{gap*100:.1f}%" if s.get("fresh") and gap is not None
                      else ("\n↗ 돌파후 진행(승률↓ 참고)" if s.get("fresh") is False
                            and s.get("stage", 0) >= 3 else ""))
+        ed = s.get("earnings_d")
+        if ed is not None and 0 <= ed <= 3:
+            fresh_txt += f"\n📅 <b>어닝 D-{ed}</b> — 갭 리스크, 신규 진입 주의"
         text = (
             f"🟢 <b>매수 제안</b> — {s['name']}({s['code']})\n"
             f"단계 {s.get('stage', 0)}{rp_txt}{fresh_txt}\n"
@@ -97,6 +100,55 @@ def check_buy_signals(sigs: list[dict], state: dict, dry_run: bool) -> int:
         sent.append(s["id"])
         n += 1
     state["sent_buy"] = sent[-500:]      # 무한 성장 방지
+    return n
+
+
+# ── ①-b 눌림/돌파 '도달' 알림 — 사용자 전략의 핵심 순간 ─────────
+# '곧 올 자리(watch)' 종목이 실제로 진입 구간에 닿는 순간을 알림.
+#   눌림 대기(pullback): 현재가가 진입가까지 내려옴 → "기다리던 자리 도착"
+#   돌파 대기(breakout): 현재가가 진입가(저항) 위로 올라섬 → "돌파 발생"
+
+ARRIVAL_TOL = 0.01   # 진입가 ±1% 이내면 '도달'로 판정
+
+
+def check_arrivals(sigs: list[dict], state: dict, dry_run: bool) -> int:
+    today = datetime.date.today().isoformat()
+    sent = state.setdefault("sent_arrival", {}).setdefault(today, [])
+    for d in list(state["sent_arrival"]):
+        if d < (datetime.date.today() - datetime.timedelta(days=7)).isoformat():
+            del state["sent_arrival"][d]
+    n = 0
+    for s in sigs:
+        if s["group"] != "watch" or s.get("entry_kind") not in ("pullback",
+                                                               "breakout"):
+            continue
+        code = s["code"]
+        if code in sent:
+            continue
+        entry = s.get("entry")
+        if not entry:
+            continue
+        px = _quote(code, None)
+        if px is None:
+            continue
+        hit, title = None, ""
+        if s["entry_kind"] == "pullback" and px <= entry * (1 + ARRIVAL_TOL):
+            hit, title = True, "눌림 도달 — 기다리던 자리"
+        elif s["entry_kind"] == "breakout" and px >= entry * (1 - ARRIVAL_TOL):
+            hit, title = True, "돌파 발생 — 저항 넘김"
+        if hit:
+            text = (
+                f"🎯 <b>{title}</b> — {s['name']}({code})\n"
+                f"현재가 {_fmt(px, s['ccy'])} ↔ 진입가 {_fmt(entry, s['ccy'])}\n"
+                f"손절 {_fmt(s['stop'], s['ccy'])} · 목표 {_fmt(s['target'], s['ccy'])}\n"
+                f"⚠️ 도달 알림일 뿐 — 지지/안착 확인 후 판단. 투자권유 아님."
+            )
+            if not dry_run:
+                notify.send(text)
+            else:
+                print(text)
+            sent.append(code)
+            n += 1
     return n
 
 
@@ -149,9 +201,10 @@ def run_once(args) -> None:
     sigs = data.get("signals", [])
     holdings = _load(args.holdings, [])
     nb = check_buy_signals(sigs, state, args.dry_run)
+    na = check_arrivals(sigs, state, args.dry_run)
     ns = check_sell_alerts(holdings, state, args.dry_run)
     print(f"시그널 {len(sigs)}개 · 보유 {len(holdings)}종목 → "
-          f"매수제안 {nb}건 · 매도제안 {ns}건 전송")
+          f"매수제안 {nb} · 도달알림 {na} · 매도제안 {ns}건 전송")
     _save(STATE_PATH, state)
 
 

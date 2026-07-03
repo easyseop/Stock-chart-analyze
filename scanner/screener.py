@@ -339,6 +339,7 @@ def _signals_json(results: list[dict]) -> str:
             "fresh": _freshness(r)[0],           # 갓 전환(추세선 부근) 여부 — 우선순위↑
             "break_gap": (round(r["break_gap"], 4)
                           if r.get("break_gap") is not None else None),
+            "earnings_d": earnings.days_until(r["code"]),  # 어닝까지 D-일수(없으면 null)
         })
     sigs.sort(key=lambda s: (s["group"], not s["fresh"], -s["stage"], -s["norm"]))
     return json.dumps({
@@ -351,24 +352,7 @@ def _signals_json(results: list[dict]) -> str:
 
 # ── 모의투자(페이퍼 트레이딩) 페이지 ──────────────────────────────
 # 추천 판정·품질 게이트는 전부 scanner/gates.py(단일 출처) — 여기엔 조건 없음.
-def _freshness(r: dict) -> tuple[bool, str]:
-    """돌파 신선도(사용자 원칙): 추세선을 '갓' 깨고 도는 후보 우선.
-
-    (신선 여부, 태그) — 신선=추세선 부근에서 막 도는 중(우선), 비신선=깨고
-    한참 올라 횡보(승률↓, 강등). break_gap 불명이면 보수적으로 비신선.
-    """
-    import config
-    stage = r.get("transition_stage", 0)
-    gap = r.get("break_gap")
-    if stage == 1:
-        return True, "⏳ 돌파 임박"
-    if stage == 2:
-        return True, "🔥 갓 돌파"
-    if stage >= 3:
-        if gap is not None and gap <= config.FRESH_BREAK_MAX:
-            return True, "🔥 갓 전환(추세선 부근)"
-        return False, "↗ 돌파후 진행(승률↓)"
-    return False, ""
+from scanner.plan import freshness as _freshness   # 돌파 신선도 — plan과 공용
 
 
 def _pick_item(r: dict, th: dict) -> dict:
