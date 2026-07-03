@@ -1,0 +1,42 @@
+name: buy-sell-advisor
+
+# 매수/매도 '제안' 텔레그램 알림 — 자동 주문 없음. daily.yml이 새 시그널을 만든
+# 직후(스캐너 스케줄과 동일 주기)에 signals.json을 읽어 새 매수 후보와 보유종목
+# (holdings.json) 손절/목표 터치를 알림. 실행은 안 함(제안만).
+on:
+  schedule:
+    - cron: "10,40 0-6 * * 1-5"    # 한국 장중, daily.yml 15분 크론 뒤 여유
+    - cron: "10,40 13-20 * * 1-5"  # 미국 장중
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: advisor
+  cancel-in-progress: true
+
+jobs:
+  advise:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -r requirements.txt
+
+      # 알림 중복 방지 상태(alert_state.json) — 실행 간 보존
+      - uses: actions/cache@v4
+        with:
+          path: bot/alert_state.json
+          key: alert-state-${{ github.run_id }}
+          restore-keys: |
+            alert-state-
+
+      - name: 매수/매도 제안 알림
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: python -m bot.advisor --once
