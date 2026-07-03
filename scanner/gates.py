@@ -72,7 +72,12 @@ def classify(r: dict) -> dict:
     far_pull = (kind == "pullback" and price and entry
                 and (price - entry) / price >= config.MAX_PULLBACK_GAP)
 
+    # 저점권(사용자 핵심): 전환 신호가 떠도 52주 범위 상단이면 '고점 추천' → 제외.
+    rp = r.get("range_pos", 0.5)
+
     if th["now"] and stage >= 3:
+        if rp > config.LOW_ZONE_NOW:
+            return {"group": None, "reasons": [f"저점권 아님(범위 {rp*100:.0f}%)"]}
         if stop_pct >= config.MAX_STOP_NOW:
             return {"group": None, "reasons": ["손절폭 과대(지금진입)"]}
         if already_ran:
@@ -80,6 +85,8 @@ def classify(r: dict) -> dict:
         return {"group": "now", "reasons": []}
 
     if stage in (1, 2) or (stage >= 3 and kind in ("pullback", "breakout")):
+        if rp > config.LOW_ZONE_WATCH:
+            return {"group": None, "reasons": [f"저점권 아님(범위 {rp*100:.0f}%)"]}
         if stop_pct >= config.MAX_STOP_WATCH:
             return {"group": None, "reasons": ["손절폭 과대(관찰)"]}
         if far_pull:
@@ -141,6 +148,9 @@ def audit(results: list[dict], picks: dict) -> None:
                     bad.append(f"{code}: now인데 전환단계 <3(전환 후보 아님)")
                 if (r.get("ext") or {}).get("runup63", 0) >= config.RECENT_RUNUP_MAX:
                     bad.append(f"{code}: now인데 3개월 급등(고점 추격)")
+                if r.get("range_pos", 0.5) > config.LOW_ZONE_NOW + tol:
+                    bad.append(f"{code}: now인데 저점권 아님"
+                               f"(범위 {r.get('range_pos', 0.5)*100:.0f}%)")
 
     if bad:
         head = "\n  ".join(bad[:12])

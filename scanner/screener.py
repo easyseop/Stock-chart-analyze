@@ -138,10 +138,14 @@ def _rec_card(p: dict, kind: str) -> str:
     fp = (lambda v: f"{v:,.0f}원") if ccy == "KRW" else (lambda v: f"${v:,.2f}")
     vc = "up" if "타당" in p["verdict"] else ("dn" if "회피" in p["verdict"] else "")
     stage = f'<span class="rtag">{html.escape(p["stage"])}</span>' if p["stage"] else ""
+    rp = p.get("range_pos", 50)
+    low_tag = (f'<span class="rtag" style="background:#eff6ff;color:#1d4ed8" '
+               f'title="52주 저가~고가 범위에서 현재가 위치(낮을수록 저점)">'
+               f'📍 저점권 {rp}%</span>')
     return (
         f'<div class="rc {kind}">'
         f'<div class="rch"><a href="stocks/{p["code"]}.html">{html.escape(p["name"])}</a>'
-        f'<span class="rtag">{html.escape(p["sig"])}</span>{stage}'
+        f'<span class="rtag">{html.escape(p["sig"])}</span>{stage}{low_tag}'
         f'<span class="rvd {vc}">{html.escape(p["verdict"])}</span></div>'
         f'<div class="rth">🤖 클로드라면: {p["thesis"]}</div>'
         f'<div class="rlv">진입 <b>{fp(p["entry"])}</b> · 손절 {fp(p["stop"])} · '
@@ -248,7 +252,52 @@ def build(results: list[dict], frames_map: dict[str, dict],
         fp.write(_tmpl("guide.html"))          # 매매 가이드(읽기 전용 안내)
     with open(os.path.join(out_dir, "paper.html"), "w", encoding="utf-8") as fp:
         fp.write(_paper_page(results))         # 모의투자(페이퍼 트레이딩)
+    os.makedirs(os.path.join(out_dir, "api"), exist_ok=True)
+    with open(os.path.join(out_dir, "api", "signals.json"), "w",
+              encoding="utf-8") as fp:
+        fp.write(_signals_json(results))       # 자동매매용 기계 판독 시그널(JSON)
     return out_dir
+
+
+def _signals_json(results: list[dict]) -> str:
+    """자동매매 봇용 시그널 API — 추천을 기계가 읽는 JSON으로.
+
+    토스/증권사 API 연동 시 실행 봇이 이 파일을 폴링해 주문 판단에 쓴다.
+    id = code+날짜+그룹 → 재빌드돼도 같은 시그널은 같은 id(중복 주문 방지 멱등키).
+    사람용 카드와 같은 gates 큐레이션 — 여기서 조건을 추가/변형하지 말 것.
+    """
+    import datetime
+    import json
+    from scanner import gates
+    now_utc = datetime.datetime.utcnow()
+    day = now_utc.strftime("%Y-%m-%d")
+    sigs = []
+    for r in results:
+        c = gates.classify(r)
+        if c["group"] is None:
+            continue
+        risk = r.get("risk") or {}
+        sigs.append({
+            "id": f'{r["code"]}-{day}-{c["group"]}',
+            "code": r["code"], "name": r["name"], "ccy": r.get("ccy", "USD"),
+            "group": c["group"],                       # now=지금 진입 / watch=관찰
+            "entry_kind": r.get("entry_kind"),
+            "stage": r.get("transition_stage", 0),
+            "price": round(float((r.get("sr") or {}).get("price") or 0), 4),
+            "entry": round(float(r.get("entry") or 0), 4),
+            "stop": round(float(risk.get("stop") or 0), 4),
+            "target": round(float(risk.get("target") or 0), 4),
+            "shares_1pct": risk.get("shares", 0),      # 계좌 1% 리스크 기준 수량
+            "range_pos": round(float(r.get("range_pos", 0.5)), 4),
+            "norm": round(float(r.get("norm", 0)), 1),
+        })
+    sigs.sort(key=lambda s: (s["group"], -s["stage"], -s["norm"]))
+    return json.dumps({
+        "version": 1,
+        "generated_at": now_utc.strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
+        "signals": sigs,
+    }, ensure_ascii=False, indent=1)
 
 
 # ── 모의투자(페이퍼 트레이딩) 페이지 ──────────────────────────────
@@ -264,6 +313,7 @@ def _pick_item(r: dict, th: dict) -> dict:
         "entry": round(float(r.get("entry") or 0), 4),
         "stop": round(float((risk.get("stop") or 0)), 4),
         "target": round(float((risk.get("target") or 0)), 4),
+        "range_pos": round(float(r.get("range_pos", 0.5)) * 100),  # 52주 범위 내 %
     }
 
 

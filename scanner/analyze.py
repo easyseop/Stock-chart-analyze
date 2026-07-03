@@ -55,6 +55,11 @@ def analyze(frames: dict[str, pd.DataFrame], meta: dict, bench=None) -> dict:
     # 최근 3개월(63거래일) 상승폭 — '이미 많이 올랐나'(고점 추격) 판정용
     price63 = float(d["Close"].iloc[-63]) if len(d) >= 63 else price
     runup63 = (price / price63 - 1) if price63 else 0.0
+    # 52주 범위 내 위치(0=최저점, 1=최고점) — '저점권' 게이트용(사용자: 저점에서 잡기)
+    lb = min(len(d), config.NEWHIGH_LOOKBACK)
+    lo52 = float(d["Low"].iloc[-lb:].min())
+    hi52 = float(d["High"].iloc[-lb:].max())
+    range_pos = (price - lo52) / (hi52 - lo52) if hi52 > lo52 else 0.5
     nh_pct = newhigh.get("pct_from_high")
     # 추격(이미 많이 올라 타점이 멂)도 과대이격에 포함 → 진입타점 판정의 단일 기준.
     near_high = newhigh["score"] == 2
@@ -123,7 +128,7 @@ def analyze(frames: dict[str, pd.DataFrame], meta: dict, bench=None) -> dict:
         "vetoed": vetoed, "terms": terms,
         "ext": {"ma20_stretch": stretch, "runup10": runup10,
                 "ma120_stretch": stretch_lt, "runup63": runup63},
-        "turnover": turnover,
+        "turnover": turnover, "range_pos": range_pos,
         "trend_oneline": trend_oneline, "chase": chase, "chase_note": chase_note,
         "transition_stage": stage, "transition_label": stage_label,
     }
