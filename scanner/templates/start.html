@@ -1,0 +1,92 @@
+<!DOCTYPE html><html lang="ko"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>시작 가이드</title>
+<style>
+  body{margin:0;font-family:-apple-system,'Segoe UI','Noto Sans KR',sans-serif;
+    background:#f1f5f9;color:#1e293b;line-height:1.75}
+  header{background:#0f172a;color:#fff;padding:14px 20px}
+  header a{color:#7dd3fc;font-size:13px;text-decoration:none}
+  header h1{margin:5px 0 0;font-size:18px}
+  .wrap{max-width:680px;margin:0 auto;padding:16px}
+  .card{background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:16px 18px;margin-bottom:13px}
+  h2{font-size:15.5px;margin:2px 0 10px;color:#0f172a}
+  .step{display:flex;gap:11px;margin:12px 0;align-items:flex-start}
+  .n{flex:0 0 26px;height:26px;border-radius:50%;background:#2563eb;color:#fff;
+    font-weight:800;font-size:14px;display:flex;align-items:center;justify-content:center}
+  .step b{color:#0f172a}
+  .step .d{font-size:13.5px;color:#334155}
+  table{width:100%;border-collapse:collapse;font-size:13px;margin:4px 0}
+  td,th{border-bottom:1px solid #eef2f7;padding:7px 8px;text-align:left;vertical-align:top}
+  th{color:#64748b;font-size:12px;background:#f8fafc;white-space:nowrap}
+  .tag{display:inline-block;font-size:12px;font-weight:700;padding:2px 9px;border-radius:999px;white-space:nowrap}
+  .big{background:#0f172a;color:#e2e8f0;border:0;font-size:14px}
+  .big b{color:#7dd3fc}
+  .note{font-size:12.5px;color:#64748b}
+  a.btn{display:inline-block;background:#2563eb;color:#fff;font-weight:700;
+    padding:9px 16px;border-radius:9px;text-decoration:none;font-size:14px;margin-top:4px}
+</style></head><body>
+<header><a href="index.html">&larr; 스크리너</a>
+<h1>🚀 3분 시작 가이드 — 뭐부터 보면 되나</h1></header>
+<div class="wrap">
+
+<div class="card big">
+<b>이 도구가 하는 일 한 줄:</b> 5,400여 종목(미국+한국)을 훑어서
+<b>"하락하다가 이제 막 상승으로 도는(전환) 종목을 저점에서"</b> 골라주고,
+진입가·손절가·목표가까지 계산해준다. 이미 오른 종목·잡주·폭등주는 자동으로 걸러진다.
+</div>
+
+<div class="card">
+<h2>매일 이 순서로 보면 끝 (3단계)</h2>
+<div class="step"><div class="n">1</div><div class="d">
+<b>홈 열기 → 맨 위 "🤖 클로드라면 살 전환 후보"만 보기.</b><br>
+<span class="tag" style="background:#fff7ed;color:#c2410c">🔥 갓 전환</span> 태그가 붙은
+종목이 최우선(추세선을 방금 깨고 도는 중).
+<span class="tag" style="background:#f1f5f9;color:#64748b">↗ 돌파후 진행</span>은 참고만.</div></div>
+<div class="step"><div class="n">2</div><div class="d">
+<b>끌리는 종목 클릭 → 상세에서 딱 3가지 확인.</b><br>
+① 📋 매매 전략 카드의 <b>진입·손절·목표</b> 숫자 ② <b>📅 어닝 D-일</b>(3일 이내면 패스)
+③ 차트 모양이 정말 바닥 다지고 도는지 눈으로.</div></div>
+<div class="step"><div class="n">3</div><div class="d">
+<b>산다면 → 손절가를 미리 정해놓고 분할로. 그리고 <a href="https://github.com/easyseop/Stock-chart-analyze/edit/claude/korean-text-review-o3wmsv/holdings.json">holdings.json에 등록</a></b>하면
+손절/목표 도달 때 텔레그램 알림이 온다. 확신 없으면
+<a href="paper.html"><b>💰 모의투자</b></a>(가상 1,000만원)로 먼저 연습.</div></div>
+</div>
+
+<div class="card">
+<h2>화면에서 이 4개만 알면 된다</h2>
+<table>
+<tr><th>📍 저점권 N%</th><td>52주 최저~최고 사이 현재 위치. <b>낮을수록 저점</b>(40% 이하 = 좋음).</td></tr>
+<tr><th>🔥 갓 전환</th><td>하락추세선을 <b>방금</b> 깨고 도는 중 — 이 도구가 노리는 바로 그 순간.</td></tr>
+<tr><th>전환단계 ①~④</th><td>①임박 → ②갓돌파 → ③돌파후 횡보 → ④확정. 클수록 확실, 작을수록 이름.</td></tr>
+<tr><th>📊 추천 성과</th><td>지난 추천이 실제로 맞았는지 자동 채점한 승률 — 도구를 믿을지 판단 근거.</td></tr>
+</table>
+</div>
+
+<div class="card">
+<h2>메뉴 지도</h2>
+<table>
+<tr><th><a href="index.html">홈</a></th><td>추천 + 전체 종목 표(검색·필터·정렬)</td></tr>
+<tr><th><a href="paper.html">💰 모의투자</a></th><td>가상 1,000만원으로 추천을 실제처럼 연습</td></tr>
+<tr><th><a href="lookup.html">➕ 즉석조회</a></th><td>목록에 없는 종목 티커 입력 → 1~2분 뒤 분석 추가</td></tr>
+<tr><th><a href="guide.html">📘 매매 가이드</a></th><td>왜 저점·전환을 노리는지, 체크리스트, 피해야 할 것</td></tr>
+</table>
+</div>
+
+<div class="card">
+<h2>텔레그램 알림 받기 (선택 · 5분)</h2>
+<div class="note">매수 후보가 새로 뜨거나, 기다리던 눌림에 도달하거나, 보유 종목이 손절/목표에 닿으면 알림.</div>
+<div class="step"><div class="n">1</div><div class="d">텔레그램 <b>@BotFather</b>에게 /newbot → 토큰 받기</div></div>
+<div class="step"><div class="n">2</div><div class="d"><b>@userinfobot</b>에게 아무 말 → 내 chat_id 확인</div></div>
+<div class="step"><div class="n">3</div><div class="d">GitHub 저장소 → Settings → Secrets → Actions에
+<b>TELEGRAM_BOT_TOKEN</b>, <b>TELEGRAM_CHAT_ID</b> 등록 — 끝.</div></div>
+</div>
+
+<div class="card" style="border-left:4px solid #dc2626">
+<h2>철칙 하나</h2>
+<b>손절선을 깨면 판다 — 무조건.</b> 이 도구의 적중률은 절반 안팎이고,
+돈은 "맞을 때 크게, 틀릴 때 작게"(손익비)로 버는 구조다. 손절을 안 지키면
+도구 전체가 의미 없어진다. 추천은 후보일 뿐, 최종 판단과 책임은 본인에게 있다.
+</div>
+
+<p style="text-align:center"><a class="btn" href="index.html">홈에서 시작하기 →</a></p>
+</div></body></html>
