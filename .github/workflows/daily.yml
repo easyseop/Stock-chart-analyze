@@ -74,6 +74,14 @@ jobs:
           restore-keys: |
             data-cache-
 
+      # 상세페이지(≈900MB) 증분 렌더용 — 이전 빌드 산출물 보존, 바뀐 종목만 다시 그림
+      - uses: actions/cache@v4
+        with:
+          path: public/stocks
+          key: detail-pages-${{ github.run_id }}
+          restore-keys: |
+            detail-pages-
+
       # 갱신 범위: push(코드변경)=none(재배포만) / 마감후 스케줄=전체 / 장중 스케줄=상위300 /
       #   수동(dispatch)=입력값(none=재배포만·top=상위300·full=전체). none이면 데이터 안 받음 → 1~2분.
       - name: 데이터 갱신 (범위별)
@@ -109,6 +117,8 @@ jobs:
         run: python main.py --update-hourly 80 || true
 
       - name: 스크리너 생성(캐시 전체 — 즉석조회 추가분 포함, 네트워크 0)
+        env:
+          BUILD_SHA: ${{ github.sha }}   # 같은 코드면 증분 렌더, 코드 바뀌면 전체 재렌더
         run: python main.py --cache --scan-cached --screener --screener-dir public
 
       - name: 진행 현황(로그용)

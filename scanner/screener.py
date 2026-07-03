@@ -229,21 +229,58 @@ def build(results: list[dict], frames_map: dict[str, dict],
     # 자가검증(불변식): 모순·잡주·폭등·손절폭 위반이 있으면 여기서 빌드 실패 →
     # 나쁜 추천이 배포되는 일 자체를 막는다(지난 회귀: NXPI·KRC·GPUS·DB하이텍·AES).
     gates.audit(results, _paper_picks(results))
-    os.makedirs(os.path.join(out_dir, "stocks"), exist_ok=True)
+    stocks_dir = os.path.join(out_dir, "stocks")
+    os.makedirs(stocks_dir, exist_ok=True)
     h_min = config.MA_PERIODS["H"][-1] + 5
+
+    # ── 증분 렌더: 5,400페이지(≈900MB)를 매 15분 전부 다시 그리던 게 빌드 5분·
+    #    배포 정체의 뿌리. 데이터(csv)가 페이지보다 새로울 때만 재렌더하고 나머지는
+    #    이전 빌드 산출물(actions/cache로 보존) 재사용. 코드가 바뀌면(BUILD_SHA 다름)
+    #    전체 재렌더 — 페이지 코드와 데이터가 어긋나는 일 방지.
+    from scanner import cache as _dcache
+    sha = os.environ.get("BUILD_SHA", "")
+    stamp = os.path.join(stocks_dir, ".build_sha")
+    prev_sha = None
+    if os.path.exists(stamp):
+        with open(stamp, encoding="utf-8") as fp:
+            prev_sha = fp.read().strip()
+    incremental = bool(sha) and prev_sha == sha
+
+    def _fresh(code: str, path: str) -> bool:
+        """페이지가 데이터보다 최신이면(재렌더 불필요) True."""
+        if not os.path.exists(path):
+            return False
+        src = _dcache._path(code)
+        if not os.path.exists(src):
+            return False
+        src_m = os.path.getmtime(src)
+        hp = os.path.join("data_cache_h", f"{code}.csv.gz")   # 시간봉도 반영
+        if os.path.exists(hp):
+            src_m = max(src_m, os.path.getmtime(hp))
+        return os.path.getmtime(path) >= src_m
+
+    rendered = 0
     for r in results:
         code = r["code"]
+        path = os.path.join(stocks_dir, f"{code}.html")
+        if incremental and _fresh(code, path):
+            continue                             # 데이터 안 바뀜 → 이전 페이지 재사용
         frames = frames_map[code]
         h = intraday.frame(code)                 # 시간봉 캐시(네트워크 0). 없으면 None
         if h is not None and len(h) >= h_min:
             frames = {**frames, "H": h}          # 충분하면 '시간봉' 탭 추가
-        path = os.path.join(out_dir, "stocks", f"{code}.html")
         try:
             page = _detail(r, frames)
         except Exception:                        # 한 종목 실패가 전체 빌드를 막지 않도록
             page = _detail(r, {k: v for k, v in frames.items() if k != "H"})
         with open(path, "w", encoding="utf-8") as fp:
             fp.write(page)
+        rendered += 1
+    if sha:
+        with open(stamp, "w", encoding="utf-8") as fp:
+            fp.write(sha)
+    print(f"상세페이지: {rendered}/{len(results)} 렌더"
+          f"{' (증분 — 나머지 재사용)' if incremental else ' (전체)'}")
     with open(os.path.join(out_dir, "index.html"), "w", encoding="utf-8") as fp:
         fp.write(_index(results))
     with open(os.path.join(out_dir, "lookup.html"), "w", encoding="utf-8") as fp:

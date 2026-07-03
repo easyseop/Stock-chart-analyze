@@ -1,0 +1,49 @@
+name: freshness-watchdog
+
+# 자가치유: 라이브 사이트의 '마지막 갱신'이 너무 오래됐으면(원인 불문 — 배포 실패·
+#   크론 지연·paths 필터 공백 등) daily.yml을 workflow_dispatch로 자동 재실행.
+#   2026-07-03 새벽 사건(배포 일시 실패 + 재시도 공백 + 크론 피크 지연으로 라이브가
+#   2시간 옛 빌드에 머묾)의 재발 방지.
+# 검사 시간: 갱신 윈도 안에서만(윈도 밖엔 사이트가 정상적으로 늙으므로 오탐 방지).
+#   KR 장중 02-06 UTC / US 장중 15-22 UTC, 정각 피크를 피해 :07/:37.
+
+on:
+  schedule:
+    - cron: "7,37 2-6,15-22 * * 1-5"
+  workflow_dispatch:
+
+permissions:
+  actions: write        # daily.yml 재실행 트리거용
+
+concurrency:
+  group: watchdog
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: 라이브 신선도 확인 → 100분 넘게 오래면 재배포 트리거
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SITE: "https://easyseop.github.io/Stock-chart-analyze/index.html"
+        run: |
+          set -e
+          html=$(curl -sf "${SITE}?cb=${GITHUB_RUN_ID}" || true)
+          ts=$(echo "$html" | grep -o '마지막 갱신 [0-9-]\{10\} [0-9:]\{5\}' | head -1 | sed 's/마지막 갱신 //')
+          if [ -z "$ts" ]; then
+            echo "::warning::라이브 페이지 파싱 실패 — 재배포 트리거"
+            stale=1
+          else
+            age=$(( $(date +%s) - $(date -u -d "$ts" +%s) ))
+            echo "라이브 마지막 갱신: $ts UTC (나이 $((age/60))분)"
+            if [ "$age" -gt 6000 ]; then stale=1; else stale=0; fi
+          fi
+          if [ "$stale" = "1" ]; then
+            echo "→ 정체 감지: daily.yml 재실행(update=none, 재빌드+재배포)"
+            gh workflow run daily.yml --repo "$GITHUB_REPOSITORY" \
+              --ref "${GITHUB_REF_NAME}" -f update=none
+          else
+            echo "→ 정상(신선) — 조치 없음"
+          fi
