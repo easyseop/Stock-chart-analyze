@@ -485,7 +485,7 @@ PLAN_CSS = """
   .plan-note.warn{background:#fffbeb;color:#92400e;border:1px solid #fde68a}
   .plan-note.good{background:#eff6ff;color:#1e40af;border:1px solid #bfdbfe}
   .plan-note b{font-weight:800}
-  .plan .pos{color:#16a34a;font-weight:700} .plan .neg{color:#dc2626;font-weight:700}
+  .plan .pos{color:#f04452;font-weight:700} .plan .neg{color:#3182f6;font-weight:700}
   .pmap{margin:10px 14px 0;border:1px solid #e2e8f0;border-radius:11px;overflow:hidden}
   .pm-h{padding:8px 12px;font-size:13px;font-weight:800;color:#0f172a;background:#f8fafc;
     border-bottom:1px solid #eef2f7}

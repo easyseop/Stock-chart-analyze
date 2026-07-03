@@ -95,12 +95,14 @@ def check_buy_signals(sigs: list[dict], state: dict, dry_run: bool) -> int:
             f'<a href="{cfg.HOLDINGS_EDIT_URL}">✍️ 샀으면 보유 등록</a>\n'
             f"⚠️ 차트 기준 제안 · 투자권유 아님. 주문 전 실시간가 재확인."
         )
-        if not dry_run:
-            notify.send(text)
-        else:
+        if dry_run:
             print(text)
-        sent.append(s["id"])
-        n += 1
+            ok = True
+        else:
+            ok = notify.send(text)       # 전송 성공 시에만 '보냈음' 기록 —
+        if ok:                            #   토큰 등록 전 신호가 소실되지 않게
+            sent.append(s["id"])
+            n += 1
     state["sent_buy"] = sent[-500:]      # 무한 성장 방지
     return n
 
@@ -146,12 +148,12 @@ def check_arrivals(sigs: list[dict], state: dict, dry_run: bool) -> int:
                 f'<a href="{cfg.SITE_URL}/stocks/{code}.html">📈 차트 보기</a>\n'
                 f"⚠️ 도달 알림일 뿐 — 지지/안착 확인 후 판단. 투자권유 아님."
             )
-            if not dry_run:
-                notify.send(text)
-            else:
+            ok = True if dry_run else notify.send(text)
+            if dry_run:
                 print(text)
-            sent.append(code)
-            n += 1
+            if ok:
+                sent.append(code)
+                n += 1
     return n
 
 

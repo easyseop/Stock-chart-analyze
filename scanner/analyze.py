@@ -60,6 +60,9 @@ def analyze(frames: dict[str, pd.DataFrame], meta: dict, bench=None) -> dict:
     lo52 = float(d["Low"].iloc[-lb:].min())
     hi52 = float(d["High"].iloc[-lb:].max())
     range_pos = (price - lo52) / (hi52 - lo52) if hi52 > lo52 else 0.5
+    # 전일 대비 등락률 — 리스트 화면(토스식 현재가+등락 표시)용
+    prev_close = float(d["Close"].iloc[-2]) if len(d) >= 2 else price
+    day_chg = (price / prev_close - 1) if prev_close else 0.0
     # 돌파 신선도: 하락추세선 대비 현재가 위치(%). 갓 깬 것(+5% 이내)이 신선한 전환,
     # 한참 위는 '돌파 후 이미 진행'(승률↓, 우선순위 강등). 음수 = 아직 추세선 아래(임박).
     down_now = ((trendline.get("down") or {}).get("now")
@@ -134,6 +137,7 @@ def analyze(frames: dict[str, pd.DataFrame], meta: dict, bench=None) -> dict:
         "ext": {"ma20_stretch": stretch, "runup10": runup10,
                 "ma120_stretch": stretch_lt, "runup63": runup63},
         "turnover": turnover, "range_pos": range_pos, "break_gap": break_gap,
+        "day_chg": day_chg,
         "trend_oneline": trend_oneline, "chase": chase, "chase_note": chase_note,
         "transition_stage": stage, "transition_label": stage_label,
     }

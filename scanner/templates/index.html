@@ -3,14 +3,14 @@
 <title>종목 스크리너</title>
 <style>
   body{margin:0;font-family:-apple-system,'Segoe UI','Noto Sans KR',sans-serif;
-    background:#f1f5f9;color:#1e293b}
-  header{background:#0f172a;color:#fff;padding:14px 20px}
-  header h1{margin:0;font-size:17px}
-  header p{margin:4px 0 0;font-size:12px;color:#94a3b8}
+    background:#f5f6f8;color:#191f28}
+  header{background:#fff;color:#191f28;padding:16px 20px 12px;border-bottom:1px solid #f2f4f6}
+  header h1{margin:0;font-size:19px;font-weight:800;letter-spacing:-.3px}
+  header p{margin:4px 0 0;font-size:12px;color:#8b95a1}
   .bar{padding:10px 16px;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-  .chip{border:1px solid #cbd5e1;background:#fff;border-radius:999px;padding:6px 14px;
+  .chip{border:1px solid #e5e8eb;background:#fff;border-radius:999px;padding:7px 14px;font-weight:600;
     cursor:pointer;font-size:13px}
-  .chip.on{background:#2563eb;border-color:#2563eb;color:#fff}
+  .chip.on{background:#3182f6;border-color:#3182f6;color:#fff}
   table{width:100%;border-collapse:collapse;background:#fff;font-size:13px}
   th,td{padding:8px 10px;border-bottom:1px solid #eef2f7;text-align:right}
   th{background:#f8fafc;color:#64748b;font-size:12px;position:sticky;top:0;cursor:pointer;
@@ -27,8 +27,8 @@
   .legend summary{cursor:pointer;padding:9px 13px;font-size:13px;font-weight:600;color:#334155}
   .legend .lc{padding:4px 15px 13px;font-size:12.5px;color:#475569;line-height:1.75}
   .legend b{color:#0f172a}
-  td.sc.pos,.num.pos,span.pos{color:#16a34a}   /* 양수=초록 */
-  td.sc.neg,.num.neg,span.neg{color:#dc2626}   /* 음수=빨강 */
+  td.sc.pos,.num.pos,span.pos{color:#f04452}   /* 양수=빨강(한국식·토스) */
+  td.sc.neg,.num.neg,span.neg{color:#3182f6}   /* 음수=파랑(한국식·토스) */
   tr.rec{background:#fffbeb}
   .sig{display:inline-flex;align-items:center;gap:5px}
   .star{font-size:11px;font-weight:700;color:#d97706}
@@ -46,9 +46,10 @@
     line-height:1;vertical-align:middle}
   .hold.on{color:#f59e0b}
   .pl{font-size:11.5px;font-weight:700;margin-left:7px;white-space:nowrap}
-  .pl.up{color:#16a34a} .pl.dn{color:#dc2626}
+  .pl.up{color:#f04452} .pl.dn{color:#3182f6}
+  .pxm{display:none}
   tr.held{background:#fffdf3}
-  .pos{color:#16a34a}.neg{color:#dc2626}
+  .pos{color:#f04452}.neg{color:#3182f6}
   .notice{margin:8px 16px 0;background:#fff;border:1px solid #e2e8f0;border-radius:10px}
   .notice>summary{cursor:pointer;padding:9px 13px;font-size:13px;font-weight:600;color:#334155}
   .notice .nc{padding:2px 15px 12px;font-size:12.5px;color:#475569;line-height:1.8}
@@ -60,14 +61,14 @@
     border-radius:9px;padding:8px 11px;margin:6px 0 10px}
   .rstat b{color:#0f172a}
   .rsec{font-size:13px;font-weight:800;color:#334155;margin:8px 0 7px}
-  .rsec b{color:#2563eb}
+  .rsec b{color:#3182f6}
   .rc{border:1px solid #e2e8f0;border-radius:10px;padding:10px 11px;margin-bottom:8px}
-  .rc.now{border-left:4px solid #16a34a} .rc.watch{border-left:4px solid #f59e0b}
+  .rc.now{border-left:4px solid #f04452} .rc.watch{border-left:4px solid #f59e0b}
   .rch{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
   .rch a{font-size:14.5px;font-weight:700;color:#0f172a;text-decoration:none}
   .rtag{font-size:11px;font-weight:700;padding:2px 7px;border-radius:999px;background:#f1f5f9;color:#475569}
   .rvd{font-size:12px;font-weight:800;margin-left:auto}
-  .rvd.up{color:#16a34a} .rvd.dn{color:#dc2626}
+  .rvd.up{color:#f04452} .rvd.dn{color:#3182f6}
   .rth{font-size:12.5px;color:#334155;line-height:1.6;margin:6px 0 5px}
   .rth b{color:#0f172a}
   .rlv{font-size:12px;color:#475569} .rlv b{color:#0f172a}
@@ -75,61 +76,52 @@
   .prog{padding:8px 16px 0}
   .ptxt{font-size:12px;color:#475569;margin-bottom:4px}
   .pbarw{height:10px;background:#e2e8f0;border-radius:999px;overflow:hidden}
-  .pfillw{height:100%;background:linear-gradient(90deg,#16a34a,#22c55e);border-radius:999px}
+  .pfillw{height:100%;background:#3182f6;border-radius:999px}
   .search{position:sticky;top:0;z-index:9;padding:8px 16px;display:flex;
-    align-items:center;gap:8px;background:#f1f5f9;border-bottom:1px solid #e2e8f0}
+    align-items:center;gap:8px;background:#f5f6f8;border-bottom:1px solid #e5e8eb}
   .search input{flex:1;box-sizing:border-box;padding:12px 14px;border:1px solid #cbd5e1;
     border-radius:10px;font-size:16px;background:#fff}
-  .search input:focus{outline:none;border-color:#2563eb}
+  .search input:focus{outline:none;border-color:#3182f6}
   .qn{font-size:12px;color:#64748b;white-space:nowrap}
   .tw{overflow-x:auto;-webkit-overflow-scrolling:touch}
   #tb tr{content-visibility:auto;contain-intrinsic-size:auto 44px}
   td.brk{display:none}   /* 모바일 카드에서만 줄바꿈용으로 사용 */
-  /* 모바일: 증권사 앱 스타일 카드 (한 종목 = 카드 한 장) */
+  /* 모바일: 토스식 미니멀 리스트 — 한 종목 = 두 줄(이름+태그 / 오른쪽 현재가·등락) */
   @media(max-width:640px){
-    header h1{font-size:15px} header p{display:none}
+    header h1{font-size:17px} header p{display:none}
     .chip{padding:6px 11px;font-size:12px}
-    .tw{overflow:visible}
+    .tw{overflow:visible;background:#fff;margin-top:8px}
     thead{display:none}
-    #tb tr{contain-intrinsic-size:auto 175px}
+    #tb tr{contain-intrinsic-size:auto 64px}
     table,tbody{display:block}
-    tr{display:flex;flex-wrap:wrap;align-items:center;gap:7px 7px;position:relative;
-       background:#fff;border:1px solid #e2e8f0;border-radius:14px;
-       margin:10px 12px;padding:13px 14px;box-shadow:0 1px 3px rgba(15,23,42,.05)}
-    tr.b-transition{border-left:4px solid #16a34a}
-    tr.b-uptrend{border-left:4px solid #38bdf8}
-    tr.b-avoid{border-left:4px solid #dc2626}
-    tr.rec{background:#fffdf5;border-color:#f1c453}
-    td{display:block;border:0;padding:0;font-size:13px;text-align:left}
-    td::before{content:attr(data-label);display:block;color:#94a3b8;font-size:10px;
-       font-weight:700;margin-bottom:1px}
-    /* 종목명: 맨 위 전체폭, 크게 */
-    td.nm{order:1;flex-basis:100%}
-    td.nm::before{display:none}
-    td.nm a{font-size:17px;font-weight:700;line-height:1.25}
-    td.nm .ko{display:inline;margin-left:6px;font-size:12px;color:#64748b}
-    td.nm .cd{display:block;margin:2px 0 0;font-size:11px}
-    /* 신호·전환단계·추세: 상태 태그(흐름대로 칩) */
-    td[data-label="신호"],td.stg,td[data-label="추세"]{order:2;flex:0 0 auto;
-       background:#f1f5f9;border-radius:999px;padding:5px 11px;font-size:12px;font-weight:700}
-    td[data-label="신호"]::before,td.stg::before,td[data-label="추세"]::before{display:none}
-    td.stg{color:#16a34a}
+    tr{display:flex;flex-wrap:wrap;align-items:center;position:relative;
+       background:#fff;border:0;border-bottom:1px solid #f2f4f6;
+       margin:0;padding:12px 16px}
+    tr:active{background:#f8f9fa}
+    tr.rec{background:#fffdf5}
+    td{display:none;border:0;padding:0;font-size:12px;text-align:left}
+    td::before{display:none}
+    /* 1행: 이름(왼쪽) + 현재가·등락(오른쪽) */
+    td.nm{display:flex;align-items:center;order:1;flex-basis:100%;gap:2px}
+    td.nm a{font-size:15.5px;font-weight:700;line-height:1.3;color:#191f28;
+       overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:52vw}
+    td.nm .ko,td.nm .cd{display:none}
+    td.nm .pl{margin-left:6px}
+    .pxm{display:flex;flex-direction:column;align-items:flex-end;margin-left:auto;
+       flex:0 0 auto}
+    .pxm .pxv{font-size:15px;font-weight:700;color:#191f28;font-variant-numeric:tabular-nums}
+    .pxm .pxc{font-size:12px;font-weight:700;font-variant-numeric:tabular-nums}
+    /* 2행: 핵심 태그 3개만 — 신호 · 전환단계 · 저점권 (작고 옅게) */
+    td[data-label="신호"],td.stg,td[data-label="저점권"]{
+       display:block;order:2;flex:0 0 auto;color:#8b95a1;font-size:11.5px;
+       font-weight:600;background:none;padding:2px 8px 0 0}
+    td.stg{color:#f04452}
     td[data-v="0"].stg,td[data-v=""].stg{display:none}
-    /* 메트릭 줄바꿈 강제(태그와 분리) */
-    td.brk{display:block;order:4;flex-basis:100%;height:0;padding:0;margin:0}
-    td.brk::before{display:none}
-    /* 점수·시장·RS·신고가: 인라인 메트릭 한 줄 'label 값' */
-    td[data-label="점수"],td[data-label="시장"],td[data-label="RS"],td[data-label="신고가"],td[data-label="저점권"]{
-       order:5;flex:0 0 auto;font-size:13.5px;font-weight:700;color:#0f172a;
-       background:#f8fafc;border-radius:8px;padding:4px 9px;white-space:nowrap}
-    td[data-label="점수"]::before,td[data-label="시장"]::before,
-    td[data-label="RS"]::before,td[data-label="신고가"]::before,td[data-label="저점권"]::before{
-       display:inline;font-size:11px;color:#94a3b8;font-weight:600;margin:0 4px 0 0}
-    /* 판정: 맨 아래 전체폭, 옅게 */
-    td.vd{order:9;flex-basis:100%;color:#94a3b8;font-size:11.5px;line-height:1.45;
-       border-top:1px solid #f1f5f9;padding-top:7px;margin-top:2px}
-    td.vd::before{display:none}
-    td.vd b{color:#475569}
+    td[data-label="저점권"]::before{content:"저점권 ";display:inline;color:#8b95a1;
+       font-size:11.5px;font-weight:600}
+    td[data-label="저점권"].pos{color:#3182f6}
+    td[data-label="저점권"].neg{color:#8b95a1}
+    /* 나머지(추세·점수·시장·RS·신고가·판정)는 모바일에서 숨김 — 상세에서 확인 */
   }
 </style></head><body>
 <header><h1>종목 스크리너 <span style="color:#38bdf8;font-size:13px">차트 신호 랭킹</span></h1>

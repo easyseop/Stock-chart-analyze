@@ -106,6 +106,11 @@ def _rows(results: list[dict]) -> str:
         rp_pct = float(r.get("range_pos", 0.5)) * 100     # 52주 범위 내 위치(낮을수록 저점)
         rp_cls = "pos" if rp_pct <= 40 else ("neg" if rp_pct >= 60 else "")
         ccy = r.get("ccy", "USD")
+        # 토스식 리스트: 현재가 + 전일 대비 등락(한국식 색 — 상승 빨강/하락 파랑)
+        chg = float(r.get("day_chg", 0)) * 100
+        px_txt = (f"{price:,.0f}원" if ccy == "KRW" else f"${price:,.2f}") if price else "-"
+        chg_txt = f"{chg:+.2f}%"
+        chg_cls = "pos" if chg > 0 else ("neg" if chg < 0 else "")
         region = "kr" if ccy == "KRW" else "us"
         flag = "🇰🇷" if region == "kr" else "🇺🇸"
         out.append(
@@ -119,7 +124,9 @@ def _rows(results: list[dict]) -> str:
             f'<span class="rgn" title="{"국내(한국)" if region=="kr" else "해외(미국)"}">{flag}</span>'
             f'<a href="stocks/{code}.html">{html.escape(r["name"])}</a>{ko_html}'
             f'<span class="cd">{html.escape(code)}</span>'
-            f'<span class="pl" data-code="{code}"></span></td>'
+            f'<span class="pl" data-code="{code}"></span>'
+            f'<span class="pxm"><b class="pxv">{px_txt}</b>'
+            f'<span class="pxc {chg_cls}">{chg_txt}</span></span></td>'
             f'<td data-label="전환단계" data-v="{stg}" class="num stg" '
             f'title="{stip}">{stg_lab}</td>'
             f'<td data-label="추세">{tone}</td>'
