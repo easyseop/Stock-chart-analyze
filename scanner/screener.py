@@ -103,6 +103,8 @@ def _rows(results: list[dict]) -> str:
         ko_html = (f'<span class="ko">{html.escape(ko)}</span>' if ko else "")
         price = (r.get("sr") or {}).get("price")
         price_attr = f"{price:.4f}" if price is not None else ""
+        rp_pct = float(r.get("range_pos", 0.5)) * 100     # 52주 범위 내 위치(낮을수록 저점)
+        rp_cls = "pos" if rp_pct <= 40 else ("neg" if rp_pct >= 60 else "")
         ccy = r.get("ccy", "USD")
         region = "kr" if ccy == "KRW" else "us"
         flag = "🇰🇷" if region == "kr" else "🇺🇸"
@@ -127,6 +129,7 @@ def _rows(results: list[dict]) -> str:
             f'<td data-label="RS" data-v="{rs if rs is not None else -999}" '
             f'class="num {_sign(rs) if rs is not None else ""}">{rs_txt}</td>'
             f'<td data-label="신고가" data-v="{nh if nh is not None else -999}" class="num">{nh_txt}</td>'
+            f'<td data-label="저점권" data-v="{rp_pct}" class="num {rp_cls}">{rp_pct:.0f}%</td>'
             f'<td data-label="판정" class="vd">{vd}</td>'
             f'<td class="brk"></td></tr>')
     return "".join(out)
@@ -161,7 +164,7 @@ def _rec_card(p: dict, kind: str) -> str:
         f'목표 {fp(p["target"])}</div></div>')
 
 
-def _recommend_html(results: list[dict]) -> str:
+def _recommend_html(results: list[dict], tstats: dict | None = None) -> str:
     """홈 상단 '클로드라면 살 종목' 추천 — 모의투자와 같은 큐레이션을 표 위에 노출."""
     picks = _paper_picks(results)
     now = "".join(_rec_card(p, "now") for p in picks["now"])
@@ -173,15 +176,30 @@ def _recommend_html(results: list[dict]) -> str:
                '아래 곧 올 자리(전환 임박) 주시.</div>')
     watch_sec = (f'<div class="rsec" style="margin-top:12px">👀 곧 올 자리 — 전환 임박·눌림 대기 '
                  f'<b>{len(picks["watch"])}</b></div>{watch}' if watch else "")
+    # 추천 성과(자동 채점) 요약 — 매매 지표의 신뢰도를 눈으로 검증
+    if tstats and tstats.get("closed"):
+        stat_html = (f'<div class="rstat">📊 지난 추천 성과(자동 채점): '
+                     f'<b>{tstats["wins"]}승 {tstats["losses"]}패</b> · '
+                     f'승률 <b>{tstats["win_rate"]}%</b> · 평균 '
+                     f'<b>{tstats["avg_r"]:+.2f}R</b> '
+                     f'<span class="rmuted">(목표 도달=승 · 손절 이탈=패 · '
+                     f'{tstats["open"]}건 진행 중 · '
+                     f'<a href="api/track.json">원자료</a>)</span></div>')
+    elif tstats:
+        stat_html = (f'<div class="rstat">📊 추천 성과 자동 채점 가동 중 — '
+                     f'{tstats.get("open", 0)}건 추적, 첫 결과(목표/손절 도달)부터 '
+                     f'승률 표시</div>')
+    else:
+        stat_html = ""
     return (f'<details class="reco" open>'
             f'<summary>🤖 클로드라면 살 전환 후보 — 하락→상승 저점 매수 (진입 논리)</summary>'
-            f'<div class="rbody">{now_sec}{watch_sec}'
+            f'<div class="rbody">{stat_html}{now_sec}{watch_sec}'
             f'<div class="rmuted">⚠️ 차트 기준 추천 · 투자권유 아님. 종목 눌러 상세 확인 · '
             f'<a href="paper.html" style="color:#15803d;font-weight:700">💰 모의투자로 연습</a></div>'
             f'</div></details>')
 
 
-def _index(results: list[dict]) -> str:
+def _index(results: list[dict], tstats: dict | None = None) -> str:
     import datetime
     from scanner import cache, universe
     # 기본 정렬: 진입 추천 점수 → 전환 단계 → 종합점수 (추천 종목이 맨 위로)
@@ -219,10 +237,11 @@ def _index(results: list[dict]) -> str:
     for k, v in {
         "__ROWS__": _rows(results), "__CHIPS__": chips,
         "__STAGE_CHIPS__": stage_chips, "__REGION_CHIPS__": region_chips,
-        "__RECO__": _recommend_html(results),
+        "__RECO__": _recommend_html(results, tstats),
         "__N__": len(results), "__RCOUNT__": rcount, "__RECMIN__": REC_MIN,
         "__CACHED__": cached, "__UNI__": uni, "__PCT__": pct,
         "__UPDATED__": updated,
+        "__UPDATED_TS__": int(__import__("time").time()),  # 클라이언트 'N분 전' 표시용
         # P5: 갱신주기 문구는 config에서 — 크론 바꿀 때 안내문이 저절로 따라오게
         "__INTERVAL__": config.UPDATE_INTERVAL_MIN,
     }.items():
@@ -234,10 +253,13 @@ def build(results: list[dict], frames_map: dict[str, dict],
           out_dir: str = "public", metas: dict | None = None) -> str:
     """스크리너(index.html) + 종목별 상세(stocks/*.html) 생성. out_dir 반환."""
     import config
-    from scanner import gates
+    from scanner import gates, track
     # 자가검증(불변식): 모순·잡주·폭등·손절폭 위반이 있으면 여기서 빌드 실패 →
     # 나쁜 추천이 배포되는 일 자체를 막는다(지난 회귀: NXPI·KRC·GPUS·DB하이텍·AES).
-    gates.audit(results, _paper_picks(results))
+    picks = _paper_picks(results)
+    gates.audit(results, picks)
+    # 추천 성과 자동 채점(포워드 테스트) — 홈 요약 + /api/track.json
+    tstats = track.update(results, picks, out_dir)
     stocks_dir = os.path.join(out_dir, "stocks")
     os.makedirs(stocks_dir, exist_ok=True)
     h_min = config.MA_PERIODS["H"][-1] + 5
@@ -291,7 +313,7 @@ def build(results: list[dict], frames_map: dict[str, dict],
     print(f"상세페이지: {rendered}/{len(results)} 렌더"
           f"{' (증분 — 나머지 재사용)' if incremental else ' (전체)'}")
     with open(os.path.join(out_dir, "index.html"), "w", encoding="utf-8") as fp:
-        fp.write(_index(results))
+        fp.write(_index(results, tstats))
     with open(os.path.join(out_dir, "lookup.html"), "w", encoding="utf-8") as fp:
         fp.write(_REPO and _trigger_page())   # 웹 즉석 조회(워크플로 트리거) 페이지
     with open(os.path.join(out_dir, "guide.html"), "w", encoding="utf-8") as fp:

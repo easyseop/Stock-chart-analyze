@@ -91,6 +91,8 @@ def check_buy_signals(sigs: list[dict], state: dict, dry_run: bool) -> int:
             f"손절 {_fmt(s['stop'], s['ccy'])} · "
             f"목표 {_fmt(s['target'], s['ccy'])}\n"
             f"참고수량(계좌1%리스크): {s.get('shares_1pct', '-')}주\n"
+            f'<a href="{cfg.SITE_URL}/stocks/{s["code"]}.html">📈 차트 보기</a> · '
+            f'<a href="{cfg.HOLDINGS_EDIT_URL}">✍️ 샀으면 보유 등록</a>\n'
             f"⚠️ 차트 기준 제안 · 투자권유 아님. 주문 전 실시간가 재확인."
         )
         if not dry_run:
@@ -141,6 +143,7 @@ def check_arrivals(sigs: list[dict], state: dict, dry_run: bool) -> int:
                 f"🎯 <b>{title}</b> — {s['name']}({code})\n"
                 f"현재가 {_fmt(px, s['ccy'])} ↔ 진입가 {_fmt(entry, s['ccy'])}\n"
                 f"손절 {_fmt(s['stop'], s['ccy'])} · 목표 {_fmt(s['target'], s['ccy'])}\n"
+                f'<a href="{cfg.SITE_URL}/stocks/{code}.html">📈 차트 보기</a>\n'
                 f"⚠️ 도달 알림일 뿐 — 지지/안착 확인 후 판단. 투자권유 아님."
             )
             if not dry_run:

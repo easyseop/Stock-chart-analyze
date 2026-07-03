@@ -56,6 +56,9 @@
   .reco{margin:10px 16px 0;background:#fff;border:1px solid #e2e8f0;border-radius:12px}
   .reco>summary{cursor:pointer;padding:11px 14px;font-size:14px;font-weight:800;color:#0f172a}
   .rbody{padding:4px 14px 12px}
+  .rstat{font-size:12.5px;color:#334155;background:#f8fafc;border:1px solid #e2e8f0;
+    border-radius:9px;padding:8px 11px;margin:6px 0 10px}
+  .rstat b{color:#0f172a}
   .rsec{font-size:13px;font-weight:800;color:#334155;margin:8px 0 7px}
   .rsec b{color:#2563eb}
   .rc{border:1px solid #e2e8f0;border-radius:10px;padding:10px 11px;margin-bottom:8px}
@@ -80,6 +83,7 @@
   .search input:focus{outline:none;border-color:#2563eb}
   .qn{font-size:12px;color:#64748b;white-space:nowrap}
   .tw{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  #tb tr{content-visibility:auto;contain-intrinsic-size:auto 44px}
   td.brk{display:none}   /* 모바일 카드에서만 줄바꿈용으로 사용 */
   /* 모바일: 증권사 앱 스타일 카드 (한 종목 = 카드 한 장) */
   @media(max-width:640px){
@@ -87,6 +91,7 @@
     .chip{padding:6px 11px;font-size:12px}
     .tw{overflow:visible}
     thead{display:none}
+    #tb tr{contain-intrinsic-size:auto 175px}
     table,tbody{display:block}
     tr{display:flex;flex-wrap:wrap;align-items:center;gap:7px 7px;position:relative;
        background:#fff;border:1px solid #e2e8f0;border-radius:14px;
@@ -114,11 +119,11 @@
     td.brk{display:block;order:4;flex-basis:100%;height:0;padding:0;margin:0}
     td.brk::before{display:none}
     /* 점수·시장·RS·신고가: 인라인 메트릭 한 줄 'label 값' */
-    td[data-label="점수"],td[data-label="시장"],td[data-label="RS"],td[data-label="신고가"]{
+    td[data-label="점수"],td[data-label="시장"],td[data-label="RS"],td[data-label="신고가"],td[data-label="저점권"]{
        order:5;flex:0 0 auto;font-size:13.5px;font-weight:700;color:#0f172a;
        background:#f8fafc;border-radius:8px;padding:4px 9px;white-space:nowrap}
     td[data-label="점수"]::before,td[data-label="시장"]::before,
-    td[data-label="RS"]::before,td[data-label="신고가"]::before{
+    td[data-label="RS"]::before,td[data-label="신고가"]::before,td[data-label="저점권"]::before{
        display:inline;font-size:11px;color:#94a3b8;font-weight:600;margin:0 4px 0 0}
     /* 판정: 맨 아래 전체폭, 옅게 */
     td.vd{order:9;flex-basis:100%;color:#94a3b8;font-size:11.5px;line-height:1.45;
@@ -130,7 +135,7 @@
 <header><h1>종목 스크리너 <span style="color:#38bdf8;font-size:13px">차트 신호 랭킹</span></h1>
 <p>__N__종목 표시 · 헤더 클릭=정렬 · 칩=필터 · 종목명 클릭=상세 차트(일/주/월)</p></header>
 <div class="prog">
-  <div class="ptxt">📥 수집 진행 <b>__CACHED__/__UNI__</b> (__PCT__%) · 마지막 갱신 __UPDATED__</div>
+  <div class="ptxt">📥 수집 진행 <b>__CACHED__/__UNI__</b> (__PCT__%) · 마지막 갱신 __UPDATED__ <span id="age" data-ts="__UPDATED_TS__"></span></div>
   <div class="pbarw"><div class="pfillw" style="width:__PCT__%"></div></div>
 </div>
 <details class="notice"><summary>🕐 차트 데이터는 언제 갱신되나요?</summary>
@@ -186,10 +191,16 @@ __RECO__
   <th onclick="srt(5,false)">시장</th>
   <th onclick="srt(6,true)">RS</th>
   <th onclick="srt(7,true)">신고가</th>
-  <th onclick="srt(8,false)">판정</th>
+  <th onclick="srt(8,true)" title="52주 저가~고가 범위 내 현재가 위치 — 낮을수록 저점">저점권</th>
+  <th onclick="srt(9,false)">판정</th>
 </tr></thead><tbody id="tb">__ROWS__</tbody></table></div>
 <script>
   var tb=document.getElementById('tb');
+  (function(){var el=document.getElementById('age');if(!el)return;var ts=+el.dataset.ts*1000;
+    function f(){var m=Math.floor((Date.now()-ts)/60000);
+      el.textContent='('+(m<1?'방금 전':m+'분 전')+')';
+      el.style.cssText='font-weight:700;color:'+(m>45?'#d97706':'#16a34a');}
+    f();setInterval(f,30000);})();
   function srt(col,num){
     var rows=[].slice.call(tb.querySelectorAll('tr'));
     rows.sort(function(a,b){

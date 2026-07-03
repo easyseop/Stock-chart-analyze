@@ -7,6 +7,9 @@
 
 # ── 시그널 소스 ──────────────────────────────────────────────────
 SIGNALS_URL = "https://easyseop.github.io/Stock-chart-analyze/api/signals.json"
+SITE_URL = "https://easyseop.github.io/Stock-chart-analyze"
+HOLDINGS_EDIT_URL = ("https://github.com/easyseop/Stock-chart-analyze/edit/"
+                     "claude/korean-text-review-o3wmsv/holdings.json")
 
 # ── 계좌/리스크 ──────────────────────────────────────────────────
 ACCOUNT_KRW = 10_000_000     # 봇 운용 자금(원). 수량 = 1회 리스크 예산 / 주당 손절폭
