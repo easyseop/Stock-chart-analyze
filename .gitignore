@@ -10,3 +10,7 @@ data_cache_h/
 earnings_cache.json
 public/
 lookup_*.html
+
+# 실행 봇 로컬 상태
+bot/state.json
+bot/seen.json
