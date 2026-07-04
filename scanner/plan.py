@@ -173,8 +173,11 @@ def _context_note(r: dict, group: str, mk: str):
                     "안 받쳐주면 <b>전환 실패(되돌림) 위험</b>이 큼. <b>진입추천은 시장이 상승일 "
                     "때만</b> 나오므로 지금은 <b>관찰만</b>, 시장이 돌면 1순위 후보.", "warn")
         if up:
-            return ("✅ <b>전환후보 + 시장 상승</b> — 개별 전환을 시장이 받쳐주는 좋은 조합. "
-                    "단계 ③·④와 거래량 확인되면 진입 검토.", "good")
+            t = tactic(r)
+            tail = (f' <b>전술: {t["label"]}</b> — {t["desc"]}.' if t
+                    else " 단계 ③·④와 거래량 확인되면 진입 검토.")
+            return (f"✅ <b>전환후보 + 시장 상승</b> — 개별 전환을 시장이 받쳐주는 좋은 조합."
+                    f"{tail}", "good")
     if group == "상승추세" and down:
         return ("⚠️ <b>상승추세지만 시장 하락</b> — 종목은 강하나 시장 역풍. 비중·손절 보수적으로.",
                 "warn")
@@ -204,6 +207,67 @@ def _fmt(v, ccy: str) -> str:
     if v is None:
         return "-"
     return f"{v:,.0f}원" if ccy == "KRW" else f"${v:,.2f}"
+
+
+def tactic(r: dict) -> dict | None:
+    """진입 전술 — '지금 진입' 종목의 <b>어떻게</b> 들어갈지(즉시/반반/눌림 지정가).
+
+    확정 전략(손절폭 3구간): 손절가는 구조로 고정이므로 진입가가 손절가에 가까울수록
+    같은 계좌 리스크로 포지션이 커져 손익비가 좋아진다.
+      ≤6% 즉시 분할 / 6~8% 절반+절반 눌림 / 8%↑ 눌림 지정가만(추격 금지).
+    신선하지 않거나(돌파후 진행) 단기 이격이 크면 한 단계 보수적으로.
+    반환: {mode, label, desc, stop_pct, pb_price, pb_stop_pct} / 대상 아니면 None.
+    """
+    if r.get("vetoed") or r.get("entry_kind") != "now":
+        return None
+    sr = r.get("sr") or {}
+    price = sr.get("price")
+    entry = r.get("entry") or price
+    stop = (r.get("risk") or {}).get("stop")
+    if not (entry and stop and entry > 0 and stop < entry):
+        return None
+    ccy = r.get("ccy", "USD")
+    f = lambda v: _fmt(v, ccy)
+    stp = (entry - stop) / entry
+    fresh, _lab = freshness(r)
+    ext = r.get("ext") or {}
+    stretched = (ext.get("ma20_stretch", 0) >= 0.06
+                 or ext.get("runup10", 0) >= 0.10)   # 단기 이격 — 눌림 확률↑
+    # 눌림 지정가 후보: 1차 반등구간(지지 겹침) > 아래 지지선
+    bz = (r.get("levels") or {}).get("bounce_zones") or []
+    pb = bz[0]["center"] if bz else _support_below(r)
+    if not pb or not (stop < pb < entry):
+        pb = None
+    pb_stp = (pb - stop) / pb if pb else None
+    tier = (0 if stp <= config.TACTIC_STOP_FULL
+            else 1 if stp <= config.TACTIC_STOP_HALF else 2)
+    if (not fresh) or stretched:
+        tier = min(2, tier + 1)      # 갓 전환이 아니면 눌림을 줄 확률이 높다 — 보수적으로
+    why = "돌파후 진행" if not fresh else ("단기 이격" if stretched else "")
+    base = {"stop_pct": round(stp * 100, 1),
+            "pb_price": round(pb, 4) if pb else None,
+            "pb_stop_pct": round(pb_stp * 100, 1) if pb_stp else None}
+    if tier == 0:
+        return {**base, "mode": "full", "label": "⚡ 즉시 분할",
+                "desc": (f"손절폭 {stp*100:.1f}%로 타이트 — 현재가에서 1~2회 분할 매수. "
+                         f"기다리는 이득보다 놓치는 비용이 큼")}
+    if tier == 1:
+        d = (f"절반은 현재가, 절반은 눌림 {f(pb)} 지정가"
+             + (f"(거기선 손절폭 {pb_stp*100:.1f}%)" if pb_stp else "")
+             if pb else "절반만 현재가, 나머지는 눌림 확인 후 추가")
+        return {**base, "mode": "half", "label": "⚖ 반반 진입",
+                "desc": f"손절폭 {stp*100:.1f}%"
+                        + (f" · {why}" if why else "") + f" — {d}"}
+    if pb:
+        d = (f"지금 추격 금지(손절폭 {stp*100:.1f}%"
+             + (f" · {why}" if why else "") + ") — "
+             f"<b>{f(pb)} 눌림 지정가만</b>. 눌리면 손절폭 "
+             + (f"{pb_stp*100:.1f}%" if pb_stp else "절반 수준")
+             + "로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)")
+    else:
+        d = (f"지금 추격 금지(손절폭 {stp*100:.1f}%"
+             + (f" · {why}" if why else "") + ") — 받칠 지지에 눌릴 때까지 대기")
+    return {**base, "mode": "pullback", "label": "⏳ 눌림 지정가만", "desc": d}
 
 
 def thesis(r: dict) -> dict:
@@ -238,19 +302,23 @@ def thesis(r: dict) -> dict:
     if kind == "wait":
         return {"now": False, "verdict": "👀 관찰",
                 "thesis": "이미 올랐는데 받칠 지지가 불명확 — 지지 형성될 때까지 관찰."}
-    # kind == "now"
+    # kind == "now" — 진입 전술(즉시/반반/눌림 지정가)까지 정해서 알려준다
     rec = rec_n(r)
     tm = timing(r)
+    t = tactic(r)
+    t_txt = f' <b>전술: {t["label"]}</b> — {t["desc"]}.' if t else ""
     strong = rec >= REC_MIN or (tm and "🎯" in tm)
     if strong:
-        size = "적정" if stp <= 12 else "다소 큼(비중 축소)"
+        if t and t["mode"] == "pullback":
+            return {"now": True, "verdict": "✅ 타당 · ⏳눌림 지정가",
+                    "thesis": (f"셋업은 타당하나 현재가 {f(price)}는 타점이 멂.{t_txt} "
+                               f"손절 {f(stop)}·목표 {f(target)}(손익비 1:{rr:.0f}).")}
         return {"now": True, "verdict": "✅ 지금 진입 타당",
-                "thesis": (f"현재가 {f(price)}가 지지 바로 위 타점권 → <b>지금 분할 진입 타당</b>. "
-                           f"손절 {f(stop)}(−{stp:.0f}%)·목표 {f(target)}(손익비 1:{rr:.0f}). "
-                           f"손절폭 {stp:.0f}% — {size}.")}
+                "thesis": (f"현재가 {f(price)}가 지지 바로 위 타점권.{t_txt} "
+                           f"손절 {f(stop)}(−{stp:.0f}%)·목표 {f(target)}(손익비 1:{rr:.0f}).")}
     return {"now": True, "verdict": "△ 조건부(확신 보통)",
-            "thesis": (f"지지 근처라 현재가 {f(price)} 분할 가능하나 만점 셋업은 아님 "
-                       f"(체크리스트 미충족) — 소액·분할로만. 손절 {f(stop)}·목표 {f(target)}.")}
+            "thesis": (f"지지 근처라 분할 가능하나 만점 셋업은 아님(체크리스트 미충족) — "
+                       f"소액·분할로만.{t_txt} 손절 {f(stop)}·목표 {f(target)}.")}
 
 
 def _headline(r: dict, rec: int) -> tuple[str, str]:
@@ -354,13 +422,20 @@ def plan_html(r: dict) -> str:
         rules.append(f"<b>매수</b>: 이미 올라 추격 금지 — <b>{tgt} {f(entry)}까지 눌리면</b> 분할 진입")
     elif kind == "wait":
         rules.append("<b>매수</b>: 진입 보류 — 받칠 지지가 잡히고 거기서 지지 확인될 때까지 관망")
+    elif (t := tactic(r)) is not None:
+        rules.append(f"<b>매수</b>: {t['label']} — {t['desc']}")
     elif r.get("transition_stage", 0) >= 2:
         rules.append("<b>매수</b>: 돌파선 위에서 되눌림 후 안착(상승추세선 형성) 확인 → 분할 진입")
     else:
         rules.append(f"<b>매수</b>: 현재가 부근 지지 확인 후 분할 (적극 진입은 신호 강화 시)")
-    rules.append(f"<b>손절</b>: {f(risk['stop'])} 종가 이탈 → 전량 정리(무조건)")
-    rules.append(f"<b>목표</b>: 1차 {f(risk['target'])}(손익비 1:{risk['rr']:.0f}) 도달 시 "
-                 f"일부 익절 + 손절을 진입가로 올리기")
+    one_r = entry + (entry - risk["stop"]) if entry and risk.get("stop") else None
+    rules.append(f"<b>손절</b>: {f(risk['stop'])} <b>종가 이탈</b> → 전량 (장중엔 손절가 −3% "
+                 f"터치 시 재해 방지 전량). 손절은 <b>절대 아래로 안 내림</b>")
+    rules.append(f"<b>익절</b>: +1R{f' {f(one_r)}' if one_r else ''} 도달 → <b>절반 익절 + "
+                 f"손절을 진입가(본전)로</b>. 나머지는 목표 {f(risk['target'])}(1:{risk['rr']:.0f}) "
+                 f"또는 트레일링(일봉 마감 기준, 올리기만) 먼저 닿는 쪽")
+    rules.append(f"<b>시간</b>: 진입 후 {config.TIME_STOP_DAYS}거래일 내 +1R 미도달 → 정리 "
+                 f"(전환 실패는 시간으로도 드러남)")
     if r.get("vetoed"):
         rules = [f"<b>회피</b>: 하락추세 — 신규 매수 금지. "
                  f"보유 시 방어선 {f(sr['defense'])} 이탈에서 정리"]
