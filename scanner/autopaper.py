@@ -20,7 +20,7 @@ import json
 import os
 
 STATE_PATH = os.path.join("data_cache", "autopaper.json")
-VERSION = 3                # 규칙 바뀌면 +1 → 시뮬레이션 깨끗하게 재시작
+VERSION = 4                # 규칙 바뀌면 +1 → 재시작 (v4: 장중에만 매매 — 주말 진입 무효화)
 START = 100_000_000        # 시드 1억(사용자 지정)
 FX = 1380                  # 달러 환산(모의투자 페이지와 동일 가정)
 RISK_PCT = 0.01            # 트레이드당 계좌 1% 리스크
@@ -33,6 +33,22 @@ PENDING_DAYS = 21          # 지정가 대기 만료
 
 def _today() -> str:
     return datetime.date.today().isoformat()
+
+
+def _market_open(ccy: str) -> bool:
+    """해당 종목의 시장이 지금 장중인가 — 장 닫힌 가격(주말·야간 종가)으로
+    진입/청산하는 비현실적 시뮬레이션 방지(사용자 지적: 주말 진입은 신뢰성↓).
+
+    한국주: 평일 09:00~15:30 KST(=00:00~06:30 UTC)
+    미국주: 평일 정규장(서머타임 포함 넉넉히 13:30~21:00 UTC)
+    """
+    now = datetime.datetime.utcnow()
+    if now.weekday() >= 5:                # 토·일 — 어떤 시장도 안 열림
+        return False
+    hm = now.hour * 60 + now.minute
+    if ccy == "KRW":
+        return 0 <= hm <= 6 * 60 + 30
+    return 13 * 60 + 30 <= hm <= 21 * 60
 
 
 def _age(day: str) -> int:
@@ -255,10 +271,11 @@ def update(results: list[dict], picks: dict, out_dir: str = "public") -> dict:
             px[r["code"]] = (r["name"], float(p), r.get("ccy", "USD"))
 
     # ① 보유 관리 — 손절 → +1R 절반 → 목표 → 타임 스탑 (한 스텝에 하나만)
+    #    장중인 시장의 종목만 — 닫힌 시장 가격은 움직이지도, 체결되지도 않는다
     for code in list(st["pos"].keys()):
         p = st["pos"][code]
         cur = px.get(code)
-        if not cur:
+        if not cur or not _market_open(p["ccy"]):
             continue
         price = cur[1]
         one_r = p["entry"] + (p["entry"] - p["stop"])
@@ -279,7 +296,7 @@ def update(results: list[dict], picks: dict, out_dir: str = "public") -> dict:
     for code in list(st["pending"].keys()):
         o = st["pending"][code]
         cur = px.get(code)
-        if not cur:
+        if not cur or not _market_open(o["ccy"]):
             continue
         price = cur[1]
         if price <= o["stop"]:
@@ -321,6 +338,8 @@ def update(results: list[dict], picks: dict, out_dir: str = "public") -> dict:
         if not (entry and stop and target and stop < entry):
             continue
         ccy = item["ccy"]
+        if not _market_open(ccy):
+            continue                       # 장 닫힘 — 종가로 가짜 진입 금지
         per = _krw(entry, ccy)                         # 1주 가격(원)
         risk_share = _krw(entry - stop, ccy)           # 1주당 리스크(원)
         q = int(equity * RISK_PCT // risk_share) if risk_share > 0 else 0
