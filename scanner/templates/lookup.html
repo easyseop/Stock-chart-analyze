@@ -3,9 +3,19 @@
 <title>티커 즉석 조회</title>
 <style>
   body{margin:0;font-family:-apple-system,'Segoe UI','Noto Sans KR',sans-serif;
-    background:#f1f5f9;color:#1e293b}
-  header{background:#0f172a;color:#fff;padding:14px 20px}
-  header h1{margin:0;font-size:17px} header a{color:#7dd3fc;font-size:13px;text-decoration:none}
+    background:#f4f5f7;color:#191f28}
+  header{background:#fff;color:#191f28;padding:13px 18px;border-bottom:1px solid #f2f4f6;
+    display:flex;align-items:center;gap:12px}
+  header h1{margin:0;font-size:17px;font-weight:800}
+  header h1 span{color:#8b95a1!important}
+  header a{color:#4e5968;font-size:13.5px;font-weight:700;text-decoration:none}
+  .tabbar{position:fixed;left:0;right:0;bottom:0;z-index:40;display:none;
+    background:rgba(255,255,255,.96);backdrop-filter:blur(8px);
+    border-top:1px solid #e8ebee;padding:6px 8px calc(6px + env(safe-area-inset-bottom))}
+  .tabbar a{flex:1;text-align:center;text-decoration:none;font-size:11px;font-weight:700;
+    color:#8b95a1;padding:4px 0 2px}
+  .tabbar a .ti{display:block;font-size:20px;line-height:1.15}
+  @media(max-width:640px){.tabbar{display:flex}body{padding-bottom:64px}}
   .wrap{max-width:620px;margin:0 auto;padding:18px}
   .card{background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:18px;margin-bottom:14px}
   label{display:block;font-size:13px;font-weight:600;margin:10px 0 4px;color:#334155}
@@ -34,8 +44,8 @@
   .hist-item .s{font-size:12px;color:#64748b;margin-left:auto}
   .hist-item .x{color:#cbd5e1;cursor:pointer;font-size:18px;line-height:1}
 </style></head><body>
-<header><a href="index.html">&larr; 스크리너</a>
-<h1>티커 즉석 조회 <span style="color:#38bdf8;font-size:13px">웹에서 바로 수집</span></h1></header>
+<header><a href="index.html">&larr; 홈</a>
+<h1>➕ 티커 즉석 조회 <span style="font-size:13px">웹에서 바로 수집</span></h1></header>
 <div class="wrap">
   <div class="card">
     <label>티커 / 코드</label>
@@ -204,4 +214,11 @@
   window.addEventListener('load',function(){renderHist();resume();});
   window.addEventListener('focus',resume);
   document.addEventListener('visibilitychange',function(){if(!document.hidden)resume();});
-</script></body></html>
+</script>
+<nav class="tabbar" aria-label="주요 메뉴">
+  <a href="index.html#home"><span class="ti">🏠</span>홈</a>
+  <a href="index.html#stocks"><span class="ti">📋</span>종목</a>
+  <a href="paper.html"><span class="ti">💰</span>모의</a>
+  <a href="more.html"><span class="ti">☰</span>더보기</a>
+</nav>
+</body></html>
