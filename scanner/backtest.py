@@ -141,6 +141,13 @@ def run_gates(frames_map: dict, metas: dict, bench_map: dict | None = None,
     by_mode = {m: agg([x for x in ev if x["mode"] == m])
                for m in ("full", "half", "pullback")
                if any(x["mode"] == m for x in ev)}
+    # 교차 분석(신선도×전술) — "갓 전환이 나쁜 건가, 즉시 체결이 나쁜 건가"를 분리
+    cross = {}
+    for fr, flab in ((True, "fresh"), (False, "stale")):
+        for m in ("full", "half", "pullback"):
+            rows = [x for x in ev if x["fresh"] == fr and x["mode"] == m]
+            if rows:
+                cross[f"{flab}_{m}"] = agg(rows)
     res = {
         "stocks": len(frames_map), "events": len(ev),
         "stride": stride, "lookback": lookback,
@@ -148,6 +155,8 @@ def run_gates(frames_map: dict, metas: dict, bench_map: dict | None = None,
         "fresh": agg([x for x in ev if x["fresh"]]),
         "stale": agg([x for x in ev if not x["fresh"]]),
         "by_mode": by_mode,
+        "cross": cross,
+        "raw": ev,             # 이벤트 원자료 — 추가 분석/재집계용
         "note": ("현행 gates.classify('now') 재생 · 다음날 시가 체결 · "
                  "확정 전략 사다리 청산 · 슬리피지/수수료/시장방향(RS) 미반영"),
     }
@@ -162,6 +171,13 @@ def run_gates(frames_map: dict, metas: dict, bench_map: dict | None = None,
         if s["n"]:
             print(f"  {name:<14} {s['n']:>4}건 · 승률 {s['win_rate']:>5.1f}% · "
                   f"기대값 {s['avg_r']:+.3f}R")
+    if cross:
+        print("-" * 66)
+        print("  교차(신선도×전술):")
+        for k, s in cross.items():
+            fl, m = k.split("_", 1)
+            print(f"    {'🔥' if fl == 'fresh' else '↗'} {lab[m]:<6} "
+                  f"{s['n']:>4}건 · 승률 {s['win_rate']:>5.1f}% · {s['avg_r']:+.3f}R")
     print("=" * 66)
     return res
 
