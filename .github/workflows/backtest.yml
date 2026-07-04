@@ -1,0 +1,64 @@
+name: strategy-backtest
+
+# 전략 백테스트 — 현행 추천 게이트(gates.classify)의 역사적 승률 검증.
+#   전체 캐시에서 고르게 300종목 표본 · 최근 780봉(약 3년) · 워크포워드 재생.
+#   결과: 로그 표 + 텔레그램 요약 + backtest.json 아티팩트.
+# 실행: 수동(Run workflow) / 이 파일 변경 푸시 / 매주 토요일 07:00 KST.
+on:
+  workflow_dispatch:
+    inputs:
+      sample:
+        description: "표본 종목 수"
+        default: "300"
+      stride:
+        description: "탐색 보폭(봉) — 작을수록 정밀·느림"
+        default: "5"
+  push:
+    branches: ["claude/korean-text-review-o3wmsv"]
+    paths: [".github/workflows/backtest.yml"]
+  schedule:
+    - cron: "0 22 * * 5"    # 토 07:00 KST — 주 1회 최신 데이터로 갱신
+
+permissions:
+  contents: read
+
+concurrency:
+  group: backtest
+  cancel-in-progress: true
+
+jobs:
+  backtest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -r requirements.txt
+
+      # 가격 캐시 복원(읽기 전용 — daily.yml이 쓰는 것과 동일)
+      - uses: actions/cache/restore@v4
+        with:
+          path: |
+            data_cache
+            data_cache_h
+            earnings_cache.json
+          key: data-cache-${{ github.run_id }}
+          restore-keys: |
+            data-cache-
+
+      - name: 백테스트 실행
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          python -c "from scanner.backtest import cli_gates; cli_gates()" -- \
+            --sample "${{ github.event.inputs.sample || '300' }}" \
+            --stride "${{ github.event.inputs.stride || '5' }}" \
+            --lookback 780 --out backtest.json --notify
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: backtest-result
+          path: backtest.json

@@ -522,6 +522,7 @@ def _pick_item(r: dict, th: dict) -> dict:
         "tactic": t,                     # 진입 전술(즉시/반반/눌림 지정가) — 없으면 None
         "rec": _rec_n(r),                # 체크리스트 점수(0~6) — 매수 사유 기록용
         "stage_n": r.get("transition_stage", 0),
+        "earnings_d": earnings.days_until(r["code"]),  # 어닝까지 D-일(캐시만, 없으면 None)
     }
 
 

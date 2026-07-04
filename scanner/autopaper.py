@@ -340,6 +340,9 @@ def update(results: list[dict], picks: dict, out_dir: str = "public") -> dict:
         ccy = item["ccy"]
         if not _market_open(ccy):
             continue                       # 장 닫힘 — 종가로 가짜 진입 금지
+        ed = item.get("earnings_d")
+        if ed is not None and 0 <= ed <= 3:
+            continue                       # 어닝 D-3 이내 — 갭 리스크, 신규 진입 금지
         per = _krw(entry, ccy)                         # 1주 가격(원)
         risk_share = _krw(entry - stop, ccy)           # 1주당 리스크(원)
         q = int(equity * RISK_PCT // risk_share) if risk_share > 0 else 0
