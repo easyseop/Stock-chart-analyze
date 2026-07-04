@@ -1,8 +1,10 @@
 name: telegram-check
 
-# 텔레그램 시크릿 연결 확인용(1회성 스모크) — 이 파일을 바꿔 푸시하거나
-# Actions에서 Run workflow를 누르면 확인 메시지 1통을 보낸다.
-# 토큰 값은 로그에 절대 출력하지 않음(성공/실패 여부만).
+# 텔레그램 연결 확인 + CHAT_ID 자동 안내.
+#   - TELEGRAM_BOT_TOKEN + TELEGRAM_CHAT_ID 둘 다 있으면: 확인 메시지 1통 전송
+#   - 토큰만 있으면: getUpdates로 대화 상대를 찾아 "당신의 CHAT_ID는 ..."을
+#     텔레그램으로 직접 보내줌(공개 로그에는 마스킹된 ID만 남김)
+# 실행: Actions → telegram-check → Run workflow, 또는 이 파일 변경 푸시.
 on:
   workflow_dispatch:
   push:
@@ -18,18 +20,80 @@ jobs:
     timeout-minutes: 3
     steps:
       - uses: actions/checkout@v4
-      - name: 연결 확인 메시지 전송
+      - name: 연결 확인 / CHAT_ID 안내
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: |
           python - <<'EOF'
-          import sys
-          from bot import notify
-          ok = notify.send(
-              "✅ <b>텔레그램 연결 확인</b>\n"
-              "스크리너 알림봇이 이 채팅으로 매수/매도 제안을 보낼 준비가 됐어요.\n"
-              "장중(한국 09:00~15:30 · 미국 22:30~05:00 KST) 15~30분 주기로 확인합니다.")
-          print("전송 결과:", "성공" if ok else "실패(시크릿 미설정 또는 토큰/챗ID 오류)")
+          import json, os, sys, urllib.parse, urllib.request
+
+          tok = (os.environ.get("TELEGRAM_BOT_TOKEN") or "").strip()
+          cid = (os.environ.get("TELEGRAM_CHAT_ID") or "").strip()
+
+          def api(method, **kw):
+              url = f"https://api.telegram.org/bot{tok}/{method}"
+              data = urllib.parse.urlencode(kw).encode() if kw else None
+              try:
+                  with urllib.request.urlopen(url, data=data, timeout=15) as r:
+                      return json.load(r)
+              except Exception as e:
+                  try:
+                      return json.load(e)          # HTTPError 본문(설명 포함)
+                  except Exception:
+                      return {"ok": False, "description": str(e)}
+
+          if not tok:
+              print("❌ TELEGRAM_BOT_TOKEN 시크릿이 비어 있어요.")
+              print("   Settings → Secrets and variables → Actions → Repository secrets에 등록하세요.")
+              sys.exit(1)
+
+          me = api("getMe")
+          if not me.get("ok"):
+              print("❌ 토큰이 유효하지 않아요:", me.get("description"))
+              sys.exit(1)
+          bot = "@" + me["result"].get("username", "?")
+          print("🤖 봇 토큰 정상 —", bot)
+
+          if cid:
+              r = api("sendMessage", chat_id=cid, parse_mode="HTML",
+                      text=("✅ <b>텔레그램 연결 확인</b>\n"
+                            "스크리너 알림봇 준비 완료 — 장중 15~30분 주기로 "
+                            "매수/매도 제안을 보내드려요."))
+              print("전송 결과:", "성공 🎉" if r.get("ok")
+                    else "실패: " + str(r.get("description")))
+              sys.exit(0 if r.get("ok") else 1)
+
+          # CHAT_ID 미등록 → 봇에게 온 메시지에서 채팅을 찾아 ID를 '텔레그램으로' 보냄
+          up = api("getUpdates")
+          if not up.get("ok") and "409" in str(up.get("description", "")):
+              api("deleteWebhook")
+              up = api("getUpdates")
+          chats = {}
+          for u in (up.get("result") or []):
+              m = (u.get("message") or u.get("edited_message")
+                   or u.get("channel_post") or {})
+              c = m.get("chat") or {}
+              if "id" in c:
+                  chats[c["id"]] = c.get("first_name") or c.get("title") or ""
+          if not chats:
+              print(f"⚠️ CHAT_ID 자동탐지 실패 — 텔레그램에서 {bot} 을 검색해")
+              print("   아무 메시지나 하나 보낸 뒤, 이 워크플로를 다시 실행하세요.")
+              sys.exit(1)
+          ok = True
+          for c in chats:
+              r = api("sendMessage", chat_id=c,
+                      text=("🔑 이 채팅의 CHAT_ID는 아래 숫자예요.\n\n"
+                            f"{c}\n\n"
+                            "GitHub 저장소 → Settings → Secrets and variables → "
+                            "Actions → Repository secrets에 TELEGRAM_CHAT_ID 이름으로 "
+                            "등록하면 알림이 시작됩니다."))
+              s = str(c)
+              masked = s[:2] + "*" * max(0, len(s) - 4) + s[-2:]
+              print("📨 CHAT_ID를 텔레그램으로 보냈어요 →", masked) if r.get("ok") \
+                  else print("전송 실패:", r.get("description"))
+              ok = ok and bool(r.get("ok"))
+          print("→ 텔레그램에 도착한 숫자를 TELEGRAM_CHAT_ID 시크릿으로 등록한 뒤,")
+          print("  이 워크플로를 한 번 더 실행하면 '연결 확인 🎉'까지 검증돼요.")
           sys.exit(0 if ok else 1)
           EOF
