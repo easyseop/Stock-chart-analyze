@@ -62,11 +62,17 @@ def _save(st: dict) -> None:
 
 
 def _log(st: dict, typ: str, code: str, name: str, q: int, price: float,
-         ccy: str, note: str) -> None:
-    st["log"].insert(0, {"d": _today(), "type": typ, "code": code, "name": name,
-                         "q": q, "price": round(price, 4), "ccy": ccy,
-                         "amt": round(_krw(price, ccy) * q), "note": note})
+         ccy: str, note: str, pl: float | None = None,
+         pl_pct: float | None = None) -> None:
+    ent = {"d": _today(), "type": typ, "code": code, "name": name,
+           "q": q, "price": round(price, 4), "ccy": ccy,
+           "amt": round(_krw(price, ccy) * q), "note": note}
+    if pl is not None:
+        ent["pl"] = round(pl)
+        ent["pl_pct"] = round(pl_pct or 0, 1)
+    st["log"].insert(0, ent)
     st["log"] = st["log"][:200]
+    st.setdefault("_ev", []).append(ent)   # 이번 런 이벤트 — 텔레그램 보고용
 
 
 def _sell(st: dict, code: str, q: int, price: float, note: str) -> None:
@@ -75,7 +81,9 @@ def _sell(st: dict, code: str, q: int, price: float, note: str) -> None:
     if q <= 0:
         return
     st["cash"] += _krw(price, p["ccy"]) * q
-    _log(st, "sell", code, p["name"], q, price, p["ccy"], note)
+    pl = (_krw(price, p["ccy"]) - _krw(p["avg"], p["ccy"])) * q   # 실현 손익(원)
+    pct = (price / p["avg"] - 1) * 100 if p["avg"] else 0
+    _log(st, "sell", code, p["name"], q, price, p["ccy"], note, pl, pct)
     p["q"] -= q
     if p["q"] <= 0:
         del st["pos"][code]
@@ -110,9 +118,47 @@ def _equity(st: dict, px: dict) -> float:
     return total
 
 
+def _fmt_native(v: float, ccy: str) -> str:
+    return f"{v:,.0f}원" if ccy == "KRW" else f"${v:,.2f}"
+
+
+def _report(st: dict, equity: float) -> None:
+    """이번 런의 매수/매도/주문을 텔레그램으로 보고(체결 있을 때만).
+
+    토큰 미설정/전송 실패는 조용히 무시 — 시뮬레이션(빌드)은 절대 안 죽인다.
+    """
+    ev = st.pop("_ev", [])
+    if not any(x["type"] in ("buy", "sell") for x in ev):
+        return
+    icon = {"buy": "🟢 매수", "sell": "🔴 매도",
+            "order": "📌 지정가 주문", "cancel": "✖ 주문 취소"}
+    lines = []
+    for x in ev[:12]:
+        ln = (f'{icon.get(x["type"], x["type"])} <b>{x["name"]}</b> '
+              f'{x["q"]}주 @ {_fmt_native(x["price"], x["ccy"])} — {x["note"]}')
+        if x.get("pl") is not None:                 # 매도: 차익/손절 금액·수익률
+            sg = "+" if x["pl"] >= 0 else ""
+            ln += f' (<b>{sg}{x["pl"]:,}원 · {sg}{x["pl_pct"]}%</b>)'
+        lines.append(ln)
+    if len(ev) > 12:
+        lines.append(f"…외 {len(ev) - 12}건")
+    ret = (equity / st["start"] - 1) * 100
+    sg = "+" if ret >= 0 else ""
+    text = ("🤖 <b>자동 모의투자 체결 보고</b> (시드 1억)\n"
+            + "\n".join(lines)
+            + f"\n💰 평가 <b>{equity:,.0f}원</b> ({sg}{ret:.2f}%) · "
+              f"현금 {st['cash']:,.0f}원 · 보유 {len(st['pos'])}종목")
+    try:
+        from bot import notify
+        notify.send(text)
+    except Exception:
+        pass
+
+
 def update(results: list[dict], picks: dict, out_dir: str = "public") -> dict:
     """빌드마다 호출 — 전략대로 시뮬레이션 한 스텝 진행하고 요약 반환."""
     st = _load()
+    st["_ev"] = []
     px = {}
     for r in results:
         p = (r.get("sr") or {}).get("price")
@@ -198,10 +244,9 @@ def update(results: list[dict], picks: dict, out_dir: str = "public") -> dict:
             continue
         _buy(st, code, item["name"], ccy, q, entry, stop, target, "즉시 분할 진입")
 
-    _save(st)
-
-    # 공개 JSON + 요약
     equity = _equity(st, px)
+    _report(st, equity)      # 이번 런 체결 내역 텔레그램 보고(_ev 소비)
+    _save(st)
     positions = []
     for code, p in st["pos"].items():
         cur = px.get(code, (p["name"], p["avg"], p["ccy"]))[1]

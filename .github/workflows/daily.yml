@@ -119,6 +119,9 @@ jobs:
       - name: 스크리너 생성(캐시 전체 — 즉석조회 추가분 포함, 네트워크 0)
         env:
           BUILD_SHA: ${{ github.sha }}   # 같은 코드면 증분 렌더, 코드 바뀌면 전체 재렌더
+          # 자동 모의투자 체결 보고(매수/매도 시 텔레그램) — 미설정이면 조용히 생략
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: python main.py --cache --scan-cached --screener --screener-dir public
 
       - name: 진행 현황(로그용)

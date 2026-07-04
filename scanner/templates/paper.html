@@ -43,6 +43,8 @@
   .logi{font-size:12.5px;padding:6px 2px;border-bottom:1px solid #f1f5f9;display:flex;gap:8px}
   .logi .b{color:#16a34a;font-weight:700}.logi .s{color:#dc2626;font-weight:700}
   .logi .tm{color:#94a3b8;margin-left:auto;font-size:11px}
+  #apos{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  #apos table{min-width:480px}
   .muted{color:#94a3b8;font-size:12.5px;text-align:center;padding:14px}
   .rst{font-size:12px;color:#94a3b8;cursor:pointer;text-decoration:underline}
   .warn{font-size:11.5px;color:#92400e;background:#fffbeb;border:1px solid #fde68a;
@@ -378,8 +380,11 @@ __TABBAR__
     document.getElementById('alog').innerHTML=(AUTOP.log||[]).slice(0,15).map(function(x){
       var lab={buy:'매수',sell:'매도',order:'주문',cancel:'취소'}[x.type]||x.type;
       var lc={buy:'b',sell:'s'}[x.type]||'';
+      var pl='';
+      if(x.pl!=null){var c=x.pl>=0?'up':'dn',s=x.pl>=0?'+':'';
+        pl=' <b class="'+c+'">'+s+won(x.pl)+' ('+s+x.pl_pct+'%)</b>';}
       return '<div class=logi><span class="'+lc+'">'+lab+'</span><span>'+flag(x.ccy)+' '+x.name
-        +(x.q?' '+x.q+'주':'')+' @ '+fmtP(x.price,x.ccy)+' — '+x.note+'</span><span class=tm>'+x.d+'</span></div>';
+        +(x.q?' '+x.q+'주':'')+' @ '+fmtP(x.price,x.ccy)+' — '+x.note+pl+'</span><span class=tm>'+x.d+'</span></div>';
     }).join('')||'<div class=muted>거래 없음</div>';
   }
   renderAuto();
