@@ -277,7 +277,8 @@ def _home_html(results: list[dict], tstats: dict | None = None) -> str:
             f'처음이라면 <a href="start.html" style="color:#1d6ce0">🚀 3분 가이드</a></div>')
 
 
-def _index(results: list[dict], tstats: dict | None = None) -> str:
+def _index(results: list[dict], tstats: dict | None = None) -> tuple[str, str]:
+    """(index.html, more.html) 두 페이지를 렌더해 반환."""
     import datetime
     from scanner import cache, universe
     # 기본 정렬: 진입 추천 점수 → 전환 단계 → 종합점수 (추천 종목이 맨 위로)
