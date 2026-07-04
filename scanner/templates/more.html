@@ -1,0 +1,118 @@
+<!DOCTYPE html><html lang="ko"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>더보기 — 종목 스크리너</title>
+<style>
+  :root{--bg:#f4f5f7;--card:#fff;--ink:#191f28;--sub:#8b95a1;--line:#f2f4f6;
+    --accent:#2e6be6;--up:#f04452;--down:#3182f6;--soft:#eef1f5}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,'Segoe UI','Noto Sans KR',sans-serif;
+    background:var(--bg);color:var(--ink)}
+  header{background:var(--card);padding:14px 20px 12px;border-bottom:1px solid var(--line);
+    display:flex;align-items:center;gap:14px}
+  header h1{margin:0;font-size:18px;font-weight:800;flex:1}
+  .topnav{display:flex;gap:4px}
+  .topnav a{text-decoration:none;font-size:13.5px;font-weight:700;color:#4e5968;
+    padding:7px 12px;border-radius:9px}
+  .topnav a.on{background:var(--soft);color:var(--ink)}
+  .tabbar{position:fixed;left:0;right:0;bottom:0;z-index:40;display:none;
+    background:rgba(255,255,255,.96);backdrop-filter:blur(8px);
+    border-top:1px solid #e8ebee;padding:6px 8px calc(6px + env(safe-area-inset-bottom))}
+  .tabbar a{flex:1;text-align:center;text-decoration:none;font-size:11px;font-weight:700;
+    color:#8b95a1;padding:4px 0 2px;border-radius:10px}
+  .tabbar a .ti{display:block;font-size:20px;line-height:1.15}
+  .tabbar a.on{color:var(--accent)}
+  @media(max-width:640px){.tabbar{display:flex}.topnav{display:none}body{padding-bottom:64px}}
+  main{max-width:720px;margin:0 auto;padding:14px}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+  .go{background:var(--card);border:1px solid #eceff3;border-radius:14px;padding:15px 14px;
+    text-decoration:none;color:inherit;display:block}
+  .go .ic{font-size:22px}
+  .go b{display:block;font-size:14.5px;margin-top:7px}
+  .go span{font-size:11.5px;color:var(--sub);line-height:1.5;display:block;margin-top:3px}
+  .card{background:var(--card);border:1px solid #eceff3;border-radius:14px;
+    padding:14px 16px;margin-bottom:12px;font-size:13px;color:#475569;line-height:1.8}
+  .card h2{margin:0 0 8px;font-size:14.5px;color:var(--ink)}
+  .card b{color:var(--ink)}
+  .dim{color:var(--sub);font-size:11.5px}
+  .pbarw{height:9px;background:#e2e8f0;border-radius:999px;overflow:hidden;margin-top:6px}
+  .pfillw{height:100%;background:var(--down);border-radius:999px}
+  details summary{cursor:pointer;font-weight:700;color:var(--ink);font-size:14px;padding:2px 0}
+  details .dc{padding-top:8px}
+</style></head><body>
+<header>
+  <h1>더보기</h1>
+  <nav class="topnav">
+    <a href="index.html#home">홈</a>
+    <a href="index.html#stocks">종목</a>
+    <a href="paper.html">모의투자</a>
+    <a href="more.html" class="on">더보기</a>
+  </nav>
+</header>
+<main>
+  <div class="grid">
+    <a class="go" href="start.html"><span class="ic">🚀</span><b>3분 시작 가이드</b>
+      <span>처음이라면 여기부터 — 화면 보는 법과 첫 매매 순서</span></a>
+    <a class="go" href="guide.html"><span class="ic">📘</span><b>매매 가이드</b>
+      <span>전환 매매 전략 · 진입/손절/목표를 정하는 원칙</span></a>
+    <a class="go" href="lookup.html"><span class="ic">➕</span><b>티커 즉석조회</b>
+      <span>목록에 없는 종목을 바로 수집해 차트 분석</span></a>
+    <a class="go" href="paper.html"><span class="ic">💰</span><b>모의투자</b>
+      <span>가상자금 1,000만원으로 추천을 따라 연습</span></a>
+  </div>
+
+  <div class="card">
+    <h2>📥 데이터 수집 현황</h2>
+    <b>__CACHED__/__UNI__</b> 종목 (__PCT__%) · 마지막 갱신 __UPDATED__ <span id="age" data-ts="__UPDATED_TS__"></span>
+    <div class="pbarw"><div class="pfillw" style="width:__PCT__%"></div></div>
+  </div>
+
+  <div class="card">
+    <h2>🕐 차트 데이터는 언제 갱신되나요?</h2>
+    <b>🇺🇸 미국주</b> — 미 장중 <b>__INTERVAL__분마다</b>(대략 밤 22:30~새벽 05:00 KST) 가격 갱신.<br>
+    <b>🇰🇷 한국주</b> — 한국 장중 <b>__INTERVAL__분마다</b>(09:00~15:30 KST) 가격 갱신.<br>
+    <b>📅 매일 마감 후</b> — 전체 종목 갱신 + 새 종목 백필.<br>
+    <b>💼 내 종목 · ➕ 즉석조회 종목</b>도 장중 갱신에 함께 포함돼요.<br>
+    <span class="dim">※ GitHub Actions 스케줄 기준이라 ±5~10분 차이날 수 있어요. 홈의 "N분 전 갱신"이 실제 반영 시각.</span>
+  </div>
+
+  <div class="card">
+    <h2>🔔 텔레그램 알림</h2>
+    장중 30분 주기로 <b>매수 제안 · 눌림/돌파 도달 · 손절/목표 터치</b>를 보내드려요.
+    자동 주문은 없고 <b>제안만</b> — 주문은 직접.<br>
+    <span class="dim">봇: @JStock_macchine_bot · 연결 재확인은 GitHub Actions → telegram-check → Run workflow</span>
+  </div>
+
+  <div class="card"><details>
+    <summary>❔ 전환후보 / 전환단계 / 신호 / 시장 — 뜻과 구분</summary>
+    <div class="dc">
+    세 가지는 <b>서로 다른 축</b>이에요:<br><br>
+    <b>① 상태 그룹</b> ("이 종목이 추세 사이클 어디?"):
+    <b>🟢 전환후보</b>=하락→상승 <b>전환 진행 중</b>(①~④단계) · <b>📈 상승추세</b>=전환 끝나고 <b>이미 강세</b> ·
+    <b>⚪ 관망</b>=방향 미정 · <b>🔴 회피</b>=하락추세.<br><br>
+    <b>② 전환단계</b> (①~④ — 전환후보 <b>안에서</b> 진행도, 클수록 강함):
+    <b>① 임박</b> 하락추세선 아래·저항 근접 → <b>② 갓 돌파</b> 막 넘었으나 안착 미확인 →
+    <b>③ 돌파후 횡보</b> 위에서 다지는 중 → <b>④ 전환 확정 ⭐</b> 돌파+안착+상승추세선+거래량 충족.<br><br>
+    <b>③ 신호</b> (종합점수 −100~+100): <b>🟢강세</b> +50↑ · <b>🟢관심</b> +20~50 ·
+    <b>⚪중립</b> ±20 · <b>🔴주의</b> −50~−20 · <b>🔴공포</b> −50↓.
+    <span class="dim">점수가 강해도 전환 셋업이 아닐 수 있어요 — 칩=추세 상태, 신호=점수.</span><br><br>
+    <b>④ 시장</b> (지수 방향) — <b>가장 중요한 필터.</b>
+    전환후보인데 시장이 하락이면 전환 실패(되돌림) 위험이 커서 <b>진입추천(⭐)은 시장 상승일 때만</b> 나와요.
+    시장 하락 중 전환후보 = "지금 사지 말고 관찰, 시장 돌면 1순위".
+    </div>
+  </details></div>
+
+  <div class="card">
+    <h2>📊 추천 성과 자동 채점</h2>
+    모든 진입 추천은 자동 추적돼요 — 목표 도달=승 · 손절 이탈=패.
+    결과는 홈 상단 요약과 <a href="api/track.json">api/track.json</a>에서.
+    <br><span class="dim">⚠️ 차트 기준 제안 · 투자권유 아님. 주문 전 실시간가 재확인.</span>
+  </div>
+</main>
+__TABBAR__
+<script>
+  (function(){var el=document.getElementById('age');if(!el)return;var ts=+el.dataset.ts*1000;
+    function f(){var m=Math.floor((Date.now()-ts)/60000);
+      el.textContent='('+(m<1?'방금 전':m+'분 전')+')';
+      el.style.cssText='font-weight:700;color:'+(m>45?'#d97706':'#16a34a');}
+    f();setInterval(f,30000);})();
+</script></body></html>

@@ -1,16 +1,116 @@
 <!DOCTYPE html><html lang="ko"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>종목 스크리너</title>
+<title>오늘의 전환 후보 — 종목 스크리너</title>
 <style>
+  :root{--bg:#f4f5f7;--card:#fff;--ink:#191f28;--sub:#8b95a1;--line:#f2f4f6;
+    --accent:#2e6be6;--up:#f04452;--down:#3182f6;--soft:#eef1f5}
+  *{box-sizing:border-box}
   body{margin:0;font-family:-apple-system,'Segoe UI','Noto Sans KR',sans-serif;
-    background:#f5f6f8;color:#191f28}
-  header{background:#fff;color:#191f28;padding:16px 20px 12px;border-bottom:1px solid #f2f4f6}
-  header h1{margin:0;font-size:19px;font-weight:800;letter-spacing:-.3px}
-  header p{margin:4px 0 0;font-size:12px;color:#8b95a1}
-  .bar{padding:10px 16px;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+    background:var(--bg);color:var(--ink)}
+  a{color:inherit}
+  header{background:var(--card);padding:14px 20px 12px;border-bottom:1px solid var(--line);
+    display:flex;align-items:center;gap:14px}
+  header h1{margin:0;font-size:18px;font-weight:800;letter-spacing:-.3px;flex:1}
+  header h1 small{color:var(--sub);font-size:12px;font-weight:600;margin-left:8px}
+  .topnav{display:flex;gap:4px}
+  .topnav a{text-decoration:none;font-size:13.5px;font-weight:700;color:#4e5968;
+    padding:7px 12px;border-radius:9px}
+  .topnav a.on{background:var(--soft);color:var(--ink)}
+  /* ── 하단 탭바(모바일) ── */
+  .tabbar{position:fixed;left:0;right:0;bottom:0;z-index:40;display:none;
+    background:rgba(255,255,255,.96);backdrop-filter:blur(8px);
+    border-top:1px solid #e8ebee;padding:6px 8px calc(6px + env(safe-area-inset-bottom))}
+  .tabbar a{flex:1;text-align:center;text-decoration:none;font-size:11px;font-weight:700;
+    color:#8b95a1;padding:4px 0 2px;border-radius:10px}
+  .tabbar a .ti{display:block;font-size:20px;line-height:1.15}
+  .tabbar a.on{color:var(--accent)}
+  @media(max-width:640px){
+    .tabbar{display:flex}
+    .topnav{display:none}
+    body{padding-bottom:64px}
+    header h1{font-size:16.5px} header h1 small{display:none}
+  }
+  main{max-width:760px;margin:0 auto}
+  main.wide{max-width:none}
+  /* ═══ 홈 — 오늘의 답 ═══ */
+  .mkline{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:12px 16px 0;
+    font-size:12.5px;color:#4e5968;font-weight:600}
+  .mkline .dot{width:7px;height:7px;border-radius:50%;background:#16a34a;display:inline-block}
+  .board{display:flex;gap:8px;padding:12px 16px 2px}
+  .bcell{flex:1;background:var(--card);border-radius:14px;padding:12px 6px;text-align:center;
+    border:1px solid #eceff3;text-decoration:none;color:inherit}
+  .bcell b{display:block;font-size:21px;letter-spacing:-.5px;font-variant-numeric:tabular-nums}
+  .bcell span{font-size:11.5px;color:var(--sub);font-weight:600}
+  .bcell.now b{color:var(--up)} .bcell.watch b{color:#c2410c} .bcell.trk b{color:var(--accent)}
+  .hsec{padding:16px 18px 6px;font-size:14.5px;font-weight:800;display:flex;align-items:center;gap:7px}
+  .hsec .cnt{color:var(--sub);font-size:12px;font-weight:700}
+  .hsec .rmk{margin-left:auto;font-size:11.5px;color:var(--sub);font-weight:600}
+  /* 픽 카드 */
+  .pk{background:var(--card);border-radius:16px;border:1px solid #eceff3;
+    margin:0 14px 10px;padding:14px 15px}
+  .pk .top{display:flex;align-items:flex-start;gap:8px}
+  .pk .nm{flex:1;min-width:0}
+  .pk .nm a{font-size:15.5px;font-weight:800;text-decoration:none;color:var(--ink);
+    line-height:1.3;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .pk .nm .cd{font-size:11px;color:var(--sub);font-weight:600}
+  .pk .px{text-align:right;flex:0 0 auto}
+  .pk .px b{display:block;font-size:15.5px;font-variant-numeric:tabular-nums}
+  .pk .px span{font-size:12px;font-weight:700;font-variant-numeric:tabular-nums}
+  .pk .tags{display:flex;gap:5px;flex-wrap:wrap;margin:8px 0 0}
+  .tg{font-size:11px;font-weight:700;padding:3px 8px;border-radius:999px;background:var(--soft);color:#4e5968}
+  .tg.hot{background:#fff1eb;color:#d84910}
+  .tg.stale{background:var(--soft);color:#8b95a1}
+  .tg.st{background:#eaf3ff;color:#1d6ce0}
+  .tg.rec{background:#fff8e5;color:#b45309}
+  /* 저점권 미터 */
+  .zone{margin:12px 0 4px}
+  .zl{display:flex;justify-content:space-between;font-size:10.5px;color:var(--sub);
+    font-weight:600;margin-bottom:4px}
+  .zbar{position:relative;height:8px;border-radius:999px;background:#e8ebf0}
+  .zbar .band{position:absolute;left:0;top:0;bottom:0;border-radius:999px 0 0 999px;
+    background:rgba(49,130,246,.22)}
+  .zbar .zdot{position:absolute;top:50%;width:14px;height:14px;border-radius:50%;
+    background:var(--accent);border:2.5px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.25);
+    transform:translate(-50%,-50%)}
+  /* 계획 3칸 */
+  .lvl{display:flex;gap:6px;margin:10px 0 0}
+  .lv{flex:1;background:#f8f9fb;border-radius:10px;padding:8px 4px;text-align:center}
+  .lv span{display:block;font-size:10.5px;color:var(--sub);font-weight:700}
+  .lv b{font-size:13px;font-variant-numeric:tabular-nums;letter-spacing:-.3px}
+  .lv.e b{color:var(--ink)} .lv.s b{color:var(--up)} .lv.t b{color:#16a34a}
+  .pk .why{font-size:12.5px;color:#4e5968;line-height:1.6;margin:10px 2px 0}
+  .pk .why b{color:var(--ink)}
+  .pk .cta{display:flex;gap:8px;margin-top:12px}
+  .pk .cta a{flex:1;text-align:center;text-decoration:none;font-size:13.5px;font-weight:800;
+    padding:11px 0;border-radius:11px}
+  .pk .cta .c1{background:var(--accent);color:#fff}
+  .pk .cta .c2{background:var(--soft);color:#334155}
+  /* 곧 올 자리 — 컴팩트 행 */
+  .soon{background:var(--card);border-radius:16px;border:1px solid #eceff3;margin:0 14px 10px;overflow:hidden}
+  .sr{display:flex;align-items:center;gap:9px;padding:12px 14px;border-bottom:1px solid var(--line);
+    text-decoration:none}
+  .sr:last-child{border-bottom:0}
+  .sr .fl{font-size:14px}
+  .sr .n{flex:1;min-width:0}
+  .sr .n b{display:block;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .sr .n span{font-size:11px;color:var(--sub);font-weight:600}
+  .sr .zp{font-size:11.5px;font-weight:700;color:#1d6ce0;background:#eaf3ff;
+    padding:3px 8px;border-radius:999px;flex:0 0 auto}
+  .sr .p{text-align:right;flex:0 0 auto}
+  .sr .p b{display:block;font-size:13.5px;font-variant-numeric:tabular-nums}
+  .sr .p span{font-size:11px;font-weight:700;font-variant-numeric:tabular-nums}
+  .hstat{margin:2px 16px 10px;font-size:12px;color:#4e5968;background:var(--card);
+    border:1px solid #eceff3;border-radius:12px;padding:9px 12px;line-height:1.6}
+  .hstat b{color:var(--ink)}
+  .hmuted{margin:0 16px 14px;font-size:11.5px;color:var(--sub);line-height:1.6}
+  .hmuted a{color:#15803d;font-weight:700}
+  .pos{color:var(--up)}.neg{color:var(--down)}
+  /* ═══ 종목 탭(스크리너) ═══ */
+  #v-stocks{display:none}
+  .chipbar{padding:10px 16px;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
   .chip{border:1px solid #e5e8eb;background:#fff;border-radius:999px;padding:7px 14px;font-weight:600;
     cursor:pointer;font-size:13px}
-  .chip.on{background:#3182f6;border-color:#3182f6;color:#fff}
+  .chip.on{background:var(--down);border-color:var(--down);color:#fff}
   table{width:100%;border-collapse:collapse;background:#fff;font-size:13px}
   th,td{padding:8px 10px;border-bottom:1px solid #eef2f7;text-align:right}
   th{background:#f8fafc;color:#64748b;font-size:12px;position:sticky;top:0;cursor:pointer;
@@ -23,12 +123,8 @@
   .nm a{color:#1d4ed8;text-decoration:none;font-weight:600}
   .nm .ko{color:#475569;font-size:12px;margin-left:6px}
   .nm .cd{color:#94a3b8;font-size:11px;margin-left:6px}
-  .legend{margin:0 16px 4px;background:#fff;border:1px solid #e2e8f0;border-radius:10px}
-  .legend summary{cursor:pointer;padding:9px 13px;font-size:13px;font-weight:600;color:#334155}
-  .legend .lc{padding:4px 15px 13px;font-size:12.5px;color:#475569;line-height:1.75}
-  .legend b{color:#0f172a}
-  td.sc.pos,.num.pos,span.pos{color:#f04452}   /* 양수=빨강(한국식·토스) */
-  td.sc.neg,.num.neg,span.neg{color:#3182f6}   /* 음수=파랑(한국식·토스) */
+  td.sc.pos,.num.pos{color:var(--up)}
+  td.sc.neg,.num.neg{color:var(--down)}
   tr.rec{background:#fffbeb}
   .sig{display:inline-flex;align-items:center;gap:5px}
   .star{font-size:11px;font-weight:700;color:#d97706}
@@ -46,51 +142,22 @@
     line-height:1;vertical-align:middle}
   .hold.on{color:#f59e0b}
   .pl{font-size:11.5px;font-weight:700;margin-left:7px;white-space:nowrap}
-  .pl.up{color:#f04452} .pl.dn{color:#3182f6}
+  .pl.up{color:var(--up)} .pl.dn{color:var(--down)}
   .pxm{display:none}
   tr.held{background:#fffdf3}
-  .pos{color:#f04452}.neg{color:#3182f6}
-  .notice{margin:8px 16px 0;background:#fff;border:1px solid #e2e8f0;border-radius:10px}
-  .notice>summary{cursor:pointer;padding:9px 13px;font-size:13px;font-weight:600;color:#334155}
-  .notice .nc{padding:2px 15px 12px;font-size:12.5px;color:#475569;line-height:1.8}
-  .notice .nc b{color:#0f172a} .notice .ndim{color:#94a3b8;font-size:11.5px}
-  .reco{margin:10px 16px 0;background:#fff;border:1px solid #e2e8f0;border-radius:12px}
-  .reco>summary{cursor:pointer;padding:11px 14px;font-size:14px;font-weight:800;color:#0f172a}
-  .rbody{padding:4px 14px 12px}
-  .rstat{font-size:12.5px;color:#334155;background:#f8fafc;border:1px solid #e2e8f0;
-    border-radius:9px;padding:8px 11px;margin:6px 0 10px}
-  .rstat b{color:#0f172a}
-  .rsec{font-size:13px;font-weight:800;color:#334155;margin:8px 0 7px}
-  .rsec b{color:#3182f6}
-  .rc{border:1px solid #e2e8f0;border-radius:10px;padding:10px 11px;margin-bottom:8px}
-  .rc.now{border-left:4px solid #f04452} .rc.watch{border-left:4px solid #f59e0b}
-  .rch{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
-  .rch a{font-size:14.5px;font-weight:700;color:#0f172a;text-decoration:none}
-  .rtag{font-size:11px;font-weight:700;padding:2px 7px;border-radius:999px;background:#f1f5f9;color:#475569}
-  .rvd{font-size:12px;font-weight:800;margin-left:auto}
-  .rvd.up{color:#f04452} .rvd.dn{color:#3182f6}
-  .rth{font-size:12.5px;color:#334155;line-height:1.6;margin:6px 0 5px}
-  .rth b{color:#0f172a}
-  .rlv{font-size:12px;color:#475569} .rlv b{color:#0f172a}
-  .rmuted{font-size:12px;color:#94a3b8;padding:4px 0}
-  .prog{padding:8px 16px 0}
-  .ptxt{font-size:12px;color:#475569;margin-bottom:4px}
-  .pbarw{height:10px;background:#e2e8f0;border-radius:999px;overflow:hidden}
-  .pfillw{height:100%;background:#3182f6;border-radius:999px}
   .search{position:sticky;top:0;z-index:9;padding:8px 16px;display:flex;
-    align-items:center;gap:8px;background:#f5f6f8;border-bottom:1px solid #e5e8eb}
+    align-items:center;gap:8px;background:var(--bg);border-bottom:1px solid #e5e8eb}
   .search input{flex:1;box-sizing:border-box;padding:12px 38px 12px 14px;border:1px solid #cbd5e1;
     border-radius:10px;font-size:16px;background:#fff}
-  .search input:focus{outline:none;border-color:#3182f6}
+  .search input:focus{outline:none;border-color:var(--down)}
   .search .qwrap{flex:1;position:relative;display:flex}
   .search #qx{position:absolute;right:6px;top:50%;transform:translateY(-50%);border:0;
     background:#e5e8eb;color:#64748b;border-radius:50%;width:24px;height:24px;line-height:1;
     font-size:13px;cursor:pointer;display:none}
   .qn{font-size:12px;color:#64748b;white-space:nowrap}
-  /* 현재 필터 상태 + 결과 카운트 — 항상 실제 표시 개수와 동기화 */
   .stat{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:6px 16px 8px;
     font-size:12.5px;color:#475569}
-  .stat b{color:#191f28}
+  .stat b{color:var(--ink)}
   .stat .rstbtn{border:1px solid #e5e8eb;background:#fff;border-radius:999px;padding:3px 10px;
     font-size:11.5px;color:#64748b;cursor:pointer;display:none}
   #morew{display:none;padding:10px 16px 24px;background:#fff}
@@ -98,150 +165,147 @@
     color:#334155;font-size:13.5px;font-weight:700;cursor:pointer}
   .tw{overflow-x:auto;-webkit-overflow-scrolling:touch}
   #tb tr{content-visibility:auto;contain-intrinsic-size:auto 44px}
-  td.brk{display:none}   /* 모바일 카드에서만 줄바꿈용으로 사용 */
-  /* 인앱 모달(내 종목 매수가 입력 등) — prompt() 대체 */
+  td.brk{display:none}
+  /* 인앱 모달 — prompt() 대체 */
   #mask{position:fixed;inset:0;background:rgba(15,23,42,.45);z-index:50;display:none;
     align-items:flex-end;justify-content:center}
   #mask.show{display:flex}
   .sheet{background:#fff;border-radius:16px 16px 0 0;padding:18px 18px 22px;width:100%;
-    max-width:480px;box-sizing:border-box}
+    max-width:480px}
   .sheet h3{margin:0 0 6px;font-size:16px}
   .sheet p{margin:0 0 12px;font-size:13px;color:#475569;line-height:1.6;white-space:pre-line}
-  .sheet input{width:100%;box-sizing:border-box;padding:12px;border:1px solid #cbd5e1;
+  .sheet input{width:100%;padding:12px;border:1px solid #cbd5e1;
     border-radius:10px;font-size:16px;margin-bottom:12px}
   .sheet .btns{display:flex;gap:8px}
   .sheet .btns button{flex:1;padding:12px;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer}
-  #mok{border:0;background:#3182f6;color:#fff}
+  #mok{border:0;background:var(--down);color:#fff}
   #mno{border:1px solid #e5e8eb;background:#fff;color:#475569}
-  @media(min-width:641px){#mask{align-items:center}.sheet{border-radius:16px}}
-  /* 모바일: 토스식 미니멀 리스트 — 한 종목 = 두 줄(이름+태그 / 오른쪽 현재가·등락) */
+  @media(min-width:641px){#mask{align-items:center}.sheet{border-radius:16px}
+    .board{max-width:760px} .pk .cta a{max-width:none}}
+  /* 모바일 종목 리스트: 토스식 2줄 */
   @media(max-width:640px){
-    header h1{font-size:17px} header p{display:none}
     .chip{padding:6px 11px;font-size:12px}
     .tw{overflow:visible;background:#fff;margin-top:8px}
     thead{display:none}
     #tb tr{contain-intrinsic-size:auto 64px}
     table,tbody{display:block}
     tr{display:flex;flex-wrap:wrap;align-items:center;position:relative;
-       background:#fff;border:0;border-bottom:1px solid #f2f4f6;
+       background:#fff;border:0;border-bottom:1px solid var(--line);
        margin:0;padding:12px 16px}
     tr:active{background:#f8f9fa}
     tr.rec{background:#fffdf5}
     td{display:none;border:0;padding:0;font-size:12px;text-align:left}
     td::before{display:none}
-    /* 1행: 이름(왼쪽) + 현재가·등락(오른쪽) */
     td.nm{display:flex;align-items:center;order:1;flex-basis:100%;gap:2px}
-    td.nm a{font-size:15.5px;font-weight:700;line-height:1.3;color:#191f28;
+    td.nm a{font-size:15.5px;font-weight:700;line-height:1.3;color:var(--ink);
        overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:52vw}
     td.nm .ko,td.nm .cd{display:none}
     td.nm .pl{margin-left:6px}
     .pxm{display:flex;flex-direction:column;align-items:flex-end;margin-left:auto;
        flex:0 0 auto}
-    .pxm .pxv{font-size:15px;font-weight:700;color:#191f28;font-variant-numeric:tabular-nums}
+    .pxm .pxv{font-size:15px;font-weight:700;color:var(--ink);font-variant-numeric:tabular-nums}
     .pxm .pxc{font-size:12px;font-weight:700;font-variant-numeric:tabular-nums}
-    /* 2행: 핵심 태그 3개만 — 신호 · 전환단계 · 저점권 (작고 옅게) */
     td[data-label="신호"],td.stg,td[data-label="저점권"]{
        display:block;order:2;flex:0 0 auto;color:#8b95a1;font-size:11.5px;
        font-weight:600;background:none;padding:2px 8px 0 0}
-    td.stg{color:#f04452}
+    td.stg{color:var(--up)}
     td[data-v="0"].stg,td[data-v=""].stg{display:none}
     td[data-label="저점권"]::before{content:"저점권 ";display:inline;color:#8b95a1;
        font-size:11.5px;font-weight:600}
-    td[data-label="저점권"].pos{color:#3182f6}
+    td[data-label="저점권"].pos{color:var(--down)}
     td[data-label="저점권"].neg{color:#8b95a1}
-    /* 나머지(추세·점수·시장·RS·신고가·판정)는 모바일에서 숨김 — 상세에서 확인 */
   }
 </style></head><body>
-<header><h1>종목 스크리너 <span style="color:#38bdf8;font-size:13px">차트 신호 랭킹</span></h1>
-<p>__N__종목 수집 · 헤더 클릭=정렬 · 칩=필터(겹쳐 쓰면 AND 조합) · 종목명 클릭=상세 차트</p></header>
-<div class="prog">
-  <div class="ptxt">📥 수집 진행 <b>__CACHED__/__UNI__</b> (__PCT__%) · 마지막 갱신 __UPDATED__ <span id="age" data-ts="__UPDATED_TS__"></span></div>
-  <div class="pbarw"><div class="pfillw" style="width:__PCT__%"></div></div>
-</div>
-<details class="notice"><summary>🕐 차트 데이터는 언제 갱신되나요?</summary>
-<div class="nc">
-<b>🇺🇸 미국주</b> — 미 장중 <b>__INTERVAL__분마다</b>(대략 밤 22:30~새벽 05:00 KST) 가격 갱신.<br>
-<b>🇰🇷 한국주</b> — 한국 장중 <b>__INTERVAL__분마다</b>(09:00~15:30 KST) 가격 갱신.<br>
-<b>📅 매일 마감 후</b> — 전체 종목 갱신 + 새 종목 백필(미수집분 채움).<br>
-<b>💼 내 종목 · ➕ 즉석조회 종목</b>도 위 장중 갱신에 함께 포함돼요(한국주는 한국 장중, 미국주는 미 장중).<br>
-<span class="ndim">※ 시간은 GitHub Actions 스케줄 기준이라 ±5~10분 차이날 수 있어요. 페이지 상단 "마지막 갱신"이 실제 반영 시각.</span>
-</div></details>
-<div class="search">
-  <div class="qwrap">
-    <input id="q" type="search" inputmode="search" autocomplete="off" aria-label="종목 검색"
-      placeholder="🔍 종목 검색 (티커·영문명·한글명)" oninput="search(this.value)">
-    <button id="qx" aria-label="검색어 지우기" onclick="clearQ()">✕</button>
+<header>
+  <h1>📉→📈 전환 스크리너<small>하락→상승 전환을 저점에서</small></h1>
+  <nav class="topnav">
+    <a href="#home" id="nav-home" class="on" onclick="return go('home')">홈</a>
+    <a href="#stocks" id="nav-stocks" onclick="return go('stocks')">종목</a>
+    <a href="paper.html">모의투자</a>
+    <a href="more.html">더보기</a>
+  </nav>
+</header>
+
+<main id="v-home">
+  <div class="mkline"><span class="dot" id="agedot"></span>
+    <span id="age" data-ts="__UPDATED_TS__"></span>__MKLINE__</div>
+  __HOME__
+</main>
+
+<main id="v-stocks" class="wide">
+  <div class="search">
+    <div class="qwrap">
+      <input id="q" type="search" inputmode="search" autocomplete="off" aria-label="종목 검색"
+        placeholder="🔍 종목 검색 (티커·영문명·한글명)" oninput="search(this.value)">
+      <button id="qx" aria-label="검색어 지우기" onclick="clearQ()">✕</button>
+    </div>
+    <span id="qn" class="qn" aria-live="polite"></span>
   </div>
-  <span id="qn" class="qn" aria-live="polite"></span>
-</div>
-<details class="legend"><summary>❔ 전환후보 / 전환단계 / 신호 / 시장 — 뜻과 구분 (꼭 읽기)</summary>
-<div class="lc">
-세 가지는 <b>서로 다른 축</b>이에요. 헷갈리지 않게 구분하면:<br><br>
-<b>① 상태 그룹</b> (위쪽 칩 — "이 종목이 추세 사이클 어디?"):<br>
-&nbsp;<b>🟢 전환후보</b>=하락→상승 <b>전환 진행 중</b>(①~④단계) · <b>📈 상승추세</b>=전환 끝나고 <b>이미 강세</b> ·
- <b>⚪ 관망</b>=방향 미정 · <b>🔴 회피</b>=하락추세.<br><br>
-<b>② 전환단계</b> (①~④ — "전환후보 <b>안에서</b> 얼마나 진행됐나", 클수록 강함):<br>
-&nbsp;<b>① 임박</b> — 아직 하락추세선 아래지만 저항 근접 · <b>② 갓 돌파(미확인)</b> — 막 넘었으나 안착 미확인 →
- <b>③ 돌파후 횡보</b> — 위에서 다지는 중 → <b>④ 전환 확정 ⭐</b> — 돌파+안착+상승추세선+거래량 다 충족(가장 강함).<br>
-&nbsp;<span style="color:#94a3b8">※ ①②③④는 "🟢전환후보" 그룹의 세부 단계예요. 상승추세/관망/회피엔 전환단계가 없음(–).</span><br><br>
-<b>③ 신호</b> (종합점수 −100~+100, <b>또 다른 축</b>): <b>🟢강세</b> +50↑ · <b>🟢관심</b> +20~50 ·
- <b>⚪중립</b> ±20 · <b>🔴주의</b> −50~−20 · <b>🔴공포</b> −50↓.<br>
-&nbsp;<span style="color:#94a3b8">※ "신호 🟢강세"인데 "전환후보"가 아닐 수 있어요 — 점수는 강해도 전환 셋업은 아닌 경우. 칩=추세 상태, 신호=점수.</span><br><br>
-<b>④ 시장</b> (지수 방향): <span style="color:#16a34a;font-weight:700">상승</span> /
- <span style="color:#dc2626;font-weight:700">하락</span>. <b>가장 중요한 필터예요.</b><br>
-&nbsp;<b>❗ 전환후보인데 시장이 하락이면?</b> → 종목은 바닥에서 도는 중이지만 <b>시장이 안 받쳐주면 전환 실패(되돌림) 위험</b>이 커요.
- 그래서 <b>진입추천(⭐)은 시장이 상승일 때만</b> 나와요(지금 시장 하락이면 추천 0이 정상). <b>전환후보+시장하락 = "지금 사지 말고 관찰, 시장 돌면 1순위"</b>.
-</div></details>
-<div class="bar">
-  <button class="chip rec-chip" data-f="rec" aria-pressed="false" onclick="chip(this)">⭐ 진입 추천 __RCOUNT__</button>
-  <button class="chip" data-f="all" aria-pressed="false" onclick="chip(this)">전체</button>
-  __REGION_CHIPS__
-  __CHIPS__
-</div>
-<div class="bar bar2"><span class="barlbl">전환단계</span>__STAGE_CHIPS__
-  <button class="chip holdchip" id="holdchip" data-f="hold" aria-pressed="false" onclick="chip(this)" style="display:none">💼 내 종목 <span id="holdn">0</span></button>
-  <a class="chip" href="start.html" style="background:#2563eb;color:#fff;border-color:#2563eb;text-decoration:none">🚀 시작 가이드</a>
-  <a class="chip" href="paper.html" style="background:#15803d;color:#fff;border-color:#15803d;text-decoration:none">💰 모의투자</a>
-  <a class="chip" href="guide.html" style="text-decoration:none">📘 가이드</a>
-  <a class="chip" href="lookup.html" style="background:#0f172a;color:#fff;border-color:#0f172a;text-decoration:none">➕ 즉석조회</a>
-</div>
-__RECO__
-<div class="stat"><span id="cnt" aria-live="polite"></span>
-  <button class="rstbtn" id="rstbtn" onclick="resetF()">필터 초기화 ↺</button></div>
-<div class="tw"><table id="t"><thead><tr>
-  <th onclick="srt(0,false)">신호</th>
-  <th onclick="srt(1,false)">종목</th>
-  <th onclick="srt(2,true)">전환단계▼</th>
-  <th onclick="srt(3,false)">추세</th>
-  <th onclick="srt(4,true)">점수</th>
-  <th onclick="srt(5,false)">시장</th>
-  <th onclick="srt(6,true)">RS</th>
-  <th onclick="srt(7,true)">신고가</th>
-  <th onclick="srt(8,true)" title="52주 저가~고가 범위 내 현재가 위치 — 낮을수록 저점">저점권</th>
-  <th onclick="srt(9,false)">판정</th>
-</tr></thead><tbody id="tb"></tbody></table></div>
-<div id="morew"><button id="more" onclick="more()"></button></div>
+  <div class="chipbar">
+    <button class="chip rec-chip" data-f="rec" aria-pressed="false" onclick="chip(this)">⭐ 진입 추천 __RCOUNT__</button>
+    <button class="chip" data-f="all" aria-pressed="false" onclick="chip(this)">전체</button>
+    __REGION_CHIPS__
+    __CHIPS__
+  </div>
+  <div class="chipbar bar2"><span class="barlbl">전환단계</span>__STAGE_CHIPS__
+    <button class="chip holdchip" id="holdchip" data-f="hold" aria-pressed="false" onclick="chip(this)" style="display:none">💼 내 종목 <span id="holdn">0</span></button>
+    <a class="chip" href="lookup.html" style="background:#0f172a;color:#fff;border-color:#0f172a;text-decoration:none">➕ 즉석조회</a>
+  </div>
+  <div class="stat"><span id="cnt" aria-live="polite"></span>
+    <button class="rstbtn" id="rstbtn" onclick="resetF()">필터 초기화 ↺</button></div>
+  <div class="tw"><table id="t"><thead><tr>
+    <th onclick="srt(0,false)">신호</th>
+    <th onclick="srt(1,false)">종목</th>
+    <th onclick="srt(2,true)">전환단계▼</th>
+    <th onclick="srt(3,false)">추세</th>
+    <th onclick="srt(4,true)">점수</th>
+    <th onclick="srt(5,false)">시장</th>
+    <th onclick="srt(6,true)">RS</th>
+    <th onclick="srt(7,true)">신고가</th>
+    <th onclick="srt(8,true)" title="52주 저가~고가 범위 내 현재가 위치 — 낮을수록 저점">저점권</th>
+    <th onclick="srt(9,false)">판정</th>
+  </tr></thead><tbody id="tb"></tbody></table></div>
+  <div id="morew"><button id="more" onclick="more()"></button></div>
+</main>
+
 <template id="rowsrc">__ROWS__</template>
 <div id="mask" role="dialog" aria-modal="true"><div class="sheet">
   <h3 id="mtt"></h3><p id="mtx"></p>
   <input id="min" inputmode="decimal" style="display:none">
   <div class="btns"><button id="mno" onclick="mHide()">취소</button><button id="mok">확인</button></div>
 </div></div>
+__TABBAR__
 <script>
   var tb=document.getElementById('tb');
+  // ── 뷰(홈/종목) 전환 — 해시 라우팅: URL·탭제목·뒤로가기와 일치 ──
+  var TITLES={home:'오늘의 전환 후보 — 종목 스크리너',stocks:'전체 종목 — 종목 스크리너'};
+  function show(v){
+    document.getElementById('v-home').style.display=(v==='home')?'block':'none';
+    document.getElementById('v-stocks').style.display=(v==='stocks')?'block':'none';
+    ['home','stocks'].forEach(function(k){
+      var n=document.getElementById('nav-'+k); if(n)n.classList.toggle('on',k===v);
+      var t=document.getElementById('tab-'+k); if(t)t.classList.toggle('on',k===v);
+    });
+    document.title=TITLES[v]||TITLES.home;
+  }
+  function go(v){location.hash=(v==='home')?'':'stocks';return false;}
+  function route(){show(location.hash==='#stocks'?'stocks':'home');}
+  window.addEventListener('hashchange',route);
+  // 갱신 나이 배지
   (function(){var el=document.getElementById('age');if(!el)return;var ts=+el.dataset.ts*1000;
     function f(){var m=Math.floor((Date.now()-ts)/60000);
-      el.textContent='('+(m<1?'방금 전':m+'분 전')+')';
-      el.style.cssText='font-weight:700;color:'+(m>45?'#d97706':'#16a34a');}
+      el.textContent=(m<1?'방금 전':m+'분 전')+' 갱신';
+      var late=m>45;
+      el.style.cssText='font-weight:700;color:'+(late?'#d97706':'#16a34a');
+      var d=document.getElementById('agedot');
+      if(d)d.style.background=late?'#d97706':'#16a34a';}
     f();setInterval(f,30000);})();
 
-  // ── 전 종목 행은 <template>(렌더 안 됨)에 두고, 필터에 맞는 것만 tbody로 —
-  //    모바일에서도 초기 렌더 DOM이 수천 행이 아니라 PAGE(200)행이 된다.
+  // ── 종목 리스트: 행은 <template>에, 매칭분만 200개씩 렌더 ──
   var ROWS=[], PAGE=200, LIMIT=PAGE, HOLD={};
   var F={rec:false, region:'', bucket:'', stage:0, hold:false, q:''};
   var BUCKET_KO={transition:'🟢 전환후보', up:'📈 상승추세', neutral:'⚪ 관망', avoid:'🔴 회피'};
   var STAGE_KO={1:'①임박',2:'②갓돌파',3:'③횡보',4:'④확정'};
-
   function init(){
     var t=document.getElementById('rowsrc');
     ROWS=[].slice.call(t.content.querySelectorAll('tr'));
@@ -292,8 +356,6 @@ __RECO__
     document.getElementById('rstbtn').style.display=(noF()&&!F.q)?'none':'inline-block';
   }
   function more(){LIMIT+=PAGE;apply(true);}
-  // 칩 하나로 통일: data-f=필터축, data-v=값. 같은 칩 다시 누르면 해제,
-  //   다른 축과는 AND 조합(예: 국내+①임박). 전역 event 의존 없음 — this 전달.
   function chip(btn){
     var f=btn.dataset.f, v=btn.dataset.v;
     if(f==='rec')F.rec=!F.rec;
@@ -328,21 +390,17 @@ __RECO__
     });
     apply(true);
   }
-  // 검색: 필터 칩과 조합 유지(검색 중에도 칩 사용 가능). 추천·안내·범례만 접어 결과를 위로.
   var _stmr=null;
   function search(v){clearTimeout(_stmr);_stmr=setTimeout(function(){
     F.q=(v||'').trim().toLowerCase(); onQ(); apply();},120);}
   function onQ(){
-    var on=!!F.q;
-    [].forEach.call(document.querySelectorAll('.reco,.notice,.legend'),function(e){
-      e.style.display=on?'none':'';});
-    document.getElementById('qx').style.display=on?'block':'none';
+    document.getElementById('qx').style.display=F.q?'block':'none';
   }
   function clearQ(){
     var q=document.getElementById('q'); q.value=''; F.q='';
     onQ(); apply(); q.focus();
   }
-  // ── 인앱 모달(prompt/confirm 대체) ─────────────────────────────
+  // ── 인앱 모달 ──
   function mShow(o){
     document.getElementById('mtt').textContent=o.title;
     document.getElementById('mtx').textContent=o.text||'';
@@ -357,7 +415,7 @@ __RECO__
   function mHide(){document.getElementById('mask').classList.remove('show');}
   document.getElementById('mask').addEventListener('click',function(e){
     if(e.target===this)mHide();});
-  // 💼 내 종목(매수/즐겨찾기) — 브라우저 localStorage에만 저장. 매수가 넣으면 손익(P/L) 표시.
+  // 💼 내 종목 — localStorage
   function loadHold(){try{return JSON.parse(localStorage.getItem('holdings')||'{}');}catch(e){return {};}}
   function saveHold(h){localStorage.setItem('holdings',JSON.stringify(h));}
   function toggleHold(e,code){
@@ -407,7 +465,7 @@ __RECO__
       }
     });
   }
-  // 첫 화면: ⭐진입 추천만 우선. 없으면 전환후보, 그래도 없으면 전체.
+  // 시작: 종목 탭 기본 필터 = ⭐추천(없으면 전환후보), 뷰는 해시 따라
   init(); renderHold();
   (function(){
     var rec=0,trans=0;
@@ -416,6 +474,6 @@ __RECO__
       if(r.dataset.bucket==='transition')trans++;});
     if(rec)F.rec=true;
     else if(trans)F.bucket='transition';
-    syncChips(); apply();
+    syncChips(); apply(); route();
   })();
 </script></body></html>

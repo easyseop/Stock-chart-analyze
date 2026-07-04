@@ -142,68 +142,139 @@ def _rows(results: list[dict]) -> str:
     return "".join(out)
 
 
-def _rec_card(p: dict, kind: str) -> str:
-    """홈 추천 카드 한 장(모의투자 큐레이션과 동일 — 진입 논리 포함)."""
-    ccy = p["ccy"]
-    fp = (lambda v: f"{v:,.0f}원") if ccy == "KRW" else (lambda v: f"${v:,.2f}")
-    vc = "up" if "타당" in p["verdict"] else ("dn" if "회피" in p["verdict"] else "")
-    stage = f'<span class="rtag">{html.escape(p["stage"])}</span>' if p["stage"] else ""
-    rp = p.get("range_pos", 50)
-    low_tag = (f'<span class="rtag" style="background:#eff6ff;color:#1d4ed8" '
-               f'title="52주 저가~고가 범위에서 현재가 위치(낮을수록 저점)">'
-               f'📍 저점권 {rp}%</span>')
-    fl = p.get("freshness")
-    if fl:
-        style = ("background:#fff7ed;color:#c2410c" if p.get("fresh")
-                 else "background:#f1f5f9;color:#64748b")
+def _tabbar(active: str) -> str:
+    """하단 탭바(모바일) — index/paper/more 공용. active: home/stocks/paper/more."""
+    items = [("home", "index.html#home", "🏠", "홈"),
+             ("stocks", "index.html#stocks", "📋", "종목"),
+             ("paper", "paper.html", "💰", "모의"),
+             ("more", "more.html", "☰", "더보기")]
+    tabs = "".join(
+        f'<a href="{href}" id="tab-{k}" class="tb{" on" if k == active else ""}"'
+        f'{" aria-current=page" if k == active else ""}>'
+        f'<span class="ti">{ic}</span>{lab}</a>'
+        for k, href, ic, lab in items)
+    return f'<nav class="tabbar" aria-label="주요 메뉴">{tabs}</nav>'
+
+
+def _fmt_px(v: float, ccy: str) -> str:
+    return f"{v:,.0f}원" if ccy == "KRW" else f"${v:,.2f}"
+
+
+def _zone_meter(rp: int) -> str:
+    """52주 저점권 미터 — 파란 띠(0~40%)=매수 목표 구간, 점=현재 위치."""
+    dot = max(2, min(98, int(rp)))
+    return (f'<div class="zone"><div class="zl"><span>52주 저점</span>'
+            f'<span>지금 {rp}%</span><span>고점</span></div>'
+            f'<div class="zbar"><div class="band" style="width:40%"></div>'
+            f'<span class="zdot" style="left:{dot}%"></span></div></div>')
+
+
+def _chg_html(p: dict) -> str:
+    chg = p.get("day_chg")
+    if chg is None:
+        return ""
+    cls = "pos" if chg > 0 else ("neg" if chg < 0 else "")
+    return f'<span class="{cls}">{chg:+.2f}%</span>'
+
+
+def _home_card(p: dict) -> str:
+    """홈 픽 카드 — 카드 한 장이 결정 한 번: 가격·신선도·저점권·계획·행동."""
+    flag = "🇰🇷" if p["ccy"] == "KRW" else "🇺🇸"
+    tags = []
+    if p.get("freshness"):
         gap = p.get("break_gap")
-        gap_txt = f" +{gap}%" if (gap is not None and gap >= 0) else ""
-        low_tag += (f'<span class="rtag" style="{style}" '
-                    f'title="하락추세선 대비 현재가 위치 — 갓 깬 것이 신선한 전환">'
-                    f'{html.escape(fl)}{gap_txt}</span>')
+        gap_txt = f" +{gap}%" if (gap is not None and gap >= 0 and p.get("fresh")) else ""
+        tags.append(f'<span class="tg {"hot" if p.get("fresh") else "stale"}">'
+                    f'{html.escape(p["freshness"])}{gap_txt}</span>')
+    if p.get("stage"):
+        tags.append(f'<span class="tg st">{html.escape(p["stage"])}</span>')
+    tags.append(f'<span class="tg">{html.escape(p["sig"])}</span>')
+    fp = lambda v: _fmt_px(v, p["ccy"])
     return (
-        f'<div class="rc {kind}">'
-        f'<div class="rch"><a href="stocks/{p["code"]}.html">{html.escape(p["name"])}</a>'
-        f'<span class="rtag">{html.escape(p["sig"])}</span>{stage}{low_tag}'
-        f'<span class="rvd {vc}">{html.escape(p["verdict"])}</span></div>'
-        f'<div class="rth">🤖 클로드라면: {p["thesis"]}</div>'
-        f'<div class="rlv">진입 <b>{fp(p["entry"])}</b> · 손절 {fp(p["stop"])} · '
-        f'목표 {fp(p["target"])}</div></div>')
+        f'<div class="pk"><div class="top">'
+        f'<div class="nm"><a href="stocks/{p["code"]}.html">{flag} {html.escape(p["name"])}</a>'
+        f'<span class="cd">{html.escape(p["code"])}</span></div>'
+        f'<div class="px"><b>{fp(p["price"]) if p.get("price") else "-"}</b>{_chg_html(p)}</div></div>'
+        f'<div class="tags">{"".join(tags)}</div>'
+        f'{_zone_meter(p.get("range_pos", 50))}'
+        f'<div class="lvl">'
+        f'<div class="lv e"><span>진입</span><b>{fp(p["entry"])}</b></div>'
+        f'<div class="lv s"><span>손절</span><b>{fp(p["stop"])}</b></div>'
+        f'<div class="lv t"><span>목표</span><b>{fp(p["target"])}</b></div></div>'
+        f'<div class="why">🤖 {p["thesis"]}</div>'
+        f'<div class="cta"><a class="c1" href="stocks/{p["code"]}.html">📈 차트 보기</a>'
+        f'<a class="c2" href="paper.html?buy={p["code"]}">💰 모의 매수</a></div></div>')
 
 
-def _recommend_html(results: list[dict], tstats: dict | None = None) -> str:
-    """홈 상단 '클로드라면 살 종목' 추천 — 모의투자와 같은 큐레이션을 표 위에 노출."""
+def _soon_row(p: dict) -> str:
+    flag = "🇰🇷" if p["ccy"] == "KRW" else "🇺🇸"
+    sub = html.escape(p.get("freshness") or p.get("stage") or p["sig"])
+    return (
+        f'<a class="sr" href="stocks/{p["code"]}.html">'
+        f'<span class="fl">{flag}</span>'
+        f'<span class="n"><b>{html.escape(p["name"])}</b><span>{sub}</span></span>'
+        f'<span class="zp">저점권 {p.get("range_pos", 50)}%</span>'
+        f'<span class="p"><b>{_fmt_px(p["price"], p["ccy"]) if p.get("price") else "-"}</b>'
+        f'{_chg_html(p)}</span></a>')
+
+
+def _mkline(results: list[dict]) -> str:
+    """홈 상단 시장 방향 한 줄 — 진입 추천의 전제 조건이라 항상 보이게."""
+    parts = []
+    for flag, want_krw in (("🇰🇷", True), ("🇺🇸", False)):
+        d = next((r.get("market", {}).get("direction", "") for r in results
+                  if (r.get("ccy") == "KRW") == want_krw), "")
+        if d:
+            cls = "pos" if "상승" in d else ("neg" if "하락" in d else "")
+            parts.append(f'{flag} 시장 <b class="{cls}">{html.escape(d)}</b>')
+    return (" · " + " · ".join(parts)) if parts else ""
+
+
+_HOME_CARD_MAX = 8     # 홈은 '답'만 — 전체 목록은 종목 탭에서
+
+
+def _home_html(results: list[dict], tstats: dict | None = None) -> str:
+    """홈 = 오늘의 답: 스코어보드 → 지금 진입 카드 → 곧 올 자리 행."""
     picks = _paper_picks(results)
-    now = "".join(_rec_card(p, "now") for p in picks["now"])
-    watch = "".join(_rec_card(p, "watch") for p in picks["watch"])
-    now_sec = (f'<div class="rsec">🟢 지금 진입 — 전환 확정·저점 <b>{len(picks["now"])}</b></div>{now}'
-               if now else
-               '<div class="rsec">🟢 지금 진입 — 전환 확정·저점 <b>0</b></div>'
-               '<div class="rmuted">지금 바로 들어갈 전환 확정(저점) 종목 없음 — '
-               '아래 곧 올 자리(전환 임박) 주시.</div>')
-    watch_sec = (f'<div class="rsec" style="margin-top:12px">👀 곧 올 자리 — 전환 임박·눌림 대기 '
-                 f'<b>{len(picks["watch"])}</b></div>{watch}' if watch else "")
-    # 추천 성과(자동 채점) 요약 — 매매 지표의 신뢰도를 눈으로 검증
+    now, watch = picks["now"], picks["watch"]
+    open_n = (tstats or {}).get("open", 0)
+    board = (
+        f'<div class="board">'
+        f'<a class="bcell now" style="text-decoration:none" href="#stocks"><b>{len(now)}</b><span>지금 진입</span></a>'
+        f'<a class="bcell watch" style="text-decoration:none" href="#stocks"><b>{len(watch)}</b><span>곧 올 자리</span></a>'
+        f'<a class="bcell trk" style="text-decoration:none" href="api/track.json"><b>{open_n}</b><span>성과 추적 중</span></a></div>')
     if tstats and tstats.get("closed"):
-        stat_html = (f'<div class="rstat">📊 지난 추천 성과(자동 채점): '
-                     f'<b>{tstats["wins"]}승 {tstats["losses"]}패</b> · '
-                     f'승률 <b>{tstats["win_rate"]}%</b> · 평균 '
-                     f'<b>{tstats["avg_r"]:+.2f}R</b> '
-                     f'<span class="rmuted">(목표 도달=승 · 손절 이탈=패 · '
-                     f'{tstats["open"]}건 진행 중 · '
-                     f'<a href="api/track.json">원자료</a>)</span></div>')
-    elif tstats:
-        stat_html = (f'<div class="rstat">📊 추천 성과 자동 채점 가동 중 — '
-                     f'{tstats.get("open", 0)}건 추적, 첫 결과(목표/손절 도달)부터 '
-                     f'승률 표시</div>')
+        stat = (f'<div class="hstat">📊 지난 추천 성과(자동 채점): '
+                f'<b>{tstats["wins"]}승 {tstats["losses"]}패</b> · 승률 '
+                f'<b>{tstats["win_rate"]}%</b> · 평균 <b>{tstats["avg_r"]:+.2f}R</b></div>')
     else:
-        stat_html = ""
-    return (f'<details class="reco" open>'
-            f'<summary>🤖 클로드라면 살 전환 후보 — 하락→상승 저점 매수 (진입 논리)</summary>'
-            f'<div class="rbody">{stat_html}{now_sec}{watch_sec}'
-            f'<div class="rmuted">⚠️ 차트 기준 추천 · 투자권유 아님. 종목 눌러 상세 확인 · '
-            f'<a href="paper.html" style="color:#15803d;font-weight:700">💰 모의투자로 연습</a></div>'
-            f'</div></details>')
+        stat = ""
+    if now:
+        cards = "".join(_home_card(p) for p in now[:_HOME_CARD_MAX])
+        rest = (f'<div class="hmuted">외 {len(now) - _HOME_CARD_MAX}개 — '
+                f'<a href="#stocks" style="color:#1d6ce0">종목 탭 ⭐추천</a>에서</div>'
+                if len(now) > _HOME_CARD_MAX else "")
+        now_sec = (f'<div class="hsec">🟢 지금 진입 <span class="cnt">{len(now)}</span>'
+                   f'<span class="rmk">전환 확정 · 저점</span></div>{cards}{rest}')
+    else:
+        now_sec = ('<div class="hsec">🟢 지금 진입 <span class="cnt">0</span></div>'
+                   '<div class="hstat">지금 바로 들어갈 전환 확정(저점) 종목이 없어요 — '
+                   '보통 <b>시장이 하락</b>일 때예요. 아래 "곧 올 자리"를 관찰하다가 '
+                   '시장이 돌면 1순위로 진입.</div>')
+    if watch:
+        rows = "".join(_soon_row(p) for p in watch[:_HOME_CARD_MAX])
+        rest_w = (f'<div class="hmuted">외 {len(watch) - _HOME_CARD_MAX}개 — '
+                  f'<a href="#stocks" style="color:#1d6ce0">종목 탭</a>에서</div>'
+                  if len(watch) > _HOME_CARD_MAX else "")
+        watch_sec = (f'<div class="hsec">👀 곧 올 자리 <span class="cnt">{len(watch)}</span>'
+                     f'<span class="rmk">전환 임박 · 눌림 대기</span></div>'
+                     f'<div class="soon">{rows}</div>{rest_w}')
+    else:
+        watch_sec = ""
+    return (f'{board}{stat}{now_sec}{watch_sec}'
+            f'<div class="hmuted">⚠️ 차트 기준 추천 · 투자권유 아님 · '
+            f'<a href="paper.html">💰 모의투자로 연습</a> · '
+            f'처음이라면 <a href="start.html" style="color:#1d6ce0">🚀 3분 가이드</a></div>')
 
 
 def _index(results: list[dict], tstats: dict | None = None) -> str:
@@ -244,20 +315,30 @@ def _index(results: list[dict], tstats: dict | None = None) -> str:
     pct = min(100, round(cached / uni * 100))
     updated = datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M UTC")
     import config
-    page = _tmpl("index.html")
-    for k, v in {
+    ts = int(__import__("time").time())            # 클라이언트 'N분 전' 표시용
+    tokens = {
         "__ROWS__": _rows(results), "__CHIPS__": chips,
         "__STAGE_CHIPS__": stage_chips, "__REGION_CHIPS__": region_chips,
-        "__RECO__": _recommend_html(results, tstats),
-        "__N__": len(results), "__RCOUNT__": rcount, "__RECMIN__": REC_MIN,
+        "__HOME__": _home_html(results, tstats),
+        "__MKLINE__": _mkline(results),
+        "__TABBAR__": _tabbar("home"),
+        "__RCOUNT__": rcount, "__RECMIN__": REC_MIN,
+        "__UPDATED_TS__": ts,
+    }
+    page = _tmpl("index.html")
+    for k, v in tokens.items():
+        page = page.replace(k, str(v))
+    # 더보기 페이지 — 수집 현황·갱신 안내·범례가 이사한 곳
+    more = _tmpl("more.html")
+    for k, v in {
         "__CACHED__": cached, "__UNI__": uni, "__PCT__": pct,
-        "__UPDATED__": updated,
-        "__UPDATED_TS__": int(__import__("time").time()),  # 클라이언트 'N분 전' 표시용
+        "__UPDATED__": updated, "__UPDATED_TS__": ts,
         # P5: 갱신주기 문구는 config에서 — 크론 바꿀 때 안내문이 저절로 따라오게
         "__INTERVAL__": config.UPDATE_INTERVAL_MIN,
+        "__TABBAR__": _tabbar("more"),
     }.items():
-        page = page.replace(k, str(v))
-    return page
+        more = more.replace(k, str(v))
+    return page, more
 
 
 def build(results: list[dict], frames_map: dict[str, dict],
@@ -323,8 +404,11 @@ def build(results: list[dict], frames_map: dict[str, dict],
             fp.write(sha)
     print(f"상세페이지: {rendered}/{len(results)} 렌더"
           f"{' (증분 — 나머지 재사용)' if incremental else ' (전체)'}")
+    index_page, more_page = _index(results, tstats)
     with open(os.path.join(out_dir, "index.html"), "w", encoding="utf-8") as fp:
-        fp.write(_index(results, tstats))
+        fp.write(index_page)
+    with open(os.path.join(out_dir, "more.html"), "w", encoding="utf-8") as fp:
+        fp.write(more_page)
     with open(os.path.join(out_dir, "lookup.html"), "w", encoding="utf-8") as fp:
         fp.write(_REPO and _trigger_page())   # 웹 즉석 조회(워크플로 트리거) 페이지
     with open(os.path.join(out_dir, "guide.html"), "w", encoding="utf-8") as fp:
@@ -398,6 +482,7 @@ def _pick_item(r: dict, th: dict) -> dict:
     return {
         "code": r["code"], "name": r["name"], "ccy": r.get("ccy", "USD"),
         "price": round(float(p), 4) if p else 0,
+        "day_chg": round(float(r.get("day_chg", 0)) * 100, 2),   # 전일 대비 %
         "sig": r["gauge"], "stage": r.get("transition_label") or "",
         "verdict": th["verdict"], "thesis": th["thesis"],
         "entry": round(float(r.get("entry") or 0), 4),
@@ -463,6 +548,7 @@ def _paper_page(results: list[dict]) -> str:
     return (_tmpl("paper.html")
             .replace("__PRICES__", json.dumps(prices, ensure_ascii=False))
             .replace("__PICKS__", json.dumps(picks, ensure_ascii=False))
+            .replace("__TABBAR__", _tabbar("paper"))
             .replace("__FX__", "1380"))
 
 

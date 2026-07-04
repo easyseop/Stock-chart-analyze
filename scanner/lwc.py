@@ -128,6 +128,31 @@ def _payload(result: dict, frames: dict, tf: str) -> dict:
             "lines": lines, "trend": trend}
 
 
+def _hero(result: dict) -> str:
+    """상세 상단 히어로 — 큰 현재가 + 전일 대비 + 52주 저점권 미터(한눈 판단)."""
+    price = (result.get("sr") or {}).get("price")
+    if price is None:
+        return ""
+    ccy = result.get("ccy", "USD")
+    px = f"{price:,.0f}원" if ccy == "KRW" else f"${price:,.2f}"
+    chg = result.get("day_chg")
+    chg_html = ""
+    if chg is not None:
+        pct = float(chg) * 100
+        cls = "hup" if pct > 0 else ("hdn" if pct < 0 else "")
+        chg_html = f'<span class="hchg {cls}">{pct:+.2f}%</span>'
+    rp = result.get("range_pos")
+    zone = ""
+    if rp is not None:
+        rpv = round(float(rp) * 100)
+        dot = max(2, min(98, rpv))
+        zone = (f'<div class="zone"><div class="zl"><span>52주 저점</span>'
+                f'<span>지금 {rpv}%</span><span>고점</span></div>'
+                f'<div class="zbar"><div class="band" style="width:40%"></div>'
+                f'<span class="zdot" style="left:{dot}%"></span></div></div>')
+    return (f'<div class="hero"><div class="hpx"><b>{px}</b>{chg_html}</div>{zone}</div>')
+
+
 def detail(result: dict, frames: dict) -> str:
     """lightweight-charts 상세 페이지 HTML. frames에 'H'(시간봉)가 있으면 탭 추가."""
     code = result["code"]
@@ -162,6 +187,7 @@ def detail(result: dict, frames: dict) -> str:
     card_txt = card.render(result).split("\n용어:")[0]
     return _TMPL.format(
         title=title, cdn=LWC_CDN, toggles=toggles, tfbtns=tfbtns,
+        hero=_hero(result),
         tfs=json.dumps(tfs), first=default_tf, plan=plan.plan_html(result),
         plan_css=plan.PLAN_CSS,
         data=json.dumps(data), default_on=default_on, precision=precision,
@@ -210,6 +236,22 @@ _TMPL = """<!DOCTYPE html><html lang="ko"><head>
   .gloss li:last-child{{margin-bottom:0}}
   .dot{{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:2px;
     vertical-align:middle}}
+  /* 상단 히어로 — 큰 현재가 + 저점권 미터 */
+  .hero{{background:#fff;border:1px solid #e2e8f0;border-radius:10px;
+    padding:13px 15px 12px;margin-bottom:10px}}
+  .hero .hpx b{{font-size:26px;font-weight:800;letter-spacing:-.5px;
+    font-variant-numeric:tabular-nums}}
+  .hchg{{font-size:14px;font-weight:800;margin-left:9px;font-variant-numeric:tabular-nums}}
+  .hchg.hup{{color:#f04452}} .hchg.hdn{{color:#3182f6}}
+  .zone{{margin-top:11px}}
+  .zl{{display:flex;justify-content:space-between;font-size:10.5px;color:#8b95a1;
+    font-weight:600;margin-bottom:4px}}
+  .zbar{{position:relative;height:8px;border-radius:999px;background:#e8ebf0}}
+  .zbar .band{{position:absolute;left:0;top:0;bottom:0;border-radius:999px 0 0 999px;
+    background:rgba(49,130,246,.22)}}
+  .zbar .zdot{{position:absolute;top:50%;width:14px;height:14px;border-radius:50%;
+    background:#2e6be6;border:2.5px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.25);
+    transform:translate(-50%,-50%)}}
   @media(max-width:640px){{.wrap{{padding:8px}}header h1{{font-size:14px}}
     .toggle,.tfbtn{{padding:5px 10px;font-size:12px}}.card{{font-size:11px}}.lc{{font-size:11.5px}}}}
 {plan_css}
@@ -217,6 +259,7 @@ _TMPL = """<!DOCTYPE html><html lang="ko"><head>
 <header><a href="../index.html">← 스크리너 목록</a><h1>{title}</h1>
 <div class="vt">{verdict}</div></header>
 <div class="wrap">
+  {hero}
   {plan}
   <div class="bar"><span style="font-size:12px;color:#64748b">지표</span>{toggles}</div>
   <div class="bar">{tfbtns}
