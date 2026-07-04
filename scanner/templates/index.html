@@ -79,13 +79,41 @@
   .pfillw{height:100%;background:#3182f6;border-radius:999px}
   .search{position:sticky;top:0;z-index:9;padding:8px 16px;display:flex;
     align-items:center;gap:8px;background:#f5f6f8;border-bottom:1px solid #e5e8eb}
-  .search input{flex:1;box-sizing:border-box;padding:12px 14px;border:1px solid #cbd5e1;
+  .search input{flex:1;box-sizing:border-box;padding:12px 38px 12px 14px;border:1px solid #cbd5e1;
     border-radius:10px;font-size:16px;background:#fff}
   .search input:focus{outline:none;border-color:#3182f6}
+  .search .qwrap{flex:1;position:relative;display:flex}
+  .search #qx{position:absolute;right:6px;top:50%;transform:translateY(-50%);border:0;
+    background:#e5e8eb;color:#64748b;border-radius:50%;width:24px;height:24px;line-height:1;
+    font-size:13px;cursor:pointer;display:none}
   .qn{font-size:12px;color:#64748b;white-space:nowrap}
+  /* 현재 필터 상태 + 결과 카운트 — 항상 실제 표시 개수와 동기화 */
+  .stat{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:6px 16px 8px;
+    font-size:12.5px;color:#475569}
+  .stat b{color:#191f28}
+  .stat .rstbtn{border:1px solid #e5e8eb;background:#fff;border-radius:999px;padding:3px 10px;
+    font-size:11.5px;color:#64748b;cursor:pointer;display:none}
+  #morew{display:none;padding:10px 16px 24px;background:#fff}
+  #more{width:100%;padding:12px;border:1px solid #e5e8eb;border-radius:10px;background:#f8fafc;
+    color:#334155;font-size:13.5px;font-weight:700;cursor:pointer}
   .tw{overflow-x:auto;-webkit-overflow-scrolling:touch}
   #tb tr{content-visibility:auto;contain-intrinsic-size:auto 44px}
   td.brk{display:none}   /* 모바일 카드에서만 줄바꿈용으로 사용 */
+  /* 인앱 모달(내 종목 매수가 입력 등) — prompt() 대체 */
+  #mask{position:fixed;inset:0;background:rgba(15,23,42,.45);z-index:50;display:none;
+    align-items:flex-end;justify-content:center}
+  #mask.show{display:flex}
+  .sheet{background:#fff;border-radius:16px 16px 0 0;padding:18px 18px 22px;width:100%;
+    max-width:480px;box-sizing:border-box}
+  .sheet h3{margin:0 0 6px;font-size:16px}
+  .sheet p{margin:0 0 12px;font-size:13px;color:#475569;line-height:1.6;white-space:pre-line}
+  .sheet input{width:100%;box-sizing:border-box;padding:12px;border:1px solid #cbd5e1;
+    border-radius:10px;font-size:16px;margin-bottom:12px}
+  .sheet .btns{display:flex;gap:8px}
+  .sheet .btns button{flex:1;padding:12px;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer}
+  #mok{border:0;background:#3182f6;color:#fff}
+  #mno{border:1px solid #e5e8eb;background:#fff;color:#475569}
+  @media(min-width:641px){#mask{align-items:center}.sheet{border-radius:16px}}
   /* 모바일: 토스식 미니멀 리스트 — 한 종목 = 두 줄(이름+태그 / 오른쪽 현재가·등락) */
   @media(max-width:640px){
     header h1{font-size:17px} header p{display:none}
@@ -125,7 +153,7 @@
   }
 </style></head><body>
 <header><h1>종목 스크리너 <span style="color:#38bdf8;font-size:13px">차트 신호 랭킹</span></h1>
-<p>__N__종목 표시 · 헤더 클릭=정렬 · 칩=필터 · 종목명 클릭=상세 차트(일/주/월)</p></header>
+<p>__N__종목 수집 · 헤더 클릭=정렬 · 칩=필터(겹쳐 쓰면 AND 조합) · 종목명 클릭=상세 차트</p></header>
 <div class="prog">
   <div class="ptxt">📥 수집 진행 <b>__CACHED__/__UNI__</b> (__PCT__%) · 마지막 갱신 __UPDATED__ <span id="age" data-ts="__UPDATED_TS__"></span></div>
   <div class="pbarw"><div class="pfillw" style="width:__PCT__%"></div></div>
@@ -139,9 +167,12 @@
 <span class="ndim">※ 시간은 GitHub Actions 스케줄 기준이라 ±5~10분 차이날 수 있어요. 페이지 상단 "마지막 갱신"이 실제 반영 시각.</span>
 </div></details>
 <div class="search">
-  <input id="q" type="search" inputmode="search" autocomplete="off"
-    placeholder="🔍 종목 검색 (티커·영문명·한글명)" oninput="search(this.value)">
-  <span id="qn" class="qn"></span>
+  <div class="qwrap">
+    <input id="q" type="search" inputmode="search" autocomplete="off" aria-label="종목 검색"
+      placeholder="🔍 종목 검색 (티커·영문명·한글명)" oninput="search(this.value)">
+    <button id="qx" aria-label="검색어 지우기" onclick="clearQ()">✕</button>
+  </div>
+  <span id="qn" class="qn" aria-live="polite"></span>
 </div>
 <details class="legend"><summary>❔ 전환후보 / 전환단계 / 신호 / 시장 — 뜻과 구분 (꼭 읽기)</summary>
 <div class="lc">
@@ -162,19 +193,21 @@
  그래서 <b>진입추천(⭐)은 시장이 상승일 때만</b> 나와요(지금 시장 하락이면 추천 0이 정상). <b>전환후보+시장하락 = "지금 사지 말고 관찰, 시장 돌면 1순위"</b>.
 </div></details>
 <div class="bar">
-  <button class="chip rec-chip on" onclick="fltRec()">⭐ 진입 추천 __RCOUNT__</button>
-  <button class="chip" onclick="flt('all')">전체</button>
+  <button class="chip rec-chip" data-f="rec" aria-pressed="false" onclick="chip(this)">⭐ 진입 추천 __RCOUNT__</button>
+  <button class="chip" data-f="all" aria-pressed="false" onclick="chip(this)">전체</button>
   __REGION_CHIPS__
   __CHIPS__
 </div>
 <div class="bar bar2"><span class="barlbl">전환단계</span>__STAGE_CHIPS__
-  <button class="chip holdchip" id="holdchip" onclick="fltHold()" style="display:none">💼 내 종목 <span id="holdn">0</span></button>
+  <button class="chip holdchip" id="holdchip" data-f="hold" aria-pressed="false" onclick="chip(this)" style="display:none">💼 내 종목 <span id="holdn">0</span></button>
   <a class="chip" href="start.html" style="background:#2563eb;color:#fff;border-color:#2563eb;text-decoration:none">🚀 시작 가이드</a>
   <a class="chip" href="paper.html" style="background:#15803d;color:#fff;border-color:#15803d;text-decoration:none">💰 모의투자</a>
   <a class="chip" href="guide.html" style="text-decoration:none">📘 가이드</a>
   <a class="chip" href="lookup.html" style="background:#0f172a;color:#fff;border-color:#0f172a;text-decoration:none">➕ 즉석조회</a>
 </div>
 __RECO__
+<div class="stat"><span id="cnt" aria-live="polite"></span>
+  <button class="rstbtn" id="rstbtn" onclick="resetF()">필터 초기화 ↺</button></div>
 <div class="tw"><table id="t"><thead><tr>
   <th onclick="srt(0,false)">신호</th>
   <th onclick="srt(1,false)">종목</th>
@@ -186,7 +219,14 @@ __RECO__
   <th onclick="srt(7,true)">신고가</th>
   <th onclick="srt(8,true)" title="52주 저가~고가 범위 내 현재가 위치 — 낮을수록 저점">저점권</th>
   <th onclick="srt(9,false)">판정</th>
-</tr></thead><tbody id="tb">__ROWS__</tbody></table></div>
+</tr></thead><tbody id="tb"></tbody></table></div>
+<div id="morew"><button id="more" onclick="more()"></button></div>
+<template id="rowsrc">__ROWS__</template>
+<div id="mask" role="dialog" aria-modal="true"><div class="sheet">
+  <h3 id="mtt"></h3><p id="mtx"></p>
+  <input id="min" inputmode="decimal" style="display:none">
+  <div class="btns"><button id="mno" onclick="mHide()">취소</button><button id="mok">확인</button></div>
+</div></div>
 <script>
   var tb=document.getElementById('tb');
   (function(){var el=document.getElementById('age');if(!el)return;var ts=+el.dataset.ts*1000;
@@ -194,99 +234,164 @@ __RECO__
       el.textContent='('+(m<1?'방금 전':m+'분 전')+')';
       el.style.cssText='font-weight:700;color:'+(m>45?'#d97706':'#16a34a');}
     f();setInterval(f,30000);})();
+
+  // ── 전 종목 행은 <template>(렌더 안 됨)에 두고, 필터에 맞는 것만 tbody로 —
+  //    모바일에서도 초기 렌더 DOM이 수천 행이 아니라 PAGE(200)행이 된다.
+  var ROWS=[], PAGE=200, LIMIT=PAGE, HOLD={};
+  var F={rec:false, region:'', bucket:'', stage:0, hold:false, q:''};
+  var BUCKET_KO={transition:'🟢 전환후보', up:'📈 상승추세', neutral:'⚪ 관망', avoid:'🔴 회피'};
+  var STAGE_KO={1:'①임박',2:'②갓돌파',3:'③횡보',4:'④확정'};
+
+  function init(){
+    var t=document.getElementById('rowsrc');
+    ROWS=[].slice.call(t.content.querySelectorAll('tr'));
+    ROWS.forEach(function(r){
+      var nm=r.querySelector('.nm');
+      r._q=((nm?nm.textContent:'')+' '+(r.dataset.code||'')).toLowerCase();
+    });
+  }
+  function dims(r){
+    var d=r.dataset;
+    if(F.rec && parseInt(d.rec||'0')<__RECMIN__) return false;
+    if(F.region && d.region!==F.region) return false;
+    if(F.bucket && d.bucket!==F.bucket) return false;
+    if(F.stage && parseInt(d.stage||'0')!==F.stage) return false;
+    if(F.hold && !HOLD[d.code]) return false;
+    if(F.q && r._q.indexOf(F.q)<0) return false;
+    return true;
+  }
+  function noF(){return !F.rec&&!F.region&&!F.bucket&&!F.stage&&!F.hold;}
+  function desc(){
+    var p=[];
+    if(F.q)p.push('“'+F.q+'” 검색');
+    if(F.rec)p.push('⭐추천');
+    if(F.region)p.push(F.region==='kr'?'🇰🇷국내':'🇺🇸해외');
+    if(F.bucket)p.push(BUCKET_KO[F.bucket]||F.bucket);
+    if(F.stage)p.push(STAGE_KO[F.stage]);
+    if(F.hold)p.push('💼내 종목');
+    return p.length?p.join(' + ')+' — ':'';
+  }
+  function apply(keep){
+    if(!keep)LIMIT=PAGE;
+    var frag=document.createDocumentFragment(), n=0, shown=0;
+    tb.textContent='';
+    for(var i=0;i<ROWS.length;i++){
+      if(!dims(ROWS[i]))continue; n++;
+      if(shown<LIMIT){frag.appendChild(ROWS[i]);shown++;}
+    }
+    tb.appendChild(frag);
+    document.getElementById('cnt').innerHTML=desc()+'<b>'+n.toLocaleString('ko-KR')+'</b>개'
+      +(shown<n?' 중 '+shown+'개 표시':'')
+      +' <span style="color:#94a3b8">/ 전체 '+ROWS.length.toLocaleString('ko-KR')+'종목</span>';
+    var qn=document.getElementById('qn');
+    qn.textContent=F.q?(n+'개'):'';
+    var mw=document.getElementById('morew');
+    if(shown<n){mw.style.display='block';
+      document.getElementById('more').textContent='더보기 ▾ (남은 '+(n-shown).toLocaleString('ko-KR')+'개)';}
+    else mw.style.display='none';
+    document.getElementById('rstbtn').style.display=(noF()&&!F.q)?'none':'inline-block';
+  }
+  function more(){LIMIT+=PAGE;apply(true);}
+  // 칩 하나로 통일: data-f=필터축, data-v=값. 같은 칩 다시 누르면 해제,
+  //   다른 축과는 AND 조합(예: 국내+①임박). 전역 event 의존 없음 — this 전달.
+  function chip(btn){
+    var f=btn.dataset.f, v=btn.dataset.v;
+    if(f==='rec')F.rec=!F.rec;
+    else if(f==='hold')F.hold=!F.hold;
+    else if(f==='all'){F.rec=false;F.region='';F.bucket='';F.stage=0;F.hold=false;}
+    else if(f==='stage'){var s=parseInt(v);F.stage=(F.stage===s?0:s);}
+    else F[f]=(F[f]===v?'':v);
+    syncChips(); apply();
+  }
+  function syncChips(){
+    [].forEach.call(document.querySelectorAll('.chip[data-f]'),function(c){
+      var f=c.dataset.f,v=c.dataset.v,on=false;
+      if(f==='rec')on=F.rec;
+      else if(f==='hold')on=F.hold;
+      else if(f==='all')on=noF();
+      else if(f==='stage')on=(F.stage===parseInt(v));
+      else on=(F[f]===v);
+      c.classList.toggle('on',on);
+      c.setAttribute('aria-pressed',on?'true':'false');
+    });
+  }
+  function resetF(){
+    F={rec:false,region:'',bucket:'',stage:0,hold:false,q:''};
+    document.getElementById('q').value='';
+    onQ(); syncChips(); apply();
+  }
   function srt(col,num){
-    var rows=[].slice.call(tb.querySelectorAll('tr'));
-    rows.sort(function(a,b){
+    ROWS.sort(function(a,b){
       var x=a.children[col],y=b.children[col];
       if(num){return parseFloat(y.dataset.v)-parseFloat(x.dataset.v);}
       return (x.textContent>y.textContent?1:-1);
     });
-    rows.forEach(function(r){tb.appendChild(r);});
+    apply(true);
   }
-  function setOn(btn){
-    document.querySelectorAll('.chip').forEach(function(c){c.classList.remove('on');});
-    if(btn) btn.classList.add('on');
+  // 검색: 필터 칩과 조합 유지(검색 중에도 칩 사용 가능). 추천·안내·범례만 접어 결과를 위로.
+  var _stmr=null;
+  function search(v){clearTimeout(_stmr);_stmr=setTimeout(function(){
+    F.q=(v||'').trim().toLowerCase(); onQ(); apply();},120);}
+  function onQ(){
+    var on=!!F.q;
+    [].forEach.call(document.querySelectorAll('.reco,.notice,.legend'),function(e){
+      e.style.display=on?'none':'';});
+    document.getElementById('qx').style.display=on?'block':'none';
   }
-  function flt(b){
-    setOn(typeof event!=='undefined'?event.target:null);
-    tb.querySelectorAll('tr').forEach(function(r){
-      r.style.display=(b==='all'||r.dataset.bucket===b)?'':'none';
-    });
+  function clearQ(){
+    var q=document.getElementById('q'); q.value=''; F.q='';
+    onQ(); apply(); q.focus();
   }
-  function fltStage(){
-    setOn(typeof event!=='undefined'?event.target:null);
-    tb.querySelectorAll('tr').forEach(function(r){
-      r.style.display=(parseInt(r.dataset.stage||'0')>0)?'':'none';
-    });
+  // ── 인앱 모달(prompt/confirm 대체) ─────────────────────────────
+  function mShow(o){
+    document.getElementById('mtt').textContent=o.title;
+    document.getElementById('mtx').textContent=o.text||'';
+    var inp=document.getElementById('min');
+    inp.style.display=o.input?'block':'none';
+    inp.value=(o.input&&o.input.val)||''; inp.placeholder=(o.input&&o.input.ph)||'';
+    document.getElementById('mok').onclick=function(){
+      var v=o.input?inp.value:null; mHide(); o.onok(v);};
+    document.getElementById('mask').classList.add('show');
+    if(o.input)inp.focus();
   }
-  // 국내(한국)/해외(미국) 필터
-  function fltRegion(rg){
-    setOn(typeof event!=='undefined'?event.target:null);
-    tb.querySelectorAll('tr').forEach(function(r){
-      r.style.display=(r.dataset.region===rg)?'':'none';
-    });
-  }
-  // 전환단계 ①~④ 각각 필터
-  function fltStageN(n){
-    setOn(typeof event!=='undefined'?event.target:null);
-    tb.querySelectorAll('tr').forEach(function(r){
-      r.style.display=(parseInt(r.dataset.stage||'0')===n)?'':'none';
-    });
-  }
-  // ⭐ 진입 추천: 체크리스트 4/6 이상만 표시(가장 손쉬운 후보 추리기)
-  function fltRec(){
-    setOn(typeof event!=='undefined'?event.target:document.querySelector('.rec-chip'));
-    tb.querySelectorAll('tr').forEach(function(r){
-      r.style.display=(parseInt(r.dataset.rec||'0')>=__RECMIN__)?'':'none';
-    });
-  }
-  // 검색: 티커·영문명·한글명. 성능 위해 검색 인덱스를 한 번만 만들고(매 글자마다 DOM
-  //   재조회 안 함), 입력은 디바운스. 검색 중엔 추천·안내·필터바를 숨겨 결과를 위로.
-  var IDX=null, _stmr=null;
-  function buildIdx(){ IDX=[].slice.call(tb.querySelectorAll('tr')).map(function(r){
-    var nm=r.querySelector('.nm'); return [r,(nm?nm.textContent:'').toLowerCase()]; }); }
-  function search(v){ clearTimeout(_stmr); _stmr=setTimeout(function(){doSearch(v);},120); }
-  function doSearch(v){
-    if(!IDX) buildIdx();
-    v=(v||'').trim().toLowerCase();
-    var qn=document.getElementById('qn'), on=!!v;
-    // 검색 중 화면 정리: 추천·안내·범례·필터바 숨김 → 결과가 검색창 바로 아래로
-    document.querySelectorAll('.reco,.notice,.legend,.bar').forEach(function(e){e.style.display=on?'none':'';});
-    if(!v){ setOn(document.querySelectorAll('.chip')[0]);
-      for(var i=0;i<IDX.length;i++) IDX[i][0].style.display='';
-      qn.textContent=''; return; }
-    setOn(null); var hit=0;
-    for(var i=0;i<IDX.length;i++){ var ok=IDX[i][1].indexOf(v)>=0;
-      IDX[i][0].style.display=ok?'':'none'; if(ok) hit++; }
-    qn.textContent=hit+'개';
-  }
+  function mHide(){document.getElementById('mask').classList.remove('show');}
+  document.getElementById('mask').addEventListener('click',function(e){
+    if(e.target===this)mHide();});
   // 💼 내 종목(매수/즐겨찾기) — 브라우저 localStorage에만 저장. 매수가 넣으면 손익(P/L) 표시.
   function loadHold(){try{return JSON.parse(localStorage.getItem('holdings')||'{}');}catch(e){return {};}}
   function saveHold(h){localStorage.setItem('holdings',JSON.stringify(h));}
   function toggleHold(e,code){
     e.preventDefault();e.stopPropagation();
     var h=loadHold();
-    if(h[code]){ if(confirm(code+' 을(를) 내 종목에서 뺄까요?')){delete h[code];} }
-    else{
-      var row=tb.querySelector('tr[data-code="'+code+'"]');
+    if(h[code]){
+      mShow({title:'관심 해제',text:code+' 을(를) 내 종목에서 뺄까요?',onok:function(){
+        delete h[code]; saveHold(h); HOLD=h; renderHold(); if(F.hold)apply();}});
+    }else{
+      var row=null;
+      for(var i=0;i<ROWS.length;i++){if(ROWS[i].dataset.code===code){row=ROWS[i];break;}}
       var cur=row?parseFloat(row.dataset.price):NaN;
-      var v=prompt(code+' 매수가 입력(손익 표시) · 비우면 즐겨찾기만'
-        +(isFinite(cur)?'\n현재가 '+cur:''),'');
-      if(v===null)return;                  // 취소
-      var buy=v?parseFloat(v.replace(/[^0-9.]/g,'')):0;
-      h[code]={buy:isFinite(buy)?buy:0,ts:Date.now()};
+      mShow({title:'관심 추가 — '+code,
+        text:'매수가를 넣으면 손익(P/L)을 표시해요. 비우면 즐겨찾기만.'
+          +(isFinite(cur)?'\n현재가 '+cur:''),
+        input:{ph:'매수가 (선택)'},
+        onok:function(v){
+          var buy=v?parseFloat((v+'').replace(/[^0-9.]/g,'')):0;
+          h[code]={buy:isFinite(buy)?buy:0,ts:Date.now()};
+          saveHold(h); HOLD=h; renderHold();}});
     }
-    saveHold(h);renderHold();
   }
   function renderHold(){
-    var h=loadHold(),keys=Object.keys(h);
+    var h=loadHold(); HOLD=h;
+    var keys=Object.keys(h);
     document.getElementById('holdn').textContent=keys.length;
     document.getElementById('holdchip').style.display=keys.length?'':'none';
-    tb.querySelectorAll('tr').forEach(function(r){
+    ROWS.forEach(function(r){
       var code=r.dataset.code,on=!!h[code];
       r.classList.toggle('held',on);
       var btn=r.querySelector('.hold');
-      if(btn){btn.textContent=on?'★':'☆';btn.classList.toggle('on',on);}
+      if(btn){btn.textContent=on?'★':'☆';btn.classList.toggle('on',on);
+        btn.setAttribute('aria-pressed',on?'true':'false');
+        btn.setAttribute('aria-label',on?'관심 해제':'관심 추가');}
       var pl=r.querySelector('.pl[data-code="'+code+'"]');
       if(pl){
         pl.className='pl';pl.innerHTML='';
@@ -302,29 +407,15 @@ __RECO__
       }
     });
   }
-  function fltHold(){
-    setOn(typeof event!=='undefined'?event.target:null);
-    var h=loadHold();
-    tb.querySelectorAll('tr').forEach(function(r){
-      r.style.display=h[r.dataset.code]?'':'none';
-    });
-  }
-  // 첫 화면: ⭐진입 추천(체크리스트 4/6+)만 우선. 없으면 전환후보, 그래도 없으면 전체.
-  window.addEventListener('load',function(){
-    renderHold();
+  // 첫 화면: ⭐진입 추천만 우선. 없으면 전환후보, 그래도 없으면 전체.
+  init(); renderHold();
+  (function(){
     var rec=0,trans=0;
-    tb.querySelectorAll('tr').forEach(function(r){
+    ROWS.forEach(function(r){
       if(parseInt(r.dataset.rec||'0')>=__RECMIN__)rec++;
       if(r.dataset.bucket==='transition')trans++;});
-    if(rec){fltRec();}
-    else if(trans){setOn(document.querySelector('.rec-chip'));
-      document.querySelector('.rec-chip').classList.remove('on');
-      var tc=Array.prototype.find.call(document.querySelectorAll('.chip'),
-        function(c){return c.textContent.indexOf('전환후보')>=0;});
-      setOn(tc);
-      tb.querySelectorAll('tr').forEach(function(r){
-        r.style.display=(r.dataset.bucket==='transition')?'':'none';});}
-    else{setOn(document.querySelector('.chip:nth-child(2)'));
-      tb.querySelectorAll('tr').forEach(function(r){r.style.display='';});}
-  });
+    if(rec)F.rec=true;
+    else if(trans)F.bucket='transition';
+    syncChips(); apply();
+  })();
 </script></body></html>

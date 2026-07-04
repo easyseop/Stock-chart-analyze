@@ -120,7 +120,7 @@ def _rows(results: list[dict]) -> str:
             f'<td data-label="신호" title="{gtip}">'
             f'<span class="sig">{star}{html.escape(gauge)}</span></td>'
             f'<td class="nm"><button class="hold" onclick="toggleHold(event,\'{code}\')" '
-            f'title="내 종목(매수) 담기">☆</button>'
+            f'title="내 종목(매수) 담기" aria-label="관심 추가" aria-pressed="false">☆</button>'
             f'<span class="rgn" title="{"국내(한국)" if region=="kr" else "해외(미국)"}">{flag}</span>'
             f'<a href="stocks/{code}.html">{html.escape(r["name"])}</a>{ko_html}'
             f'<span class="cd">{html.escape(code)}</span>'
@@ -216,21 +216,25 @@ def _index(results: list[dict], tstats: dict | None = None) -> str:
     counts = {k: sum(1 for r in results if _bucket(r) == k) for k, _ in _BUCKETS}
     rcount = sum(1 for r in results if _rec_n(r) >= REC_MIN)
     chips = "".join(
-        f'<button class="chip" onclick="flt(\'{k}\')">{_BUCKET_KO[k]} {counts[k]}</button>'
+        f'<button class="chip" data-f="bucket" data-v="{k}" aria-pressed="false" '
+        f'onclick="chip(this)">{_BUCKET_KO[k]} {counts[k]}</button>'
         for k, _ in _BUCKETS)
     # 전환단계 ①~④ 각각 필터
     stage_lab = {1: "①임박", 2: "②갓돌파", 3: "③횡보", 4: "④확정"}
     scnt = {s: sum(1 for r in results if r.get("transition_stage", 0) == s)
             for s in (1, 2, 3, 4)}
     stage_chips = "".join(
-        f'<button class="chip stagechip" onclick="fltStageN({s})">{stage_lab[s]} {scnt[s]}</button>'
+        f'<button class="chip stagechip" data-f="stage" data-v="{s}" aria-pressed="false" '
+        f'onclick="chip(this)">{stage_lab[s]} {scnt[s]}</button>'
         for s in (1, 2, 3, 4) if scnt[s])
     # 국내(한국)/해외(미국) 구분 필터
     n_us = sum(1 for r in results if r.get("ccy") != "KRW")
     n_kr = sum(1 for r in results if r.get("ccy") == "KRW")
     region_chips = (
-        f'<button class="chip rgnchip" onclick="fltRegion(\'us\')">🇺🇸 해외 {n_us}</button>'
-        f'<button class="chip rgnchip" onclick="fltRegion(\'kr\')">🇰🇷 국내 {n_kr}</button>')
+        f'<button class="chip rgnchip" data-f="region" data-v="us" aria-pressed="false" '
+        f'onclick="chip(this)">🇺🇸 해외 {n_us}</button>'
+        f'<button class="chip rgnchip" data-f="region" data-v="kr" aria-pressed="false" '
+        f'onclick="chip(this)">🇰🇷 국내 {n_kr}</button>')
     # 수집 진행률(캐시된 종목 / 유니버스 전체)
     try:
         cached = len(cache.cached_codes())
