@@ -20,7 +20,7 @@ import json
 import os
 
 STATE_PATH = os.path.join("data_cache", "autopaper.json")
-VERSION = 2                # 규칙 바뀌면 +1 → 시뮬레이션 깨끗하게 재시작
+VERSION = 3                # 규칙 바뀌면 +1 → 시뮬레이션 깨끗하게 재시작
 START = 100_000_000        # 시드 1억(사용자 지정)
 FX = 1380                  # 달러 환산(모의투자 페이지와 동일 가정)
 RISK_PCT = 0.01            # 트레이드당 계좌 1% 리스크
@@ -67,13 +67,15 @@ def _save(st: dict) -> None:
 
 def _log(st: dict, typ: str, code: str, name: str, q: int, price: float,
          ccy: str, note: str, pl: float | None = None,
-         pl_pct: float | None = None) -> None:
+         pl_pct: float | None = None, r: float | None = None) -> None:
     ent = {"d": _today(), "type": typ, "code": code, "name": name,
            "q": q, "price": round(price, 4), "ccy": ccy,
            "amt": round(_krw(price, ccy) * q), "note": note}
     if pl is not None:
         ent["pl"] = round(pl)
         ent["pl_pct"] = round(pl_pct or 0, 1)
+    if r is not None:
+        ent["r"] = r                       # 청산 완료 트레이드의 R 성과
     st["log"].insert(0, ent)
     st["log"] = st["log"][:200]
     st.setdefault("_ev", []).append(ent)   # 이번 런 이벤트 — 텔레그램 보고용
@@ -87,14 +89,33 @@ def _sell(st: dict, code: str, q: int, price: float, note: str) -> None:
     st["cash"] += _krw(price, p["ccy"]) * q
     pl = (_krw(price, p["ccy"]) - _krw(p["avg"], p["ccy"])) * q   # 실현 손익(원)
     pct = (price / p["avg"] - 1) * 100 if p["avg"] else 0
-    _log(st, "sell", code, p["name"], q, price, p["ccy"], note, pl, pct)
+    p["realized"] = p.get("realized", 0) + pl
+    p.setdefault("exits", []).append({"d": _today(), "q": q,
+                                      "price": round(price, 4), "note": note})
     p["q"] -= q
-    if p["q"] <= 0:
+    final = p["q"] <= 0
+    r = None
+    if final and p.get("risk0"):
+        r = round(p["realized"] / p["risk0"], 2)     # 트레이드 성과(R 단위)
+    _log(st, "sell", code, p["name"], q, price, p["ccy"], note, pl, pct, r=r)
+    if final:
+        # 청산 완료 — 예측(계획) vs 실제를 통째로 기록(승률·기준 준수 분석용)
+        st.setdefault("closed", []).insert(0, {
+            "code": code, "name": p["name"], "ccy": p["ccy"],
+            "ctx": p.get("ctx"),             # 매수 사유(신선도·단계·저점권·체크·전술)
+            "plan": p.get("plan"),           # 진입 시점 우리 기준(진입/손절/목표)
+            "fill": {"avg": round(p["avg"], 4), "q": p.get("q0", 0)},  # 실제 체결
+            "exits": p["exits"],             # 실제 청산 내역(가격·사유)
+            "opened": p["opened"], "closed": _today(),
+            "pl": round(p["realized"]), "r": r if r is not None else 0,
+        })
+        st["closed"] = st["closed"][:400]
         del st["pos"][code]
 
 
 def _buy(st: dict, code: str, name: str, ccy: str, q: int, price: float,
-         stop: float, target: float, note: str) -> bool:
+         stop: float, target: float, note: str,
+         plan: dict | None = None, ctx: dict | None = None) -> bool:
     cost = _krw(price, ccy) * q
     if q < 1 or cost > st["cash"]:
         q = int(st["cash"] // _krw(price, ccy))
@@ -103,15 +124,75 @@ def _buy(st: dict, code: str, name: str, ccy: str, q: int, price: float,
             return False
     st["cash"] -= cost
     p = st["pos"].get(code)
-    if p:                                  # 반반 2차 체결 — 평단 합산
+    if p:                                  # 반반 2차 체결 — 평단 합산 + 리스크 누적
         p["avg"] = (p["avg"] * p["q"] + price * q) / (p["q"] + q)
         p["q"] += q
+        p["q0"] = p.get("q0", 0) + q
+        p["risk0"] = p.get("risk0", 0) + _krw(price - stop, ccy) * q
     else:
-        st["pos"][code] = {"name": name, "ccy": ccy, "q": q, "avg": price,
-                           "entry": price, "stop": stop, "target": target,
-                           "half_done": False, "opened": _today()}
+        st["pos"][code] = {"name": name, "ccy": ccy, "q": q, "q0": q,
+                           "avg": price, "entry": price, "stop": stop,
+                           "target": target, "half_done": False,
+                           "opened": _today(),
+                           "plan": plan, "ctx": ctx,
+                           "risk0": _krw(price - stop, ccy) * q,
+                           "realized": 0, "exits": []}
     _log(st, "buy", code, name, q, price, ccy, note)
     return True
+
+
+def _basis(item: dict) -> str:
+    """매수 사유 한 줄 — '왜 샀는지'를 기록(전부 추천 기준에서 나온 값들)."""
+    t = item.get("tactic") or {}
+    parts = [item.get("freshness"), item.get("stage"),
+             f'저점권{item.get("range_pos", "?")}%',
+             f'체크{item.get("rec", "?")}/6',
+             f'손절폭{t.get("stop_pct", "?")}%']
+    return " · ".join(str(x) for x in parts if x)
+
+
+def _ctx(item: dict) -> dict:
+    t = item.get("tactic") or {}
+    return {"mode": t.get("mode", "full"), "fresh": bool(item.get("fresh")),
+            "stage": item.get("stage_n", 0), "rp": item.get("range_pos"),
+            "rec": item.get("rec"), "basis": _basis(item)}
+
+
+def _stats(st: dict) -> dict:
+    """청산 완료 트레이드로 승률·평균R을 기준별(전술/신선도)로 집계 +
+    예측(계획) 대비 실제 체결 편차."""
+    cl = st.get("closed", [])
+
+    def agg(rows):
+        n = len(rows)
+        w = sum(1 for x in rows if x["r"] > 0)
+        return {"n": n, "win": w,
+                "win_rate": round(w / n * 100) if n else 0,
+                "avg_r": round(sum(x["r"] for x in rows) / n, 2) if n else 0}
+
+    by_mode = {}
+    for m in ("full", "half", "pullback"):
+        rows = [x for x in cl if (x.get("ctx") or {}).get("mode") == m]
+        if rows:
+            by_mode[m] = agg(rows)
+    fresh = agg([x for x in cl if (x.get("ctx") or {}).get("fresh")])
+    stale = agg([x for x in cl if x.get("ctx") and not x["ctx"].get("fresh")])
+    # 예측 vs 실제 — 계획 진입가 대비 실제 평단(+ = 비싸게 삼), 계획 손절가 대비 손절 체결가
+    slips = [(x["fill"]["avg"] / x["plan"]["entry"] - 1) * 100
+             for x in cl if x.get("plan") and x["plan"].get("entry")
+             and x.get("fill", {}).get("avg")]
+    stop_slips = []
+    for x in cl:
+        ps = (x.get("plan") or {}).get("stop")
+        if not ps:
+            continue
+        for e in x.get("exits", []):
+            if "손절" in e["note"]:
+                stop_slips.append((e["price"] / ps - 1) * 100)
+    return {"all": agg(cl), "by_mode": by_mode, "fresh": fresh, "stale": stale,
+            "slip_entry_pct": round(sum(slips) / len(slips), 2) if slips else None,
+            "slip_stop_pct": (round(sum(stop_slips) / len(stop_slips), 2)
+                              if stop_slips else None)}
 
 
 def _equity(st: dict, px: dict) -> float:
@@ -142,7 +223,11 @@ def _report(st: dict, equity: float) -> None:
               f'{x["q"]}주 @ {_fmt_native(x["price"], x["ccy"])} — {x["note"]}')
         if x.get("pl") is not None:                 # 매도: 차익/손절 금액·수익률
             sg = "+" if x["pl"] >= 0 else ""
-            ln += f' (<b>{sg}{x["pl"]:,}원 · {sg}{x["pl_pct"]}%</b>)'
+            ln += f' (<b>{sg}{x["pl"]:,}원 · {sg}{x["pl_pct"]}%</b>'
+            if x.get("r") is not None:              # 청산 완료 — R 성과
+                sr = "+" if x["r"] >= 0 else ""
+                ln += f' · {sr}{x["r"]}R'
+            ln += ")"
         lines.append(ln)
     if len(ev) > 12:
         lines.append(f"…외 {len(ev) - 12}건")
@@ -203,7 +288,9 @@ def update(results: list[dict], picks: dict, out_dir: str = "public") -> dict:
             del st["pending"][code]
         elif price <= o["limit"]:
             filled = _buy(st, code, o["name"], o["ccy"], o["q"], o["limit"],
-                          o["stop"], o["target"], "눌림 지정가 체결")
+                          o["stop"], o["target"],
+                          "눌림 지정가 체결 — " + (o.get("basis") or ""),
+                          plan=o.get("plan"), ctx=o.get("ctx"))
             if not filled:
                 _log(st, "cancel", code, o["name"], 0, price, o["ccy"],
                      "지정가 취소 — 현금 부족")
@@ -242,6 +329,10 @@ def update(results: list[dict], picks: dict, out_dir: str = "public") -> dict:
             continue
         t = item.get("tactic") or {}
         mode, pb = t.get("mode", "full"), t.get("pb_price")
+        # 예측값(우리 기준) 스냅샷 + 매수 사유 — 추천 기준으로만 매수한다는 증빙
+        plan = {"entry": entry, "stop": stop, "target": target,
+                "pb": pb, "tactic": mode}
+        ctx, basis = _ctx(item), _basis(item)
         if mode == "pullback":
             if pb and stop < pb < entry:
                 oq = min(q, int(budget // _krw(pb, ccy)))
@@ -249,17 +340,18 @@ def update(results: list[dict], picks: dict, out_dir: str = "public") -> dict:
                     continue
                 st["pending"][code] = {"name": item["name"], "ccy": ccy,
                                        "limit": pb, "stop": stop, "target": target,
-                                       "q": oq, "created": _today()}
+                                       "q": oq, "created": _today(),
+                                       "plan": plan, "ctx": ctx, "basis": basis}
                 budget -= _krw(pb, ccy) * oq           # 주문 금액 예약
                 _log(st, "order", code, item["name"], oq, pb, ccy,
-                     "눌림 지정가 주문(추격 금지)")
+                     "눌림 지정가 주문(추격 금지) — " + basis)
             continue                                   # 눌림가 없으면 관망
         if mode == "half":
             bq = min(max(1, q // 2), int(budget // per))
             if bq < 1:
                 continue
             if _buy(st, code, item["name"], ccy, bq, entry, stop, target,
-                    "반반 — 1차 시장가"):
+                    "반반 1차 — " + basis, plan=plan, ctx=ctx):
                 budget -= per * bq
             oq = q - q // 2
             if pb and stop < pb < entry and oq >= 1:
@@ -268,12 +360,13 @@ def update(results: list[dict], picks: dict, out_dir: str = "public") -> dict:
                     st["pending"][code] = {"name": item["name"], "ccy": ccy,
                                            "limit": pb, "stop": stop,
                                            "target": target, "q": oq,
-                                           "created": _today()}
+                                           "created": _today(),
+                                           "plan": plan, "ctx": ctx, "basis": basis}
                     budget -= _krw(pb, ccy) * oq
             continue
         bq = min(q, int(budget // per))
         if bq >= 1 and _buy(st, code, item["name"], ccy, bq, entry, stop, target,
-                            "즉시 분할 진입"):
+                            "즉시 분할 — " + basis, plan=plan, ctx=ctx):
             budget -= per * bq
 
     equity = _equity(st, px)
@@ -289,15 +382,16 @@ def update(results: list[dict], picks: dict, out_dir: str = "public") -> dict:
                           "half_done": p["half_done"], "opened": p["opened"],
                           "pl_krw": round(pl),
                           "pl_pct": round((cur / p["avg"] - 1) * 100, 2)})
-    sells = [x for x in st["log"] if x["type"] == "sell"]
-    wins = sum(1 for x in sells if "익절" in x["note"] or "목표" in x["note"])
+    stats = _stats(st)
     out = {
         "updated": _today(), "start": st["start"], "cash": round(st["cash"]),
         "equity": round(equity),
         "ret_pct": round((equity / st["start"] - 1) * 100, 2),
         "positions": positions,
         "pending": [{"code": c, **o} for c, o in st["pending"].items()],
-        "trades": len(sells), "win_trades": wins,
+        "trades": stats["all"]["n"], "win_trades": stats["all"]["win"],
+        "stats": stats,                    # 승률·평균R(전술/신선도별) + 예측대비 편차
+        "closed": st.get("closed", [])[:30],   # 청산 기록 — 계획 vs 실제 비교용
         "log": st["log"][:50],
     }
     os.makedirs(os.path.join(out_dir, "api"), exist_ok=True)
