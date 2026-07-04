@@ -1,0 +1,35 @@
+name: telegram-check
+
+# 텔레그램 시크릿 연결 확인용(1회성 스모크) — 이 파일을 바꿔 푸시하거나
+# Actions에서 Run workflow를 누르면 확인 메시지 1통을 보낸다.
+# 토큰 값은 로그에 절대 출력하지 않음(성공/실패 여부만).
+on:
+  workflow_dispatch:
+  push:
+    branches: ["claude/korean-text-review-o3wmsv"]
+    paths: [".github/workflows/telegram-check.yml"]
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+      - name: 연결 확인 메시지 전송
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          python - <<'EOF'
+          import sys
+          from bot import notify
+          ok = notify.send(
+              "✅ <b>텔레그램 연결 확인</b>\n"
+              "스크리너 알림봇이 이 채팅으로 매수/매도 제안을 보낼 준비가 됐어요.\n"
+              "장중(한국 09:00~15:30 · 미국 22:30~05:00 KST) 15~30분 주기로 확인합니다.")
+          print("전송 결과:", "성공" if ok else "실패(시크릿 미설정 또는 토큰/챗ID 오류)")
+          sys.exit(0 if ok else 1)
+          EOF
