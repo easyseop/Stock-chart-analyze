@@ -20,11 +20,13 @@ import json
 import os
 
 STATE_PATH = os.path.join("data_cache", "autopaper.json")
+VERSION = 2                # 규칙 바뀌면 +1 → 시뮬레이션 깨끗하게 재시작
 START = 100_000_000        # 시드 1억(사용자 지정)
 FX = 1380                  # 달러 환산(모의투자 페이지와 동일 가정)
 RISK_PCT = 0.01            # 트레이드당 계좌 1% 리스크
 MAX_POS = 12               # 동시 보유(대기 주문 포함) 상한
-POS_CAP = 0.20             # 종목당 최대 평가 비중(타이트 손절 종목 과대 매수 방지)
+POS_CAP = 0.15             # 종목당 최대 평가 비중(타이트 손절 종목 과대 매수 방지)
+MAX_INVEST = 0.85          # 총 투자 한도 — 15%는 현금 버퍼(눌림 체결·신규 신호용)
 TIME_STOP_DAYS = 21        # 캘린더 21일 ≈ 15거래일(config.TIME_STOP_DAYS)
 PENDING_DAYS = 21          # 지정가 대기 만료
 
@@ -48,11 +50,13 @@ def _load() -> dict:
     try:
         with open(STATE_PATH, encoding="utf-8") as fp:
             st = json.load(fp)
-            if st.get("start") == START and "pos" in st:
+            if (st.get("start") == START and "pos" in st
+                    and st.get("v") == VERSION):
                 return st
     except Exception:
         pass
-    return {"cash": START, "start": START, "pos": {}, "pending": {}, "log": []}
+    return {"v": VERSION, "cash": START, "start": START,
+            "pos": {}, "pending": {}, "log": []}
 
 
 def _save(st: dict) -> None:
@@ -186,7 +190,7 @@ def update(results: list[dict], picks: dict, out_dir: str = "public") -> dict:
         elif _age(p["opened"]) >= TIME_STOP_DAYS and not p["half_done"]:
             _sell(st, code, p["q"], price, "타임 스탑(+1R 미도달)")
 
-    # ② 지정가 대기 체결/취소
+    # ② 지정가 대기 체결/취소 (주문 금액은 ③에서 예약해둔 상태 — 체결 실패 시 취소)
     for code in list(st["pending"].keys()):
         o = st["pending"][code]
         cur = px.get(code)
@@ -198,51 +202,79 @@ def update(results: list[dict], picks: dict, out_dir: str = "public") -> dict:
                  "지정가 취소 — 손절선 이탈(추세 훼손)")
             del st["pending"][code]
         elif price <= o["limit"]:
-            if _buy(st, code, o["name"], o["ccy"], o["q"], o["limit"],
-                    o["stop"], o["target"], "눌림 지정가 체결"):
-                del st["pending"][code]
+            filled = _buy(st, code, o["name"], o["ccy"], o["q"], o["limit"],
+                          o["stop"], o["target"], "눌림 지정가 체결")
+            if not filled:
+                _log(st, "cancel", code, o["name"], 0, price, o["ccy"],
+                     "지정가 취소 — 현금 부족")
+            del st["pending"][code]
         elif _age(o["created"]) >= PENDING_DAYS:
             _log(st, "cancel", code, o["name"], 0, price, o["ccy"],
                  "지정가 만료 — 눌림 안 옴(놓침≠손실)")
             del st["pending"][code]
 
-    # ③ 신규 진입 — '지금 진입' 추천을 전술대로
+    # ③ 신규 진입 — '지금 진입' 추천을 전술대로.
+    #    지정가 대기 주문 금액은 '예약'으로 계산해 현금을 다 써버리지 않는다
+    #    (실제 증권사의 주문가능금액과 동일 개념 — 대기 주문이 체결 불능이 되는 것 방지)
     equity = _equity(st, px)
+    reserved = sum(_krw(o["limit"], o["ccy"]) * o["q"]
+                   for o in st["pending"].values())
+    invested = equity - st["cash"]                 # 현재 보유 평가액
+    budget = min(st["cash"] - reserved,
+                 equity * MAX_INVEST - invested - reserved)
     for item in picks.get("now", []):
         code = item["code"]
         if code in st["pos"] or code in st["pending"]:
             continue
         if len(st["pos"]) + len(st["pending"]) >= MAX_POS:
             break
+        if budget <= 0:
+            break                                      # 주문가능금액 소진
         entry, stop, target = item.get("price"), item["stop"], item["target"]
         if not (entry and stop and target and stop < entry):
             continue
         ccy = item["ccy"]
-        risk_share = _krw(entry - stop, ccy)          # 1주당 리스크(원)
+        per = _krw(entry, ccy)                         # 1주 가격(원)
+        risk_share = _krw(entry - stop, ccy)           # 1주당 리스크(원)
         q = int(equity * RISK_PCT // risk_share) if risk_share > 0 else 0
-        cap_q = int(equity * POS_CAP // _krw(entry, ccy))
-        q = min(q, cap_q)
+        q = min(q, int(equity * POS_CAP // per))       # 종목당 20% 상한
         if q < 1:
             continue
         t = item.get("tactic") or {}
         mode, pb = t.get("mode", "full"), t.get("pb_price")
         if mode == "pullback":
             if pb and stop < pb < entry:
+                oq = min(q, int(budget // _krw(pb, ccy)))
+                if oq < 1:
+                    continue
                 st["pending"][code] = {"name": item["name"], "ccy": ccy,
                                        "limit": pb, "stop": stop, "target": target,
-                                       "q": q, "created": _today()}
-                _log(st, "order", code, item["name"], q, pb, ccy,
+                                       "q": oq, "created": _today()}
+                budget -= _krw(pb, ccy) * oq           # 주문 금액 예약
+                _log(st, "order", code, item["name"], oq, pb, ccy,
                      "눌림 지정가 주문(추격 금지)")
             continue                                   # 눌림가 없으면 관망
         if mode == "half":
-            _buy(st, code, item["name"], ccy, max(1, q // 2), entry, stop, target,
-                 "반반 — 1차 시장가")
-            if pb and stop < pb < entry and q - q // 2 >= 1:
-                st["pending"][code] = {"name": item["name"], "ccy": ccy,
-                                       "limit": pb, "stop": stop, "target": target,
-                                       "q": q - q // 2, "created": _today()}
+            bq = min(max(1, q // 2), int(budget // per))
+            if bq < 1:
+                continue
+            if _buy(st, code, item["name"], ccy, bq, entry, stop, target,
+                    "반반 — 1차 시장가"):
+                budget -= per * bq
+            oq = q - q // 2
+            if pb and stop < pb < entry and oq >= 1:
+                oq = min(oq, int(budget // _krw(pb, ccy)))
+                if oq >= 1:
+                    st["pending"][code] = {"name": item["name"], "ccy": ccy,
+                                           "limit": pb, "stop": stop,
+                                           "target": target, "q": oq,
+                                           "created": _today()}
+                    budget -= _krw(pb, ccy) * oq
             continue
-        _buy(st, code, item["name"], ccy, q, entry, stop, target, "즉시 분할 진입")
+        bq = min(q, int(budget // per))
+        if bq >= 1 and _buy(st, code, item["name"], ccy, bq, entry, stop, target,
+                            "즉시 분할 진입"):
+            budget -= per * bq
 
     equity = _equity(st, px)
     _report(st, equity)      # 이번 런 체결 내역 텔레그램 보고(_ev 소비)
