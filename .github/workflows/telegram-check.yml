@@ -4,7 +4,7 @@ name: telegram-check
 #   - TELEGRAM_BOT_TOKEN + TELEGRAM_CHAT_ID 둘 다 있으면: 확인 메시지 1통 전송
 #   - 토큰만 있으면: getUpdates로 대화 상대를 찾아 "당신의 CHAT_ID는 ..."을
 #     텔레그램으로 직접 보내줌(공개 로그에는 마스킹된 ID만 남김)
-# 실행: Actions → telegram-check → Run workflow, 또는 이 파일 변경 푸시. (검증 재실행 v2)
+# 실행: Actions → telegram-check → Run workflow, 또는 이 파일 변경 푸시. (검증 재실행 v3)
 on:
   workflow_dispatch:
   push:
