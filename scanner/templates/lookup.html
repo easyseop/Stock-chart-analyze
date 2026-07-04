@@ -95,7 +95,15 @@
     HIST.unshift({t:t,done:false,ts:Date.now()});saveHist();renderHist();}
   function markDone(t,ok){for(var i=0;i<HIST.length;i++){if(HIST[i].t===t){HIST[i].done=true;HIST[i].ok=ok!==false;}}saveHist();renderHist();}
   function delHist(t){HIST=HIST.filter(function(h){return h.t!==t;});saveHist();renderHist();}
-  function clearHist(){if(confirm('즉석조회 목록을 비울까요?')){HIST=[];saveHist();renderHist();}}
+  // confirm() 대신 두 번 탭: 첫 탭에서 확인 문구로 바뀌고 3초 내 재탭 시 실행
+  var _chArm=null;
+  function clearHist(){
+    var b=document.getElementById('histclear');
+    if(_chArm){clearTimeout(_chArm);_chArm=null;
+      HIST=[];saveHist();renderHist();b.textContent='목록 비우기';b.style.color='#94a3b8';return;}
+    b.textContent='정말 비울까요? (한 번 더 탭)';b.style.color='#dc2626';
+    _chArm=setTimeout(function(){_chArm=null;b.textContent='목록 비우기';b.style.color='#94a3b8';},3000);
+  }
   function renderHist(){
     var c=document.getElementById('histcard'),h=document.getElementById('hist');
     document.getElementById('histn').textContent=HIST.length?'('+HIST.length+')':'';

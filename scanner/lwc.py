@@ -148,13 +148,11 @@ def detail(result: dict, frames: dict) -> str:
     tfs = [tf for tf, _lab in _TF_LABELS if tf in data]
     tfbtns = "".join(
         f'<button class="tfbtn{" active" if tf == default_tf else ""}" '
-        f'id="tfb-{tf}" onclick="sw(\'{tf}\')">{labels[tf]}</button>' for tf in tfs)
-    _hide = ' style="display:none"'
-    ccs = "".join(
-        f'<div class="cc" id="c-{tf}"{"" if tf == default_tf else _hide}></div>'
-        for tf in tfs)
+        f'id="tfb-{tf}" aria-pressed="{"true" if tf == default_tf else "false"}" '
+        f'onclick="sw(\'{tf}\')">{labels[tf]}</button>' for tf in tfs)
     toggles = "".join(
         f'<button class="toggle{" on" if on else ""}" data-group="{k}" '
+        f'aria-pressed="{"true" if on else "false"}" '
         f'onclick="tg(this)">{html.escape(lab)}</button>'
         for k, lab, on in GROUPS)
     default_on = json.dumps({k: (k in _DEFAULT_ON) for k, _l, _o in GROUPS})
@@ -163,7 +161,7 @@ def detail(result: dict, frames: dict) -> str:
              f'{html.escape(result["gauge"])} 정규화 {result["norm"]:+.0f}')
     card_txt = card.render(result).split("\n용어:")[0]
     return _TMPL.format(
-        title=title, cdn=LWC_CDN, toggles=toggles, tfbtns=tfbtns, ccs=ccs,
+        title=title, cdn=LWC_CDN, toggles=toggles, tfbtns=tfbtns,
         tfs=json.dumps(tfs), first=default_tf, plan=plan.plan_html(result),
         plan_css=plan.PLAN_CSS,
         data=json.dumps(data), default_on=default_on, precision=precision,
@@ -223,7 +221,7 @@ _TMPL = """<!DOCTYPE html><html lang="ko"><head>
   <div class="bar"><span style="font-size:12px;color:#64748b">지표</span>{toggles}</div>
   <div class="bar">{tfbtns}
     <span style="font-size:11px;color:#64748b;margin-left:6px">핀치=확대/축소 · 드래그=이동</span></div>
-  <div class="chart">{ccs}</div>
+  <div class="chart"><div class="cc" id="cc"></div></div>
   <details class="lines"><summary>❔ 차트의 선들이 무슨 뜻인가요? (진입·지지/저항)</summary>
   <div class="lc">
   <b>매매선</b>(파란 토글):<br>
@@ -247,11 +245,15 @@ _TMPL = """<!DOCTYPE html><html lang="ko"><head>
   <details><summary>📋 상세 신호 카드</summary><pre class="card">{card}</pre></details>
 </div>
 <script>
-  var DATA={data}, STATE={default_on}, PREC={precision}, TFS={tfs}, CUR='{first}', CH={{}};
+  var DATA={data}, STATE={default_on}, PREC={precision}, TFS={tfs}, CUR='{first}';
+  var CH=null, RO=null;   // 차트 인스턴스는 항상 1개 — 전환 시 이전 것을 파괴(캔버스 누적 방지)
   var LS=LightweightCharts.LineStyle;
   var STY=[LS.Solid,LS.Dotted,LS.Dashed];
   function build(tf){{
-    var el=document.getElementById('c-'+tf);
+    var el=document.getElementById('cc');
+    if(RO){{RO.disconnect();RO=null;}}
+    if(CH){{CH.chart.remove();CH=null;}}
+    el.innerHTML='';
     var c=LightweightCharts.createChart(el,{{
       width:el.clientWidth,height:el.clientHeight,
       layout:{{background:{{color:'#fff'}},textColor:'#334155',fontSize:11}},
@@ -280,12 +282,13 @@ _TMPL = """<!DOCTYPE html><html lang="ko"><head>
         lineWidth:1,lineStyle:STY[l.dash]||0,axisLabelVisible:true,title:l.title}});}};
       reg.lines[l.group].push({{mk:mk,pl:null}});
     }});
-    CH[tf]={{chart:c,candle:candle,reg:reg}};
-    apply(tf); c.timeScale().fitContent();
-    new ResizeObserver(function(){{c.applyOptions({{width:el.clientWidth,height:el.clientHeight}});}}).observe(el);
+    CH={{chart:c,candle:candle,reg:reg}};
+    apply(); c.timeScale().fitContent();
+    RO=new ResizeObserver(function(){{c.applyOptions({{width:el.clientWidth,height:el.clientHeight}});}});
+    RO.observe(el);
   }}
-  function apply(tf){{
-    var o=CH[tf]; if(!o)return; var r=o.reg;
+  function apply(){{
+    var o=CH; if(!o)return; var r=o.reg;
     r.ma.forEach(function(s){{s.applyOptions({{visible:STATE.ma}});}});
     r.trend.forEach(function(s){{s.applyOptions({{visible:STATE.trend}});}});
     ['level','trade','sr','fib'].forEach(function(g){{
@@ -296,12 +299,15 @@ _TMPL = """<!DOCTYPE html><html lang="ko"><head>
     }});
   }}
   function tg(btn){{var g=btn.dataset.group;STATE[g]=!STATE[g];
-    btn.classList.toggle('on',STATE[g]);apply(CUR);}}
-  function sw(tf){{CUR=tf;
-    TFS.forEach(function(t){{
-      document.getElementById('c-'+t).style.display=(t===tf)?'block':'none';
-      document.getElementById('tfb-'+t).classList.toggle('active',t===tf);}});
-    if(!CH[tf])build(tf); else {{CH[tf].chart.timeScale().fitContent();}}
+    btn.classList.toggle('on',STATE[g]);
+    btn.setAttribute('aria-pressed',STATE[g]?'true':'false');apply();}}
+  function sw(tf){{
+    if(tf===CUR&&CH)return;
+    CUR=tf;
+    TFS.forEach(function(t){{var b=document.getElementById('tfb-'+t);
+      b.classList.toggle('active',t===tf);
+      b.setAttribute('aria-pressed',t===tf?'true':'false');}});
+    build(tf);
   }}
   window.addEventListener('load',function(){{build(CUR);}});
 </script></body></html>"""

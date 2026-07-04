@@ -48,6 +48,35 @@
   .warn{font-size:11.5px;color:#92400e;background:#fffbeb;border:1px solid #fde68a;
     border-radius:9px;padding:9px 11px;margin-bottom:13px;line-height:1.6}
   .flag{font-size:12px;margin-right:2px}
+  .vlab{font-size:10.5px;color:#94a3b8;text-align:center;margin-top:4px}
+  /* 인앱 모달(수량 입력) — prompt() 대체 */
+  #mask{position:fixed;inset:0;background:rgba(15,23,42,.45);z-index:50;display:none;
+    align-items:flex-end;justify-content:center}
+  #mask.show{display:flex}
+  .sheet{background:#fff;border-radius:16px 16px 0 0;padding:18px 18px 22px;width:100%;
+    max-width:480px;box-sizing:border-box}
+  .sheet h3{margin:0 0 6px;font-size:16px}
+  .sheet .vtag{display:inline-block;font-size:11px;font-weight:700;color:#92400e;
+    background:#fef3c7;border-radius:999px;padding:2px 9px;margin-left:6px;vertical-align:middle}
+  .sheet p{margin:0 0 12px;font-size:13px;color:#475569;line-height:1.7;white-space:pre-line}
+  .sheet p b{color:#0f172a}
+  .sheet input{width:100%;box-sizing:border-box;padding:12px;border:1px solid #cbd5e1;
+    border-radius:10px;font-size:16px;margin-bottom:6px}
+  .sheet .qmax{font-size:12px;color:#3182f6;cursor:pointer;font-weight:700;
+    margin-bottom:12px;display:inline-block}
+  .sheet .btns{display:flex;gap:8px}
+  .sheet .btns button{flex:1;padding:12px;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer}
+  #mok{border:0;background:#f04452;color:#fff}
+  #mok.sellm{background:#3182f6}
+  #mno{border:1px solid #e5e8eb;background:#fff;color:#475569}
+  @media(min-width:641px){#mask{align-items:center}.sheet{border-radius:16px}}
+  /* 토스트(성공/실패 피드백) */
+  #toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);z-index:60;
+    background:#191f28;color:#fff;font-size:13.5px;font-weight:600;border-radius:999px;
+    padding:11px 19px;opacity:0;pointer-events:none;transition:opacity .25s;max-width:88vw;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  #toast.show{opacity:.96}
+  #toast.err{background:#dc2626}
 </style></head><body>
 <header><a href="index.html">&larr; 스크리너</a>
 <h1>💰 모의투자 <span style="color:#86efac;font-size:13px">가상자금 페이퍼 트레이딩</span></h1></header>
@@ -99,8 +128,42 @@
     </div>
   </div>
 </div>
+<div id="mask" role="dialog" aria-modal="true"><div class="sheet">
+  <h3><span id="mtt"></span><span class="vtag">가상 거래</span></h3>
+  <p id="mtx"></p>
+  <input id="min" type="number" min="1" step="1" style="display:none" aria-label="수량">
+  <span class="qmax" id="mqmax" style="display:none" onclick="qMax()"></span>
+  <div class="btns"><button id="mno" onclick="mHide()">취소</button><button id="mok">확인</button></div>
+</div></div>
+<div id="toast" role="status" aria-live="polite"></div>
 <script>
   var FX=__FX__, PRICES=__PRICES__, PICKS=__PICKS__, START=10000000;
+  // ── 모달/토스트 유틸(prompt·alert 대체) ─────────────────────
+  var _mmax=0, _ttmr=null;
+  function toast(msg,err){
+    var t=document.getElementById('toast');
+    t.textContent=msg; t.classList.toggle('err',!!err); t.classList.add('show');
+    clearTimeout(_ttmr); _ttmr=setTimeout(function(){t.classList.remove('show');},2400);
+  }
+  function mShow(o){ // {title,text,qty:{val,max},sell,okLabel,onok(v)}
+    document.getElementById('mtt').textContent=o.title;
+    document.getElementById('mtx').innerHTML=o.text||'';
+    var inp=document.getElementById('min'), qm=document.getElementById('mqmax');
+    inp.style.display=o.qty?'block':'none';
+    qm.style.display=o.qty?'inline-block':'none';
+    if(o.qty){inp.value=o.qty.val||''; _mmax=o.qty.max||0;
+      qm.textContent='최대 '+_mmax.toLocaleString('ko-KR')+'주 채우기';}
+    var ok=document.getElementById('mok');
+    ok.textContent=o.okLabel||'확인';
+    ok.classList.toggle('sellm',!!o.sell);
+    ok.onclick=function(){var v=o.qty?inp.value:null; mHide(); o.onok(v);};
+    document.getElementById('mask').classList.add('show');
+    if(o.qty)inp.focus();
+  }
+  function mHide(){document.getElementById('mask').classList.remove('show');}
+  function qMax(){document.getElementById('min').value=_mmax;}
+  document.getElementById('mask').addEventListener('click',function(e){
+    if(e.target===this)mHide();});
   function load(){var a;try{a=JSON.parse(localStorage.getItem('paper_v1'));}catch(e){a=null;}
     if(!a||!a.pos){a={cash:START,start:START,pos:{},log:[]};}return a;}
   function save(a){localStorage.setItem('paper_v1',JSON.stringify(a));}
@@ -152,15 +215,16 @@
     var s=btoa(unescape(encodeURIComponent(JSON.stringify(blob))));
     var t=document.getElementById('ioarea'); t.value=s; t.focus(); t.select();
     try{document.execCommand('copy');}catch(e){}
-    alert('백업코드를 복사했어요. 다른 기기 모의투자 페이지의 복원칸에 붙여넣고 "복원"을 누르세요.');
+    toast('백업코드 복사 완료 — 다른 기기 복원칸에 붙여넣으세요');
   }
   function importData(){
-    var s=(document.getElementById('ioarea').value||'').trim(); if(!s){alert('복원할 백업코드를 붙여넣으세요.');return;}
+    var s=(document.getElementById('ioarea').value||'').trim();
+    if(!s){toast('복원할 백업코드를 붙여넣으세요',true);return;}
     try{var blob=JSON.parse(decodeURIComponent(escape(atob(s))));
       if(blob.a&&blob.a.pos)save(blob.a);
       if(blob.h)localStorage.setItem('paper_hist',JSON.stringify(blob.h));
-      render(); alert('복원 완료!');
-    }catch(e){alert('복원 실패 — 백업코드가 올바른지 확인하세요.');}
+      render(); toast('✅ 복원 완료');
+    }catch(e){toast('복원 실패 — 백업코드가 올바른지 확인하세요',true);}
   }
   function renderHolds(a){
     var codes=Object.keys(a.pos), h=document.getElementById('holds');
@@ -172,7 +236,7 @@
       rows+='<tr><td class=l><span class=flag>'+flag(p.ccy)+'</span><a href="stocks/'+code+'.html" style="color:#1d4ed8;text-decoration:none">'+p.name+'</a></td>'
         +'<td>'+p.q+'</td><td>'+fmtP(p.avg,p.ccy)+'</td><td>'+fmtP(cur,p.ccy)+'</td>'
         +'<td class="'+cls+'">'+sg+won(plv)+'<br><span style=font-size:11px>'+sg+plp.toFixed(1)+'%</span></td>'
-        +'<td><button class=sell onclick="sellP(\''+code+'\')">매도</button></td></tr>';
+        +'<td><button class=sell aria-label="'+p.name+' 모의 매도" onclick="sellP(\''+code+'\')">매도</button></td></tr>';
     });
     h.innerHTML=rows+'</table>';
   }
@@ -197,7 +261,9 @@
       +'<div class="vd '+vc+'">'+p.verdict+'</div>'
       +'<div class=th>🤖 클로드라면: '+p.thesis+'</div>'
       +'<div class=lv>'+lv+'</div>'
-      +'<button class=buy onclick="buyP(\''+p.code+'\')">'+(kind==='now'?'💰 매수':'💰 그래도 매수')+'</button></div>';
+      +'<button class=buy aria-label="'+p.name+' 모의 매수" onclick="buyP(\''+p.code+'\')">'
+      +(kind==='now'?'💰 모의 매수':'💰 그래도 모의 매수')+'</button>'
+      +'<div class=vlab>가상 거래 — 실제 주문이 아니에요</div></div>';
   }
   function renderPicks(){
     document.getElementById('picksNow').innerHTML=PICKS.now.length?PICKS.now.map(function(p){return pickCard(p,'now');}).join(''):'<div class=muted>지금 진입 타당한 종목 없음(시장 하락 등). 관찰 목록을 보세요.</div>';
@@ -206,29 +272,42 @@
     document.getElementById('watchn').textContent=PICKS.watch.length+'개';
   }
   function buyP(code){
-    var s=PRICES[code]; if(!s){alert('가격 정보 없음');return;}
+    var s=PRICES[code]; if(!s){toast('가격 정보 없음',true);return;}
     var name=s[0],price=s[1],ccy=s[2], per=krw(price,ccy);
     var a=load();
     var max=Math.floor(a.cash/per);
-    var v=prompt(name+' 매수\n현재가 '+fmtP(price,ccy)+' (1주 ≈ '+won(per)+')\n현금 '+won(a.cash)+' → 최대 '+max+'주\n\n살 수량:', Math.min(max,1)||'');
-    if(!v)return; var q=parseInt(v); if(!(q>0)){return;}
-    var cost=Math.round(per*q);
-    if(cost>a.cash){alert('현금 부족: 필요 '+won(cost)+' / 보유 '+won(a.cash));return;}
-    a.cash-=cost;
-    var p=a.pos[code]||{q:0,avg:0,ccy:ccy,name:name};
-    p.avg=(p.avg*p.q+price*q)/(p.q+q); p.q+=q; p.name=name; a.pos[code]=p;
-    a.log.unshift({t:Date.now(),type:'buy',code:code,name:name,q:q,price:price,ccy:ccy,amt:cost});
-    save(a); render();
+    if(max<1){toast('현금 부족 — 1주 가격 '+won(per)+' / 보유 '+won(a.cash),true);return;}
+    mShow({title:name+' 모의 매수', okLabel:'매수 (가상)',
+      text:'현재가 <b>'+fmtP(price,ccy)+'</b> (1주 ≈ '+won(per)+')\n현금 '+won(a.cash)+' → 최대 '+max.toLocaleString('ko-KR')+'주',
+      qty:{val:1,max:max},
+      onok:function(v){
+        var q=parseInt(v);
+        if(!(q>0)){toast('수량을 1 이상 입력하세요',true);return;}
+        var cost=Math.round(per*q);
+        if(cost>a.cash){toast('현금 부족 — 필요 '+won(cost)+' / 보유 '+won(a.cash),true);return;}
+        a.cash-=cost;
+        var p=a.pos[code]||{q:0,avg:0,ccy:ccy,name:name};
+        p.avg=(p.avg*p.q+price*q)/(p.q+q); p.q+=q; p.name=name; a.pos[code]=p;
+        a.log.unshift({t:Date.now(),type:'buy',code:code,name:name,q:q,price:price,ccy:ccy,amt:cost});
+        save(a); render();
+        toast('✅ 모의 매수 완료 — '+name+' '+q+'주 · '+won(cost));
+      }});
   }
   function sellP(code){
     var a=load(); var p=a.pos[code]; if(!p)return;
     var price=curPrice(code,p.avg), per=krw(price,p.ccy);
-    var v=prompt(p.name+' 매도\n보유 '+p.q+'주 · 현재가 '+fmtP(price,p.ccy)+'\n\n팔 수량(비우면 전량):', p.q);
-    if(v===null)return; var q=v?parseInt(v):p.q; if(!(q>0)||q>p.q){return;}
-    var proceeds=Math.round(per*q);
-    a.cash+=proceeds; p.q-=q; if(p.q<=0)delete a.pos[code];
-    a.log.unshift({t:Date.now(),type:'sell',code:code,name:p.name,q:q,price:price,ccy:p.ccy,amt:proceeds});
-    save(a); render();
+    mShow({title:p.name+' 모의 매도', okLabel:'매도 (가상)', sell:true,
+      text:'보유 <b>'+p.q+'주</b> · 현재가 <b>'+fmtP(price,p.ccy)+'</b>',
+      qty:{val:p.q,max:p.q},
+      onok:function(v){
+        var q=v?parseInt(v):p.q;
+        if(!(q>0)||q>p.q){toast('수량은 1~'+p.q+'주 사이여야 해요',true);return;}
+        var proceeds=Math.round(per*q);
+        a.cash+=proceeds; p.q-=q; if(p.q<=0)delete a.pos[code];
+        a.log.unshift({t:Date.now(),type:'sell',code:code,name:p.name,q:q,price:price,ccy:p.ccy,amt:proceeds});
+        save(a); render();
+        toast('✅ 모의 매도 완료 — '+q+'주 · '+won(proceeds)+' 입금');
+      }});
   }
   function search(v){
     v=(v||'').trim().toLowerCase(); var res=document.getElementById('res');
@@ -236,10 +315,15 @@
     var hits=[],n=0;
     for(var code in PRICES){var s=PRICES[code];
       if(code.toLowerCase().indexOf(v)>=0||s[0].toLowerCase().indexOf(v)>=0){
-        hits.push('<div class=r><span class=flag>'+flag(s[2])+'</span><a href="stocks/'+code+'.html" style="color:#1d4ed8;text-decoration:none">'+s[0]+'</a> <span style=color:#94a3b8;font-size:11px>'+code+' · '+fmtP(s[1],s[2])+'</span><button class=bu onclick="buyP(\''+code+'\')">매수</button></div>');
+        hits.push('<div class=r><span class=flag>'+flag(s[2])+'</span><a href="stocks/'+code+'.html" style="color:#1d4ed8;text-decoration:none">'+s[0]+'</a> <span style=color:#94a3b8;font-size:11px>'+code+' · '+fmtP(s[1],s[2])+'</span><button class=bu aria-label="'+s[0]+' 모의 매수" onclick="buyP(\''+code+'\')">매수</button></div>');
         if(++n>=20)break;}}
     res.innerHTML=hits.length?hits.join(''):'<div class=muted>검색 결과 없음</div>';
   }
-  function reset(){if(confirm('모의투자를 초기화할까요? (보유·현금·일지 모두 삭제, 1,000만원으로)')){save({cash:START,start:START,pos:{},log:[]});render();}}
+  function reset(){
+    mShow({title:'모의투자 초기화', okLabel:'초기화',
+      text:'보유·현금·일지를 모두 삭제하고 1,000만원으로 되돌립니다.',
+      onok:function(){save({cash:START,start:START,pos:{},log:[]});render();
+        toast('초기화 완료 — 가상자금 1,000만원');}});
+  }
   renderPicks(); render();
 </script></body></html>
