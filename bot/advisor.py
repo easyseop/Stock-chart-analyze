@@ -84,6 +84,9 @@ def check_buy_signals(sigs: list[dict], state: dict, dry_run: bool) -> int:
         ed = s.get("earnings_d")
         if ed is not None and 0 <= ed <= 3:
             fresh_txt += f"\n📅 <b>어닝 D-{ed}</b> — 갭 리스크, 신규 진입 주의"
+        t = s.get("tactic")
+        if t:   # 진입 전술 — 어떻게 들어갈지까지 제안(즉시/반반/눌림 지정가)
+            fresh_txt += f"\n🎯 <b>{t['label']}</b> — {t['desc']}"
         text = (
             f"🟢 <b>매수 제안</b> — {s['name']}({s['code']})\n"
             f"단계 {s.get('stage', 0)}{rp_txt}{fresh_txt}\n"

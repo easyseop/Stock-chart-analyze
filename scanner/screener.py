@@ -51,7 +51,7 @@ def _detail(result: dict, frames: dict) -> str:
 
 
 from scanner.plan import (rec_n as _rec_n, REC_MIN, timing as _timing,
-                          thesis as _plan_thesis)
+                          thesis as _plan_thesis, tactic as _plan_tactic)
 
 
 def _sign(v) -> str:
@@ -188,8 +188,16 @@ def _home_card(p: dict) -> str:
                     f'{html.escape(p["freshness"])}{gap_txt}</span>')
     if p.get("stage"):
         tags.append(f'<span class="tg st">{html.escape(p["stage"])}</span>')
+    t = p.get("tactic")
+    if t:   # 진입 전술 — 카드에서 가장 행동에 가까운 정보라 눈에 띄게
+        cls = {"full": "hot", "half": "st", "pullback": "wait"}.get(t["mode"], "")
+        tags.append(f'<span class="tg {cls}">{html.escape(t["label"])}</span>')
     tags.append(f'<span class="tg">{html.escape(p["sig"])}</span>')
     fp = lambda v: _fmt_px(v, p["ccy"])
+    # 눌림 지정가 전술이면 진입 칸에 '눌림 목표가'를 보여준다 — 지금 사라는 뜻이 아님
+    ent_lab, ent_v = "진입", p["entry"]
+    if t and t["mode"] == "pullback" and t.get("pb_price"):
+        ent_lab, ent_v = "진입(눌림)", t["pb_price"]
     return (
         f'<div class="pk"><div class="top">'
         f'<div class="nm"><a href="stocks/{p["code"]}.html">{flag} {html.escape(p["name"])}</a>'
@@ -198,7 +206,7 @@ def _home_card(p: dict) -> str:
         f'<div class="tags">{"".join(tags)}</div>'
         f'{_zone_meter(p.get("range_pos", 50))}'
         f'<div class="lvl">'
-        f'<div class="lv e"><span>진입</span><b>{fp(p["entry"])}</b></div>'
+        f'<div class="lv e"><span>{ent_lab}</span><b>{fp(ent_v)}</b></div>'
         f'<div class="lv s"><span>손절</span><b>{fp(p["stop"])}</b></div>'
         f'<div class="lv t"><span>목표</span><b>{fp(p["target"])}</b></div></div>'
         f'<div class="why">🤖 {p["thesis"]}</div>'
@@ -277,7 +285,8 @@ def _home_html(results: list[dict], tstats: dict | None = None) -> str:
             f'처음이라면 <a href="start.html" style="color:#1d6ce0">🚀 3분 가이드</a></div>')
 
 
-def _index(results: list[dict], tstats: dict | None = None) -> str:
+def _index(results: list[dict], tstats: dict | None = None) -> tuple[str, str]:
+    """(index.html, more.html) 두 페이지를 렌더해 반환."""
     import datetime
     from scanner import cache, universe
     # 기본 정렬: 진입 추천 점수 → 전환 단계 → 종합점수 (추천 종목이 맨 위로)
@@ -459,6 +468,9 @@ def _signals_json(results: list[dict]) -> str:
             "break_gap": (round(r["break_gap"], 4)
                           if r.get("break_gap") is not None else None),
             "earnings_d": earnings.days_until(r["code"]),  # 어닝까지 D-일수(없으면 null)
+            # 진입 전술(즉시/반반/눌림 지정가) — 자동매매 봇이 주문 방식 결정에 사용:
+            #   full=시장가 분할, half=절반 시장가+절반 pb_price 지정가, pullback=pb_price 지정가만
+            "tactic": _plan_tactic(r),
         })
     sigs.sort(key=lambda s: (s["group"], not s["fresh"], -s["stage"], -s["norm"]))
     return json.dumps({
@@ -479,6 +491,7 @@ def _pick_item(r: dict, th: dict) -> dict:
     p = (r.get("sr") or {}).get("price")
     fresh, fresh_label = _freshness(r)
     gap = r.get("break_gap")
+    t = _plan_tactic(r)
     return {
         "code": r["code"], "name": r["name"], "ccy": r.get("ccy", "USD"),
         "price": round(float(p), 4) if p else 0,
@@ -491,6 +504,7 @@ def _pick_item(r: dict, th: dict) -> dict:
         "range_pos": round(float(r.get("range_pos", 0.5)) * 100),  # 52주 범위 내 %
         "fresh": fresh, "freshness": fresh_label,
         "break_gap": round(gap * 100, 1) if gap is not None else None,
+        "tactic": t,                     # 진입 전술(즉시/반반/눌림 지정가) — 없으면 None
     }
 
 
