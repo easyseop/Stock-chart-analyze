@@ -18,6 +18,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
+import os
+
 import pandas as pd
 
 import config
@@ -41,6 +43,189 @@ class Trade:
 
 from scanner import trendlines as _tl
 TRANSITION = _tl.TRANSITION_CONFIRMED   # '전환 후보' 트리거 식별값
+
+
+# ═════════════════════════════════════════════════════════════════
+# 현행 추천 게이트 재생 — "지금 배포 중인 기준(gates.classify)이
+# 과거에도 이기는 기준이었나"를 그대로 검증 (사용자 요구: 승률 분석)
+#   진입: classify()=="now" (저점권·손절폭·과열·전환단계 게이트 전부 포함)
+#   체결: 다음날 시가 / 청산: 확정 전략 사다리(1R 절반+본전 → 2R → 타임스탑)
+# ═════════════════════════════════════════════════════════════════
+from scanner import gates as _gates
+from scanner.plan import freshness as _fresh_fn, tactic as _tactic_fn
+
+
+def _ladder(d, ei: int, fill: float, stop: float,
+            max_hold: int = 60) -> tuple[float, int, str]:
+    """확정 전략 청산 사다리 → (R, 청산 인덱스, 사유)."""
+    n = len(d)
+    risk = fill - stop
+    one_r, target = fill + risk, fill + 2 * risk
+    half = False
+    j = ei
+    for j in range(ei, min(ei + max_hold, n)):
+        lo, hi = float(d["Low"].iloc[j]), float(d["High"].iloc[j])
+        cl = float(d["Close"].iloc[j])
+        if not half:
+            if lo <= stop:
+                return -1.0, j, "손절"
+            if hi >= one_r:
+                half = True                      # 절반 익절 + 손절 본전
+                continue
+            if j - ei + 1 >= config.TIME_STOP_DAYS:
+                return (cl - fill) / risk, j, "타임스탑"
+        else:
+            if lo <= fill:
+                return 0.5, j, "본전스탑"
+            if hi >= target:
+                return 1.5, j, "목표(2R)"
+    cl = float(d["Close"].iloc[j])
+    r = (0.5 + 0.5 * (cl - fill) / risk) if half else (cl - fill) / risk
+    return r, j, "만기청산"
+
+
+def simulate_gates(code: str, frames: dict, meta: dict, bench=None,
+                   warmup: int = 520, stride: int = 3,
+                   lookback: int = 780, max_hold: int = 60) -> list[dict]:
+    """한 종목을 현행 게이트로 워크포워드 — 이벤트별 R·컨텍스트 기록."""
+    d = frames["D"]
+    n = len(d)
+    i = max(warmup, n - lookback)
+    out = []
+    while i < n - 3:
+        sub = d.iloc[:i + 1]
+        bsub = bench.loc[:sub.index[-1]] if bench is not None else None
+        try:
+            res = analyze(data.frames_from_daily(sub), meta, bench=bsub)
+        except Exception:
+            i += stride
+            continue
+        if _gates.classify(res)["group"] != "now":
+            i += stride
+            continue
+        ei = i + 1
+        fill = float(d["Open"].iloc[ei])
+        stop = float(res["risk"]["stop"])
+        if not (fill > stop > 0):
+            i += stride
+            continue
+        fresh, _lab = _fresh_fn(res)
+        t = _tactic_fn(res) or {}
+        r, xj, reason = _ladder(d, ei, fill, stop, max_hold)
+        out.append({"code": code, "d": str(d.index[ei].date()),
+                    "r": round(r, 2), "reason": reason,
+                    "fresh": bool(fresh), "mode": t.get("mode", "full"),
+                    "rp": round(float(res.get("range_pos", 0.5)) * 100),
+                    "stop_pct": round((fill - stop) / fill * 100, 1)})
+        i = xj + 1                               # 청산 후 재탐색(중복 보유 금지)
+    return out
+
+
+def run_gates(frames_map: dict, metas: dict, bench_map: dict | None = None,
+              stride: int = 3, lookback: int = 780) -> dict:
+    """현행 게이트 백테스트 — 전체/신선도별/전술별 승률·기대값 집계."""
+    bench_map = bench_map or {}
+    ev = []
+    for code, frames in frames_map.items():
+        ev += simulate_gates(code, frames, metas[code],
+                             bench=bench_map.get(code),
+                             stride=stride, lookback=lookback)
+
+    def agg(rows):
+        n = len(rows)
+        w = sum(1 for x in rows if x["r"] > 0)
+        return {"n": n, "win": w,
+                "win_rate": round(w / n * 100, 1) if n else 0,
+                "avg_r": round(sum(x["r"] for x in rows) / n, 3) if n else 0}
+
+    by_mode = {m: agg([x for x in ev if x["mode"] == m])
+               for m in ("full", "half", "pullback")
+               if any(x["mode"] == m for x in ev)}
+    res = {
+        "stocks": len(frames_map), "events": len(ev),
+        "stride": stride, "lookback": lookback,
+        "all": agg(ev),
+        "fresh": agg([x for x in ev if x["fresh"]]),
+        "stale": agg([x for x in ev if not x["fresh"]]),
+        "by_mode": by_mode,
+        "note": ("현행 gates.classify('now') 재생 · 다음날 시가 체결 · "
+                 "확정 전략 사다리 청산 · 슬리피지/수수료/시장방향(RS) 미반영"),
+    }
+    lab = {"full": "⚡즉시", "half": "⚖반반", "pullback": "⏳눌림"}
+    print("=" * 66)
+    print("◆ 현행 추천 게이트 백테스트 — 지금 기준의 역사적 승률")
+    print(f"  종목 {res['stocks']} · 이벤트 {res['events']} · 최근 {lookback}봉")
+    print("-" * 66)
+    for name, s in [("전체", res["all"]), ("🔥 갓 전환", res["fresh"]),
+                    ("↗ 돌파후 진행", res["stale"])] + [
+                        (lab[m], v) for m, v in by_mode.items()]:
+        if s["n"]:
+            print(f"  {name:<14} {s['n']:>4}건 · 승률 {s['win_rate']:>5.1f}% · "
+                  f"기대값 {s['avg_r']:+.3f}R")
+    print("=" * 66)
+    return res
+
+
+def cli_gates() -> None:
+    """오프라인(캐시만) 현행 게이트 백테스트 CLI.
+
+    python -c "from scanner.backtest import cli_gates; cli_gates()" \
+        -- [--stride 3] [--max-stocks 0] [--out api/backtest.json]
+    """
+    import argparse
+    import json as _json
+    import sys
+    from scanner import cache as _cache
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--stride", type=int, default=3)
+    ap.add_argument("--lookback", type=int, default=780)
+    ap.add_argument("--max-stocks", type=int, default=0)
+    ap.add_argument("--sample", type=int, default=0,
+                    help="전체에서 고르게 N종목 추출(한국/미국 섞이게)")
+    ap.add_argument("--notify", action="store_true",
+                    help="결과 요약을 텔레그램으로 발송")
+    ap.add_argument("--out", default="")
+    a = ap.parse_args([x for x in sys.argv[1:] if x != "--"])
+    codes = sorted(_cache.cached_codes())
+    if a.sample and len(codes) > a.sample:
+        step = len(codes) / a.sample
+        codes = [codes[int(i * step)] for i in range(a.sample)]
+    if a.max_stocks:
+        codes = codes[:a.max_stocks]
+    frames_map, metas = {}, {}
+    for code in codes:
+        try:
+            f = _cache.frames(code, refresh=False)   # 캐시만 — 네트워크 0
+        except Exception:
+            continue
+        if len(f.get("D", [])) < 540:
+            continue
+        frames_map[code] = f
+        metas[code] = {"code": code, "name": code,
+                       "ccy": "KRW" if code.isdigit() else "USD"}
+    res = run_gates(frames_map, metas, stride=a.stride, lookback=a.lookback)
+    if a.out:
+        os.makedirs(os.path.dirname(a.out) or ".", exist_ok=True)
+        with open(a.out, "w", encoding="utf-8") as fp:
+            _json.dump(res, fp, ensure_ascii=False, indent=1)
+        print("저장:", a.out)
+    if a.notify:
+        try:
+            from bot import notify as _n
+            s, f, st_ = res["all"], res["fresh"], res["stale"]
+            lab = {"full": "⚡즉시", "half": "⚖반반", "pullback": "⏳눌림"}
+            bm = " · ".join(f'{lab[m]} {v["win_rate"]}%({v["n"]})'
+                            for m, v in res["by_mode"].items())
+            _n.send(
+                "📜 <b>전략 백테스트</b> — 현행 추천 기준의 역사적 성적\n"
+                f'종목 {res["stocks"]} · 이벤트 {s["n"]}건 (최근 {res["lookback"]}봉)\n'
+                f'전체: 승률 <b>{s["win_rate"]}%</b> · 기대값 <b>{s["avg_r"]:+.3f}R</b>\n'
+                f'🔥 갓 전환: <b>{f["win_rate"]}%</b> ({f["n"]}건, {f["avg_r"]:+.3f}R)\n'
+                f'↗ 돌파후 진행: {st_["win_rate"]}% ({st_["n"]}건, {st_["avg_r"]:+.3f}R)\n'
+                f'전술별: {bm}\n'
+                "※ 다음날 시가 체결 · 확정 청산 사다리 · 수수료/슬리피지 미반영")
+        except Exception:
+            pass
 
 
 def trigger_kind(t: "Trade") -> str:
