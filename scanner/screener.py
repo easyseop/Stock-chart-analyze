@@ -361,6 +361,9 @@ def build(results: list[dict], frames_map: dict[str, dict],
     gates.audit(results, picks)
     # 추천 성과 자동 채점(포워드 테스트) — 홈 요약 + /api/track.json
     tstats = track.update(results, picks, out_dir)
+    # 클로드 자동 모의투자(시드 1억) — 전술대로 스스로 진입·청산 시뮬레이션
+    from scanner import autopaper
+    auto = autopaper.update(results, picks, out_dir)
     stocks_dir = os.path.join(out_dir, "stocks")
     os.makedirs(stocks_dir, exist_ok=True)
     h_min = config.MA_PERIODS["H"][-1] + 5
@@ -425,7 +428,7 @@ def build(results: list[dict], frames_map: dict[str, dict],
     with open(os.path.join(out_dir, "start.html"), "w", encoding="utf-8") as fp:
         fp.write(_tmpl("start.html"))          # 3분 시작 가이드(처음 사용자용)
     with open(os.path.join(out_dir, "paper.html"), "w", encoding="utf-8") as fp:
-        fp.write(_paper_page(results))         # 모의투자(페이퍼 트레이딩)
+        fp.write(_paper_page(results, auto))   # 모의투자(페이퍼 트레이딩)
     os.makedirs(os.path.join(out_dir, "api"), exist_ok=True)
     with open(os.path.join(out_dir, "api", "signals.json"), "w",
               encoding="utf-8") as fp:
@@ -550,7 +553,7 @@ def _paper_picks(results: list[dict]) -> dict:
     return {"now": now_p, "watch": watch_p}
 
 
-def _paper_page(results: list[dict]) -> str:
+def _paper_page(results: list[dict], auto: dict | None = None) -> str:
     import json
     prices = {}
     for r in results:
@@ -562,6 +565,7 @@ def _paper_page(results: list[dict]) -> str:
     return (_tmpl("paper.html")
             .replace("__PRICES__", json.dumps(prices, ensure_ascii=False))
             .replace("__PICKS__", json.dumps(picks, ensure_ascii=False))
+            .replace("__AUTOP__", json.dumps(auto or {}, ensure_ascii=False))
             .replace("__TABBAR__", _tabbar("paper"))
             .replace("__FX__", "1380"))
 

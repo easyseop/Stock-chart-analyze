@@ -93,7 +93,20 @@
   <div class="warn">⚠️ <b>가상 거래</b>입니다(실제 주문 아님). 가격은 <b>30분마다 갱신되는 종가 기준</b>(실시간 아님)이고,
     해외주는 <b>환율 __FX__원/$ 가정</b>으로 원화 환산해요. 데이터는 이 브라우저에만 저장됩니다.</div>
 
+  <div class="card" style="border-left:4px solid #2e6be6">
+    <h2>🤖 클로드 자동 매매 <span class="cnt">시드 1억 · 15분마다 전술대로 스스로 진입·청산</span></h2>
+    <div class="sumv" id="asumv">–</div>
+    <div class="sub" id="asumsub"></div>
+    <div id="apos" style="margin-top:8px"></div>
+    <div id="apend"></div>
+    <details style="margin-top:8px"><summary style="cursor:pointer;font-size:12.5px;color:#64748b;font-weight:700">🧾 자동 매매 일지</summary>
+      <div id="alog" style="margin-top:6px"></div></details>
+    <div class="sub" style="margin-top:8px;font-size:11.5px">⚡즉시=시장가 · ⚖반반=절반+절반 눌림 지정가 · ⏳눌림=지정가만 ·
+      +1R 절반 익절→본전 스탑 · 목표 2R · 타임스탑 15거래일 — <b>가상 계좌</b>(아래 내 모의투자와 별개)</div>
+  </div>
+
   <div class="card">
+    <h2>💰 내 모의투자</h2>
     <div class="sumv" id="sumv">–</div>
     <div class="sub" id="sumsub"></div>
     <div style="text-align:right;margin-top:6px"><span class="rst" onclick="reset()">초기화(1,000만원)</span></div>
@@ -336,6 +349,40 @@ __TABBAR__
       onok:function(){save({cash:START,start:START,pos:{},log:[]});render();
         toast('초기화 완료 — 가상자금 1,000만원');}});
   }
+  // ── 🤖 클로드 자동 매매(빌드 시점 주입) — 읽기 전용 표시 ──
+  var AUTOP=__AUTOP__;
+  function renderAuto(){
+    if(!AUTOP||!AUTOP.start){document.getElementById('asumv').textContent='곧 첫 매매를 시작해요';return;}
+    var cls=AUTOP.ret_pct>=0?'up':'dn', sg=AUTOP.ret_pct>=0?'+':'';
+    document.getElementById('asumv').innerHTML=won(AUTOP.equity)
+      +' <span class="'+cls+'" style="font-size:18px">'+sg+AUTOP.ret_pct.toFixed(2)+'%</span>';
+    document.getElementById('asumsub').innerHTML='현금 '+won(AUTOP.cash)
+      +' · 보유 '+AUTOP.positions.length+'종목 · 대기 주문 '+AUTOP.pending.length
+      +'건 · 청산 '+AUTOP.trades+'회(익절 '+AUTOP.win_trades+') · '+AUTOP.updated+' 기준';
+    var ap=document.getElementById('apos');
+    if(AUTOP.positions.length){
+      var rows='<table><tr><th class=l>종목</th><th>수량</th><th>평단</th><th>현재가</th><th>손익</th><th>손절</th></tr>';
+      AUTOP.positions.forEach(function(p){
+        var c=p.pl_krw>=0?'up':'dn', s=p.pl_krw>=0?'+':'';
+        rows+='<tr><td class=l><span class=flag>'+flag(p.ccy)+'</span><a href="stocks/'+p.code+'.html" style="color:#1d4ed8;text-decoration:none">'+p.name+'</a>'
+          +(p.half_done?' <span style="font-size:10px;color:#16a34a;font-weight:700">본전확보</span>':'')+'</td>'
+          +'<td>'+p.q+'</td><td>'+fmtP(p.avg,p.ccy)+'</td><td>'+fmtP(p.price,p.ccy)+'</td>'
+          +'<td class="'+c+'">'+s+won(p.pl_krw)+'<br><span style=font-size:11px>'+s+p.pl_pct.toFixed(1)+'%</span></td>'
+          +'<td style=font-size:11px>'+fmtP(p.stop,p.ccy)+'</td></tr>';
+      });
+      ap.innerHTML=rows+'</table>';
+    }else ap.innerHTML='<div class=muted>보유 없음 — 타점 오면 자동 진입</div>';
+    var pd=document.getElementById('apend');
+    pd.innerHTML=AUTOP.pending.length?'<div class=sub style="margin-top:6px">⏳ 눌림 대기: '
+      +AUTOP.pending.map(function(o){return flag(o.ccy)+o.name+' '+fmtP(o.limit,o.ccy);}).join(' · ')+'</div>':'';
+    document.getElementById('alog').innerHTML=(AUTOP.log||[]).slice(0,15).map(function(x){
+      var lab={buy:'매수',sell:'매도',order:'주문',cancel:'취소'}[x.type]||x.type;
+      var lc={buy:'b',sell:'s'}[x.type]||'';
+      return '<div class=logi><span class="'+lc+'">'+lab+'</span><span>'+flag(x.ccy)+' '+x.name
+        +(x.q?' '+x.q+'주':'')+' @ '+fmtP(x.price,x.ccy)+' — '+x.note+'</span><span class=tm>'+x.d+'</span></div>';
+    }).join('')||'<div class=muted>거래 없음</div>';
+  }
+  renderAuto();
   renderPicks(); render();
   // 홈 카드 "모의 매수" 딥링크: paper.html?buy=CODE → 매수 모달 바로 열기
   (function(){
