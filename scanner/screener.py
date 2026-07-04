@@ -209,7 +209,8 @@ def _home_card(p: dict) -> str:
         f'<div class="lv e"><span>{ent_lab}</span><b>{fp(ent_v)}</b></div>'
         f'<div class="lv s"><span>손절</span><b>{fp(p["stop"])}</b></div>'
         f'<div class="lv t"><span>목표</span><b>{fp(p["target"])}</b></div></div>'
-        f'<div class="why">🤖 {p["thesis"]}</div>'
+        # 카드엔 이유만 — 손절·목표 숫자는 위 3칸에 이미 있어 문장 꼬리를 잘라 중복 제거
+        f'<div class="why">🤖 {p["thesis"].split(" 손절 ")[0].rstrip("—- ·,")}</div>'
         f'<div class="cta"><a class="c1" href="stocks/{p["code"]}.html">📈 차트 보기</a>'
         f'<a class="c2" href="paper.html?buy={p["code"]}">💰 모의 매수</a></div></div>')
 
@@ -241,7 +242,8 @@ def _mkline(results: list[dict]) -> str:
 _HOME_CARD_MAX = 8     # 홈은 '답'만 — 전체 목록은 종목 탭에서
 
 
-def _home_html(results: list[dict], tstats: dict | None = None) -> str:
+def _home_html(results: list[dict], tstats: dict | None = None,
+               auto: dict | None = None) -> str:
     """홈 = 오늘의 답: 스코어보드 → 지금 진입 카드 → 곧 올 자리 행."""
     picks = _paper_picks(results)
     now, watch = picks["now"], picks["watch"]
@@ -250,13 +252,21 @@ def _home_html(results: list[dict], tstats: dict | None = None) -> str:
         f'<div class="board">'
         f'<a class="bcell now" style="text-decoration:none" href="#stocks"><b>{len(now)}</b><span>지금 진입</span></a>'
         f'<a class="bcell watch" style="text-decoration:none" href="#stocks"><b>{len(watch)}</b><span>곧 올 자리</span></a>'
-        f'<a class="bcell trk" style="text-decoration:none" href="api/track.json"><b>{open_n}</b><span>성과 추적 중</span></a></div>')
+        f'<a class="bcell trk" style="text-decoration:none" href="paper.html"><b>{open_n}</b><span>성과 추적 중</span></a></div>')
+    stat = ""
+    if auto and auto.get("start"):        # 🤖 자동 모의투자 성과 — 홈에서 한눈에
+        rp = auto.get("ret_pct", 0)
+        cls = "pos" if rp > 0 else ("neg" if rp < 0 else "")
+        stat += (f'<div class="hstat">🤖 자동 모의투자(시드 1억): '
+                 f'<b class="{cls}">{rp:+.2f}%</b> · 보유 {len(auto.get("positions", []))}종목 · '
+                 f'청산 {auto.get("trades", 0)}회'
+                 + (f' · 승률 <b>{auto["stats"]["all"]["win_rate"]}%</b>'
+                    if auto.get("stats", {}).get("all", {}).get("n") else "")
+                 + ' · <a href="paper.html" style="color:#1d6ce0;font-weight:700">상세 →</a></div>')
     if tstats and tstats.get("closed"):
-        stat = (f'<div class="hstat">📊 지난 추천 성과(자동 채점): '
-                f'<b>{tstats["wins"]}승 {tstats["losses"]}패</b> · 승률 '
-                f'<b>{tstats["win_rate"]}%</b> · 평균 <b>{tstats["avg_r"]:+.2f}R</b></div>')
-    else:
-        stat = ""
+        stat += (f'<div class="hstat">📊 지난 추천 성과(자동 채점): '
+                 f'<b>{tstats["wins"]}승 {tstats["losses"]}패</b> · 승률 '
+                 f'<b>{tstats["win_rate"]}%</b> · 평균 <b>{tstats["avg_r"]:+.2f}R</b></div>')
     if now:
         cards = "".join(_home_card(p) for p in now[:_HOME_CARD_MAX])
         rest = (f'<div class="hmuted">외 {len(now) - _HOME_CARD_MAX}개 — '
@@ -285,7 +295,8 @@ def _home_html(results: list[dict], tstats: dict | None = None) -> str:
             f'처음이라면 <a href="start.html" style="color:#1d6ce0">🚀 3분 가이드</a></div>')
 
 
-def _index(results: list[dict], tstats: dict | None = None) -> tuple[str, str]:
+def _index(results: list[dict], tstats: dict | None = None,
+           auto: dict | None = None) -> tuple[str, str]:
     """(index.html, more.html) 두 페이지를 렌더해 반환."""
     import datetime
     from scanner import cache, universe
@@ -321,6 +332,7 @@ def _index(results: list[dict], tstats: dict | None = None) -> tuple[str, str]:
         uni = len([s for s in universe.load() if s.get("code")]) or 1
     except Exception:
         cached, uni = len(results), max(len(results), 1)
+    uni = max(uni, cached)     # 즉석조회 추가분으로 수집>유니버스가 될 수 있음 — 표기 꼬임 방지
     pct = min(100, round(cached / uni * 100))
     updated = datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M UTC")
     import config
@@ -328,7 +340,7 @@ def _index(results: list[dict], tstats: dict | None = None) -> tuple[str, str]:
     tokens = {
         "__ROWS__": _rows(results), "__CHIPS__": chips,
         "__STAGE_CHIPS__": stage_chips, "__REGION_CHIPS__": region_chips,
-        "__HOME__": _home_html(results, tstats),
+        "__HOME__": _home_html(results, tstats, auto),
         "__MKLINE__": _mkline(results),
         "__TABBAR__": _tabbar("home"),
         "__RCOUNT__": rcount, "__RECMIN__": REC_MIN,
@@ -416,7 +428,7 @@ def build(results: list[dict], frames_map: dict[str, dict],
             fp.write(sha)
     print(f"상세페이지: {rendered}/{len(results)} 렌더"
           f"{' (증분 — 나머지 재사용)' if incremental else ' (전체)'}")
-    index_page, more_page = _index(results, tstats)
+    index_page, more_page = _index(results, tstats, auto)
     with open(os.path.join(out_dir, "index.html"), "w", encoding="utf-8") as fp:
         fp.write(index_page)
     with open(os.path.join(out_dir, "more.html"), "w", encoding="utf-8") as fp:

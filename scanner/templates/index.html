@@ -292,14 +292,26 @@ __TABBAR__
   function go(v){location.hash=(v==='home')?'':'stocks';return false;}
   function route(){show(location.hash==='#stocks'?'stocks':'home');}
   window.addEventListener('hashchange',route);
-  // 갱신 나이 배지
+  // 갱신 나이 배지 — 장 마감(주말·야간)일 땐 '오래됨' 경고 대신 마감 안내
+  function mktClosed(){
+    var k=new Date(Date.now()+9*3600e3);            // KST
+    var d=k.getUTCDay(), hm=k.getUTCHours()*60+k.getUTCMinutes();
+    if(d===0||d===6)return '주말';
+    var kr=hm>=540&&hm<=930, us=hm>=1350||hm<=300;  // 09~15:30 / 22:30~05:00 KST
+    return (kr||us)?'':'장 마감';
+  }
   (function(){var el=document.getElementById('age');if(!el)return;var ts=+el.dataset.ts*1000;
     function f(){var m=Math.floor((Date.now()-ts)/60000);
-      el.textContent=(m<1?'방금 전':m+'분 전')+' 갱신';
-      var late=m>45;
-      el.style.cssText='font-weight:700;color:'+(late?'#d97706':'#16a34a');
+      var closed=mktClosed();
+      var t=(m<1?'방금 전':(m<60?m+'분 전':Math.floor(m/60)+'시간 전'))+' 갱신';
+      if(closed)t+=' · 🌙 '+closed+'(월~금 09시 개장)'.replace('(월~금 09시 개장)',
+        closed==='주말'?' — 월 09:00 개장':'');
+      el.textContent=t;
+      var late=!closed&&m>45;                        // 장중인데 오래됨 → 경고
+      var col=closed?'#8b95a1':(late?'#d97706':'#16a34a');
+      el.style.cssText='font-weight:700;color:'+col;
       var d=document.getElementById('agedot');
-      if(d)d.style.background=late?'#d97706':'#16a34a';}
+      if(d)d.style.background=col;}
     f();setInterval(f,30000);})();
 
   // ── 종목 리스트: 행은 <template>에, 매칭분만 200개씩 렌더 ──
@@ -388,6 +400,10 @@ __TABBAR__
       var x=a.children[col],y=b.children[col];
       if(num){return parseFloat(y.dataset.v)-parseFloat(x.dataset.v);}
       return (x.textContent>y.textContent?1:-1);
+    });
+    // 정렬 기준 표시(▼) — 클릭한 컬럼으로 이동
+    [].forEach.call(document.querySelectorAll('#t thead th'),function(th,i){
+      th.textContent=th.textContent.replace('▼','')+(i===col?'▼':'');
     });
     apply(true);
   }
