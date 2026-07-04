@@ -112,11 +112,24 @@ def simulate_gates(code: str, frames: dict, meta: dict, bench=None,
         fresh, _lab = _fresh_fn(res)
         t = _tactic_fn(res) or {}
         r, xj, reason = _ladder(d, ei, fill, stop, max_hold)
+        # A/B: 같은 이벤트를 '눌림 지정가'로 기다렸다면? — 15봉 내 지정가 도달 시
+        # 체결, 미도달이면 놓침(트레이드 없음). 즉시 체결과의 직접 비교용.
+        pb = t.get("pb_price")
+        r_pb, pb_filled = None, False
+        if pb and stop < pb < fill:
+            for j in range(ei, min(ei + config.TIME_STOP_DAYS, n)):
+                if float(d["Low"].iloc[j]) <= pb:
+                    r_pb, _xj2, _rs2 = _ladder(d, j, float(pb), stop, max_hold)
+                    pb_filled = True
+                    break
         out.append({"code": code, "d": str(d.index[ei].date()),
                     "r": round(r, 2), "reason": reason,
                     "fresh": bool(fresh), "mode": t.get("mode", "full"),
                     "rp": round(float(res.get("range_pos", 0.5)) * 100),
-                    "stop_pct": round((fill - stop) / fill * 100, 1)})
+                    "stop_pct": round((fill - stop) / fill * 100, 1),
+                    "has_pb": bool(pb and stop < pb < fill),
+                    "pb_filled": pb_filled,
+                    "r_pb": round(r_pb, 2) if r_pb is not None else None})
         i = xj + 1                               # 청산 후 재탐색(중복 보유 금지)
     return out
 
@@ -148,6 +161,19 @@ def run_gates(frames_map: dict, metas: dict, bench_map: dict | None = None,
             rows = [x for x in ev if x["fresh"] == fr and x["mode"] == m]
             if rows:
                 cross[f"{flab}_{m}"] = agg(rows)
+    # A/B: 즉시 체결 vs 눌림 지정가 — 눌림가가 존재하는 '같은 이벤트'끼리 비교
+    pbable = [x for x in ev if x.get("has_pb")]
+    filled = [x for x in pbable if x["pb_filled"]]
+    ab = {}
+    if pbable:
+        ab = {
+            "n": len(pbable),
+            "immediate": agg(pbable),                        # A: 즉시(다음날 시가)
+            "pb_fill_rate": round(len(filled) / len(pbable) * 100, 1),
+            "pb_filled": agg([{"r": x["r_pb"]} for x in filled]),   # B: 체결분만
+            # B의 이벤트당 기대값(미체결=0R로 — 놓침의 기회비용 반영)
+            "pb_per_event_r": round(sum(x["r_pb"] for x in filled) / len(pbable), 3),
+        }
     res = {
         "stocks": len(frames_map), "events": len(ev),
         "stride": stride, "lookback": lookback,
@@ -156,6 +182,7 @@ def run_gates(frames_map: dict, metas: dict, bench_map: dict | None = None,
         "stale": agg([x for x in ev if not x["fresh"]]),
         "by_mode": by_mode,
         "cross": cross,
+        "ab": ab,
         "raw": ev,             # 이벤트 원자료 — 추가 분석/재집계용
         "note": ("현행 gates.classify('now') 재생 · 다음날 시가 체결 · "
                  "확정 전략 사다리 청산 · 슬리피지/수수료/시장방향(RS) 미반영"),
@@ -178,6 +205,14 @@ def run_gates(frames_map: dict, metas: dict, bench_map: dict | None = None,
             fl, m = k.split("_", 1)
             print(f"    {'🔥' if fl == 'fresh' else '↗'} {lab[m]:<6} "
                   f"{s['n']:>4}건 · 승률 {s['win_rate']:>5.1f}% · {s['avg_r']:+.3f}R")
+    if ab:
+        print("-" * 66)
+        print(f"  A/B (눌림가 있는 {ab['n']}건 — 같은 이벤트 직접 비교):")
+        print(f"    A 즉시 체결   승률 {ab['immediate']['win_rate']:>5.1f}% · "
+              f"{ab['immediate']['avg_r']:+.3f}R/이벤트")
+        print(f"    B 눌림 지정가 체결률 {ab['pb_fill_rate']}% · 체결분 승률 "
+              f"{ab['pb_filled']['win_rate']:>5.1f}%({ab['pb_filled']['avg_r']:+.3f}R) · "
+              f"이벤트당 {ab['pb_per_event_r']:+.3f}R(미체결=0)")
     print("=" * 66)
     return res
 
