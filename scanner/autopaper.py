@@ -393,6 +393,14 @@ def update(results: list[dict], picks: dict, out_dir: str = "public") -> dict:
 
     equity = _equity(st, px)
     _report(st, equity)      # 이번 런 체결 내역 텔레그램 보고(_ev 소비)
+    # 수익 곡선용 일별 스냅샷 — 하루 1점(같은 날 재실행 시 최신값으로 갱신)
+    hist = st.setdefault("hist", [])
+    today = _today()
+    if hist and hist[-1]["d"] == today:
+        hist[-1]["v"] = round(equity)
+    else:
+        hist.append({"d": today, "v": round(equity)})
+    st["hist"] = hist[-400:]
     _save(st)
     positions = []
     for code, p in st["pos"].items():
@@ -414,6 +422,7 @@ def update(results: list[dict], picks: dict, out_dir: str = "public") -> dict:
         "trades": stats["all"]["n"], "win_trades": stats["all"]["win"],
         "stats": stats,                    # 승률·평균R(전술/신선도별) + 예측대비 편차
         "closed": st.get("closed", [])[:30],   # 청산 기록 — 계획 vs 실제 비교용
+        "hist": st.get("hist", []),        # 수익 곡선용 일별 평가액 스냅샷
         "log": st["log"][:50],
     }
     os.makedirs(os.path.join(out_dir, "api"), exist_ok=True)
