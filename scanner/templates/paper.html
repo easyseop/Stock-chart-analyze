@@ -90,6 +90,23 @@
   .tabbar a .ti{display:block;font-size:20px;line-height:1.15}
   .tabbar a.on{color:#2e6be6}
   @media(max-width:640px){.tabbar{display:flex}body{padding-bottom:64px}}
+  /* 🤖 자동매매 수익 대시보드 */
+  .dash{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:10px 0}
+  .kpi{background:#f8f9fb;border:1px solid #eceff3;border-radius:11px;padding:10px 8px;text-align:center}
+  .kpi b{display:block;font-size:18px;letter-spacing:-.4px;font-variant-numeric:tabular-nums}
+  .kpi span{font-size:10.5px;color:#8b95a1;font-weight:600}
+  .kpi b.up{color:#f04452}.kpi b.dn{color:#3182f6}.kpi b.ac{color:#2e6be6}
+  @media(max-width:520px){.dash{grid-template-columns:repeat(2,1fr)}}
+  .eqwrap{background:#fff;border:1px solid #eceff3;border-radius:11px;padding:12px 12px 8px;margin-bottom:10px}
+  .eqwrap .eh{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px}
+  .eqwrap .eh b{font-size:13px}.eqwrap .eh span{font-size:11px;color:#8b95a1}
+  .eqsvg{width:100%;height:120px;display:block}
+  .modebars{margin:2px 0 4px}
+  .mb{display:flex;align-items:center;gap:8px;font-size:12px;margin:5px 0}
+  .mb .lbl{width:56px;color:#475569;font-weight:600;flex:0 0 auto}
+  .mb .track{flex:1;height:14px;background:#eef1f5;border-radius:999px;overflow:hidden;position:relative}
+  .mb .fill{height:100%;border-radius:999px}
+  .mb .val{width:88px;text-align:right;color:#475569;font-variant-numeric:tabular-nums;flex:0 0 auto;font-size:11px}
 </style></head><body>
 <header><a href="index.html">&larr; 홈</a>
 <h1>💰 모의투자 <span style="font-size:13px">가상자금 페이퍼 트레이딩</span></h1></header>
@@ -101,6 +118,20 @@
     <h2>🤖 클로드 자동 매매 <span class="cnt">시드 1억 · 15분마다 전술대로 스스로 진입·청산</span></h2>
     <div class="sumv" id="asumv">–</div>
     <div class="sub" id="asumsub"></div>
+    <!-- KPI 타일 -->
+    <div class="dash" id="adash" style="display:none">
+      <div class="kpi"><b id="k_ret">–</b><span>수익률</span></div>
+      <div class="kpi"><b id="k_win">–</b><span>승률</span></div>
+      <div class="kpi"><b id="k_r">–</b><span>평균 R</span></div>
+      <div class="kpi"><b id="k_pos">–</b><span>보유·대기</span></div>
+    </div>
+    <!-- 수익 곡선 -->
+    <div class="eqwrap" id="aeqwrap" style="display:none">
+      <div class="eh"><b>📈 수익 곡선</b><span id="aeqsub"></span></div>
+      <svg class="eqsvg" id="aeqsvg" viewBox="0 0 600 120" preserveAspectRatio="none"></svg>
+    </div>
+    <!-- 전술별 성적 막대 -->
+    <div class="modebars" id="amodes"></div>
     <div id="astat" style="margin-top:6px;font-size:12px;color:#334155;background:#f8fafc;border:1px solid #e2e8f0;border-radius:9px;padding:8px 11px;line-height:1.7;display:none"></div>
     <div id="apos" style="margin-top:8px"></div>
     <div id="apend"></div>
@@ -358,14 +389,68 @@ __TABBAR__
   }
   // ── 🤖 클로드 자동 매매(빌드 시점 주입) — 읽기 전용 표시 ──
   var AUTOP=__AUTOP__;
+  function drawEquity(hist){
+    var wrap=document.getElementById('aeqwrap'), svg=document.getElementById('aeqsvg');
+    if(!hist||hist.length<2){wrap.style.display='none';return;}
+    wrap.style.display='block';
+    var W=600,H=120,pad=8;
+    var vs=hist.map(function(x){return x.v;});
+    var base=AUTOP.start;
+    var mn=Math.min.apply(null,vs.concat([base])), mx=Math.max.apply(null,vs.concat([base]));
+    var rng=(mx-mn)||1;
+    function X(i){return pad+i*(W-2*pad)/(hist.length-1);}
+    function Y(v){return pad+(H-2*pad)*(1-(v-mn)/rng);}
+    var last=vs[vs.length-1], up=last>=base;
+    var col=up?'#f04452':'#3182f6';          // 한국식: 이익=빨강 / 손실=파랑
+    var line=hist.map(function(x,i){return X(i).toFixed(1)+','+Y(x.v).toFixed(1);}).join(' ');
+    var area=pad+','+ (H-pad) +' '+line+' '+(W-pad)+','+(H-pad);
+    var bY=Y(base).toFixed(1);
+    svg.innerHTML=
+      '<defs><linearGradient id="eg" x1="0" y1="0" x2="0" y2="1">'
+      +'<stop offset="0" stop-color="'+col+'" stop-opacity="0.18"/>'
+      +'<stop offset="1" stop-color="'+col+'" stop-opacity="0"/></linearGradient></defs>'
+      +'<line x1="'+pad+'" y1="'+bY+'" x2="'+(W-pad)+'" y2="'+bY+'" stroke="#cbd5e1" stroke-width="1" stroke-dasharray="4 4"/>'
+      +'<polygon points="'+area+'" fill="url(#eg)"/>'
+      +'<polyline points="'+line+'" fill="none" stroke="'+col+'" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>'
+      +'<circle cx="'+X(hist.length-1).toFixed(1)+'" cy="'+Y(last).toFixed(1)+'" r="3.5" fill="'+col+'"/>';
+    document.getElementById('aeqsub').textContent='최근 '+hist.length+'일 · 점선=시드 '+won(base);
+  }
+  function drawModes(S){
+    var box=document.getElementById('amodes');
+    if(!S||!S.by_mode||!Object.keys(S.by_mode).length){box.innerHTML='';return;}
+    var lab={full:'⚡즉시',half:'⚖반반',pullback:'⏳눌림'};
+    var html='<div style="font-size:12px;font-weight:700;color:#334155;margin:6px 0 2px">전술별 승률</div>';
+    ['full','half','pullback'].forEach(function(m){
+      var v=S.by_mode[m]; if(!v)return;
+      var c=v.avg_r>=0?'#f04452':'#3182f6';
+      html+='<div class=mb><span class=lbl>'+lab[m]+'</span>'
+        +'<span class=track><span class=fill style="width:'+v.win_rate+'%;background:'+c+'"></span></span>'
+        +'<span class=val>'+v.win_rate+'% · '+(v.avg_r>=0?'+':'')+v.avg_r+'R ('+v.n+')</span></div>';
+    });
+    box.innerHTML=html;
+  }
   function renderAuto(){
-    if(!AUTOP||!AUTOP.start){document.getElementById('asumv').textContent='곧 첫 매매를 시작해요';return;}
+    if(!AUTOP||!AUTOP.start){document.getElementById('asumv').textContent='곧 첫 매매를 시작해요 (월요일 09:00 개장부터)';return;}
     var cls=AUTOP.ret_pct>=0?'up':'dn', sg=AUTOP.ret_pct>=0?'+':'';
     document.getElementById('asumv').innerHTML=won(AUTOP.equity)
       +' <span class="'+cls+'" style="font-size:18px">'+sg+AUTOP.ret_pct.toFixed(2)+'%</span>';
     document.getElementById('asumsub').innerHTML='현금 '+won(AUTOP.cash)
       +' · 보유 '+AUTOP.positions.length+'종목 · 대기 주문 '+AUTOP.pending.length
       +'건 · 청산 '+AUTOP.trades+'회(익절 '+AUTOP.win_trades+') · '+AUTOP.updated+' 기준';
+    // KPI 타일
+    var S=AUTOP.stats||{}, all=S.all||{n:0};
+    document.getElementById('adash').style.display='grid';
+    var kret=document.getElementById('k_ret');
+    kret.textContent=sg+AUTOP.ret_pct.toFixed(2)+'%'; kret.className=AUTOP.ret_pct>=0?'up':'dn';
+    document.getElementById('k_win').textContent=all.n?all.win_rate+'%':'–';
+    document.getElementById('k_win').className='ac';
+    var kr=document.getElementById('k_r');
+    kr.textContent=all.n?((all.avg_r>=0?'+':'')+all.avg_r+'R'):'–';
+    kr.className=all.n&&all.avg_r>=0?'up':(all.n?'dn':'');
+    document.getElementById('k_pos').textContent=AUTOP.positions.length+'·'+AUTOP.pending.length;
+    document.getElementById('k_pos').className='ac';
+    drawEquity(AUTOP.hist);
+    drawModes(S);
     var ap=document.getElementById('apos');
     if(AUTOP.positions.length){
       var rows='<table><tr><th class=l>종목</th><th>수량</th><th>평단</th><th>현재가</th><th>손익</th><th>손절</th></tr>';
