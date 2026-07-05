@@ -4,6 +4,7 @@ name: strategy-backtest
 #   전체 캐시에서 고르게 300종목 표본 · 최근 780봉(약 3년) · 워크포워드 재생.
 #   결과: 로그 표 + 텔레그램 요약 + backtest.json 아티팩트.
 # 실행: 수동(Run workflow) / 이 파일 변경 푸시 / 매주 토요일 07:00 KST.
+#   (첫 발동 — 전체 캐시 300종목 표본으로 임계 튜닝 판단용 데이터 생성)
 on:
   workflow_dispatch:
     inputs:
