@@ -1,7 +1,8 @@
 """클로드 자동 모의투자 — 확정 전략(bot/STRATEGY.md)대로 스스로 진입·관리·청산.
 
 사용자 요청: "타점 오면 알아서 들어가는 시뮬레이션, 시드 1억".
-매 빌드(장중 15분)마다 이번 빌드의 현재가만 사용(추가 네트워크 0):
+매 빌드(장중 15분)마다 이번 빌드의 현재가만 사용(예외: USD/KRW 환율만
+하루 1회 갱신 — 실패해도 직전값 폴백, 빌드는 절대 안 죽음):
 
   ① 청산 관리 — 손절 터치(전량) → +1R(절반 익절+손절 본전) → 목표 2R(잔량) →
      타임 스탑(21일≈15거래일 내 +1R 미도달 시 정리)
@@ -24,9 +25,14 @@ import config
 STATE_PATH = os.path.join("data_cache", "autopaper.json")
 VERSION = 4                # 규칙 바뀌면 +1 → 재시작 (v4: 장중에만 매매 — 주말 진입 무효화)
 START = 100_000_000        # 시드 1억(사용자 지정)
-FX = 1380                  # 달러 환산(모의투자 페이지와 동일 가정)
+FX = 1380                  # 달러 환산 기본값 — 하루 1회 USD/KRW 종가로 갱신(실패 시 유지)
 RISK_PCT = 0.01            # 트레이드당 계좌 1% 리스크
 MAX_POS = 12               # 동시 보유(대기 주문 포함) 상한
+DAY_ENTRY_MAX = 3          # 하루 신규 진입 상한 — 같은 날 신호 몰림(시장 반등 베팅) 차단
+DAILY_LOSS_LIMIT = 0.02    # 일일 실현손실 −2% 도달 시 당일 신규 진입 중지(서킷브레이커)
+STOP_HARD_ATR = 0.5        # 하드 손절 = 손절가 − 0.5×ATR₀ 이탈 시 즉시(급락 방어)
+                           #   그 위~손절가 사이는 2연속 폴링(≈30분) 확인 후 집행(소프트)
+                           #   — 15분 스파이크 휩쏘 방지. 0.5는 검증 전 가설(로그로 비교)
 POS_CAP = 1.0 / 3          # ★ 종목당 최대 비중 = 총자산의 1/3 (사용자 확정 기준).
                            #   한 종목에 시드의 1/3 초과 투입 금지. 사이징 단계에서
                            #   강제하고, 빌드마다 _audit_caps로 사후 재검증(위반 로그).
@@ -77,6 +83,73 @@ def _age(day: str) -> int:
         return (config.today_kst() - datetime.date.fromisoformat(day)).days
     except Exception:
         return 0
+
+
+def _prev_tday() -> str:
+    """직전 거래일(주말 건너뜀) — 손절 쿨다운 '익일' 판정용."""
+    d = config.today_kst() - datetime.timedelta(days=1)
+    while d.weekday() >= 5:
+        d -= datetime.timedelta(days=1)
+    return d.isoformat()
+
+
+def _earnings_d(code: str):
+    """어닝까지 D-일(캐시만, 실패 시 None) — 보유 중 어닝 통과 관리용."""
+    try:
+        from scanner import earnings
+        return earnings.days_until(code)
+    except Exception:
+        return None
+
+
+def _update_fx(st: dict) -> None:
+    """USD/KRW 환산율 — 하루 1회 종가로 갱신(고정 1380의 사이징 왜곡 제거).
+    실패해도 빌드는 절대 안 죽인다: 직전 성공값 → 기본값 순 폴백."""
+    global FX
+    if st.get("fx"):
+        FX = st["fx"]
+    if st.get("fx_d") == _today():
+        return
+    try:
+        import FinanceDataReader as fdr
+        start = (config.today_kst() - datetime.timedelta(days=10)).isoformat()
+        v = float(fdr.DataReader("USD/KRW", start)["Close"].iloc[-1])
+        if 800 < v < 2500:                 # 명백한 이상값 방어
+            FX = v
+            st["fx"], st["fx_d"] = v, _today()
+    except Exception:
+        pass
+
+
+def _cooldown(st: dict, code: str) -> bool:
+    """재진입 쿨다운 — 당일 전량 청산 종목은 당일 금지, 손절(-R) 종결은 +익일까지.
+    15분 폴링 구조에서 손절→즉시 재매수 연쇄(churn)를 차단한다."""
+    today, prev = _today(), _prev_tday()
+    for c in st.get("closed", [])[:80]:
+        if c["code"] != code:
+            continue
+        if c["closed"] == today:
+            return True
+        stopped = any("손절" in (e.get("note") or "") for e in c.get("exits", []))
+        if stopped and c.get("r", 0) < 0 and c["closed"] == prev:
+            return True
+        break                              # 이 종목의 최신 청산만 보면 됨
+    return False
+
+
+def _day_ent(st: dict) -> dict:
+    """오늘 신규 진입 카운터(날짜 바뀌면 리셋)."""
+    de = st.get("day_ent")
+    if not de or de.get("d") != _today():
+        de = {"d": _today(), "n": 0}
+        st["day_ent"] = de
+    return de
+
+
+def _today_pl(st: dict) -> float:
+    """오늘 실현손익(원) — 일일 서킷브레이커 판정용."""
+    return sum(e.get("pl", 0) or 0 for e in st["log"]
+               if e.get("type") == "sell" and e.get("d") == _today())
 
 
 def _krw(v: float, ccy: str) -> float:
@@ -206,6 +279,7 @@ def _buy(st: dict, code: str, name: str, ccy: str, q: int, price: float,
     else:
         st["pos"][code] = {"name": name, "ccy": ccy, "q": q, "q0": q,
                            "avg": price, "entry": price, "stop": stop,
+                           "stop0": stop,               # 진입 시점 손절(MFE·R 기준선)
                            "target": target, "half_done": False,
                            "opened": _today(),
                            "plan": plan, "ctx": ctx,
@@ -252,6 +326,18 @@ def _stats(st: dict) -> dict:
             by_mode[m] = agg(rows)
     fresh = agg([x for x in cl if (x.get("ctx") or {}).get("fresh")])
     stale = agg([x for x in cl if x.get("ctx") and not x["ctx"].get("fresh")])
+    # 전환 단계별(③ vs ④) — 리스크 티어링 결정용 포워드 데이터(2차 검토 Phase 1)
+    by_stage = {}
+    for sn in (3, 4):
+        rows = [x for x in cl if (x.get("ctx") or {}).get("stage") == sn]
+        if rows:
+            by_stage[str(sn)] = agg(rows)
+    # 시장별(KR/US) — KR 음(-) 기대값 divergence 추적용(2차 검토 추가-5)
+    by_ccy = {}
+    for ccy in ("KRW", "USD"):
+        rows = [x for x in cl if x.get("ccy") == ccy]
+        if rows:
+            by_ccy[ccy] = agg(rows)
     # 예측 vs 실제 — 계획 진입가 대비 실제 평단(+ = 비싸게 삼), 계획 손절가 대비 손절 체결가
     slips = [(x["fill"]["avg"] / x["plan"]["entry"] - 1) * 100
              for x in cl if x.get("plan") and x["plan"].get("entry")
@@ -265,6 +351,7 @@ def _stats(st: dict) -> dict:
             if "손절" in e["note"]:
                 stop_slips.append((e["price"] / ps - 1) * 100)
     return {"all": agg(cl), "by_mode": by_mode, "fresh": fresh, "stale": stale,
+            "by_stage": by_stage, "by_ccy": by_ccy,
             "slip_entry_pct": round(sum(slips) / len(slips), 2) if slips else None,
             "slip_stop_pct": (round(sum(stop_slips) / len(stop_slips), 2)
                               if stop_slips else None)}
@@ -313,6 +400,24 @@ def _audit_caps(st: dict, equity: float) -> list[dict]:
             print(f"[autopaper] ⚠️ 비중 위반 {v['name']}({v['code']}): "
                   f"투입 {v['cost']:,}원 = {v['pct']}% > 상한 {v['cap']:,}원(1/3)")
     return violations
+
+
+def _audit_rules(st: dict) -> list[str]:
+    """운영 규칙 사후 감사 — 위반은 로그·공개 JSON에 남긴다(조용한 위반 방지).
+    ① 하루 신규 진입 ≤ DAY_ENTRY_MAX ② 당일 손절 종목이 pos/pending에 재등장 금지."""
+    bad = []
+    de = st.get("day_ent") or {}
+    if de.get("d") == _today() and de.get("n", 0) > DAY_ENTRY_MAX:
+        bad.append(f"하루 신규 진입 {de['n']}건 > 상한 {DAY_ENTRY_MAX}")
+    stopped_today = {e["code"] for e in st["log"]
+                     if e.get("type") == "sell" and e.get("d") == _today()
+                     and "손절" in (e.get("note") or "")}
+    for code in stopped_today:
+        if code in st["pos"] or code in st["pending"]:
+            bad.append(f"{code}: 당일 손절 후 pos/pending 재등장(쿨다운 위반)")
+    for b in bad:
+        print(f"[autopaper] ⚠️ 규칙 위반: {b}")
+    return bad
 
 
 def _report(st: dict, equity: float) -> None:
@@ -368,45 +473,111 @@ def update(results: list[dict], picks: dict, out_dir: str = "public") -> dict:
     """빌드마다 호출 — 전략대로 시뮬레이션 한 스텝 진행하고 요약 반환."""
     st = _load()
     st["_ev"] = []
+    _update_fx(st)                         # 환산율 갱신(하루 1회, 실패 시 직전값)
     px = {}
     for r in results:
         p = (r.get("sr") or {}).get("price")
         if p:
             px[r["code"]] = (r["name"], float(p), r.get("ccy", "USD"))
 
-    # ① 보유 관리 — 손절 → +1R 절반 → 잔량 트레일 래칫 → 타임 스탑 (한 스텝에 하나만)
-    #    장중인 시장의 종목만 — 닫힌 시장 가격은 움직이지도, 체결되지도 않는다
+    # ① 보유 관리 — 하드/소프트 손절 → +1R 절반(2연속 확인) → 잔량 트레일 래칫
+    #    → 어닝 D-1 관리 → 타임 스탑. 장중인 시장의 종목만.
+    #    '터치 즉시' 집행의 15분 스파이크 휩쏘를 줄이기 위해 손절·+1R 모두
+    #    2연속 폴링(≈30분) 확인 후 집행하고, 급락은 하드선(−0.5ATR)이 즉시 방어.
     for code in list(st["pos"].keys()):
         p = st["pos"][code]
         cur = px.get(code)
         if not cur or not _market_open(p["ccy"]):
             continue
         price = cur[1]
-        one_r = p["entry"] + (p["entry"] - p["stop"])
-        if price <= p["stop"]:
+        p["hw"] = max(p.get("hw", price), price)       # MFE 추적(어닝 관리·트레일)
+        stop0 = p.get("stop0") or (p.get("plan") or {}).get("stop") or p["stop"]
+        risk_ps = p["entry"] - stop0                   # 1주당 초기 리스크(R 기준선)
+        one_r = p["entry"] + risk_ps
+        # 하드선: 손절가 − 0.5×ATR₀(급락은 확인 없이 즉시). ATR 미기록(구)은 터치 즉시.
+        hard = p["stop"] - STOP_HARD_ATR * p["atr0"] if p.get("atr0") else p["stop"]
+
+        def _stop_note() -> str:
             if not p["half_done"]:
-                note = "손절"
+                return "손절"
+            return "트레일 스탑" if p["stop"] > p["entry"] else "본전 스탑"
+
+        if price <= hard:
+            _sell(st, code, p["q"], price, _stop_note() + "(급락 즉시)"
+                  if p.get("atr0") else _stop_note())
+        elif price <= p["stop"]:
+            if p.get("stop_hit"):                      # 2연속 확인 — 소프트 집행
+                _sell(st, code, p["q"], price, _stop_note())
             else:
-                note = "트레일 스탑" if p["stop"] > p["entry"] else "본전 스탑"
-            _sell(st, code, p["q"], price, note)
-        elif not p["half_done"] and price >= one_r:
-            _sell(st, code, max(1, p["q"] // 2), price, "+1R 절반 익절")
-            if code in st["pos"]:          # 잔량 있으면 손절→본전(래칫)
-                st["pos"][code]["stop"] = max(p["stop"], p["entry"])
-                st["pos"][code]["half_done"] = True
-                st["pos"][code]["hw"] = max(p.get("hw", price), price)
-        elif p["half_done"] and p.get("atr0"):
-            # 잔량 = ATR 트레일 래칫(2R 캡 없음, 승자를 태움). 스탑 판정은 위에서
-            # '이전 트레일'로 먼저 했으므로 여기서 갱신(선반영 방지 — 백테스트와 동일).
-            p["hw"] = max(p.get("hw", price), price)
-            p["stop"] = max(p["stop"], p["hw"] - TRAIL_ATR * p["atr0"])
-        elif p["half_done"] and price >= p["target"]:
-            # 구(舊) 포지션(진입 ATR 미기록) — 기존 2R 목표 규칙 유지(계좌 연속성)
-            _sell(st, code, p["q"], price, "목표(2R) 도달")
-        elif _age(p["opened"]) >= TIME_STOP_DAYS and not p["half_done"]:
-            _sell(st, code, p["q"], price, "타임 스탑(+1R 미도달)")
+                p["stop_hit"] = True
+        else:
+            p["stop_hit"] = False
+            if not p["half_done"]:
+                if price >= one_r:
+                    if p.get("r1_hit"):                # +1R도 2연속 확인(스파이크 방지)
+                        _sell(st, code, max(1, p["q"] // 2), price, "+1R 절반 익절")
+                        if code in st["pos"]:          # 잔량 → 손절 본전(래칫)
+                            p["stop"] = max(p["stop"], p["entry"])
+                            p["half_done"] = True
+                    else:
+                        p["r1_hit"] = True
+                else:
+                    p["r1_hit"] = False
+            if code not in st["pos"]:
+                continue                               # 전량 청산됨(q=1 절반익절 등)
+            if p["half_done"] and p.get("atr0"):
+                # 잔량 = ATR 트레일 래칫(2R 캡 없음). 스탑 판정은 위에서 '이전
+                # 트레일'로 먼저 했으므로 여기서 갱신(선반영 방지 — 백테스트 동일).
+                p["stop"] = max(p["stop"], p["hw"] - TRAIL_ATR * p["atr0"])
+            elif p["half_done"] and price >= p["target"]:
+                # 구(舊) 포지션(진입 ATR 미기록) — 기존 2R 목표 규칙 유지
+                _sell(st, code, p["q"], price, "목표(2R) 도달")
+                continue
+            # 어닝 D-1 — 갭은 손절선을 무시하므로 쿠션 없는 포지션은 정리.
+            #   MFE<0.5R 전량 / 0.5~1R 절반 / +1R 달성(본전 잠김)은 통과 허용.
+            ed = None if p.get("earn_ok") else _earnings_d(code)
+            if ed is not None and 0 <= ed <= 1:
+                if p["half_done"]:
+                    p["earn_ok"] = True
+                else:
+                    mfe_r = (p["hw"] - p["entry"]) / risk_ps if risk_ps > 0 else 0
+                    if mfe_r < 0.5:
+                        _sell(st, code, p["q"], price,
+                              "어닝 회피 — 전량(진행 없음, MFE<0.5R)")
+                    else:
+                        _sell(st, code, max(1, p["q"] // 2), price,
+                              "어닝 축소 — 절반(MFE<1R)")
+                        if code in st["pos"]:
+                            p["earn_ok"] = True
+            elif _age(p["opened"]) >= TIME_STOP_DAYS and not p["half_done"]:
+                _sell(st, code, p["q"], price, "타임 스탑(+1R 미도달)")
 
     # ② 지정가 대기 체결/취소 (주문 금액은 ③에서 예약해둔 상태 — 체결 실패 시 취소)
+    #    체결 판정 전에 '신호 부패' 재검사 — 주문 생성 후 종목이 하드 제외
+    #    (부실·저유동·폭등 등)에 걸리거나 어닝 D-3에 들어오면 취소.
+    #    "추천 기준으로만 매수한다" 원칙이 대기 주문 경로에서도 유지되게.
+    rmap = {r["code"]: r for r in results}
+    for code in list(st["pending"].keys()):
+        o = st["pending"][code]
+        rot = None
+        r = rmap.get(code)
+        if r is not None:
+            try:
+                from scanner import gates
+                why = gates.exclusion_reasons(r)
+                if why:
+                    rot = "제외 게이트 — " + ",".join(why)
+            except Exception:
+                pass                       # 재검사 실패는 취소 사유 아님(보수적)
+        if rot is None:
+            ed = _earnings_d(code)
+            if ed is not None and 0 <= ed <= 3:
+                rot = "어닝 D-3 이내(신규 진입 금지 구간)"
+        if rot:
+            cur = px.get(code)
+            _log(st, "cancel", code, o["name"], 0, cur[1] if cur else o["limit"],
+                 o["ccy"], "지정가 취소 — 신호 부패: " + rot)
+            del st["pending"][code]
     for code in list(st["pending"].keys()):
         o = st["pending"][code]
         cur = px.get(code)
@@ -418,6 +589,7 @@ def update(results: list[dict], picks: dict, out_dir: str = "public") -> dict:
                  "지정가 취소 — 손절선 이탈(추세 훼손)")
             del st["pending"][code]
         elif price <= o["limit"]:
+            new_pos = code not in st["pos"]
             filled = _buy(st, code, o["name"], o["ccy"], o["q"], o["limit"],
                           o["stop"], o["target"],
                           "눌림 지정가 체결 — " + (o.get("basis") or ""),
@@ -426,6 +598,8 @@ def update(results: list[dict], picks: dict, out_dir: str = "public") -> dict:
             if not filled:
                 _log(st, "cancel", code, o["name"], 0, price, o["ccy"],
                      "지정가 취소 — 현금 부족")
+            elif new_pos:
+                _day_ent(st)["n"] += 1     # 체결로 새 포지션 개시 — 일일 카운트 포함
             del st["pending"][code]
         elif _age(o["created"]) >= PENDING_DAYS:
             _log(st, "cancel", code, o["name"], 0, price, o["ccy"],
@@ -441,10 +615,22 @@ def update(results: list[dict], picks: dict, out_dir: str = "public") -> dict:
     invested = equity - st["cash"]                 # 현재 보유 평가액
     budget = min(st["cash"] - reserved,
                  equity * MAX_INVEST - invested - reserved)
+    day_pl = _today_pl(st)
+    halted = day_pl <= -equity * DAILY_LOSS_LIMIT  # 일일 서킷브레이커
+    if halted:
+        print(f"[autopaper] ⛔ 일일 실현손실 {day_pl:,.0f}원 "
+              f"(한도 −{DAILY_LOSS_LIMIT*100:.0f}%) — 당일 신규 진입 중지")
+    de = _day_ent(st)
     for item in picks.get("now", []):
+        if halted:
+            break
         code = item["code"]
         if code in st["pos"] or code in st["pending"]:
             continue
+        if _cooldown(st, code):
+            continue                       # 손절/청산 직후 재진입 금지(churn 방지)
+        if de["n"] >= DAY_ENTRY_MAX:
+            break                          # 하루 신규 진입 상한 — 몰림 차단
         if len(st["pos"]) + len(st["pending"]) >= MAX_POS:
             break
         if budget <= 0:
@@ -482,6 +668,7 @@ def update(results: list[dict], picks: dict, out_dir: str = "public") -> dict:
                                        "q": oq, "created": _today(), "atr": atr0,
                                        "plan": plan, "ctx": ctx, "basis": basis}
                 budget -= _krw(pb, ccy) * oq           # 주문 금액 예약
+                de["n"] += 1                           # 신규 진입 결정 카운트
                 _log(st, "order", code, item["name"], oq, pb, ccy,
                      "눌림 지정가 주문(추격 금지) — " + basis)
             continue                                   # 눌림가 없으면 관망
@@ -492,6 +679,7 @@ def update(results: list[dict], picks: dict, out_dir: str = "public") -> dict:
             if _buy(st, code, item["name"], ccy, bq, entry, stop, target,
                     "반반 1차 — " + basis, plan=plan, ctx=ctx, atr0=atr0):
                 budget -= per * bq
+                de["n"] += 1
             oq = q - q // 2
             if pb and stop < pb < entry and oq >= 1:
                 oq = min(oq, int(budget // _krw(pb, ccy)))
@@ -507,9 +695,11 @@ def update(results: list[dict], picks: dict, out_dir: str = "public") -> dict:
         if bq >= 1 and _buy(st, code, item["name"], ccy, bq, entry, stop, target,
                             "즉시 분할 — " + basis, plan=plan, ctx=ctx, atr0=atr0):
             budget -= per * bq
+            de["n"] += 1
 
     equity = _equity(st, px)
     cap_viol = _audit_caps(st, equity)   # 종목당 1/3 상한 사후 재검증(위반 로그)
+    rule_viol = _audit_rules(st)         # 일일 상한·쿨다운 사후 재검증(위반 로그)
     _report(st, equity)      # 이번 런 체결 내역 텔레그램 보고(_ev 소비)
     # 수익 곡선용 일별 스냅샷 — 하루 1점(같은 날 재실행 시 최신값으로 갱신)
     hist = st.setdefault("hist", [])
@@ -540,6 +730,8 @@ def update(results: list[dict], picks: dict, out_dir: str = "public") -> dict:
         "trades": stats["all"]["n"], "win_trades": stats["all"]["win"],
         "pos_cap_pct": round(POS_CAP * 100, 1),   # 종목당 비중 상한(=33.3%)
         "cap_violations": cap_viol,        # 1/3 상한 위반(정상 시 빈 배열)
+        "rule_violations": rule_viol,      # 일일상한·쿨다운 위반(정상 시 빈 배열)
+        "fx": round(FX, 2),                # 이번 빌드 적용 환산율
         "stats": stats,                    # 승률·평균R(전술/신선도별) + 예측대비 편차
         "closed": st.get("closed", [])[:30],   # 청산 기록 — 계획 vs 실제 비교용
         "hist": st.get("hist", []),        # 수익 곡선용 일별 평가액 스냅샷
