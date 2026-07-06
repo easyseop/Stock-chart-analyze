@@ -160,6 +160,7 @@ jobs:
           sleep 15
           URL="${{ steps.deploy.outputs.page_url }}"
           curl -sf "${URL}?cb=${{ github.run_id }}" -o /tmp/live.html
-          grep -q "마지막 갱신" /tmp/live.html
-          grep -q "클로드라면" /tmp/live.html
+          # 리디자인 후 홈의 안정적 마커로 검증(옛 '마지막 갱신/클로드라면'은 더보기로 이동/삭제됨)
+          grep -q "전환 스크리너" /tmp/live.html
+          grep -q 'id="rowsrc"' /tmp/live.html
           echo "라이브 정상: $URL"
