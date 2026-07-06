@@ -78,3 +78,6 @@ def market_open(ccy: str) -> bool:
 # 알림 폭주 방지 — 한 실행에서 보낼 최대 개수(우선순위 높은 것부터)
 BUY_ALERT_MAX = 8
 ARRIVAL_ALERT_MAX = 6
+# 하루 총량 상한(매수+도달 제안) — 회당 상한이 깨져도 누적 폭주는 막는 서킷브레이커.
+#   미국장 밤새 ~13회 실행 × 회당 최대 14 = 이론상 180+ → 40으로 캡.
+DAILY_ALERT_BUDGET = 40

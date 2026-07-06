@@ -65,9 +65,29 @@ def _quote(code: str, fallback: float | None) -> float | None:
         return fallback
 
 
+# ── 알림 폭주 방지: 하루 총량 서킷브레이커 ───────────────────────
+#   회당 상한(BUY 8·ARRIVAL 6)은 '1회 실행'만 막는다. 밤새 여러 번 실행되면
+#   누적으로 쏟아질 수 있어(필터가 깨지는 최악의 경우 특히) 하루 총량도 막는다.
+
+def _sent_today(state: dict) -> int:
+    return state.setdefault("day_sent", {}).get(cfg.today_kst(), 0)
+
+
+def _record_sent(state: dict, n: int) -> None:
+    if n <= 0:
+        return
+    dk = state.setdefault("day_sent", {})
+    today = cfg.today_kst()
+    dk[today] = dk.get(today, 0) + n
+    for d in list(dk):                    # 오래된 날짜 정리(3일 초과)
+        if d < cfg.days_ago_kst(3):
+            del dk[d]
+
+
 # ── ① 매수 제안 ──────────────────────────────────────────────────
 
-def check_buy_signals(sigs: list[dict], state: dict, dry_run: bool) -> int:
+def check_buy_signals(sigs: list[dict], state: dict, dry_run: bool,
+                      budget: int = 10 ** 9) -> int:
     sent = state.setdefault("sent_buy", [])
     sent_set = set(sent)
     # '지금 살 수 있는' 종목만(장 열린 시장) + 새 신호만 → 우선순위 높은 것부터 상한까지.
@@ -77,8 +97,9 @@ def check_buy_signals(sigs: list[dict], state: dict, dry_run: bool) -> int:
             and cfg.market_open(s["ccy"])]
     cand.sort(key=lambda s: (not s.get("fresh"), -s.get("stage", 0),
                              -s.get("norm", 0)))          # 갓전환·상위단계 먼저
+    cap = max(0, min(cfg.BUY_ALERT_MAX, budget))          # 회당·일일 상한 중 작은 쪽
     n = 0
-    for s in cand[:cfg.BUY_ALERT_MAX]:
+    for s in cand[:cap]:
         # 간단히 — 종목명 + 진입/손절 + 전술 한 줄. (상세는 웹 차트에서)
         tag = "🔥" if s.get("fresh") else "↗"
         t = s.get("tactic") or {}
@@ -90,6 +111,8 @@ def check_buy_signals(sigs: list[dict], state: dict, dry_run: bool) -> int:
             f"진입 {_fmt(s['entry'], s['ccy'])} · 손절 {_fmt(s['stop'], s['ccy'])}{tac}{earn}\n"
             f'<a href="{cfg.SITE_URL}/stocks/{s["code"]}.html">📈 상세</a>'
         )
+        if not cfg.market_open(s["ccy"]):    # 전송 직전 재확인(장 닫힘 오발송 방지)
+            continue
         if dry_run:
             print(text)
             ok = True
@@ -110,7 +133,8 @@ def check_buy_signals(sigs: list[dict], state: dict, dry_run: bool) -> int:
 ARRIVAL_TOL = 0.01   # 진입가 ±1% 이내면 '도달'로 판정
 
 
-def check_arrivals(sigs: list[dict], state: dict, dry_run: bool) -> int:
+def check_arrivals(sigs: list[dict], state: dict, dry_run: bool,
+                   budget: int = 10 ** 9) -> int:
     today = cfg.today_kst()
     sent = state.setdefault("sent_arrival", {}).setdefault(today, [])
     for d in list(state["sent_arrival"]):
@@ -125,10 +149,13 @@ def check_arrivals(sigs: list[dict], state: dict, dry_run: bool) -> int:
             and s.get("entry")
             and cfg.market_open(s["ccy"])]
     cand.sort(key=lambda s: (not s.get("fresh"), -s.get("stage", 0)))
+    cap = max(0, min(cfg.ARRIVAL_ALERT_MAX, budget))   # 회당·일일 상한 중 작은 쪽
     n = 0
     for s in cand:
-        if n >= cfg.ARRIVAL_ALERT_MAX:
+        if n >= cap:
             break
+        if not cfg.market_open(s["ccy"]):              # 전송 직전 재확인
+            continue
         code = s["code"]
         entry = s.get("entry")
         px = _quote(code, None)
@@ -202,11 +229,22 @@ def run_once(args) -> None:
     data = fetch_signals(args.signals)
     sigs = data.get("signals", [])
     holdings = _load(args.holdings, [])
-    nb = check_buy_signals(sigs, state, args.dry_run)
-    na = check_arrivals(sigs, state, args.dry_run)
+    # 하루 총량 서킷브레이커 — 매수/도달 제안에만 적용(매도는 보유 관리라 예외).
+    budget = max(0, cfg.DAILY_ALERT_BUDGET - _sent_today(state))
+    nb = check_buy_signals(sigs, state, args.dry_run, budget)
+    na = check_arrivals(sigs, state, args.dry_run, budget - nb)
+    _record_sent(state, nb + na)
     ns = check_sell_alerts(holdings, state, args.dry_run)
+    # 예산 소진 첫 순간 1회만 안내(이후 제안은 웹에서) — 조용한 누락 방지
+    if (_sent_today(state) >= cfg.DAILY_ALERT_BUDGET
+            and state.get("budget_notice_day") != cfg.today_kst()):
+        state["budget_notice_day"] = cfg.today_kst()
+        if not args.dry_run:
+            notify.send(f"ℹ️ 오늘 제안 알림 {cfg.DAILY_ALERT_BUDGET}건 도달 — "
+                        f"이후 후보는 웹에서 확인하세요. (폭주 방지 상한)")
     print(f"시그널 {len(sigs)}개 · 보유 {len(holdings)}종목 → "
-          f"매수제안 {nb} · 도달알림 {na} · 매도제안 {ns}건 전송")
+          f"매수제안 {nb} · 도달알림 {na} · 매도제안 {ns}건 전송 "
+          f"(오늘 누적 {_sent_today(state)}/{cfg.DAILY_ALERT_BUDGET})")
     _save(STATE_PATH, state)
 
 
