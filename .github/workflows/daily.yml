@@ -149,7 +149,11 @@ jobs:
           # Pages 배포 큐 정체(잦은 배포로 한도 근접) 시 10분 기본값으론 타임아웃
           #   → 20분으로 여유. 그래도 실패하면 다음 스케줄 런이 자동 재배포.
           timeout: 1200000
-      # Pages 서버 일시 오류 대비 재시도(1회) — 첫 시도 성공이면 건너뜀
+      # Pages 서버 일시 오류 대비 재시도(1회) — 첫 시도 성공이면 건너뜀.
+      #   'try again later'류 장애는 수십 초 안에 안 풀림(실측: 37초 간격 재시도
+      #   연속 실패) → 재시도 전 90초 대기.
+      - if: steps.deploy.outcome == 'failure'
+        run: sleep 90
       - id: deploy-retry
         if: steps.deploy.outcome == 'failure'
         uses: actions/deploy-pages@v4
