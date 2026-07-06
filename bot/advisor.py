@@ -79,29 +79,16 @@ def check_buy_signals(sigs: list[dict], state: dict, dry_run: bool) -> int:
                              -s.get("norm", 0)))          # 갓전환·상위단계 먼저
     n = 0
     for s in cand[:cfg.BUY_ALERT_MAX]:
-        rp = s.get("range_pos")
-        rp_txt = f" · 📍저점권 {rp*100:.0f}%" if rp is not None else ""
-        gap = s.get("break_gap")
-        fresh_txt = ("\n🔥 갓 전환 — 추세선 위 "
-                     f"+{gap*100:.1f}%" if s.get("fresh") and gap is not None
-                     else ("\n↗ 돌파후 진행(승률↓ 참고)" if s.get("fresh") is False
-                           and s.get("stage", 0) >= 3 else ""))
+        # 간단히 — 종목명 + 진입/손절 + 전술 한 줄. (상세는 웹 차트에서)
+        tag = "🔥" if s.get("fresh") else "↗"
+        t = s.get("tactic") or {}
+        tac = f" · {t['label']}" if t.get("label") else ""
         ed = s.get("earnings_d")
-        if ed is not None and 0 <= ed <= 3:
-            fresh_txt += f"\n📅 <b>어닝 D-{ed}</b> — 갭 리스크, 신규 진입 주의"
-        t = s.get("tactic")
-        if t:   # 진입 전술 — 어떻게 들어갈지까지 제안(즉시/반반/눌림 지정가)
-            fresh_txt += f"\n🎯 <b>{t['label']}</b> — {t['desc']}"
+        earn = " · ⚠️어닝임박" if (ed is not None and 0 <= ed <= 3) else ""
         text = (
-            f"🟢 <b>매수 제안</b> — {s['name']}({s['code']})\n"
-            f"단계 {s.get('stage', 0)}{rp_txt}{fresh_txt}\n"
-            f"진입 <b>{_fmt(s['entry'], s['ccy'])}</b> · "
-            f"손절 {_fmt(s['stop'], s['ccy'])} · "
-            f"목표 {_fmt(s['target'], s['ccy'])}\n"
-            f"참고수량(계좌1%리스크): {s.get('shares_1pct', '-')}주\n"
-            f'<a href="{cfg.SITE_URL}/stocks/{s["code"]}.html">📈 차트 보기</a> · '
-            f'<a href="{cfg.HOLDINGS_EDIT_URL}">✍️ 샀으면 보유 등록</a>\n'
-            f"⚠️ 차트 기준 제안 · 투자권유 아님. 주문 전 실시간가 재확인."
+            f"🟢 <b>매수 제안</b> {tag} {s['name']}({s['code']})\n"
+            f"진입 {_fmt(s['entry'], s['ccy'])} · 손절 {_fmt(s['stop'], s['ccy'])}{tac}{earn}\n"
+            f'<a href="{cfg.SITE_URL}/stocks/{s["code"]}.html">📈 상세</a>'
         )
         if dry_run:
             print(text)
@@ -154,11 +141,9 @@ def check_arrivals(sigs: list[dict], state: dict, dry_run: bool) -> int:
             hit, title = True, "돌파 발생 — 저항 넘김"
         if hit:
             text = (
-                f"🎯 <b>{title}</b> — {s['name']}({code})\n"
-                f"현재가 {_fmt(px, s['ccy'])} ↔ 진입가 {_fmt(entry, s['ccy'])}\n"
-                f"손절 {_fmt(s['stop'], s['ccy'])} · 목표 {_fmt(s['target'], s['ccy'])}\n"
-                f'<a href="{cfg.SITE_URL}/stocks/{code}.html">📈 차트 보기</a>\n'
-                f"⚠️ 도달 알림일 뿐 — 지지/안착 확인 후 판단. 투자권유 아님."
+                f"🎯 <b>{title}</b> {s['name']}({code})\n"
+                f"현재가 {_fmt(px, s['ccy'])} · 손절 {_fmt(s['stop'], s['ccy'])}\n"
+                f'<a href="{cfg.SITE_URL}/stocks/{code}.html">📈 상세</a>'
             )
             ok = True if dry_run else notify.send(text)
             if dry_run:
