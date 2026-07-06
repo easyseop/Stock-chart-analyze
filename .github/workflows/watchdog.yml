@@ -43,8 +43,8 @@ jobs:
           else
             age=$(( now - ets ))
             echo "라이브 나이: $((age/60))분 (data-ts=$ets)"
-            if [ "$age" -gt 6000 ]; then
-              stale=1; reason="라이브가 $((age/60))분째 정체(>100분)"
+            if [ "$age" -gt 2700 ]; then
+              stale=1; reason="라이브가 $((age/60))분째 정체(>45분)"
             fi
           fi
 
