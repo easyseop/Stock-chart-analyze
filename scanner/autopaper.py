@@ -420,6 +420,32 @@ def _audit_rules(st: dict) -> list[str]:
     return bad
 
 
+def _report_violations(st: dict, cap_viol: list, rule_viol: list) -> None:
+    """규칙/비중 위반을 텔레그램으로 즉시 에스컬레이션 — 자동매매가 '조용히
+    규칙을 어기는' 것을 사람이 대시보드를 안 봐도 알게 한다.
+
+    같은 위반은 하루 한 번만 알림(15분마다 재알림 방지 — 위반 집합이 바뀌면 재알림).
+    감사(_audit_*)는 이미 매 빌드 도는데, 그 결과가 JSON에만 쌓이고 아무도 안 보던
+    구멍을 메운다(사용자 지적: '발생 전에 대비'해야 한다).
+    """
+    items = ([f"비중 {v['name']}({v['code']}) {v['pct']}%>33%" for v in cap_viol]
+             + list(rule_viol))
+    if not items:
+        return
+    sig = _today() + "|" + "|".join(sorted(items))
+    if st.get("_viol_sig") == sig:
+        return                             # 같은 위반 이미 알림함(당일)
+    st["_viol_sig"] = sig
+    text = ("🚨 <b>자동매매 규칙 위반 감지</b> (즉시 점검)\n"
+            + "\n".join("· " + x for x in items)
+            + "\n→ 사이징·쿨다운·상한 로직 확인 필요.")
+    try:
+        from bot import notify
+        notify.send(text)
+    except Exception:
+        pass
+
+
 def _report(st: dict, equity: float) -> None:
     """이번 런의 매수/매도/주문을 텔레그램으로 보고(체결 있을 때만).
 
@@ -700,6 +726,7 @@ def update(results: list[dict], picks: dict, out_dir: str = "public") -> dict:
     equity = _equity(st, px)
     cap_viol = _audit_caps(st, equity)   # 종목당 1/3 상한 사후 재검증(위반 로그)
     rule_viol = _audit_rules(st)         # 일일 상한·쿨다운 사후 재검증(위반 로그)
+    _report_violations(st, cap_viol, rule_viol)   # 위반 시 텔레그램 즉시 경보
     _report(st, equity)      # 이번 런 체결 내역 텔레그램 보고(_ev 소비)
     # 수익 곡선용 일별 스냅샷 — 하루 1점(같은 날 재실행 시 최신값으로 갱신)
     hist = st.setdefault("hist", [])
