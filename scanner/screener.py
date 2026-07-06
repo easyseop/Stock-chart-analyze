@@ -534,6 +534,7 @@ def _pick_item(r: dict, th: dict) -> dict:
         "entry": round(float(r.get("entry") or 0), 4),
         "stop": round(float((risk.get("stop") or 0)), 4),
         "target": round(float((risk.get("target") or 0)), 4),
+        "atr": round(float(risk.get("atr") or 0), 4),  # 트레일링 스탑용 진입 시점 ATR
         "range_pos": round(float(r.get("range_pos", 0.5)) * 100),  # 52주 범위 내 %
         "fresh": fresh, "freshness": fresh_label,
         "break_gap": round(gap * 100, 1) if gap is not None else None,

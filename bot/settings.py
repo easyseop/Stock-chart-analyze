@@ -51,17 +51,28 @@ def days_ago_kst(n: int) -> str:
 
 def market_open(ccy: str) -> bool:
     """지금 해당 시장이 장중인가 — 알림을 '지금 행동 가능한' 종목만 보내려는 필터.
-    판정은 UTC(미국장이 KST로는 자정을 넘어 요일 경계가 꼬임). autopaper와 동일 규칙.
+    autopaper._market_open과 동일 규칙(둘 다 바꿀 것).
       한국주: 평일 00:00~06:30 UTC(=09:00~15:30 KST)
-      미국주: 평일 13:30~21:00 UTC(=밤 22:30~새벽 05:00 KST)
+      미국주: 미 동부시간(ET) 평일 09:30~16:00 — 서머타임 정확 반영
     """
-    now = _dt.datetime.utcnow()
-    if now.weekday() >= 5:
-        return False
-    hm = now.hour * 60 + now.minute
+    now = _dt.datetime.now(_dt.timezone.utc)
     if ccy == "KRW":
+        if now.weekday() >= 5:
+            return False
+        hm = now.hour * 60 + now.minute
         return 0 <= hm <= 390
-    return 810 <= hm <= 1260
+    try:
+        from zoneinfo import ZoneInfo
+        et = now.astimezone(ZoneInfo("America/New_York"))
+        if et.weekday() >= 5:
+            return False
+        hm = et.hour * 60 + et.minute
+        return 570 <= hm < 960
+    except Exception:                 # tzdata 없으면 기존 고정창 폴백
+        if now.weekday() >= 5:
+            return False
+        hm = now.hour * 60 + now.minute
+        return 810 <= hm <= 1260
 
 
 # 알림 폭주 방지 — 한 실행에서 보낼 최대 개수(우선순위 높은 것부터)
