@@ -424,6 +424,9 @@ def risk_levels(df: pd.DataFrame, entry: float, defense: float, ccy: str,
         stop = max(cands) if cands else atr_stop
     # 안전장치: 손절은 진입보다 최소 MIN_STOP_PCT(기본 3%) 아래 — 너무 가까우면 휩쏘
     stop = min(stop, entry * (1 - config.MIN_STOP_PCT))
+    # 안전장치②: 최소 1.5×ATR 아래 — %는 충분해도 고변동 종목에선 노이즈 안쪽일 수
+    # 있음(계측: 폭<1.5ATR 손절의 40%가 10일 내 +1R 회복 = 휩쏘). 둘 중 넓은 쪽.
+    stop = min(stop, entry - config.MIN_STOP_ATR * a)
 
     risk_per_share = entry - stop
     target = entry + config.RR_TARGET * risk_per_share

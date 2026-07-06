@@ -237,6 +237,134 @@ def cli_exit_variants() -> None:
         print("저장:", a.out)
 
 
+def _last_swing_high(d, i: int, k: int = 5, lookback: int = 120) -> float | None:
+    """i 시점에서 사용 가능한(우측 k봉 확정) 직전 스윙고점 — look-ahead 없음."""
+    hi = d["High"]
+    lo_i = max(k, i - lookback)
+    best = None
+    for j in range(i - k - 1, lo_i - 1, -1):          # 최근 것부터
+        seg = hi.iloc[j - k:j + k + 1]
+        if float(hi.iloc[j]) >= float(seg.max()):
+            best = float(hi.iloc[j])
+            break
+    return best
+
+
+def simulate_v2_experiments(code: str, frames: dict, meta: dict, bench=None,
+                            warmup: int = 520, stride: int = 3,
+                            lookback: int = 780, max_hold: int = 60) -> list[dict]:
+    """v2 후보 규칙 2건을 같은 이벤트에서 측정(라이브 규칙 변경 없음 — 계측 전용).
+
+    ① 손절 1.5ATR 하한: stopB = min(nearest, fill−1.5ATR). 하한 적용으로
+       손절폭이 12%를 넘으면 now 게이트 탈락 → B팔은 '트레이드 없음'(missed).
+       두 팔 모두 라이브와 같은 청산(트레일 무제한 C)으로 비교.
+    ② ③+ 단계: 진입봉 종가가 '직전 확정 스윙고점'(우측 5봉 확정, look-ahead
+       없음) 위인가 — ③을 ③/③+로 갈라 성과 분리(리스크 티어 후보 측정).
+    """
+    d = frames["D"]
+    n = len(d)
+    i = max(warmup, n - lookback)
+    out = []
+    while i < n - 3:
+        sub = d.iloc[:i + 1]
+        bsub = bench.loc[:sub.index[-1]] if bench is not None else None
+        try:
+            res = analyze(data.frames_from_daily(sub), meta, bench=bsub)
+        except Exception:
+            i += stride
+            continue
+        if _gates.classify(res)["group"] != "now":
+            i += stride
+            continue
+        ei = i + 1
+        fill = float(d["Open"].iloc[ei])
+        stop_a = float(res["risk"]["stop"])
+        if not (fill > stop_a > 0):
+            i += stride
+            continue
+        atr = _atr_at(d, ei)
+        # ① 손절 1.5ATR 하한 팔(B)
+        stop_b = min(stop_a, fill - 1.5 * atr) if atr > 0 else stop_a
+        b_width = (fill - stop_b) / fill
+        b_missed = b_width >= config.MAX_STOP_NOW      # 하한 적용 → 게이트 탈락
+        ra, xj, _ = _ladder_exit(d, ei, fill, stop_a, "C", max_hold)
+        rb = None
+        if not b_missed:
+            rb, _, _ = _ladder_exit(d, ei, fill, stop_b, "C", max_hold)
+        # ② ③+ 판정 — 신호봉(i) 종가가 직전 확정 스윙고점 위인가
+        swing = _last_swing_high(d, i)
+        stage3p = bool(swing is not None
+                       and float(d["Close"].iloc[i]) > swing)
+        out.append({"code": code, "d": str(d.index[ei].date()),
+                    "stage": res.get("transition_stage", 0),
+                    "stage3p": stage3p,
+                    "stop_width_atr": round((fill - stop_a) / atr, 2) if atr > 0 else None,
+                    "floored": bool(stop_b < stop_a),
+                    "b_missed": b_missed,
+                    "rA": round(ra, 2),
+                    "rB": round(rb, 2) if rb is not None else None})
+        i = xj + 1
+    return out
+
+
+def cli_v2_experiments() -> None:
+    """python -c "from scanner.backtest import cli_v2_experiments; cli_v2_experiments()" \
+        -- [--stride 3] [--out ...]"""
+    import argparse
+    import json as _json
+    import sys
+    from scanner import cache as _cache
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--stride", type=int, default=3)
+    ap.add_argument("--lookback", type=int, default=780)
+    ap.add_argument("--out", default="")
+    a = ap.parse_args([x for x in sys.argv[1:] if x != "--"])
+    ev = []
+    for code in sorted(_cache.cached_codes()):
+        try:
+            f = _cache.frames(code, refresh=False)
+        except Exception:
+            continue
+        if len(f.get("D", [])) < 540:
+            continue
+        ev += simulate_v2_experiments(
+            code, f, {"code": code, "name": code,
+                      "ccy": "KRW" if code.isdigit() else "USD"},
+            stride=a.stride, lookback=a.lookback)
+
+    def agg(rows, key):
+        rs = [x[key] for x in rows if x.get(key) is not None]
+        if not rs:
+            return "0건"
+        w = sum(1 for r in rs if r > 0)
+        return (f"{len(rs):>4}건 · 승률 {w/len(rs)*100:5.1f}% · "
+                f"기대값 {sum(rs)/len(rs):+.3f}R")
+
+    print("=" * 70)
+    print(f"◆ v2 후보 규칙 측정 — 같은 이벤트 {len(ev)}건 (청산=라이브 트레일 C)")
+    print("\n[①] 손절 1.5ATR 하한 A/B:")
+    aff = [x for x in ev if x["floored"]]
+    print(f"  하한이 실제로 물린 이벤트: {len(aff)}건 "
+          f"(그중 12% 컷 탈락 {sum(1 for x in aff if x['b_missed'])}건)")
+    if aff:
+        print(f"    A(현행 nearest)  {agg(aff, 'rA')}")
+        print(f"    B(1.5ATR 하한)   {agg(aff, 'rB')}  ※미체결 제외")
+        per_ev = sum((x['rB'] or 0) for x in aff) / len(aff)
+        print(f"    B 이벤트당(미체결=0R): {per_ev:+.3f}R vs "
+              f"A {sum(x['rA'] for x in aff)/len(aff):+.3f}R")
+    print("\n[②] ③ 세분화(직전 스윙고점 종가 돌파 = ③+):")
+    s3 = [x for x in ev if x["stage"] == 3]
+    print(f"  ③  (미돌파): {agg([x for x in s3 if not x['stage3p']], 'rA')}")
+    print(f"  ③+ (돌파)  : {agg([x for x in s3 if x['stage3p']], 'rA')}")
+    print(f"  ④          : {agg([x for x in ev if x['stage'] == 4], 'rA')}")
+    print("=" * 70)
+    if a.out:
+        os.makedirs(os.path.dirname(a.out) or ".", exist_ok=True)
+        with open(a.out, "w", encoding="utf-8") as fp:
+            _json.dump(ev, fp, ensure_ascii=False)
+        print("저장:", a.out)
+
+
 def simulate_gates(code: str, frames: dict, meta: dict, bench=None,
                    warmup: int = 520, stride: int = 3,
                    lookback: int = 780, max_hold: int = 60) -> list[dict]:
