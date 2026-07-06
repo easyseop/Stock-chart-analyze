@@ -19,6 +19,8 @@ import datetime
 import json
 import os
 
+import config
+
 STATE_PATH = os.path.join("data_cache", "autopaper.json")
 VERSION = 4                # 규칙 바뀌면 +1 → 재시작 (v4: 장중에만 매매 — 주말 진입 무효화)
 START = 100_000_000        # 시드 1억(사용자 지정)
@@ -32,7 +34,7 @@ PENDING_DAYS = 21          # 지정가 대기 만료
 
 
 def _today() -> str:
-    return datetime.date.today().isoformat()
+    return config.today_kst().isoformat()      # 날짜 스탬프는 KST(한국 사용자 기준)
 
 
 def _market_open(ccy: str) -> bool:
@@ -41,6 +43,8 @@ def _market_open(ccy: str) -> bool:
 
     한국주: 평일 09:00~15:30 KST(=00:00~06:30 UTC)
     미국주: 평일 정규장(서머타임 포함 넉넉히 13:30~21:00 UTC)
+    ※ 판정은 UTC로 한다(의도된 예외) — 미국장이 KST로는 밤 22:30~새벽 05:00로
+      자정을 넘어 주말·요일 경계가 꼬이기 때문. 날짜 스탬프만 KST(_today).
     """
     now = datetime.datetime.utcnow()
     if now.weekday() >= 5:                # 토·일 — 어떤 시장도 안 열림
@@ -53,7 +57,7 @@ def _market_open(ccy: str) -> bool:
 
 def _age(day: str) -> int:
     try:
-        return (datetime.date.today() - datetime.date.fromisoformat(day)).days
+        return (config.today_kst() - datetime.date.fromisoformat(day)).days
     except Exception:
         return 0
 

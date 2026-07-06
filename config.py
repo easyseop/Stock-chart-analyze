@@ -1,5 +1,21 @@
 """스캐너 전역 설정 — 종목 리스트 / 점수 임계값 / 국면 가중치 / 리스크 파라미터."""
 
+import datetime as _dt
+
+# 한국시간(KST) — 화면 표시·날짜 스탬프 전부 이 기준. GitHub 러너가 UTC라도
+#   '오늘'·'마지막 갱신'을 한국 사용자 시계에 맞춘다.
+#   (단, 장중 판정 _market_open은 UTC 유지 — 미국장이 KST로는 자정을 넘어가
+#    주말·요일 경계가 꼬이기 때문. 그건 의도된 예외.)
+KST = _dt.timezone(_dt.timedelta(hours=9))
+
+
+def now_kst() -> "_dt.datetime":
+    return _dt.datetime.now(KST)
+
+
+def today_kst() -> "_dt.date":
+    return now_kst().date()
+
 # ─────────────────────────────────────────────────────────────
 # 1. 분석 종목 (10개 슬롯: 현재 5개 확정 + 5개 공란)
 #    code  : FinanceDataReader 심볼 (미국=티커, 한국=6자리 코드)

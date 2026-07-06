@@ -46,8 +46,9 @@ def stats(st: dict | None = None) -> dict:
 
 def update(results: list[dict], picks: dict, out_dir: str) -> dict:
     """빌드 시 호출 — 기록 갱신 + public/api/track.json 발행. 집계 반환."""
+    import config
     st = _load()
-    today = datetime.date.today().isoformat()
+    today = config.today_kst().isoformat()
     px = {r["code"]: (r.get("sr") or {}).get("price") for r in results}
     open_codes = {e["code"] for e in st["entries"] if e.get("status") == "open"}
 
@@ -91,8 +92,8 @@ def update(results: list[dict], picks: dict, out_dir: str) -> dict:
     os.makedirs(os.path.join(out_dir, "api"), exist_ok=True)
     with open(os.path.join(out_dir, "api", "track.json"), "w",
               encoding="utf-8") as fp:
-        json.dump({"generated_at": datetime.datetime.utcnow()
-                   .strftime("%Y-%m-%dT%H:%M:%SZ"),
+        json.dump({"generated_at": config.now_kst()
+                   .strftime("%Y-%m-%dT%H:%M:%S+09:00"),
                    "stats": s, "recent": st["entries"][-60:]},
                   fp, ensure_ascii=False, indent=1)
     return s
