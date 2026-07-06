@@ -119,10 +119,10 @@ ARRIVAL_TOL = 0.01   # 진입가 ±1% 이내면 '도달'로 판정
 
 
 def check_arrivals(sigs: list[dict], state: dict, dry_run: bool) -> int:
-    today = datetime.date.today().isoformat()
+    today = cfg.today_kst()
     sent = state.setdefault("sent_arrival", {}).setdefault(today, [])
     for d in list(state["sent_arrival"]):
-        if d < (datetime.date.today() - datetime.timedelta(days=7)).isoformat():
+        if d < cfg.days_ago_kst(7):
             del state["sent_arrival"][d]
     n = 0
     for s in sigs:
@@ -163,11 +163,11 @@ def check_arrivals(sigs: list[dict], state: dict, dry_run: bool) -> int:
 # ── ② 매도 제안(손절/목표) ───────────────────────────────────────
 
 def check_sell_alerts(holdings: list[dict], state: dict, dry_run: bool) -> int:
-    today = datetime.date.today().isoformat()
+    today = cfg.today_kst()
     sent_today = state.setdefault("sent_sell", {}).setdefault(today, [])
     # 오래된 날짜 정리(7일 초과)
     for d in list(state["sent_sell"]):
-        if d < (datetime.date.today() - datetime.timedelta(days=7)).isoformat():
+        if d < cfg.days_ago_kst(7):
             del state["sent_sell"][d]
     n = 0
     for h in holdings:

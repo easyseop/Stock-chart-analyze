@@ -175,7 +175,7 @@ def status(st: dict, bk) -> None:
 
 
 def run_once(args) -> None:
-    today = datetime.date.today().isoformat()
+    today = cfg.today_kst()
     bk = brokers.make(cfg.BROKER, offline=args.offline)
     st = load_state()
     data = fetch_signals(args.signals)

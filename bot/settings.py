@@ -32,3 +32,15 @@ POLL_SEC = 300               # --loop 모드 폴링 주기(초)
 # ── 상태 파일(봇 로컬 저장 — git 추적 안 함) ────────────────────
 STATE_PATH = "bot/state.json"
 SEEN_PATH = "bot/seen.json"
+
+# ── 한국시간(KST) — 날짜 스탬프/일지 기준(러너가 UTC라도 한국 시계로) ──
+import datetime as _dt
+KST = _dt.timezone(_dt.timedelta(hours=9))
+
+
+def today_kst() -> str:
+    return _dt.datetime.now(KST).date().isoformat()
+
+
+def days_ago_kst(n: int) -> str:
+    return (_dt.datetime.now(KST).date() - _dt.timedelta(days=n)).isoformat()

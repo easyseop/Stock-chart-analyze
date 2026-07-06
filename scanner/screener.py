@@ -334,8 +334,8 @@ def _index(results: list[dict], tstats: dict | None = None,
         cached, uni = len(results), max(len(results), 1)
     uni = max(uni, cached)     # 즉석조회 추가분으로 수집>유니버스가 될 수 있음 — 표기 꼬임 방지
     pct = min(100, round(cached / uni * 100))
-    updated = datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M UTC")
     import config
+    updated = config.now_kst().strftime("%Y-%m-%d %H:%M KST")
     ts = int(__import__("time").time())            # 클라이언트 'N분 전' 표시용
     tokens = {
         "__ROWS__": _rows(results), "__CHIPS__": chips,
@@ -455,11 +455,11 @@ def _signals_json(results: list[dict]) -> str:
     id = code+날짜+그룹 → 재빌드돼도 같은 시그널은 같은 id(중복 주문 방지 멱등키).
     사람용 카드와 같은 gates 큐레이션 — 여기서 조건을 추가/변형하지 말 것.
     """
-    import datetime
     import json
+    import config
     from scanner import gates
-    now_utc = datetime.datetime.utcnow()
-    day = now_utc.strftime("%Y-%m-%d")
+    now = config.now_kst()
+    day = now.strftime("%Y-%m-%d")            # 시그널 id 날짜 = KST 기준
     sigs = []
     for r in results:
         c = gates.classify(r)
@@ -490,7 +490,7 @@ def _signals_json(results: list[dict]) -> str:
     sigs.sort(key=lambda s: (s["group"], not s["fresh"], -s["stage"], -s["norm"]))
     return json.dumps({
         "version": 1,
-        "generated_at": now_utc.strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "generated_at": now.strftime("%Y-%m-%dT%H:%M:%S+09:00"),   # KST
         "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
         "signals": sigs,
     }, ensure_ascii=False, indent=1)
