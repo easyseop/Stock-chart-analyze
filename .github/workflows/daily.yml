@@ -21,6 +21,7 @@ on:
       - "main.py"
       - "config.py"
       - ".github/workflows/daily.yml"
+      - "trigger/**"     # 백업 스케줄러(클로드 예약 세션)의 강제 빌드 킥 전용 경로
   schedule:
     # ※ 주기를 바꾸면 config.UPDATE_INTERVAL_MIN(홈 안내문 표시값)도 함께 바꿀 것.
     - cron: "*/15 0-6 * * 1-5"    # 한국 장중(09~15:30 KST) 15분마다 — 한국주 갱신
