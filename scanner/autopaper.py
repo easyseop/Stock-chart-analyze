@@ -8,7 +8,7 @@
   ② 지정가 체결 — 반반/눌림 전술의 대기 주문이 눌림가에 닿으면 체결,
      손절가까지 빠지면 취소(추세 훼손), 21일 지나면 만료
   ③ 신규 진입 — '지금 진입' 추천을 전술대로: ⚡즉시=전량 / ⚖반반=절반+절반 지정가 /
-     ⏳눌림=지정가만. 수량은 계좌 1% 리스크, 종목당 평가 20% 상한
+     ⏳눌림=지정가만. 수량은 계좌 1% 리스크, 종목당 총자산의 1/3 상한(사용자 확정)
 
 상태: data_cache/autopaper.json (actions/cache 영속) · 공개: public/api/paper_auto.json
 track.py(추천 채점)와 다른 점: 여기는 '계좌'를 굴린다 — 현금·비중·복리까지 시뮬레이션.
@@ -27,7 +27,9 @@ START = 100_000_000        # 시드 1억(사용자 지정)
 FX = 1380                  # 달러 환산(모의투자 페이지와 동일 가정)
 RISK_PCT = 0.01            # 트레이드당 계좌 1% 리스크
 MAX_POS = 12               # 동시 보유(대기 주문 포함) 상한
-POS_CAP = 0.15             # 종목당 최대 평가 비중(타이트 손절 종목 과대 매수 방지)
+POS_CAP = 1.0 / 3          # ★ 종목당 최대 비중 = 총자산의 1/3 (사용자 확정 기준).
+                           #   한 종목에 시드의 1/3 초과 투입 금지. 사이징 단계에서
+                           #   강제하고, 빌드마다 _audit_caps로 사후 재검증(위반 로그).
 MAX_INVEST = 0.85          # 총 투자 한도 — 15%는 현금 버퍼(눌림 체결·신규 신호용)
 TIME_STOP_DAYS = 21        # 캘린더 21일 ≈ 15거래일(config.TIME_STOP_DAYS)
 PENDING_DAYS = 21          # 지정가 대기 만료
@@ -263,6 +265,39 @@ def _fmt_native(v: float, ccy: str) -> str:
     return f"{v:,.0f}원" if ccy == "KRW" else f"${v:,.2f}"
 
 
+def _audit_caps(st: dict, equity: float) -> list[dict]:
+    """사후 재검증 — 어떤 종목도 '투입 원가(보유+대기 합산)'가 총자산의 1/3을
+    넘지 않는지 빌드마다 재확인. 사이징에서 이미 막지만, 반반 전술이 pos+pending에
+    동시에 걸리는 등 경로가 많아 '실제로 안 넘는지'를 독립적으로 감사한다.
+
+    기준은 '투입 원가'(보유=평단×수량, 대기=지정가×수량). 진입 후 주가가 올라
+    평가액이 1/3을 넘는 것은 정상(승자를 강제로 자르지 않음) — 감사 대상 아님.
+    위반이 있으면 로그로 남기고(조용한 룰 위반 방지) 목록을 반환한다.
+    """
+    cap = equity * POS_CAP
+    codes = set(st["pos"]) | set(st["pending"])
+    violations = []
+    for code in codes:
+        cost = 0.0
+        p = st["pos"].get(code)
+        if p:
+            cost += _krw(p["avg"], p["ccy"]) * p["q"]        # 보유 원가
+        o = st["pending"].get(code)
+        if o:
+            cost += _krw(o["limit"], o["ccy"]) * o["q"]      # 대기 주문 원가
+        # 1원 단위 반올림·환율 오차 흡수용 0.5% 여유
+        if cost > cap * 1.005:
+            name = (p or o).get("name", code)
+            violations.append({"code": code, "name": name,
+                               "cost": round(cost), "cap": round(cap),
+                               "pct": round(cost / equity * 100, 1)})
+    if violations:
+        for v in violations:
+            print(f"[autopaper] ⚠️ 비중 위반 {v['name']}({v['code']}): "
+                  f"투입 {v['cost']:,}원 = {v['pct']}% > 상한 {v['cap']:,}원(1/3)")
+    return violations
+
+
 def _report(st: dict, equity: float) -> None:
     """이번 런의 매수/매도/주문을 텔레그램으로 보고(체결 있을 때만).
 
@@ -398,7 +433,8 @@ def update(results: list[dict], picks: dict, out_dir: str = "public") -> dict:
         per = _krw(entry, ccy)                         # 1주 가격(원)
         risk_share = _krw(entry - stop, ccy)           # 1주당 리스크(원)
         q = int(equity * RISK_PCT // risk_share) if risk_share > 0 else 0
-        q = min(q, int(equity * POS_CAP // per))       # 종목당 20% 상한
+        cap_q = int(equity * POS_CAP // per)           # 종목당 총자산 1/3 상한(주수)
+        q = min(q, cap_q)                              # 리스크·비중 중 더 빡빡한 쪽
         if q < 1:
             continue
         t = item.get("tactic") or {}
@@ -444,6 +480,7 @@ def update(results: list[dict], picks: dict, out_dir: str = "public") -> dict:
             budget -= per * bq
 
     equity = _equity(st, px)
+    cap_viol = _audit_caps(st, equity)   # 종목당 1/3 상한 사후 재검증(위반 로그)
     _report(st, equity)      # 이번 런 체결 내역 텔레그램 보고(_ev 소비)
     # 수익 곡선용 일별 스냅샷 — 하루 1점(같은 날 재실행 시 최신값으로 갱신)
     hist = st.setdefault("hist", [])
@@ -472,6 +509,8 @@ def update(results: list[dict], picks: dict, out_dir: str = "public") -> dict:
         "positions": positions,
         "pending": [{"code": c, **o} for c, o in st["pending"].items()],
         "trades": stats["all"]["n"], "win_trades": stats["all"]["win"],
+        "pos_cap_pct": round(POS_CAP * 100, 1),   # 종목당 비중 상한(=33.3%)
+        "cap_violations": cap_viol,        # 1/3 상한 위반(정상 시 빈 배열)
         "stats": stats,                    # 승률·평균R(전술/신선도별) + 예측대비 편차
         "closed": st.get("closed", [])[:30],   # 청산 기록 — 계획 vs 실제 비교용
         "hist": st.get("hist", []),        # 수익 곡선용 일별 평가액 스냅샷
