@@ -33,6 +33,10 @@ POS_CAP = 1.0 / 3          # ★ 종목당 최대 비중 = 총자산의 1/3 (사
 MAX_INVEST = 0.85          # 총 투자 한도 — 15%는 현금 버퍼(눌림 체결·신규 신호용)
 TIME_STOP_DAYS = 21        # 캘린더 21일 ≈ 15거래일(config.TIME_STOP_DAYS)
 PENDING_DAYS = 21          # 지정가 대기 만료
+TRAIL_ATR = 3.0            # +1R 절반 익절 후 잔량 트레일 = max(본전, 최고가−3×ATR).
+                           #   2R 고정 목표 대신 승자를 태움 — 110종목 174이벤트 A/B/C
+                           #   백테스트에서 C(트레일 무제한 +0.131R) > A(2R 캡 +0.120R)
+                           #   > B(트레일+2R캡 +0.117R), 시간 앞/뒤·한미 전 구간 일관.
 
 
 def _today() -> str:
@@ -184,7 +188,8 @@ def _sell(st: dict, code: str, q: int, price: float, note: str) -> None:
 
 def _buy(st: dict, code: str, name: str, ccy: str, q: int, price: float,
          stop: float, target: float, note: str,
-         plan: dict | None = None, ctx: dict | None = None) -> bool:
+         plan: dict | None = None, ctx: dict | None = None,
+         atr0: float | None = None) -> bool:
     cost = _krw(price, ccy) * q
     if q < 1 or cost > st["cash"]:
         q = int(st["cash"] // _krw(price, ccy))
@@ -204,6 +209,7 @@ def _buy(st: dict, code: str, name: str, ccy: str, q: int, price: float,
                            "target": target, "half_done": False,
                            "opened": _today(),
                            "plan": plan, "ctx": ctx,
+                           "atr0": atr0, "hw": price,   # 트레일용: 진입 ATR·최고가
                            "risk0": _krw(price - stop, ccy) * q,
                            "realized": 0, "exits": []}
     _log(st, "buy", code, name, q, price, ccy, note, stop=stop, target=target)
@@ -368,7 +374,7 @@ def update(results: list[dict], picks: dict, out_dir: str = "public") -> dict:
         if p:
             px[r["code"]] = (r["name"], float(p), r.get("ccy", "USD"))
 
-    # ① 보유 관리 — 손절 → +1R 절반 → 목표 → 타임 스탑 (한 스텝에 하나만)
+    # ① 보유 관리 — 손절 → +1R 절반 → 잔량 트레일 래칫 → 타임 스탑 (한 스텝에 하나만)
     #    장중인 시장의 종목만 — 닫힌 시장 가격은 움직이지도, 체결되지도 않는다
     for code in list(st["pos"].keys()):
         p = st["pos"][code]
@@ -378,14 +384,24 @@ def update(results: list[dict], picks: dict, out_dir: str = "public") -> dict:
         price = cur[1]
         one_r = p["entry"] + (p["entry"] - p["stop"])
         if price <= p["stop"]:
-            note = "손절" if not p["half_done"] else "본전 스탑"
+            if not p["half_done"]:
+                note = "손절"
+            else:
+                note = "트레일 스탑" if p["stop"] > p["entry"] else "본전 스탑"
             _sell(st, code, p["q"], price, note)
         elif not p["half_done"] and price >= one_r:
             _sell(st, code, max(1, p["q"] // 2), price, "+1R 절반 익절")
             if code in st["pos"]:          # 잔량 있으면 손절→본전(래칫)
                 st["pos"][code]["stop"] = max(p["stop"], p["entry"])
                 st["pos"][code]["half_done"] = True
-        elif price >= p["target"]:
+                st["pos"][code]["hw"] = max(p.get("hw", price), price)
+        elif p["half_done"] and p.get("atr0"):
+            # 잔량 = ATR 트레일 래칫(2R 캡 없음, 승자를 태움). 스탑 판정은 위에서
+            # '이전 트레일'로 먼저 했으므로 여기서 갱신(선반영 방지 — 백테스트와 동일).
+            p["hw"] = max(p.get("hw", price), price)
+            p["stop"] = max(p["stop"], p["hw"] - TRAIL_ATR * p["atr0"])
+        elif p["half_done"] and price >= p["target"]:
+            # 구(舊) 포지션(진입 ATR 미기록) — 기존 2R 목표 규칙 유지(계좌 연속성)
             _sell(st, code, p["q"], price, "목표(2R) 도달")
         elif _age(p["opened"]) >= TIME_STOP_DAYS and not p["half_done"]:
             _sell(st, code, p["q"], price, "타임 스탑(+1R 미도달)")
@@ -405,7 +421,8 @@ def update(results: list[dict], picks: dict, out_dir: str = "public") -> dict:
             filled = _buy(st, code, o["name"], o["ccy"], o["q"], o["limit"],
                           o["stop"], o["target"],
                           "눌림 지정가 체결 — " + (o.get("basis") or ""),
-                          plan=o.get("plan"), ctx=o.get("ctx"))
+                          plan=o.get("plan"), ctx=o.get("ctx"),
+                          atr0=o.get("atr"))
             if not filled:
                 _log(st, "cancel", code, o["name"], 0, price, o["ccy"],
                      "지정가 취소 — 현금 부족")
@@ -450,6 +467,7 @@ def update(results: list[dict], picks: dict, out_dir: str = "public") -> dict:
             continue
         t = item.get("tactic") or {}
         mode, pb = t.get("mode", "full"), t.get("pb_price")
+        atr0 = item.get("atr") or None     # 진입 시점 ATR — 잔량 트레일 래칫용
         # 예측값(우리 기준) 스냅샷 + 매수 사유 — 추천 기준으로만 매수한다는 증빙
         plan = {"entry": entry, "stop": stop, "target": target,
                 "pb": pb, "tactic": mode}
@@ -461,7 +479,7 @@ def update(results: list[dict], picks: dict, out_dir: str = "public") -> dict:
                     continue
                 st["pending"][code] = {"name": item["name"], "ccy": ccy,
                                        "limit": pb, "stop": stop, "target": target,
-                                       "q": oq, "created": _today(),
+                                       "q": oq, "created": _today(), "atr": atr0,
                                        "plan": plan, "ctx": ctx, "basis": basis}
                 budget -= _krw(pb, ccy) * oq           # 주문 금액 예약
                 _log(st, "order", code, item["name"], oq, pb, ccy,
@@ -472,7 +490,7 @@ def update(results: list[dict], picks: dict, out_dir: str = "public") -> dict:
             if bq < 1:
                 continue
             if _buy(st, code, item["name"], ccy, bq, entry, stop, target,
-                    "반반 1차 — " + basis, plan=plan, ctx=ctx):
+                    "반반 1차 — " + basis, plan=plan, ctx=ctx, atr0=atr0):
                 budget -= per * bq
             oq = q - q // 2
             if pb and stop < pb < entry and oq >= 1:
@@ -481,13 +499,13 @@ def update(results: list[dict], picks: dict, out_dir: str = "public") -> dict:
                     st["pending"][code] = {"name": item["name"], "ccy": ccy,
                                            "limit": pb, "stop": stop,
                                            "target": target, "q": oq,
-                                           "created": _today(),
+                                           "created": _today(), "atr": atr0,
                                            "plan": plan, "ctx": ctx, "basis": basis}
                     budget -= _krw(pb, ccy) * oq
             continue
         bq = min(q, int(budget // per))
         if bq >= 1 and _buy(st, code, item["name"], ccy, bq, entry, stop, target,
-                            "즉시 분할 — " + basis, plan=plan, ctx=ctx):
+                            "즉시 분할 — " + basis, plan=plan, ctx=ctx, atr0=atr0):
             budget -= per * bq
 
     equity = _equity(st, px)
