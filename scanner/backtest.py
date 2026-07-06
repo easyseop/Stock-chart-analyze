@@ -84,6 +84,159 @@ def _ladder(d, ei: int, fill: float, stop: float,
     return r, j, "만기청산"
 
 
+def _atr_at(d, i: int, period: int = 14) -> float:
+    """i번째 봉 기준 단순 ATR(진입 시점 스냅샷용)."""
+    hi, lo, cl = d["High"], d["Low"], d["Close"]
+    trs = []
+    for j in range(max(1, i - period + 1), i + 1):
+        pc = float(cl.iloc[j - 1])
+        trs.append(max(float(hi.iloc[j]) - float(lo.iloc[j]),
+                       abs(float(hi.iloc[j]) - pc),
+                       abs(float(lo.iloc[j]) - pc)))
+    return sum(trs) / len(trs) if trs else 0.0
+
+
+def _ladder_exit(d, ei: int, fill: float, stop: float, variant: str,
+                 max_hold: int = 60, atr_mult: float = 3.0) -> tuple[float, int, str]:
+    """청산 방식 A/B/C 비교용 사다리 → (총 R, 청산 인덱스, 사유).
+
+    공통(전략 확정분): 손절 전량 / +1R 절반 익절 / 타임스탑. 잔량 관리만 다름:
+      A = 본전 스탑 + 2R 목표(현행 autopaper 코드)
+      B = ATR 트레일(max(본전, 최고가−3×ATR)) + 2R 캡(STRATEGY.md 문서안)
+      C = ATR 트레일만, 2R 캡 없음(승자를 끝까지 태움)
+    보수적 판정: 같은 봉에서 손절/목표 둘 다 닿으면 손절 먼저.
+    트레일은 '어제까지의 값'으로 오늘 low를 판정(선반영 방지) 후 갱신.
+    """
+    n = len(d)
+    risk = fill - stop
+    one_r, target = fill + risk, fill + 2 * risk
+    atr0 = _atr_at(d, ei) if variant in ("B", "C") else 0.0
+    half = False
+    hw = fill
+    trail = fill                       # 절반 익절 후 잔량 스탑(본전에서 시작)
+    j = ei
+    for j in range(ei, min(ei + max_hold, n)):
+        lo_, hi_ = float(d["Low"].iloc[j]), float(d["High"].iloc[j])
+        cl_ = float(d["Close"].iloc[j])
+        if not half:
+            if lo_ <= stop:
+                return -1.0, j, "손절"
+            if hi_ >= one_r:
+                half = True
+                hw = hi_
+                continue
+            if j - ei + 1 >= config.TIME_STOP_DAYS:
+                return (cl_ - fill) / risk, j, "타임스탑"
+        else:
+            if lo_ <= trail:
+                return (0.5 + 0.5 * (trail - fill) / risk, j,
+                        "본전스탑" if trail <= fill else "트레일 스탑")
+            if variant in ("A", "B") and hi_ >= target:
+                return 1.5, j, "목표(2R)"
+            hw = max(hw, hi_)
+            if variant in ("B", "C") and atr0 > 0:
+                trail = max(trail, hw - atr_mult * atr0)
+    cl_ = float(d["Close"].iloc[j])
+    r = (0.5 + 0.5 * (cl_ - fill) / risk) if half else (cl_ - fill) / risk
+    return r, j, "만기청산"
+
+
+def simulate_exit_variants(code: str, frames: dict, meta: dict, bench=None,
+                           warmup: int = 520, stride: int = 3,
+                           lookback: int = 780, max_hold: int = 60) -> list[dict]:
+    """같은 진입 이벤트(gates 'now')에 청산 A/B/C를 나란히 적용 — 공정 비교."""
+    d = frames["D"]
+    n = len(d)
+    i = max(warmup, n - lookback)
+    out = []
+    while i < n - 3:
+        sub = d.iloc[:i + 1]
+        bsub = bench.loc[:sub.index[-1]] if bench is not None else None
+        try:
+            res = analyze(data.frames_from_daily(sub), meta, bench=bsub)
+        except Exception:
+            i += stride
+            continue
+        if _gates.classify(res)["group"] != "now":
+            i += stride
+            continue
+        ei = i + 1
+        fill = float(d["Open"].iloc[ei])
+        stop = float(res["risk"]["stop"])
+        if not (fill > stop > 0):
+            i += stride
+            continue
+        ra, xj, rea = _ladder_exit(d, ei, fill, stop, "A", max_hold)
+        rb, _, reb = _ladder_exit(d, ei, fill, stop, "B", max_hold)
+        rc, _, rec = _ladder_exit(d, ei, fill, stop, "C", max_hold)
+        out.append({"code": code, "d": str(d.index[ei].date()),
+                    "rA": round(ra, 2), "rB": round(rb, 2), "rC": round(rc, 2),
+                    "reasonA": rea, "reasonB": reb, "reasonC": rec})
+        i = xj + 1                     # A(현행) 기준으로 다음 탐색(이벤트셋 고정)
+    return out
+
+
+def cli_exit_variants() -> None:
+    """청산 방식 A/B/C 백테스트 CLI — 캐시만 사용(네트워크 0).
+
+    python -c "from scanner.backtest import cli_exit_variants; cli_exit_variants()" \
+        -- [--stride 3] [--sample 0] [--out ...]
+    """
+    import argparse
+    import json as _json
+    import sys
+    from scanner import cache as _cache
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--stride", type=int, default=3)
+    ap.add_argument("--lookback", type=int, default=780)
+    ap.add_argument("--sample", type=int, default=0)
+    ap.add_argument("--out", default="")
+    a = ap.parse_args([x for x in sys.argv[1:] if x != "--"])
+    codes = sorted(_cache.cached_codes())
+    if a.sample and len(codes) > a.sample:
+        step = len(codes) / a.sample
+        codes = [codes[int(i * step)] for i in range(a.sample)]
+    ev = []
+    for code in codes:
+        try:
+            f = _cache.frames(code, refresh=False)
+        except Exception:
+            continue
+        if len(f.get("D", [])) < 540:
+            continue
+        meta = {"code": code, "name": code,
+                "ccy": "KRW" if code.isdigit() else "USD"}
+        ev += simulate_exit_variants(code, f, meta,
+                                     stride=a.stride, lookback=a.lookback)
+
+    def agg(key):
+        rs = [x[key] for x in ev]
+        n = len(rs)
+        w = sum(1 for r in rs if r > 0)
+        return {"n": n, "win_rate": round(w / n * 100, 1) if n else 0,
+                "avg_r": round(sum(rs) / n, 3) if n else 0,
+                "max_r": round(max(rs), 2) if rs else 0,
+                "min_r": round(min(rs), 2) if rs else 0}
+
+    res = {"events": len(ev),
+           "A_현행(본전+2R)": agg("rA"),
+           "B_문서안(트레일+2R캡)": agg("rB"),
+           "C_트레일무제한": agg("rC"),
+           "raw": ev}
+    print("=" * 70)
+    print(f"◆ 청산 방식 A/B/C — 같은 진입 {len(ev)}건에 나란히 적용")
+    for k in ("A_현행(본전+2R)", "B_문서안(트레일+2R캡)", "C_트레일무제한"):
+        s = res[k]
+        print(f"  {k:<22} 승률 {s['win_rate']:>5.1f}% · 기대값 {s['avg_r']:+.3f}R"
+              f" · 최대 {s['max_r']:+.2f}R / 최소 {s['min_r']:+.2f}R")
+    print("=" * 70)
+    if a.out:
+        os.makedirs(os.path.dirname(a.out) or ".", exist_ok=True)
+        with open(a.out, "w", encoding="utf-8") as fp:
+            _json.dump(res, fp, ensure_ascii=False, indent=1)
+        print("저장:", a.out)
+
+
 def simulate_gates(code: str, frames: dict, meta: dict, bench=None,
                    warmup: int = 520, stride: int = 3,
                    lookback: int = 780, max_hold: int = 60) -> list[dict]:

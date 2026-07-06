@@ -43,18 +43,29 @@ def _market_open(ccy: str) -> bool:
     """해당 종목의 시장이 지금 장중인가 — 장 닫힌 가격(주말·야간 종가)으로
     진입/청산하는 비현실적 시뮬레이션 방지(사용자 지적: 주말 진입은 신뢰성↓).
 
-    한국주: 평일 09:00~15:30 KST(=00:00~06:30 UTC)
-    미국주: 평일 정규장(서머타임 포함 넉넉히 13:30~21:00 UTC)
-    ※ 판정은 UTC로 한다(의도된 예외) — 미국장이 KST로는 밤 22:30~새벽 05:00로
-      자정을 넘어 주말·요일 경계가 꼬이기 때문. 날짜 스탬프만 KST(_today).
+    한국주: 평일 09:00~15:30 KST(=00:00~06:30 UTC, 요일도 이 시간대엔 UTC=KST)
+    미국주: 미 동부시간(ET) 평일 09:30~16:00 — 서머타임을 zoneinfo로 정확히 반영.
+      (고정 UTC 창을 쓰면 여름엔 마감 후 1시간, 겨울엔 프리마켓 1시간을
+       장중으로 오판해 멈춘 종가로 가짜 체결이 남 — 사용자 지적으로 수정)
     """
-    now = datetime.datetime.utcnow()
-    if now.weekday() >= 5:                # 토·일 — 어떤 시장도 안 열림
-        return False
-    hm = now.hour * 60 + now.minute
+    now = datetime.datetime.now(datetime.timezone.utc)
     if ccy == "KRW":
+        if now.weekday() >= 5:
+            return False
+        hm = now.hour * 60 + now.minute
         return 0 <= hm <= 6 * 60 + 30
-    return 13 * 60 + 30 <= hm <= 21 * 60
+    try:
+        from zoneinfo import ZoneInfo
+        et = now.astimezone(ZoneInfo("America/New_York"))
+        if et.weekday() >= 5:
+            return False
+        hm = et.hour * 60 + et.minute
+        return 9 * 60 + 30 <= hm < 16 * 60
+    except Exception:                     # tzdata 없으면 기존 고정창 폴백
+        if now.weekday() >= 5:
+            return False
+        hm = now.hour * 60 + now.minute
+        return 13 * 60 + 30 <= hm <= 21 * 60
 
 
 def _age(day: str) -> int:
