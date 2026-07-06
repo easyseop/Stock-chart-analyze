@@ -49,8 +49,10 @@ jobs:
 
           if [ "$stale" = "1" ]; then
             echo "::warning::$reason → daily.yml 재실행"
+            # update=top: 정체 원인이 '크론 드랍'이면 캐시 가격도 낡았으므로
+            #   재배포만(none)으론 낡은 가격으로 매매하게 됨 → 데이터까지 갱신.
             gh workflow run daily.yml --repo "$GITHUB_REPOSITORY" \
-              --ref "${GITHUB_REF_NAME}" -f update=none || echo "재실행 트리거 실패"
+              --ref "${GITHUB_REF_NAME}" -f update=top || echo "재실행 트리거 실패"
             # 텔레그램 경고(토큰 있으면) — 조용한 멈춤 방지
             if [ -n "$TG_TOKEN" ] && [ -n "$TG_CHAT" ]; then
               msg="🚨 자동매매 워치독 경보%0A${reason}%0A→ daily.yml 자동 재실행함. 계속되면 확인 필요."
