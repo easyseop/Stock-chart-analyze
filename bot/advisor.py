@@ -70,10 +70,15 @@ def _quote(code: str, fallback: float | None) -> float | None:
 def check_buy_signals(sigs: list[dict], state: dict, dry_run: bool) -> int:
     sent = state.setdefault("sent_buy", [])
     sent_set = set(sent)
+    # '지금 살 수 있는' 종목만(장 열린 시장) + 새 신호만 → 우선순위 높은 것부터 상한까지.
+    #   (한국 낮에 미국주 제안이 우르르 오던 폭주 방지 — 지금 열린 시장만 알림)
+    cand = [s for s in sigs
+            if s["group"] == "now" and s["id"] not in sent_set
+            and cfg.market_open(s["ccy"])]
+    cand.sort(key=lambda s: (not s.get("fresh"), -s.get("stage", 0),
+                             -s.get("norm", 0)))          # 갓전환·상위단계 먼저
     n = 0
-    for s in sigs:
-        if s["group"] != "now" or s["id"] in sent_set:
-            continue
+    for s in cand[:cfg.BUY_ALERT_MAX]:
         rp = s.get("range_pos")
         rp_txt = f" · 📍저점권 {rp*100:.0f}%" if rp is not None else ""
         gap = s.get("break_gap")
@@ -124,17 +129,21 @@ def check_arrivals(sigs: list[dict], state: dict, dry_run: bool) -> int:
     for d in list(state["sent_arrival"]):
         if d < cfg.days_ago_kst(7):
             del state["sent_arrival"][d]
+    # 지금 장 열린 시장의 watch 종목만(한국 낮에 미국주 도달알림 폭주 방지) +
+    #   상한까지. 우선순위: 갓전환·상위단계 먼저.
+    cand = [s for s in sigs
+            if s["group"] == "watch"
+            and s.get("entry_kind") in ("pullback", "breakout")
+            and s["code"] not in sent
+            and s.get("entry")
+            and cfg.market_open(s["ccy"])]
+    cand.sort(key=lambda s: (not s.get("fresh"), -s.get("stage", 0)))
     n = 0
-    for s in sigs:
-        if s["group"] != "watch" or s.get("entry_kind") not in ("pullback",
-                                                               "breakout"):
-            continue
+    for s in cand:
+        if n >= cfg.ARRIVAL_ALERT_MAX:
+            break
         code = s["code"]
-        if code in sent:
-            continue
         entry = s.get("entry")
-        if not entry:
-            continue
         px = _quote(code, None)
         if px is None:
             continue

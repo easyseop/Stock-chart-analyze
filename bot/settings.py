@@ -44,3 +44,23 @@ def today_kst() -> str:
 
 def days_ago_kst(n: int) -> str:
     return (_dt.datetime.now(KST).date() - _dt.timedelta(days=n)).isoformat()
+
+
+def market_open(ccy: str) -> bool:
+    """지금 해당 시장이 장중인가 — 알림을 '지금 행동 가능한' 종목만 보내려는 필터.
+    판정은 UTC(미국장이 KST로는 자정을 넘어 요일 경계가 꼬임). autopaper와 동일 규칙.
+      한국주: 평일 00:00~06:30 UTC(=09:00~15:30 KST)
+      미국주: 평일 13:30~21:00 UTC(=밤 22:30~새벽 05:00 KST)
+    """
+    now = _dt.datetime.utcnow()
+    if now.weekday() >= 5:
+        return False
+    hm = now.hour * 60 + now.minute
+    if ccy == "KRW":
+        return 0 <= hm <= 390
+    return 810 <= hm <= 1260
+
+
+# 알림 폭주 방지 — 한 실행에서 보낼 최대 개수(우선순위 높은 것부터)
+BUY_ALERT_MAX = 8
+ARRIVAL_ALERT_MAX = 6
