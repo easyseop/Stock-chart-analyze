@@ -1,10 +1,10 @@
 name: freshness-watchdog
 
-# 자가치유: 라이브 사이트의 '마지막 갱신'이 너무 오래됐으면(원인 불문 — 배포 실패·
-#   크론 지연·paths 필터 공백 등) daily.yml을 workflow_dispatch로 자동 재실행.
-#   2026-07-03 새벽 사건(배포 일시 실패 + 재시도 공백 + 크론 피크 지연으로 라이브가
-#   2시간 옛 빌드에 머묾)의 재발 방지.
-# 검사 시간: 갱신 윈도 안에서만(윈도 밖엔 사이트가 정상적으로 늙으므로 오탐 방지).
+# 자가치유 + 경보: 라이브가 너무 오래됐으면(배포 실패·크론 지연·paths 공백 등 원인
+#   불문) daily.yml을 자동 재실행하고, 텔레그램으로도 알린다.
+#   "자동매매가 조용히 멈추는 것"을 막는 안전망 — 멈추면 반드시 알림이 온다.
+# 신선도 판정: index.html의 data-ts(에폭초, 시간대 무관)로 계산 → KST/UTC 혼동 없음.
+# 검사 시간: 갱신 윈도 안에서만(윈도 밖엔 정상적으로 늙으므로 오탐 방지).
 #   KR 장중 02-06 UTC / US 장중 15-22 UTC, 정각 피크를 피해 :07/:37.
 
 on:
@@ -24,26 +24,40 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - name: 라이브 신선도 확인 → 100분 넘게 오래면 재배포 트리거
+      - name: 라이브 신선도 확인 → 오래되면 재배포 + 텔레그램 경고
         env:
           GH_TOKEN: ${{ github.token }}
           SITE: "https://easyseop.github.io/Stock-chart-analyze/index.html"
+          TG_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TG_CHAT: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: |
-          set -e
-          html=$(curl -sf "${SITE}?cb=${GITHUB_RUN_ID}" || true)
-          ts=$(echo "$html" | grep -o '마지막 갱신 [0-9-]\{10\} [0-9:]\{5\}' | head -1 | sed 's/마지막 갱신 //')
-          if [ -z "$ts" ]; then
-            echo "::warning::라이브 페이지 파싱 실패 — 재배포 트리거"
-            stale=1
+          set +e
+          html=$(curl -sf "${SITE}?cb=${GITHUB_RUN_ID}")
+          # 시간대 무관 에폭초로 판정(data-ts="1700000000")
+          ets=$(echo "$html" | grep -o 'data-ts="[0-9]\{9,\}"' | head -1 | grep -o '[0-9]\{9,\}')
+          now=$(date +%s)
+          stale=0; reason=""
+          if [ -z "$ets" ]; then
+            stale=1; reason="라이브 페이지 파싱 실패(응답 이상)"
           else
-            age=$(( $(date +%s) - $(date -u -d "$ts" +%s) ))
-            echo "라이브 마지막 갱신: $ts UTC (나이 $((age/60))분)"
-            if [ "$age" -gt 6000 ]; then stale=1; else stale=0; fi
+            age=$(( now - ets ))
+            echo "라이브 나이: $((age/60))분 (data-ts=$ets)"
+            if [ "$age" -gt 6000 ]; then
+              stale=1; reason="라이브가 $((age/60))분째 정체(>100분)"
+            fi
           fi
+
           if [ "$stale" = "1" ]; then
-            echo "→ 정체 감지: daily.yml 재실행(update=none, 재빌드+재배포)"
+            echo "::warning::$reason → daily.yml 재실행"
             gh workflow run daily.yml --repo "$GITHUB_REPOSITORY" \
-              --ref "${GITHUB_REF_NAME}" -f update=none
-          else
-            echo "→ 정상(신선) — 조치 없음"
+              --ref "${GITHUB_REF_NAME}" -f update=none || echo "재실행 트리거 실패"
+            # 텔레그램 경고(토큰 있으면) — 조용한 멈춤 방지
+            if [ -n "$TG_TOKEN" ] && [ -n "$TG_CHAT" ]; then
+              msg="🚨 자동매매 워치독 경보%0A${reason}%0A→ daily.yml 자동 재실행함. 계속되면 확인 필요."
+              curl -sf -X POST "https://api.telegram.org/bot${TG_TOKEN}/sendMessage" \
+                -d "chat_id=${TG_CHAT}" -d "text=${msg}" >/dev/null \
+                && echo "텔레그램 경고 발송" || echo "텔레그램 발송 실패"
+            fi
+            exit 0
           fi
+          echo "→ 정상(신선) — 조치 없음"

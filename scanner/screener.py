@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import html
 import os
+import sys
 
 from scanner import card, earnings, intraday, lwc, names_ko
 from scanner.dashboard import _BUCKETS, _bucket
@@ -372,10 +373,27 @@ def build(results: list[dict], frames_map: dict[str, dict],
     picks = _paper_picks(results)
     gates.audit(results, picks)
     # 추천 성과 자동 채점(포워드 테스트) — 홈 요약 + /api/track.json
-    tstats = track.update(results, picks, out_dir)
-    # 클로드 자동 모의투자(시드 1억) — 전술대로 스스로 진입·청산 시뮬레이션
+    try:
+        tstats = track.update(results, picks, out_dir)
+    except Exception as e:                # 채점 실패가 배포를 막지 않도록
+        print(f"[track] 갱신 실패(무시): {type(e).__name__}: {e}", file=sys.stderr)
+        tstats = None
+    # 클로드 자동 모의투자(시드 1억) — 전술대로 스스로 진입·청산 시뮬레이션.
+    #   ★ 자동매매 로직 버그가 사이트 전체를 죽이면 안 됨: 크래시 시 직전
+    #     결과(paper_auto.json)로 폴백해 배포는 계속(상태는 원자적 저장이라 안전).
     from scanner import autopaper
-    auto = autopaper.update(results, picks, out_dir)
+    try:
+        auto = autopaper.update(results, picks, out_dir)
+    except Exception as e:
+        import json as _json
+        print(f"[autopaper] 업데이트 실패 — 직전 결과 유지: "
+              f"{type(e).__name__}: {e}", file=sys.stderr)
+        try:
+            with open(os.path.join(out_dir, "api", "paper_auto.json"),
+                      encoding="utf-8") as _fp:
+                auto = _json.load(_fp)
+        except Exception:
+            auto = None
     stocks_dir = os.path.join(out_dir, "stocks")
     os.makedirs(stocks_dir, exist_ok=True)
     h_min = config.MA_PERIODS["H"][-1] + 5

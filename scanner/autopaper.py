@@ -66,23 +66,54 @@ def _krw(v: float, ccy: str) -> float:
     return v * FX if ccy == "USD" else v
 
 
-def _load() -> dict:
+def _valid(st) -> bool:
+    return (isinstance(st, dict) and st.get("start") == START
+            and "pos" in st and st.get("v") == VERSION)
+
+
+def _read(path: str):
     try:
-        with open(STATE_PATH, encoding="utf-8") as fp:
-            st = json.load(fp)
-            if (st.get("start") == START and "pos" in st
-                    and st.get("v") == VERSION):
-                return st
+        with open(path, encoding="utf-8") as fp:
+            return json.load(fp)
     except Exception:
-        pass
+        return None
+
+
+def _load() -> dict:
+    """상태 로드 — 본파일 깨졌으면 백업(.bak)에서 복구, 둘 다 실패해야 초기화.
+
+    자동매매에서 '계좌가 이유 없이 리셋'되는 사고를 막는다: 원자적 저장으로
+    본파일 손상 자체를 예방하고, 그래도 손상되면 직전 정상본(.bak)으로 되살린다.
+    """
+    st = _read(STATE_PATH)
+    if _valid(st):
+        return st
+    bak = _read(STATE_PATH + ".bak")
+    if _valid(bak):
+        print("[autopaper] 본 상태파일 손상 → 백업(.bak)에서 복구")
+        return bak
+    if st is not None or bak is not None:
+        # 파일은 있는데 유효하지 않음(버전 변경 등) — 초기화는 의도된 경우만
+        print("[autopaper] 유효한 상태 없음 → 새 계좌로 시작(시드 1억)")
     return {"v": VERSION, "cash": START, "start": START,
             "pos": {}, "pending": {}, "log": []}
 
 
 def _save(st: dict) -> None:
+    """원자적 저장 — 임시파일에 쓰고 os.replace로 교체(중간에 죽어도 손상 없음).
+    교체 직전의 정상본을 .bak으로 남겨 복구 경로 확보."""
     os.makedirs(os.path.dirname(STATE_PATH), exist_ok=True)
-    with open(STATE_PATH, "w", encoding="utf-8") as fp:
+    tmp = STATE_PATH + ".tmp"
+    with open(tmp, "w", encoding="utf-8") as fp:
         json.dump(st, fp, ensure_ascii=False)
+        fp.flush()
+        os.fsync(fp.fileno())
+    if os.path.exists(STATE_PATH):        # 직전 정상본을 백업으로 보존
+        try:
+            os.replace(STATE_PATH, STATE_PATH + ".bak")
+        except OSError:
+            pass
+    os.replace(tmp, STATE_PATH)           # 원자적 교체
 
 
 def _log(st: dict, typ: str, code: str, name: str, q: int, price: float,
