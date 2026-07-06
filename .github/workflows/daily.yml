@@ -135,6 +135,20 @@ jobs:
         with:
           path: public
 
+      # 빌드 실패 시 텔레그램 즉시 알림 — 자동매매 파이프라인이 '조용히' 죽는 것 방지.
+      #   (실측 2026-07-06: 배포 실패를 사람이 물어봐서야 발견 → 실패는 시스템이 먼저 알린다)
+      - name: 빌드 실패 알림
+        if: failure()
+        env:
+          TG_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TG_CHAT: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          [ -z "$TG_TOKEN" ] && exit 0
+          curl -sf -X POST "https://api.telegram.org/bot${TG_TOKEN}/sendMessage" \
+            -d "chat_id=${TG_CHAT}" \
+            -d "text=🚨 빌드 실패 (daily #${GITHUB_RUN_NUMBER}) — 자동매매 이번 회차 미실행. 반복되면 점검 필요." \
+            >/dev/null || true
+
   deploy:
     needs: build
     runs-on: ubuntu-latest
@@ -171,3 +185,17 @@ jobs:
           grep -q "전환 스크리너" /tmp/live.html
           grep -q 'id="rowsrc"' /tmp/live.html
           echo "라이브 정상: $URL"
+
+      # 배포 실패(재시도 포함) 시 텔레그램 알림 — 매매는 빌드에서 이미 완결됐고
+      #   웹만 낡는 상황임을 사용자에게 알린다(사이트가 멈춘 걸로 오해 방지).
+      - name: 배포 실패 알림
+        if: failure()
+        env:
+          TG_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TG_CHAT: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          [ -z "$TG_TOKEN" ] && exit 0
+          curl -sf -X POST "https://api.telegram.org/bot${TG_TOKEN}/sendMessage" \
+            -d "chat_id=${TG_CHAT}" \
+            -d "text=⚠️ 웹 배포 실패 (Pages 장애 추정) — 매매·알림은 정상 동작, 사이트 표시만 지연. 다음 빌드가 자동 재시도." \
+            >/dev/null || true

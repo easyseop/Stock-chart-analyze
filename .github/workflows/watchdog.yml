@@ -9,7 +9,8 @@ name: freshness-watchdog
 
 on:
   schedule:
-    - cron: "7,37 2-6,13-22 * * 1-5"
+    - cron: "7,22,37,52 2-6,13-22 * * 1-5"   # 시간당 4회 — 스케줄러가 일부를
+                                             # 드랍해도(실측) 한 번만 발화하면 자가치유
   workflow_dispatch:
 
 permissions:
