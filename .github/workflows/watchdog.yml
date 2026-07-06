@@ -5,11 +5,11 @@ name: freshness-watchdog
 #   "자동매매가 조용히 멈추는 것"을 막는 안전망 — 멈추면 반드시 알림이 온다.
 # 신선도 판정: index.html의 data-ts(에폭초, 시간대 무관)로 계산 → KST/UTC 혼동 없음.
 # 검사 시간: 갱신 윈도 안에서만(윈도 밖엔 정상적으로 늙으므로 오탐 방지).
-#   KR 장중 02-06 UTC / US 장중 15-22 UTC, 정각 피크를 피해 :07/:37.
+#   KR 장중 02-06 UTC / US 장중 13-22 UTC(개장 직후 크론 드랍 사각지대 커버), 정각 피크를 피해 :07/:37.
 
 on:
   schedule:
-    - cron: "7,37 2-6,15-22 * * 1-5"
+    - cron: "7,37 2-6,13-22 * * 1-5"
   workflow_dispatch:
 
 permissions:
