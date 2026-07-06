@@ -147,6 +147,9 @@ def try_entries(st: dict, bk, sigs: list[dict], today: str) -> None:
         budget = cfg.ACCOUNT_KRW * cfg.RISK_PER_TRADE
         per_share = _krw(entry - stop, ccy)
         qty = int(budget // per_share) if per_share > 0 else 0
+        # 종목당 총자산 1/3 상한 — autopaper와 동일 규칙(리스크·비중 중 빡빡한 쪽)
+        cap_qty = int(cfg.ACCOUNT_KRW * cfg.POS_CAP_FRACTION // _krw(q, ccy))
+        qty = min(qty, cap_qty)
         if qty <= 0:
             print(f"  ⏸ {s['name']}({code}) 보류 — 손절폭이 리스크 예산보다 큼")
             continue

@@ -434,9 +434,14 @@ __TABBAR__
     var cls=AUTOP.ret_pct>=0?'up':'dn', sg=AUTOP.ret_pct>=0?'+':'';
     document.getElementById('asumv').innerHTML=won(AUTOP.equity)
       +' <span class="'+cls+'" style="font-size:18px">'+sg+AUTOP.ret_pct.toFixed(2)+'%</span>';
+    var capv=(AUTOP.cap_violations||[]).length;
+    var capnote=' · <span title="한 종목에 총자산의 1/3 초과 투입 금지">종목당 상한 '
+      +(AUTOP.pos_cap_pct||33.3)+'%</span>'
+      +(capv?' <span class="dn" style="font-weight:700">⚠️비중위반 '+capv+'건</span>':'');
     document.getElementById('asumsub').innerHTML='현금 '+won(AUTOP.cash)
       +' · 보유 '+AUTOP.positions.length+'종목 · 대기 주문 '+AUTOP.pending.length
-      +'건 · 청산 '+AUTOP.trades+'회(익절 '+AUTOP.win_trades+') · '+AUTOP.updated+' 기준';
+      +'건 · 청산 '+AUTOP.trades+'회(익절 '+AUTOP.win_trades+')'+capnote
+      +' · '+AUTOP.updated+' 기준';
     // KPI 타일
     var S=AUTOP.stats||{}, all=S.all||{n:0};
     document.getElementById('adash').style.display='grid';
