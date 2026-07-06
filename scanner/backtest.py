@@ -265,6 +265,24 @@ def simulate_gates(code: str, frames: dict, meta: dict, bench=None,
         fresh, _lab = _fresh_fn(res)
         t = _tactic_fn(res) or {}
         r, xj, reason = _ladder(d, ei, fill, stop, max_hold)
+        # ── 계측 필드(2차 검토 Phase 1) — 손절 방식·단계 티어 결정용 ──
+        one_r = fill + (fill - stop)
+        atr14 = _atr_at(d, ei)
+        extra = {
+            "stage": res.get("transition_stage", 0),
+            "stop_px": round(stop, 4),
+            "stop_width_atr": round((fill - stop) / atr14, 2) if atr14 > 0 else None,
+            # +1R 스파이크(고가는 닿았는데 종가 미달) 횟수 — 터치 트리거 과속 측정
+            "oneR_spike": int(((d["High"].iloc[ei:xj + 1] >= one_r)
+                               & (d["Close"].iloc[ei:xj + 1] < one_r)).sum()),
+        }
+        if reason == "손절":
+            # 손절 당일 종가가 스탑 위로 회복했나(소프트 손절이면 살았을 후보)
+            extra["close_recovery"] = bool(
+                float(d["Close"].iloc[xj]) > stop)
+            # 손절 후 10거래일 내 +1R 가격 회복(휩쏘) — nearest 손절 재평가용
+            hi10 = d["High"].iloc[xj + 1:xj + 11]
+            extra["whipsaw_10d"] = bool(len(hi10) and float(hi10.max()) >= one_r)
         # A/B: 같은 이벤트를 '눌림 지정가'로 기다렸다면? — 15봉 내 지정가 도달 시
         # 체결, 미도달이면 놓침(트레이드 없음). 즉시 체결과의 직접 비교용.
         pb = t.get("pb_price")
@@ -282,7 +300,8 @@ def simulate_gates(code: str, frames: dict, meta: dict, bench=None,
                     "stop_pct": round((fill - stop) / fill * 100, 1),
                     "has_pb": bool(pb and stop < pb < fill),
                     "pb_filled": pb_filled,
-                    "r_pb": round(r_pb, 2) if r_pb is not None else None})
+                    "r_pb": round(r_pb, 2) if r_pb is not None else None,
+                    **extra})
         i = xj + 1                               # 청산 후 재탐색(중복 보유 금지)
     return out
 
