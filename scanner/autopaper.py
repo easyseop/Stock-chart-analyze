@@ -118,7 +118,8 @@ def _save(st: dict) -> None:
 
 def _log(st: dict, typ: str, code: str, name: str, q: int, price: float,
          ccy: str, note: str, pl: float | None = None,
-         pl_pct: float | None = None, r: float | None = None) -> None:
+         pl_pct: float | None = None, r: float | None = None,
+         stop: float | None = None, target: float | None = None) -> None:
     ent = {"d": _today(), "type": typ, "code": code, "name": name,
            "q": q, "price": round(price, 4), "ccy": ccy,
            "amt": round(_krw(price, ccy) * q), "note": note}
@@ -127,6 +128,10 @@ def _log(st: dict, typ: str, code: str, name: str, q: int, price: float,
         ent["pl_pct"] = round(pl_pct or 0, 1)
     if r is not None:
         ent["r"] = r                       # 청산 완료 트레이드의 R 성과
+    if stop is not None:
+        ent["stop"] = round(stop, 4)       # 매수 시 잡은 손절가(상세 보고용)
+    if target is not None:
+        ent["target"] = round(target, 4)
     st["log"].insert(0, ent)
     st["log"] = st["log"][:200]
     st.setdefault("_ev", []).append(ent)   # 이번 런 이벤트 — 텔레그램 보고용
@@ -188,7 +193,7 @@ def _buy(st: dict, code: str, name: str, ccy: str, q: int, price: float,
                            "plan": plan, "ctx": ctx,
                            "risk0": _krw(price - stop, ccy) * q,
                            "realized": 0, "exits": []}
-    _log(st, "buy", code, name, q, price, ccy, note)
+    _log(st, "buy", code, name, q, price, ccy, note, stop=stop, target=target)
     return True
 
 
@@ -266,28 +271,40 @@ def _report(st: dict, equity: float) -> None:
     ev = st.pop("_ev", [])
     if not any(x["type"] in ("buy", "sell") for x in ev):
         return
-    icon = {"buy": "🟢 매수", "sell": "🔴 매도",
-            "order": "📌 지정가 주문", "cancel": "✖ 주문 취소"}
-    lines = []
-    for x in ev[:12]:
-        ln = (f'{icon.get(x["type"], x["type"])} <b>{x["name"]}</b> '
-              f'{x["q"]}주 @ {_fmt_native(x["price"], x["ccy"])} — {x["note"]}')
-        if x.get("pl") is not None:                 # 매도: 차익/손절 금액·수익률
-            sg = "+" if x["pl"] >= 0 else ""
-            ln += f' (<b>{sg}{x["pl"]:,}원 · {sg}{x["pl_pct"]}%</b>'
-            if x.get("r") is not None:              # 청산 완료 — R 성과
-                sr = "+" if x["r"] >= 0 else ""
-                ln += f' · {sr}{x["r"]}R'
-            ln += ")"
-        lines.append(ln)
-    if len(ev) > 12:
-        lines.append(f"…외 {len(ev) - 12}건")
+
+    def _blk(x) -> str:
+        """이벤트 1건을 상세 블록으로 — 진입가·손절·목표·수량·사유·손익까지."""
+        f = lambda v: _fmt_native(v, x["ccy"])
+        # note는 "즉시 분할 — 🔥 갓 전환 · ④ 확정 · 저점권27% · 체크6/6 · 손절폭5.0%"
+        head, _, why = x["note"].partition(" — ")
+        if x["type"] == "buy":
+            ln = (f'🟢 <b>매수 · {x["name"]}</b>\n'
+                  f'  {x["q"]}주 @ {f(x["price"])} = {x["amt"]:,}원\n'
+                  f'  손절 {f(x["stop"])} · 목표 {f(x["target"])}\n'
+                  f'  방식 {head}')
+            if why:
+                ln += f'\n  사유 {why}'
+            return ln
+        if x["type"] == "sell":
+            sg = "+" if x.get("pl", 0) >= 0 else ""
+            pl = (f' → <b>{sg}{x["pl"]:,}원 ({sg}{x["pl_pct"]}%'
+                  + (f' · {"+" if x["r"]>=0 else ""}{x["r"]}R' if x.get("r") is not None else "")
+                  + ')</b>') if x.get("pl") is not None else ""
+            return (f'🔴 <b>매도 · {x["name"]}</b> [{head}]\n'
+                    f'  {x["q"]}주 @ {f(x["price"])}{pl}')
+        if x["type"] == "order":
+            return f'📌 <b>지정가 주문 · {x["name"]}</b> {x["q"]}주 @ {f(x["price"])} ({head})'
+        return f'✖ <b>주문 취소 · {x["name"]}</b> ({head})'
+
+    blocks = [_blk(x) for x in ev[:10]]
+    if len(ev) > 10:
+        blocks.append(f'…외 {len(ev) - 10}건')
     ret = (equity / st["start"] - 1) * 100
     sg = "+" if ret >= 0 else ""
-    text = ("🤖 <b>자동 모의투자 체결 보고</b> (시드 1억)\n"
-            + "\n".join(lines)
-            + f"\n💰 평가 <b>{equity:,.0f}원</b> ({sg}{ret:.2f}%) · "
-              f"현금 {st['cash']:,.0f}원 · 보유 {len(st['pos'])}종목")
+    text = ("🤖 <b>자동매매 체결 상세</b> (시드 1억 · 가상)\n\n"
+            + "\n\n".join(blocks)
+            + f"\n\n───────\n💰 평가 <b>{equity:,.0f}원</b> "
+              f"({sg}{ret:.2f}%) · 현금 {st['cash']:,.0f}원 · 보유 {len(st['pos'])}종목")
     try:
         from bot import notify
         notify.send(text)
