@@ -77,8 +77,9 @@
 
   <div class="card">
     <h2>🔔 텔레그램 알림</h2>
-    장중 30분 주기로 <b>매수 제안 · 눌림/돌파 도달 · 손절/목표 터치</b>를 보내드려요.
-    자동 주문은 없고 <b>제안만</b> — 주문은 직접.<br>
+    <b>🤖 자동매매(모의) 체결 상세</b> — 진입/청산이 일어나면 수량·체결가·손절·목표·사유까지 즉시.<br>
+    <b>💡 매수 제안 · 눌림/돌파 도달</b> — 장중 30분 주기, 간단 요약(회당·일일 상한 있음). 실제 주문은 직접.<br>
+    <b>🚨 시스템 경보</b> — 빌드 정체·규칙 위반·배포 실패 시 자동 알림.<br>
     <span class="dim">봇: @JStock_macchine_bot · 연결 재확인은 GitHub Actions → telegram-check → Run workflow</span>
   </div>
 
@@ -110,9 +111,23 @@
 </main>
 __TABBAR__
 <script>
+  // 신선도 표시 — 페이지에 박힌 빌드 시각이 아니라 '지금 서버의 최신 배포'를
+  // 주기적으로 재조회(HEAD). 탭을 열어둔 채 시간이 지나도(브라우저 캐시여도)
+  // 실제 시스템 상태를 보여준다. (사고 사례: 열린 탭이 155분을 세는 동안
+  // 시스템은 65분 전에 이미 갱신돼 있었음 — 표시가 거짓 경보를 울림)
   (function(){var el=document.getElementById('age');if(!el)return;var ts=+el.dataset.ts*1000;
-    function f(){var m=Math.floor((Date.now()-ts)/60000);
-      el.textContent='('+(m<1?'방금 전':m+'분 전')+')';
+    function draw(m,live){
+      el.textContent='('+(m<1?'방금 전':m+'분 전')+(live?'':' · 이 화면 기준')+')';
       el.style.cssText='font-weight:700;color:'+(m>45?'#d97706':'#16a34a');}
-    f();setInterval(f,30000);})();
+    function f(){draw(Math.floor((Date.now()-ts)/60000),false);}
+    async function sync(){
+      try{
+        var r=await fetch('index.html?cb='+Date.now(),{method:'HEAD',cache:'no-store'});
+        var lm=r.headers.get('last-modified');
+        if(lm){var t=new Date(lm).getTime();if(t>0){ts=Math.max(ts,t);
+          draw(Math.floor((Date.now()-ts)/60000),true);return;}}
+      }catch(e){}
+      f();
+    }
+    f();sync();setInterval(f,30000);setInterval(sync,180000);})();
 </script></body></html>
