@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated_at": "2026-07-08T06:45:04+09:00",
+ "generated_at": "2026-07-08T07:02:24+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "signals": [
   {
@@ -1472,20 +1472,20 @@
    "group": "watch",
    "entry_kind": "now",
    "stage": 1,
-   "price": 32.8,
-   "entry": 32.8,
-   "stop": 31.0887,
-   "target": 36.2227,
+   "price": 32.54,
+   "entry": 32.54,
+   "stop": 30.8409,
+   "target": 35.9382,
    "shares_1pct": 58,
-   "range_pos": 0.3272,
+   "range_pos": 0.3021,
    "norm": 7.5,
    "fresh": true,
-   "break_gap": -0.0025,
+   "break_gap": -0.0094,
    "earnings_d": null,
    "tactic": {
     "stop_pct": 5.2,
-    "pb_price": null,
-    "pb_stop_pct": null,
+    "pb_price": 30.9083,
+    "pb_stop_pct": 0.2,
     "mode": "full",
     "label": "⚡ 즉시 분할",
     "desc": "손절폭 5.2%로 타이트 — 현재가에서 1~2회 분할 매수. 기다리는 이득보다 놓치는 비용이 큼"
