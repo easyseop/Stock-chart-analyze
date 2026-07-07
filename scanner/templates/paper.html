@@ -312,7 +312,20 @@ __TABBAR__
     }).join('');
   }
   function pickCard(p,kind){
-    var lv='<b>진입</b> '+fmtP(p.entry,p.ccy)+' · <b>손절</b> '+fmtP(p.stop,p.ccy)+' · <b>목표</b> '+fmtP(p.target,p.ccy);
+    // 진입가 표기 — '지금 진입' 픽은 정의상 현재가가 곧 타점이라 진입=현재가.
+    //   즉시/반반: 지금 현재가에 매수 → "= 현재가(지금이 타점)" 명시(오해 방지).
+    //   눌림 지정가: 실제 주문은 현재가보다 낮은 pb_price → 그걸 진입가로 전면에.
+    var cur=(p.price!=null?p.price:p.entry), t=p.tactic||{};
+    var note='font-size:11px;color:#94a3b8;font-weight:400';
+    var ent;
+    if(t.mode==='pullback'&&t.pb_price){
+      ent='<b>진입</b> '+fmtP(t.pb_price,p.ccy)+' <span style="'+note+'">눌림 지정가 · 현재 '+fmtP(cur,p.ccy)+'</span>';
+    }else if(Math.abs((p.entry||0)-cur)<1e-6){
+      ent='<b>진입</b> '+fmtP(p.entry,p.ccy)+' <span style="'+note+'">= 현재가(지금이 타점)</span>';
+    }else{
+      ent='<b>진입</b> '+fmtP(p.entry,p.ccy);
+    }
+    var lv=ent+' · <b>손절</b> '+fmtP(p.stop,p.ccy)+' · <b>목표</b> '+fmtP(p.target,p.ccy);
     var vc=p.verdict.indexOf('타당')>=0?'up':(p.verdict.indexOf('회피')>=0?'dn':'');
     return '<div class="pick '+kind+'"><div class=ph><span class=flag>'+flag(p.ccy)+'</span>'
       +'<span class=nm><a href="stocks/'+p.code+'.html">'+p.name+'</a></span>'
