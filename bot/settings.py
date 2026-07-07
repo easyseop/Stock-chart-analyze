@@ -6,7 +6,14 @@
 """
 
 # ── 시그널 소스 ──────────────────────────────────────────────────
+# 기계용 feed(state 브랜치)를 1순위로 — Pages 장애(실측 3회)와 알림 정확도를
+# 분리. Pages는 폴백. (SRE 검토 §4 채택)
+SIGNALS_FEED_URL = ("https://raw.githubusercontent.com/easyseop/"
+                    "Stock-chart-analyze/state/feed/signals.latest.json")
 SIGNALS_URL = "https://easyseop.github.io/Stock-chart-analyze/api/signals.json"
+SIGNALS_SOURCES = (SIGNALS_FEED_URL, SIGNALS_URL)   # 순서대로 시도
+SIGNALS_STALE_MIN = 25   # 장중에 신호가 이보다 낡으면 제안 대신 '신호 낡음' 경보
+                         #   (15분 주기 + raw CDN 캐시 ~5분 여유)
 SITE_URL = "https://easyseop.github.io/Stock-chart-analyze"
 HOLDINGS_EDIT_URL = ("https://github.com/easyseop/Stock-chart-analyze/edit/"
                      "claude/korean-text-review-o3wmsv/holdings.json")

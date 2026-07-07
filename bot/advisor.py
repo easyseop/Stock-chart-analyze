@@ -52,6 +52,31 @@ def fetch_signals(url_or_path: str) -> dict:
         return json.load(fp)
 
 
+def fetch_signals_chain(primary: str) -> tuple[dict, str]:
+    """신호 조회 — 기본 URL이면 feed(state 브랜치)→Pages 순 폴백 체인.
+    Pages 장애 때 낡은 신호로 제안이 나가는 결합을 끊는다(기계용 feed 분리).
+    반환: (데이터, 실제 사용한 소스)."""
+    sources = (cfg.SIGNALS_SOURCES if primary == cfg.SIGNALS_URL
+               else (primary,))
+    last_err = None
+    for src in sources:
+        try:
+            return fetch_signals(src), src
+        except Exception as e:
+            last_err = e
+    raise last_err
+
+
+def _signals_age_min(data: dict) -> float | None:
+    """generated_at 기준 신호 나이(분). 파싱 실패 시 None(판정 보류)."""
+    try:
+        import datetime
+        t = datetime.datetime.fromisoformat(data.get("generated_at", ""))
+        return (datetime.datetime.now(t.tzinfo) - t).total_seconds() / 60
+    except Exception:
+        return None
+
+
 def _fmt(v: float, ccy: str) -> str:
     return f"${v:,.2f}" if ccy == "USD" else f"{v:,.0f}원"
 
@@ -226,13 +251,27 @@ def check_sell_alerts(holdings: list[dict], state: dict, dry_run: bool) -> int:
 
 def run_once(args) -> None:
     state = _load(STATE_PATH, {})
-    data = fetch_signals(args.signals)
+    data, src = fetch_signals_chain(args.signals)
     sigs = data.get("signals", [])
     holdings = _load(args.holdings, [])
-    # 하루 총량 서킷브레이커 — 매수/도달 제안에만 적용(매도는 보유 관리라 예외).
-    budget = max(0, cfg.DAILY_ALERT_BUDGET - _sent_today(state))
-    nb = check_buy_signals(sigs, state, args.dry_run, budget)
-    na = check_arrivals(sigs, state, args.dry_run, budget - nb)
+    # stale 가드 — 장중인데 신호가 낡았으면(빌드 정체 등) 제안을 보내지 않는다.
+    #   낡은 가격 기준의 '지금 진입' 제안은 없느니만 못함. 대신 하루 1회만 경보.
+    age = _signals_age_min(data)
+    stale = (age is not None and age > cfg.SIGNALS_STALE_MIN
+             and (cfg.market_open("USD") or cfg.market_open("KRW")))
+    if stale:
+        print(f"신호 {age:.0f}분 낡음(>{cfg.SIGNALS_STALE_MIN}) — 제안 생략 [src={src}]")
+        if (state.get("stale_notice_day") != cfg.today_kst()
+                and not args.dry_run):
+            state["stale_notice_day"] = cfg.today_kst()
+            notify.send(f"⚠️ 신호가 {age:.0f}분째 낡음 — 매수/도달 제안을 일시 중단"
+                        f"(낡은 가격 기준 제안 방지). 빌드 복구 시 자동 재개.")
+        nb = na = 0
+    else:
+        # 하루 총량 서킷브레이커 — 매수/도달 제안에만 적용(매도는 보유 관리라 예외).
+        budget = max(0, cfg.DAILY_ALERT_BUDGET - _sent_today(state))
+        nb = check_buy_signals(sigs, state, args.dry_run, budget)
+        na = check_arrivals(sigs, state, args.dry_run, budget - nb)
     _record_sent(state, nb + na)
     ns = check_sell_alerts(holdings, state, args.dry_run)
     # 예산 소진 첫 순간 1회만 안내(이후 제안은 웹에서) — 조용한 누락 방지
