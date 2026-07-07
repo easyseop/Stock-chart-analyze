@@ -488,11 +488,14 @@ def plan_html(r: dict) -> str:
         tags.append(f'<span class="ptag" style="{style}">'
                     f'{html.escape(flabel)}{gap_txt}</span>')
     tags_html = (f'<div class="plan-tags">{"".join(tags)}</div>' if tags else "")
-    # 진입가 숫자는 '실제로 진입 가능한 경우'에만 — 회피·보류·관망(rec 미달)엔 '—'.
+    # 진입가 숫자는 '실제로 진입 가능한 경우'에만 — 회피·보류·관망엔 '—'.
     #   "진입가 = 이 가격에 사라"는 뜻인데, 매수 자리가 아닌 종목에 현재가를 박으면
     #   '지금 사라'로 오독된다(사용자 지적: 회피인데 진입가=현재가).
-    actionable = (kind in ("breakout", "pullback")      # 조건부 진입가(돌파/눌림 시)
-                  or (kind == "now" and rec >= REC_MIN))  # 지금 진입 타당
+    #   ※ '지금 진입 추천'의 기준은 rec(6/6 별)이 아니라 gates.classify == now
+    #     (추천 픽은 대개 체크4/6). rec로 걸면 정식 추천주까지 '—'가 되는 버그.
+    from scanner import gates                          # 지연 import(gates↔plan 순환 회피)
+    now_reco = (kind == "now" and gates.classify(r)["group"] == "now")
+    actionable = kind in ("breakout", "pullback") or now_reco   # 조건부 진입 or 지금 진입 추천
     entry_disp = f(entry) if actionable else "—"
     return _TMPL.format(
         color=color, head=html.escape(head), why=why, timing=tm_html,
