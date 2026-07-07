@@ -196,8 +196,14 @@ def build_figure(result: dict, frames: dict, tf: str = "D", lookback: int = None
                group="level", term="신고가", dash="dot", vfmt=vfmt)
 
     # 매매선 (진입·손절·목표) — 그룹 'trade'
-    _hline(fig, x0, x1, result["entry"], "진입(기준가)", C["entry"],
-           group="trade", dash="dash", vfmt=vfmt)
+    #   진입선은 '실제 진입 자리'일 때만(상세카드 '—'·lwc 차트와 일치). 회피·보류·
+    #   관망 종목에 현재가를 '진입선'으로 그리면 '지금 사라'로 오독된다.
+    from scanner import gates                       # 지연 import(chart→gates→plan 안전)
+    _kind = result.get("entry_kind", "now")
+    _now_reco = (_kind == "now" and gates.classify(result)["group"] == "now")
+    if _kind in ("breakout", "pullback") or _now_reco:
+        _hline(fig, x0, x1, result["entry"], "진입(기준가)", C["entry"],
+               group="trade", dash="dash", vfmt=vfmt)
     _hline(fig, x0, x1, risk["stop"], "손절", C["stop"],
            group="trade", term="ATR손절", dash="dash", width=1.8, vfmt=vfmt)
     _hline(fig, x0, x1, risk["target"], "목표(1:2)", C["target"],

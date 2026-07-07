@@ -90,7 +90,13 @@ def _payload(result: dict, frames: dict, tf: str) -> dict:
     nh = result.get("newhigh", {}).get("high52")
     if nh:
         L(nh, "52주고가", chart.C["target"], "level", 1)
-    L(result["entry"], "진입", chart.C["entry"], "trade", 2)
+    # 진입선은 '실제 진입 자리'일 때만(상세카드 '—' 처리와 일치). 회피·보류·관망
+    #   종목에 현재가를 '진입선'으로 그리면 '지금 사라'로 오독된다.
+    from scanner import gates                       # 지연 import(순환 회피)
+    _kind = result.get("entry_kind", "now")
+    _now_reco = (_kind == "now" and gates.classify(result)["group"] == "now")
+    if _kind in ("breakout", "pullback") or _now_reco:
+        L(result["entry"], "진입", chart.C["entry"], "trade", 2)
     L(risk["stop"], "손절", chart.C["stop"], "trade", 2)
     L(risk["target"], "목표", chart.C["target"], "trade", 2)
     for lv in result["levels"]["strong"][:6]:
