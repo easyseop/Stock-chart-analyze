@@ -80,7 +80,11 @@ def analyze(frames: dict[str, pd.DataFrame], meta: dict, bench=None) -> dict:
     downtrend = bool(trendline.get("confirmed_down")
                      or trendline.get("state") == "하락추세 지속")
 
-    if sr["position"] == "박스이탈" or (config.DOWNTREND_VETO and downtrend):
+    # 현재가가 방어선 아래 = 지지 이탈. 추세선이 '불명확'이라 downtrend veto를
+    #   못 잡는 falling knife(예: METC 저점권 0%·현재가<방어선인데 'now'로 오분류)를
+    #   여기서 회피 처리. 실측: 진입 픽 20개 전부 현재가≥방어선이라 정상 픽엔 무영향.
+    below_defense = bool(sr.get("defense") and price < sr["defense"])
+    if sr["position"] == "박스이탈" or (config.DOWNTREND_VETO and downtrend) or below_defense:
         entry = price                                # 방어선 이탈/하락추세 → 매수 자리 아님
         entry_kind = "avoid"
     elif sr["position"] == "고점권":
