@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated_at": "2026-07-07T13:38:56+09:00",
+ "generated_at": "2026-07-07T14:46:00+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "signals": [
   {
@@ -298,6 +298,33 @@
     "mode": "half",
     "label": "⚖ 반반 진입",
     "desc": "손절폭 7.3% — 절반만 현재가, 나머지는 눌림 확인 후 추가"
+   }
+  },
+  {
+   "id": "068270-2026-07-07-now",
+   "code": "068270",
+   "name": "셀트리온",
+   "ccy": "KRW",
+   "group": "now",
+   "entry_kind": "now",
+   "stage": 3,
+   "price": 173700.0,
+   "entry": 173700.0,
+   "stop": 155609.7611,
+   "target": 209880.4778,
+   "shares_1pct": 5,
+   "range_pos": 0.2558,
+   "norm": -30.2,
+   "fresh": true,
+   "break_gap": 0.0431,
+   "earnings_d": null,
+   "tactic": {
+    "stop_pct": 10.4,
+    "pb_price": 161189.0469,
+    "pb_stop_pct": 3.5,
+    "mode": "pullback",
+    "label": "⏳ 눌림 지정가만",
+    "desc": "지금 추격 금지(손절폭 10.4%) — <b>161,189원 눌림 지정가만</b>. 눌리면 손절폭 3.5%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
    }
   },
   {
@@ -703,33 +730,6 @@
     "mode": "half",
     "label": "⚖ 반반 진입",
     "desc": "손절폭 5.4% · 돌파후 진행 — 절반만 현재가, 나머지는 눌림 확인 후 추가"
-   }
-  },
-  {
-   "id": "068270-2026-07-07-now",
-   "code": "068270",
-   "name": "셀트리온",
-   "ccy": "KRW",
-   "group": "now",
-   "entry_kind": "now",
-   "stage": 3,
-   "price": 174900.0,
-   "entry": 174900.0,
-   "stop": 156809.7611,
-   "target": 211080.4778,
-   "shares_1pct": 5,
-   "range_pos": 0.2695,
-   "norm": -30.2,
-   "fresh": false,
-   "break_gap": 0.0503,
-   "earnings_d": null,
-   "tactic": {
-    "stop_pct": 10.3,
-    "pb_price": 161189.0469,
-    "pb_stop_pct": 2.7,
-    "mode": "pullback",
-    "label": "⏳ 눌림 지정가만",
-    "desc": "지금 추격 금지(손절폭 10.3% · 돌파후 진행) — <b>161,189원 눌림 지정가만</b>. 눌리면 손절폭 2.7%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
    }
   },
   {
@@ -3954,15 +3954,15 @@
    "group": "watch",
    "entry_kind": "pullback",
    "stage": 3,
-   "price": 240500.0,
-   "entry": 239216.1,
-   "stop": 210032.3363,
-   "target": 297583.6275,
+   "price": 239500.0,
+   "entry": 227777.5,
+   "stop": 198593.7363,
+   "target": 286145.0275,
    "shares_1pct": 3,
-   "range_pos": 0.2386,
+   "range_pos": 0.2328,
    "norm": -30.2,
    "fresh": false,
-   "break_gap": 0.1024,
+   "break_gap": 0.0978,
    "earnings_d": null,
    "tactic": null
   },
@@ -3974,15 +3974,15 @@
    "group": "watch",
    "entry_kind": "pullback",
    "stage": 3,
-   "price": 200500.0,
-   "entry": 199202.5,
-   "stop": 183147.863,
-   "target": 231311.7739,
+   "price": 198900.0,
+   "entry": 172600.0,
+   "stop": 156545.363,
+   "target": 204709.2739,
    "shares_1pct": 6,
-   "range_pos": 0.2864,
+   "range_pos": 0.27,
    "norm": -33.0,
    "fresh": false,
-   "break_gap": 0.106,
+   "break_gap": 0.0972,
    "earnings_d": null,
    "tactic": null
   }
