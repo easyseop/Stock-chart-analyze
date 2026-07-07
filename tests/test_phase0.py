@@ -132,13 +132,40 @@ def main() -> int:
         else:
             print("  [PASS] 어닝 D-1: +1R 달성 포지션은 통과 허용")
 
+    # 6) 전일 주문 체결은 일일 카운터에 불포함(이중 카운트 방지)
+    #    실측 사고(2026-07-07 12:21): 전일 셀트리온 지정가가 오늘 체결되며
+    #    주문일 +1, 체결일 +1로 이중 카운트 → '4건>상한3' 위반 오탐 경보.
+    import json as _json
+    with tempfile.TemporaryDirectory() as tmp:
+        _fresh(tmp)
+        st = {"v": ap.VERSION, "cash": ap.START, "start": ap.START,
+              "pos": {}, "log": [],
+              "pending": {"PB": {"name": "PB", "ccy": "KRW", "limit": 49_500,
+                                 "stop": 49_000, "target": 52_000, "q": 10,
+                                 "created": "2026-07-06", "atr": 500,
+                                 "plan": None, "ctx": None, "basis": "t"}},
+              "day_ent": {"d": ap._today(), "n": 3}}   # 오늘 결정 이미 만석
+        ap._save(st)
+        row = {"code": "PB", "name": "PB", "ccy": "KRW",
+               "sr": {"price": 49_400}, "turnover": 10_000_000_000}
+        out = _run([row], [], tmp)
+        n_after = _json.load(open(ap.STATE_PATH))["day_ent"]["n"]
+        if not any(p["code"] == "PB" for p in out["positions"]):
+            fails.append("전일 주문이 카운터 만석에 체결 차단됨(체결은 허용돼야)")
+        elif out.get("rule_violations"):
+            fails.append(f"체결 이중 카운트 위반 오탐: {out['rule_violations']}")
+        elif n_after != 3:
+            fails.append(f"체결이 일일 카운터 증가시킴: {n_after}")
+        else:
+            print("  [PASS] 전일 주문 체결 — 카운터 불변·위반 오탐 없음")
+
     print()
     if fails:
         print("❌ 실패:")
         for f in fails:
             print("   -", f)
         return 1
-    print("✅ Phase 0 안전장치 5종 전부 통과.")
+    print("✅ Phase 0 안전장치 6종 전부 통과.")
     return 0
 
 

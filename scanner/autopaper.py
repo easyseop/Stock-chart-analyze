@@ -171,7 +171,13 @@ def _read(path: str):
 
 def _state_branch_snapshot():
     """state 브랜치의 계좌 스냅샷 조회(git) — cache 소멸 시 3차 복구 경로.
-    git 부재·브랜치 부재·파싱 실패 전부 조용히 None(빌드는 절대 안 죽임)."""
+    git 부재·브랜치 부재·파싱 실패 전부 조용히 None(빌드는 절대 안 죽임).
+
+    ※ CI(GitHub Actions)에서만 작동 — 로컬 테스트/개발이 빈 상태로 시작할 때
+      운영 계좌를 몰래 끌어오면 테스트 격리가 깨지고(실측: state 브랜치 생성
+      직후 전체 테스트가 운영 잔고로 오염) 개발 실수로 운영 상태를 만질 위험."""
+    if os.environ.get("GITHUB_ACTIONS") != "true":
+        return None
     try:
         import subprocess
         subprocess.run(["git", "fetch", "-q", "origin", "state"],
@@ -636,7 +642,6 @@ def update(results: list[dict], picks: dict, out_dir: str = "public") -> dict:
                  "지정가 취소 — 손절선 이탈(추세 훼손)")
             del st["pending"][code]
         elif price <= o["limit"]:
-            new_pos = code not in st["pos"]
             filled = _buy(st, code, o["name"], o["ccy"], o["q"], o["limit"],
                           o["stop"], o["target"],
                           "눌림 지정가 체결 — " + (o.get("basis") or ""),
@@ -645,8 +650,10 @@ def update(results: list[dict], picks: dict, out_dir: str = "public") -> dict:
             if not filled:
                 _log(st, "cancel", code, o["name"], 0, price, o["ccy"],
                      "지정가 취소 — 현금 부족")
-            elif new_pos:
-                _day_ent(st)["n"] += 1     # 체결로 새 포지션 개시 — 일일 카운트 포함
+            # ※ 체결은 일일 진입 카운트에 넣지 않는다 — '진입 결정'은 주문을 낸
+            #   날 ③에서 이미 +1 됐다. 체결일에 또 세면 이중 카운트가 되고,
+            #   전일 주문이 오늘 체결되면 오늘 결정 0건에도 위반 오탐이 난다
+            #   (실측 2026-07-07 12:21 경보 — 셀트리온 전일 주문 체결 건).
             del st["pending"][code]
         elif _age(o["created"]) >= PENDING_DAYS:
             _log(st, "cancel", code, o["name"], 0, price, o["ccy"],
