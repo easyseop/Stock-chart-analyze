@@ -316,9 +316,14 @@ def thesis(r: dict) -> dict:
         return {"now": True, "verdict": "✅ 지금 진입 타당",
                 "thesis": (f"현재가 {f(price)}가 지지 바로 위 타점권.{t_txt} "
                            f"손절 {f(stop)}(−{stp:.0f}%)·목표 {f(target)}(손익비 1:{rr:.0f}).")}
-    return {"now": True, "verdict": "△ 조건부(확신 보통)",
-            "thesis": (f"지지 근처라 분할 가능하나 만점 셋업은 아님(체크리스트 미충족) — "
-                       f"소액·분할로만.{t_txt} 손절 {f(stop)}·목표 {f(target)}.")}
+    if r.get("norm", 0) >= config.VERDICT_WEAK:
+        return {"now": True, "verdict": "△ 조건부(확신 보통)",
+                "thesis": (f"지지 근처라 분할 가능하나 만점 셋업은 아님(체크리스트 미충족) — "
+                           f"소액·분할로만.{t_txt} 손절 {f(stop)}·목표 {f(target)}.")}
+    # 종합점수까지 약하면(예: 정규화 −24) '분할 가능'도 과함 → 관망.
+    return {"now": True, "verdict": "👀 관망(근거 부족)",
+            "thesis": ("현재가가 지지 근처지만 종합점수 미달·전환 미확정 — 진입 근거 부족. "
+                       "'지금 사라' 아님, 관망. 조건 갖춰지면 후보.")}
 
 
 def _headline(r: dict, rec: int) -> tuple[str, str]:
@@ -381,9 +386,15 @@ def plan_html(r: dict) -> str:
         entry_desc = "받칠 지지 불명확 — <b>진입 보류</b>(관망)"
         entry_src = ("표시된 값은 현재가일 뿐 '지금 사라'가 아님. 눌림 받칠 지지가 "
                      "잡힐 때까지 신규 진입 보류.")
-    else:
+    elif rec >= REC_MIN:
         entry_desc = f"= 현재가 — <b>지금 이 가격에 분할 매수</b> (지지 바로 위 타점권)"
         entry_src = "진입가가 현재가와 같은 건 '지금 여기서 사라'는 뜻(타점권이라 일부러 동일)."
+    else:
+        # 기하학적으론 지지 근처(now)지만 체크리스트 미충족 → '지금 사라' 아님.
+        #   (실측: METC 저점권 2%·정규화 −24인데 '분할 매수'로 표시되던 오류)
+        entry_desc = "현재가가 지지 근처지만 <b>진입 조건 미충족 — 관망</b>"
+        entry_src = ("표시값은 현재가일 뿐 '지금 사라'가 아님. 지지 바로 위이긴 하나 "
+                     "전환 미확정·종합점수 미달로 진입 추천에 못 든다. 조건 갖춰지면 후보.")
 
     # 손절 설명 — 핵심만(실제 손절가 기준). 방어선 vs 손절 구분은 '자세히'로.
     ds = sr.get("defense_strength", "")
