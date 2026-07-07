@@ -83,7 +83,7 @@ def _payload(result: dict, frames: dict, tf: str) -> dict:
         lines.append({"price": round(float(p), 4), "title": title,
                       "color": color, "group": group, "dash": dash})
 
-    L(price, "● 현재가", "#0f172a", "level")          # 현재가 — 굵고 진하게(항상 보이게)
+    L(price, "● 현재가", "#0f172a", "level")          # 현재가 — 굵고 진하게(항상 보이게) [r53]
     L(sr["box_high"], "저항", chart.C["resist"], "level")
     L(sr["defense"], "방어선", chart.C["defense"], "level")
     L(va["poc"], "POC", chart.C["poc"], "level", 1)
