@@ -370,9 +370,9 @@ def plan_html(r: dict) -> str:
     kind = r.get("entry_kind", "now")
     has_bz = bool((r.get("levels") or {}).get("bounce_zones"))
     if kind == "avoid":
-        entry_desc = "<b>신규 매수 회피</b> — 방어선 아래(하락추세). 표시값은 참고용 현재가"
-        entry_src = ("방어선 이탈/하락추세 = 매수 자리 아님. '여기서 사라'가 아니라 "
-                     "방어선 회복 전까지 관망. 보유 중이면 반등에 비중 축소.")
+        entry_desc = f"<b>신규 매수 회피</b> — 방어선 아래(하락추세). 현재가 {f(price)}"
+        entry_src = ("방어선 이탈/하락추세 = 매수 자리 아님. 진입가 없음('여기서 사라' "
+                     "아님) — 방어선 회복 전까지 관망. 보유 중이면 반등에 비중 축소.")
     elif kind == "breakout":
         entry_desc = f"저항 {f(sr['box_high'])} 돌파+안착 시 <b>지금 아님</b>"
         entry_src = "고점권이라 저항 돌파 자리에서 매수(돌파 확인 후)."
@@ -488,10 +488,16 @@ def plan_html(r: dict) -> str:
         tags.append(f'<span class="ptag" style="{style}">'
                     f'{html.escape(flabel)}{gap_txt}</span>')
     tags_html = (f'<div class="plan-tags">{"".join(tags)}</div>' if tags else "")
+    # 진입가 숫자는 '실제로 진입 가능한 경우'에만 — 회피·보류·관망(rec 미달)엔 '—'.
+    #   "진입가 = 이 가격에 사라"는 뜻인데, 매수 자리가 아닌 종목에 현재가를 박으면
+    #   '지금 사라'로 오독된다(사용자 지적: 회피인데 진입가=현재가).
+    actionable = (kind in ("breakout", "pullback")      # 조건부 진입가(돌파/눌림 시)
+                  or (kind == "now" and rec >= REC_MIN))  # 지금 진입 타당
+    entry_disp = f(entry) if actionable else "—"
     return _TMPL.format(
         color=color, head=html.escape(head), why=why, timing=tm_html,
         tags=tags_html, note=note_html, zones=zones_html,
-        entry=f(entry), entry_desc=entry_desc, entry_src=entry_src,
+        entry=entry_disp, entry_desc=entry_desc, entry_src=entry_src,
         stop=f(risk["stop"]), stop_desc=stop_desc, stop_more=stop_more,
         target=f(risk["target"]), rr=f"{risk['rr']:.0f}",
         pos_desc=pos_desc, rules=rules_html)
