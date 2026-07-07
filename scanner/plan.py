@@ -510,10 +510,31 @@ def _zones_html(r: dict, f) -> str:
                 if res_li else "")
     bnc_html = (f'<div class="pm-dn">⬇ 반등 예상 <span class="zhs">(깨지면 다음 구간)</span>'
                 f'<ul>{bnc_li}</ul></div>' if bnc_li else "")
+    # 관찰선(단기 선반) — 여러 번 받친 '단독' 지지선. 컨플루언스(2종+) 미달이라
+    #   반등 구간에선 빠지지만, 단타 진영이 말하는 "깨지면 안 되는 선"이 대개
+    #   이것이라 참고용으로 노출(집행 기준 아님 — 손절·방어선이 기준).
+    #   실측 계기: MSFT $373(2026-07) — 페이지에 없어서 외부 주장 대조가 안 됐음.
+    strong = lv.get("strong") or []
+    shown = bounce[:3]
+    def _in_zone(p):
+        return any(z["low"] * 0.995 <= p <= z["high"] * 1.005 for z in shown)
+    watch = [l for l in strong
+             if price and l["price"] < price
+             and (price - l["price"]) / price <= 0.12      # 12% 이내만(관련성)
+             and not _in_zone(l["price"])]
+    watch.sort(key=lambda l: -l["price"])                  # 현재가에 가까운 순
+    watch_li = "".join(
+        f'<li><b>관찰</b> {f(l["price"])} '
+        f'<span class="zd">({(l["price"] - price) / price * 100:+.1f}% · '
+        f'{l["touches"]}회 받침)</span> — 단기 선반 · 깨지면 아래 구간 주시</li>'
+        for l in watch[:2])
+    wl_html = (f'<div class="pm-dn">👀 관찰선 <span class="zhs">(자주 받친 단기 선 '
+               f'— 참고용, 손절 아님)</span><ul>{watch_li}</ul></div>'
+               if watch_li else "")
     now = (f'<div class="pm-now">── 현재가 <b>{f(price)}</b>'
            f'{" · 손절 " + f(stop) if stop else ""} ──</div>')
     return (f'<div class="pmap"><div class="pm-h">📈 가격 지도</div>'
-            f'{res_html}{now}{bnc_html}</div>')
+            f'{res_html}{now}{wl_html}{bnc_html}</div>')
 
 
 _TMPL = """<div class="plan">
