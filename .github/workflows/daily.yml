@@ -37,6 +37,9 @@ on:
         description: "데이터 갱신 범위 — none=재배포만(가장 빠름·코드만 반영) / top=상위300 / full=전체(느림)"
         options: ["none", "top", "full"]
         default: "none"
+      confirm:
+        description: "full 실행 확인 — full일 때만 대문자로 FULL 입력(외부 킥의 무거운 모드 남발 방지)"
+        default: ""
       backfill:
         description: "백필 묶음(update=full일 때만 적용, 미수집분 전부면 9999)"
         default: "9999"
@@ -45,7 +48,7 @@ on:
         default: ""
 
 permissions:
-  contents: read
+  contents: write       # state 브랜치 계좌 백업 커밋용(그 외 쓰기 없음)
   pages: write
   id-token: write
 
@@ -58,7 +61,41 @@ env:
   CHUNK: "9999"           # 한 실행에 미수집분 전부 백필(백필=아직 없는 종목만 받음)
 
 jobs:
+  # ── 외부 킥 공회전 가드 ─────────────────────────────────────────
+  #   외부 크론(PAT)이 15분마다 무조건 dispatch를 쏘는 구조에서:
+  #   ① top 킥인데 라이브가 이미 신선(<40분)하면 → 빌드 생략(no-op).
+  #      토큰이 유출돼 폭탄 dispatch가 와도 최악이 '공회전'으로 축소.
+  #   ② full은 confirm=FULL 명시 없이는 거부 — 무거운 모드 남발/오발사 방지.
+  #   신선도 조회 실패 시엔 실행(fail-open) — 가드가 빌드를 막는 사고 방지.
+  guard:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    outputs:
+      run: ${{ steps.g.outputs.run }}
+    steps:
+      - id: g
+        run: |
+          run=1
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            if [ "${{ github.event.inputs.update }}" = "full" ] && [ "${{ github.event.inputs.confirm }}" != "FULL" ]; then
+              echo "::warning::full은 confirm=FULL 입력 필요 — 실행 거부"
+              run=0
+            elif [ "${{ github.event.inputs.update }}" = "top" ]; then
+              age=$(curl -sf "https://easyseop.github.io/Stock-chart-analyze/api/signals.json?cb=${GITHUB_RUN_ID}" \
+                | python3 -c 'import json,sys,datetime as d; t=d.datetime.fromisoformat(json.load(sys.stdin)["generated_at"]); print(int((d.datetime.now(t.tzinfo)-t).total_seconds()))' \
+                2>/dev/null || echo 999999)
+              echo "라이브 나이: $((age/60))분"
+              if [ "$age" -lt 2400 ]; then
+                echo "이미 신선(<40분) — 공회전 방지 no-op"
+                run=0
+              fi
+            fi
+          fi
+          echo "run=$run" >> "$GITHUB_OUTPUT"
+
   build:
+    needs: guard
+    if: needs.guard.outputs.run == '1'
     runs-on: ubuntu-latest
     timeout-minutes: 120
     steps:
@@ -130,6 +167,66 @@ jobs:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: python main.py --cache --scan-cached --screener --screener-dir public
+
+      # ── 계좌 상태 영구 백업(state 브랜치) — actions/cache 밖의 source of truth ──
+      #   cache는 경합·7일 소멸·임의 evict 위험(실측: 즉석조회 소실 사고).
+      #   매 빌드 후 스냅샷 + 월별 append-only 원장 + 기계용 feed를 state 브랜치에
+      #   커밋 — 계좌 리셋 사고 원천 차단 + 매매 이력 감사 가능.
+      #   실패해도 빌드는 계속(::warning) — 다음 빌드가 재시도.
+      - name: 계좌 상태 백업(state 브랜치)
+        run: |
+          set +e
+          (
+            set -e
+            [ -f data_cache/autopaper.json ] || { echo "상태 파일 없음 — 백업 생략"; exit 0; }
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            rm -rf /tmp/st
+            if git fetch origin state 2>/dev/null; then
+              git worktree add /tmp/st FETCH_HEAD
+            else
+              git worktree add --detach /tmp/st
+              git -C /tmp/st checkout --orphan state
+              git -C /tmp/st rm -rf . >/dev/null 2>&1 || true
+            fi
+            mkdir -p /tmp/st/state/ledger /tmp/st/feed
+            cp data_cache/autopaper.json /tmp/st/state/autopaper.snapshot.json
+            # 기계용 feed 미러 — 알림봇이 Pages 대신 1순위로 읽는 경로
+            cp public/api/signals.json    /tmp/st/feed/signals.latest.json    2>/dev/null || true
+            cp public/api/paper_auto.json /tmp/st/feed/autopaper.public.json  2>/dev/null || true
+            # 하트비트 + 월별 원장(요약 1줄 append)
+            python3 - <<'PY'
+          import json, os, datetime
+          now = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=9)))
+          hb = {"generated_at": now.isoformat(timespec="seconds"),
+                "run_id": os.environ.get("GITHUB_RUN_ID"),
+                "event": os.environ.get("GITHUB_EVENT_NAME")}
+          json.dump(hb, open("/tmp/st/feed/heartbeat.json", "w"))
+          try:
+              out = json.load(open("public/api/paper_auto.json"))
+              led = {"ts": hb["generated_at"], "run_id": hb["run_id"],
+                     "cash": out.get("cash"), "equity": out.get("equity"),
+                     "ret_pct": out.get("ret_pct"),
+                     "positions": len(out.get("positions", [])),
+                     "pending": len(out.get("pending", [])),
+                     "trades": out.get("trades")}
+              path = f"/tmp/st/state/ledger/{now.strftime('%Y-%m')}.jsonl"
+              with open(path, "a") as fp:
+                  fp.write(json.dumps(led, ensure_ascii=False) + "\n")
+          except Exception as e:
+              print("원장 기록 생략:", e)
+          PY
+            git -C /tmp/st add -A
+            if git -C /tmp/st diff --cached --quiet; then
+              echo "변경 없음 — 커밋 생략"
+            else
+              git -C /tmp/st commit -q -m "state: $(date -u +%FT%TZ) run=${GITHUB_RUN_ID} [skip ci]"
+              git -C /tmp/st push -q origin HEAD:state
+              echo "상태 백업 완료 → state 브랜치"
+            fi
+          )
+          [ $? -ne 0 ] && echo "::warning::계좌 상태 백업 실패 — 빌드는 계속, 다음 빌드 재시도"
+          exit 0
 
       - name: 진행 현황(로그용)
         run: |

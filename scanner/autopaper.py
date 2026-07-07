@@ -169,11 +169,28 @@ def _read(path: str):
         return None
 
 
+def _state_branch_snapshot():
+    """state 브랜치의 계좌 스냅샷 조회(git) — cache 소멸 시 3차 복구 경로.
+    git 부재·브랜치 부재·파싱 실패 전부 조용히 None(빌드는 절대 안 죽임)."""
+    try:
+        import subprocess
+        subprocess.run(["git", "fetch", "-q", "origin", "state"],
+                       timeout=30, check=True, capture_output=True)
+        out = subprocess.run(
+            ["git", "show", "FETCH_HEAD:state/autopaper.snapshot.json"],
+            timeout=10, check=True, capture_output=True)
+        return json.loads(out.stdout)
+    except Exception:
+        return None
+
+
 def _load() -> dict:
-    """상태 로드 — 본파일 깨졌으면 백업(.bak)에서 복구, 둘 다 실패해야 초기화.
+    """상태 로드 — 복구 순서 고정(SRE 검토 §2 채택):
+      ① 본파일 → ② .bak → ③ state 브랜치 스냅샷(git 영구 백업) → ④ 새 계좌.
 
     자동매매에서 '계좌가 이유 없이 리셋'되는 사고를 막는다: 원자적 저장으로
-    본파일 손상 자체를 예방하고, 그래도 손상되면 직전 정상본(.bak)으로 되살린다.
+    본파일 손상을 예방하고, cache가 통째로 소멸(7일 미사용·임의 evict)해도
+    state 브랜치 백업으로 되살린다.
     """
     st = _read(STATE_PATH)
     if _valid(st):
@@ -182,6 +199,10 @@ def _load() -> dict:
     if _valid(bak):
         print("[autopaper] 본 상태파일 손상 → 백업(.bak)에서 복구")
         return bak
+    snap = _state_branch_snapshot()
+    if _valid(snap):
+        print("[autopaper] 로컬 상태 없음 → state 브랜치 스냅샷에서 복구")
+        return snap
     if st is not None or bak is not None:
         # 파일은 있는데 유효하지 않음(버전 변경 등) — 초기화는 의도된 경우만
         print("[autopaper] 유효한 상태 없음 → 새 계좌로 시작(시드 1억)")
