@@ -1,9 +1,9 @@
 {
  "updated": "2026-07-08",
  "start": 100000000,
- "cash": 48914436,
- "equity": 100031637,
- "ret_pct": 0.03,
+ "cash": 48873191,
+ "equity": 99755519,
+ "ret_pct": -0.24,
  "positions": [
   {
    "code": "MRSH",
@@ -11,13 +11,13 @@
    "ccy": "USD",
    "q": 72,
    "avg": 174.3075,
-   "price": 178.80999755859375,
+   "price": 177.63499450683594,
    "stop": 165.3325,
    "target": 192.2575,
    "half_done": false,
    "opened": "2026-07-06",
-   "pl_krw": 490854,
-   "pl_pct": 2.58
+   "pl_krw": 362757,
+   "pl_pct": 1.91
   },
   {
    "code": "EQT",
@@ -25,13 +25,13 @@
    "ccy": "USD",
    "q": 256,
    "avg": 52.085,
-   "price": 51.709999084472656,
+   "price": 51.33000183105469,
    "stop": 49.5451,
    "target": 57.1649,
    "half_done": false,
    "opened": "2026-07-07",
-   "pl_krw": -145358,
-   "pl_pct": -0.72
+   "pl_krw": -292652,
+   "pl_pct": -1.45
   },
   {
    "code": "STE",
@@ -39,13 +39,13 @@
    "ccy": "USD",
    "q": 6,
    "avg": 213.02,
-   "price": 215.4199981689453,
+   "price": 215.33999633789065,
    "stop": 202.063,
    "target": 234.934,
    "half_done": false,
    "opened": "2026-07-07",
-   "pl_krw": 21804,
-   "pl_pct": 1.13
+   "pl_krw": 21077,
+   "pl_pct": 1.09
   },
   {
    "code": "068270",
@@ -60,6 +60,20 @@
    "opened": "2026-07-07",
    "pl_krw": 153986,
    "pl_pct": 1.63
+  },
+  {
+   "code": "ORC",
+   "name": "Orchid Island Capital, Inc.",
+   "ccy": "USD",
+   "q": 4,
+   "avg": 6.81,
+   "price": 6.809999942779541,
+   "stop": 6.5493,
+   "target": 7.3314,
+   "half_done": false,
+   "opened": "2026-07-08",
+   "pl_krw": 0,
+   "pl_pct": -0.0
   }
  ],
  "pending": [
@@ -219,10 +233,23 @@
   },
   {
    "d": "2026-07-08",
-   "v": 100031637
+   "v": 99755519
   }
  ],
  "log": [
+  {
+   "d": "2026-07-08",
+   "type": "buy",
+   "code": "ORC",
+   "name": "Orchid Island Capital, Inc.",
+   "q": 4,
+   "price": 6.81,
+   "ccy": "USD",
+   "amt": 41245,
+   "note": "즉시 분할 — 🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권20% · 체크4/6 · 손절폭3.8%",
+   "stop": 6.5493,
+   "target": 7.3314
+  },
   {
    "d": "2026-07-08",
    "type": "order",
