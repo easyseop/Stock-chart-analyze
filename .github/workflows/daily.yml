@@ -63,8 +63,11 @@ env:
 jobs:
   # ── 외부 킥 공회전 가드 ─────────────────────────────────────────
   #   외부 크론(PAT)이 15분마다 무조건 dispatch를 쏘는 구조에서:
-  #   ① top 킥인데 라이브가 이미 신선(<40분)하면 → 빌드 생략(no-op).
+  #   ① top 킥인데 라이브가 이미 신선(<20분)하면 → 빌드 생략(no-op).
   #      토큰이 유출돼 폭탄 dispatch가 와도 최악이 '공회전'으로 축소.
+  #      ※ 임계=20분: 15분 주기 시스템의 '슬롯 보정'용. 40분이면 GitHub 크론이
+  #        죽어도 40분간 '아직 신선'으로 no-op → 워치독 45분과 겹쳐 무의미.
+  #        20분이면 크론이 한 슬롯 드랍한 즉시(다음 외부 킥에서) 보정된다.
   #   ② full은 confirm=FULL 명시 없이는 거부 — 무거운 모드 남발/오발사 방지.
   #   신선도 조회 실패 시엔 실행(fail-open) — 가드가 빌드를 막는 사고 방지.
   guard:
@@ -85,8 +88,8 @@ jobs:
                 | python3 -c 'import json,sys,datetime as d; t=d.datetime.fromisoformat(json.load(sys.stdin)["generated_at"]); print(int((d.datetime.now(t.tzinfo)-t).total_seconds()))' \
                 2>/dev/null || echo 999999)
               echo "라이브 나이: $((age/60))분"
-              if [ "$age" -lt 2400 ]; then
-                echo "이미 신선(<40분) — 공회전 방지 no-op"
+              if [ "$age" -lt 1200 ]; then
+                echo "이미 신선(<20분) — 공회전 방지 no-op"
                 run=0
               fi
             fi
@@ -225,8 +228,26 @@ jobs:
               echo "상태 백업 완료 → state 브랜치"
             fi
           )
-          [ $? -ne 0 ] && echo "::warning::계좌 상태 백업 실패 — 빌드는 계속, 다음 빌드 재시도"
+          rc=$?
+          # 연속 실패 카운터(cache 영속) — 계좌 원본은 cache+.bak에 안전하나,
+          #   백업이 '조용히' 계속 실패하면 원장·복구층이 낡는다. 2연속+면 경보.
+          FC=data_cache/.backup_fails
+          if [ $rc -eq 0 ]; then
+            echo 0 > "$FC"
+          else
+            n=$(( $(cat "$FC" 2>/dev/null || echo 0) + 1 ))
+            echo "$n" > "$FC"
+            echo "::warning::계좌 상태 백업 실패(${n}회 연속) — 빌드는 계속, 다음 빌드 재시도"
+            if [ "$n" -ge 2 ] && [ -n "${TG_TOKEN}" ] && [ -n "${TG_CHAT}" ]; then
+              curl -sf -X POST "https://api.telegram.org/bot${TG_TOKEN}/sendMessage" \
+                -d "chat_id=${TG_CHAT}" \
+                -d "text=🟠 계좌 상태 백업 ${n}회 연속 실패 — state 브랜치 원장/복구층이 낡는 중. 매매·계좌 원본(cache+.bak)은 정상. 지속되면 확인 필요." >/dev/null || true
+            fi
+          fi
           exit 0
+        env:
+          TG_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TG_CHAT: ${{ secrets.TELEGRAM_CHAT_ID }}
 
       - name: 진행 현황(로그용)
         run: |

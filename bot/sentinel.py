@@ -163,7 +163,18 @@ def check_once(broker, state: dict) -> None:
         qty = p.get("q", 0)
         if not stop or qty <= 0:
             continue
-        # 멱등키: 종목+손절가+날짜 — 같은 손절이 두 번 나가지 않게
+        # 멱등키: 종목+손절가+날짜 — 같은 손절이 두 번 나가지 않게(dry-run엔 충분).
+        # ── 실거래 전 필수(토스 어댑터 구현 시 반드시 강화) ─────────────
+        #   현재 키는 SRE 재검토(2026-07-07)가 지적한 4개 구멍이 있다:
+        #     ① 부분 체결 후 재시도 → 같은 키가 잔여 수량 주문을 막음
+        #     ② 트레일링으로 stop이 바뀌면 같은 포지션에 새 키 생성 → 중복 주문
+        #     ③ 당일 재진입 시 이전 stop 키와 충돌
+        #     ④ KR/US trade_date 혼재 시 date 키 흔들림
+        #   → 실거래 키는 포지션 정체성 기반:
+        #        {broker}:{account}:{symbol}:{opened_at}:{seq}:{action}
+        #   → place_sell 직전 broker 실보유수량 재조회, intended>broker면 축소.
+        #   → 주문 원장(submitted→ack→partial→filled / rejected / unknown→reconcile)
+        #     을 별도 저장하고, unknown은 다음 폴링에서 reconcile.
         key = f'{code}:{stop}:{_now_kst().date().isoformat()}'
         if key in sent:
             continue
