@@ -102,6 +102,15 @@ def _fmt(v: float, ccy: str) -> str:
 
 
 def _quote(code: str, fallback: float | None) -> float | None:
+    # 1순위: 토스 시세(키 있을 때만·실패 시 조용히 폴백) — 실전급 최신가.
+    try:
+        from bot import toss
+        px = toss.quote_price(code)
+        if px is not None:
+            return px
+    except Exception:
+        pass
+    # 폴백: FDR(야후/Stooq) 마지막 종가.
     try:
         import FinanceDataReader as fdr
         df = fdr.DataReader(code)

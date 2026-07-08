@@ -16,20 +16,19 @@
 |---|---|---|
 | Base URL | `https://openapi.tossinvest.com` | [확정] |
 | 인증 | OAuth 2.0 **Client Credentials** — 사용자 로그인 없이 서버 간 토큰 발급 | [확정] |
+| 토큰 엔드포인트 | `POST /oauth2/token` (form-urlencoded: `grant_type=client_credentials`, `client_id`, `client_secret`) → `access_token`, `expires_in` | [확정, OpenAPI] |
 | 인증 헤더 | 모든 호출에 `Authorization: Bearer {access_token}` | [확정] |
-| 계좌 헤더 | 계좌 관련 호출은 추가로 `X-Tossinvest-Account` | [확정] |
-| 토큰 만료 | 약 1시간 — **50분경 선제 갱신** 권장 | [확정] |
-| 카테고리 | Auth · Market Data(시세) · Stock Info · Market Info(환율·휴장일) · Account(잔고) · Order(주문) 등 26종 | [확정] |
-| 대상 시장 | 국내 KRX + **미국 주식** 둘 다 (우리 유니버스 95% 미국주와 정합) | [확정] |
+| 계좌 헤더 | 계좌·자산·주문 호출은 추가로 `X-Tossinvest-Account` | [확정] |
+| 토큰 만료 | `expires_in`이 진실(문서 예시 **86400초=24h**, "약 1시간"이 아님). **client당 유효 토큰 1개 — 재발급 시 이전 토큰 즉시 무효화** → 루프별 개별 발급 금지, 단일 token_manager 필수 | [확정, OpenAPI] |
+| 시세 엔드포인트 | `GET /api/v1/prices?symbols=AAPL,005930` (콤마 구분 **최대 200건**) → `result[].{symbol, timestamp(ISO8601\|null), lastPrice(문자열), currency}`. Rate group `MARKET_DATA` | [확정, OpenAPI] |
+| 대상 시장 | 국내 KRX + **미국 주식** 둘 다 (currency: KRW/USD) | [확정] |
 | 실시간 | **웹소켓 미공개** — 현재는 REST 폴링. 웹소켓은 준비 중 | [확정] |
-| Rate limit | 시세 **분당 수백 건** / 계좌 조회 **초당 1건**(가장 빡빡) / 주문 초당 1~10건. 과도 트래픽 시 무통보 제한 가능 | [확정, 세부 수치 대조필요] |
+| Rate limit | 그룹별(응답에 `Rate Limits Group` 명시): `MARKET_DATA`(시세)·`STOCK`·`ACCOUNT`·`ORDER`·`AUTH` 등. 세부 수치(초당/분당)는 [대조필요] | [확정 구조, 수치 대조필요] |
 | 선행 조건 | 토스증권 **계좌 개설 + 앱키 발급** (✅ 사용자 완료) | [확정] |
-| 수수료 | 국내주 2026년 6월까지 면제 | [확정] |
-| 개별 엔드포인트 경로/파라미터 | 예: `/oauth/token`, `/market-data/...`, `/account/...`, `/order` | [대조필요] |
+| 서버측 조건주문 | **`/api/v1/conditional-orders` 존재(생성/조회/취소/정정)** → 0차 방어(서버측 stop) **지원 확인**. 단 stop/stop-limit 세부·미국주 지원은 [대조필요] | [확정 존재, 세부 대조필요] |
+| 전체 엔드포인트 | 27종 확인 — accounts·buying-power·holdings·sellable-quantity·orders·conditional-orders·prices·candles·orderbook·stocks·exchange-rate·market-calendar/{KR,US}·commissions·price-limits·rankings·trades·market-indicators | [확정, OpenAPI] |
 
-출처: 토스증권 Open API 공식(corp.tossinvest.com/ko/open-api), 개발자 문서
-(developers.tossinvest.com/docs), Open API 이용약관(corp.tossinvest.com/ko/terms),
-가이드(pulse-know.com/toss-invest-open-api-guide-2026).
+출처: **developers.tossinvest.com OpenAPI 3.1 스펙**(`openapi.tossinvest.com/openapi-docs/latest/openapi.json`, 2026-07-08 직접 파싱 — 위 [확정, OpenAPI] 항목의 근거), 토스증권 Open API 공식(corp.tossinvest.com/ko/open-api), 개발자 문서(developers.tossinvest.com/docs).
 
 ## 2. 이 연동이 해결하는 것 (지금 시스템의 근본 한계)
 
@@ -159,15 +158,33 @@ SRE 장애는 반영됐으나 "증권 실계좌"의 함정은 별도로 확정�
 | **수수료·세금·소수점** | 미국주 소수점 주문 지원?·최소주문금액·제세금 반영 손익·매도가능수량 반올림 |
 | **kill switch** | 신규 진입 전역 중지 → 전 주문 중지 → 파수꾼만 유지 → 파수꾼도 중지 → 수동 청산, 단계별 스위치 |
 
-## 8. 지금 바로 할 수 있는 것 (Stage 0)
+## 8. 지금 바로 할 수 있는 것 (Stage 0) — ✅ 구현 완료
 
-키가 있으니 **주문·계좌를 안 건드리고 시세만** 붙일 수 있다:
-1. `bot/toss.py` 어댑터 — OAuth 토큰 발급/갱신 + 시세 배치 조회(읽기 전용)
-2. `scanner/data.py`에 **토스 우선 → 실패 시 FDR 폴백** 소스 체인 추가
-3. 자동매매·주문은 **여전히 가상** → 리스크 0, 데이터 품질만 실전급
+키가 있으니 **주문·계좌를 안 건드리고 시세만** 붙였다:
+1. ✅ `bot/toss.py` — OAuth 토큰 발급/캐시(선제 갱신·401 자동 재발급) + 시세
+   배치 조회(`/api/v1/prices`, ≤200건, 읽기 전용). 표준 라이브러리만.
+2. ✅ **토스 우선 → 실패 시 FDR 폴백** — `bot/advisor._quote`·`bot/sentinel`
+   현재가 조회의 1순위를 토스로. 키 없거나 실패면 조용히 FDR(현행 100% 동일).
+3. 자동매매·주문은 **여전히 가상** → 리스크 0, 데이터 품질만 실전급.
+4. ✅ 검증: `tests/test_toss.py`(키게이트·파싱·401재발급·시크릿 비노출).
 
-착수 시 필요한 것: 발급받은 **앱키(Client ID/Secret)** 를 서버/로컬 환경변수로만
-(코드·로그 노출 금지). 값은 채팅/커밋에 절대 올리지 말 것 — 환경변수 이름만 합의.
+**설계 안전판**: 키 미설정=어댑터 전면 비활성, 모든 실패=예외 없이 빈 결과→폴백.
+그래서 엔드포인트 추정이 틀려도 최악이 "지금과 동일(FDR)"이지 장애가 아니다.
+
+**환경변수(값은 절대 코드·채팅·로그·커밋 금지 — GitHub Actions 시크릿으로만):**
+```
+TOSS_CLIENT_ID       발급받은 클라이언트 ID
+TOSS_CLIENT_SECRET   발급받은 클라이언트 시크릿
+TOSS_BASE_URL        (선택) 기본 https://openapi.tossinvest.com
+```
+**사용자 확인 절차(키 설정 후)**: 로컬에서 `TOSS_CLIENT_ID=… TOSS_CLIENT_SECRET=…
+python -m bot.toss --selftest AAPL,005930` → 토큰 발급·시세가 찍히면 연동 OK.
+그다음 Actions 시크릿에 두 값을 넣으면 배치가 자동으로 토스 시세를 1순위 사용.
+
+**다음(Stage 0.5, 더 큰 효과)**: fast lane/autopaper의 "현재가=일봉 마지막 종가"를
+토스 실시간가로 주입 → 실제 매매 판단이 실전 가격으로. `analyze` 입력의 마지막 봉만
+교체하는 방식이라 게이트·사이징 로직은 무변경. Stage 0 셀프테스트로 응답을 실측한
+뒤 착수(추정으로 매매 경로를 바꾸지 않는다).
 
 ## 9. 구현 착수 시 실제 응답으로 확정할 것 (2차 검토 Q1~Q10 — 감으로 답 금지)
 
@@ -178,16 +195,23 @@ SRE 장애는 반영됐으나 "증권 실계좌"의 함정은 별도로 확정�
 2. 계좌 초당 1건에 잔고·주문가능수량·open orders·주문상세·체결조회가 **다 포함**되나
 3. 미국주 시세: 정규장/프리/애프터/주간거래 중 어디까지·어떤 지연으로
 4. **quote_ts**가 응답에 있나 — 거래소 시각인가 토스 수신 시각인가
-5. 주문에 **client_order_id/멱등키**를 넣을 수 있나
-6. timeout 후 주문 상태를 어떤 엔드포인트로 안정 확인하나
-7. 부분체결·미체결취소·정정의 **상태 전이** 표현
+   → **부분 확정**: `/api/v1/prices` 응답에 `timestamp`(ISO8601, 체결 없으면 null)
+   존재. 거래소 시각 vs 토스 수신 시각 구분은 실측 필요.
+5. 주문에 **client_order_id/멱등키**를 넣을 수 있나(`/api/v1/orders` 스키마 실측)
+6. timeout 후 주문 상태를 어떤 엔드포인트로 안정 확인 → `/api/v1/orders/{orderId}` 존재
+7. 부분체결·미체결취소·정정의 **상태 전이** 표현(`orders`·`orders/{id}/cancel|modify`)
 8. **서버측 stop/조건주문** 지원 여부(0차 방어 존폐를 가름)
+   → **지원 확인**: `/api/v1/conditional-orders`(생성/조회/취소/정정) 존재.
+   stop vs stop-limit·미국주 지원·트리거 조건 세부는 실측 필요.
 9. API 점검시간·토큰갱신 실패 시 주문/조회 실패 형태
 10. 앱 주문 ↔ API 주문 동시 존재 시 source of truth
 
 > **검토 이력**: 초판(자체) → v2: GPT Q1~Q6 최종 판정 반영 — 계좌 rate limit을
 > 실제 병목으로 승격, 파수꾼 계좌 조회 규율, token refresh lock, broker-side stop
 > [대조필요] 강등, Stage 1.5 추가, 증권 실계좌 함정(§7.5), 실측 질문 10종(§9).
+> → v3(2026-07-08): **OpenAPI 3.1 스펙 직접 파싱** — 토큰 경로(`/oauth2/token`)·
+> 만료(expires_in=예시 24h·토큰 1개 제약)·시세(`/api/v1/prices` ≤200·필드)·
+> 조건주문 존재(Q8 '지원 확인'으로 승격) 확정. **Stage 0(bot/toss.py) 구현·검증 완료.**
 >
 > 관련 문서: `RELIABILITY_PLAN.md`(3계층·장애 매트릭스) · `bot/STRATEGY.md`
 > 5.5(실거래 원칙)·5.5.1(파수꾼 스펙) · `bot/sentinel.py`(어댑터 자리).
