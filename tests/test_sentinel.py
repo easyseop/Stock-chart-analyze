@@ -19,6 +19,7 @@ import tempfile
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import bot.sentinel as sn
+import bot.ledger as L
 
 
 class FakeBroker:
@@ -40,6 +41,7 @@ POS = {"code": "TT", "name": "테스트", "ccy": "USD", "q": 10, "stop": 100.0}
 
 def _setup(tmp, feed_positions, age=None):
     sn.SENT_PATH = os.path.join(tmp, "sent.json")
+    L.LEDGER_PATH = os.path.join(tmp, "ledger.jsonl")   # 원장도 tmp로(전역 오염 방지)
     sn._market_open = lambda ccy: True
     sn._notify = lambda text, **kw: NOTES.append(text)
     sn._fetch_positions = lambda: (feed_positions, age)
@@ -119,6 +121,50 @@ def main() -> int:
             fails.append(f"트레일 변경 후 중복 발화({len(bk.sells)}회) — 정체성 키 실패")
         else:
             print("  [PASS] 트레일로 손절선 변경돼도 같은 포지션 재발화 없음")
+
+    # ⑧ 주문 UNKNOWN → 종목 잠금 → 대사 → 잔여만 재주문(초과매도 방지 end-to-end)
+    class UnknownThenFill:
+        name = "mock"
+
+        def __init__(self, price):
+            self.price, self.calls, self.phase = price, [], "unknown"
+
+        def quote(self, code, ccy):
+            return self.price
+
+        def place_sell(self, code, qty, reason, key):
+            self.calls.append((code, qty, key))
+            if self.phase == "unknown":
+                self.phase = "filled"
+                return {"state": "unknown", "filled": 0}   # 첫 주문 타임아웃
+            return {"state": "filled", "filled": qty}
+
+        def order_status(self, key):
+            return 3          # 대사: 첫 주문은 실제로 3주만 체결돼 있었다(부분)
+
+    with tempfile.TemporaryDirectory() as tmp:
+        NOTES = []
+        pos = {"code": "UN", "name": "언논", "ccy": "USD", "q": 10,
+               "stop": 100.0, "opened": "2026-07-02"}
+        _setup(tmp, [pos])
+        bk = UnknownThenFill(98.0)                # 하드 손절 발화가
+        st = {}
+        sn.check_once(bk, st)                     # #1: 발주→UNKNOWN→잠금
+        if not any("UNKNOWN" in n for n in NOTES):
+            fails.append("UNKNOWN 경보 미발송")
+        # 잠금 중엔 재주문 없어야(같은 사이클 반복해도)
+        sn.check_once(bk, st)                     # #2: 대사→부분3 확정→잔여7 재주문→체결
+        qtys = [c[1] for c in bk.calls]
+        if qtys != [10, 7]:
+            fails.append(f"잔여 재주문 오류 — 주문 수량 흐름 {qtys}(기대 [10,7])")
+        elif len(bk.calls) != 2:
+            fails.append(f"주문 횟수 오류: {len(bk.calls)}(초과매도 위험)")
+        else:
+            sn.check_once(bk, st)                 # #3: 이미 완결 → 추가 주문 없음
+            if len(bk.calls) != 2:
+                fails.append("완결 후 추가 주문 발생(초과매도)")
+            else:
+                print("  [PASS] UNKNOWN→잠금→대사→잔여만(10→7) 재주문, 초과매도 없음")
 
     # ⑤ 매수 경로 부재(보안 원칙)
     src = open(os.path.join(os.path.dirname(sn.__file__), "sentinel.py"),

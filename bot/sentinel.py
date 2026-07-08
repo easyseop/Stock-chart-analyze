@@ -40,6 +40,8 @@ import os
 import time
 import urllib.request
 
+from bot import ledger
+
 POLL_SEC = 20              # 장중 폴링 주기(초) — 손절 보호용이라 짧게
 FEED_URLS = (              # 포지션/손절선 소스 — state 브랜치 우선, Pages 폴백
     "https://raw.githubusercontent.com/easyseop/Stock-chart-analyze/state/feed/autopaper.public.json",
@@ -154,8 +156,36 @@ def _save_sent(d: dict) -> None:
         json.dump(d, fp, ensure_ascii=False, indent=1)
 
 
+def _norm_result(res, qty: int) -> tuple[str, int]:
+    """브로커 place_sell 응답 정규화 → (state, filled_qty).
+    레거시 bool(True=체결/False=거부)과 리치 dict({state, filled}) 모두 지원.
+    타임아웃은 브로커가 dict{state:"unknown"}로 신호(초과매도 방지의 진입점)."""
+    if isinstance(res, dict):
+        return res.get("state", "filled"), int(res.get("filled", qty))
+    return ("filled", qty) if res else ("rejected", 0)
+
+
+def _reconcile_open(broker) -> None:
+    """미해소 UNKNOWN 주문을 브로커 실측 체결량으로 확정(대사) — 잠금 해제.
+    order_status를 지원하는 브로커(실거래 어댑터)에서만 동작. 모의/dry-run은 no-op."""
+    if not hasattr(broker, "order_status"):
+        return
+    for o in ledger.open_orders():
+        if o.get("state") != "unknown":
+            continue
+        try:
+            actual = broker.order_status(o["key"])   # 실제 체결 수량(없으면 None)
+        except Exception:
+            continue
+        if actual is not None:
+            r = ledger.reconcile(o["key"], int(actual))
+            _notify(f"🔁 파수꾼 대사 — {o.get('symbol')} 주문 확정 {r['state']}"
+                    f"(체결 {r['filled']} · 잔여 {r['residual']})", critical=True)
+
+
 def check_once(broker, state: dict) -> None:
     """한 사이클: 피드 → 장중 보유 종목 시세 → 하드/소프트 손절 판단."""
+    _reconcile_open(broker)                    # 먼저 UNKNOWN 대사(잠금 해제 기회)
     positions, age = _fetch_positions()
     stale = age is not None and age > FEED_STALE_MIN
     if stale and not state.get("_stale_warned"):
@@ -170,6 +200,8 @@ def check_once(broker, state: dict) -> None:
     for code, p in held.items():
         if not _market_open(p.get("ccy", "USD")):
             continue
+        if ledger.is_locked(code):             # 미해소 UNKNOWN 주문 — 재주문 전면 금지
+            continue                           #   (대사 전 재발주 = 초과매도)
         stop = p.get("stop")
         qty = p.get("q", 0)
         if not stop or qty <= 0:
@@ -224,13 +256,30 @@ def check_once(broker, state: dict) -> None:
         else:
             state["_hit_" + code] = False
         if fire:
-            ok = broker.place_sell(code, qty, reason, key)
-            if ok:
+            # 잔여 수량만 발주 — 이 포지션에서 이미 확인된 체결을 뺀 나머지만.
+            #   (부분체결 후 원수량 재발주 = 초과매도. 시도마다 별도 주문키.)
+            qty_send = qty - ledger.filled_for(key)
+            if qty_send <= 0:
+                sent[key] = _now_kst().isoformat(timespec="seconds")   # 이미 다 팔림
+                _save_sent(sent)
+                continue
+            okey = f"{key}#{ledger.attempts(key) + 1}"       # 이번 주문 시도의 고유키
+            ledger.record_submit(okey, code, qty_send, reason)  # send 이전 기록(크래시 대비)
+            res = broker.place_sell(code, qty_send, reason, okey)
+            rstate, filled = _norm_result(res, qty_send)
+            ledger.on_result(okey, rstate, filled)
+            if rstate == "filled" or (rstate == "partial"
+                                      and ledger.filled_for(key) >= qty):
                 sent[key] = _now_kst().isoformat(timespec="seconds")
                 _save_sent(sent)
+            if rstate in ("filled", "partial"):
                 _notify(f"🛡️ 파수꾼 매도 — {p.get('name', code)}({code}) "
-                        f"{qty}주 @ {px} · {reason}"
+                        f"{filled}주 @ {px} · {reason}"
                         + ("" if LIVE else " [DRY-RUN]"), critical=True)
+            elif rstate == "unknown":
+                # 응답 불명 — 종목 잠금(원장). 대사 전엔 재발주 금지(초과매도 방지).
+                _notify(f"⚠️ 파수꾼 주문 응답 불명(UNKNOWN) — {code} 대사까지 잠금. "
+                        f"수동 확인 권장.", critical=True)
 
 
 def main() -> None:
