@@ -1,9 +1,9 @@
 {
  "updated": "2026-07-08",
  "start": 100000000,
- "cash": 48873191,
- "equity": 99886599,
- "ret_pct": -0.11,
+ "cash": 38719882,
+ "equity": 99436112,
+ "ret_pct": -0.56,
  "positions": [
   {
    "code": "MRSH",
@@ -11,14 +11,14 @@
    "ccy": "USD",
    "q": 72,
    "avg": 174.3075,
-   "price": 178.0,
+   "price": 176.80499267578125,
    "stop": 165.3325,
    "target": 192.2575,
    "half_done": false,
    "opened": "2026-07-06",
-   "pl_krw": 402549,
-   "pl_pct": 2.12,
-   "price_age_min": 8.0
+   "pl_krw": 272272,
+   "pl_pct": 1.43,
+   "price_age_min": 0.5
   },
   {
    "code": "EQT",
@@ -26,14 +26,14 @@
    "ccy": "USD",
    "q": 256,
    "avg": 52.085,
-   "price": 51.7599983215332,
+   "price": 51.150001525878906,
    "stop": 49.5451,
    "target": 57.1649,
    "half_done": false,
    "opened": "2026-07-07",
-   "pl_krw": -125977,
-   "pl_pct": -0.62,
-   "price_age_min": 8.2
+   "pl_krw": -362424,
+   "pl_pct": -1.8,
+   "price_age_min": 0.5
   },
   {
    "code": "STE",
@@ -41,14 +41,14 @@
    "ccy": "USD",
    "q": 6,
    "avg": 213.02,
-   "price": 215.38999938964844,
+   "price": 212.5,
    "stop": 202.063,
    "target": 234.934,
    "half_done": false,
    "opened": "2026-07-07",
-   "pl_krw": 21531,
-   "pl_pct": 1.11,
-   "price_age_min": 8.6
+   "pl_krw": -4724,
+   "pl_pct": -0.24,
+   "price_age_min": 0.5
   },
   {
    "code": "068270",
@@ -63,7 +63,7 @@
    "opened": "2026-07-07",
    "pl_krw": 78386,
    "pl_pct": 0.83,
-   "price_age_min": 8.2
+   "price_age_min": 0.5
   },
   {
    "code": "ORC",
@@ -71,14 +71,44 @@
    "ccy": "USD",
    "q": 4,
    "avg": 6.81,
-   "price": 6.769999980926514,
+   "price": 6.800000190734863,
    "stop": 6.5493,
    "target": 7.3314,
    "half_done": false,
    "opened": "2026-07-08",
-   "pl_krw": -242,
-   "pl_pct": -0.59,
-   "price_age_min": 8.9
+   "pl_krw": -61,
+   "pl_pct": -0.15,
+   "price_age_min": 0.5
+  },
+  {
+   "code": "FND",
+   "name": "Floor & Decor Holdings, Inc.",
+   "ccy": "USD",
+   "q": 122,
+   "avg": 54.6923,
+   "price": 54.380001068115234,
+   "stop": 51.1158,
+   "target": 67.0734,
+   "half_done": false,
+   "opened": "2026-07-08",
+   "pl_krw": -57689,
+   "pl_pct": -0.57,
+   "price_age_min": 0.5
+  },
+  {
+   "code": "CMG",
+   "name": "Chipotle Mexican Grill, Inc.",
+   "ccy": "USD",
+   "q": 1,
+   "avg": 33.2,
+   "price": 33.20000076293945,
+   "stop": 30.8676,
+   "target": 37.8648,
+   "half_done": false,
+   "opened": "2026-07-08",
+   "pl_krw": 0,
+   "pl_pct": 0.0,
+   "price_age_min": 0.4
   }
  ],
  "pending": [
@@ -108,33 +138,6 @@
     "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권38% · 체크4/6 · 손절폭7.0%"
    },
    "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권38% · 체크4/6 · 손절폭7.0%"
-  },
-  {
-   "code": "FND",
-   "name": "Floor & Decor Holdings, Inc.",
-   "ccy": "USD",
-   "limit": 54.6923,
-   "stop": 51.1158,
-   "target": 67.0734,
-   "q": 122,
-   "created": "2026-07-06",
-   "atr": 2.6596,
-   "plan": {
-    "entry": 56.435,
-    "stop": 51.1158,
-    "target": 67.0734,
-    "pb": 54.6923,
-    "tactic": "pullback"
-   },
-   "ctx": {
-    "mode": "pullback",
-    "fresh": true,
-    "stage": 3,
-    "rp": 28,
-    "rec": 4,
-    "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권28% · 체크4/6 · 손절폭9.4%"
-   },
-   "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권28% · 체크4/6 · 손절폭9.4%"
   },
   {
    "code": "SHOP",
@@ -238,10 +241,36 @@
   },
   {
    "d": "2026-07-08",
-   "v": 99886599
+   "v": 99436112
   }
  ],
  "log": [
+  {
+   "d": "2026-07-08",
+   "type": "buy",
+   "code": "CMG",
+   "name": "Chipotle Mexican Grill, Inc.",
+   "q": 1,
+   "price": 33.2,
+   "ccy": "USD",
+   "amt": 50269,
+   "note": "반반 1차 — 🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권18% · 체크4/6 · 손절폭7.0%",
+   "stop": 30.8676,
+   "target": 37.8648
+  },
+  {
+   "d": "2026-07-08",
+   "type": "buy",
+   "code": "FND",
+   "name": "Floor & Decor Holdings, Inc.",
+   "q": 122,
+   "price": 54.6923,
+   "ccy": "USD",
+   "amt": 10103040,
+   "note": "눌림 지정가 체결 — 🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권28% · 체크4/6 · 손절폭9.4%",
+   "stop": 51.1158,
+   "target": 67.0734
+  },
   {
    "d": "2026-07-08",
    "type": "buy",
@@ -363,6 +392,6 @@
    "note": "눌림 지정가 주문(추격 금지) — ↗ 돌파후 진행(승률↓) · ③ 돌파후 횡보(대기) · 저점권28% · 체크4/6 · 손절폭10.5%"
   }
  ],
- "lane": "bulk",
+ "lane": "fast",
  "data_stale": []
 }
