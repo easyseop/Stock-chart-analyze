@@ -2,7 +2,7 @@
  "updated": "2026-07-09",
  "start": 100000000,
  "cash": 38594650,
- "equity": 99227591,
+ "equity": 99225698,
  "ret_pct": -0.77,
  "positions": [
   {
@@ -11,14 +11,14 @@
    "ccy": "USD",
    "q": 72,
    "avg": 174.3075,
-   "price": 178.50999450683594,
+   "price": 178.49000549316406,
    "stop": 165.3325,
    "target": 192.2575,
    "half_done": false,
    "opened": "2026-07-06",
-   "pl_krw": 456565,
-   "pl_pct": 2.41,
-   "price_age_min": 0.5
+   "pl_krw": 454394,
+   "pl_pct": 2.4,
+   "price_age_min": 8.5
   },
   {
    "code": "EQT",
@@ -33,7 +33,7 @@
    "opened": "2026-07-07",
    "pl_krw": -392075,
    "pl_pct": -1.95,
-   "price_age_min": 0.5
+   "price_age_min": 18.9
   },
   {
    "code": "STE",
@@ -41,14 +41,14 @@
    "ccy": "USD",
    "q": 6,
    "avg": 213.02,
-   "price": 210.75999450683597,
+   "price": 210.7899932861328,
    "stop": 202.063,
    "target": 234.934,
    "half_done": false,
    "opened": "2026-07-07",
-   "pl_krw": -20461,
-   "pl_pct": -1.06,
-   "price_age_min": 0.5
+   "pl_krw": -20189,
+   "pl_pct": -1.05,
+   "price_age_min": 9.3
   },
   {
    "code": "068270",
@@ -63,7 +63,7 @@
    "opened": "2026-07-07",
    "pl_krw": 78386,
    "pl_pct": 0.83,
-   "price_age_min": 0.5
+   "price_age_min": 8.7
   },
   {
    "code": "ORC",
@@ -78,7 +78,7 @@
    "opened": "2026-07-08",
    "pl_krw": -422,
    "pl_pct": -1.03,
-   "price_age_min": 0.5
+   "price_age_min": 18.9
   },
   {
    "code": "FND",
@@ -93,7 +93,7 @@
    "opened": "2026-07-08",
    "pl_krw": -228691,
    "pl_pct": -2.27,
-   "price_age_min": 0.4
+   "price_age_min": 18.9
   },
   {
    "code": "CMG",
@@ -101,14 +101,14 @@
    "ccy": "USD",
    "q": 1,
    "avg": 33.2,
-   "price": 33.71500015258789,
+   "price": 33.720001220703125,
    "stop": 30.8676,
    "target": 37.8648,
    "half_done": false,
    "opened": "2026-07-08",
-   "pl_krw": 777,
-   "pl_pct": 1.55,
-   "price_age_min": 0.4
+   "pl_krw": 785,
+   "pl_pct": 1.57,
+   "price_age_min": 8.8
   },
   {
    "code": "HMC",
@@ -123,7 +123,7 @@
    "opened": "2026-07-09",
    "pl_krw": 430,
    "pl_pct": 0.34,
-   "price_age_min": 0.4
+   "price_age_min": 9.2
   }
  ],
  "pending": [
@@ -260,7 +260,7 @@
   },
   {
    "d": "2026-07-09",
-   "v": 99227591
+   "v": 99225698
   }
  ],
  "log": [
@@ -446,6 +446,6 @@
    "note": "눌림 지정가 주문(추격 금지) — ↗ 돌파후 진행(승률↓) · ③ 돌파후 횡보(대기) · 저점권28% · 체크4/6 · 손절폭10.5%"
   }
  ],
- "lane": "fast",
+ "lane": "bulk",
  "data_stale": []
 }
