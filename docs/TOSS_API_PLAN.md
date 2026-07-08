@@ -137,11 +137,19 @@ account_bucket: 1 req/s, burst 1 — 모든 계좌/주문조회 endpoint 공유 
 | **3. 제한 라이브** | 전체 | 실주문 0.25~0.5% | Stage2 무사고 후 |
 | **4. 정상 후보** | 전체 | 실주문 1% 후보 | 주문 50~100건 무사고 + 장애주입 통과 |
 
-**Stage 2 진입 전 필수(2차 검토)**: 주문 원장 상태전이 구현 · UNKNOWN 처리 ·
-부분체결 reconcile · 주문 상태 조회 · client_order_id/멱등 지원 확인(미지원 시
-내부 멱등+open orders 대사) · broker-side stop 지원 확인 · kill switch ·
-P0 ntfy/텔레그램 실제 도달 테스트 · 장전 preflight 5일 연속 성공.
+**Stage 2 진입 전 필수(2차 검토)** — ✅=스캐폴드 구현·테스트 완료(모의):
+· ✅ **주문 원장 상태전이**(`bot/ledger.py`: submitted→filled/partial/rejected/unknown,
+  append-only JSONL) · ✅ **UNKNOWN 처리**(종목 잠금→대사 전 재발주 금지) ·
+  ✅ **부분체결 reconcile**(실체결 대사 후 **잔여만** 재주문) · ✅ **내부 멱등**
+  (`{broker}:{account}:{code}:{opened}:sell` + 시도별 `#n`) · ✅ **kill switch**
+  (`KILL_NEW_ENTRIES`) · ✅ **P0 ntfy 이중화** ·
+  ⬜ 실 브로커 주문상태 조회 API 연결(`broker.order_status` 자리 — 토스 응답 실측) ·
+  ⬜ client_order_id 지원 확인 · ⬜ broker-side stop(`/conditional-orders`) 실측 ·
+  ⬜ 장전 preflight 5일 연속 성공.
 각 단계 통과 기준·장애 주입 테스트는 `RELIABILITY_PLAN.md` §6 참조.
+> 원장 스캐폴드는 모의 브로커로 UNKNOWN→잠금→대사→잔여재주문 경로까지 검증됨
+> (`tests/test_ledger.py`, `tests/test_sentinel.py` ⑧). 실주문 붙일 때 토스
+> `order_status`/`conditional-orders` 응답만 어댑터에 채우면 된다.
 
 ## 7.5 증권 실계좌 운영 함정 (2차 검토 Q5 — 실매매 전 필수 확정)
 
