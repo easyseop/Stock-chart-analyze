@@ -197,7 +197,14 @@ def main():
                     help="전환후보 상위 N종목의 시간봉(60분) 캐시 갱신(best-effort, yfinance)")
     ap.add_argument("--update-earnings", action="store_true",
                     help="캐시 종목의 다음 실적발표일 갱신(best-effort, yfinance, 하루 1회)")
+    ap.add_argument("--fast", action="store_true",
+                    help="빠른 차선 — 보유·대기·후보만 시세→자동매매→피드(~3분, 렌더·배포 없음)")
     args = ap.parse_args()
+
+    if args.fast:
+        from scanner import fastlane
+        fastlane.run()
+        return
 
     if args.prune:
         _prune(args.prune)
