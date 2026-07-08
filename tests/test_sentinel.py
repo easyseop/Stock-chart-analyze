@@ -22,6 +22,8 @@ import bot.sentinel as sn
 
 
 class FakeBroker:
+    name = "fake"
+
     def __init__(self, prices):
         self.prices, self.sells = prices, []
 
@@ -97,6 +99,26 @@ def main() -> int:
             fails.append("stale 경보 미발송")
         else:
             print("  [PASS] 피드 stale에도 기존 손절선으로 보호 + 경보 1회")
+
+    # ⑦ 트레일로 손절선이 바뀌어도 같은 포지션엔 재발화 없음(멱등키=포지션 정체성)
+    with tempfile.TemporaryDirectory() as tmp:
+        NOTES = []
+        pos = {"code": "TR", "name": "트레일", "ccy": "USD", "q": 10,
+               "stop": 100.0, "opened": "2026-07-01"}
+        _setup(tmp, [pos])
+        bk = FakeBroker({"TR": 98.0})              # 하드 손절 → 1회 발화
+        st = {}
+        sn.check_once(bk, st)
+        # 손절선이 트레일로 상향되고(110) 가격도 그 아래로 — 옛 키({code}:{stop}:{date})
+        #   였다면 stop이 바뀌어 '새 키'가 되어 재발화했을 상황.
+        pos2 = dict(pos); pos2["stop"] = 110.0
+        sn._fetch_positions = lambda: ([pos2], None)
+        bk.prices["TR"] = 108.0                    # 110 −1% = 108.9 아래(하드)
+        sn.check_once(bk, st)
+        if len(bk.sells) != 1:
+            fails.append(f"트레일 변경 후 중복 발화({len(bk.sells)}회) — 정체성 키 실패")
+        else:
+            print("  [PASS] 트레일로 손절선 변경돼도 같은 포지션 재발화 없음")
 
     # ⑤ 매수 경로 부재(보안 원칙)
     src = open(os.path.join(os.path.dirname(sn.__file__), "sentinel.py"),

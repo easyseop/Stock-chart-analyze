@@ -195,7 +195,18 @@ def check_once(broker, state: dict) -> None:
         #   불일치 → 신규 주문 전면 금지 + P0.
         #   [0차 방어] 브로커 서버측 stop 지원 시 매수 직후 등록 — 파수꾼·GitHub·
         #   CF가 전부 죽어도 남는 최후 방어선(RELIABILITY_PLAN B0).
-        key = f'{code}:{stop}:{_now_kst().date().isoformat()}'
+        #
+        # [현 단계 강화] 멱등키를 '포지션 정체성'으로 교체(감사 rank9):
+        #   {broker}:{account}:{symbol}:{opened}:sell
+        #   · raw stop 제거 → 트레일로 손절선이 바뀌어도 같은 포지션엔 재발화 없음
+        #     (기존 {code}:{stop}:{date}는 stop 변경 시 새 키가 되어 중복 발화 위험).
+        #   · 날짜 대신 포지션 opened → KR/US 날짜 혼재·해 넘김 문제 제거, 재진입은
+        #     새 opened로 구분(같은 날 재진입은 autopaper 쿨다운이 이미 차단).
+        #   · seq/stop_version·부분체결 잔여 재발주는 주문 원장(rank10)에서 완성 —
+        #     그때 이 키에 :{seq}:{stop_version} 추가. 지금은 포지션당 1회 발화가 정답.
+        acct = os.environ.get("TOSS_ACCOUNT", "default")
+        opened = p.get("opened") or "?"
+        key = f'{broker.name}:{acct}:{code}:{opened}:sell'
         if key in sent:
             continue
         px = broker.quote(code, p.get("ccy", "USD"))
