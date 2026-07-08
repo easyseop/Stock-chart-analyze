@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated_at": "2026-07-09T06:00:09+09:00",
+ "generated_at": "2026-07-09T06:42:24+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "signals": [
   {
@@ -649,6 +649,33 @@
     "mode": "pullback",
     "label": "⏳ 눌림 지정가만",
     "desc": "지금 추격 금지(손절폭 9.4%) — <b>$27.53 눌림 지정가만</b>. 눌리면 손절폭 5.1%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
+   }
+  },
+  {
+   "id": "003380-2026-07-09-now",
+   "code": "003380",
+   "name": "하림지주",
+   "ccy": "KRW",
+   "group": "now",
+   "entry_kind": "now",
+   "stage": 3,
+   "price": 9840.0,
+   "entry": 9840.0,
+   "stop": 8660.2269,
+   "target": 12199.5461,
+   "shares_1pct": 84,
+   "range_pos": 0.2215,
+   "norm": -39.6,
+   "fresh": true,
+   "break_gap": 0.0228,
+   "earnings_d": null,
+   "tactic": {
+    "stop_pct": 12.0,
+    "pb_price": 8880.0,
+    "pb_stop_pct": 2.5,
+    "mode": "pullback",
+    "label": "⏳ 눌림 지정가만",
+    "desc": "지금 추격 금지(손절폭 12.0% · 단기 이격) — <b>8,880원 눌림 지정가만</b>. 눌리면 손절폭 2.5%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
    }
   },
   {
@@ -1751,26 +1778,6 @@
    "norm": -32.1,
    "fresh": true,
    "break_gap": 0.042,
-   "earnings_d": null,
-   "tactic": null
-  },
-  {
-   "id": "003380-2026-07-09-watch",
-   "code": "003380",
-   "name": "하림지주",
-   "ccy": "KRW",
-   "group": "watch",
-   "entry_kind": "pullback",
-   "stage": 2,
-   "price": 10040.0,
-   "entry": 8880.0,
-   "stop": 7709.4752,
-   "target": 11221.0497,
-   "shares_1pct": 85,
-   "range_pos": 0.2375,
-   "norm": -47.2,
-   "fresh": true,
-   "break_gap": 0.0311,
    "earnings_d": null,
    "tactic": null
   },
@@ -3797,26 +3804,6 @@
    "norm": -33.0,
    "fresh": false,
    "break_gap": 0.1031,
-   "earnings_d": null,
-   "tactic": null
-  },
-  {
-   "id": "257720-2026-07-09-watch",
-   "code": "257720",
-   "name": "실리콘투",
-   "ccy": "KRW",
-   "group": "watch",
-   "entry_kind": "breakout",
-   "stage": 3,
-   "price": 38500.0,
-   "entry": 38500.0,
-   "stop": 33494.6759,
-   "target": 48510.6483,
-   "shares_1pct": 19,
-   "range_pos": 0.2578,
-   "norm": -39.6,
-   "fresh": false,
-   "break_gap": 0.2474,
    "earnings_d": null,
    "tactic": null
   },
