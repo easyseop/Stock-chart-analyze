@@ -61,10 +61,10 @@ def _market_open(ccy: str) -> bool:
     return cfg.market_open(ccy)
 
 
-def _notify(text: str) -> None:
+def _notify(text: str, *, critical: bool = False) -> None:
     try:
         from bot import notify
-        notify.send(text)
+        notify.send(text, critical=critical)
     except Exception:
         pass
 
@@ -161,7 +161,7 @@ def check_once(broker, state: dict) -> None:
     if stale and not state.get("_stale_warned"):
         state["_stale_warned"] = True
         _notify(f"⚠️ 파수꾼: 포지션 피드 {age:.0f}분 낡음 — 알고 있던 "
-                f"손절선으로 보호 계속(신규 판단은 보류)")
+                f"손절선으로 보호 계속(신규 판단은 보류)", critical=True)
     if not stale:
         state["_stale_warned"] = False
         state["positions"] = {p["code"]: p for p in positions}  # 최신 스냅샷 유지
@@ -219,7 +219,7 @@ def check_once(broker, state: dict) -> None:
                 _save_sent(sent)
                 _notify(f"🛡️ 파수꾼 매도 — {p.get('name', code)}({code}) "
                         f"{qty}주 @ {px} · {reason}"
-                        + ("" if LIVE else " [DRY-RUN]"))
+                        + ("" if LIVE else " [DRY-RUN]"), critical=True)
 
 
 def main() -> None:

@@ -39,6 +39,7 @@ jobs:
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}   # 손절·신호낡음 P0 이중화(미설정=무동작)
           # 토스 시세(Stage 0) — 시크릿 미설정이면 빈 값 → 어댑터 비활성 → FDR 폴백(무해).
           #   설정하면 advisor 현재가 조회가 토스 실시간가를 1순위 사용.
           TOSS_CLIENT_ID: ${{ secrets.TOSS_CLIENT_ID }}

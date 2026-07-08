@@ -36,10 +36,13 @@ import urllib.request
 BASE_URL = os.environ.get("TOSS_BASE_URL", "https://openapi.tossinvest.com")
 PRICES_MAX = 200            # /api/v1/prices 다건 조회 상한(콤마 구분)
 _TOKEN_SKEW = 300           # 만료 이 초 전이면 선제 재발급(시계 오차·왕복 여유)
+_TOKEN_FAIL_COOLDOWN = 60   # 토큰 발급 실패 시 이 초간 재시도 안 함(음성 캐시)
 _HTTP_TIMEOUT = 15
 
-# 모듈 전역 토큰 캐시 — {"tok": str|None, "exp": epoch초}
-_TOK: dict = {"tok": None, "exp": 0.0}
+# 모듈 전역 토큰 캐시 — {"tok": str|None, "exp": epoch초, "fail_until": epoch초}
+#   fail_until: 발급이 계속 실패할 때 매 시세 호출마다 15초씩 타임아웃을 무는 것을
+#   막는 음성 캐시(장애 중 손절 감시 주기 회귀 방지 — 감사 CONFIRMED).
+_TOK: dict = {"tok": None, "exp": 0.0, "fail_until": 0.0}
 
 
 def enabled() -> bool:
@@ -68,9 +71,11 @@ def _fetch_token() -> str | None:
         if tok:
             _TOK["tok"] = tok
             _TOK["exp"] = time.time() + exp
+            _TOK["fail_until"] = 0.0        # 복구 즉시 정상화
             return tok
     except Exception as e:
         # 키 값은 절대 남기지 않는다 — 예외 타입만.
+        _TOK["fail_until"] = time.time() + _TOKEN_FAIL_COOLDOWN
         print(f"[toss] 토큰 발급 실패({type(e).__name__}) — FDR 폴백")
     return None
 
@@ -80,6 +85,10 @@ def _token(force: bool = False) -> str | None:
         return None
     if not force and _TOK["tok"] and time.time() < _TOK["exp"] - _TOKEN_SKEW:
         return _TOK["tok"]
+    # 최근 발급 실패 쿨다운 중이면 재시도 안 하고 즉시 폴백(장애 중 주기 회귀 방지).
+    #   force(401 재발급)는 예외 — 진짜 만료는 즉시 갱신 필요.
+    if not force and time.time() < _TOK.get("fail_until", 0.0):
+        return None
     return _fetch_token()
 
 

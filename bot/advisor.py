@@ -279,7 +279,8 @@ def check_sell_alerts(holdings: list[dict], state: dict, dry_run: bool) -> int:
                 f"⚠️ 차트 기준 제안 · 투자권유 아님."
             )
             if not dry_run:
-                notify.send(text)
+                # 손절 터치는 P0(ntfy 이중화) · 목표 도달(익절)은 좋은 소식이라 텔레그램만.
+                notify.send(text, critical=(reason == "손절"))
             else:
                 print(text)
             sent_today.append(key)
@@ -303,7 +304,8 @@ def run_once(args) -> None:
                 and not args.dry_run):
             state["stale_notice_day"] = cfg.today_kst()
             notify.send(f"⚠️ 신호가 {age:.0f}분째 낡음 — 매수/도달 제안을 일시 중단"
-                        f"(낡은 가격 기준 제안 방지). 빌드 복구 시 자동 재개.")
+                        f"(낡은 가격 기준 제안 방지). 빌드 복구 시 자동 재개.",
+                        critical=True)
         nb = na = 0
     else:
         # 하루 총량 서킷브레이커 — 매수/도달 제안에만 적용(매도는 보유 관리라 예외).
