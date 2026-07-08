@@ -19,6 +19,7 @@ from __future__ import annotations
 import datetime
 import json
 import os
+import time
 
 import config
 
@@ -43,6 +44,11 @@ TRAIL_ATR = 3.0            # +1R 절반 익절 후 잔량 트레일 = max(본전
                            #   2R 고정 목표 대신 승자를 태움 — 110종목 174이벤트 A/B/C
                            #   백테스트에서 C(트레일 무제한 +0.131R) > A(2R 캡 +0.120R)
                            #   > B(트레일+2R캡 +0.117R), 시간 앞/뒤·한미 전 구간 일관.
+LOCK_MIN = 20              # 매매 분산 락 유효(분) — fast/bulk 두 차선의 동시 매매(F8)
+                           #   차단. 초과하면 stale로 간주하고 탈취(빌드 실패 잔류 대비).
+STALE_ENTRY_MIN = 30       # 시세 캐시 나이(분) 초과 종목은 신규 진입·지정가 체결 금지 —
+                           #   "낡은 가격으로 주문 내지 않는다"(F5·2차 SRE 검토 A3).
+STALE_HELD_MIN = 30        # 보유 종목 시세가 장중 이만큼 낡으면 텔레그램 경보(하루 1회).
 
 
 def _today() -> str:
@@ -190,6 +196,83 @@ def _state_branch_snapshot():
         return None
 
 
+def _price_age_min(code: str):
+    """시세 캐시(csv)의 나이(분) — 종목 단위 무음 정지(F5, 실측: TSLA 6시간
+    동결) 감지용. 파일 없음/오류는 None(판단 보류)."""
+    try:
+        from scanner import cache as _c
+        p = _c._path(code)
+        if not os.path.exists(p):
+            return None
+        return (time.time() - os.path.getmtime(p)) / 60.0
+    except Exception:
+        return None
+
+
+def _lock_git(args, **kw):
+    import subprocess
+    return subprocess.run(["git"] + args, capture_output=True, timeout=45, **kw)
+
+
+def _trading_lock_status(run_id: str) -> str:
+    """매매 분산 락(F8) — fast/bulk 두 차선이 같은 계좌로 동시에 매매하지 않게.
+
+    반환: 'acquired'(이번 런이 매매) / 'held'(다른 런 보유 → 매매 생략) /
+          'off'(비CI·락 인프라 불가 → 락 없이 진행).
+    구현: state 브랜치에 state/trading.lock을 push — git push의 원자성
+    (non-fast-forward 거부)이 상호배제를 보장. **해제는 계좌 백업 스텝이
+    스냅샷 push와 같은 커밋으로 수행**(scripts/state_backup.sh) — 매매→스냅샷
+    보존까지가 임계구역이라서. 빌드가 중간에 죽으면 LOCK_MIN 만료가 안전망.
+    락 인프라 오류는 전부 fail-open(매매 진행+경고) — 모의 단계 원칙
+    '감시가 매매를 막지 않는다'. 실거래 승격 시 fail-closed+P0로 전환할 것.
+    """
+    if os.environ.get("GITHUB_ACTIONS") != "true":
+        return "off"
+    try:
+        import tempfile
+        for _attempt in (1, 2):
+            if _lock_git(["fetch", "-q", "origin", "state"]).returncode != 0:
+                return "off"               # state 브랜치 없음/네트워크 — 락 생략
+            show = _lock_git(["show", "FETCH_HEAD:state/trading.lock"])
+            if show.returncode == 0:
+                try:
+                    lk = json.loads(show.stdout)
+                except Exception:
+                    lk = {}
+                age_min = (time.time() - float(lk.get("ts", 0))) / 60.0
+                if lk.get("run_id") == run_id:
+                    return "acquired"      # 내 락(재진입)
+                if age_min < LOCK_MIN:
+                    print(f"[autopaper] 매매 락 보유중(run={lk.get('run_id')}"
+                          f" · {age_min:.1f}분) — 이번 런 매매 생략(표시만)")
+                    return "held"
+                print(f"::warning::[autopaper] stale 매매 락({age_min:.0f}분) 탈취")
+            wt = tempfile.mkdtemp(prefix="aplk")
+            try:
+                if _lock_git(["worktree", "add", "-q", "--detach", wt,
+                              "FETCH_HEAD"]).returncode != 0:
+                    return "off"
+                os.makedirs(os.path.join(wt, "state"), exist_ok=True)
+                with open(os.path.join(wt, "state", "trading.lock"), "w",
+                          encoding="utf-8") as fp:
+                    json.dump({"run_id": run_id, "ts": time.time()}, fp)
+                _lock_git(["-C", wt, "add", "state/trading.lock"])
+                _lock_git(["-C", wt, "-c", "user.name=autopaper",
+                           "-c", "user.email=bot@local",
+                           "commit", "-q", "-m", f"lock {run_id} [skip ci]"])
+                if _lock_git(["-C", wt, "push", "-q", "origin",
+                              "HEAD:state"]).returncode == 0:
+                    return "acquired"
+            finally:
+                _lock_git(["worktree", "remove", "--force", wt])
+            # push 거부 = 경합 — 한 번 더 최신 락을 읽어 판정
+        print("[autopaper] 매매 락 경합 — 이번 런 매매 생략")
+        return "held"
+    except Exception as e:                 # 락이 매매를 죽이면 본말전도
+        print(f"[autopaper] 락 처리 실패(fail-open): {type(e).__name__}: {e}")
+        return "off"
+
+
 def _load() -> dict:
     """상태 로드 — 복구 순서 고정(SRE 검토 §2 채택):
       ① 본파일 → ② .bak → ③ state 브랜치 스냅샷(git 영구 백업) → ④ 새 계좌.
@@ -197,21 +280,30 @@ def _load() -> dict:
     자동매매에서 '계좌가 이유 없이 리셋'되는 사고를 막는다: 원자적 저장으로
     본파일 손상을 예방하고, cache가 통째로 소멸(7일 미사용·임의 evict)해도
     state 브랜치 백업으로 되살린다.
+
+    ★ 차선 간 최신성(F8): fast/bulk가 각자 actions/cache 사본으로 돌기 때문에,
+    상대 차선이 방금 저장한 계좌(state 스냅샷)가 로컬 사본보다 새로우면 그걸
+    채택한다(saved_at 비교). 낡은 사본으로 같은 주문을 재실행하거나 체결을
+    잃는 일 방지. CI에서만(스냅샷 조회 자체가 CI 게이트).
     """
     st = _read(STATE_PATH)
+    if not _valid(st):
+        bak = _read(STATE_PATH + ".bak")
+        if _valid(bak):
+            print("[autopaper] 본 상태파일 손상 → 백업(.bak)에서 복구")
+            st = bak
+        else:
+            st = None
+    snap = _state_branch_snapshot()
+    if _valid(snap) and (not _valid(st)
+                         or snap.get("saved_at", 0) > st.get("saved_at", 0)):
+        print("[autopaper] state 스냅샷이 더 최신 — 채택(차선 간 동기화)"
+              if _valid(st) else
+              "[autopaper] 로컬 상태 없음 → state 브랜치 스냅샷에서 복구")
+        return snap
     if _valid(st):
         return st
-    bak = _read(STATE_PATH + ".bak")
-    if _valid(bak):
-        print("[autopaper] 본 상태파일 손상 → 백업(.bak)에서 복구")
-        return bak
-    snap = _state_branch_snapshot()
-    if _valid(snap):
-        print("[autopaper] 로컬 상태 없음 → state 브랜치 스냅샷에서 복구")
-        return snap
-    if st is not None or bak is not None:
-        # 파일은 있는데 유효하지 않음(버전 변경 등) — 초기화는 의도된 경우만
-        print("[autopaper] 유효한 상태 없음 → 새 계좌로 시작(시드 1억)")
+    print("[autopaper] 유효한 상태 없음 → 새 계좌로 시작(시드 1억)")
     return {"v": VERSION, "cash": START, "start": START,
             "pos": {}, "pending": {}, "log": []}
 
@@ -219,6 +311,7 @@ def _load() -> dict:
 def _save(st: dict) -> None:
     """원자적 저장 — 임시파일에 쓰고 os.replace로 교체(중간에 죽어도 손상 없음).
     교체 직전의 정상본을 .bak으로 남겨 복구 경로 확보."""
+    st["saved_at"] = time.time()   # 차선 간 최신성 비교 기준(_load 참조)
     os.makedirs(os.path.dirname(STATE_PATH), exist_ok=True)
     tmp = STATE_PATH + ".tmp"
     with open(tmp, "w", encoding="utf-8") as fp:
@@ -527,6 +620,11 @@ def update(results: list[dict], picks: dict, out_dir: str = "public") -> dict:
     st = _load()
     st["_ev"] = []
     _update_fx(st)                         # 환산율 갱신(하루 1회, 실패 시 직전값)
+    # 매매 분산 락(F8) — 다른 차선(fast/bulk)이 매매 중이면 이번 런은 관리·표시만.
+    #   held면 상태를 저장하지도 않는다(낡은 사본으로 최신 스냅샷을 덮지 않게).
+    run_id = os.environ.get("GITHUB_RUN_ID", "local")
+    lock = _trading_lock_status(run_id)
+    trade_ok = lock != "held"
     px = {}
     for r in results:
         p = (r.get("sr") or {}).get("price")
@@ -537,7 +635,7 @@ def update(results: list[dict], picks: dict, out_dir: str = "public") -> dict:
     #    → 어닝 D-1 관리 → 타임 스탑. 장중인 시장의 종목만.
     #    '터치 즉시' 집행의 15분 스파이크 휩쏘를 줄이기 위해 손절·+1R 모두
     #    2연속 폴링(≈30분) 확인 후 집행하고, 급락은 하드선(−0.5ATR)이 즉시 방어.
-    for code in list(st["pos"].keys()):
+    for code in (list(st["pos"].keys()) if trade_ok else []):
         p = st["pos"][code]
         cur = px.get(code)
         if not cur or not _market_open(p["ccy"]):
@@ -609,8 +707,24 @@ def update(results: list[dict], picks: dict, out_dir: str = "public") -> dict:
     #    체결 판정 전에 '신호 부패' 재검사 — 주문 생성 후 종목이 하드 제외
     #    (부실·저유동·폭등 등)에 걸리거나 어닝 D-3에 들어오면 취소.
     #    "추천 기준으로만 매수한다" 원칙이 대기 주문 경로에서도 유지되게.
+    # 보유 종목 시세 무음 정지 감지(F5) — 장중인데 캐시가 오래 낡으면 경보(하루 1회).
+    #   손절 관리는 마지막 가격으로 계속(관리 동결이 더 위험) — 감지·알림만.
+    stale_held = [c for c, p in st["pos"].items()
+                  if _market_open(p["ccy"])
+                  and (_price_age_min(c) or 0) > STALE_HELD_MIN]
+    if stale_held and st.get("_stale_day") != _today():
+        st["_stale_day"] = _today()
+        try:
+            from bot import notify
+            notify.send("⚠️ <b>보유 종목 시세 정체</b> — "
+                        + ", ".join(stale_held)
+                        + f" ({STALE_HELD_MIN}분+ 미갱신). 손절 관리는 마지막 "
+                          "가격으로 계속. 데이터소스 확인 필요.")
+        except Exception:
+            pass
+
     rmap = {r["code"]: r for r in results}
-    for code in list(st["pending"].keys()):
+    for code in (list(st["pending"].keys()) if trade_ok else []):
         o = st["pending"][code]
         rot = None
         r = rmap.get(code)
@@ -631,11 +745,14 @@ def update(results: list[dict], picks: dict, out_dir: str = "public") -> dict:
             _log(st, "cancel", code, o["name"], 0, cur[1] if cur else o["limit"],
                  o["ccy"], "지정가 취소 — 신호 부패: " + rot)
             del st["pending"][code]
-    for code in list(st["pending"].keys()):
+    for code in (list(st["pending"].keys()) if trade_ok else []):
         o = st["pending"][code]
         cur = px.get(code)
         if not cur or not _market_open(o["ccy"]):
             continue
+        age = _price_age_min(code)
+        if age is not None and age > STALE_ENTRY_MIN:
+            continue                       # 시세 낡음 — 낡은 가격으로 체결 판단 금지(F5)
         price = cur[1]
         if price <= o["stop"]:
             _log(st, "cancel", code, o["name"], 0, price, o["ccy"],
@@ -675,12 +792,15 @@ def update(results: list[dict], picks: dict, out_dir: str = "public") -> dict:
         print(f"[autopaper] ⛔ 일일 실현손실 {day_pl:,.0f}원 "
               f"(한도 −{DAILY_LOSS_LIMIT*100:.0f}%) — 당일 신규 진입 중지")
     de = _day_ent(st)
-    for item in picks.get("now", []):
+    for item in (picks.get("now", []) if trade_ok else []):
         if halted:
             break
         code = item["code"]
         if code in st["pos"] or code in st["pending"]:
             continue
+        age = _price_age_min(code)
+        if age is not None and age > STALE_ENTRY_MIN:
+            continue                       # 시세 낡음 — 낡은 가격으로 신규 주문 금지(F5)
         if _cooldown(st, code):
             continue                       # 손절/청산 직후 재진입 금지(churn 방지)
         if de["n"] >= DAY_ENTRY_MAX:
@@ -754,27 +874,34 @@ def update(results: list[dict], picks: dict, out_dir: str = "public") -> dict:
     equity = _equity(st, px)
     cap_viol = _audit_caps(st, equity)   # 종목당 1/3 상한 사후 재검증(위반 로그)
     rule_viol = _audit_rules(st)         # 일일 상한·쿨다운 사후 재검증(위반 로그)
-    _report_violations(st, cap_viol, rule_viol)   # 위반 시 텔레그램 즉시 경보
-    _report(st, equity)      # 이번 런 체결 내역 텔레그램 보고(_ev 소비)
-    # 수익 곡선용 일별 스냅샷 — 하루 1점(같은 날 재실행 시 최신값으로 갱신)
-    hist = st.setdefault("hist", [])
-    today = _today()
-    if hist and hist[-1]["d"] == today:
-        hist[-1]["v"] = round(equity)
+    if trade_ok:
+        _report_violations(st, cap_viol, rule_viol)   # 위반 시 텔레그램 즉시 경보
+        _report(st, equity)  # 이번 런 체결 내역 텔레그램 보고(_ev 소비)
+        # 수익 곡선용 일별 스냅샷 — 하루 1점(같은 날 재실행 시 최신값으로 갱신)
+        hist = st.setdefault("hist", [])
+        today = _today()
+        if hist and hist[-1]["d"] == today:
+            hist[-1]["v"] = round(equity)
+        else:
+            hist.append({"d": today, "v": round(equity)})
+        st["hist"] = hist[-400:]
+        _save(st)
     else:
-        hist.append({"d": today, "v": round(equity)})
-    st["hist"] = hist[-400:]
-    _save(st)
+        # 락 미보유 — 낡은 사본으로 최신 스냅샷·계좌를 덮지 않는다(저장 생략).
+        print("[autopaper] 락 미보유 런 — 상태 저장·알림 생략(표시 데이터만 생성)")
     positions = []
     for code, p in st["pos"].items():
         cur = px.get(code, (p["name"], p["avg"], p["ccy"]))[1]
         pl = (_krw(cur, p["ccy"]) - _krw(p["avg"], p["ccy"])) * p["q"]
+        page = _price_age_min(code)        # 시세 신선도 — 파수꾼/감시 소비용
         positions.append({"code": code, "name": p["name"], "ccy": p["ccy"],
                           "q": p["q"], "avg": p["avg"], "price": cur,
                           "stop": p["stop"], "target": p["target"],
                           "half_done": p["half_done"], "opened": p["opened"],
                           "pl_krw": round(pl),
-                          "pl_pct": round((cur / p["avg"] - 1) * 100, 2)})
+                          "pl_pct": round((cur / p["avg"] - 1) * 100, 2),
+                          "price_age_min": round(page, 1) if page is not None
+                          else None})
     stats = _stats(st)
     out = {
         "updated": _today(), "start": st["start"], "cash": round(st["cash"]),
@@ -791,7 +918,11 @@ def update(results: list[dict], picks: dict, out_dir: str = "public") -> dict:
         "closed": st.get("closed", [])[:30],   # 청산 기록 — 계획 vs 실제 비교용
         "hist": st.get("hist", []),        # 수익 곡선용 일별 평가액 스냅샷
         "log": st["log"][:50],
+        "lane": os.environ.get("LANE", "bulk"),   # 이 결과를 만든 차선(fast/bulk)
+        "data_stale": stale_held,          # 시세 정체 중인 보유 종목(F5 감시)
     }
+    if not trade_ok:
+        out["lock_skipped"] = True         # 매매 생략 런(락 미보유) 표시
     os.makedirs(os.path.join(out_dir, "api"), exist_ok=True)
     with open(os.path.join(out_dir, "api", "paper_auto.json"), "w",
               encoding="utf-8") as fp:

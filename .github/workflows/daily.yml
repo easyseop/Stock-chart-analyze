@@ -34,8 +34,8 @@ on:
     inputs:
       update:
         type: choice
-        description: "데이터 갱신 범위 — none=재배포만(가장 빠름·코드만 반영) / top=상위300 / full=전체(느림)"
-        options: ["none", "top", "full"]
+        description: "데이터 갱신 범위 — none=재배포만 / fast=매매차선(보유·후보 시세→매매→피드, ~3분, 렌더 없음) / top=상위300 / full=전체(느림)"
+        options: ["none", "fast", "top", "full"]
         default: "none"
       confirm:
         description: "full 실행 확인 — full일 때만 대문자로 FULL 입력(외부 킥의 무거운 모드 남발 방지)"
@@ -52,9 +52,9 @@ permissions:
   pages: write
   id-token: write
 
-concurrency:
-  group: pages          # lookup과 Pages 배포 직렬화(동시 배포 충돌 방지)
-  cancel-in-progress: false
+# concurrency는 '잡 레벨'로 내렸다(build=pages, fast=trading-fast) — 워크플로
+#   레벨이면 fast 차선까지 벌크 뒤에 줄을 서서 차선 분리(A1)가 무효가 된다.
+#   계좌 정합성은 autopaper 매매 분산 락 + 스냅샷 최신성 채택(F8)이 담당.
 
 env:
   TARGET: "3000"          # 스크리너 표시 상한(유니버스 확장 대비 넉넉히)
@@ -83,6 +83,25 @@ jobs:
             if [ "${{ github.event.inputs.update }}" = "full" ] && [ "${{ github.event.inputs.confirm }}" != "FULL" ]; then
               echo "::warning::full은 confirm=FULL 입력 필요 — 실행 거부"
               run=0
+            elif [ "${{ github.event.inputs.update }}" = "fast" ]; then
+              # fast는 Pages를 배포하지 않으므로 신선도는 'state 하트비트'로 판정
+              #   (Pages signals는 벌크만 갱신 — 그걸 보면 fast가 헛돎/공회전 오판).
+              #   ① 양 시장 모두 장외면 no-op(24/7 킥 낭비 방지)
+              #   ② 마지막 실빌드가 12분 내면 no-op(중복 차선 방지)
+              open=$(python3 -c "import datetime,zoneinfo;now=datetime.datetime.now(datetime.timezone.utc);kr=now.weekday()<5 and 0<=now.hour*60+now.minute<=390;et=now.astimezone(zoneinfo.ZoneInfo('America/New_York'));us=et.weekday()<5 and 9*60+30<=et.hour*60+et.minute<16*60;print(1 if (kr or us) else 0)")
+              if [ "$open" != "1" ]; then
+                echo "장외(한/미 모두 닫힘) — fast no-op"
+                run=0
+              else
+                age=$(curl -sf "https://raw.githubusercontent.com/${{ github.repository }}/state/feed/heartbeat.json?cb=${GITHUB_RUN_ID}" \
+                  | python3 -c 'import json,sys,datetime as d; t=d.datetime.fromisoformat(json.load(sys.stdin)["generated_at"]); print(int((d.datetime.now(t.tzinfo)-t).total_seconds()))' \
+                  2>/dev/null || echo 999999)
+                echo "하트비트 나이: $((age/60))분"
+                if [ "$age" -lt 720 ]; then
+                  echo "실빌드 신선(<12분) — fast no-op"
+                  run=0
+                fi
+              fi
             elif [ "${{ github.event.inputs.update }}" = "top" ]; then
               age=$(curl -sf "https://easyseop.github.io/Stock-chart-analyze/api/signals.json?cb=${GITHUB_RUN_ID}" \
                 | python3 -c 'import json,sys,datetime as d; t=d.datetime.fromisoformat(json.load(sys.stdin)["generated_at"]); print(int((d.datetime.now(t.tzinfo)-t).total_seconds()))' \
@@ -96,11 +115,63 @@ jobs:
           fi
           echo "run=$run" >> "$GITHUB_OUTPUT"
 
+  # ── 빠른 차선(fast) — 시세→매매→피드만 ~3분(L2 분리, RELIABILITY A1) ──────
+  #   렌더·배포 없음. 벌크(pages 그룹)와 분리된 차선이라 렌더 정체(F4)에 안 막힘.
+  #   계좌 정합성: autopaper 매매 분산 락 + state 스냅샷 최신성 채택(F8)이 보장.
+  fast:
+    needs: guard
+    if: needs.guard.outputs.run == '1' && github.event_name == 'workflow_dispatch' && github.event.inputs.update == 'fast'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    concurrency:
+      group: trading-fast          # 벌크와 별개 차선(대기·취소 없이 독립 주행)
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -r requirements.txt
+      - uses: actions/cache@v4
+        with:
+          path: |
+            data_cache
+            data_cache_h
+            earnings_cache.json
+          key: data-cache-${{ github.run_id }}
+          restore-keys: |
+            data-cache-
+      - name: 빠른 차선 — 시세·매매·피드
+        env:
+          LANE: fast
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: python main.py --fast
+      - name: 계좌 상태 백업(state 브랜치) + 매매 락 해제
+        env:
+          LANE: fast
+          TG_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TG_CHAT: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: bash scripts/state_backup.sh
+      - name: 실패 알림
+        if: failure()
+        env:
+          TG_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TG_CHAT: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          [ -z "$TG_TOKEN" ] && exit 0
+          curl -sf -X POST "https://api.telegram.org/bot${TG_TOKEN}/sendMessage" \
+            -d "chat_id=${TG_CHAT}" \
+            -d "text=🚨 fast 차선 실패 (#${GITHUB_RUN_NUMBER}) — 이번 매매 사이클 미실행. 벌크 차선은 정상. 반복되면 점검." >/dev/null || true
+
   build:
     needs: guard
-    if: needs.guard.outputs.run == '1'
+    if: needs.guard.outputs.run == '1' && !(github.event_name == 'workflow_dispatch' && github.event.inputs.update == 'fast')
     runs-on: ubuntu-latest
     timeout-minutes: 120
+    concurrency:
+      group: pages          # lookup·벌크 빌드 직렬화(동시 Pages 배포 충돌 방지)
+      cancel-in-progress: false
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -176,78 +247,12 @@ jobs:
       #   매 빌드 후 스냅샷 + 월별 append-only 원장 + 기계용 feed를 state 브랜치에
       #   커밋 — 계좌 리셋 사고 원천 차단 + 매매 이력 감사 가능.
       #   실패해도 빌드는 계속(::warning) — 다음 빌드가 재시도.
-      - name: 계좌 상태 백업(state 브랜치)
-        run: |
-          set +e
-          (
-            set -e
-            [ -f data_cache/autopaper.json ] || { echo "상태 파일 없음 — 백업 생략"; exit 0; }
-            git config user.name "github-actions[bot]"
-            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            rm -rf /tmp/st
-            if git fetch origin state 2>/dev/null; then
-              git worktree add /tmp/st FETCH_HEAD
-            else
-              git worktree add --detach /tmp/st
-              git -C /tmp/st checkout --orphan state
-              git -C /tmp/st rm -rf . >/dev/null 2>&1 || true
-            fi
-            mkdir -p /tmp/st/state/ledger /tmp/st/feed
-            cp data_cache/autopaper.json /tmp/st/state/autopaper.snapshot.json
-            # 기계용 feed 미러 — 알림봇이 Pages 대신 1순위로 읽는 경로
-            cp public/api/signals.json    /tmp/st/feed/signals.latest.json    2>/dev/null || true
-            cp public/api/paper_auto.json /tmp/st/feed/autopaper.public.json  2>/dev/null || true
-            # 하트비트 + 월별 원장(요약 1줄 append)
-            python3 - <<'PY'
-          import json, os, datetime
-          now = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=9)))
-          hb = {"generated_at": now.isoformat(timespec="seconds"),
-                "run_id": os.environ.get("GITHUB_RUN_ID"),
-                "event": os.environ.get("GITHUB_EVENT_NAME")}
-          json.dump(hb, open("/tmp/st/feed/heartbeat.json", "w"))
-          try:
-              out = json.load(open("public/api/paper_auto.json"))
-              led = {"ts": hb["generated_at"], "run_id": hb["run_id"],
-                     "cash": out.get("cash"), "equity": out.get("equity"),
-                     "ret_pct": out.get("ret_pct"),
-                     "positions": len(out.get("positions", [])),
-                     "pending": len(out.get("pending", [])),
-                     "trades": out.get("trades")}
-              path = f"/tmp/st/state/ledger/{now.strftime('%Y-%m')}.jsonl"
-              with open(path, "a") as fp:
-                  fp.write(json.dumps(led, ensure_ascii=False) + "\n")
-          except Exception as e:
-              print("원장 기록 생략:", e)
-          PY
-            git -C /tmp/st add -A
-            if git -C /tmp/st diff --cached --quiet; then
-              echo "변경 없음 — 커밋 생략"
-            else
-              git -C /tmp/st commit -q -m "state: $(date -u +%FT%TZ) run=${GITHUB_RUN_ID} [skip ci]"
-              git -C /tmp/st push -q origin HEAD:state
-              echo "상태 백업 완료 → state 브랜치"
-            fi
-          )
-          rc=$?
-          # 연속 실패 카운터(cache 영속) — 계좌 원본은 cache+.bak에 안전하나,
-          #   백업이 '조용히' 계속 실패하면 원장·복구층이 낡는다. 2연속+면 경보.
-          FC=data_cache/.backup_fails
-          if [ $rc -eq 0 ]; then
-            echo 0 > "$FC"
-          else
-            n=$(( $(cat "$FC" 2>/dev/null || echo 0) + 1 ))
-            echo "$n" > "$FC"
-            echo "::warning::계좌 상태 백업 실패(${n}회 연속) — 빌드는 계속, 다음 빌드 재시도"
-            if [ "$n" -ge 2 ] && [ -n "${TG_TOKEN}" ] && [ -n "${TG_CHAT}" ]; then
-              curl -sf -X POST "https://api.telegram.org/bot${TG_TOKEN}/sendMessage" \
-                -d "chat_id=${TG_CHAT}" \
-                -d "text=🟠 계좌 상태 백업 ${n}회 연속 실패 — state 브랜치 원장/복구층이 낡는 중. 매매·계좌 원본(cache+.bak)은 정상. 지속되면 확인 필요." >/dev/null || true
-            fi
-          fi
-          exit 0
+      - name: 계좌 상태 백업(state 브랜치) + 매매 락 해제
         env:
+          LANE: bulk
           TG_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TG_CHAT: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: bash scripts/state_backup.sh
 
       - name: 진행 현황(로그용)
         run: |

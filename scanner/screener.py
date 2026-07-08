@@ -410,6 +410,18 @@ def build(results: list[dict], frames_map: dict[str, dict],
         with open(stamp, encoding="utf-8") as fp:
             prev_sha = fp.read().strip()
     incremental = bool(sha) and prev_sha == sha
+    # 장중 코드변경 전체 재렌더 금지(A4/F4) — 5,400페이지 재렌더가 가격·매매
+    #   빌드를 밀어낸 실측 사고(7/7 33분+) 재발 방지. 스탬프를 옛 sha로 유지해
+    #   '장외 첫 빌드'가 전체 재렌더를 수행한다. 데이터가 갱신된 종목은 어차피
+    #   새 코드로 즉시 재렌더되므로(종목 단위 신구 혼재는 과도기 허용) 시세·매매
+    #   신선도에는 영향 없음. 긴급 시 RERENDER_MARKET_GUARD=0으로 우회.
+    if (sha and prev_sha and prev_sha != sha
+            and os.environ.get("RERENDER_MARKET_GUARD", "1") == "1"):
+        from scanner.autopaper import _market_open as _mo
+        if _mo("KRW") or _mo("USD"):
+            print("[render] 장중 — 코드변경 전체 재렌더를 장외로 지연"
+                  "(시세·매매·갱신 종목 렌더는 정상)")
+            incremental, sha = True, prev_sha
 
     def _fresh(code: str, path: str) -> bool:
         """페이지가 데이터보다 최신이면(재렌더 불필요) True."""
