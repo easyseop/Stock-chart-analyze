@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated_at": "2026-07-09T05:46:19+09:00",
+ "generated_at": "2026-07-09T06:00:09+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "signals": [
   {
@@ -2421,15 +2421,15 @@
    "group": "watch",
    "entry_kind": "pullback",
    "stage": 1,
-   "price": 75.48,
+   "price": 75.09,
    "entry": 58.69,
-   "stop": 53.7884,
-   "target": 68.4932,
+   "stop": 53.6998,
+   "target": 68.6704,
    "shares_1pct": 20,
-   "range_pos": 0.2441,
+   "range_pos": 0.2388,
    "norm": -8.2,
    "fresh": true,
-   "break_gap": 0.0045,
+   "break_gap": -0.0007,
    "earnings_d": 22,
    "tactic": null
   },
