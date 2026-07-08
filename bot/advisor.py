@@ -67,6 +67,26 @@ def fetch_signals_chain(primary: str) -> tuple[dict, str]:
     raise last_err
 
 
+def _held_codes() -> set:
+    """자동매매 계좌가 이미 보유·대기 중인 종목코드 집합.
+    이미 산 종목엔 '지금 진입 자리!'·'돌파 발생' 제안이 무의미·혼란 → 알림에서 제외.
+    조회 실패는 빈 집합(제외 안 함 — 알림을 막기보다 중복을 감수. 보수적)."""
+    for src in cfg.PAPER_SOURCES:
+        try:
+            d = fetch_signals(src)   # 같은 http/파일 로더 재사용
+            codes = set()
+            for p in d.get("positions", []):
+                if p.get("code"):
+                    codes.add(p["code"])
+            for o in d.get("pending", []):
+                if o.get("code"):
+                    codes.add(o["code"])
+            return codes
+        except Exception:
+            continue
+    return set()
+
+
 def _signals_age_min(data: dict) -> float | None:
     """generated_at 기준 신호 나이(분). 파싱 실패 시 None(판정 보류)."""
     try:
@@ -112,13 +132,16 @@ def _record_sent(state: dict, n: int) -> None:
 # ── ① 매수 제안 ──────────────────────────────────────────────────
 
 def check_buy_signals(sigs: list[dict], state: dict, dry_run: bool,
-                      budget: int = 10 ** 9) -> int:
+                      budget: int = 10 ** 9, held: set | None = None) -> int:
+    held = held or set()
     sent = state.setdefault("sent_buy", [])
     sent_set = set(sent)
     # '지금 살 수 있는' 종목만(장 열린 시장) + 새 신호만 → 우선순위 높은 것부터 상한까지.
     #   (한국 낮에 미국주 제안이 우르르 오던 폭주 방지 — 지금 열린 시장만 알림)
+    #   자동매매가 이미 보유·대기 중인 종목은 제외 — 이미 산 걸 "매수 제안"하면 혼란(사용자 지적).
     cand = [s for s in sigs
             if s["group"] == "now" and s["id"] not in sent_set
+            and s["code"] not in held
             and cfg.market_open(s["ccy"])]
     cand.sort(key=lambda s: (not s.get("fresh"), -s.get("stage", 0),
                              -s.get("norm", 0)))          # 갓전환·상위단계 먼저
@@ -132,8 +155,9 @@ def check_buy_signals(sigs: list[dict], state: dict, dry_run: bool,
         ed = s.get("earnings_d")
         earn = " · ⚠️어닝임박" if (ed is not None and 0 <= ed <= 3) else ""
         text = (
-            f"🟢 <b>매수 제안</b> {tag} {s['name']}({s['code']})\n"
+            f"🟢 <b>[관찰] 매수 제안</b> {tag} {s['name']}({s['code']})\n"
             f"진입 {_fmt(s['entry'], s['ccy'])} · 손절 {_fmt(s['stop'], s['ccy'])}{tac}{earn}\n"
+            f"— 자동매매 미체결(제안만). 실제 체결은 '🤖 자동매매 체결' 알림.\n"
             f'<a href="{cfg.SITE_URL}/stocks/{s["code"]}.html">📈 상세</a>'
         )
         if not cfg.market_open(s["ccy"]):    # 전송 직전 재확인(장 닫힘 오발송 방지)
@@ -159,7 +183,8 @@ ARRIVAL_TOL = 0.01   # 진입가 ±1% 이내면 '도달'로 판정
 
 
 def check_arrivals(sigs: list[dict], state: dict, dry_run: bool,
-                   budget: int = 10 ** 9) -> int:
+                   budget: int = 10 ** 9, held: set | None = None) -> int:
+    held = held or set()
     today = cfg.today_kst()
     sent = state.setdefault("sent_arrival", {}).setdefault(today, [])
     for d in list(state["sent_arrival"]):
@@ -167,10 +192,13 @@ def check_arrivals(sigs: list[dict], state: dict, dry_run: bool,
             del state["sent_arrival"][d]
     # 지금 장 열린 시장의 watch 종목만(한국 낮에 미국주 도달알림 폭주 방지) +
     #   상한까지. 우선순위: 갓전환·상위단계 먼저.
+    #   자동매매가 이미 보유·대기 중인 종목은 제외 — 이미 산 종목의 '돌파 발생'은
+    #   중복·혼란(사용자가 MRSH 사례로 지적: 이미 보유인데 돌파 알림이 옴).
     cand = [s for s in sigs
             if s["group"] == "watch"
             and s.get("entry_kind") in ("pullback", "breakout")
             and s["code"] not in sent
+            and s["code"] not in held
             and s.get("entry")
             and cfg.market_open(s["ccy"])]
     cand.sort(key=lambda s: (not s.get("fresh"), -s.get("stage", 0)))
@@ -193,8 +221,9 @@ def check_arrivals(sigs: list[dict], state: dict, dry_run: bool,
             hit, title = True, "돌파 발생 — 저항 넘김"
         if hit:
             text = (
-                f"🎯 <b>{title}</b> {s['name']}({code})\n"
+                f"🎯 <b>[관찰] {title}</b> {s['name']}({code})\n"
                 f"현재가 {_fmt(px, s['ccy'])} · 손절 {_fmt(s['stop'], s['ccy'])}\n"
+                f"— 자동매매 미보유 종목의 도달 알림(제안). 체결과 무관.\n"
                 f'<a href="{cfg.SITE_URL}/stocks/{code}.html">📈 상세</a>'
             )
             ok = True if dry_run else notify.send(text)
@@ -269,9 +298,11 @@ def run_once(args) -> None:
         nb = na = 0
     else:
         # 하루 총량 서킷브레이커 — 매수/도달 제안에만 적용(매도는 보유 관리라 예외).
+        #   자동매매 보유·대기 종목을 1회 조회해 두 알림에서 함께 제외(중복·혼란 방지).
+        held = _held_codes()
         budget = max(0, cfg.DAILY_ALERT_BUDGET - _sent_today(state))
-        nb = check_buy_signals(sigs, state, args.dry_run, budget)
-        na = check_arrivals(sigs, state, args.dry_run, budget - nb)
+        nb = check_buy_signals(sigs, state, args.dry_run, budget, held)
+        na = check_arrivals(sigs, state, args.dry_run, budget - nb, held)
     _record_sent(state, nb + na)
     ns = check_sell_alerts(holdings, state, args.dry_run)
     # 예산 소진 첫 순간 1회만 안내(이후 제안은 웹에서) — 조용한 누락 방지

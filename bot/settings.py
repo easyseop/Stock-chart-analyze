@@ -12,6 +12,12 @@ SIGNALS_FEED_URL = ("https://raw.githubusercontent.com/easyseop/"
                     "Stock-chart-analyze/state/feed/signals.latest.json")
 SIGNALS_URL = "https://easyseop.github.io/Stock-chart-analyze/api/signals.json"
 SIGNALS_SOURCES = (SIGNALS_FEED_URL, SIGNALS_URL)   # 순서대로 시도
+# 자동매매 계좌 feed — advisor가 '이미 보유한 종목'을 제안/도달 알림에서 빼려고 읽음
+#   (이미 산 종목에 "지금 진입 자리!"·"돌파 발생"은 중복·혼란 — 사용자 지적).
+PAPER_FEED_URL = ("https://raw.githubusercontent.com/easyseop/"
+                  "Stock-chart-analyze/state/feed/autopaper.public.json")
+PAPER_URL = "https://easyseop.github.io/Stock-chart-analyze/api/paper_auto.json"
+PAPER_SOURCES = (PAPER_FEED_URL, PAPER_URL)
 SIGNALS_STALE_MIN = 25   # 장중에 신호가 이보다 낡으면 제안 대신 '신호 낡음' 경보
                          #   (15분 주기 + raw CDN 캐시 ~5분 여유)
 SITE_URL = "https://easyseop.github.io/Stock-chart-analyze"
