@@ -97,6 +97,14 @@ class _PaperBroker:
     name = "paper(dry-run)"
 
     def quote(self, code: str, ccy: str) -> float | None:
+        # 1순위: 토스 시세(키 있을 때만·실패 시 조용히 폴백) — 손절 감시용 최신가.
+        try:
+            from bot import toss
+            px = toss.quote_price(code)
+            if px is not None:
+                return px
+        except Exception:
+            pass
         try:
             import FinanceDataReader as fdr
             df = fdr.DataReader(code)
@@ -112,19 +120,22 @@ class _PaperBroker:
 class _TossBroker(_PaperBroker):
     """토스증권 어댑터 자리 — API 키 발급 후 이 두 메서드만 구현하면 실전.
 
-    보안: 키는 환경변수(TOSS_APP_KEY/TOSS_APP_SECRET)로만. 이 클래스에도
+    보안: 키는 환경변수(TOSS_CLIENT_ID/TOSS_CLIENT_SECRET)로만. 이 클래스에도
     매수 메서드는 두지 않는다(매도 전용 원칙).
     """
     name = "toss"
 
     def __init__(self):
-        self.key = os.environ.get("TOSS_APP_KEY")
-        self.secret = os.environ.get("TOSS_APP_SECRET")
+        self.key = os.environ.get("TOSS_CLIENT_ID")
+        self.secret = os.environ.get("TOSS_CLIENT_SECRET")
         if not (self.key and self.secret):
-            raise SystemExit("TOSS_APP_KEY/TOSS_APP_SECRET 환경변수 필요")
+            raise SystemExit("TOSS_CLIENT_ID/TOSS_CLIENT_SECRET 환경변수 필요")
 
     def quote(self, code: str, ccy: str) -> float | None:
-        raise NotImplementedError("토스 시세 API 연동 지점")
+        # 시세는 Stage 0 어댑터(읽기 전용) 재사용 — 실패 시 부모 폴백.
+        from bot import toss
+        px = toss.quote_price(code)
+        return px if px is not None else super().quote(code, ccy)
 
     def place_sell(self, code: str, qty: int, reason: str, key: str) -> bool:
         raise NotImplementedError("토스 매도 주문 API 연동 지점(멱등키 포함)")

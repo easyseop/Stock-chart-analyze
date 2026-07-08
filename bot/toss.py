@@ -1,0 +1,191 @@
+"""토스증권 Open API 어댑터 — Stage 0: 시세 읽기 전용(주문·계좌 미사용).
+
+설계 원칙(안전 우선):
+  1. 표준 라이브러리만 사용(requests 없음 — notify.py와 동일 방침).
+  2. 키 미설정이면 전면 비활성 → 호출부가 기존 FDR(야후/Stooq)로 자동 폴백.
+     즉 키가 없으면 시스템 동작은 지금과 100% 동일(리스크 0).
+  3. 어떤 실패도 예외를 밖으로 던지지 않는다 — 조회 실패는 빈 결과 → 폴백.
+  4. 키 값(client_secret)은 절대 로그·예외 메시지에 담지 않는다.
+  5. 주문·계좌 엔드포인트는 이 파일에 두지 않는다(Stage 0은 시세만).
+
+토큰 주의: 토스는 "client당 유효 토큰 1개 — 재발급 시 이전 토큰 즉시 무효화".
+  따라서 프로세스 내 단일 캐시로만 발급하고 매 호출마다 재발급하지 않는다.
+  (서버 상시 운용 시 루프 여러 개가 각자 발급하면 서로 무효화 → 반드시 단일
+   token_manager. Stage 0은 배치 단일 프로세스라 모듈 전역 캐시로 충분.)
+
+검증 출처: developers.tossinvest.com — OpenAPI 3.1(openapi.json), 2026-07 확인.
+  POST /oauth2/token  (application/x-www-form-urlencoded, grant_type=client_credentials)
+      → { access_token, token_type: "Bearer", expires_in }
+  GET  /api/v1/prices?symbols=AAPL,005930  (콤마 구분, 최대 200건)
+      → { result: [ { symbol, timestamp(ISO8601|null), lastPrice(str), currency } ] }
+
+환경변수(값은 절대 코드/채팅/로그에 두지 말 것 — 시크릿으로만):
+  TOSS_CLIENT_ID      발급받은 클라이언트 ID
+  TOSS_CLIENT_SECRET  발급받은 클라이언트 시크릿
+  TOSS_BASE_URL       (선택) 기본 https://openapi.tossinvest.com
+"""
+from __future__ import annotations
+
+import json
+import os
+import time
+import urllib.error
+import urllib.parse
+import urllib.request
+
+BASE_URL = os.environ.get("TOSS_BASE_URL", "https://openapi.tossinvest.com")
+PRICES_MAX = 200            # /api/v1/prices 다건 조회 상한(콤마 구분)
+_TOKEN_SKEW = 300           # 만료 이 초 전이면 선제 재발급(시계 오차·왕복 여유)
+_HTTP_TIMEOUT = 15
+
+# 모듈 전역 토큰 캐시 — {"tok": str|None, "exp": epoch초}
+_TOK: dict = {"tok": None, "exp": 0.0}
+
+
+def enabled() -> bool:
+    """키가 둘 다 있으면 True. 없으면 어댑터 비활성(호출부는 FDR 폴백)."""
+    return bool(os.environ.get("TOSS_CLIENT_ID")
+                and os.environ.get("TOSS_CLIENT_SECRET"))
+
+
+def _fetch_token() -> str | None:
+    cid = os.environ.get("TOSS_CLIENT_ID")
+    sec = os.environ.get("TOSS_CLIENT_SECRET")
+    if not (cid and sec):
+        return None
+    body = urllib.parse.urlencode({
+        "grant_type": "client_credentials",
+        "client_id": cid, "client_secret": sec,
+    }).encode("utf-8")
+    req = urllib.request.Request(
+        BASE_URL + "/oauth2/token", data=body,
+        headers={"Content-Type": "application/x-www-form-urlencoded"})
+    try:
+        with urllib.request.urlopen(req, timeout=_HTTP_TIMEOUT) as resp:
+            d = json.load(resp)
+        tok = d.get("access_token")
+        exp = float(d.get("expires_in", 3600))
+        if tok:
+            _TOK["tok"] = tok
+            _TOK["exp"] = time.time() + exp
+            return tok
+    except Exception as e:
+        # 키 값은 절대 남기지 않는다 — 예외 타입만.
+        print(f"[toss] 토큰 발급 실패({type(e).__name__}) — FDR 폴백")
+    return None
+
+
+def _token(force: bool = False) -> str | None:
+    if not enabled():
+        return None
+    if not force and _TOK["tok"] and time.time() < _TOK["exp"] - _TOKEN_SKEW:
+        return _TOK["tok"]
+    return _fetch_token()
+
+
+def _get(path: str, params: dict) -> dict | None:
+    """인증 GET — 401이면 토큰 1회 강제 갱신 후 재시도. 실패는 None."""
+    tok = _token()
+    if not tok:
+        return None
+    url = BASE_URL + path + "?" + urllib.parse.urlencode(params)
+    for attempt in (0, 1):
+        req = urllib.request.Request(
+            url, headers={"Authorization": f"Bearer {tok}",
+                          "Accept": "application/json"})
+        try:
+            with urllib.request.urlopen(req, timeout=_HTTP_TIMEOUT) as resp:
+                return json.load(resp)
+        except urllib.error.HTTPError as e:
+            if e.code == 401 and attempt == 0:      # 만료/무효 → 1회 재발급
+                tok = _token(force=True)
+                if tok:
+                    continue
+            print(f"[toss] GET {path} 실패(HTTP {e.code}) — FDR 폴백")
+            return None
+        except Exception as e:
+            print(f"[toss] GET {path} 실패({type(e).__name__}) — FDR 폴백")
+            return None
+    return None
+
+
+def _chunks(seq: list, n: int):
+    for i in range(0, len(seq), n):
+        yield seq[i:i + n]
+
+
+def prices(symbols: list[str]) -> dict[str, dict]:
+    """다건 현재가 조회(읽기 전용). 반환: {symbol: {price, ts, currency}}.
+
+    - price: float(원/달러 원값), ts: ISO8601 문자열 또는 None(체결 미발생),
+      currency: 'KRW'/'USD'.
+    - 비활성/실패/누락 종목은 결과에서 빠진다(→ 호출부가 그 종목만 FDR 폴백).
+    """
+    syms = [s for s in dict.fromkeys(symbols) if s]   # 중복·빈값 제거, 순서 보존
+    if not syms or not enabled():
+        return {}
+    out: dict[str, dict] = {}
+    for group in _chunks(syms, PRICES_MAX):
+        d = _get("/api/v1/prices", {"symbols": ",".join(group)})
+        if not d:
+            continue
+        for row in (d.get("result") or []):
+            sym = row.get("symbol")
+            lp = row.get("lastPrice")
+            if not sym or lp in (None, ""):
+                continue
+            try:
+                px = float(lp)
+            except (TypeError, ValueError):
+                continue
+            if px <= 0:
+                continue
+            out[sym] = {"price": px, "ts": row.get("timestamp"),
+                        "currency": row.get("currency")}
+    return out
+
+
+def price(symbol: str) -> dict | None:
+    """단건 현재가. 실패/비활성이면 None."""
+    return prices([symbol]).get(symbol)
+
+
+def quote_price(symbol: str) -> float | None:
+    """단건 현재가 float만 — advisor/sentinel 폴백 체인의 1순위 소스용.
+    토스가 값을 주면 float, 아니면 None(호출부가 FDR로 폴백)."""
+    p = price(symbol)
+    return p["price"] if p else None
+
+
+def _selftest(symbols: list[str]) -> None:
+    """`python -m bot.toss --selftest AAPL,005930` — 키 검증용(값 미출력)."""
+    if not enabled():
+        print("TOSS_CLIENT_ID/TOSS_CLIENT_SECRET 미설정 — 어댑터 비활성 상태.")
+        print("시크릿을 설정하면 이 명령으로 시세 조회를 확인할 수 있습니다.")
+        return
+    print(f"키 감지됨. base={BASE_URL}")
+    tok = _token()
+    print("토큰 발급:", "성공" if tok else "실패")
+    if not tok:
+        return
+    res = prices(symbols)
+    if not res:
+        print("시세 조회 결과 없음(심볼/시장/장 상태 확인).")
+        return
+    for sym, q in res.items():
+        cur = q.get("currency") or ""
+        print(f"  {sym}: {q['price']} {cur}  ts={q.get('ts')}")
+
+
+def main() -> None:
+    import argparse
+    ap = argparse.ArgumentParser(description="토스 시세 어댑터 자가진단")
+    ap.add_argument("--selftest", metavar="SYMBOLS",
+                    default="AAPL,005930",
+                    help="콤마 구분 심볼(기본 AAPL,005930)")
+    args = ap.parse_args()
+    _selftest([s.strip() for s in args.selftest.split(",") if s.strip()])
+
+
+if __name__ == "__main__":
+    main()
