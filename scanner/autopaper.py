@@ -561,7 +561,7 @@ def _report_violations(st: dict, cap_viol: list, rule_viol: list) -> None:
             + "\n→ 사이징·쿨다운·상한 로직 확인 필요.")
     try:
         from bot import notify
-        notify.send(text)
+        notify.send(text, critical=True)   # 규칙 위반=P0(ntfy 이중화)
     except Exception:
         pass
 
@@ -719,7 +719,7 @@ def update(results: list[dict], picks: dict, out_dir: str = "public") -> dict:
             notify.send("⚠️ <b>보유 종목 시세 정체</b> — "
                         + ", ".join(stale_held)
                         + f" ({STALE_HELD_MIN}분+ 미갱신). 손절 관리는 마지막 "
-                          "가격으로 계속. 데이터소스 확인 필요.")
+                          "가격으로 계속. 데이터소스 확인 필요.", critical=True)
         except Exception:
             pass
 

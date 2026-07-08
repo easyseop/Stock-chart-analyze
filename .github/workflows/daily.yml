@@ -146,6 +146,7 @@ jobs:
           LANE: fast
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}   # P0 이중화(미설정=무동작)
         run: python main.py --fast
       - name: 계좌 상태 백업(state 브랜치) + 매매 락 해제
         env:
@@ -240,6 +241,7 @@ jobs:
           # 자동 모의투자 체결 보고(매수/매도 시 텔레그램) — 미설정이면 조용히 생략
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}   # 규칙위반·시세정체 P0 이중화(미설정=무동작)
         run: python main.py --cache --scan-cached --screener --screener-dir public
 
       # ── 계좌 상태 영구 백업(state 브랜치) — actions/cache 밖의 source of truth ──

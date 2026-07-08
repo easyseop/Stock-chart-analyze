@@ -39,7 +39,7 @@ POS = {"code": "TT", "name": "테스트", "ccy": "USD", "q": 10, "stop": 100.0}
 def _setup(tmp, feed_positions, age=None):
     sn.SENT_PATH = os.path.join(tmp, "sent.json")
     sn._market_open = lambda ccy: True
-    sn._notify = lambda text: NOTES.append(text)
+    sn._notify = lambda text, **kw: NOTES.append(text)
     sn._fetch_positions = lambda: (feed_positions, age)
 
 
@@ -111,7 +111,7 @@ def main() -> int:
     from bot import advisor, notify
     import bot.settings as cfg
     sent_msgs = []
-    notify.send = lambda t: sent_msgs.append(t) or True
+    notify.send = lambda t, **kw: sent_msgs.append(t) or True
     orig_open = cfg.market_open
     cfg.market_open = lambda ccy: True
     try:

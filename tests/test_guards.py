@@ -22,7 +22,7 @@ def test_violation_escalation() -> list[str]:
     """위반 주입 → 경보 1회, 같은 위반 재빌드 → 침묵, 위반 바뀌면 재경보."""
     sent = []
     import bot.notify as notify
-    notify.send = lambda text: sent.append(text) or True   # 캡처
+    notify.send = lambda text, **kw: sent.append(text) or True   # 캡처
 
     st = {"pos": {}, "pending": {}, "log": []}
     v1 = [{"code": "AAA", "name": "위반주", "pct": 50.0}]

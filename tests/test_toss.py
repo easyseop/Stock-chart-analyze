@@ -93,6 +93,32 @@ def test_401_forces_refresh():
     print("[PASS] 401 → 토큰 1회 강제 재발급 후 재시도 성공")
 
 
+def test_token_failure_cooldown():
+    """토큰 발급이 실패하면 쿨다운 동안 재시도하지 않는다(장애 중 15초 타임아웃
+    반복으로 손절 감시 주기가 밀리는 회귀 방지 — 감사 CONFIRMED)."""
+    toss = _reload("c_x", "s_x")
+    toss._TOK = {"tok": None, "exp": 0.0, "fail_until": 0.0}
+    n = {"token_calls": 0}
+
+    def fake(req, timeout=None):
+        if "/oauth2/token" in req.full_url:
+            n["token_calls"] += 1
+            raise urllib.error.URLError("token endpoint down")
+        raise AssertionError("쿨다운 중엔 /prices까지 가면 안 됨")
+
+    with mock.patch("urllib.request.urlopen", fake):
+        assert toss.quote_price("AAPL") is None      # 1회 시도(실패)
+        assert toss.quote_price("MSFT") is None      # 쿨다운 → 시도 안 함
+        assert toss.quote_price("005930") is None    # 쿨다운 → 시도 안 함
+    assert n["token_calls"] == 1, f"쿨다운이 안 먹음(토큰 {n['token_calls']}회 시도)"
+    # 쿨다운 만료 후엔 다시 시도
+    toss._TOK["fail_until"] = 0.0
+    with mock.patch("urllib.request.urlopen", fake):
+        assert toss.quote_price("AAPL") is None
+    assert n["token_calls"] == 2, "쿨다운 만료 후 재시도해야 함"
+    print("[PASS] 토큰 실패 쿨다운 — 장애 중 재시도 폭주 차단, 만료 후 복구")
+
+
 def test_secret_never_logged():
     toss = _reload("c_x", "SUPER_SECRET_VALUE")
     toss._TOK = {"tok": None, "exp": 0.0}
@@ -114,6 +140,7 @@ if __name__ == "__main__":
     test_disabled_without_keys()
     test_parse_and_drop_null()
     test_401_forces_refresh()
+    test_token_failure_cooldown()
     test_secret_never_logged()
     print("\n✅ 토스 어댑터 전부 통과 — 읽기 전용·키 게이트·폴백·시크릿 비노출.")
     # 원상복구(다른 테스트에 영향 없게)
