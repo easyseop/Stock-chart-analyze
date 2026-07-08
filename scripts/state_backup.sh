@@ -43,7 +43,8 @@ now = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=9)))
 hb = {"generated_at": now.isoformat(timespec="seconds"),
       "run_id": os.environ.get("GITHUB_RUN_ID"),
       "event": os.environ.get("GITHUB_EVENT_NAME"),
-      "lane": os.environ.get("LANE", "bulk")}
+      "lane": os.environ.get("LANE", "bulk"),
+      "sha": os.environ.get("GITHUB_SHA")}   # 배포된 코드 SHA — 워커가 HEAD와 대조(B7)
 json.dump(hb, open("/tmp/st/feed/heartbeat.json", "w"))
 try:
     out = json.load(open("public/api/paper_auto.json"))
