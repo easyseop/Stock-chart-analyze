@@ -147,6 +147,7 @@ jobs:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
           NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}   # P0 이중화(미설정=무동작)
+          KILL_NEW_ENTRIES: ${{ vars.KILL_NEW_ENTRIES }}   # 긴급정지(변수 켜면 신규진입만 중단)
         run: python main.py --fast
       - name: 계좌 상태 백업(state 브랜치) + 매매 락 해제
         env:
@@ -242,6 +243,7 @@ jobs:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
           NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}   # 규칙위반·시세정체 P0 이중화(미설정=무동작)
+          KILL_NEW_ENTRIES: ${{ vars.KILL_NEW_ENTRIES }}   # 긴급정지(변수 켜면 신규진입만 중단)
         run: python main.py --cache --scan-cached --screener --screener-dir public
 
       # ── 계좌 상태 영구 백업(state 브랜치) — actions/cache 밖의 source of truth ──

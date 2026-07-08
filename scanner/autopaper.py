@@ -152,6 +152,31 @@ def _day_ent(st: dict) -> dict:
     return de
 
 
+def _kill_new_entries() -> bool:
+    """긴급 정지 스위치(1층) — 켜지면 '신규 진입/신규 지정가'만 중단한다.
+    보유 관리·손절·지정가 체결·백업은 그대로 계속(보호는 유지, 확대만 정지).
+
+    켜는 법: 저장소 Settings→Variables에 KILL_NEW_ENTRIES=1(코드 수정 없이 즉시).
+    나쁜 데이터·로직 사고 때의 2클릭 브레이크이자, 실거래 단계적 kill switch의 1층
+    (§7.5: 신규 진입 중지 → 전 주문 중지 → 파수꾼만 → 전면 중지)."""
+    v = os.environ.get("KILL_NEW_ENTRIES", "").strip().lower()
+    return v in ("1", "true", "on", "yes")
+
+
+def _kill_notice(st: dict) -> None:
+    """긴급 정지가 신규 진입을 실제로 막은 날 1회만 P0 통지(무음 정지 방지)."""
+    if st.get("_kill_day") == _today():
+        return
+    st["_kill_day"] = _today()
+    try:
+        from bot import notify
+        notify.send("⛔ <b>긴급 정지(KILL_NEW_ENTRIES) 작동</b> — 신규 진입·신규 "
+                    "지정가 중단. 보유 관리·손절·백업은 계속. "
+                    "해제: 저장소 Variable KILL_NEW_ENTRIES 끄기.", critical=True)
+    except Exception:
+        pass
+
+
 def _today_pl(st: dict) -> float:
     """오늘 실현손익(원) — 일일 서킷브레이커 판정용."""
     return sum(e.get("pl", 0) or 0 for e in st["log"]
@@ -792,7 +817,11 @@ def update(results: list[dict], picks: dict, out_dir: str = "public") -> dict:
         print(f"[autopaper] ⛔ 일일 실현손실 {day_pl:,.0f}원 "
               f"(한도 −{DAILY_LOSS_LIMIT*100:.0f}%) — 당일 신규 진입 중지")
     de = _day_ent(st)
-    for item in (picks.get("now", []) if trade_ok else []):
+    # 긴급 정지(1층): 켜지면 신규 진입/신규 지정가만 건너뛴다(보유 관리·손절은 위에서 이미 처리).
+    kill = _kill_new_entries()
+    if kill and trade_ok and picks.get("now"):
+        _kill_notice(st)                   # 막은 날 1회 P0 통지
+    for item in (picks.get("now", []) if (trade_ok and not kill) else []):
         if halted:
             break
         code = item["code"]
