@@ -2,8 +2,8 @@
  "updated": "2026-07-08",
  "start": 100000000,
  "cash": 48873191,
- "equity": 99897399,
- "ret_pct": -0.1,
+ "equity": 99886599,
+ "ret_pct": -0.11,
  "positions": [
   {
    "code": "MRSH",
@@ -17,7 +17,8 @@
    "half_done": false,
    "opened": "2026-07-06",
    "pl_krw": 402549,
-   "pl_pct": 2.12
+   "pl_pct": 2.12,
+   "price_age_min": 7.8
   },
   {
    "code": "EQT",
@@ -31,7 +32,8 @@
    "half_done": false,
    "opened": "2026-07-07",
    "pl_krw": -125977,
-   "pl_pct": -0.62
+   "pl_pct": -0.62,
+   "price_age_min": 8.0
   },
   {
    "code": "STE",
@@ -45,7 +47,8 @@
    "half_done": false,
    "opened": "2026-07-07",
    "pl_krw": 21531,
-   "pl_pct": 1.11
+   "pl_pct": 1.11,
+   "price_age_min": 8.3
   },
   {
    "code": "068270",
@@ -53,13 +56,14 @@
    "ccy": "KRW",
    "q": 54,
    "avg": 175348.4128,
-   "price": 177000.0,
+   "price": 176800.0,
    "stop": 157651.1713,
    "target": 212997.6574,
    "half_done": false,
    "opened": "2026-07-07",
-   "pl_krw": 89186,
-   "pl_pct": 0.94
+   "pl_krw": 78386,
+   "pl_pct": 0.83,
+   "price_age_min": 8.0
   },
   {
    "code": "ORC",
@@ -73,7 +77,8 @@
    "half_done": false,
    "opened": "2026-07-08",
    "pl_krw": -242,
-   "pl_pct": -0.59
+   "pl_pct": -0.59,
+   "price_age_min": 8.6
   }
  ],
  "pending": [
@@ -233,7 +238,7 @@
   },
   {
    "d": "2026-07-08",
-   "v": 99897399
+   "v": 99886599
   }
  ],
  "log": [
@@ -357,5 +362,7 @@
    "amt": 9468814,
    "note": "눌림 지정가 주문(추격 금지) — ↗ 돌파후 진행(승률↓) · ③ 돌파후 횡보(대기) · 저점권28% · 체크4/6 · 손절폭10.5%"
   }
- ]
+ ],
+ "lane": "bulk",
+ "data_stale": []
 }
