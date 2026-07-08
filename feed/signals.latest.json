@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated_at": "2026-07-09T07:09:18+09:00",
+ "generated_at": "2026-07-09T07:44:52+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "signals": [
   {
@@ -2169,33 +2169,6 @@
     "mode": "full",
     "label": "⚡ 즉시 분할",
     "desc": "손절폭 5.0%로 타이트 — 현재가에서 1~2회 분할 매수. 기다리는 이득보다 놓치는 비용이 큼"
-   }
-  },
-  {
-   "id": "REXR-2026-07-09-watch",
-   "code": "REXR",
-   "name": "Rexford Industrial Realty, Inc.",
-   "ccy": "USD",
-   "group": "watch",
-   "entry_kind": "now",
-   "stage": 1,
-   "price": 34.34,
-   "entry": 34.34,
-   "stop": 32.6996,
-   "target": 37.6209,
-   "shares_1pct": 60,
-   "range_pos": 0.1797,
-   "norm": -1.9,
-   "fresh": true,
-   "break_gap": -0.0159,
-   "earnings_d": null,
-   "tactic": {
-    "stop_pct": 4.8,
-    "pb_price": null,
-    "pb_stop_pct": null,
-    "mode": "full",
-    "label": "⚡ 즉시 분할",
-    "desc": "손절폭 4.8%로 타이트 — 현재가에서 1~2회 분할 매수. 기다리는 이득보다 놓치는 비용이 큼"
    }
   },
   {
