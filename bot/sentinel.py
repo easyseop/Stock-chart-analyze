@@ -165,16 +165,25 @@ def check_once(broker, state: dict) -> None:
             continue
         # 멱등키: 종목+손절가+날짜 — 같은 손절이 두 번 나가지 않게(dry-run엔 충분).
         # ── 실거래 전 필수(토스 어댑터 구현 시 반드시 강화) ─────────────
-        #   현재 키는 SRE 재검토(2026-07-07)가 지적한 4개 구멍이 있다:
-        #     ① 부분 체결 후 재시도 → 같은 키가 잔여 수량 주문을 막음
-        #     ② 트레일링으로 stop이 바뀌면 같은 포지션에 새 키 생성 → 중복 주문
-        #     ③ 당일 재진입 시 이전 stop 키와 충돌
-        #     ④ KR/US trade_date 혼재 시 date 키 흔들림
-        #   → 실거래 키는 포지션 정체성 기반:
-        #        {broker}:{account}:{symbol}:{opened_at}:{seq}:{action}
-        #   → place_sell 직전 broker 실보유수량 재조회, intended>broker면 축소.
-        #   → 주문 원장(submitted→ack→partial→filled / rejected / unknown→reconcile)
-        #     을 별도 저장하고, unknown은 다음 폴링에서 reconcile.
+        #   [키] SRE 재검토(07-07)의 4개 구멍(부분체결 재시도 차단·트레일 stop 변경
+        #   중복·당일 재진입 충돌·KR/US date 혼재) → 포지션 정체성 키로 교체:
+        #        {broker}:{account}:{symbol}:{opened_at}:{seq}:{action}:{stop_version}
+        #   (stop_version: 트레일 변경마다 +1 — 2차 검토(07-08) 추가)
+        #   [원장] submitted→ack→partial→filled / rejected / unknown→reconcile.
+        #   timeout은 실패가 아니라 UNKNOWN — 즉시 재주문 금지, 해당 종목 lock,
+        #   open orders+positions 대사 후 '잔여 수량만' 새 키로. (초과매도 방지)
+        #   [브로커가 진실] 보유·평단·주문가능수량은 매번 브로커 API 재조회 —
+        #   state feed는 손절선 '참고'용. 수량 불일치(액면분할·기업행위 포함)면
+        #   신규 주문 금지 + 수동 리뷰 경보.
+        #   [매도 허용 조건] broker 실보유>0 ∧ feed에 open position ∧ 정체성 일치
+        #   ∧ quote 나이 ≤10~30초(낡은 시세로 손절 판단 금지) ∧ stop 래칫(절대
+        #   하향 금지 — 파수꾼 내부에서도 검증: feed가 낡아도 마지막 확정 stop은
+        #   계속 집행) ∧ intended_qty ≤ broker_available.
+        #   [preflight/kill switch] 장 시작 전 브로커 인증·주문권한 확인(실패=P0,
+        #   warning 아님) · 하루 매도 N회 초과/동일 종목 UNKNOWN 2회/브로커-로컬
+        #   불일치 → 신규 주문 전면 금지 + P0.
+        #   [0차 방어] 브로커 서버측 stop 지원 시 매수 직후 등록 — 파수꾼·GitHub·
+        #   CF가 전부 죽어도 남는 최후 방어선(RELIABILITY_PLAN B0).
         key = f'{code}:{stop}:{_now_kst().date().isoformat()}'
         if key in sent:
             continue
