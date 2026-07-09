@@ -2,8 +2,8 @@
  "updated": "2026-07-09",
  "start": 100000000,
  "cash": 38574529,
- "equity": 99138297,
- "ret_pct": -0.86,
+ "equity": 99146397,
+ "ret_pct": -0.85,
  "positions": [
   {
    "code": "MRSH",
@@ -18,7 +18,7 @@
    "opened": "2026-07-06",
    "pl_krw": 515233,
    "pl_pct": 2.72,
-   "price_age_min": 0.4
+   "price_age_min": 0.5
   },
   {
    "code": "EQT",
@@ -56,13 +56,13 @@
    "ccy": "KRW",
    "q": 54,
    "avg": 175348.4128,
-   "price": 171900.0,
+   "price": 172050.0,
    "stop": 157651.1713,
    "target": 212997.6574,
    "half_done": false,
    "opened": "2026-07-07",
-   "pl_krw": -186214,
-   "pl_pct": -1.97,
+   "pl_krw": -178114,
+   "pl_pct": -1.88,
    "price_age_min": 0.4
   },
   {
@@ -275,7 +275,7 @@
   },
   {
    "d": "2026-07-09",
-   "v": 99138297
+   "v": 99146397
   }
  ],
  "log": [
