@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated_at": "2026-07-09T20:57:06+09:00",
+ "generated_at": "2026-07-09T21:15:19+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "signals": [
   {
@@ -1455,6 +1455,26 @@
    "tactic": null
   },
   {
+   "id": "005830-2026-07-09-watch",
+   "code": "005830",
+   "name": "DB손해보험",
+   "ccy": "KRW",
+   "group": "watch",
+   "entry_kind": "pullback",
+   "stage": 4,
+   "price": 146500.0,
+   "entry": 127450.0,
+   "stop": 112638.7569,
+   "target": 157072.4862,
+   "shares_1pct": 6,
+   "range_pos": 0.2961,
+   "norm": -28.3,
+   "fresh": true,
+   "break_gap": 0.0135,
+   "earnings_d": null,
+   "tactic": null
+  },
+  {
    "id": "BWIN-2026-07-09-watch",
    "code": "BWIN",
    "name": "The Baldwin Insurance Group, Inc.",
@@ -1711,26 +1731,6 @@
    "norm": -11.3,
    "fresh": true,
    "break_gap": 0.0347,
-   "earnings_d": null,
-   "tactic": null
-  },
-  {
-   "id": "005830-2026-07-09-watch",
-   "code": "005830",
-   "name": "DB손해보험",
-   "ccy": "KRW",
-   "group": "watch",
-   "entry_kind": "pullback",
-   "stage": 3,
-   "price": 146500.0,
-   "entry": 127450.0,
-   "stop": 112638.7569,
-   "target": 157072.4862,
-   "shares_1pct": 6,
-   "range_pos": 0.2961,
-   "norm": -30.2,
-   "fresh": true,
-   "break_gap": 0.0135,
    "earnings_d": null,
    "tactic": null
   },
