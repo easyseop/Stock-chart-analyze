@@ -2,8 +2,8 @@
  "updated": "2026-07-09",
  "start": 100000000,
  "cash": 38151189,
- "equity": 99147840,
- "ret_pct": -0.85,
+ "equity": 99118056,
+ "ret_pct": -0.88,
  "positions": [
   {
    "code": "MRSH",
@@ -11,14 +11,14 @@
    "ccy": "USD",
    "q": 72,
    "avg": 174.3075,
-   "price": 177.50999450683594,
+   "price": 177.9499969482422,
    "stop": 165.3325,
    "target": 192.2575,
    "half_done": false,
    "opened": "2026-07-06",
-   "pl_krw": 347924,
-   "pl_pct": 1.84,
-   "price_age_min": 8.3
+   "pl_krw": 395726,
+   "pl_pct": 2.09,
+   "price_age_min": 0.5
   },
   {
    "code": "EQT",
@@ -26,14 +26,14 @@
    "ccy": "USD",
    "q": 256,
    "avg": 52.085,
-   "price": 51.15999984741211,
+   "price": 50.70500183105469,
    "stop": 49.5451,
    "target": 57.1649,
    "half_done": false,
    "opened": "2026-07-07",
-   "pl_krw": -357310,
-   "pl_pct": -1.78,
-   "price_age_min": 423.6
+   "pl_krw": -533067,
+   "pl_pct": -2.65,
+   "price_age_min": 0.4
   },
   {
    "code": "STE",
@@ -41,14 +41,14 @@
    "ccy": "USD",
    "q": 6,
    "avg": 213.02,
-   "price": 209.4900054931641,
+   "price": 211.65499877929688,
    "stop": 202.063,
    "target": 234.934,
    "half_done": false,
    "opened": "2026-07-07",
-   "pl_krw": -31959,
-   "pl_pct": -1.66,
-   "price_age_min": 8.8
+   "pl_krw": -12358,
+   "pl_pct": -0.64,
+   "price_age_min": 0.4
   },
   {
    "code": "068270",
@@ -63,7 +63,7 @@
    "opened": "2026-07-07",
    "pl_krw": -121414,
    "pl_pct": -1.28,
-   "price_age_min": 8.5
+   "price_age_min": 0.4
   },
   {
    "code": "ORC",
@@ -71,14 +71,14 @@
    "ccy": "USD",
    "q": 4,
    "avg": 6.81,
-   "price": 6.739999771118164,
+   "price": 6.750100135803223,
    "stop": 6.5493,
    "target": 7.3314,
    "half_done": false,
    "opened": "2026-07-08",
-   "pl_krw": -422,
-   "pl_pct": -1.03,
-   "price_age_min": 423.6
+   "pl_krw": -362,
+   "pl_pct": -0.88,
+   "price_age_min": 0.4
   },
   {
    "code": "FND",
@@ -86,14 +86,14 @@
    "ccy": "USD",
    "q": 122,
    "avg": 54.6923,
-   "price": 54.595001220703125,
+   "price": 54.9900016784668,
    "stop": 51.1158,
    "target": 67.0734,
    "half_done": false,
    "opened": "2026-07-08",
-   "pl_krw": -17911,
-   "pl_pct": -0.18,
-   "price_age_min": 8.5
+   "pl_krw": 54803,
+   "pl_pct": 0.54,
+   "price_age_min": 0.4
   },
   {
    "code": "CMG",
@@ -101,14 +101,14 @@
    "ccy": "USD",
    "q": 1,
    "avg": 33.2,
-   "price": 33.17499923706055,
+   "price": 33.65010070800781,
    "stop": 30.8676,
    "target": 37.8648,
    "half_done": false,
    "opened": "2026-07-08",
-   "pl_krw": -38,
-   "pl_pct": -0.08,
-   "price_age_min": 8.5
+   "pl_krw": 679,
+   "pl_pct": 1.36,
+   "price_age_min": 0.4
   },
   {
    "code": "HMC",
@@ -116,14 +116,14 @@
    "ccy": "USD",
    "q": 3,
    "avg": 27.665,
-   "price": 27.63999938964844,
+   "price": 27.61000061035156,
    "stop": 26.2063,
    "target": 30.5824,
    "half_done": false,
    "opened": "2026-07-09",
-   "pl_krw": -113,
-   "pl_pct": -0.09,
-   "price_age_min": 8.8
+   "pl_krw": -249,
+   "pl_pct": -0.2,
+   "price_age_min": 0.4
   },
   {
    "code": "NU",
@@ -131,14 +131,14 @@
    "ccy": "USD",
    "q": 1,
    "avg": 13.335,
-   "price": 13.204999923706056,
+   "price": 13.300000190734863,
    "stop": 12.3253,
    "target": 15.3544,
    "half_done": false,
    "opened": "2026-07-09",
-   "pl_krw": -196,
-   "pl_pct": -0.97,
-   "price_age_min": 8.6
+   "pl_krw": -53,
+   "pl_pct": -0.26,
+   "price_age_min": 0.4
   },
   {
    "code": "LSPD",
@@ -146,14 +146,14 @@
    "ccy": "USD",
    "q": 28,
    "avg": 10.02,
-   "price": 9.93000030517578,
+   "price": 10.050000190734863,
    "stop": 9.2434,
    "target": 11.6783,
    "half_done": false,
    "opened": "2026-07-09",
-   "pl_krw": -3802,
-   "pl_pct": -0.9,
-   "price_age_min": 8.6
+   "pl_krw": 1267,
+   "pl_pct": 0.3,
+   "price_age_min": 0.4
   }
  ],
  "pending": [
@@ -263,7 +263,7 @@
   },
   {
    "d": "2026-07-09",
-   "v": 99147840
+   "v": 99118056
   }
  ],
  "log": [
@@ -475,9 +475,6 @@
    "note": "눌림 지정가 주문(추격 금지) — ↗ 돌파후 진행(승률↓) · ③ 돌파후 횡보(대기) · 저점권28% · 체크4/6 · 손절폭10.5%"
   }
  ],
- "lane": "bulk",
- "data_stale": [
-  "EQT",
-  "ORC"
- ]
+ "lane": "fast",
+ "data_stale": []
 }
