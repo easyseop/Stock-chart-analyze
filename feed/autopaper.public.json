@@ -2,8 +2,8 @@
  "updated": "2026-07-10",
  "start": 100000000,
  "cash": 38151189,
- "equity": 99347667,
- "ret_pct": -0.65,
+ "equity": 99404985,
+ "ret_pct": -0.6,
  "positions": [
   {
    "code": "MRSH",
@@ -11,14 +11,14 @@
    "ccy": "USD",
    "q": 72,
    "avg": 174.3075,
-   "price": 178.72999572753906,
+   "price": 178.88499450683594,
    "stop": 165.3325,
    "target": 192.2575,
    "half_done": false,
    "opened": "2026-07-06",
-   "pl_krw": 480658,
-   "pl_pct": 2.54,
-   "price_age_min": 8.0
+   "pl_krw": 497504,
+   "pl_pct": 2.63,
+   "price_age_min": 0.5
   },
   {
    "code": "EQT",
@@ -26,14 +26,14 @@
    "ccy": "USD",
    "q": 256,
    "avg": 52.085,
-   "price": 50.48799896240234,
+   "price": 50.630001068115234,
    "stop": 49.5451,
    "target": 57.1649,
    "half_done": false,
    "opened": "2026-07-07",
-   "pl_krw": -617136,
-   "pl_pct": -3.07,
-   "price_age_min": 43.1
+   "pl_krw": -562262,
+   "pl_pct": -2.79,
+   "price_age_min": 0.5
   },
   {
    "code": "STE",
@@ -41,14 +41,14 @@
    "ccy": "USD",
    "q": 6,
    "avg": 213.02,
-   "price": 213.0800018310547,
+   "price": 212.81500244140625,
    "stop": 202.063,
    "target": 234.934,
    "half_done": false,
    "opened": "2026-07-07",
-   "pl_krw": 543,
-   "pl_pct": 0.03,
-   "price_age_min": 8.5
+   "pl_krw": -1857,
+   "pl_pct": -0.1,
+   "price_age_min": 0.5
   },
   {
    "code": "068270",
@@ -63,7 +63,7 @@
    "opened": "2026-07-07",
    "pl_krw": -121414,
    "pl_pct": -1.28,
-   "price_age_min": 8.1
+   "price_age_min": 0.5
   },
   {
    "code": "ORC",
@@ -71,14 +71,14 @@
    "ccy": "USD",
    "q": 4,
    "avg": 6.81,
-   "price": 6.780300140380859,
+   "price": 6.803699970245361,
    "stop": 6.5493,
    "target": 7.3314,
    "half_done": false,
    "opened": "2026-07-08",
-   "pl_krw": -179,
-   "pl_pct": -0.44,
-   "price_age_min": 21.5
+   "pl_krw": -38,
+   "pl_pct": -0.09,
+   "price_age_min": 0.5
   },
   {
    "code": "FND",
@@ -86,14 +86,14 @@
    "ccy": "USD",
    "q": 122,
    "avg": 54.6923,
-   "price": 56.040000915527344,
+   "price": 55.970001220703125,
    "stop": 51.1158,
    "target": 67.0734,
    "half_done": false,
    "opened": "2026-07-08",
-   "pl_krw": 248193,
-   "pl_pct": 2.46,
-   "price_age_min": 8.2
+   "pl_krw": 235302,
+   "pl_pct": 2.34,
+   "price_age_min": 0.5
   },
   {
    "code": "CMG",
@@ -101,14 +101,14 @@
    "ccy": "USD",
    "q": 1,
    "avg": 33.2,
-   "price": 34.10499954223633,
+   "price": 34.22999954223633,
    "stop": 30.8676,
    "target": 37.8648,
    "half_done": false,
    "opened": "2026-07-08",
-   "pl_krw": 1366,
-   "pl_pct": 2.73,
-   "price_age_min": 8.4
+   "pl_krw": 1555,
+   "pl_pct": 3.1,
+   "price_age_min": 0.5
   },
   {
    "code": "HMC",
@@ -116,14 +116,14 @@
    "ccy": "USD",
    "q": 3,
    "avg": 27.665,
-   "price": 27.75,
+   "price": 27.7549991607666,
    "stop": 26.2063,
    "target": 30.5824,
    "half_done": false,
    "opened": "2026-07-09",
-   "pl_krw": 385,
-   "pl_pct": 0.31,
-   "price_age_min": 8.5
+   "pl_krw": 408,
+   "pl_pct": 0.33,
+   "price_age_min": 0.5
   },
   {
    "code": "NU",
@@ -131,14 +131,14 @@
    "ccy": "USD",
    "q": 1,
    "avg": 13.335,
-   "price": 13.5600004196167,
+   "price": 13.635000228881836,
    "stop": 12.3253,
    "target": 15.3544,
    "half_done": false,
    "opened": "2026-07-09",
-   "pl_krw": 340,
-   "pl_pct": 1.69,
-   "price_age_min": 8.3
+   "pl_krw": 453,
+   "pl_pct": 2.25,
+   "price_age_min": 0.5
   },
   {
    "code": "LSPD",
@@ -146,14 +146,14 @@
    "ccy": "USD",
    "q": 28,
    "avg": 10.02,
-   "price": 10.050000190734863,
+   "price": 10.0600004196167,
    "stop": 9.2434,
    "target": 11.6783,
    "half_done": false,
    "opened": "2026-07-09",
-   "pl_krw": 1268,
-   "pl_pct": 0.3,
-   "price_age_min": 8.2
+   "pl_krw": 1691,
+   "pl_pct": 0.4,
+   "price_age_min": 0.5
   }
  ],
  "pending": [
@@ -267,7 +267,7 @@
   },
   {
    "d": "2026-07-10",
-   "v": 99347667
+   "v": 99404985
   }
  ],
  "log": [
@@ -479,8 +479,6 @@
    "note": "눌림 지정가 주문(추격 금지) — ↗ 돌파후 진행(승률↓) · ③ 돌파후 횡보(대기) · 저점권28% · 체크4/6 · 손절폭10.5%"
   }
  ],
- "lane": "bulk",
- "data_stale": [
-  "EQT"
- ]
+ "lane": "fast",
+ "data_stale": []
 }
