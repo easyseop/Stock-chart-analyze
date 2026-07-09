@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated_at": "2026-07-10T05:30:17+09:00",
+ "generated_at": "2026-07-10T06:16:17+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "signals": [
   {
@@ -2051,19 +2051,26 @@
    "name": "Southern Company (The) 2025 Series A Corpo",
    "ccy": "USD",
    "group": "watch",
-   "entry_kind": "pullback",
+   "entry_kind": "now",
    "stage": 1,
-   "price": 49.88,
-   "entry": 48.0733,
-   "stop": 46.593,
-   "target": 51.034,
+   "price": 49.64,
+   "entry": 49.64,
+   "stop": 48.1508,
+   "target": 52.6184,
    "shares_1pct": 67,
-   "range_pos": 0.3284,
+   "range_pos": 0.2892,
    "norm": 3.8,
    "fresh": true,
-   "break_gap": -0.0089,
+   "break_gap": -0.0137,
    "earnings_d": null,
-   "tactic": null
+   "tactic": {
+    "stop_pct": 3.0,
+    "pb_price": null,
+    "pb_stop_pct": null,
+    "mode": "full",
+    "label": "⚡ 즉시 분할",
+    "desc": "손절폭 3.0%로 타이트 — 현재가에서 1~2회 분할 매수. 기다리는 이득보다 놓치는 비용이 큼"
+   }
   },
   {
    "id": "VNOM-2026-07-10-watch",
