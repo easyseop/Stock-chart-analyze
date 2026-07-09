@@ -119,6 +119,30 @@ def test_token_failure_cooldown():
     print("[PASS] 토큰 실패 쿨다운 — 장애 중 재시도 폭주 차단, 만료 후 복구")
 
 
+def test_classify_error():
+    """에러 분류 — 특히 주문 경로에서 '불확실=UNKNOWN'(초과매도 방지) 규칙 검증."""
+    toss = _reload()
+    C = toss.classify_error
+    cases = [
+        # (status, is_order, expected)
+        (200, False, "ok"), (401, False, "refresh_auth"), (403, False, "auth_fatal"),
+        (429, False, "retry"), (404, False, "not_found"),
+        (400, False, "reject"), (422, False, "reject"),
+        # 조회 5xx = 재시도, 주문 5xx/타임아웃 = UNKNOWN(핵심 안전규칙)
+        (500, False, "retry"), (500, True, "unknown"), (0, True, "unknown"),
+        (408, True, "unknown"),
+        # 409: 조회=거부, 주문=중복접수(멱등)
+        (409, False, "reject"), (409, True, "duplicate"),
+        # 422 주문=비즈니스 거부(재시도 무의미)
+        (422, True, "reject"),
+        # 미지 status: 주문이면 안전하게 UNKNOWN, 조회면 재시도
+        (418, True, "unknown"), (418, False, "retry"),
+    ]
+    bad = [(s, o, C(s, is_order=o), e) for s, o, e in cases if C(s, is_order=o) != e]
+    assert not bad, f"오분류: {bad}"
+    print("[PASS] classify_error — 주문 불확실=UNKNOWN, 409=중복, 422=거부 등 정확")
+
+
 def test_secret_never_logged():
     toss = _reload("c_x", "SUPER_SECRET_VALUE")
     toss._TOK = {"tok": None, "exp": 0.0}
@@ -141,6 +165,7 @@ if __name__ == "__main__":
     test_parse_and_drop_null()
     test_401_forces_refresh()
     test_token_failure_cooldown()
+    test_classify_error()
     test_secret_never_logged()
     print("\n✅ 토스 어댑터 전부 통과 — 읽기 전용·키 게이트·폴백·시크릿 비노출.")
     # 원상복구(다른 테스트에 영향 없게)

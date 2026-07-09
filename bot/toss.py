@@ -51,6 +51,49 @@ def enabled() -> bool:
                 and os.environ.get("TOSS_CLIENT_SECRET"))
 
 
+# ── 에러 대응 분류 ────────────────────────────────────────────────
+#   토스는 에러 code를 flat string으로 주고 "unknown code 허용" 설계라, 1차 축은
+#   HTTP status, 2차는 알려진 code. 결정적 포인트: **같은 status가 조회(GET)와
+#   주문(POST)에서 다른 의미**를 갖는다.
+#     · 조회 500 = 그냥 재시도/폴백(무해)   · 주문 500 = 결과 불명(UNKNOWN, 위험)
+#     · 조회 409 = 클라 오류               · 주문 409 = 중복 접수(이미 들어감, 멱등)
+#   타임아웃(HTTP status 없음)은 status=0으로 넘긴다 → 주문이면 UNKNOWN.
+ACT_OK = "ok"
+ACT_RETRY = "retry"            # 일시 오류·429 → 지수 백오프 후 재시도
+ACT_REFRESH = "refresh_auth"   # 401 → 토큰 재발급 후 1회 재시도
+ACT_AUTH_FATAL = "auth_fatal"  # 403/자격증명 오류 → 재시도 무의미, P0
+ACT_UNKNOWN = "unknown"        # 주문 결과 불명 → 재주문 절대 금지, 원장 잠금·대사
+ACT_DUPLICATE = "duplicate"    # 이미 접수됨(멱등 충돌) → 재전송 말고 대사
+ACT_REJECT = "reject"          # 비즈니스/클라 오류(422·400) → 재시도 무의미(종료)
+ACT_NOT_FOUND = "not_found"    # 404 — 종목/주문/계좌 없음
+
+
+def classify_error(status: int, code: str = "", *, is_order: bool = False) -> str:
+    """(HTTP status, 에러 code) → 대응 액션 문자열. is_order면 주문 경로 규칙 적용.
+
+    주문 경로의 핵심 안전 규칙: 결과가 조금이라도 불확실하면(5xx·타임아웃·미지의
+    status) REJECT가 아니라 **UNKNOWN**으로 분류한다 → 원장이 종목을 잠그고 실체결
+    대사 후 잔여만 재주문 → 초과매도 원천 차단. (감사·설계 원칙과 일치.)"""
+    if status in (200, 201, 204):
+        return ACT_OK
+    if status == 401:
+        return ACT_REFRESH
+    if status == 403:
+        return ACT_AUTH_FATAL
+    if status == 429:
+        return ACT_RETRY
+    if status in (408, 0, 500, 502, 503, 504):      # 0=네트워크 타임아웃(status 없음)
+        return ACT_UNKNOWN if is_order else ACT_RETRY
+    if status == 409:                                # 중복 요청
+        return ACT_DUPLICATE if is_order else ACT_REJECT
+    if status == 404:
+        return ACT_NOT_FOUND
+    if status in (400, 422):                         # 잘못된 요청 / 비즈니스 규칙 위반
+        return ACT_REJECT
+    # 미지의 status — 주문이면 안전하게 UNKNOWN(초과매도 방지), 조회면 재시도.
+    return ACT_UNKNOWN if is_order else ACT_RETRY
+
+
 def _fetch_token() -> str | None:
     cid = os.environ.get("TOSS_CLIENT_ID")
     sec = os.environ.get("TOSS_CLIENT_SECRET")
