@@ -1,9 +1,9 @@
 {
  "updated": "2026-07-10",
  "start": 100000000,
- "cash": 38151189,
- "equity": 99215147,
- "ret_pct": -0.78,
+ "cash": 50240221,
+ "equity": 99161651,
+ "ret_pct": -0.84,
  "positions": [
   {
    "code": "MRSH",
@@ -11,28 +11,13 @@
    "ccy": "USD",
    "q": 72,
    "avg": 174.3075,
-   "price": 179.54249572753906,
+   "price": 179.77000427246094,
    "stop": 165.3325,
    "target": 192.2575,
    "half_done": false,
    "opened": "2026-07-06",
-   "pl_krw": 568964,
-   "pl_pct": 3.0,
-   "price_age_min": 0.4
-  },
-  {
-   "code": "EQT",
-   "name": "EQT Corporation",
-   "ccy": "USD",
-   "q": 256,
-   "avg": 52.085,
-   "price": 49.25,
-   "stop": 49.5451,
-   "target": 57.1649,
-   "half_done": false,
-   "opened": "2026-07-07",
-   "pl_krw": -1095542,
-   "pl_pct": -5.44,
+   "pl_krw": 593691,
+   "pl_pct": 3.13,
    "price_age_min": 0.4
   },
   {
@@ -41,13 +26,13 @@
    "ccy": "USD",
    "q": 6,
    "avg": 213.02,
-   "price": 216.27999877929688,
+   "price": 216.4499969482422,
    "stop": 202.063,
    "target": 234.934,
    "half_done": false,
    "opened": "2026-07-07",
-   "pl_krw": 29526,
-   "pl_pct": 1.53,
+   "pl_krw": 31066,
+   "pl_pct": 1.61,
    "price_age_min": 0.4
   },
   {
@@ -71,13 +56,13 @@
    "ccy": "USD",
    "q": 4,
    "avg": 6.81,
-   "price": 6.824999809265137,
+   "price": 6.829999923706055,
    "stop": 6.5493,
    "target": 7.3314,
    "half_done": false,
    "opened": "2026-07-08",
-   "pl_krw": 91,
-   "pl_pct": 0.22,
+   "pl_krw": 121,
+   "pl_pct": 0.29,
    "price_age_min": 0.4
   },
   {
@@ -86,13 +71,13 @@
    "ccy": "USD",
    "q": 122,
    "avg": 54.6923,
-   "price": 56.56499862670898,
+   "price": 57.02000045776367,
    "stop": 51.1158,
    "target": 67.0734,
    "half_done": false,
    "opened": "2026-07-08",
-   "pl_krw": 344877,
-   "pl_pct": 3.42,
+   "pl_krw": 428670,
+   "pl_pct": 4.26,
    "price_age_min": 0.4
   },
   {
@@ -101,13 +86,13 @@
    "ccy": "USD",
    "q": 1,
    "avg": 33.2,
-   "price": 35.31999969482422,
+   "price": 35.44499969482422,
    "stop": 30.8676,
    "target": 37.8648,
    "half_done": false,
    "opened": "2026-07-08",
-   "pl_krw": 3200,
-   "pl_pct": 6.39,
+   "pl_krw": 3389,
+   "pl_pct": 6.76,
    "price_age_min": 0.4
   },
   {
@@ -116,13 +101,13 @@
    "ccy": "USD",
    "q": 3,
    "avg": 27.665,
-   "price": 27.88999938964844,
+   "price": 27.940000534057617,
    "stop": 26.2063,
    "target": 30.5824,
    "half_done": false,
    "opened": "2026-07-09",
-   "pl_krw": 1019,
-   "pl_pct": 0.81,
+   "pl_krw": 1245,
+   "pl_pct": 0.99,
    "price_age_min": 0.4
   },
   {
@@ -131,13 +116,13 @@
    "ccy": "USD",
    "q": 1,
    "avg": 13.335,
-   "price": 13.93000030517578,
+   "price": 13.925000190734863,
    "stop": 12.3253,
    "target": 15.3544,
    "half_done": false,
    "opened": "2026-07-09",
-   "pl_krw": 898,
-   "pl_pct": 4.46,
+   "pl_krw": 891,
+   "pl_pct": 4.42,
    "price_age_min": 0.4
   },
   {
@@ -146,13 +131,28 @@
    "ccy": "USD",
    "q": 28,
    "avg": 10.02,
-   "price": 10.40999984741211,
+   "price": 10.369999885559082,
    "stop": 9.2434,
    "target": 11.6783,
    "half_done": false,
    "opened": "2026-07-09",
-   "pl_krw": 16484,
-   "pl_pct": 3.89,
+   "pl_krw": 14793,
+   "pl_pct": 3.49,
+   "price_age_min": 0.4
+  },
+  {
+   "code": "SARO",
+   "name": "StandardAero, Inc.",
+   "ccy": "USD",
+   "q": 161,
+   "avg": 27.9,
+   "price": 27.899999618530277,
+   "stop": 25.8678,
+   "target": 31.9643,
+   "half_done": false,
+   "opened": "2026-07-10",
+   "pl_krw": 0,
+   "pl_pct": -0.0,
    "price_age_min": 0.4
   }
  ],
@@ -212,7 +212,7 @@
    "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권26% · 체크4/6 · 손절폭9.5%"
   }
  ],
- "trades": 0,
+ "trades": 1,
  "win_trades": 0,
  "pos_cap_pct": 33.3,
  "cap_violations": [],
@@ -220,17 +220,24 @@
  "fx": 1509.51,
  "stats": {
   "all": {
-   "n": 0,
+   "n": 1,
    "win": 0,
    "win_rate": 0,
-   "avg_r": 0
+   "avg_r": -1.26
   },
-  "by_mode": {},
+  "by_mode": {
+   "full": {
+    "n": 1,
+    "win": 0,
+    "win_rate": 0,
+    "avg_r": -1.26
+   }
+  },
   "fresh": {
-   "n": 0,
+   "n": 1,
    "win": 0,
    "win_rate": 0,
-   "avg_r": 0
+   "avg_r": -1.26
   },
   "stale": {
    "n": 0,
@@ -238,12 +245,63 @@
    "win_rate": 0,
    "avg_r": 0
   },
-  "by_stage": {},
-  "by_ccy": {},
-  "slip_entry_pct": null,
-  "slip_stop_pct": null
+  "by_stage": {
+   "3": {
+    "n": 1,
+    "win": 0,
+    "win_rate": 0,
+    "avg_r": -1.26
+   }
+  },
+  "by_ccy": {
+   "USD": {
+    "n": 1,
+    "win": 0,
+    "win_rate": 0,
+    "avg_r": -1.26
+   }
+  },
+  "slip_entry_pct": 0.0,
+  "slip_stop_pct": -1.44
  },
- "closed": [],
+ "closed": [
+  {
+   "code": "EQT",
+   "name": "EQT Corporation",
+   "ccy": "USD",
+   "ctx": {
+    "mode": "full",
+    "fresh": true,
+    "stage": 3,
+    "rp": 18,
+    "rec": 4,
+    "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권18% · 체크4/6 · 손절폭4.9%"
+   },
+   "plan": {
+    "entry": 52.085,
+    "stop": 49.5451,
+    "target": 57.1649,
+    "pb": 50.125,
+    "tactic": "full"
+   },
+   "fill": {
+    "avg": 52.085,
+    "q": 256
+   },
+   "exits": [
+    {
+     "d": "2026-07-10",
+     "q": 256,
+     "price": 48.83,
+     "note": "손절(급락 즉시)"
+    }
+   ],
+   "opened": "2026-07-07",
+   "closed": "2026-07-10",
+   "pl": -1257844,
+   "r": -1.26
+  }
+ ],
  "hist": [
   {
    "d": "2026-07-05",
@@ -267,10 +325,37 @@
   },
   {
    "d": "2026-07-10",
-   "v": 99215147
+   "v": 99161651
   }
  ],
  "log": [
+  {
+   "d": "2026-07-10",
+   "type": "buy",
+   "code": "SARO",
+   "name": "StandardAero, Inc.",
+   "q": 161,
+   "price": 27.9,
+   "ccy": "USD",
+   "amt": 6780568,
+   "note": "반반 1차 — 🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권38% · 체크4/6 · 손절폭7.3%",
+   "stop": 25.8678,
+   "target": 31.9643
+  },
+  {
+   "d": "2026-07-10",
+   "type": "sell",
+   "code": "EQT",
+   "name": "EQT Corporation",
+   "q": 256,
+   "price": 48.83,
+   "ccy": "USD",
+   "amt": 18869600,
+   "note": "손절(급락 즉시)",
+   "pl": -1257844,
+   "pl_pct": -6.2,
+   "r": -1.26
+  },
   {
    "d": "2026-07-09",
    "type": "buy",
