@@ -129,6 +129,7 @@ def main() -> int:
     ap = argparse.ArgumentParser(description="토스 API 읽기전용 진단(주문 없음)")
     ap.add_argument("--symbol", default="AAPL", help="시세/매도가능수량 조회 종목")
     ap.add_argument("--account", default=None, help="accountSeq 명시(계좌 여러 개일 때)")
+    ap.add_argument("--currency", default="KRW", help="매수여력 통화(KRW/USD)")
     args = ap.parse_args()
 
     print(f"base = {BASE}")
@@ -170,7 +171,10 @@ def main() -> int:
     # 3) 계좌 상세 (헤더 필요) — 전부 읽기 전용
     for label, path, params in [
         ("보유(holdings)", "/api/v1/holdings", None),
-        ("매수여력(buying-power)", "/api/v1/buying-power", None),
+        # buying-power는 currency 파라미터 필수(실측 확인 2026-07-10: 없으면
+        #   400 invalid-request field=currency).
+        ("매수여력(buying-power)", "/api/v1/buying-power",
+         {"currency": args.currency}),
         ("매도가능수량(sellable-quantity)", "/api/v1/sellable-quantity",
          {"symbol": args.symbol}),
     ]:
