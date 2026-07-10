@@ -2,8 +2,8 @@
  "updated": "2026-07-10",
  "start": 100000000,
  "cash": 38151189,
- "equity": 99195745,
- "ret_pct": -0.8,
+ "equity": 99449545,
+ "ret_pct": -0.55,
  "positions": [
   {
    "code": "MRSH",
@@ -18,7 +18,7 @@
    "opened": "2026-07-06",
    "pl_krw": 510003,
    "pl_pct": 2.69,
-   "price_age_min": 0.4
+   "price_age_min": 0.5
   },
   {
    "code": "EQT",
@@ -33,7 +33,7 @@
    "opened": "2026-07-07",
    "pl_krw": -747750,
    "pl_pct": -3.72,
-   "price_age_min": 0.4
+   "price_age_min": 0.5
   },
   {
    "code": "STE",
@@ -56,13 +56,13 @@
    "ccy": "KRW",
    "q": 54,
    "avg": 175348.4128,
-   "price": 173100.0,
+   "price": 177800.0,
    "stop": 157651.1713,
    "target": 212997.6574,
    "half_done": false,
    "opened": "2026-07-07",
-   "pl_krw": -121414,
-   "pl_pct": -1.28,
+   "pl_krw": 132386,
+   "pl_pct": 1.4,
    "price_age_min": 0.4
   },
   {
@@ -267,7 +267,7 @@
   },
   {
    "d": "2026-07-10",
-   "v": 99195745
+   "v": 99449545
   }
  ],
  "log": [
