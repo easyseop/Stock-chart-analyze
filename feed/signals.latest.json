@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated_at": "2026-07-10T17:00:00+09:00",
+ "generated_at": "2026-07-10T17:10:03+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "signals": [
   {
@@ -2401,6 +2401,60 @@
     "mode": "half",
     "label": "⚖ 반반 진입",
     "desc": "손절폭 6.4% — 절반만 현재가, 나머지는 눌림 확인 후 추가"
+   }
+  },
+  {
+   "id": "047810-2026-07-10-watch",
+   "code": "047810",
+   "name": "한국항공우주",
+   "ccy": "KRW",
+   "group": "watch",
+   "entry_kind": "now",
+   "stage": 1,
+   "price": 144300.0,
+   "entry": 144300.0,
+   "stop": 123095.9656,
+   "target": 186708.0688,
+   "shares_1pct": 4,
+   "range_pos": 0.4622,
+   "norm": -30.2,
+   "fresh": true,
+   "break_gap": -0.0174,
+   "earnings_d": null,
+   "tactic": {
+    "stop_pct": 14.7,
+    "pb_price": 135400.0,
+    "pb_stop_pct": 9.1,
+    "mode": "pullback",
+    "label": "⏳ 눌림 지정가만",
+    "desc": "지금 추격 금지(손절폭 14.7%) — <b>135,400원 눌림 지정가만</b>. 눌리면 손절폭 9.1%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
+   }
+  },
+  {
+   "id": "377300-2026-07-10-watch",
+   "code": "377300",
+   "name": "카카오페이",
+   "ccy": "KRW",
+   "group": "watch",
+   "entry_kind": "now",
+   "stage": 1,
+   "price": 38850.0,
+   "entry": 38850.0,
+   "stop": 33624.3065,
+   "target": 49301.3869,
+   "shares_1pct": 19,
+   "range_pos": 0.0447,
+   "norm": -48.1,
+   "fresh": true,
+   "break_gap": -0.0032,
+   "earnings_d": null,
+   "tactic": {
+    "stop_pct": 13.5,
+    "pb_price": 36550.0,
+    "pb_stop_pct": 8.0,
+    "mode": "pullback",
+    "label": "⏳ 눌림 지정가만",
+    "desc": "지금 추격 금지(손절폭 13.5%) — <b>36,550원 눌림 지정가만</b>. 눌리면 손절폭 8.0%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
    }
   },
   {
