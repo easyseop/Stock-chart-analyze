@@ -2,8 +2,8 @@
  "updated": "2026-07-10",
  "start": 100000000,
  "cash": 38151189,
- "equity": 99309145,
- "ret_pct": -0.69,
+ "equity": 99215147,
+ "ret_pct": -0.78,
  "positions": [
   {
    "code": "MRSH",
@@ -11,14 +11,14 @@
    "ccy": "USD",
    "q": 72,
    "avg": 174.3075,
-   "price": 179.0,
+   "price": 179.54249572753906,
    "stop": 165.3325,
    "target": 192.2575,
    "half_done": false,
    "opened": "2026-07-06",
-   "pl_krw": 510003,
-   "pl_pct": 2.69,
-   "price_age_min": 8.6
+   "pl_krw": 568964,
+   "pl_pct": 3.0,
+   "price_age_min": 0.4
   },
   {
    "code": "EQT",
@@ -26,14 +26,14 @@
    "ccy": "USD",
    "q": 256,
    "avg": 52.085,
-   "price": 50.150001525878906,
+   "price": 49.25,
    "stop": 49.5451,
    "target": 57.1649,
    "half_done": false,
    "opened": "2026-07-07",
-   "pl_krw": -747750,
-   "pl_pct": -3.72,
-   "price_age_min": 465.8
+   "pl_krw": -1095542,
+   "pl_pct": -5.44,
+   "price_age_min": 0.4
   },
   {
    "code": "STE",
@@ -41,14 +41,14 @@
    "ccy": "USD",
    "q": 6,
    "avg": 213.02,
-   "price": 216.0,
+   "price": 216.27999877929688,
    "stop": 202.063,
    "target": 234.934,
    "half_done": false,
    "opened": "2026-07-07",
-   "pl_krw": 26990,
-   "pl_pct": 1.4,
-   "price_age_min": 8.6
+   "pl_krw": 29526,
+   "pl_pct": 1.53,
+   "price_age_min": 0.4
   },
   {
    "code": "068270",
@@ -63,7 +63,7 @@
    "opened": "2026-07-07",
    "pl_krw": -8014,
    "pl_pct": -0.08,
-   "price_age_min": 330.1
+   "price_age_min": 0.4
   },
   {
    "code": "ORC",
@@ -71,14 +71,14 @@
    "ccy": "USD",
    "q": 4,
    "avg": 6.81,
-   "price": 6.820000171661377,
+   "price": 6.824999809265137,
    "stop": 6.5493,
    "target": 7.3314,
    "half_done": false,
    "opened": "2026-07-08",
-   "pl_krw": 60,
-   "pl_pct": 0.15,
-   "price_age_min": 7.3
+   "pl_krw": 91,
+   "pl_pct": 0.22,
+   "price_age_min": 0.4
   },
   {
    "code": "FND",
@@ -86,14 +86,14 @@
    "ccy": "USD",
    "q": 122,
    "avg": 54.6923,
-   "price": 55.58000183105469,
+   "price": 56.56499862670898,
    "stop": 51.1158,
    "target": 67.0734,
    "half_done": false,
    "opened": "2026-07-08",
-   "pl_krw": 163479,
-   "pl_pct": 1.62,
-   "price_age_min": 8.9
+   "pl_krw": 344877,
+   "pl_pct": 3.42,
+   "price_age_min": 0.4
   },
   {
    "code": "CMG",
@@ -101,14 +101,14 @@
    "ccy": "USD",
    "q": 1,
    "avg": 33.2,
-   "price": 34.599998474121094,
+   "price": 35.31999969482422,
    "stop": 30.8676,
    "target": 37.8648,
    "half_done": false,
    "opened": "2026-07-08",
-   "pl_krw": 2113,
-   "pl_pct": 4.22,
-   "price_age_min": 9.2
+   "pl_krw": 3200,
+   "pl_pct": 6.39,
+   "price_age_min": 0.4
   },
   {
    "code": "HMC",
@@ -116,14 +116,14 @@
    "ccy": "USD",
    "q": 3,
    "avg": 27.665,
-   "price": 27.59000015258789,
+   "price": 27.88999938964844,
    "stop": 26.2063,
    "target": 30.5824,
    "half_done": false,
    "opened": "2026-07-09",
-   "pl_krw": -340,
-   "pl_pct": -0.27,
-   "price_age_min": 9.2
+   "pl_krw": 1019,
+   "pl_pct": 0.81,
+   "price_age_min": 0.4
   },
   {
    "code": "NU",
@@ -131,14 +131,14 @@
    "ccy": "USD",
    "q": 1,
    "avg": 13.335,
-   "price": 13.670000076293944,
+   "price": 13.93000030517578,
    "stop": 12.3253,
    "target": 15.3544,
    "half_done": false,
    "opened": "2026-07-09",
-   "pl_krw": 506,
-   "pl_pct": 2.51,
-   "price_age_min": 9.0
+   "pl_krw": 898,
+   "pl_pct": 4.46,
+   "price_age_min": 0.4
   },
   {
    "code": "LSPD",
@@ -146,14 +146,14 @@
    "ccy": "USD",
    "q": 28,
    "avg": 10.02,
-   "price": 10.220000267028809,
+   "price": 10.40999984741211,
    "stop": 9.2434,
    "target": 11.6783,
    "half_done": false,
    "opened": "2026-07-09",
-   "pl_krw": 8453,
-   "pl_pct": 2.0,
-   "price_age_min": 8.9
+   "pl_krw": 16484,
+   "pl_pct": 3.89,
+   "price_age_min": 0.4
   }
  ],
  "pending": [
@@ -267,7 +267,7 @@
   },
   {
    "d": "2026-07-10",
-   "v": 99309145
+   "v": 99215147
   }
  ],
  "log": [
@@ -479,8 +479,6 @@
    "note": "눌림 지정가 주문(추격 금지) — ↗ 돌파후 진행(승률↓) · ③ 돌파후 횡보(대기) · 저점권28% · 체크4/6 · 손절폭10.5%"
   }
  ],
- "lane": "bulk",
- "data_stale": [
-  "EQT"
- ]
+ "lane": "fast",
+ "data_stale": []
 }
