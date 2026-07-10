@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated_at": "2026-07-11T06:30:06+09:00",
+ "generated_at": "2026-07-11T06:59:45+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "signals": [
   {
@@ -1756,33 +1756,6 @@
    }
   },
   {
-   "id": "028300-2026-07-11-watch",
-   "code": "028300",
-   "name": "HLB",
-   "ccy": "KRW",
-   "group": "watch",
-   "entry_kind": "now",
-   "stage": 2,
-   "price": 52200.0,
-   "entry": 52200.0,
-   "stop": 44767.0043,
-   "target": 67065.9913,
-   "shares_1pct": 13,
-   "range_pos": 0.4856,
-   "norm": -26.4,
-   "fresh": true,
-   "break_gap": 0.0313,
-   "earnings_d": null,
-   "tactic": {
-    "stop_pct": 14.2,
-    "pb_price": 49916.6667,
-    "pb_stop_pct": 10.3,
-    "mode": "pullback",
-    "label": "⏳ 눌림 지정가만",
-    "desc": "지금 추격 금지(손절폭 14.2% · 단기 이격) — <b>49,917원 눌림 지정가만</b>. 눌리면 손절폭 10.3%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
-   }
-  },
-  {
    "id": "BSX-2026-07-11-watch",
    "code": "BSX",
    "name": "Boston Scientific Corporation",
@@ -2867,6 +2840,26 @@
    "tactic": null
   },
   {
+   "id": "257720-2026-07-11-watch",
+   "code": "257720",
+   "name": "실리콘투",
+   "ccy": "KRW",
+   "group": "watch",
+   "entry_kind": "pullback",
+   "stage": 3,
+   "price": 37600.0,
+   "entry": 37312.4333,
+   "stop": 32213.2726,
+   "target": 47510.7549,
+   "shares_1pct": 19,
+   "range_pos": 0.231,
+   "norm": -30.2,
+   "fresh": false,
+   "break_gap": 0.2687,
+   "earnings_d": null,
+   "tactic": null
+  },
+  {
    "id": "259960-2026-07-11-watch",
    "code": "259960",
    "name": "크래프톤",
@@ -2883,6 +2876,26 @@
    "norm": -30.2,
    "fresh": false,
    "break_gap": 0.1255,
+   "earnings_d": null,
+   "tactic": null
+  },
+  {
+   "id": "003380-2026-07-11-watch",
+   "code": "003380",
+   "name": "하림지주",
+   "ccy": "KRW",
+   "group": "watch",
+   "entry_kind": "pullback",
+   "stage": 3,
+   "price": 10360.0,
+   "entry": 8880.0,
+   "stop": 7649.3793,
+   "target": 11341.2413,
+   "shares_1pct": 81,
+   "range_pos": 0.2629,
+   "norm": -39.6,
+   "fresh": false,
+   "break_gap": 0.1034,
    "earnings_d": null,
    "tactic": null
   }
