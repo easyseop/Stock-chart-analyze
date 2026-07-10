@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated_at": "2026-07-10T14:14:47+09:00",
+ "generated_at": "2026-07-10T14:29:31+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "signals": [
   {
@@ -1415,23 +1415,23 @@
    "group": "now",
    "entry_kind": "now",
    "stage": 3,
-   "price": 191800.0,
-   "entry": 191800.0,
-   "stop": 176036.9397,
-   "target": 223326.1206,
+   "price": 191300.0,
+   "entry": 191300.0,
+   "stop": 175451.2254,
+   "target": 222997.5491,
    "shares_1pct": 6,
-   "range_pos": 0.1971,
+   "range_pos": 0.192,
    "norm": -39.6,
    "fresh": false,
-   "break_gap": 0.0869,
+   "break_gap": 0.0841,
    "earnings_d": null,
    "tactic": {
-    "stop_pct": 8.2,
+    "stop_pct": 8.3,
     "pb_price": null,
     "pb_stop_pct": null,
     "mode": "pullback",
     "label": "⏳ 눌림 지정가만",
-    "desc": "지금 추격 금지(손절폭 8.2% · 돌파후 진행) — 받칠 지지에 눌릴 때까지 대기"
+    "desc": "지금 추격 금지(손절폭 8.3% · 돌파후 진행) — 받칠 지지에 눌릴 때까지 대기"
    }
   },
   {
@@ -2991,15 +2991,15 @@
    "group": "watch",
    "entry_kind": "pullback",
    "stage": 3,
-   "price": 161800.0,
+   "price": 160800.0,
    "entry": 127450.0,
    "stop": 111382.4171,
    "target": 159585.1658,
    "shares_1pct": 6,
-   "range_pos": 0.4557,
+   "range_pos": 0.4453,
    "norm": -9.4,
    "fresh": false,
-   "break_gap": 0.1251,
+   "break_gap": 0.1182,
    "earnings_d": null,
    "tactic": null
   },
@@ -3171,15 +3171,15 @@
    "group": "watch",
    "entry_kind": "pullback",
    "stage": 3,
-   "price": 241000.0,
+   "price": 240500.0,
    "entry": 239216.1,
    "stop": 210165.9072,
    "target": 297316.4855,
    "shares_1pct": 3,
-   "range_pos": 0.2415,
+   "range_pos": 0.2386,
    "norm": -30.2,
    "fresh": false,
-   "break_gap": 0.1397,
+   "break_gap": 0.1374,
    "earnings_d": null,
    "tactic": null
   }
