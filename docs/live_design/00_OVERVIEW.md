@@ -4,9 +4,10 @@
 > 이 설계는 6개 파일로 나뉜다. **한 번에 다 읽지 말 것.**
 > - 파일 순서: `00_OVERVIEW → 01_STAGE1_ACCOUNT_QUOTE → 02_ORDER_PRIMITIVES →
 >   03_EXECUTION_PROTECTION → 04_INFRA_GATES → 05_TESTING_VERIFICATION →
->   06_REVIEW_V2_CHANGES`.
-> - **⚠️ `06_REVIEW_V2_CHANGES.md`가 Codex 리뷰 반영 확정본이며 원본을 오버라이드한다.**
->   충돌 시 06 우선. 각 태스크는 원본 + 06 델타를 함께 본다.
+>   06_REVIEW_V2_CHANGES → 07_ACCOUNT_ISOLATION_BUDGET`.
+> - **⚠️ `06_REVIEW_V2_CHANGES.md`(Codex 리뷰)와 `07_ACCOUNT_ISOLATION_BUDGET.md`(계좌
+>   격리·시드 봉투)가 확정 오버라이드다.** 충돌 시 06·07 우선. 07은 X1/X2/L4를 오버라이드.
+>   특히 **라이브 사이징이 계좌 equity가 아니라 고정 SEED 기준**이어야 함(현행 버그).
 > - **각 파일 안에서도 `##`(섹션=태스크) 하나씩 끊어 읽고, 그 태스크만 판정한 뒤
 >   다음으로 넘어가라.** 태스크 하나가 What/Why/How/주의/테스트/의존으로 자기완결.
 > - 리뷰는 `REVIEW_PROMPT.md`의 지시를 따른다(태스크별 채택/수정/기각 + 실패 시나리오).
