@@ -19,6 +19,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import socket
 import sys
 import urllib.error
 import urllib.parse
@@ -26,6 +27,32 @@ import urllib.request
 
 BASE = os.environ.get("TOSS_BASE_URL", "https://openapi.tossinvest.com")
 TIMEOUT = 20
+
+# ── IPv4 강제 ─────────────────────────────────────────────────────
+#   토스 IP 허용목록은 IPv4로 등록하는 게 안정적(IPv6 홈 주소는 프라이버시 회전으로
+#   수시 변경 → allowlist 불가). 맥/공유기가 IPv6를 쓰면 파이썬이 IPv6로 나가서
+#   등록한 IPv4와 안 맞아 403 'IP not allowed'가 난다. 그래서 IPv4로만 접속.
+#   (TOSS_ALLOW_IPV6=1 이면 이 강제를 끈다.)
+if os.environ.get("TOSS_ALLOW_IPV6") != "1":
+    _orig_gai = socket.getaddrinfo
+
+    def _ipv4_only(host, *a, **k):
+        res = [r for r in _orig_gai(host, *a, **k) if r[0] == socket.AF_INET]
+        return res or _orig_gai(host, *a, **k)   # v4 없으면 원래대로(폴백)
+
+    socket.getaddrinfo = _ipv4_only
+
+
+def egress_ip() -> str:
+    """토스 서버로 나가는 실제 source IP(=allowlist에 등록해야 할 바로 그 IP)."""
+    host = urllib.parse.urlparse(BASE).hostname or "openapi.tossinvest.com"
+    try:
+        s = socket.create_connection((host, 443), timeout=TIMEOUT)
+        ip = s.getsockname()[0]
+        s.close()
+        return ip
+    except Exception as e:
+        return f"(확인 실패: {type(e).__name__})"
 
 
 def _mask(s: str | None) -> str:
@@ -105,6 +132,9 @@ def main() -> int:
     args = ap.parse_args()
 
     print(f"base = {BASE}")
+    ip = egress_ip()
+    print(f"★ 토스로 나가는 내 IP(IPv4): {ip}")
+    print(f"   → 이 IP를 토스 개발자콘솔 허용목록에 등록하세요(글자 그대로).\n")
     tok = get_token()
     if not tok:
         return 1
