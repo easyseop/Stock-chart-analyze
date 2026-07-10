@@ -1,9 +1,9 @@
 {
- "updated": "2026-07-10",
+ "updated": "2026-07-11",
  "start": 100000000,
- "cash": 50240221,
- "equity": 99183774,
- "ret_pct": -0.82,
+ "cash": 38120569,
+ "equity": 98976515,
+ "ret_pct": -1.02,
  "positions": [
   {
    "code": "MRSH",
@@ -11,14 +11,14 @@
    "ccy": "USD",
    "q": 72,
    "avg": 174.3075,
-   "price": 180.0500030517578,
+   "price": 180.1699981689453,
    "stop": 165.3325,
    "target": 192.2575,
    "half_done": false,
    "opened": "2026-07-06",
-   "pl_krw": 624122,
-   "pl_pct": 3.29,
-   "price_age_min": 0.5
+   "pl_krw": 634239,
+   "pl_pct": 3.36,
+   "price_age_min": 0.4
   },
   {
    "code": "STE",
@@ -26,13 +26,13 @@
    "ccy": "USD",
    "q": 6,
    "avg": 213.02,
-   "price": 216.66000366210935,
+   "price": 216.76499938964844,
    "stop": 202.063,
    "target": 234.934,
    "half_done": false,
    "opened": "2026-07-07",
-   "pl_krw": 32968,
-   "pl_pct": 1.71,
+   "pl_krw": 33763,
+   "pl_pct": 1.76,
    "price_age_min": 0.4
   },
   {
@@ -56,13 +56,13 @@
    "ccy": "USD",
    "q": 4,
    "avg": 6.81,
-   "price": 6.809999942779541,
+   "price": 6.804999828338623,
    "stop": 6.5493,
    "target": 7.3314,
    "half_done": false,
    "opened": "2026-07-08",
-   "pl_krw": 0,
-   "pl_pct": -0.0,
+   "pl_krw": -30,
+   "pl_pct": -0.07,
    "price_age_min": 0.4
   },
   {
@@ -71,28 +71,13 @@
    "ccy": "USD",
    "q": 122,
    "avg": 54.6923,
-   "price": 56.9900016784668,
+   "price": 56.959999084472656,
    "stop": 51.1158,
    "target": 67.0734,
    "half_done": false,
    "opened": "2026-07-08",
-   "pl_krw": 423145,
-   "pl_pct": 4.2,
-   "price_age_min": 0.4
-  },
-  {
-   "code": "CMG",
-   "name": "Chipotle Mexican Grill, Inc.",
-   "ccy": "USD",
-   "q": 1,
-   "avg": 33.2,
-   "price": 35.70500183105469,
-   "stop": 30.8676,
-   "target": 37.8648,
-   "half_done": false,
-   "opened": "2026-07-08",
-   "pl_krw": 3781,
-   "pl_pct": 7.55,
+   "pl_krw": 415703,
+   "pl_pct": 4.15,
    "price_age_min": 0.4
   },
   {
@@ -101,13 +86,13 @@
    "ccy": "USD",
    "q": 3,
    "avg": 27.665,
-   "price": 27.940099716186523,
+   "price": 27.96500015258789,
    "stop": 26.2063,
    "target": 30.5824,
    "half_done": false,
    "opened": "2026-07-09",
-   "pl_krw": 1246,
-   "pl_pct": 0.99,
+   "pl_krw": 1352,
+   "pl_pct": 1.08,
    "price_age_min": 0.4
   },
   {
@@ -116,13 +101,13 @@
    "ccy": "USD",
    "q": 1,
    "avg": 13.335,
-   "price": 13.999899864196776,
+   "price": 13.875,
    "stop": 12.3253,
    "target": 15.3544,
    "half_done": false,
    "opened": "2026-07-09",
-   "pl_krw": 1004,
-   "pl_pct": 4.99,
+   "pl_krw": 811,
+   "pl_pct": 4.05,
    "price_age_min": 0.4
   },
   {
@@ -131,13 +116,13 @@
    "ccy": "USD",
    "q": 28,
    "avg": 10.02,
-   "price": 10.25,
+   "price": 10.244999885559082,
    "stop": 9.2434,
    "target": 11.6783,
    "half_done": false,
    "opened": "2026-07-09",
-   "pl_krw": 9721,
-   "pl_pct": 2.3,
+   "pl_krw": 9466,
+   "pl_pct": 2.25,
    "price_age_min": 0.4
   },
   {
@@ -146,11 +131,26 @@
    "ccy": "USD",
    "q": 161,
    "avg": 27.9,
-   "price": 27.899999618530277,
+   "price": 27.76000022888184,
    "stop": 25.8678,
    "target": 31.9643,
    "half_done": false,
    "opened": "2026-07-10",
+   "pl_krw": -33868,
+   "pl_pct": -0.5,
+   "price_age_min": 0.4
+  },
+  {
+   "code": "J",
+   "name": "Jacobs Solutions Inc.",
+   "ccy": "USD",
+   "q": 64,
+   "avg": 126.585,
+   "price": 126.58499908447266,
+   "stop": 119.2617,
+   "target": 141.2316,
+   "half_done": false,
+   "opened": "2026-07-11",
    "pl_krw": 0,
    "pl_pct": -0.0,
    "price_age_min": 0.4
@@ -212,18 +212,18 @@
    "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권26% · 체크4/6 · 손절폭9.5%"
   }
  ],
- "trades": 1,
- "win_trades": 0,
+ "trades": 2,
+ "win_trades": 1,
  "pos_cap_pct": 33.3,
  "cap_violations": [],
  "rule_violations": [],
- "fx": 1509.51,
+ "fx": 1502.58,
  "stats": {
   "all": {
-   "n": 1,
-   "win": 0,
-   "win_rate": 0,
-   "avg_r": -1.26
+   "n": 2,
+   "win": 1,
+   "win_rate": 50,
+   "avg_r": -0.13
   },
   "by_mode": {
    "full": {
@@ -231,13 +231,19 @@
     "win": 0,
     "win_rate": 0,
     "avg_r": -1.26
+   },
+   "half": {
+    "n": 1,
+    "win": 1,
+    "win_rate": 100,
+    "avg_r": 1.0
    }
   },
   "fresh": {
-   "n": 1,
-   "win": 0,
-   "win_rate": 0,
-   "avg_r": -1.26
+   "n": 2,
+   "win": 1,
+   "win_rate": 50,
+   "avg_r": -0.13
   },
   "stale": {
    "n": 0,
@@ -247,24 +253,60 @@
   },
   "by_stage": {
    "3": {
-    "n": 1,
-    "win": 0,
-    "win_rate": 0,
-    "avg_r": -1.26
+    "n": 2,
+    "win": 1,
+    "win_rate": 50,
+    "avg_r": -0.13
    }
   },
   "by_ccy": {
    "USD": {
-    "n": 1,
-    "win": 0,
-    "win_rate": 0,
-    "avg_r": -1.26
+    "n": 2,
+    "win": 1,
+    "win_rate": 50,
+    "avg_r": -0.13
    }
   },
   "slip_entry_pct": 0.0,
   "slip_stop_pct": -1.44
  },
  "closed": [
+  {
+   "code": "CMG",
+   "name": "Chipotle Mexican Grill, Inc.",
+   "ccy": "USD",
+   "ctx": {
+    "mode": "half",
+    "fresh": true,
+    "stage": 3,
+    "rp": 18,
+    "rec": 4,
+    "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권18% · 체크4/6 · 손절폭7.0%"
+   },
+   "plan": {
+    "entry": 33.2,
+    "stop": 30.8676,
+    "target": 37.8648,
+    "pb": null,
+    "tactic": "half"
+   },
+   "fill": {
+    "avg": 33.2,
+    "q": 1
+   },
+   "exits": [
+    {
+     "d": "2026-07-11",
+     "q": 1,
+     "price": 35.545,
+     "note": "+1R 절반 익절"
+    }
+   ],
+   "opened": "2026-07-08",
+   "closed": "2026-07-11",
+   "pl": 3524,
+   "r": 1.0
+  },
   {
    "code": "EQT",
    "name": "EQT Corporation",
@@ -326,9 +368,40 @@
   {
    "d": "2026-07-10",
    "v": 99183774
+  },
+  {
+   "d": "2026-07-11",
+   "v": 98976515
   }
  ],
  "log": [
+  {
+   "d": "2026-07-11",
+   "type": "buy",
+   "code": "J",
+   "name": "Jacobs Solutions Inc.",
+   "q": 64,
+   "price": 126.585,
+   "ccy": "USD",
+   "amt": 12173061,
+   "note": "즉시 분할 — 🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권33% · 체크4/6 · 손절폭5.8%",
+   "stop": 119.2617,
+   "target": 141.2316
+  },
+  {
+   "d": "2026-07-11",
+   "type": "sell",
+   "code": "CMG",
+   "name": "Chipotle Mexican Grill, Inc.",
+   "q": 1,
+   "price": 35.545,
+   "ccy": "USD",
+   "amt": 53409,
+   "note": "+1R 절반 익절",
+   "pl": 3524,
+   "pl_pct": 7.1,
+   "r": 1.0
+  },
   {
    "d": "2026-07-10",
    "type": "buy",
