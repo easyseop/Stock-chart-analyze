@@ -122,7 +122,9 @@ appkey가 정말 그 1계좌만 접근하는지 · 모의↔실전 TR_ID 차이 
 
 **지금 바로**: ① token_manager + flock ② TR_ID 명시 테이블 + 테스트 ③ 모의 프로브(token/balance/
 nccs/ccnl) ④ ledger 확장(ODNO·synthetic_key·confidence·rt_cd/msg_cd) ⑤ rate limiter(20/s·2/s).
-✅ ③은 `scripts/kis_probe.py`로 token/balance/nccs 완료(ccnl 추가 예정).
+✅ ③ `scripts/kis_probe.py`로 **token/balance/nccs/ccnl 전부 모의 실측 green(2026-07-10)** —
+대사 채널 A(nccs)·B(ccnl) 작동 확인. ✅ ①②④(일부) `bot/kis.py`(token flock·TR테이블·
+classify_error) + `tests/test_kis.py`. 남은 ④ = ledger의 ODNO·합성 대사키·confidence 확장.
 
 **모의 Stage 1.5 전**: order primitive(모의) · nccs+ccnl reconcile · UNKNOWN manual lock ·
 same-symbol single-open-order · 모의 EGW00201/timeout/부분체결 **장애주입**.

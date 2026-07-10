@@ -85,7 +85,8 @@ def _keyhash() -> str:
 # ── TR_ID 명시 매핑 (env × 시장 × 액션) — 접두 치환 금지 ──────────────
 #   ★ 미국 매도만 비대칭: 실전 TTTT1006U ↔ 모의 VTTT1001U(숫자까지 다름).
 #   조회 TR은 T→V 접두 규칙이 성립하지만, 실수 방지 위해 전부 명시한다.
-#   [대조필요] mock nccs/ccnl의 정확 수용값은 Stage 1.5 프로브로 최종 확인.
+#   모의 실측 확정(2026-07-10): balance VTTS3012R · nccs VTTS3018R · ccnl VTTS3035R
+#   모두 rt_cd=0. 주문 TR(buy/sell/rvsecncl)은 Stage 1.5 실주문으로 최종 확인.
 _TR: dict[tuple[str, str, str], str] = {
     # 조회(읽기 전용) — Stage 0에서 사용
     ("live", "US", "balance"): "TTTS3012R", ("mock", "US", "balance"): "VTTS3012R",
