@@ -80,6 +80,9 @@ def _fold() -> dict:
                         cur[f] = ev[f]
                 if ev.get("ev") == "submit":
                     cur["submitted_at"] = ev.get("ts", 0.0)
+                    side = (ev.get("meta") or {}).get("side")
+                    if side:
+                        cur["side"] = str(side).upper()   # 대사 후보 방향 필터용
     except FileNotFoundError:
         pass
     return st
