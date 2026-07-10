@@ -2,8 +2,8 @@
  "updated": "2026-07-10",
  "start": 100000000,
  "cash": 38151189,
- "equity": 99346945,
- "ret_pct": -0.65,
+ "equity": 99330745,
+ "ret_pct": -0.67,
  "positions": [
   {
    "code": "MRSH",
@@ -18,7 +18,7 @@
    "opened": "2026-07-06",
    "pl_krw": 510003,
    "pl_pct": 2.69,
-   "price_age_min": 0.5
+   "price_age_min": 0.6
   },
   {
    "code": "EQT",
@@ -33,7 +33,7 @@
    "opened": "2026-07-07",
    "pl_krw": -747750,
    "pl_pct": -3.72,
-   "price_age_min": 0.5
+   "price_age_min": 0.6
   },
   {
    "code": "STE",
@@ -48,7 +48,7 @@
    "opened": "2026-07-07",
    "pl_krw": 26990,
    "pl_pct": 1.4,
-   "price_age_min": 0.5
+   "price_age_min": 0.6
   },
   {
    "code": "068270",
@@ -56,13 +56,13 @@
    "ccy": "KRW",
    "q": 54,
    "avg": 175348.4128,
-   "price": 175900.0,
+   "price": 175600.0,
    "stop": 157651.1713,
    "target": 212997.6574,
    "half_done": false,
    "opened": "2026-07-07",
-   "pl_krw": 29786,
-   "pl_pct": 0.31,
+   "pl_krw": 13586,
+   "pl_pct": 0.14,
    "price_age_min": 0.5
   },
   {
@@ -93,7 +93,7 @@
    "opened": "2026-07-08",
    "pl_krw": 163479,
    "pl_pct": 1.62,
-   "price_age_min": 0.4
+   "price_age_min": 0.5
   },
   {
    "code": "CMG",
@@ -108,7 +108,7 @@
    "opened": "2026-07-08",
    "pl_krw": 2113,
    "pl_pct": 4.22,
-   "price_age_min": 0.4
+   "price_age_min": 0.5
   },
   {
    "code": "HMC",
@@ -123,7 +123,7 @@
    "opened": "2026-07-09",
    "pl_krw": -340,
    "pl_pct": -0.27,
-   "price_age_min": 0.4
+   "price_age_min": 0.5
   },
   {
    "code": "NU",
@@ -138,7 +138,7 @@
    "opened": "2026-07-09",
    "pl_krw": 506,
    "pl_pct": 2.51,
-   "price_age_min": 0.4
+   "price_age_min": 0.5
   },
   {
    "code": "LSPD",
@@ -153,7 +153,7 @@
    "opened": "2026-07-09",
    "pl_krw": 8453,
    "pl_pct": 2.0,
-   "price_age_min": 0.4
+   "price_age_min": 0.5
   }
  ],
  "pending": [
@@ -267,7 +267,7 @@
   },
   {
    "d": "2026-07-10",
-   "v": 99346945
+   "v": 99330745
   }
  ],
  "log": [
