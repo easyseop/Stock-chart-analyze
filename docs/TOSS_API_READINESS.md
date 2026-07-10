@@ -3,6 +3,12 @@
 > 2026-07-09. **OpenAPI 3.1 스펙(openapi.json) 전수 파싱 + 개발자 문서** 정독 결과를
 > 실운영 관점으로 정리. 목적: 실주문 붙이기 전에 "이건 몰라서 사고난다"를 없앤다.
 >
+> **v2(2026-07-10): GPT 5부 검토 반영.** 최대 교정 — **"OCO=손절 보장" → 보조 방어로
+> 강등(§7 등급화)**. 그 외: OrderStatus 전이실패 상태 구분(§6) · clientOrderId 해시매핑·
+> 9분30초 창(§5) · confirmHighValueOrder=false 방어(§5) · accountSeq 명시·sellable 단계화
+> (§4) · **깃엔 주문 키 금지** 아키텍처·Go/No-Go(§15). 한 군데 반박: 보호주문 실패 시
+> "즉시 강제청산"은 과함 → 신규중지+P0+파수꾼 전환까지(§7.2).
+>
 > **표기**: [확정]=스펙/문서에서 직접 확인 · [대조필요]=실제 응답·CS·약관으로
 > 최종 확인 · ✅=우리 시스템에 이미 반영 · ⬜=미구현/실측 대기.
 >
@@ -68,6 +74,13 @@
 
 → **핵심 함정**: `holdings.quantity`(보유)와 `sellable-quantity`(매도가능)는 **다르다**
 (방금 매수분은 결제 전이라 못 팜). 손절 매도 전 반드시 sellable-quantity로 상한 확인.
+→ **파수꾼 조회 규율(GPT)**: sellable-quantity를 **매 폴링 조회 금지** — 평상시 prices/
+orderbook만, **stop 근접(현재가 ≤ stop+0.3ATR) 시 갱신·이탈 시 1회 즉시 조회**. 실패 시
+Retry-After 1회 재시도 → 그래도 실패면 조건주문(B0)에 맡기고 P0. 모든 루프가 공유하는
+**그룹별 중앙 rate limiter**(ORDER/ORDER_INFO/ASSET/... 각각) 필요.
+→ **accountSeq 오선택 방지(GPT)**: `GET /accounts`가 계좌 여러 개면 **result[0] 자동선택
+금지**. `LIVE_ACCOUNT_SEQ` env 명시 → 시작 시 accountNo 끝4자리·타입 로그 → 기대값과
+다르면 **프로세스 종료**. Stage 2는 계좌 1개만 주문 허용.
 
 ## 5. 주문 생성 `POST /orders` [확정]
 
@@ -79,33 +92,52 @@
 | `orderType` | `LIMIT` / `MARKET` | MARKET은 price 생략 |
 | `quantity` | 문자열 decimal | **소수점 수량은 US 시장가 매도만 허용**. 그 외 소수점=`400 invalid-request`. 소수점 매수는 `orderAmount`(금액기반) |
 | `timeInForce` | `DAY`(기본) / `CLS`(종가, **US LIMIT만**=LOC) | 미전달 시 DAY(정규장 종료 시 미체결 자동취소) |
-| **`clientOrderId`** | ≤36자 `[a-zA-Z0-9-_]` | **멱등키! 10분 유효** — 동일 값 재요청 시 **이전 주문 결과 그대로 반환**(중복 생성 방지). 10분 후 동일값=새 주문 |
-| `confirmHighValueOrder` | boolean | **1억원 이상 주문은 동의 필요** — 시드 1억이라 종목당 1/3(≈33M)이면 단건은 대개 미만이나, 확인 필요 |
+| **`clientOrderId`** | ≤36자 `[a-zA-Z0-9-_]` | **멱등키! 10분 유효** — 동일 값 재요청 시 **이전 주문 결과 그대로 반환**. 10분 후 동일값=새 주문 |
+| `confirmHighValueOrder` | boolean | **1억원 이상 주문 동의** — **항상 false로 고정**(아래) |
 
-→ **멱등 전략 확정**: `clientOrderId`에 우리 주문키(`{account}:{symbol}:{opened}:{seq}`)를
-넣으면 **timeout 후 안전 재시도**가 가능(중복이면 이전 결과 반환). 단 **10분 창** 주의 —
-10분 지나 재요청하면 새 주문이 되므로, 10분 넘긴 UNKNOWN은 반드시 **주문조회로 대사** 후 처리. ✅ 원장 UNKNOWN 잠금·대사 이미 구현, ⬜ clientOrderId 연결은 실주문 시.
+→ **멱등 전략(GPT 반영)**: 내부 주문키(`{broker}:{account}:{symbol}:{opened}:{seq}...`)는
+**콜론·36자 초과**라 clientOrderId에 그대로 못 넣는다. **해시 매핑** 필수:
+`clientOrderId = "cid-" + sha256(internal_key)[:32]` (36자, 규격 내). ✅ `bot/toss.client_order_id()`
+구현. 원장에 `(internal_key, clientOrderId, body_hash, first_submitted_at)` 저장.
+→ **10분 창 안전 규칙(GPT)**: 경계 오차 감안 **9분30초 이후 재POST 금지** → 대사 모드.
+같은 clientOrderId엔 **반드시 같은 body**(body_hash 대조 — 다르면 P0/버그). 10분 초과
+UNKNOWN은 재POST 금지, **order history/holdings/sellable/triggeredOrderId로 대사**,
+식별 실패 시 종목 **MANUAL_REVIEW_LOCK**. ✅ 원장 잠금·대사 골격 구현.
+→ **confirmHighValueOrder=false 고정(GPT, 좋은 방어)**: 시드 1억이라 **사이징 버그가
+1억+ 주문을 만들면 조용히 체결되는 대신 거부**되게. `confirm-high-value-required` 발생 =
+**P0 + "왜 1억+ 주문이 나왔나" 버그 조사**. 자동 true 금지.
 
 ## 6. 주문 상태기계 `OrderStatus` [확정] → 우리 원장 매핑
 
 `PENDING · PENDING_CANCEL · PENDING_REPLACE · PARTIAL_FILLED · FILLED · CANCELED ·
 REJECTED · CANCEL_REJECTED · REPLACE_REJECTED · REPLACED`
 
+**GPT 검토 반영 — 단순 매핑은 실주문에서 위험. 전이실패 상태를 구분한다:**
 | 토스 status | 우리 ledger | 대응 |
 |---|---|---|
-| PENDING/PENDING_* | submitted | 대기 — 조회 지속 |
-| PARTIAL_FILLED | partial | 잔여만 재주문 대상 |
-| FILLED | filled | 종료 |
-| REJECTED/CANCEL_REJECTED/REPLACE_REJECTED | rejected | **손절 거부면 P0**(보호 실패!) |
-| CANCELED/REPLACED | (해당 없음/재평가) | 정정·취소 결과 반영 |
+| PENDING | submitted/open | 대기 — 조회 지속, 추가 주문 금지 |
+| **PENDING_CANCEL** | pending_cancel | 원주문이 **아직 체결 가능** → **신규 주문 금지** |
+| **PENDING_REPLACE** | pending_replace | 원/정정 경계 → **신규 주문 금지** |
+| PARTIAL_FILLED | partial | filledQuantity 반영, 잔여 취소/유지 정책 |
+| FILLED | filled(종료) | — |
+| CANCELED | canceled(종료) | **filledQty>0이면 partial_then_canceled** — 체결분 기준 포지션/조건주문 재계산 |
+| REJECTED | rejected(종료) | **filledQty>0 가능성 확인** · 손절 거부면 **P0** |
+| **CANCEL_REJECTED** | cancel_rejected **(전이실패)** | 최종거부 아님 — **원주문이 이전 상태로 복귀** → 원주문 재조회 필수, 새 주문 금지 |
+| **REPLACE_REJECTED** | replace_rejected **(전이실패)** | 위와 동일 — 원주문 복귀, 재조회 |
+| REPLACED | replaced(구주문 종료) | **새 orderId 확보** 필요, 모르면 ORDER_HISTORY 대사 |
 | **타임아웃·5xx·응답없음** | **unknown** | **종목 잠금 → 주문조회 대사 → 잔여만**(초과매도 방지) |
 
+⚠️ **핵심 함정(GPT)**: `CANCEL_REJECTED`를 "취소 실패=주문 끝"으로 처리하면 원주문이
+살아 계속 체결 대기 중인데 새 손절을 또 내 **이중 주문**. 반드시 전이실패로 보고 원주문 재조회.
 응답 `execution{filledQuantity, averageFilledPrice, filledAmount, commission, tax,
-filledAt, settlementDate}`. **부분체결 시 execution으로 실체결 확인** → 잔여 계산.
+filledAt, settlementDate}`. ⬜ 원장에 위 상태 추가는 cancel/modify 구현 시.
 
-## 7. 서버측 조건주문 = 0차 방어(B0) `POST /conditional-orders` [확정]
+## 7. 서버측 조건주문 = 0차 방어(B0) `POST /conditional-orders` [확정 존재 / 실체결 대조필요]
 
-전부-죽어도 남는 최후 손절선. **지원 확인됨**.
+> **GPT 검토 최대 교정: "OCO = 손절 보장"은 과신. "보조 방어"로 강등한다.**
+> 조건주문 **존재**는 확정이나 **실제 손절 체결**은 별개다. 등록≠보장.
+
+전부-죽어도 남는 최후 손절선 후보. **엔드포인트 지원은 확인됨**.
 | 필드 | 값 |
 |---|---|
 | `type` | `SINGLE`(단일) / **`OCO`**(손절+익절 동시, 하나 체결 시 나머지 취소) / `OTO`(부모→자식) |
@@ -116,10 +148,30 @@ filledAt, settlementDate}`. **부분체결 시 execution으로 실체결 확인*
 | `clientOrderId` | 멱등키(주문과 동일) |
 | leg 상태 | WATCHING·HOLDING·PAUSED·ORDERING·ORDERED·COMPLETED·EXPIRED·CANCELED |
 
-→ **전략 매핑**: 매수 직후 **OCO 조건주문(STOP=손절가 + PROFIT_RATE/지정가=목표가)**을
-등록하면 손익비 1:2가 브로커 서버측에 박힌다 → 파수꾼·GitHub·CF 전부 죽어도 손절 집행.
-⬜ 단 **stop 트리거가 시장가인지 지정가인지·미국주 지원·트리거 정확도**는 실측 필요
-([대조필요]). expireDate 자동만료 → **스윙 보유기간 넘어가면 갱신** 로직 필요.
+### 7.1 방어 등급화 (등록 ≠ 보장)
+| 등급 | 조건 | 의미 |
+|---|---|---|
+| **B0a 진짜 0차** | SINGLE **STOP + orderType=MARKET**이 해당 시장/종목/세션에서 지원·실체결 | 시장가라 슬리피지는 감수(손절은 나가는 게 우선). **잔여 위험=거래정지(halt)** — 시장가라도 못 나감(모두에게 공통, 불가피) |
+| **B0b 제한적** | OCO/STOP **LIMIT**(지정가) | 갭·호가공백에 **미체결 가능** — "손절 등록"이지 "보장" 아님 |
+| **B0c 파수꾼 의존** | 조건주문 미지원/거부/만료/미체결 | 파수꾼(+상시 호스트)만 손절 |
+
+→ 스키마상 `orderType=MARKET` 조건주문은 **표현 가능**(B0a 후보) — 단 **미국주·세션별
+지원·트리거→체결 지연**은 [대조필요]. 실측 전엔 **B0b로 간주**(보수적).
+
+### 7.2 조건주문 운영 규칙 (GPT 검토 반영, ⬜ 실주문 단계)
+- **수량은 filledQuantity 기준** 등록(주문수량 아님) — 부분체결 후 초과 조건주문 방지.
+- **sellable 선점 충돌**: 조건주문이 sellable-quantity를 예약하면 파수꾼 시장가 매도가
+  `sellable=0`으로 막힐 수 있음. **정책**: (A) 조건주문 1차 신뢰 → 파수꾼은 감시·갱신만,
+  별도 매도는 조건주문 취소 후 / (B) 조건주문은 SINGLE MARKET STOP만, 파수꾼은 조건주문
+  실패·만료 시 보조. **실측 후 A/B 택일** — 실측 전엔 둘 다 켜지 않는다.
+- **expireDate 관리**: 스윙 보유(≈15거래일) > 조건주문 만료면 보호 공백. **장전 D-2
+  이하 검사 → 갱신, 갱신 실패=P0+신규진입 금지.** (수정=취소후재생성이면 갱신 중 공백 주의.)
+- **매수 직후 보호 등록 SLA**: 5초 내 등록 시도 → 30초 내 확인 실패면 **신규진입 전면
+  중지 + P0 + 파수꾼 보호모드**. (즉시 강제청산은 하지 않음 — 일시 오류로 손실 실현 방지;
+  파수꾼도 못 지킬 때만 수동 판단.)
+- **고아 조건주문**: `holdings=0`인데 OPEN 조건주문 있으면 취소(앱 수동매도 후 잔존). 취소
+  실패/UNKNOWN이면 종목 잠금.
+- **Stage 2 초기엔 OCO profit leg 미룸** — SINGLE STOP 보호 검증 우선, 익절은 파수꾼/전략 루프.
 
 ## 8. 종목 상태·유의사항 — 진입/매매 회피 [확정]
 
@@ -212,8 +264,51 @@ REJECT가 아니라 UNKNOWN**으로 분류(초과매도 방지). ⬜ 실주문 �
 8. 앱 수동주문 ↔ API 주문 동시 존재 시 source of truth(holdings 재조회로 대사).
 9. `confirmHighValueOrder` 트리거 금액·동작.
 10. 상장폐지·티커변경·액면분할 시 심볼 매핑·수량 불일치 처리.
+11. **IP allowlist 여부** — 토스가 허용 IP 기반 제한을 두나? (VPS 재시작 egress IP 변경 시 주문불능·403) [대조필요].
+12. **UNKNOWN 대사 실측**: orderId 없이 clientOrderId/symbol/기간/holdings 변화로 당일 주문 식별 가능한가(안 되면 Stage 2 No-Go).
+13. **조건주문의 sellable 선점 여부**(파수꾼과 충돌 가름).
 
-## 15. 출처
+## 15. GPT 5부 검토 반영 — 아키텍처 원칙·Go/No-Go (v2)
+
+### 15.1 아키텍처 철칙 (실주문 단계)
+- **GitHub Actions·CF Worker엔 "주문 가능" 키를 절대 두지 않는다.** 이들은 신호·발사·
+  검증·렌더만. 주문 가능 토스 키는 **고정 IP 상시 서버(파수꾼)에만**. ⚠️ 현재 Stage 0은
+  읽기전용이라 깃에 키가 있어도 무방하나, **Stage 2 전에 토스가 읽기전용 스코프 키를
+  주는지 확인** — 못 주면 시세 조회도 상시 서버로 옮기고 깃에서 토스 키 제거.
+- **환경 분리 플래그**: `TOSS_ENV=read|paper|live` · `LIVE_TRADING_ENABLED` · `ALLOW_BUY`
+  · `ALLOW_SELL` · `LIVE_ACCOUNT_SEQ` · `MAX_LIVE_RISK_PCT`. Stage 0/1 프로세스엔 주문
+  키·주문 플래그 자체를 주지 않는다.
+- **단일 token_manager** + 그룹별 중앙 rate limiter(§4·§2). 서버 NTP/시계 오차>2초면 주문 금지.
+
+### 15.2 추가 손절 안전(§7 밖)
+- **호가공백 방어**: lastPrice만으로 손절 판단 금지. `orderbook` best bid ≤ stop이면 이미
+  아래 → 위험 신호. spread>1~2%면 시장가 대신 보호 로직. `timestamp=null`이면 orderbook
+  대체 → 그것도 낡으면 신규 금지·보유는 P1/P0.
+- **체결가 리스크 재검증**: 실체결 평균가가 계획보다 나빠 `actual_risk > planned×1.15`면
+  포지션 축소/청산 검토(1% 리스크가 몰래 1.4%로 커지는 것 방지).
+
+### 15.3 Stage 2 Go 최소 조건(요약)
+단일 token_manager·IP allowlist 확인·accountSeq 명시·clientOrderId 해시매핑·10분 창
+실동작·UNKNOWN 대사 루틴 실측·orderId 미수신 대사법 확정·sellable↔조건주문 선점 실측·
+STOP 시장가/US 지원 실측·보호주문 실패 시 즉시 보호모드·whole-share만·regularMarket
+진입만·orderbook 호가공백 방어·앱 수동주문 발견 시 중지·P0 ntfy+텔레그램 실발송.
+
+### 15.4 Stage 2 No-Go (하나라도 남으면 실주문 금지)
+OCO를 stop-market으로 착각 · 조건주문 sellable 선점 여부 모름 · timeout 후 orderId 없는
+주문 못 찾음 · clientOrderId 10분 후 재사용 가능성 · 소수점 조건주문 가능여부 모름 ·
+**깃에 주문 가능 키 존재** · live에서 앱 수동주문 병행 · 보호주문 실패 시 정책 없음.
+
+### 15.5 Stage 2 첫 주 제한
+한 시장만 · **whole share만** · 동시 1종목 · 하루 신규 1건 · risk ≤0.1% ·
+confirmHighValueOrder=false · 앱 수동주문 금지 · 조건주문 실측 완료 종목만 ·
+보호주문 실패 시 신규진입 중지.
+
+### 15.6 과설계라 지금 안 하는 것(GPT Q5)
+OCO profit leg 완전자동(→ Stage 3) · 트레일링 stop을 조건주문으로 실시간 수정(→ 파수꾼
+내부 stop) · 5,400종목 전체 토스 실시간(→ 보유+후보 80~100만) · 기업행위 완전자동(→ 감지
+후 신규금지+수동).
+
+## 16. 출처
 
 - **OpenAPI 3.1 스펙(권위 원본, 본 문서 [확정]의 근거)**:
   `https://openapi.tossinvest.com/openapi-docs/latest/openapi.json` (2026-07-09 전수 파싱)

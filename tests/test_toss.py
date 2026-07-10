@@ -143,6 +143,19 @@ def test_classify_error():
     print("[PASS] classify_error — 주문 불확실=UNKNOWN, 409=중복, 422=거부 등 정확")
 
 
+def test_client_order_id():
+    """clientOrderId 매핑 — 36자 이하·규격 문자·결정적(멱등)."""
+    import re
+    toss = _reload()
+    key = "toss:acct-12345678901:AAPL:2026-07-10T22:30:00+09:00:seq42:SELL_STOP:v3"
+    cid = toss.client_order_id(key)
+    assert len(cid) <= 36, f"36자 초과: {len(cid)}"
+    assert re.fullmatch(r"[a-zA-Z0-9_-]+", cid), f"규격 외 문자: {cid}"
+    assert cid == toss.client_order_id(key), "결정적이지 않음(멱등 깨짐)"
+    assert cid != toss.client_order_id(key + ":x"), "다른 키가 같은 값(충돌)"
+    print(f"[PASS] client_order_id — 36자 이하·규격·멱등 ({cid})")
+
+
 def test_secret_never_logged():
     toss = _reload("c_x", "SUPER_SECRET_VALUE")
     toss._TOK = {"tok": None, "exp": 0.0}
@@ -166,6 +179,7 @@ if __name__ == "__main__":
     test_401_forces_refresh()
     test_token_failure_cooldown()
     test_classify_error()
+    test_client_order_id()
     test_secret_never_logged()
     print("\n✅ 토스 어댑터 전부 통과 — 읽기 전용·키 게이트·폴백·시크릿 비노출.")
     # 원상복구(다른 테스트에 영향 없게)

@@ -26,6 +26,7 @@
 """
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 import time
@@ -92,6 +93,18 @@ def classify_error(status: int, code: str = "", *, is_order: bool = False) -> st
         return ACT_REJECT
     # 미지의 status — 주문이면 안전하게 UNKNOWN(초과매도 방지), 조회면 재시도.
     return ACT_UNKNOWN if is_order else ACT_RETRY
+
+
+def client_order_id(internal_key: str) -> str:
+    """내부 주문키 → 토스 clientOrderId(≤36자, [a-zA-Z0-9-_], 결정적=멱등).
+
+    내부 키(`{broker}:{account}:{symbol}:{opened}:{seq}...`)는 콜론·36자 초과라
+    clientOrderId에 그대로 못 넣는다(GPT 검토). sha256 해시 앞부분으로 안전 매핑:
+      "cid-" + hex[:32] = 36자, 규격 내. 같은 내부키 → 항상 같은 값(10분 멱등에 사용).
+    호출부(원장)는 (internal_key, clientOrderId, body_hash, first_submitted_at)를 저장해
+    10분 창·본문 대조에 쓴다. **10분 초과 UNKNOWN은 이 값으로 재POST 금지 → 대사만.**"""
+    h = hashlib.sha256(internal_key.encode("utf-8")).hexdigest()
+    return "cid-" + h[:32]
 
 
 def _fetch_token() -> str | None:
