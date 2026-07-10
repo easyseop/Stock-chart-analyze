@@ -212,7 +212,9 @@ def main() -> int:
             {**acct, "PDNO": "", "ORD_STRT_DT": weekago, "ORD_END_DT": today,
              "SLL_BUY_DVSN": "00", "CCLD_NCCS_DVSN": "00",
              "OVRS_EXCG_CD": args.excg, "SORT_SQN": "DS",
-             "CTX_AREA_FK200": "", "CTX_AREA_NK200": ""})
+             # 아래 3개는 빈 값이라도 필수(누락 시 OPSQ2001 INPUT_FIELD_NAME ORD_DT)
+             "ORD_DT": "", "ORD_GNO_BRNO": "", "ODNO": "",
+             "CTX_AREA_NK200": "", "CTX_AREA_FK200": ""})
     if d and d.get("rt_cd") == "0":
         oo = d.get("output") or []
         print(f"   최근 7일 주문/체결 {len(oo)}건" + (":" if oo else ""))
