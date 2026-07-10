@@ -271,10 +271,19 @@ def _token(force: bool = False) -> str | None:
 
 
 # ── 인증 GET (읽기 전용) ─────────────────────────────────────────────
+#   유량: 프로세스 전역 초당 버킷(모의 2/s·실전 20/s, order 예약슬롯) — 사전 억제.
+from bot import kis_ratelimit as _rl
+
+_LIMITER = _rl.for_env(IS_MOCK)
+
+
 def _get(path: str, tr: str, params: dict) -> dict | None:
     """인증 GET. 401→토큰 1회 강제 재발급, EGW00201→짧은 백오프 1회 재시도. 실패 None."""
     tok = _token()
     if not tok:
+        return None
+    if not _LIMITER.acquire("data", timeout=10.0):   # 사전 억제(EGW00201 예방)
+        print(f"[kis] GET {path} 유량 대기 초과 — 건너뜀")
         return None
     k, s = _cred()
     url = BASE_URL + path + "?" + urllib.parse.urlencode(params)
