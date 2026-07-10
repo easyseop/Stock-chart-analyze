@@ -31,6 +31,7 @@ import argparse
 import json
 import os
 import sys
+import time
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -97,7 +98,8 @@ def _show_http_err(what: str, e: urllib.error.HTTPError) -> None:
 
 
 def get(token: str, appkey: str, appsecret: str, path: str,
-        tr_id: str, params: dict) -> dict | None:
+        tr_id: str, params: dict, retries: int = 2) -> dict | None:
+    """조회 GET. 레이트리밋(EGW00201, HTTP 500)이면 잠시 후 재시도."""
     url = BASE + path + "?" + urllib.parse.urlencode(params)
     headers = {
         "content-type": "application/json; charset=utf-8",
@@ -105,19 +107,36 @@ def get(token: str, appkey: str, appsecret: str, path: str,
         "appkey": appkey, "appsecret": appsecret,
         "tr_id": tr_id, "custtype": "P",
     }
-    req = urllib.request.Request(url, headers=headers)
-    try:
-        with urllib.request.urlopen(req, timeout=TIMEOUT) as r:
-            d = json.load(r)
-        rt = d.get("rt_cd")
+    for attempt in range(retries + 1):
+        d = None
+        try:
+            req = urllib.request.Request(url, headers=headers)
+            with urllib.request.urlopen(req, timeout=TIMEOUT) as r:
+                d = json.load(r)
+        except urllib.error.HTTPError as e:
+            # KIS는 레이트리밋을 HTTP 500 + 본문 rt_cd로 준다 → 본문 파싱
+            body = ""
+            try:
+                body = e.read().decode("utf-8", "ignore")
+                d = json.loads(body)
+            except Exception:
+                _show_http_err(f"GET {path} (tr_id={tr_id})", e)
+                return None
+        except Exception as e:
+            print(f"✗ GET {path} 오류: {type(e).__name__}: {e}")
+            return None
+
+        if d and d.get("msg_cd") == "EGW00201" and attempt < retries:
+            print(f"   … 초당 유량초과(EGW00201) — 1.2초 후 재시도 "
+                  f"({attempt + 1}/{retries})")
+            time.sleep(1.2)
+            continue
+
+        rt = d.get("rt_cd") if d else None
         tag = "✓" if rt == "0" else "✗"
         print(f"   {tag} tr_id={tr_id} rt_cd={rt} "
-              f"msg_cd={d.get('msg_cd')} msg={d.get('msg1','').strip()}")
+              f"msg_cd={(d or {}).get('msg_cd')} msg={(d or {}).get('msg1','').strip()}")
         return d
-    except urllib.error.HTTPError as e:
-        _show_http_err(f"GET {path} (tr_id={tr_id})", e)
-    except Exception as e:
-        print(f"✗ GET {path} 오류: {type(e).__name__}: {e}")
     return None
 
 
@@ -166,6 +185,7 @@ def main() -> int:
                   f" 평단={h.get('pchs_avg_pric')} 평가손익={h.get('frcr_evlu_pfls_amt')}")
 
     # 2) 해외 미체결내역 (모의/실전 모두 지원) — UNKNOWN 대사 채널 A
+    time.sleep(0.7)   # 모의 초당 2건 제한 회피(잔고 호출과 간격)
     print("\n[해외미체결] GET /uapi/overseas-stock/v1/trading/inquire-nccs")
     d = get(tok, appkey, appsecret,
             "/uapi/overseas-stock/v1/trading/inquire-nccs",
