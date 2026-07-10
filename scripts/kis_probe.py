@@ -200,6 +200,27 @@ def main() -> int:
                   f" {o.get('sll_buy_dvsn_cd_name','')} 주문={o.get('ft_ord_qty')}"
                   f" 미체결={o.get('nccs_qty')}")
 
+    # 3) 해외 주문체결내역 (모의/실전 지원) — UNKNOWN 대사 채널 B
+    #    ※ ODNO로 검색 불가(반드시 Null) → 기간+계좌로 조회 후 클라이언트 필터.
+    time.sleep(0.7)
+    today = time.strftime("%Y%m%d")
+    weekago = time.strftime("%Y%m%d", time.localtime(time.time() - 7 * 86400))
+    print("\n[해외체결내역] GET /uapi/overseas-stock/v1/trading/inquire-ccnl")
+    d = get(tok, appkey, appsecret,
+            "/uapi/overseas-stock/v1/trading/inquire-ccnl",
+            _tr("TTTS3035R"),
+            {**acct, "PDNO": "", "ORD_STRT_DT": weekago, "ORD_END_DT": today,
+             "SLL_BUY_DVSN": "00", "CCLD_NCCS_DVSN": "00",
+             "OVRS_EXCG_CD": args.excg, "SORT_SQN": "DS",
+             "CTX_AREA_FK200": "", "CTX_AREA_NK200": ""})
+    if d and d.get("rt_cd") == "0":
+        oo = d.get("output") or []
+        print(f"   최근 7일 주문/체결 {len(oo)}건" + (":" if oo else ""))
+        for o in oo[:10]:
+            print(f"     ODNO={o.get('odno')} {o.get('pdno')}"
+                  f" 주문={o.get('ft_ord_qty')} 체결={o.get('ft_ccld_qty')}"
+                  f" 체결단가={o.get('ft_ccld_unpr3')}")
+
     print("\n완료 — 위 결과(시크릿 없음)를 공유하면 다음 단계를 정확히 안내합니다.")
     print("※ 매수가능금액·예약주문조회·분봉·10호가는 모의 미지원이라 이 프로브는 부르지 않음.")
     return 0
