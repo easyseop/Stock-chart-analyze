@@ -156,8 +156,10 @@ def place_order(key: str, symbol: str, side: str, qty: int, price: float,
                     "why": "EGW00201 지속 — P0(집행 불능) 대상"}
         if act in (kis.ACT_REJECT, kis.ACT_AUTH_FATAL):
             ledger.on_result(key, "rejected", 0)
+            mc = (d or {}).get("msg_cd") or http
+            m1 = str((d or {}).get("msg1") or "").strip()
             return {"ok": False, "act": act, "key": key,
-                    "why": str((d or {}).get("msg_cd") or http)}
+                    "why": f"{mc}: {m1}" if m1 else str(mc)}
         # UNKNOWN — 종목 잠금, kis_reconcile로만 해소(재주문 절대 금지)
         ledger.on_result(key, "unknown", 0)
         return {"ok": False, "act": "unknown", "key": key,
