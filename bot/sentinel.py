@@ -119,6 +119,44 @@ class _PaperBroker:
         return True
 
 
+class _KisBroker(_PaperBroker):
+    """KIS 어댑터(X4) — 매도 전용. 주문은 kis_orders.place_sell만 사용(매수 없음).
+
+    안전:
+      · kis_orders가 자체 게이트(모의 전용 하드블록·KIS_ORDERS_ENABLED·원장
+        can_submit)를 다시 검사 — 파수꾼이 실수로 불러도 live 전송 불가.
+      · 손절가는 연속장 시장가가 없어(KIS 미국주) **마켓터블 지정가**로 발주.
+      · 응답은 _norm_result 규약(dict{state, filled})으로 정규화해 원장과 일치.
+    """
+    name = "kis"
+
+    def __init__(self):
+        from bot import kis
+        if not kis.enabled():
+            raise SystemExit("KIS appkey/appsecret 환경변수 필요")
+        self.env = kis.ENV
+
+    def place_sell(self, code: str, qty: int, reason: str, key: str):
+        from bot import kis_orders
+        px = self.quote(code, "USD")
+        if px is None:                       # 시세 없이 손절가 산출 불가 — 보류
+            return {"state": "rejected", "filled": 0}
+        limit = kis_orders.marketable_limit_price(px, "SELL")
+        r = kis_orders.place_sell(key, code, qty, limit, reason=reason)
+        act = r.get("act")
+        if act == "ack":                     # 접수됨(in-flight) — 체결은 대사가 확정
+            return {"state": "ack", "filled": 0}
+        if act == "unknown":                 # 응답 유실 — 원장이 이미 잠금
+            return {"state": "unknown", "filled": 0}
+        # blocked/reject/rate_limited — 명시 실패(체결 없음)
+        return {"state": "rejected", "filled": 0}
+
+    def reconcile_unknowns(self):
+        """UNKNOWN 대사 — nccs+ccnl 기반(kis_boot 재사용). 반환: 대사 결과 목록."""
+        from bot import kis_boot
+        return kis_boot.boot_reconcile().get("results", [])
+
+
 class _TossBroker(_PaperBroker):
     """토스증권 어댑터 자리 — API 키 발급 후 이 두 메서드만 구현하면 실전.
 
@@ -167,7 +205,18 @@ def _norm_result(res, qty: int) -> tuple[str, int]:
 
 def _reconcile_open(broker) -> None:
     """미해소 UNKNOWN 주문을 브로커 실측 체결량으로 확정(대사) — 잠금 해제.
-    order_status를 지원하는 브로커(실거래 어댑터)에서만 동작. 모의/dry-run은 no-op."""
+    KIS 어댑터는 nccs+ccnl 대사(reconcile_unknowns), 그 외는 order_status 지원 시.
+    모의/dry-run은 no-op."""
+    if hasattr(broker, "reconcile_unknowns"):      # KIS 경로(대사 채널 A+B)
+        try:
+            for r in broker.reconcile_unknowns():
+                if r.get("confidence") == ledger.CONF_HIGH:
+                    _notify(f"🔁 파수꾼 대사 — {r.get('symbol')} {r.get('state')}"
+                            f"(체결 {r.get('filled')} · 잔여 {r.get('residual')})",
+                            critical=True)
+        except Exception as e:
+            print(f"[대사 오류] {type(e).__name__}: {e}")
+        return
     if not hasattr(broker, "order_status"):
         return
     for o in ledger.open_orders():
@@ -287,12 +336,22 @@ def main() -> None:
     ap = argparse.ArgumentParser(description="매도 전용 손절 파수꾼(기본 dry-run)")
     ap.add_argument("--once", action="store_true", help="1회 점검 후 종료")
     args = ap.parse_args()
-    broker = _TossBroker() if (LIVE and os.environ.get("TOSS_APP_KEY")) \
-        else _PaperBroker()
+    want = os.environ.get("SENTINEL_BROKER", "").lower()
+    if want == "kis":                              # KIS(모의) 어댑터 — X4
+        broker = _KisBroker()
+    elif LIVE and os.environ.get("TOSS_APP_KEY"):
+        broker = _TossBroker()
+    else:
+        broker = _PaperBroker()
     print(f"파수꾼 시작 — 브로커={broker.name} · 폴링 {POLL_SEC}초 · "
           f"{'⚠️ 실주문 모드' if LIVE else 'dry-run(기본)'}")
-    if LIVE and broker.name != "toss":
-        raise SystemExit("SENTINEL_LIVE=1인데 토스 키 없음 — 안전을 위해 종료")
+    if LIVE and broker.name not in ("toss", "kis"):
+        raise SystemExit("SENTINEL_LIVE=1인데 브로커 키 없음 — 안전을 위해 종료")
+    if broker.name == "kis":                       # 부팅 대사(O4) — 재시작 안전
+        from bot import kis_boot
+        s = kis_boot.boot_reconcile()
+        print(f"부팅 대사: unknowns={s['unknowns']} resolved={s['resolved']} "
+              f"low={s['low']} ok={s['ok']}")
     state: dict = {}
     while True:
         try:
