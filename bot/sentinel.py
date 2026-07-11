@@ -358,6 +358,12 @@ def main() -> None:
             check_once(broker, state)
         except Exception as e:                     # 파수꾼은 죽지 않는다
             print(f"[오류] {type(e).__name__}: {e}")
+        try:                                       # 생존성 SLA(R4) — 매 사이클 기록
+            from bot import heartbeat
+            heartbeat.write({"broker": broker.name,
+                             "positions": len(state.get("positions", {}))})
+        except Exception:
+            pass
         if args.once:
             break
         # 장외엔 60초 간격으로만 깨어나 확인(호출 0)
