@@ -1,0 +1,106 @@
+"""I7 — 단계적 롤아웃 가드(코드 강제) + I1 세션 게이트(US 정규장만).
+
+문서가 아니라 **코드가** Stage 제한을 강제한다(리뷰 I7 채택). 신규 매수 앞에서
+X1이 이 모듈의 check_new_entry()를 반드시 통과해야 한다.
+
+Stage 프로파일(환경변수 TRADE_STAGE, 기본 "1.5"):
+  1.5  모의 검증:  1종목 · 하루 1건 · risk ≤0.1% · allowlist 필수 · whole-share
+  2    실전 첫 주: 1종목 · 하루 1건 · risk ≤0.1% · allowlist 필수 · US 정규장만
+  2.5  확장:      3종목 · 하루 2건 · risk ≤0.25%
+  3    정상:      5종목 · 하루 3건 · risk ≤1.0%
+
+공통 강제(전 Stage):
+  · **US 정규장만**(I1·Codex B7) — dayMarket/pre/after 신규 진입 hard-off.
+  · whole-share만(소수점 주문 가능 여부 [대조필요]라 금지).
+  · ALLOWED_SYMBOLS(콤마 구분) 밖 종목 금지 — Stage 2.5까지는 allowlist 필수,
+    미설정이면 전 종목 거부(fail-closed).
+  · 하루 신규 카운트는 원장(submit·side=BUY·당일)에서 계산 — 별도 상태 파일 없음
+    (재시작에도 정확).
+"""
+from __future__ import annotations
+
+import datetime
+import os
+
+from bot import ledger
+
+_PROFILES = {
+    "1.5": {"max_positions": 1, "max_new_per_day": 1, "risk_cap": 0.001,
+            "allowlist_required": True},
+    "2":   {"max_positions": 1, "max_new_per_day": 1, "risk_cap": 0.001,
+            "allowlist_required": True},
+    "2.5": {"max_positions": 3, "max_new_per_day": 2, "risk_cap": 0.0025,
+            "allowlist_required": True},
+    "3":   {"max_positions": 5, "max_new_per_day": 3, "risk_cap": 0.01,
+            "allowlist_required": False},
+}
+
+
+def stage() -> str:
+    s = os.environ.get("TRADE_STAGE", "1.5")
+    return s if s in _PROFILES else "1.5"
+
+
+def profile() -> dict:
+    return dict(_PROFILES[stage()])
+
+
+def allowed_symbols() -> set[str] | None:
+    """ALLOWED_SYMBOLS(콤마 구분). 미설정=None(allowlist_required면 전 거부)."""
+    raw = os.environ.get("ALLOWED_SYMBOLS", "").strip()
+    if not raw:
+        return None
+    return {s.strip().upper() for s in raw.split(",") if s.strip()}
+
+
+def _today_kst() -> datetime.date:
+    return datetime.datetime.now(
+        datetime.timezone(datetime.timedelta(hours=9))).date()
+
+
+def new_entries_today() -> int:
+    """오늘(KST) 원장에 기록된 신규 매수 submit 수 — 하루 한도 계산용."""
+    day = _today_kst()
+    n = 0
+    for cur in ledger._fold().values():
+        if cur.get("side") != "BUY":
+            continue
+        ts = cur.get("submitted_at") or 0
+        if ts and datetime.datetime.fromtimestamp(
+                ts, datetime.timezone(datetime.timedelta(hours=9))).date() == day:
+            n += 1
+    return n
+
+
+def us_regular_open() -> bool:
+    """I1 세션 게이트 — US 정규장만 True(dayMarket/pre/after 신규진입 hard-off)."""
+    try:
+        from bot import settings as cfg
+        return bool(cfg.market_open("USD"))
+    except Exception:
+        return False              # 판정 불가 = 진입 금지(fail-closed)
+
+
+def check_new_entry(symbol: str, *, open_positions: int,
+                    risk_pct: float, qty_is_whole: bool = True,
+                    session_open: bool | None = None) -> tuple[bool, str]:
+    """신규 진입 허용 판정. (ok, 사유). 모든 게이트 fail-closed."""
+    p = profile()
+    if session_open is None:
+        session_open = us_regular_open()
+    if not session_open:
+        return False, "US 정규장 아님(dayMarket/pre/after 신규진입 금지)"
+    if not qty_is_whole:
+        return False, "whole-share만 허용(소수점 금지)"
+    al = allowed_symbols()
+    if p["allowlist_required"] and al is None:
+        return False, "ALLOWED_SYMBOLS 미설정(allowlist 필수 Stage)"
+    if al is not None and symbol.upper() not in al:
+        return False, f"{symbol} allowlist 밖"
+    if open_positions >= p["max_positions"]:
+        return False, f"동시 보유 한도({p['max_positions']}) 도달"
+    if new_entries_today() >= p["max_new_per_day"]:
+        return False, f"하루 신규 한도({p['max_new_per_day']}) 도달"
+    if risk_pct > p["risk_cap"] + 1e-12:
+        return False, f"risk {risk_pct:.4f} > cap {p['risk_cap']:.4f}"
+    return True, "ok"

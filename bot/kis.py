@@ -343,6 +343,37 @@ def open_orders(excg: str = "NASD") -> dict | None:
                  "CTX_AREA_FK200": "", "CTX_AREA_NK200": ""})
 
 
+def buying_power(symbol: str, price: float, excg: str = "NASD") -> float | None:
+    """매수여력(USD) — envelope의 feasibility(하향 클램프) 입력.
+
+    · live: `inquire-psamount`(TTTS3007R) — `ord_psbl_frcr_amt`(보유 USD 기준).
+      통합증거금 값(echm_af_*)은 cash-only 확인 전 사용 금지(REFLECTION R6) —
+      **보수적으로 외화예수금 기준만** 쓴다.
+    · mock: psamount **모의 미지원**(확정) → KIS_MOCK_BUYING_POWER(테스트 셋업용
+      명시 값)만 허용, 없으면 None(=X1 사이징이 0으로 차단, fail-closed).
+    """
+    if IS_MOCK:
+        v = os.environ.get("KIS_MOCK_BUYING_POWER")
+        try:
+            return float(v) if v is not None else None
+        except ValueError:
+            return None
+    acct = account()
+    if not acct or not enabled():
+        return None
+    d = _get("/uapi/overseas-stock/v1/trading/inquire-psamount",
+             tr_id("psamount"),
+             {**acct, "OVRS_EXCG_CD": excg,
+              "OVRS_ORD_UNPR": f"{float(price):.2f}", "ITEM_CD": symbol})
+    if not d or d.get("rt_cd") != "0":
+        return None
+    out = d.get("output") or {}
+    try:
+        return float(out.get("ord_psbl_frcr_amt") or 0) or None
+    except (TypeError, ValueError):
+        return None
+
+
 def fills(excg: str = "NASD", start: str = "", end: str = "") -> dict | None:
     """해외 주문체결내역(inquire-ccnl) — UNKNOWN 대사 채널 B.
     ODNO 검색 불가 → 기간+계좌 조회 후 클라이언트 필터. start/end=YYYYMMDD."""

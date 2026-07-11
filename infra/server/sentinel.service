@@ -1,0 +1,26 @@
+# 파수꾼(sentinel) systemd 유닛 — Stage 1.5 모의(Stage 2에서 live 값으로 교체)
+# 설치: infra/server/README.md 참조. 시크릿은 EnvironmentFile(권한 600)로만.
+[Unit]
+Description=stock sentinel (sell-only stop guard, KIS)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=bot
+WorkingDirectory=/opt/stock/Stock-chart-analyze
+# 시크릿·플래그는 이 파일에만(chmod 600, root:bot) — 유닛/깃에 값 금지
+EnvironmentFile=/etc/stock/kis.env
+Environment=SENTINEL_BROKER=kis
+ExecStart=/usr/bin/python3 -m bot.sentinel
+Restart=always
+RestartSec=5
+# 파수꾼이 멈추면 손절이 멈춘다 — 저널 로그 유지
+StandardOutput=journal
+StandardError=journal
+# 안전: 쓰기 필요한 경로만 허용
+ProtectSystem=full
+ReadWritePaths=/opt/stock/Stock-chart-analyze /tmp
+
+[Install]
+WantedBy=multi-user.target

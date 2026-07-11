@@ -1,0 +1,21 @@
+# watchdog systemd 유닛 — 파수꾼 heartbeat 감시·재기동·P0 (R4)
+[Unit]
+Description=sentinel watchdog (heartbeat SLA, restart, P0)
+After=network-online.target sentinel.service
+
+[Service]
+Type=simple
+# systemctl restart 권한 필요 — root 또는 polkit 규칙으로 bot에 위임
+User=root
+WorkingDirectory=/opt/stock/Stock-chart-analyze
+EnvironmentFile=/etc/stock/kis.env
+Environment=SENTINEL_UNIT=sentinel.service
+Environment=BOT_REPO_DIR=/opt/stock/Stock-chart-analyze
+ExecStart=/usr/bin/python3 infra/server/watchdog.py
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
