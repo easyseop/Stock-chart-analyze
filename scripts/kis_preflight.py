@@ -82,6 +82,7 @@ def main() -> int:
     # ── 환경 새니티 ───────────────────────────────────────────────
     seed = os.environ.get("BOT_SEED_KRW")
     print(f"[{_mark(bool(seed))}] BOT_SEED_KRW " + ("설정" if seed else "미설정(사이징 0)"))
+    warns += (not seed)
     if not kis.IS_MOCK:
         if os.environ.get("KIS_ORDERS_ENABLED") == "1":
             print("[✗] ⚠️ live 환경인데 KIS_ORDERS_ENABLED=1 — Stage 2 게이트 전 금지")
