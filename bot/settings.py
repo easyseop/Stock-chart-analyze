@@ -88,6 +88,13 @@ def market_open(ccy: str) -> bool:
         return 810 <= hm <= 1260
 
 
+# 제안(추천)형 알림 스위치 — 사용자 요청(2026-07-12): 텔레그램은 '실제 액션'
+#   (자동매매 예약/매수/손절 체결 + 보유 손절선 터치)만 받는다. '[관찰] 매수 제안'과
+#   '눌림/돌파 도달' 같은 추천 알림은 기본 OFF(웹 대시보드엔 계속 표시 — 정보 손실 없음).
+#   다시 켜려면 환경변수 ADVISOR_SUGGEST_ALERTS=1.
+import os as _os
+SUGGEST_ALERTS = _os.environ.get("ADVISOR_SUGGEST_ALERTS", "0") == "1"
+
 # 알림 폭주 방지 — 한 실행에서 보낼 최대 개수(우선순위 높은 것부터)
 BUY_ALERT_MAX = 8
 ARRIVAL_ALERT_MAX = 6

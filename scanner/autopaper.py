@@ -592,12 +592,15 @@ def _report_violations(st: dict, cap_viol: list, rule_viol: list) -> None:
 
 
 def _report(st: dict, equity: float) -> None:
-    """이번 런의 매수/매도/주문을 텔레그램으로 보고(체결 있을 때만).
+    """이번 런의 매수/매도/주문을 텔레그램으로 보고(액션 있을 때만).
 
     토큰 미설정/전송 실패는 조용히 무시 — 시뮬레이션(빌드)은 절대 안 죽인다.
+    사용자 요청(2026-07-12): 체결(buy/sell)뿐 아니라 **지정가 예약(order)·예약
+    취소(cancel)만 있어도** 보고 — 제안 알림이 기본 OFF가 되면서 액션 알림이
+    유일한 텔레그램 소식이므로 '예약 걸림'을 놓치면 안 된다.
     """
     ev = st.pop("_ev", [])
-    if not any(x["type"] in ("buy", "sell") for x in ev):
+    if not any(x["type"] in ("buy", "sell", "order", "cancel") for x in ev):
         return
 
     def _blk(x) -> str:
