@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated_at": "2026-07-12T08:29:17+09:00",
+ "generated_at": "2026-07-12T09:13:12+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "signals": [
   {
@@ -992,7 +992,7 @@
    "norm": -10.4,
    "fresh": false,
    "break_gap": 0.1102,
-   "earnings_d": 5,
+   "earnings_d": 4,
    "tactic": {
     "stop_pct": 5.0,
     "pb_price": null,
@@ -1289,7 +1289,7 @@
    "norm": 5.7,
    "fresh": true,
    "break_gap": 0.0401,
-   "earnings_d": 17,
+   "earnings_d": 16,
    "tactic": null
   },
   {
@@ -1369,7 +1369,7 @@
    "norm": -11.3,
    "fresh": true,
    "break_gap": 0.0291,
-   "earnings_d": 17,
+   "earnings_d": 16,
    "tactic": null
   },
   {
@@ -1449,7 +1449,7 @@
    "norm": 17.0,
    "fresh": true,
    "break_gap": 0.0506,
-   "earnings_d": 26,
+   "earnings_d": 25,
    "tactic": null
   },
   {
@@ -1866,7 +1866,7 @@
    "norm": -9.4,
    "fresh": true,
    "break_gap": 0.0189,
-   "earnings_d": 19,
+   "earnings_d": 18,
    "tactic": {
     "stop_pct": 7.2,
     "pb_price": null,
@@ -2048,7 +2048,7 @@
    "norm": -18.9,
    "fresh": true,
    "break_gap": 0.0143,
-   "earnings_d": 23,
+   "earnings_d": 22,
    "tactic": {
     "stop_pct": 6.6,
     "pb_price": 67.594,
@@ -2425,7 +2425,7 @@
    "norm": -1.9,
    "fresh": true,
    "break_gap": 0.0005,
-   "earnings_d": 19,
+   "earnings_d": 18,
    "tactic": {
     "stop_pct": 6.7,
     "pb_price": 39.8952,
@@ -2546,7 +2546,7 @@
    "norm": -2.8,
    "fresh": true,
    "break_gap": -0.0196,
-   "earnings_d": 19,
+   "earnings_d": 18,
    "tactic": {
     "stop_pct": 5.6,
     "pb_price": 57.3769,
@@ -3286,7 +3286,7 @@
    "norm": 25.4,
    "fresh": false,
    "break_gap": 0.1648,
-   "earnings_d": 19,
+   "earnings_d": 18,
    "tactic": null
   },
   {
@@ -3306,7 +3306,7 @@
    "norm": 17.0,
    "fresh": false,
    "break_gap": 0.0899,
-   "earnings_d": 12,
+   "earnings_d": 11,
    "tactic": null
   },
   {
