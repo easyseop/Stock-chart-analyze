@@ -663,6 +663,13 @@ class Signal:
     vol_mult: float    # 진입봉 거래대금 / 평균
     rsi: float
     dist_pct: float    # 추세선 대비 거리(%) — 돌파폭 근사
+    # 패턴 품질(Phase 0 기록 — 분위수 검증용. None=산출 불가)
+    cs_r: float | None = None        # clear_space_R (no_overhead면 +inf 취급)
+    atr_ct: float | None = None      # ATR14/ATR60
+    close_loc: float | None = None   # 진입 신호봉 종가 위치
+    ext_atr: float | None = None     # (종가-MA20)/ATR14
+    mfe: float = 0.0                 # 보유 중 최대 유리 편위(R)
+    mae: float = 0.0                 # 보유 중 최대 불리 편위(R, ≤0)
 
 
 def collect_signals(code: str, frames: dict, meta: dict, bench=None,
@@ -694,12 +701,30 @@ def collect_signals(code: str, frames: dict, meta: dict, bench=None,
         kind = ("transition" if res["trendline"]["state"] in _tl.TRANSITION_STATES
                 else "normal")
         dist = res["trendline"].get("dist_pct")
+        pat = res.get("pattern") or {}
+        cs = pat.get("clear_space_R")
+        if cs is None and pat.get("no_overhead"):
+            cs = float("inf")                    # 상방 저항 없음 = 무한 공간
+        mfe, mae = _mfe_mae(d, ei, exit_i, fill, fill - stop)
         sigs.append(Signal(
             code=code, date=d.index[ei], kind=kind, r=r, reason=reason,
             vol_mult=float(res["volume"].get("mult", 0.0)),
             rsi=float(res["rsi"].get("rsi", 50.0)),
-            dist_pct=float(dist) if dist is not None else 0.0))
+            dist_pct=float(dist) if dist is not None else 0.0,
+            cs_r=cs, atr_ct=pat.get("atr_contract"),
+            close_loc=pat.get("close_location"),
+            ext_atr=pat.get("extension_atr"), mfe=mfe, mae=mae))
     return sigs
+
+
+def _mfe_mae(d, ei: int, exit_i: int, fill: float,
+             risk: float) -> tuple[float, float]:
+    """진입~청산 구간의 최대 유리/불리 편위(R). risk≤0이면 (0,0)."""
+    if risk <= 0:
+        return 0.0, 0.0
+    hi = float(d["High"].iloc[ei:exit_i + 1].max())
+    lo = float(d["Low"].iloc[ei:exit_i + 1].min())
+    return (hi - fill) / risk, min(0.0, (lo - fill) / risk)
 
 
 # 실험할 필터 전략 (이름, 신호 판정 함수). '전환후보' 개선이 목표.
@@ -913,3 +938,105 @@ def oos_split(trades: list[Trade], train_frac: float = 0.7) -> dict:
     k = int(len(ts) * train_frac)
     return {"train": summarize(ts[:k]), "test": summarize(ts[k:]),
             "cut": ts[k].entry_date if 0 < k < len(ts) else None}
+
+
+# ─────────────────────────────────────────────────────────────
+# 패턴 품질 분위수 검증(Phase 0→1 관문) — GPT 제안서 §6 방법론.
+#   같은 신호 풀을 지표 분위수로 나눠 기대R·승률·+1R/+2R·MFE/MAE 비교.
+#   "분위수가 오를수록 성과가 단조 개선"인 지표만 정렬 점수로 승격한다.
+# ─────────────────────────────────────────────────────────────
+def _pq_bucket_stats(rows: list) -> dict:
+    n = len(rows)
+    if not n:
+        return {"n": 0}
+    rs = [s.r for s in rows]
+    return {"n": n,
+            "avg_r": round(sum(rs) / n, 3),
+            "win": round(sum(1 for x in rs if x > 0) / n * 100, 1),
+            "hit1R": round(sum(1 for s in rows if s.mfe >= 1.0) / n * 100, 1),
+            "hit2R": round(sum(1 for s in rows if s.mfe >= 2.0) / n * 100, 1),
+            "mfe": round(sum(s.mfe for s in rows) / n, 2),
+            "mae": round(sum(s.mae for s in rows) / n, 2)}
+
+
+def pattern_quantile_report(sigs: list, metric: str, q: int = 4) -> list[dict]:
+    """metric(cs_r/atr_ct/close_loc/ext_atr) 분위수별 성과. None은 제외."""
+    vals = [s for s in sigs if getattr(s, metric, None) is not None]
+    if len(vals) < q * 3:                       # 버킷당 최소 3건은 있어야 의미
+        return []
+    vals.sort(key=lambda s: getattr(s, metric))
+    out = []
+    for b in range(q):
+        lo_i = b * len(vals) // q
+        hi_i = (b + 1) * len(vals) // q
+        rows = vals[lo_i:hi_i]
+        edge0 = getattr(rows[0], metric)
+        edge1 = getattr(rows[-1], metric)
+        st = _pq_bucket_stats(rows)
+        st["bucket"] = f"Q{b + 1}"
+        st["range"] = (f"{edge0:.2f}~{edge1:.2f}"
+                       if edge1 != float("inf") else f"{edge0:.2f}~∞")
+        out.append(st)
+    return out
+
+
+def cli_pattern_quantiles() -> None:
+    """패턴 품질 분위수 백테스트 CLI — 캐시만 사용(네트워크 0).
+
+    python -c "from scanner.backtest import cli_pattern_quantiles; cli_pattern_quantiles()" \
+        -- [--sample 60] [--warmup 520] [--out pq.json]
+    """
+    import argparse
+    import json as _json
+    import sys
+    from scanner import cache as _cache
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--sample", type=int, default=0)
+    ap.add_argument("--warmup", type=int, default=520)
+    ap.add_argument("--out", default="")
+    a = ap.parse_args([x for x in sys.argv[1:] if x != "--"])
+    codes = sorted(_cache.cached_codes())
+    if a.sample and len(codes) > a.sample:
+        step = len(codes) / a.sample
+        codes = [codes[int(i * step)] for i in range(a.sample)]
+    sigs = []
+    for i, code in enumerate(codes):
+        try:
+            f = _cache.frames(code, refresh=False)
+        except Exception:
+            continue
+        if len(f.get("D", [])) < a.warmup + 40:
+            continue
+        meta = {"code": code, "name": code,
+                "ccy": "KRW" if code.isdigit() else "USD"}
+        try:
+            sigs += collect_signals(code, f, meta, warmup=a.warmup)
+        except Exception:
+            continue
+        if (i + 1) % 10 == 0:
+            print(f"  … {i + 1}/{len(codes)} 종목 · 신호 {len(sigs)}건")
+    print(f"\n신호 {len(sigs)}건 수집 — 지표별 분위수 성과"
+          f" (단조 개선인 지표만 정렬 승격 후보)")
+    names = {"cs_r": "clear_space_R(저항까지 R)",
+             "atr_ct": "ATR14/ATR60(수축·낮을수록 조임)",
+             "close_loc": "close_location(종가 위치)",
+             "ext_atr": "extension_ATR(추격·낮을수록 안전)"}
+    report = {}
+    for m, label in names.items():
+        rows = pattern_quantile_report(sigs, m)
+        report[m] = rows
+        print(f"\n◆ {label}")
+        if not rows:
+            print("  표본 부족")
+            continue
+        for st in rows:
+            print(f"  {st['bucket']} [{st['range']:>14}] n={st['n']:>4} · "
+                  f"기대 {st['avg_r']:+.3f}R · 승률 {st['win']:4.1f}% · "
+                  f"+1R {st['hit1R']:4.1f}% · +2R {st['hit2R']:4.1f}% · "
+                  f"MFE {st['mfe']:+.2f} · MAE {st['mae']:+.2f}")
+    if a.out:
+        with open(a.out, "w", encoding="utf-8") as fp:
+            _json.dump(report, fp, ensure_ascii=False, indent=1)
+        print("\n저장:", a.out)
+    print("\n해석: Q1→Q4로 갈수록 기대R·+2R이 단조 개선되면 그 지표를 정렬에 승격."
+          "\n      (ext_atr·atr_ct는 방향 반대 — Q1(낮음)이 좋아야 정상.)")

@@ -13,6 +13,7 @@ from . import scoring
 from . import levels as lv
 from . import trendlines as tl
 from . import supply as sp
+from . import pattern_quality as pq
 
 
 def analyze(frames: dict[str, pd.DataFrame], meta: dict, bench=None) -> dict:
@@ -106,6 +107,9 @@ def analyze(frames: dict[str, pd.DataFrame], meta: dict, bench=None) -> dict:
     #   모든 매수 타점(now/pullback/wait/breakout)에 적용, 회피만 제외.
     risk = ind.risk_levels(d, entry, sr["defense"], meta["ccy"],
                            prefer_atr=(entry_kind != "avoid"))
+    # 패턴 품질(Phase 0 — 기록 전용): 점수·verdict·게이트에 불개입.
+    #   백테스트 분위수 검증에서 단조 개선이 증명된 항목만 이후 정렬에 승격.
+    pattern = pq.compute(d, entry=entry, stop=risk["stop"], sr=sr, levels=levels)
 
     # ── 하락추세 veto: 하락추세 지속이면 매수 신호를 막는다(사용자 원칙) ──
     vetoed = False
@@ -133,7 +137,7 @@ def analyze(frames: dict[str, pd.DataFrame], meta: dict, bench=None) -> dict:
         "regime": regime, "trend": trend, "rsi": rsi, "sr": sr,
         "rs": rs, "newhigh": newhigh, "market": market,
         "volume": volume, "trendline": trendline, "levels": levels,
-        "supply": supply, "risk": risk,
+        "supply": supply, "risk": risk, "pattern": pattern,
         "module_scores": module_scores, "weights": norm["weights"],
         "norm": norm["score"], "verdict_label": label, "gauge": gauge,
         "verdict": verdict_txt, "entry": entry, "entry_kind": entry_kind,

@@ -39,6 +39,11 @@ def render(result: dict) -> str:
     out.append(f"한눈추세  : {r.get('trend_oneline','')}")
     if r.get("chase_note"):
         out.append(f"            {r['chase_note']}")
+    if r.get("pattern"):                      # Phase 0 기록 전용(행동 불개입)
+        from . import pattern_quality as _pq
+        b = _pq.badge(r["pattern"])
+        if b:
+            out.append(f"패턴품질  : {b}")
     out.append(f"국면      : {r['regime']['reason']}  방향 {r['regime']['direction']}")
     out.append(f"추세      : {r['trend']['reason']}  [{r['trend']['score']:+d}]")
     out.append(f"시장방향  : {r['market']['reason']}  [{r['market']['score']:+d}]")
