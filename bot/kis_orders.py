@@ -123,12 +123,18 @@ def _post(path: str, tr: str, body: dict) -> tuple[dict | None, int]:
 
 
 def _order_body(market: str, acct: dict, symbol: str, side: str,
-                qty: int, price: float, excg: str, key: str) -> dict:
-    """시장별 주문 바디. 국내(order-cash)와 해외는 필드가 완전히 다르다 — [대조필요]."""
+                qty: int, price: float, excg: str, key: str,
+                order_type: str) -> dict:
+    """시장별 주문 바디. 국내(order-cash)와 해외는 필드가 완전히 다르다 — [대조필요].
+    order_type: 'limit'(지정가 00) | 'market'(국내 시장가 01·ORD_UNPR=0)."""
     if market == "KR":
-        # 국내: 매수/매도는 TR_ID로 구분(바디는 동일)·원단위 지정가·PDNO 6자리.
-        return {**acct, "PDNO": symbol, "ORD_DVSN": "00",
-                "ORD_QTY": str(qty), "ORD_UNPR": str(int(round(float(price))))}
+        # 국내: 매수/매도는 TR_ID로 구분(바디는 동일)·PDNO 6자리.
+        #   시장가(01)는 단가 0. 지정가(00)는 원단위 정수.
+        is_mkt = order_type == "market"
+        return {**acct, "PDNO": symbol, "ORD_DVSN": "01" if is_mkt else "00",
+                "ORD_QTY": str(qty),
+                "ORD_UNPR": "0" if is_mkt else str(int(round(float(price))))}
+    # 미국(해외): 연속장 시장가 없음 — 항상 지정가(호출부가 마켓터블 지정가 계산).
     return {**acct, "OVRS_EXCG_CD": excg, "PDNO": symbol,
             "ORD_QTY": str(qty), "OVRS_ORD_UNPR": f"{float(price):.2f}",
             "ORD_SVR_DVSN_CD": "0", "ORD_DVSN": "00",
@@ -138,12 +144,15 @@ def _order_body(market: str, acct: dict, symbol: str, side: str,
 
 def place_order(key: str, symbol: str, side: str, qty: int, price: float,
                 *, excg: str = "NASD", reason: str = "",
-                min_interval_s: float = 60.0, market: str | None = None) -> dict:
+                min_interval_s: float = 60.0, market: str | None = None,
+                order_type: str = "limit") -> dict:
     """주문 1건 전송(모의 전용). 반환 {ok, act, key, odno?, orgno?, why?}.
 
     key: 포지션 정체성 멱등키(호출부 소유, 예 '{pos}#{n}'). 같은 키 재호출 금지 —
          잔여 재주문은 새 키(#n+1)로. side: 'BUY'|'SELL'. qty: whole-share 정수.
     market: None이면 심볼로 자동 판별(국내 6자리 숫자=KR, 그 외=US).
+    order_type: 'limit'(기본) | 'market'. **시장가는 국내(KR)만** — 미국주는 연속장
+         시장가가 없어 요청 시 차단(fail-closed). 국내 손절 체결 보장용(사용자 정책 2026-07-13).
     """
     side = side.upper()
     market = market or kis.market_of_symbol(symbol)
@@ -152,9 +161,18 @@ def place_order(key: str, symbol: str, side: str, qty: int, price: float,
         return {"ok": False, "act": "blocked", "key": key, "why": why}
     if side not in ("BUY", "SELL"):
         return {"ok": False, "act": "blocked", "key": key, "why": f"side={side}"}
+    if order_type not in ("limit", "market"):
+        return {"ok": False, "act": "blocked", "key": key,
+                "why": f"order_type={order_type}"}
+    if order_type == "market" and market != "KR":
+        # 미국 해외주식은 연속장 시장가 부재 → 마켓터블 지정가로만(chase가 보완).
+        return {"ok": False, "act": "blocked", "key": key,
+                "why": "시장가는 국내(KR)만 — 미국주는 마켓터블 지정가 사용"}
     qty = int(qty)
-    if qty < 1 or float(price) <= 0:
+    if qty < 1 or float(price) < 0:
         return {"ok": False, "act": "blocked", "key": key, "why": "qty/price 무효"}
+    if order_type == "limit" and float(price) <= 0:
+        return {"ok": False, "act": "blocked", "key": key, "why": "지정가 0 이하"}
     if not ledger.can_submit(symbol, min_interval_s=min_interval_s):
         return {"ok": False, "act": "blocked", "key": key,
                 "why": "원장 게이트(잠금/in-flight/간격)"}
@@ -164,13 +182,14 @@ def place_order(key: str, symbol: str, side: str, qty: int, price: float,
 
     acct = kis.account()
     tr = kis.tr_id("buy" if side == "BUY" else "sell", market=market)
-    body = _order_body(market, acct, symbol, side, qty, price, excg, key)
+    body = _order_body(market, acct, symbol, side, qty, price, excg, key, order_type)
     venue = excg if market == "US" else "KRX"
 
     # 원장 선기록(전송 전 — 크래시 대비) + 합성키(타임아웃 대사 근거)
     ledger.record_submit(key, symbol, qty, reason,
                          meta={"side": side, "price": float(price),
-                               "excg": excg, "market": market, "env": kis.ENV})
+                               "excg": excg, "market": market,
+                               "order_type": order_type, "env": kis.ENV})
     ledger.record_synthetic(key, ledger.synthetic_key(
         acct["CANO"], venue, symbol, side, qty, price,
         time.strftime("%H%M%S")))

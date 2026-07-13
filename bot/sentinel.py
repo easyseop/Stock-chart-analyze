@@ -142,9 +142,16 @@ class _KisBroker(_PaperBroker):
         px = self.quote(code, "KRW" if market == "KR" else "USD")
         if px is None:                       # 시세 없이 손절가 산출 불가 — 보류
             return {"state": "rejected", "filled": 0}
-        limit = kis_orders.marketable_limit_price(px, "SELL", market=market)
-        r = kis_orders.place_sell(key, code, qty, limit, reason=reason,
-                                  market=market)
+        if market == "KR":
+            # 국내 손절은 **시장가**(체결 보장 — 사용자 정책 2026-07-13). 국내는
+            #   미국과 달리 연속장 시장가가 있어 미체결 방치 위험을 없앤다.
+            r = kis_orders.place_sell(key, code, qty, px, reason=reason,
+                                      market=market, order_type="market")
+        else:
+            # 미국주는 시장가 부재 → 마켓터블 지정가(급락 시 chase가 보완).
+            limit = kis_orders.marketable_limit_price(px, "SELL", market=market)
+            r = kis_orders.place_sell(key, code, qty, limit, reason=reason,
+                                      market=market)
         act = r.get("act")
         if act == "ack":                     # 접수됨(in-flight) — 체결은 대사가 확정
             return {"state": "ack", "filled": 0}

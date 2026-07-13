@@ -158,6 +158,61 @@ def test_us_buy_still_overseas():
     print("[PASS] 미국 매수 회귀 없음(overseas·OVRS_EXCG_CD)")
 
 
+def test_kr_market_sell_body():
+    """국내 손절 시장가(ORD_DVSN=01·ORD_UNPR=0) — 사용자 정책(2026-07-13)."""
+    with tempfile.TemporaryDirectory() as tmp:
+        _, _, KO = _setup(tmp)
+        cap = []
+        with mock.patch("urllib.request.urlopen", _recording_urlopen(cap)):
+            r = KO.place_sell("kr#m1", "005930", 1, 71_000, min_interval_s=0.0,
+                              order_type="market")
+        assert r["ok"] and r["act"] == "ack"
+        b = [c for c in cap if "order-cash" in c["url"]][0]["body"]
+        assert b["ORD_DVSN"] == "01" and b["ORD_UNPR"] == "0"
+        assert b["PDNO"] == "005930" and b["ORD_QTY"] == "1"
+    print("[PASS] 국내 손절 시장가 바디(ORD_DVSN=01·단가 0)")
+
+
+def test_kr_buy_stays_limit():
+    """진입 매수는 시장가 아님 — 지정가(00) 유지(가격 통제)."""
+    with tempfile.TemporaryDirectory() as tmp:
+        _, _, KO = _setup(tmp)
+        cap = []
+        with mock.patch("urllib.request.urlopen", _recording_urlopen(cap)):
+            KO.place_buy("kr#b1", "005930", 1, 71_000, min_interval_s=0.0)
+        b = [c for c in cap if "order-cash" in c["url"]][0]["body"]
+        assert b["ORD_DVSN"] == "00" and b["ORD_UNPR"] == "71000"
+    print("[PASS] 국내 매수는 지정가 유지(00)")
+
+
+def test_us_market_blocked():
+    """미국주 시장가 요청 → 차단(연속장 시장가 부재, fail-closed)."""
+    with tempfile.TemporaryDirectory() as tmp:
+        _, _, KO = _setup(tmp)
+        r = KO.place_sell("us#m1", "AAPL", 1, 190.0, order_type="market")
+        assert r["act"] == "blocked" and "시장가는 국내" in r["why"]
+    print("[PASS] 미국주 시장가 차단(마켓터블 지정가만)")
+
+
+def test_sentinel_kr_uses_market():
+    """파수꾼 국내 매도는 order_type='market'로 place_sell 호출."""
+    import bot.sentinel as S
+    importlib.reload(S)
+    br = object.__new__(S._KisBroker)            # __init__(키 검증) 우회
+    br.quote = lambda code, ccy: 70_000.0
+    with mock.patch("bot.kis_orders.place_sell",
+                    return_value={"ok": True, "act": "ack"}) as ps:
+        br.place_sell("005930", 2, "손절", "k#1")
+        assert ps.call_args.kwargs.get("order_type") == "market"
+        assert ps.call_args.kwargs.get("market") == "KR"
+    # 미국은 order_type 미지정(지정가)
+    with mock.patch("bot.kis_orders.place_sell",
+                    return_value={"ok": True, "act": "ack"}) as ps2:
+        br.place_sell("AAPL", 2, "손절", "k#2")
+        assert ps2.call_args.kwargs.get("order_type") is None
+    print("[PASS] 파수꾼: 국내=시장가·미국=지정가 라우팅")
+
+
 def test_kr_cancel_body():
     with tempfile.TemporaryDirectory() as tmp:
         _, _, KO = _setup(tmp)
@@ -203,6 +258,10 @@ def main():
     test_kr_tick_marketable()
     test_kr_buy_uses_domestic_path_body()
     test_us_buy_still_overseas()
+    test_kr_market_sell_body()
+    test_kr_buy_stays_limit()
+    test_us_market_blocked()
+    test_sentinel_kr_uses_market()
     test_kr_cancel_body()
     test_session_gate_routing()
     for k in list(os.environ):
