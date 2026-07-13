@@ -345,8 +345,10 @@ def _get(path: str, tr: str, params: dict) -> dict | None:
         if act == ACT_RETRY and attempt < 2:
             time.sleep(1.2)                      # 조회 경로 짧은 백오프(모의 2/s)
             continue
+        m1 = str((d or {}).get("msg1") or "").strip()
         print(f"[kis] GET {path} → {act} "
-              f"(rt_cd={(d or {}).get('rt_cd')} msg_cd={(d or {}).get('msg_cd')})")
+              f"(rt_cd={(d or {}).get('rt_cd')} msg_cd={(d or {}).get('msg_cd')}"
+              f"{' · ' + m1 if m1 else ''})")           # msg1 노출(모의 미지원 판별용)
         return None
     return None
 
