@@ -47,6 +47,32 @@ def say(x: str) -> None:
     print(x, flush=True)
 
 
+def _held_qty(symbol: str, market: str, excg: str):
+    """잔고 보유수량(대사 채널). 조회 실패=None, 미보유=0, 보유=수량.
+    국내 VTTC8434R / 해외 잔고 — output1 행에서 종목 매칭. 필드명 [대조필요]."""
+    if market == "KR":
+        d = kis.domestic_balance()
+        pdno_keys, qty_keys = ("pdno",), ("hldg_qty", "ord_psbl_qty")
+    else:
+        d = kis.overseas_balance(excg=excg)
+        pdno_keys = ("ovrs_pdno", "pdno")
+        qty_keys = ("ovrs_cblc_qty", "ord_psbl_qty")
+    if not d:
+        return None
+    for row in (d.get("output1") or []):
+        code = next((str(row.get(k)) for k in pdno_keys if row.get(k)), "")
+        if code == str(symbol):
+            for k in qty_keys:
+                v = row.get(k)
+                if v not in (None, ""):
+                    try:
+                        return int(float(v))
+                    except (TypeError, ValueError):
+                        pass
+            return 0
+    return 0
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description="KIS 모의 주문 왕복(기본: 안 체결)")
     ap.add_argument("--symbol", default="AAPL")
@@ -144,29 +170,50 @@ def main() -> int:
         if mine:
             say("    " + json.dumps(mine[0], ensure_ascii=False)[:300])
     else:
-        # --fill: 마켓터블 매수 → ccnl → 마켓터블 매도(청산)
+        # --fill: 마켓터블 매수 → **잔고로 체결 확인**(국내 nccs 모의 미지원 → 대사
+        #   채널은 잔고) → 원장에 체결 반영 → 청산. 매수가 in-flight로 남으면 동일종목
+        #   게이트가 매도를 막으므로, 잔고로 확인된 체결을 원장에 반영해야 청산 가능.
+        buy_key = f"{pos}#1"
         bpx = kis_orders.marketable_limit_price(last, "BUY", market=market)
         say(f"\n[1] 마켓터블 매수 1주 @ {bpx}{unit}")
-        r = kis_orders.place_buy(f"{pos}#1", args.symbol, 1, bpx,
+        r = kis_orders.place_buy(buy_key, args.symbol, 1, bpx,
                                  excg=args.excg, market=market,
                                  reason="체결관찰", min_interval_s=0.0)
         say(f"    → {r}")
         if not r.get("ok"):
             return 0
+        odno, orgno = r["odno"], r.get("orgno", "")
         say("    (체결 대기 5s)")
         time.sleep(5)
+
+        # [2] 잔고 확인 — 대사 채널(국내=VTTC8434R). 체결 판정의 source of truth.
+        held = _held_qty(args.symbol, market, args.excg)
+        say(f"[2] 잔고 보유수량({args.symbol}): "
+            f"{held if held is not None else '조회 실패'}")
+
+        # [3] ccnl 행 구조 관찰(대사 채널 B 필드명 확보용)
         d = kis.domestic_fills() if market == "KR" else kis.fills(excg=args.excg)
         rows = (d or {}).get("output1") or (d or {}).get("output") or []
-        mine = [x for x in rows if str(x.get("odno")) == str(r["odno"])]
-        say(f"[2] ccnl: {'✓ 체결 확인' if mine else '미확인(지연?)'} "
-            + (json.dumps(mine[0], ensure_ascii=False)[:250] if mine else ""))
-        time.sleep(0.8)
-        spx = kis_orders.marketable_limit_price(last, "SELL", market=market)
-        say(f"\n[3] 마켓터블 매도 1주 @ {spx}{unit} (청산)")
-        r2 = kis_orders.place_sell(f"{pos}#2", args.symbol, 1, spx,
-                                   excg=args.excg, market=market,
-                                   reason="청산", min_interval_s=0.0)
-        say(f"    → {r2}")
+        mine = [x for x in rows if str(x.get("odno")) == str(odno)]
+        say(f"[3] ccnl {len(rows)}건 중 ODNO={odno}: "
+            f"{'✓ 발견' if mine else '미표시'}")
+        if mine:
+            say("    " + json.dumps(mine[0], ensure_ascii=False)[:400])
+
+        # [4] 잔고로 체결 확인되면 원장 반영 후 청산. 아니면 매수 취소로 정리.
+        if held and held >= 1:
+            ledger.on_result(buy_key, "filled", int(held))   # 관측 기반 대사
+            spx = kis_orders.marketable_limit_price(last, "SELL", market=market)
+            say(f"\n[4] 마켓터블 매도 1주 @ {spx}{unit} (청산)")
+            r2 = kis_orders.place_sell(f"{pos}#2", args.symbol, 1, spx,
+                                       excg=args.excg, market=market,
+                                       reason="청산", min_interval_s=0.0)
+            say(f"    → {r2}")
+        else:
+            say("\n[4] 잔고 미반영(모의 미체결/지연) — 매수 취소로 정리")
+            r2 = kis_orders.cancel_order(buy_key + ":cxl", args.symbol, odno, 1,
+                                         excg=args.excg, orgno=orgno, market=market)
+            say(f"    → {r2}")
 
     say("\n[원장] " + json.dumps(
         {k: {kk: v.get(kk) for kk in ("state", "odno", "intended", "filled")}
