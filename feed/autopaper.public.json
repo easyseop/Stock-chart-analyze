@@ -2,8 +2,8 @@
  "updated": "2026-07-13",
  "start": 100000000,
  "cash": 38120569,
- "equity": 98940703,
- "ret_pct": -1.06,
+ "equity": 98789503,
+ "ret_pct": -1.21,
  "positions": [
   {
    "code": "MRSH",
@@ -41,13 +41,13 @@
    "ccy": "KRW",
    "q": 54,
    "avg": 175348.4128,
-   "price": 180700.0,
+   "price": 177900.0,
    "stop": 157651.1713,
    "target": 212997.6574,
    "half_done": false,
    "opened": "2026-07-07",
-   "pl_krw": 288986,
-   "pl_pct": 3.05,
+   "pl_krw": 137786,
+   "pl_pct": 1.46,
    "price_age_min": 0.5
   },
   {
@@ -93,7 +93,7 @@
    "opened": "2026-07-09",
    "pl_krw": 1192,
    "pl_pct": 0.96,
-   "price_age_min": 0.5
+   "price_age_min": 0.4
   },
   {
    "code": "NU",
@@ -108,7 +108,7 @@
    "opened": "2026-07-09",
    "pl_krw": 637,
    "pl_pct": 3.19,
-   "price_age_min": 0.5
+   "price_age_min": 0.4
   },
   {
    "code": "LSPD",
@@ -123,7 +123,7 @@
    "opened": "2026-07-09",
    "pl_krw": 11751,
    "pl_pct": 2.79,
-   "price_age_min": 0.5
+   "price_age_min": 0.4
   },
   {
    "code": "SARO",
@@ -379,7 +379,7 @@
   },
   {
    "d": "2026-07-13",
-   "v": 98940703
+   "v": 98789503
   }
  ],
  "log": [
