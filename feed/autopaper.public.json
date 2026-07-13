@@ -2,8 +2,8 @@
  "updated": "2026-07-13",
  "start": 100000000,
  "cash": 38120569,
- "equity": 98835403,
- "ret_pct": -1.16,
+ "equity": 98875903,
+ "ret_pct": -1.12,
  "positions": [
   {
    "code": "MRSH",
@@ -18,7 +18,7 @@
    "opened": "2026-07-06",
    "pl_krw": 431944,
    "pl_pct": 2.3,
-   "price_age_min": 0.5
+   "price_age_min": 0.6
   },
   {
    "code": "STE",
@@ -33,7 +33,7 @@
    "opened": "2026-07-07",
    "pl_krw": 26800,
    "pl_pct": 1.4,
-   "price_age_min": 0.5
+   "price_age_min": 0.6
   },
   {
    "code": "068270",
@@ -41,14 +41,14 @@
    "ccy": "KRW",
    "q": 54,
    "avg": 175348.4128,
-   "price": 178750.0,
+   "price": 179500.0,
    "stop": 157651.1713,
    "target": 212997.6574,
    "half_done": false,
    "opened": "2026-07-07",
-   "pl_krw": 183686,
-   "pl_pct": 1.94,
-   "price_age_min": 0.5
+   "pl_krw": 224186,
+   "pl_pct": 2.37,
+   "price_age_min": 0.6
   },
   {
    "code": "ORC",
@@ -63,7 +63,7 @@
    "opened": "2026-07-08",
    "pl_krw": 0,
    "pl_pct": -0.0,
-   "price_age_min": 0.5
+   "price_age_min": 0.6
   },
   {
    "code": "FND",
@@ -379,7 +379,7 @@
   },
   {
    "d": "2026-07-13",
-   "v": 98835403
+   "v": 98875903
   }
  ],
  "log": [
