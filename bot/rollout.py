@@ -81,15 +81,31 @@ def us_regular_open() -> bool:
         return False              # 판정 불가 = 진입 금지(fail-closed)
 
 
+def session_open_for(market: str) -> bool:
+    """시장별 정규장 게이트(fail-closed). US=미 정규장, KR=한국 정규장.
+    두 시장 모두 pre/after/dayMarket 신규진입 금지 — 정규 연속장만.
+    US는 us_regular_open()에 위임(단일 소스)."""
+    if market != "KR":
+        return us_regular_open()
+    try:
+        from bot import settings as cfg
+        return bool(cfg.market_open("KRW"))
+    except Exception:
+        return False
+
+
 def check_new_entry(symbol: str, *, open_positions: int,
                     risk_pct: float, qty_is_whole: bool = True,
-                    session_open: bool | None = None) -> tuple[bool, str]:
-    """신규 진입 허용 판정. (ok, 사유). 모든 게이트 fail-closed."""
+                    session_open: bool | None = None,
+                    market: str = "US") -> tuple[bool, str]:
+    """신규 진입 허용 판정. (ok, 사유). 모든 게이트 fail-closed.
+    market: 'US'|'KR' — 세션 게이트를 해당 시장 정규장으로 라우팅."""
     p = profile()
     if session_open is None:
-        session_open = us_regular_open()
+        session_open = session_open_for(market)
     if not session_open:
-        return False, "US 정규장 아님(dayMarket/pre/after 신규진입 금지)"
+        mk = "한국" if market == "KR" else "US"
+        return False, f"{mk} 정규장 아님(장외/시간외 신규진입 금지)"
     if not qty_is_whole:
         return False, "whole-share만 허용(소수점 금지)"
     al = allowed_symbols()

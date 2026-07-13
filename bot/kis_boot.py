@@ -51,19 +51,37 @@ def boot_reconcile(excgs: tuple[str, ...] = ("NASD", "NYSE", "AMEX")) -> dict:
         _STATE.update(done=True, low=0)
         return {"ok": True, "unknowns": 0, "resolved": 0, "low": 0, "results": []}
 
-    # 필요한 거래소만 조회(유량 절약) — meta.excg 없으면 전체.
-    need = {u.get("excg") for u in unknowns if u.get("excg")} or set(excgs)
     all_nccs_rows, all_ccnl_rows = [], []
-    for ex in sorted(need):
-        n = kis.open_orders(excg=ex)
-        c = kis.fills(excg=ex)
+
+    # 국내(KR) UNKNOWN — 도메스틱 미체결/체결내역 1회 조회(거래소 구분 없음).
+    if any(kis.market_of_symbol(u.get("symbol", "")) == "KR"
+           or u.get("market") == "KR" for u in unknowns):
+        n = kis.domestic_open_orders()
+        c = kis.domestic_fills()
         if n is None or c is None:                 # 조회 실패 — fail-closed
-            _notify(f"🚨 부팅 대사 조회 실패({ex}) — 매매 게이트 닫힌 채 유지",
+            _notify("🚨 부팅 대사 조회 실패(KR 국내) — 매매 게이트 닫힌 채 유지",
                     critical=True)
             return {"ok": False, "unknowns": len(unknowns), "resolved": 0,
                     "low": 0, "results": []}
         all_nccs_rows += (n.get("output") or [])
-        all_ccnl_rows += (c.get("output") or [])
+        all_ccnl_rows += (c.get("output1") or c.get("output") or [])
+
+    # 미국(US) UNKNOWN — 필요한 거래소만 조회(유량 절약). meta.excg 없으면 전체.
+    us = [u for u in unknowns
+          if kis.market_of_symbol(u.get("symbol", "")) != "KR"
+          and u.get("market") != "KR"]
+    if us:
+        need = {u.get("excg") for u in us if u.get("excg")} or set(excgs)
+        for ex in sorted(need):
+            n = kis.open_orders(excg=ex)
+            c = kis.fills(excg=ex)
+            if n is None or c is None:             # 조회 실패 — fail-closed
+                _notify(f"🚨 부팅 대사 조회 실패({ex}) — 매매 게이트 닫힌 채 유지",
+                        critical=True)
+                return {"ok": False, "unknowns": len(unknowns), "resolved": 0,
+                        "low": 0, "results": []}
+            all_nccs_rows += (n.get("output") or [])
+            all_ccnl_rows += (c.get("output") or [])
 
     results = kis_reconcile.reconcile_unknowns(
         {"rt_cd": "0", "output": all_nccs_rows},

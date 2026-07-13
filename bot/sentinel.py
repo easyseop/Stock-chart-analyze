@@ -137,12 +137,14 @@ class _KisBroker(_PaperBroker):
         self.env = kis.ENV
 
     def place_sell(self, code: str, qty: int, reason: str, key: str):
-        from bot import kis_orders
-        px = self.quote(code, "USD")
+        from bot import kis, kis_orders
+        market = kis.market_of_symbol(code)      # 국내 6자리 숫자=KR, 그 외=US
+        px = self.quote(code, "KRW" if market == "KR" else "USD")
         if px is None:                       # 시세 없이 손절가 산출 불가 — 보류
             return {"state": "rejected", "filled": 0}
-        limit = kis_orders.marketable_limit_price(px, "SELL")
-        r = kis_orders.place_sell(key, code, qty, limit, reason=reason)
+        limit = kis_orders.marketable_limit_price(px, "SELL", market=market)
+        r = kis_orders.place_sell(key, code, qty, limit, reason=reason,
+                                  market=market)
         act = r.get("act")
         if act == "ack":                     # 접수됨(in-flight) — 체결은 대사가 확정
             return {"state": "ack", "filled": 0}

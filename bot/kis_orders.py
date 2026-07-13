@@ -34,8 +34,15 @@ import urllib.request
 from bot import kis, kis_ratelimit, ledger
 
 _HTTP_TIMEOUT = 15
-_ORDER_PATH = "/uapi/overseas-stock/v1/trading/order"
-_CANCEL_PATH = "/uapi/overseas-stock/v1/trading/order-rvsecncl"
+# 시장별 주문/취소 엔드포인트 — 국내(order-cash)와 해외(order)는 경로·바디 구조가
+#   완전히 다르다(국내: PDNO 6자리·ORD_DVSN·매수매도는 TR_ID로만 구분 / 해외:
+#   OVRS_EXCG_CD·SLL_TYPE). 심볼로 시장을 가른다(kis.market_of_symbol).
+_PATHS = {
+    "US": {"order":  "/uapi/overseas-stock/v1/trading/order",
+           "cancel": "/uapi/overseas-stock/v1/trading/order-rvsecncl"},
+    "KR": {"order":  "/uapi/domestic-stock/v1/trading/order-cash",
+           "cancel": "/uapi/domestic-stock/v1/trading/order-rvsecncl"},
+}
 
 # 주문 전용 리미터 공유(kis._LIMITER와 같은 인스턴스 — 총 유량 일관)
 _LIMITER: kis_ratelimit.SecondBucket = kis._LIMITER
@@ -54,14 +61,34 @@ def orders_allowed() -> tuple[bool, str]:
     return True, "ok"
 
 
+def _kr_tick(price: float) -> int:
+    """국내 호가단위(원) — 2023-01 KRX 개정표. 정확 밴드는 [대조필요]지만 이 값이
+    호가 유효성의 하한. 지정가는 호가단위에 맞아야 거부되지 않는다."""
+    p = float(price)
+    if p < 2_000:        return 1
+    if p < 5_000:        return 5
+    if p < 20_000:       return 10
+    if p < 50_000:       return 50
+    if p < 200_000:      return 100
+    if p < 500_000:      return 500
+    return 1_000
+
+
 def marketable_limit_price(last_price: float, side: str,
-                           slippage_bps: int = 30) -> float:
+                           slippage_bps: int = 30, *,
+                           market: str = "US") -> float:
     """연속장 시장가 부재 → 즉시 체결 지향 지정가.
-    SELL: 현재가보다 낮게(팔리게), BUY: 높게(사지게). 기본 30bp, 2자리 반올림.
-    ※ US 1달러 미만 소수점 4자리 규칙은 [대조필요] — Stage 1.5 실측."""
+    SELL: 현재가보다 낮게(팔리게), BUY: 높게(사지게). 기본 30bp.
+    · US: 2자리 반올림(1달러 미만 4자리 규칙은 [대조필요]).
+    · KR: 원단위·호가단위 정렬(BUY는 위 tick, SELL은 아래 tick)로 유효성 확보."""
     px = float(last_price)
     adj = px * (slippage_bps / 10_000.0)
     out = px - adj if side.upper() == "SELL" else px + adj
+    if market == "KR":
+        tick = _kr_tick(px)
+        if side.upper() == "SELL":
+            return float(max(tick, (int(out) // tick) * tick))          # 아래로 정렬
+        return float(((int(out) + tick - 1) // tick) * tick)            # 위로 정렬
     return round(max(0.01, out), 2)
 
 
@@ -95,15 +122,31 @@ def _post(path: str, tr: str, body: dict) -> tuple[dict | None, int]:
         return None, 0                            # 타임아웃/네트워크 — UNKNOWN 경로
 
 
+def _order_body(market: str, acct: dict, symbol: str, side: str,
+                qty: int, price: float, excg: str, key: str) -> dict:
+    """시장별 주문 바디. 국내(order-cash)와 해외는 필드가 완전히 다르다 — [대조필요]."""
+    if market == "KR":
+        # 국내: 매수/매도는 TR_ID로 구분(바디는 동일)·원단위 지정가·PDNO 6자리.
+        return {**acct, "PDNO": symbol, "ORD_DVSN": "00",
+                "ORD_QTY": str(qty), "ORD_UNPR": str(int(round(float(price))))}
+    return {**acct, "OVRS_EXCG_CD": excg, "PDNO": symbol,
+            "ORD_QTY": str(qty), "OVRS_ORD_UNPR": f"{float(price):.2f}",
+            "ORD_SVR_DVSN_CD": "0", "ORD_DVSN": "00",
+            "SLL_TYPE": "00" if side == "SELL" else "",
+            "CTAC_TLNO": "", "MGCO_APTM_ODNO": _mgco_tag(key)}
+
+
 def place_order(key: str, symbol: str, side: str, qty: int, price: float,
                 *, excg: str = "NASD", reason: str = "",
-                min_interval_s: float = 60.0) -> dict:
-    """주문 1건 전송(모의 전용). 반환 {ok, act, key, odno?, why?}.
+                min_interval_s: float = 60.0, market: str | None = None) -> dict:
+    """주문 1건 전송(모의 전용). 반환 {ok, act, key, odno?, orgno?, why?}.
 
     key: 포지션 정체성 멱등키(호출부 소유, 예 '{pos}#{n}'). 같은 키 재호출 금지 —
          잔여 재주문은 새 키(#n+1)로. side: 'BUY'|'SELL'. qty: whole-share 정수.
+    market: None이면 심볼로 자동 판별(국내 6자리 숫자=KR, 그 외=US).
     """
     side = side.upper()
+    market = market or kis.market_of_symbol(symbol)
     ok, why = orders_allowed()
     if not ok:
         return {"ok": False, "act": "blocked", "key": key, "why": why}
@@ -120,33 +163,31 @@ def place_order(key: str, symbol: str, side: str, qty: int, price: float,
                 "why": "order-plane 유량 슬롯 없음(5s)"}
 
     acct = kis.account()
-    tr = kis.tr_id("buy" if side == "BUY" else "sell", market="US")
-    body = {**acct, "OVRS_EXCG_CD": excg, "PDNO": symbol,
-            "ORD_QTY": str(qty), "OVRS_ORD_UNPR": f"{float(price):.2f}",
-            "ORD_SVR_DVSN_CD": "0", "ORD_DVSN": "00",
-            "SLL_TYPE": "00" if side == "SELL" else "",
-            "CTAC_TLNO": "", "MGCO_APTM_ODNO": _mgco_tag(key)}
+    tr = kis.tr_id("buy" if side == "BUY" else "sell", market=market)
+    body = _order_body(market, acct, symbol, side, qty, price, excg, key)
+    venue = excg if market == "US" else "KRX"
 
     # 원장 선기록(전송 전 — 크래시 대비) + 합성키(타임아웃 대사 근거)
     ledger.record_submit(key, symbol, qty, reason,
                          meta={"side": side, "price": float(price),
-                               "excg": excg, "env": kis.ENV})
+                               "excg": excg, "market": market, "env": kis.ENV})
     ledger.record_synthetic(key, ledger.synthetic_key(
-        acct["CANO"], excg, symbol, side, qty, price,
+        acct["CANO"], venue, symbol, side, qty, price,
         time.strftime("%H%M%S")))
 
     for attempt in (0, 1):
-        d, http = _post(_ORDER_PATH, tr, body)
+        d, http = _post(_PATHS[market]["order"], tr, body)
         act = kis.classify_error((d or {}).get("rt_cd"), (d or {}).get("msg_cd"),
                                  http, is_order=True)
         if act == kis.ACT_OK:
             out = (d or {}).get("output") or {}
             odno = str(out.get("ODNO") or out.get("odno") or "")
-            ledger.bind_broker_order(key, odno,
-                                     orgno=str(out.get("KRX_FWDG_ORD_ORGNO") or ""),
+            orgno = str(out.get("KRX_FWDG_ORD_ORGNO") or "")
+            ledger.bind_broker_order(key, odno, orgno=orgno,
                                      ord_tmd=str(out.get("ORD_TMD") or ""))
             ledger.on_result(key, "ack", 0)
-            return {"ok": True, "act": "ack", "key": key, "odno": odno}
+            return {"ok": True, "act": "ack", "key": key, "odno": odno,
+                    "orgno": orgno}
         if act == kis.ACT_RETRY and attempt == 0:
             time.sleep(1.2)                       # R2: 짧은 백오프 1회(61초 금지)
             continue
@@ -179,9 +220,12 @@ def place_buy(key: str, symbol: str, qty: int, price: float, **kw) -> dict:
 
 
 def cancel_order(key: str, symbol: str, odno: str, qty: int,
-                 *, excg: str = "NASD") -> dict:
+                 *, excg: str = "NASD", orgno: str = "",
+                 market: str | None = None) -> dict:
     """주문 취소(모의 전용). 취소 응답 유실=원주문 생사 불명 → unknown 잠금(§16).
-    key: 취소 자체의 원장 키(원주문 키와 별개, 예 '{orig_key}:cxl')."""
+    key: 취소 자체의 원장 키(원주문 키와 별개, 예 '{orig_key}:cxl').
+    orgno: 국내 취소는 KRX_FWDG_ORD_ORGNO(원주문 응답의 orgno) 필수 — place 응답에서 받아 전달."""
+    market = market or kis.market_of_symbol(symbol)
     ok, why = orders_allowed()
     if not ok:
         return {"ok": False, "act": "blocked", "key": key, "why": why}
@@ -191,13 +235,20 @@ def cancel_order(key: str, symbol: str, odno: str, qty: int,
         return {"ok": False, "act": "rate_limited", "key": key,
                 "why": "order-plane 유량 슬롯 없음(5s)"}
     acct = kis.account()
-    body = {**acct, "OVRS_EXCG_CD": excg, "PDNO": symbol,
-            "ORGN_ODNO": str(odno), "RVSE_CNCL_DVSN_CD": "02",
-            "ORD_QTY": str(int(qty)), "OVRS_ORD_UNPR": "0",
-            "ORD_SVR_DVSN_CD": "0"}
+    if market == "KR":
+        body = {**acct, "KRX_FWDG_ORD_ORGNO": str(orgno), "ORGN_ODNO": str(odno),
+                "ORD_DVSN": "00", "RVSE_CNCL_DVSN_CD": "02",
+                "ORD_QTY": str(int(qty)), "ORD_UNPR": "0", "QTY_ALL_ORD_YN": "Y"}
+    else:
+        body = {**acct, "OVRS_EXCG_CD": excg, "PDNO": symbol,
+                "ORGN_ODNO": str(odno), "RVSE_CNCL_DVSN_CD": "02",
+                "ORD_QTY": str(int(qty)), "OVRS_ORD_UNPR": "0",
+                "ORD_SVR_DVSN_CD": "0"}
     ledger.record_submit(key, symbol, 0, "취소",
-                         meta={"side": "CANCEL", "orgn_odno": str(odno)})
-    d, http = _post(_CANCEL_PATH, kis.tr_id("rvsecncl", market="US"), body)
+                         meta={"side": "CANCEL", "orgn_odno": str(odno),
+                               "market": market})
+    d, http = _post(_PATHS[market]["cancel"], kis.tr_id("rvsecncl", market=market),
+                    body)
     act = kis.classify_error((d or {}).get("rt_cd"), (d or {}).get("msg_cd"),
                              http, is_order=True)
     if act == kis.ACT_OK:

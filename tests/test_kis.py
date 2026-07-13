@@ -54,7 +54,8 @@ def test_tr_id_us_sell_asymmetry():
 
 def test_tr_id_missing_raises():
     kis = _reload()
-    for bad in [("buy", "KR"), ("unknown_action", "US")]:
+    # KR·US 둘 다 정의됨 → 진짜 미정의 조합(없는 시장·없는 액션)만 raise 검증
+    for bad in [("buy", "JP"), ("unknown_action", "US"), ("unknown_action", "KR")]:
         try:
             kis.tr_id(bad[0], market=bad[1])
         except RuntimeError:

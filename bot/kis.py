@@ -88,6 +88,7 @@ def _keyhash() -> str:
 #   모의 실측 확정(2026-07-10): balance VTTS3012R · nccs VTTS3018R · ccnl VTTS3035R
 #   모두 rt_cd=0. 주문 TR(buy/sell/rvsecncl)은 Stage 1.5 실주문으로 최종 확인.
 _TR: dict[tuple[str, str, str], str] = {
+    # ── 미국(해외주식) ─────────────────────────────────────────────
     # 조회(읽기 전용) — Stage 0에서 사용
     ("live", "US", "balance"): "TTTS3012R", ("mock", "US", "balance"): "VTTS3012R",
     ("live", "US", "nccs"):    "TTTS3018R", ("mock", "US", "nccs"):    "VTTS3018R",  # 모의 실측 확정
@@ -98,7 +99,31 @@ _TR: dict[tuple[str, str, str], str] = {
     ("live", "US", "buy"):  "TTTT1002U", ("mock", "US", "buy"):  "VTTT1002U",
     ("live", "US", "sell"): "TTTT1006U", ("mock", "US", "sell"): "VTTT1001U",  # ★비대칭
     ("live", "US", "rvsecncl"): "TTTT1004U", ("mock", "US", "rvsecncl"): "VTTT1004U",
+
+    # ── 한국(국내주식) ─────────────────────────────────────────────
+    #   국내는 US-매도 같은 비대칭 없음(T→V 접두 규칙 성립) — 그래도 실수 방지
+    #   위해 전부 명시. 아래 TR_ID·필드는 모의 왕복 실측 전까지 [대조필요].
+    #   매수/매도는 같은 order-cash 엔드포인트, TR_ID로만 구분(해외와 다른 구조).
+    ("live", "KR", "buy"):  "TTTC0802U", ("mock", "KR", "buy"):  "VTTC0802U",  # 현금매수
+    ("live", "KR", "sell"): "TTTC0801U", ("mock", "KR", "sell"): "VTTC0801U",  # 현금매도
+    ("live", "KR", "rvsecncl"): "TTTC0803U", ("mock", "KR", "rvsecncl"): "VTTC0803U",
+    ("live", "KR", "balance"):  "TTTC8434R", ("mock", "KR", "balance"):  "VTTC8434R",
+    ("live", "KR", "nccs"):     "TTTC8036R", ("mock", "KR", "nccs"):     "VTTC8036R",  # 정정취소가능주문조회
+    ("live", "KR", "ccnl"):     "TTTC8001R", ("mock", "KR", "ccnl"):     "VTTC8001R",  # 일별주문체결조회
+    ("live", "KR", "psbl"):     "TTTC8908R", ("mock", "KR", "psbl"):     "VTTC8908R",  # 매수가능조회
 }
+
+
+def market_of_symbol(symbol: str) -> str:
+    """심볼 → 시장('KR'|'US'). 국내주식은 6자리 숫자 코드, 미국은 알파벳 티커.
+    라우팅 단일 소스 — kis_orders/sentinel이 이걸로 주문 경로를 가른다."""
+    s = str(symbol).strip()
+    return "KR" if (s.isdigit() and len(s) == 6) else "US"
+
+
+def market_of_ccy(ccy: str) -> str:
+    """통화 → 시장. KRW=KR, 그 외(USD)=US. (신호의 ccy 기준 라우팅용.)"""
+    return "KR" if str(ccy).upper() == "KRW" else "US"
 
 
 def tr_id(action: str, *, market: str = "US", env: str | None = None) -> str:
@@ -390,3 +415,101 @@ def fills(excg: str = "NASD", start: str = "", end: str = "") -> dict | None:
                  # 빈 값이라도 필수(누락 시 OPSQ2001 INPUT_FIELD_NAME ORD_DT)
                  "ORD_DT": "", "ORD_GNO_BRNO": "", "ODNO": "",
                  "CTX_AREA_NK200": "", "CTX_AREA_FK200": ""})
+
+
+# ── 국내(KR) 조회 — 해외와 대칭. 필드·output 키는 모의 왕복 실측 전까지 [대조필요] ──
+def domestic_balance() -> dict | None:
+    """국내잔고(inquire-balance). output1=보유(hldg_qty·ord_psbl_qty), output2=요약."""
+    acct = account()
+    if not acct or not enabled():
+        return None
+    return _get("/uapi/domestic-stock/v1/trading/inquire-balance",
+                tr_id("balance", market="KR"),
+                {**acct, "AFHR_FLPR_YN": "N", "OFL_YN": "",
+                 "INQR_DVSN": "02", "UNPR_DVSN": "01", "FUND_STTL_ICLD_YN": "N",
+                 "FNCG_AMT_AUTO_RDPT_YN": "N", "PRCS_DVSN": "00",
+                 "CTX_AREA_FK100": "", "CTX_AREA_NK100": ""})
+
+
+def domestic_open_orders() -> dict | None:
+    """국내 정정취소가능주문조회(inquire-psbl-rvsecncl) — UNKNOWN 대사 채널 A(국내)."""
+    acct = account()
+    if not acct or not enabled():
+        return None
+    return _get("/uapi/domestic-stock/v1/trading/inquire-psbl-rvsecncl",
+                tr_id("nccs", market="KR"),
+                {**acct, "INQR_DVSN_1": "0", "INQR_DVSN_2": "0",
+                 "CTX_AREA_FK100": "", "CTX_AREA_NK100": ""})
+
+
+def domestic_fills(start: str = "", end: str = "") -> dict | None:
+    """국내 일별주문체결조회(inquire-daily-ccld) — UNKNOWN 대사 채널 B(국내).
+    3개월 이내는 TTTC8001R/VTTC8001R. start/end=YYYYMMDD(기본 최근 7일)."""
+    acct = account()
+    if not acct or not enabled():
+        return None
+    end = end or time.strftime("%Y%m%d")
+    start = start or time.strftime("%Y%m%d", time.localtime(time.time() - 7 * 86400))
+    return _get("/uapi/domestic-stock/v1/trading/inquire-daily-ccld",
+                tr_id("ccnl", market="KR"),
+                {**acct, "INQR_STRT_DT": start, "INQR_END_DT": end,
+                 "SLL_BUY_DVSN_CD": "00", "INQR_DVSN": "00", "PDNO": "",
+                 "CCLD_DVSN": "00", "ORD_GNO_BRNO": "", "ODNO": "",
+                 "INQR_DVSN_3": "00", "INQR_DVSN_1": "",
+                 "CTX_AREA_FK100": "", "CTX_AREA_NK100": ""})
+
+
+def domestic_buying_power(symbol: str, price: float) -> float | None:
+    """국내 매수여력(원) — inquire-psbl-order. envelope feasibility 입력.
+    · live: `ORD_DVSN=00`(지정가)·현금 기준 `nrcvb_buy_amt`(미수 없는 매수가능금액).
+    · mock: 국내 매수가능 모의 지원 여부 [대조필요] → 미확인 시 명시 환경변수만."""
+    if IS_MOCK:
+        v = os.environ.get("KIS_MOCK_BUYING_POWER")
+        try:
+            return float(v) if v is not None else None
+        except ValueError:
+            return None
+    acct = account()
+    if not acct or not enabled():
+        return None
+    d = _get("/uapi/domestic-stock/v1/trading/inquire-psbl-order",
+             tr_id("psbl", market="KR"),
+             {**acct, "PDNO": symbol, "ORD_UNPR": str(int(price)),
+              "ORD_DVSN": "00", "CMA_EVLU_AMT_ICLD_YN": "N",
+              "OVRS_ICLD_YN": "N"})
+    if not d or d.get("rt_cd") != "0":
+        return None
+    out = d.get("output") or {}
+    try:
+        return float(out.get("nrcvb_buy_amt") or 0) or None
+    except (TypeError, ValueError):
+        return None
+
+
+def buying_power_of(symbol: str, price: float, *, market: str = "US",
+                    excg: str = "NASD") -> float | None:
+    """시장 라우팅 매수여력 — KR은 원(KRW), US는 달러(USD) 기준. 미확인=None(차단)."""
+    if market == "KR":
+        return domestic_buying_power(symbol, price)
+    return buying_power(symbol, price, excg=excg)
+
+
+def last_price(symbol: str, *, market: str = "US", excg: str = "NASD") -> float | None:
+    """현재가 조회(주문가 산출용). KR=국내시세(FHKST01010100), US=해외시세."""
+    if not enabled():
+        return None
+    if market == "KR":
+        d = _get("/uapi/domestic-stock/v1/quotations/inquire-price",
+                 "FHKST01010100",
+                 {"FID_COND_MRKT_DIV_CODE": "J", "FID_INPUT_ISCD": symbol})
+        try:
+            return float(((d or {}).get("output") or {}).get("stck_prpr") or 0) or None
+        except (TypeError, ValueError):
+            return None
+    d = _get("/uapi/overseas-price/v1/quotations/price", "HHDFS00000300",
+             {"AUTH": "", "EXCD": {"NASD": "NAS", "NYSE": "NYS",
+                                   "AMEX": "AMS"}.get(excg, "NAS"), "SYMB": symbol})
+    try:
+        return float(((d or {}).get("output") or {}).get("last") or 0) or None
+    except (TypeError, ValueError):
+        return None

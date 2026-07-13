@@ -3,6 +3,16 @@
 > ✅=완료 · 🔨=코드 남음 · 🧪=실측(장/키 필요) · 👤=사용자 작업.
 > 순서는 대략 의존 순. "가장 위험 3개"(리뷰 Q6)는 ★.
 
+> **2026-07-13 보강 — 국내(KR) 실행 경로 추가**: 기존 배선이 미국 해외주식만
+> 다뤄 국장이 실행 계층에서 누락돼 있던 것을 복구. 이제 **국장·미장 둘 다** 주문/
+> 취소/대사/세션 게이트가 심볼로 자동 라우팅된다(6자리 숫자=KR). 같은 appkey로
+> 두 시장 커버. TR_ID·바디 필드는 모의 왕복 실측 전까지 [대조필요](아래 §실측).
+> `test_kis_domestic.py`로 라우팅·바디·세션 게이트 불변 증명(23개 모듈 green).
+>   · `kis.py` KR TR표 + domestic_balance/open_orders/fills/buying_power/last_price
+>   · `kis_orders.py` 국내 order-cash 경로·바디·호가단위 정렬 마켓터블 지정가
+>   · `rollout.py` session_open_for(market) — KR=한국 정규장(낮), US=미 정규장(밤)
+>   · `kis_buy`(원화 사이징)·`sentinel`(심볼 라우팅)·`kis_boot`(국내 대사)
+
 ## ✅ 이미 완료 (참고)
 - 문서: 준비도(에러표 포함)·전환 재계획·모의vs실전·리뷰 반영 오버라이드·핸드오프
 - `bot/kis.py` 읽기 어댑터(토큰 flock·TR 테이블·classify_error·잔고/nccs/ccnl)

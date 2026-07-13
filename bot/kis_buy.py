@@ -41,14 +41,22 @@ def execute_entry(pos_key: str, symbol: str, *, price_usd: float,
                   per_share_risk_usd: float, krw_per_usd: float,
                   excg: str = "NASD", open_positions: int | None = None,
                   risk_pct: float = envelope.DEFAULT_RISK_PCT,
-                  reason: str = "진입") -> BuyDecision:
-    """신규 진입 1건 시도. 반환: 어느 게이트에서 왜 멈췄는지까지 항상 보고."""
+                  reason: str = "진입",
+                  market: str | None = None) -> BuyDecision:
+    """신규 진입 1건 시도. 반환: 어느 게이트에서 왜 멈췄는지까지 항상 보고.
+
+    가격/리스크 인자는 **해당 시장의 표시통화**(US=USD, KR=KRW)로 받는다.
+    KR이면 이미 원화이므로 krw_per_usd는 1.0을 넘긴다(환산 없음).
+    market=None이면 심볼로 자동 판별(국내 6자리 숫자=KR)."""
     symbol = symbol.upper()
+    market = market or kis.market_of_symbol(symbol)
+    # 원화 환산계수: US는 fx(krw_per_usd), KR은 표시통화가 이미 원화 → 1.0.
+    fx = 1.0 if market == "KR" else krw_per_usd
 
     # 0) 환경 분리(I4)
     if os.environ.get("ALLOW_BUY") != "1":
         return BuyDecision(False, "env", "ALLOW_BUY != 1 (매수 경로 봉인)")
-    if price_usd <= 0 or per_share_risk_usd <= 0 or krw_per_usd <= 0:
+    if price_usd <= 0 or per_share_risk_usd <= 0 or fx <= 0:
         return BuyDecision(False, "input", "price/risk/fx 무효")
 
     # 1) kill-switch(I6)
@@ -68,7 +76,7 @@ def execute_entry(pos_key: str, symbol: str, *, price_usd: float,
     n_open = open_positions if open_positions is not None else sum(
         1 for l in costbook._fold()["lots"].values() if l["qty"] > 0)
     ok, why = rollout.check_new_entry(symbol, open_positions=n_open,
-                                      risk_pct=risk_pct)
+                                      risk_pct=risk_pct, market=market)
     if not ok:
         return BuyDecision(False, "rollout", why)
 
@@ -90,10 +98,10 @@ def execute_entry(pos_key: str, symbol: str, *, price_usd: float,
         return BuyDecision(False, "invariant", "open_cost > SEED — 회계 버그, 신규 중지")
     dep = envelope.deployable(
         seed, envelope.bot_cash(seed, t["buy_cost"], t["sell_proceeds"]), open_cost)
-    bp_usd = kis.buying_power(symbol, price_usd, excg=excg)
-    feas_krw = bp_usd * krw_per_usd if bp_usd is not None else None
-    r = envelope.size_buy(price_usd * krw_per_usd,
-                          per_share_risk_usd * krw_per_usd,
+    bp_native = kis.buying_power_of(symbol, price_usd, market=market, excg=excg)
+    feas_krw = bp_native * fx if bp_native is not None else None
+    r = envelope.size_buy(price_usd * fx,
+                          per_share_risk_usd * fx,
                           seed=seed,
                           open_cost_symbol=costbook.open_cost_symbol(symbol),
                           deployable_amt=dep, feasibility=feas_krw,
@@ -103,9 +111,9 @@ def execute_entry(pos_key: str, symbol: str, *, price_usd: float,
                            f"수량 0 (binding={r.binding}, cap={r.cap_krw:.0f}KRW)")
 
     # 8) 전송 — kis_orders가 모의 전용 하드블록 등 자체 게이트 재검사
-    limit = kis_orders.marketable_limit_price(price_usd, "BUY")
+    limit = kis_orders.marketable_limit_price(price_usd, "BUY", market=market)
     res = kis_orders.place_buy(pos_key, symbol, r.qty, limit,
-                               excg=excg, reason=reason)
+                               excg=excg, reason=reason, market=market)
     if res.get("ok"):
         return BuyDecision(True, "sent", f"ack ODNO={res.get('odno')}",
                            qty=r.qty, order=res)

@@ -85,6 +85,8 @@ def _fold() -> dict:
                         cur["side"] = str(meta["side"]).upper()  # 대사 방향 필터용
                     if meta.get("excg"):
                         cur["excg"] = meta["excg"]        # 부팅 대사 조회 범위용
+                    if meta.get("market"):
+                        cur["market"] = meta["market"]    # 국내/해외 대사 라우팅용
     except FileNotFoundError:
         pass
     return st
