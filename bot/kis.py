@@ -518,6 +518,29 @@ def price_limits(symbol: str) -> tuple[float, float] | None:
         return None
 
 
+def holdings(market: str = "US", excg: str = "NASD") -> dict | None:
+    """브로커 실보유 {symbol.upper(): qty} — 브로커-진실 대조용(매수루프·파수꾼).
+    조회 실패/불완전(연속조회 남음)=None(신뢰 불가 → 호출부 보수 처리).
+    국내 output1: pdno·hldg_qty / 해외 output1: ovrs_pdno·ovrs_cblc_qty."""
+    d = domestic_balance() if market == "KR" else overseas_balance(excg=excg)
+    if not d or d.get("rt_cd") != "0":
+        return None
+    if str(d.get("ctx_area_nk100") or d.get("CTX_AREA_NK100") or "").strip():
+        return None                               # 다중페이지 미완 → 신뢰 불가
+    out: dict[str, int] = {}
+    for r in (d.get("output1") or []):
+        sym = str(r.get("pdno") or r.get("ovrs_pdno") or "").upper()
+        if not sym:
+            continue
+        try:
+            q = int(float(r.get("hldg_qty") or r.get("ovrs_cblc_qty") or 0))
+        except (TypeError, ValueError):
+            return None
+        if q:
+            out[sym] = out.get(sym, 0) + q
+    return out
+
+
 def last_price(symbol: str, *, market: str = "US", excg: str = "NASD") -> float | None:
     """현재가 조회(주문가 산출용). KR=국내시세(FHKST01010100), US=해외시세."""
     if not enabled():
