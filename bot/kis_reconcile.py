@@ -196,43 +196,58 @@ def reconcile_unknowns_kr(balance: dict | None) -> list[dict]:
     results = []
 
     def _low(o, reason):
-        r = ledger.reconcile_from_candidates(o["key"], [],
-                                             intended=o.get("intended"))
+        # 이미 LOW로 판정된 UNKNOWN은 원장에 confidence 재기록 안 함(매cycle 무한증가
+        #   방지) + already_low 표시(호출부가 재알림 억제 — 알림 폭주 방지).
+        already = o.get("confidence") == ledger.CONF_LOW
+        if not already:
+            ledger.reconcile_from_candidates(o["key"], [], intended=o.get("intended"))
+        intended = int(o.get("intended") or 0)
+        filled = int(o.get("filled") or 0)
         results.append({"key": o["key"], "symbol": o.get("symbol"),
-                        "candidates": 0, "kr_reason": reason, **r})
+                        "candidates": 0, "kr_reason": reason,
+                        "confidence": ledger.CONF_LOW, "state": "unknown",
+                        "filled": filled, "residual": max(0, intended - filled),
+                        "already_low": already})
+
+    def _freeze_once(S, why):
+        if not ownership.is_frozen(S):             # 이미 동결이면 재알림 금지
+            ownership.freeze(S, why)
 
     for o in kr:
-        S = str(o.get("symbol") or "").upper()
-        Q = int(o.get("intended") or 0)
-        side = (o.get("side") or "").upper()
-        if hmap is None or not complete:
-            _low(o, "잔고 조회실패/불완전"); continue
-        if side != "SELL" or Q <= 0:
-            _low(o, "BUY/side불명 — 자동해소 금지(수동)"); continue   # BUY 항상 LOW
-        if open_count.get(S, 0) != 1:
-            _low(o, f">1 non-terminal 주문({open_count.get(S,0)}) — net 귀속불가"); continue
-        b = ownership.baseline()
-        if b is None or S in b or ownership.is_frozen(S):
-            _low(o, "ownership 미armed/기보유/동결"); continue
-        before = o.get("hldg_before")
-        if before is None:
-            _low(o, "before 스냅샷 없음"); continue
-        before = int(before)
-        now = int(hmap.get(S, 0))                  # complete 확인됨 → 부재=0주 신뢰
-        if Q > before:                             # 보유보다 많이 매도? 설명불가
-            ownership.freeze(S, f"국내대사 impossible sell Q={Q}>before={before}")
-            _low(o, f"impossible sell Q>{before} → 동결"); continue
-        delta = before - now
-        if delta == Q:                             # 정확 full-fill만 자동확정
-            r = ledger.reconcile_from_candidates(
-                o["key"], [{"filled": Q, "odno": o.get("odno") or ""}], intended=Q)
-            results.append({"key": o["key"], "symbol": o.get("symbol"),
-                            "candidates": 1, "kr_reason": "잔고확정 full SELL", **r})
-        elif delta < 0 or delta > Q:               # 증가/과다감소 = 외부개입 의심
-            ownership.freeze(S, f"국내대사 이상 delta={delta} (before={before} now={now} Q={Q})")
-            _low(o, f"이상 delta={delta} → 동결")
-        else:                                      # 0≤delta<Q: 부분/미체결 — 자동해소 금지
-            _low(o, f"부분/미체결 delta={delta}<Q — 수동")
+        try:
+            S = str(o.get("symbol") or "").upper()
+            Q = int(o.get("intended") or 0)
+            side = (o.get("side") or "").upper()
+            if hmap is None or not complete:
+                _low(o, "잔고 조회실패/불완전"); continue
+            if side != "SELL" or Q <= 0:
+                _low(o, "BUY/side불명 — 자동해소 금지(수동)"); continue   # BUY 항상 LOW
+            if open_count.get(S, 0) != 1:
+                _low(o, f">1 non-terminal 주문({open_count.get(S,0)}) — net 귀속불가"); continue
+            b = ownership.baseline()
+            if b is None or S in b or ownership.is_frozen(S):
+                _low(o, "ownership 미armed/기보유/동결"); continue
+            before = o.get("hldg_before")
+            if before is None:
+                _low(o, "before 스냅샷 없음"); continue
+            before = int(before)
+            now = int(hmap.get(S, 0))              # complete 확인됨 → 부재=0주 신뢰
+            if Q > before:                         # 보유보다 많이 매도? 설명불가
+                _freeze_once(S, f"국내대사 impossible sell Q={Q}>before={before}")
+                _low(o, f"impossible sell Q>{before} → 동결"); continue
+            delta = before - now
+            if delta == Q:                         # 정확 full-fill만 자동확정
+                r = ledger.reconcile_from_candidates(
+                    o["key"], [{"filled": Q, "odno": o.get("odno") or ""}], intended=Q)
+                results.append({"key": o["key"], "symbol": o.get("symbol"),
+                                "candidates": 1, "kr_reason": "잔고확정 full SELL", **r})
+            elif delta < 0 or delta > Q:           # 증가/과다감소 = 외부개입 의심
+                _freeze_once(S, f"국내대사 이상 delta={delta} (before={before} now={now} Q={Q})")
+                _low(o, f"이상 delta={delta} → 동결")
+            else:                                  # 0≤delta<Q: 부분/미체결 — 자동해소 금지
+                _low(o, f"부분/미체결 delta={delta}<Q — 수동")
+        except Exception as e:                     # 손상 줄 1건이 배치를 깨지 않게
+            _low(o, f"처리 예외({type(e).__name__}) — 보수적 LOW")
     return results
 
 

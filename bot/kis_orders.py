@@ -173,7 +173,10 @@ def place_order(key: str, symbol: str, side: str, qty: int, price: float,
         return {"ok": False, "act": "blocked", "key": key, "why": "qty/price 무효"}
     if order_type == "limit" and float(price) <= 0:
         return {"ok": False, "act": "blocked", "key": key, "why": "지정가 0 이하"}
-    if not ledger.can_submit(symbol, min_interval_s=min_interval_s):
+    # exclude_key=key: 호출부(파수꾼)가 이 키를 이미 선기록했을 수 있으므로 자기
+    #   주문을 in-flight로 오인해 스스로를 막지 않게 한다(자기 차단 버그 수정).
+    if not ledger.can_submit(symbol, min_interval_s=min_interval_s,
+                             exclude_key=key):
         return {"ok": False, "act": "blocked", "key": key,
                 "why": "원장 게이트(잠금/in-flight/간격)"}
     if not _LIMITER.acquire("order", timeout=5.0):

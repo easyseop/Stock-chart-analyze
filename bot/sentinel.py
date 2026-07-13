@@ -364,9 +364,12 @@ def main() -> None:
         raise SystemExit("SENTINEL_LIVE=1인데 브로커 키 없음 — 안전을 위해 종료")
     if broker.name == "kis":                       # 부팅 대사(O4) — 재시작 안전
         from bot import kis_boot
-        s = kis_boot.boot_reconcile()
-        print(f"부팅 대사: unknowns={s['unknowns']} resolved={s['resolved']} "
-              f"low={s['low']} ok={s['ok']}")
+        try:                                       # 대사 실패가 파수꾼 시작을 막지 않게
+            s = kis_boot.boot_reconcile()          #   (fail-closed: 게이트는 닫힌 채 유지)
+            print(f"부팅 대사: unknowns={s['unknowns']} resolved={s['resolved']} "
+                  f"low={s['low']} ok={s['ok']}")
+        except Exception as e:
+            print(f"[부팅 대사 오류] {type(e).__name__}: {e} — 게이트 닫힌 채 진행")
     state: dict = {}
     while True:
         try:

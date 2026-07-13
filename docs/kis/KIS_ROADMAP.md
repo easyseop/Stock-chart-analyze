@@ -53,7 +53,17 @@
 >   13케이스. adversarial 워크플로우(설계 3안 + 스트레스 3렌즈 + 구현검증)로 검증.
 >   · costbook 미배선(add_lot/close_lot 호출 0)이라 claim 대신 hldg_before 사용 — 자기완결.
 >   · `kis_arm.py`에 국내 baseline 캡처 추가(사용자-주식 배제 가드 KR 복구).
->   · **남은 것**: sell_cap/reconcile_claims 하드 백스톱 배선(방어심화·이 대사 안전엔 불필요),
+>   · **구현검증 워크플로우(초과매도·배선·엣지 3렌즈+판정) 결과**: 초과매도/이중주문
+>     안전정리 **HOLDS**(자동해소는 delta==Q full-fill뿐, 나머지 잠금유지). 발견·수정:
+>     - [HIGH·수정] 파수꾼 pre-record가 place_order의 can_submit을 자기 차단 → **KIS 손절이
+>       영영 전송 안 되던 선재 버그**. `can_submit(exclude_key)`로 자기 키 제외. e2e 회귀 테스트 추가.
+>     - [MED·수정] LOW 매cycle 재알림·원장 무한증가 → already_low 표시로 재기록/재알림 억제.
+>     - [MED·수정] 손상된 원장 줄이 부팅 대사 크래시 → per-order try/except + sentinel 부팅 가드.
+>   · **남은 것(low, fail-safe 방향)**: ①is_locked가 'unknown'만 봐 wedged 'submitted'/'ack'는
+>     can_submit이 백스톱(대사 self-heal은 아님) ②hldg_before==intended라 delta==Q는 사실상
+>     '체결후 잔고==0'(정직히 문서화; 실제 보유 스냅샷은 핫패스 API라 보류) ③잔고 페이지네이션은
+>     body 필드로만 판정(tr_cont 헤더 미노출) — 다중페이지 실측[대조필요]. 전부 under-sell 방향.
+>   · **남은 것(별개 배선)**: sell_cap/reconcile_claims 하드 백스톱(방어심화·이 대사 안전엔 불필요),
 >     costbook 확정체결 배선(envelope 정확도), hldg_qty 당일 결제 의미 LIVE 실측.
 >
 > **(구설계 메모) 국내 대사 잔고 기반 방향 결정**:

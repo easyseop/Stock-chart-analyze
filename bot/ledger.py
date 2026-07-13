@@ -158,10 +158,13 @@ def attempts(pos_key: str) -> int:
     return len(_pos_keys(pos_key, _fold()))
 
 
-def is_locked(symbol: str) -> bool:
+def is_locked(symbol: str, exclude_key: str | None = None) -> bool:
     """이 종목에 미해소 UNKNOWN 주문이 있나 — 있으면 신규/재주문 전면 금지.
-    (대사 전 재주문 = 초과매도. 이 잠금이 마지막 방어선.)"""
-    for cur in _fold().values():
+    (대사 전 재주문 = 초과매도. 이 잠금이 마지막 방어선.)
+    exclude_key: 지금 발주 중인 자기 주문키(그 키가 원인인 자기 차단 방지)."""
+    for k, cur in _fold().items():
+        if k == exclude_key:
+            continue
         if (cur.get("symbol") == symbol and cur.get("state") == "unknown"
                 and not cur.get("reconciled")):
             return True
@@ -244,30 +247,35 @@ def reconcile_from_candidates(key: str, candidates: list,
             "residual": max(0, intended - filled), "confidence": CONF_LOW}
 
 
-def open_order_count(symbol: str) -> int:
+def open_order_count(symbol: str, exclude_key: str | None = None) -> int:
     """이 종목의 in-flight(결과 미확정: submitted/ack/unknown) 주문 수.
-    동일종목 동시주문(오매칭·이중주문) 방지 판정용."""
-    return sum(1 for v in _fold().values()
-               if v.get("symbol") == symbol and v.get("state") in _INFLIGHT)
+    동일종목 동시주문(오매칭·이중주문) 방지 판정용.
+    exclude_key: 지금 발주 중인 자기 주문키는 세지 않는다(자기 차단 방지)."""
+    return sum(1 for k, v in _fold().items()
+               if k != exclude_key and v.get("symbol") == symbol
+               and v.get("state") in _INFLIGHT)
 
 
-def last_submit_ts(symbol: str) -> float:
+def last_submit_ts(symbol: str, exclude_key: str | None = None) -> float:
     fold = _fold()
-    ts = [float(v.get("submitted_at", 0.0)) for v in fold.values()
-          if v.get("symbol") == symbol]
+    ts = [float(v.get("submitted_at", 0.0)) for k, v in fold.items()
+          if k != exclude_key and v.get("symbol") == symbol]
     return max(ts) if ts else 0.0
 
 
 def can_submit(symbol: str, min_interval_s: float = 60.0,
-               now: float | None = None) -> bool:
+               now: float | None = None,
+               exclude_key: str | None = None) -> bool:
     """R3 안전 게이트 — 다음이면 신규/추가 주문 금지(초과매도·오매칭 방지):
       · 종목이 UNKNOWN 잠금 상태거나
       · 이미 in-flight 주문이 있거나(동시 open order 1개 제한)
       · 직전 주문 후 min_interval_s(기본 60초) 이내.
-    (Stage 2에서 동일 symbol/side 반복 주문의 대사 오매칭을 원천 차단.)"""
-    if is_locked(symbol):
+    (Stage 2에서 동일 symbol/side 반복 주문의 대사 오매칭을 원천 차단.)
+    exclude_key: 호출부가 이미 원장에 선기록한 '이번' 주문키 — 그 키가 자기 자신을
+      in-flight/최근제출로 오인해 차단하는 것을 막는다(파수꾼 pre-record → place_order)."""
+    if is_locked(symbol, exclude_key=exclude_key):
         return False
-    if open_order_count(symbol) >= 1:
+    if open_order_count(symbol, exclude_key=exclude_key) >= 1:
         return False
     now = time.time() if now is None else now
-    return (now - last_submit_ts(symbol)) >= min_interval_s
+    return (now - last_submit_ts(symbol, exclude_key=exclude_key)) >= min_interval_s

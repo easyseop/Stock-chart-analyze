@@ -230,6 +230,26 @@ def test_kr_cancel_body():
     print("[PASS] 국내 취소 바디(KRX_FWDG_ORD_ORGNO·domestic 경로)")
 
 
+def test_no_self_block_after_pre_record():
+    """파수꾼이 hldg_before 남기려 place_sell 전에 record_submit해도, place_order가
+    자기 주문키를 in-flight로 오인해 스스로를 막지 않아야 한다(자기 차단 버그 회귀)."""
+    with tempfile.TemporaryDirectory() as tmp:
+        _, L, KO = _setup(tmp)
+        # 파수꾼 pre-record(메타에 hldg_before) — send 이전 크래시 대비 기록
+        L.record_submit("k#1", "005930", 1, "손절",
+                        meta={"side": "SELL", "market": "KR", "hldg_before": 1})
+        cap = []
+        with mock.patch("urllib.request.urlopen", _recording_urlopen(cap)):
+            r = KO.place_sell("k#1", "005930", 1, 71_000, market="KR",
+                              order_type="market", min_interval_s=0.0)
+        assert r["ok"] and r["act"] == "ack", r        # 차단되지 않고 전송됨
+        # 다른 키의 동일종목 주문은 여전히 차단(in-flight 보호 유지)
+        r2 = KO.place_sell("k#2", "005930", 1, 71_000, market="KR",
+                           order_type="market", min_interval_s=0.0)
+        assert r2["act"] == "blocked", r2
+    print("[PASS] pre-record 자기 차단 없음 + 타 주문 in-flight 보호 유지")
+
+
 def test_session_gate_routing():
     import bot.rollout as R
     import bot.settings as cfg
@@ -263,6 +283,7 @@ def main():
     test_us_market_blocked()
     test_sentinel_kr_uses_market()
     test_kr_cancel_body()
+    test_no_self_block_after_pre_record()
     test_session_gate_routing()
     for k in list(os.environ):
         if k.startswith("KIS_"):

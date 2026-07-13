@@ -86,6 +86,8 @@ def boot_reconcile(excgs: tuple[str, ...] = ("NASD", "NYSE", "AMEX")) -> dict:
     low = [r for r in results if r.get("confidence") == ledger.CONF_LOW]
     resolved = [r for r in results if r.get("confidence") == ledger.CONF_HIGH]
     for r in low:
+        if r.get("already_low"):
+            continue                              # 직전 cycle에 이미 알림 — 폭주 방지
         why = r.get("kr_reason") or f"후보 {r.get('candidates')}"
         _notify(f"🚨 부팅 대사 LOW — {r.get('symbol')}({why}) "
                 f"잠금 유지, 수동 검토 필요(MANUAL_REVIEW)", critical=True)
