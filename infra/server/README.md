@@ -7,9 +7,14 @@
 ## 구성
 | 파일 | 역할 |
 |---|---|
-| `sentinel.service` | 파수꾼 상시 실행(`python -m bot.sentinel`, `SENTINEL_BROKER=kis`) |
+| `sentinel.service` | 파수꾼(매도) 상시 실행(`python -m bot.sentinel`, `SENTINEL_BROKER=kis`) |
+| `buyloop.service` | 매수 루프 — autopaper 'now' 신호를 KIS에 미러 매수(`python -m bot.kis_buyloop --loop`) |
 | `watchdog.service` | heartbeat 감시 — 60s P0 · 90s 재기동(≤3회/10분) · 120s+ kill L1 |
 | `watchdog.py` | 위 유닛이 실행하는 스크립트 |
+
+> **손 = 매수(buyloop) + 매도(sentinel) 대칭.** 파수꾼만 켜면 손절만, 둘 다 켜면
+> autopaper 결정을 KIS 모의계좌에 완전 미러(진입+청산). 처음엔 **매도만**(파수꾼)으로
+> 검증하고, 안정되면 매수 루프를 켜는 걸 권장.
 
 ## 설치 순서 (Ubuntu 계열, Stage 1.5 모의 기준)
 ```bash
@@ -28,26 +33,43 @@ KIS_MOCK_CANO=여기에
 KIS_MOCK_ACNT_PRDT_CD=01
 BOT_SEED_KRW=10000000
 TRADE_STAGE=1.5
+# ★ 매수·매도 루프가 같은 토큰 캐시 공유(I3: 발급 1분1회 — flock 직렬화)
+KIS_TOKEN_CACHE=/opt/stock/kis_token.json
 # 주문·매수는 명시적으로만(기본 봉인):
-# KIS_ORDERS_ENABLED=1
-# ALLOW_BUY=1
-# ALLOWED_SYMBOLS=AAPL
+# KIS_ORDERS_ENABLED=1     # ← 주문 전송 게이트(매도·매수 공통)
+# ALLOW_BUY=1              # ← 매수 루프 게이트(이게 없으면 매수 시도 자체 봉인)
+# ALLOWED_SYMBOLS=AAPL     # ← Stage 1.5/2 allowlist 필수(밖 종목 전부 거부)
 TELEGRAM_BOT_TOKEN=여기에
 TELEGRAM_CHAT_ID=여기에
 NTFY_TOPIC=여기에
 EOF
 sudo chmod 600 /etc/stock/kis.env
 
-# 2) 유닛 설치·기동
+# 1.5) 무장(arming) — 사용자 기보유 심볼 denylist 캡처(매수 전 1회 필수)
+sudo -u bot KIS_ENV=mock ... python3 /opt/stock/Stock-chart-analyze/scripts/kis_arm.py
+#   (모의 새 계좌면 "빈 목록 — 깨끗한 계좌"가 정상. baseline 없으면 매수 전면 거부.)
+
+# 2) 유닛 설치·기동 — 처음엔 매도(파수꾼)만, 안정 후 buyloop 추가
 sudo cp /opt/stock/Stock-chart-analyze/infra/server/{sentinel,watchdog}.service \
         /etc/systemd/system/
 sudo systemctl daemon-reload
 sudo systemctl enable --now sentinel.service watchdog.service
+# 매수도 켤 때(선택):
+sudo cp /opt/stock/Stock-chart-analyze/infra/server/buyloop.service /etc/systemd/system/
+sudo systemctl enable --now buyloop.service   # ALLOW_BUY=1·KIS_ORDERS_ENABLED=1 확인 후
 
 # 3) 확인
-systemctl status sentinel watchdog --no-pager
+systemctl status sentinel watchdog buyloop --no-pager
 sudo -u bot python3 /opt/stock/Stock-chart-analyze/scripts/kis_preflight.py
 ```
+
+## 모의 봇 켜기 — 최소 순서 (Stage 1.5)
+1. `kis.env` 채우고 `chmod 600` → `kis_arm.py`로 무장(baseline 캡처).
+2. **매도만 먼저**: `sentinel`+`watchdog` 기동. 손절 dry-run→실측 확인.
+3. 매수 켜기: env에 `KIS_ORDERS_ENABLED=1`·`ALLOW_BUY=1`·`ALLOWED_SYMBOLS=…` 추가
+   → `buyloop.service` 기동. `journalctl -u buyloop -f`로 게이트 통과/skip 관찰.
+4. **롤아웃**: `TRADE_STAGE=1.5`(1종목·하루1건). 안정되면 `2.5`→`3`으로.
+   비상시 `python -m bot.kill 1 "사유"`(kill-switch L1=신규매수 중지, 손절은 유지).
 
 ## 운영 규칙 (설계 04·REFLECTION 준수)
 - **단일 프로세스 원칙(I3)**: 파수꾼 1개만 KIS 토큰을 쓴다. 루프를 늘리면 반드시

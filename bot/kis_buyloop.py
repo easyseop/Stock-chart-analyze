@@ -94,13 +94,32 @@ def _fetch_signals() -> list[dict]:
     return []
 
 
-def main() -> int:
+def _cycle() -> None:
     sigs = _fetch_signals()
-    print(f"신호 {len(sigs)}건 로드 · 'now' 후보 {len(_now_signals(sigs))}건")
+    print(f"신호 {len(sigs)}건 로드 · 'now' 후보 {len(_now_signals(sigs))}건", flush=True)
     for r in run_once(sigs):
         mark = "✓ 전송" if r.get("ok") else "·"
-        print(f"  {mark} {r['code']} [{r['gate']}] {r.get('why','')}")
-    return 0
+        print(f"  {mark} {r['code']} [{r['gate']}] {r.get('why', '')}", flush=True)
+
+
+def main() -> int:
+    import argparse
+    import time
+    ap = argparse.ArgumentParser(description="KIS 미러 매수 루프(기본 1회)")
+    ap.add_argument("--loop", action="store_true", help="POLL초마다 반복(서버 모드)")
+    ap.add_argument("--poll", type=int, default=300, help="반복 주기(초, 기본 300)")
+    args = ap.parse_args()
+    if not args.loop:
+        _cycle()
+        return 0
+    print(f"매수 루프 시작 — {args.poll}초 주기(ALLOW_BUY·KIS_ORDERS_ENABLED 필요)",
+          flush=True)
+    while True:
+        try:
+            _cycle()
+        except Exception as e:                     # 루프는 죽지 않는다
+            print(f"[오류] {type(e).__name__}: {e}", flush=True)
+        time.sleep(args.poll)
 
 
 if __name__ == "__main__":

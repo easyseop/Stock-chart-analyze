@@ -1,0 +1,26 @@
+# 매수 루프(Loop B) systemd 유닛 — autopaper 'now' 신호 KIS 미러 매수(모의 기본)
+# 파수꾼(매도)의 대칭. 실제 매수는 ALLOW_BUY=1 + KIS_ORDERS_ENABLED=1 있어야만.
+# 설치: infra/server/README.md 참조. 시크릿은 EnvironmentFile(권한 600)로만.
+[Unit]
+Description=stock buy loop (mirror autopaper entries to KIS)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=bot
+WorkingDirectory=/opt/stock/Stock-chart-analyze
+# 시크릿·플래그는 이 파일에만(chmod 600, root:bot) — 유닛/깃에 값 금지
+EnvironmentFile=/etc/stock/kis.env
+# ★ 파수꾼과 같은 토큰 캐시 공유 필수(I3: 토큰 발급 1분1회 — flock 직렬화)
+Environment=KIS_TOKEN_CACHE=/opt/stock/kis_token.json
+ExecStart=/usr/bin/python3 -m bot.kis_buyloop --loop --poll 300
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+ProtectSystem=full
+ReadWritePaths=/opt/stock/Stock-chart-analyze /tmp /opt/stock
+
+[Install]
+WantedBy=multi-user.target
