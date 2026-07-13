@@ -34,6 +34,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+import tempfile
 import time
 import os
 
@@ -54,7 +55,21 @@ def main() -> int:
                     help="미지정 시 심볼로 자동판별(6자리 숫자=KR)")
     ap.add_argument("--fill", action="store_true",
                     help="마켓터블로 실제 체결(매수→매도 청산)까지 관찰")
+    ap.add_argument("--ledger", default="",
+                    help="원장 경로(기본: 실행마다 새 임시 원장으로 격리)")
     args = ap.parse_args()
+
+    # 검증 스크립트는 **실행마다 깨끗한 임시 원장**을 쓴다. 실제 봇 원장을 오염시키지
+    #   않고, 직전 왕복의 ack(in-flight) 찌꺼기가 다음 실행을 막지 않게(동일종목 1건
+    #   게이트). 단독 실행이라 대사(reconcile)가 원주문을 안 닫아 찌꺼기가 남기 때문.
+    ledger.LEDGER_PATH = args.ledger or os.path.join(
+        tempfile.gettempdir(), "kis_roundtrip_ledger.jsonl")
+    if not args.ledger:
+        try:
+            os.remove(ledger.LEDGER_PATH)
+        except OSError:
+            pass
+    say(f"[원장 격리] {ledger.LEDGER_PATH}")
     market = args.market or kis.market_of_symbol(args.symbol)
     unit = "원" if market == "KR" else "$"
 
