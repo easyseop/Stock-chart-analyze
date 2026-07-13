@@ -42,7 +42,21 @@
 >     msg1 = "모의투자에서는 해당업무가 제공되지 않습니다."(US psamount와 동일 케이스).
 >     → **국내 대사 채널 A(nccs)는 LIVE 전용.** 모의 검증 불가.
 >
-> **국내 대사 설계 결정(2026-07-13) — 잔고 기반**:
+> **국내 대사 구현 완료(2026-07-13) — 잔고 delta 기반, 안전정리**:
+>   `kis_reconcile.reconcile_unknowns_kr(balance)` — 국내 UNKNOWN을 **제출 시점 보유
+>   스냅샷(meta.hldg_before, 파수꾼이 손절 핫패스에 API 추가 없이 기록) 대비 현재잔고
+>   delta**로 대사. **안전정리(초과매도 구조적 봉쇄)**: KR UNKNOWN은 unknown→filled로만,
+>   잔고가 정확 full-fill을 증명할 때만 전이. '미체결'은 절대 자동결론 안 함 → 미해소는
+>   잠금 유지(is_locked→재주문 차단). 8개 fail-closed 게이트(조회실패/불완전·SELL아님·
+>   동일종목 주문>1·ownership 미armed/기보유/동결·스냅샷없음·impossible sell·delta≠정확Q).
+>   BUY는 항상 LOW(신뢰근거 없음). 이상치(방향역전·과다)는 동결. `test_kis_reconcile_kr`
+>   13케이스. adversarial 워크플로우(설계 3안 + 스트레스 3렌즈 + 구현검증)로 검증.
+>   · costbook 미배선(add_lot/close_lot 호출 0)이라 claim 대신 hldg_before 사용 — 자기완결.
+>   · `kis_arm.py`에 국내 baseline 캡처 추가(사용자-주식 배제 가드 KR 복구).
+>   · **남은 것**: sell_cap/reconcile_claims 하드 백스톱 배선(방어심화·이 대사 안전엔 불필요),
+>     costbook 확정체결 배선(envelope 정확도), hldg_qty 당일 결제 의미 LIVE 실측.
+>
+> **(구설계 메모) 국내 대사 잔고 기반 방향 결정**:
 >   국내는 nccs가 모의 미지원이라, UNKNOWN 대사를 **잔고(`VTTC8434R` 주식잔고조회,
 >   모의 지원) 대조** 중심으로 설계한다(원장 기대 포지션 vs 실제 보유). nccs는 LIVE에서만
 >   보조. 미국(nccs/ccnl 모의 지원)과 대사 채널이 갈린다 — `kis_reconcile`에 국내 경로는

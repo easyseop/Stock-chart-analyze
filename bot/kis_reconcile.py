@@ -136,6 +136,106 @@ def candidates_for(unknown: dict, rows: list[dict], known_odnos: set[str],
     return out
 
 
+def _kr_holdings(balance: dict | None) -> tuple[dict | None, bool]:
+    """국내 잔고(output1) → {pdno.upper(): hldg_qty 합}. (맵|None, complete).
+    · 조회 실패/rt_cd≠0/파싱불가 → (None, False): 신뢰 불가.
+    · 연속조회 키(ctx_area_nk100)가 남아 있으면 complete=False(불완전 → 심볼 부재를
+      '0주'로 오해하면 초과매도 → 불완전이면 대사 보류). 봇 계좌는 종목 少라 보통 1페이지."""
+    if not balance or balance.get("rt_cd") != "0":
+        return None, False
+    complete = not str(balance.get("ctx_area_nk100")
+                       or balance.get("CTX_AREA_NK100") or "").strip()
+    hmap: dict[str, int] = {}
+    for r in (balance.get("output1") or []):
+        sym = str(r.get("pdno") or "").upper()
+        if not sym:
+            continue
+        try:
+            hmap[sym] = hmap.get(sym, 0) + int(float(r.get("hldg_qty") or 0))
+        except (TypeError, ValueError):
+            return None, False                    # 파싱불가 = 신뢰 불가(추측 금지)
+    return hmap, complete
+
+
+def reconcile_unknowns_kr(balance: dict | None) -> list[dict]:
+    """국내(KR) UNKNOWN 대사 — 잔고 delta 기반(국내 nccs 모의 미지원·costbook 미배선).
+
+    **안전 정리(초과매도·이중주문 구조적 봉쇄)**: KR UNKNOWN은 오직 unknown→filled로만,
+    잔고가 '정확한 full-fill'을 증명할 때만 전이한다. '미체결/부분/거부'는 절대 자동
+    결론하지 않는다 → 미해소 UNKNOWN은 잠금(is_locked)이 유지돼 재주문이 원천 차단된다.
+    따라서 잘못돼도 최악은 '수동검토로 남김'이지, 재매도가 아니다.
+
+    기준(before): 제출 시 meta.hldg_before(파수꾼이 그 시점 보유수량 기록 — 별도 API
+    호출 없이 손절 핫패스 유지). delta = before − 현재잔고. side는 명시 meta.side만 신뢰.
+
+    fail-closed 게이트(하나라도 걸리면 LOW=잠금 유지):
+      G0 잔고 조회실패/불완전, G1 SELL 아님/불명·intended≤0(BUY는 항상 수동),
+      G2 심볼 non-terminal 주문 ≠1(net 귀속 불가), G3 ownership 미armed/기보유/동결,
+      G4 before 스냅샷 없음, G5 before<Q(impossible sell)→동결, G6 delta≠정확Q → LOW
+      (delta<0·delta>Q 등 이상치는 동결).
+    반환: reconcile_unknowns와 동일 형태(KR 항목만) + kr_reason.
+    """
+    from bot import kis, ownership
+    fold_open = ledger.open_orders()
+
+    def _is_kr(o: dict) -> bool:
+        return (o.get("market") == "KR"
+                or kis.market_of_symbol(o.get("symbol", "")) == "KR")
+
+    kr = [o for o in fold_open
+          if o.get("state") == "unknown" and not o.get("reconciled") and _is_kr(o)]
+    if not kr:
+        return []
+
+    hmap, complete = _kr_holdings(balance)
+    open_count: dict[str, int] = {}
+    for o in fold_open:                            # 심볼별 non-terminal 주문 수
+        s = str(o.get("symbol") or "").upper()
+        open_count[s] = open_count.get(s, 0) + 1
+
+    results = []
+
+    def _low(o, reason):
+        r = ledger.reconcile_from_candidates(o["key"], [],
+                                             intended=o.get("intended"))
+        results.append({"key": o["key"], "symbol": o.get("symbol"),
+                        "candidates": 0, "kr_reason": reason, **r})
+
+    for o in kr:
+        S = str(o.get("symbol") or "").upper()
+        Q = int(o.get("intended") or 0)
+        side = (o.get("side") or "").upper()
+        if hmap is None or not complete:
+            _low(o, "잔고 조회실패/불완전"); continue
+        if side != "SELL" or Q <= 0:
+            _low(o, "BUY/side불명 — 자동해소 금지(수동)"); continue   # BUY 항상 LOW
+        if open_count.get(S, 0) != 1:
+            _low(o, f">1 non-terminal 주문({open_count.get(S,0)}) — net 귀속불가"); continue
+        b = ownership.baseline()
+        if b is None or S in b or ownership.is_frozen(S):
+            _low(o, "ownership 미armed/기보유/동결"); continue
+        before = o.get("hldg_before")
+        if before is None:
+            _low(o, "before 스냅샷 없음"); continue
+        before = int(before)
+        now = int(hmap.get(S, 0))                  # complete 확인됨 → 부재=0주 신뢰
+        if Q > before:                             # 보유보다 많이 매도? 설명불가
+            ownership.freeze(S, f"국내대사 impossible sell Q={Q}>before={before}")
+            _low(o, f"impossible sell Q>{before} → 동결"); continue
+        delta = before - now
+        if delta == Q:                             # 정확 full-fill만 자동확정
+            r = ledger.reconcile_from_candidates(
+                o["key"], [{"filled": Q, "odno": o.get("odno") or ""}], intended=Q)
+            results.append({"key": o["key"], "symbol": o.get("symbol"),
+                            "candidates": 1, "kr_reason": "잔고확정 full SELL", **r})
+        elif delta < 0 or delta > Q:               # 증가/과다감소 = 외부개입 의심
+            ownership.freeze(S, f"국내대사 이상 delta={delta} (before={before} now={now} Q={Q})")
+            _low(o, f"이상 delta={delta} → 동결")
+        else:                                      # 0≤delta<Q: 부분/미체결 — 자동해소 금지
+            _low(o, f"부분/미체결 delta={delta}<Q — 수동")
+    return results
+
+
 def reconcile_unknowns(nccs: dict | None, ccnl: dict | None,
                        window_s: int = 120) -> list[dict]:
     """원장의 모든 미해소 UNKNOWN을 nccs+ccnl로 대사(신뢰도 판정 포함).
@@ -143,6 +243,7 @@ def reconcile_unknowns(nccs: dict | None, ccnl: dict | None,
     반환: [{key, symbol, confidence, state, filled, residual, candidates}].
     HIGH만 자동 확정되고(잠금 해제), LOW는 잠금 유지 — 호출부는 LOW를 P0로 알릴 것.
     """
+    from bot import kis
     rows = normalize_rows(nccs, ccnl)
     fold_open = ledger.open_orders()
     # 이미 결속된 ODNO들 — 다른 UNKNOWN의 후보에서 제외(교차 오귀속 방지)
@@ -150,6 +251,10 @@ def reconcile_unknowns(nccs: dict | None, ccnl: dict | None,
     results = []
     for o in fold_open:
         if o.get("state") != "unknown" or o.get("reconciled"):
+            continue
+        # 국내(KR)는 nccs/ccnl 필드가 달라 여기서 처리 금지 — reconcile_unknowns_kr 담당.
+        if (o.get("market") == "KR"
+                or kis.market_of_symbol(o.get("symbol", "")) == "KR"):
             continue
         key = o["key"]
         cands = candidates_for(o, rows, known_odnos=known - {str(o.get("odno") or "")},

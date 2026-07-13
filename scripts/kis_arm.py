@@ -51,6 +51,14 @@ def main() -> int:
         rows += (d.get("output1") or [])
         time.sleep(0.7)                       # 모의 2/s 유량
 
+    # 국내(KR) 기보유도 캡처 — 잔고대사 사용자-주식 배제 가드가 KR에도 살아있게.
+    #   (누락 시 국내 대사가 사용자 기보유 KR주를 봇 것으로 오인할 위험 — 스트레스테스트)
+    dk = kis.domestic_balance()
+    if dk is None or dk.get("rt_cd") != "0":
+        print("✗ 국내 잔고 조회 실패 — fail-closed: 캡처하지 않음(재시도 요망)")
+        return 1
+    rows += (dk.get("output1") or [])
+
     if not ownership.capture_baseline(rows):
         print("✗ baseline 저장 실패")
         return 1

@@ -322,7 +322,13 @@ def check_once(broker, state: dict) -> None:
                 _save_sent(sent)
                 continue
             okey = f"{key}#{ledger.attempts(key) + 1}"       # 이번 주문 시도의 고유키
-            ledger.record_submit(okey, code, qty_send, reason)  # send 이전 기록(크래시 대비)
+            # 국내 잔고대사 기준: 이 주문 직전 보유수량(=잔여 qty_send, 파수꾼이 이미
+            #   아는 값이라 손절 핫패스에 API 호출 추가 없음) + 방향·시장 명시 기록.
+            from bot import kis as _kis
+            ledger.record_submit(okey, code, qty_send, reason,   # send 이전 기록(크래시 대비)
+                                 meta={"side": "SELL",
+                                       "market": _kis.market_of_symbol(code),
+                                       "hldg_before": int(qty_send)})
             res = broker.place_sell(code, qty_send, reason, okey)
             rstate, filled = _norm_result(res, qty_send)
             ledger.on_result(okey, rstate, filled)

@@ -87,6 +87,8 @@ def _fold() -> dict:
                         cur["excg"] = meta["excg"]        # 부팅 대사 조회 범위용
                     if meta.get("market"):
                         cur["market"] = meta["market"]    # 국내/해외 대사 라우팅용
+                    if meta.get("hldg_before") is not None:
+                        cur["hldg_before"] = meta["hldg_before"]  # 국내 잔고대사 기준
     except FileNotFoundError:
         pass
     return st

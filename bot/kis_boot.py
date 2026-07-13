@@ -55,15 +55,12 @@ def boot_reconcile(excgs: tuple[str, ...] = ("NASD", "NYSE", "AMEX")) -> dict:
         return (u.get("market") == "KR"
                 or kis.market_of_symbol(u.get("symbol", "")) == "KR")
 
-    # 국내(KR) UNKNOWN — 자동 대사 보류(fail-closed). 국내 nccs/ccnl 응답 필드명은
-    #   해외(ft_*)와 달라 kis_reconcile.normalize_rows가 아직 매핑하지 못한다([대조필요]).
-    #   검증 안 된 필드로 자동 해소하면 오귀속(이중매도) 위험 → 실측 전까지는 해당
-    #   종목을 **잠금 유지 + P0**로 명시 처리(수동 검토). 조용한 오동작보다 안전.
-    kr_unknowns = [u for u in unknowns if _is_kr(u)]
-    for u in kr_unknowns:
-        _notify(f"🚨 부팅 대사 보류(KR 미검증) — {u.get('symbol')} 잠금 유지, "
-                f"수동 검토 필요. 국내 대사 필드 실측 후 자동화(MANUAL_REVIEW).",
-                critical=True)
+    # 국내(KR) UNKNOWN — 잔고 delta 기반 대사(reconcile_unknowns_kr). SELL만 정확
+    #   full-fill 확정 시 자동해소, 나머지(BUY·부분·불명·조회실패)는 LOW 잠금 유지.
+    #   국내 nccs 모의 미지원·costbook 미배선이라 잔고를 유일 근거로 쓴다(안전 정리).
+    kr_results = []
+    if any(_is_kr(u) for u in unknowns):
+        kr_results = kis_reconcile.reconcile_unknowns_kr(kis.domestic_balance())
 
     all_nccs_rows, all_ccnl_rows = [], []
 
@@ -82,18 +79,15 @@ def boot_reconcile(excgs: tuple[str, ...] = ("NASD", "NYSE", "AMEX")) -> dict:
             all_nccs_rows += (n.get("output") or [])
             all_ccnl_rows += (c.get("output") or [])
 
-    # reconcile_unknowns는 원장의 모든 UNKNOWN을 훑는다 — KR은 US 행과 안 맞아
-    #   후보 0건 → LOW로 남아 잠금 유지(위 P0와 일관). US만 실제 해소된다.
+    # US는 nccs/ccnl per-order 매칭(reconcile_unknowns는 KR을 건너뛴다).
     results = kis_reconcile.reconcile_unknowns(
         {"rt_cd": "0", "output": all_nccs_rows},
-        {"rt_cd": "0", "output": all_ccnl_rows})
+        {"rt_cd": "0", "output": all_ccnl_rows}) + kr_results
     low = [r for r in results if r.get("confidence") == ledger.CONF_LOW]
     resolved = [r for r in results if r.get("confidence") == ledger.CONF_HIGH]
-    kr_syms = {u.get("symbol") for u in kr_unknowns}
     for r in low:
-        if r.get("symbol") in kr_syms:
-            continue                              # KR은 위에서 이미 명시 P0
-        _notify(f"🚨 부팅 대사 LOW — {r.get('symbol')}(후보 {r.get('candidates')}) "
+        why = r.get("kr_reason") or f"후보 {r.get('candidates')}"
+        _notify(f"🚨 부팅 대사 LOW — {r.get('symbol')}({why}) "
                 f"잠금 유지, 수동 검토 필요(MANUAL_REVIEW)", critical=True)
     if resolved:
         _notify("🔁 부팅 대사 — " + ", ".join(
