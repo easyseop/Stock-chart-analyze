@@ -75,10 +75,22 @@ def main() -> int:
 
     pos = f"rt:{args.symbol}:{int(time.time())}"
     if not args.fill:
-        # 1) 체결 안 될 낮은 지정가 매수 1주(국내는 호가단위 정렬)
-        px = kis_orders.marketable_limit_price(last * 0.5, "SELL", 0, market=market) \
-            if market == "KR" else round(last * 0.5, 2)
-        say(f"\n[1] 매수 1주 @ {px}{unit} (현재가의 50% — 체결 안 됨) 접수")
+        # 1) 체결 안 될 낮은 지정가 매수 1주.
+        #    국내: 현재가×50%는 일일 하한가(±30%) 아래라 거부(실측 40270000) →
+        #      하한가에 매수(항상 유효·매수 미체결). 미국: 현재가×50%(무제한 밴드).
+        if market == "KR":
+            bands = kis.price_limits(args.symbol)
+            if bands:
+                px = float(bands[0])              # 하한가
+                note = "하한가 — 체결 안 됨"
+            else:
+                px = kis_orders.marketable_limit_price(
+                    last * 0.72, "SELL", 0, market="KR")  # -28%(밴드 내 폴백)
+                note = "≈-28% — 체결 안 됨(하한가 조회 실패 폴백)"
+        else:
+            px = round(last * 0.5, 2)
+            note = "현재가의 50% — 체결 안 됨"
+        say(f"\n[1] 매수 1주 @ {px}{unit} ({note}) 접수")
         r = kis_orders.place_buy(f"{pos}#1", args.symbol, 1, px,
                                  excg=args.excg, market=market,
                                  reason="왕복검증", min_interval_s=0.0)

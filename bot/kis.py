@@ -499,6 +499,23 @@ def buying_power_of(symbol: str, price: float, *, market: str = "US",
     return buying_power(symbol, price, excg=excg)
 
 
+def price_limits(symbol: str) -> tuple[float, float] | None:
+    """국내 (하한가, 상한가) — 한국주 일일 ±가격제한. 모의 왕복의 '안 체결 지정가'
+    산출용(미국식 현재가×50%는 하한가 아래라 거부됨 — 2026-07-13 실측 40270000).
+    output: stck_llam(하한가)·stck_mxpr(상한가). [대조필요] 필드명 실측 확정."""
+    if not enabled():
+        return None
+    d = _get("/uapi/domestic-stock/v1/quotations/inquire-price", "FHKST01010100",
+             {"FID_COND_MRKT_DIV_CODE": "J", "FID_INPUT_ISCD": symbol})
+    out = (d or {}).get("output") or {}
+    try:
+        lo = float(out.get("stck_llam") or 0)
+        hi = float(out.get("stck_mxpr") or 0)
+        return (lo, hi) if lo > 0 and hi > 0 else None
+    except (TypeError, ValueError):
+        return None
+
+
 def last_price(symbol: str, *, market: str = "US", excg: str = "NASD") -> float | None:
     """현재가 조회(주문가 산출용). KR=국내시세(FHKST01010100), US=해외시세."""
     if not enabled():
