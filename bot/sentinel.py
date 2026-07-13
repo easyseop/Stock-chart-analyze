@@ -258,8 +258,11 @@ def check_once(broker, state: dict) -> None:
     for code, p in held.items():
         if not _market_open(p.get("ccy", "USD")):
             continue
-        if ledger.is_locked(code):             # 미해소 UNKNOWN 주문 — 재주문 전면 금지
-            continue                           #   (대사 전 재발주 = 초과매도)
+        # 미해소 in-flight 주문(submitted/ack/unknown) 있으면 재발주 전면 금지 —
+        #   (대사 전 재발주 = 초과매도. is_locked는 unknown만 봐 wedged ack/submitted를
+        #    놓치므로 open_order_count로 넓게 막는다 — 검증 지적 반영.)
+        if ledger.open_order_count(code) >= 1:
+            continue
         stop = p.get("stop")
         qty = p.get("q", 0)
         if not stop or qty <= 0:

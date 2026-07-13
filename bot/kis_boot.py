@@ -64,6 +64,14 @@ def boot_reconcile(excgs: tuple[str, ...] = ("NASD", "NYSE", "AMEX")) -> dict:
 
     all_nccs_rows, all_ccnl_rows = [], []
 
+    def _notify_low(rs):
+        for r in rs:
+            if r.get("confidence") != ledger.CONF_LOW or r.get("already_low"):
+                continue
+            why = r.get("kr_reason") or f"후보 {r.get('candidates')}"
+            _notify(f"🚨 부팅 대사 LOW — {r.get('symbol')}({why}) "
+                    f"잠금 유지, 수동 검토 필요(MANUAL_REVIEW)", critical=True)
+
     # 미국(US) UNKNOWN — 필요한 거래소만 조회(유량 절약). meta.excg 없으면 전체.
     us = [u for u in unknowns if not _is_kr(u)]
     if us:
@@ -74,8 +82,14 @@ def boot_reconcile(excgs: tuple[str, ...] = ("NASD", "NYSE", "AMEX")) -> dict:
             if n is None or c is None:             # 조회 실패 — fail-closed
                 _notify(f"🚨 부팅 대사 조회 실패({ex}) — 매매 게이트 닫힌 채 유지",
                         critical=True)
-                return {"ok": False, "unknowns": len(unknowns), "resolved": 0,
-                        "low": 0, "results": []}
+                # KR은 이미 대사됨(원장 반영) — 결과·알림 보존(관측성). 게이트만 닫는다.
+                _notify_low(kr_results)
+                kr_low = sum(1 for r in kr_results
+                             if r.get("confidence") == ledger.CONF_LOW)
+                return {"ok": False, "unknowns": len(unknowns),
+                        "resolved": sum(1 for r in kr_results
+                                        if r.get("confidence") == ledger.CONF_HIGH),
+                        "low": kr_low, "results": kr_results}
             all_nccs_rows += (n.get("output") or [])
             all_ccnl_rows += (c.get("output") or [])
 
@@ -85,12 +99,7 @@ def boot_reconcile(excgs: tuple[str, ...] = ("NASD", "NYSE", "AMEX")) -> dict:
         {"rt_cd": "0", "output": all_ccnl_rows}) + kr_results
     low = [r for r in results if r.get("confidence") == ledger.CONF_LOW]
     resolved = [r for r in results if r.get("confidence") == ledger.CONF_HIGH]
-    for r in low:
-        if r.get("already_low"):
-            continue                              # 직전 cycle에 이미 알림 — 폭주 방지
-        why = r.get("kr_reason") or f"후보 {r.get('candidates')}"
-        _notify(f"🚨 부팅 대사 LOW — {r.get('symbol')}({why}) "
-                f"잠금 유지, 수동 검토 필요(MANUAL_REVIEW)", critical=True)
+    _notify_low(results)                          # already_low는 내부에서 억제
     if resolved:
         _notify("🔁 부팅 대사 — " + ", ".join(
             f"{r.get('symbol')} {r.get('state')}(체결 {r.get('filled')})"

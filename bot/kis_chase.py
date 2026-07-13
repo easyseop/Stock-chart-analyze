@@ -52,8 +52,25 @@ class Chase:
     cfg: ChaseConfig = field(default_factory=ChaseConfig)
     status: str = "idle"
     attempts: int = 0
-    current: dict | None = None      # 살아있는 주문 {key, odno, price, placed_at}
+    current: dict | None = None      # 살아있는 주문 {key, odno, orgno, price, placed_at}
     t0: float | None = None
+    market: str = ""                 # ""=심볼 자동판별(6자리 숫자=KR)
+
+    def _mkt(self) -> str:
+        if self.market:
+            return self.market
+        s = str(self.symbol).strip()
+        return "KR" if (len(s) == 6 and s[:5].isdigit()) else "US"
+
+    def _px(self, raw: float) -> float:
+        """매도 지정가 반올림 — US 2자리 / KR 호가단위 **아래로** 정렬(유효·마켓터블)."""
+        if self._mkt() != "KR":
+            return round(float(raw), 2)
+        p = float(raw)
+        tick = (1 if p < 2_000 else 5 if p < 5_000 else 10 if p < 20_000
+                else 50 if p < 50_000 else 100 if p < 200_000
+                else 500 if p < 500_000 else 1_000)
+        return float(max(tick, (int(p) // tick) * tick))
 
     def _notify(self, text: str) -> None:
         try:
@@ -63,7 +80,7 @@ class Chase:
             pass
 
     def _floor(self) -> float:
-        return round(self.ref_price * (1 - self.cfg.max_slippage_bps / 1e4), 2)
+        return self._px(self.ref_price * (1 - self.cfg.max_slippage_bps / 1e4))
 
     def _ladder_price(self) -> float:
         """이번 시도의 지정가 — 최신 시세와 ref 중 낮은 쪽 기준, floor 하한."""
@@ -75,7 +92,7 @@ class Chase:
         base = min(self.ref_price, q) if q else self.ref_price
         bps = self.cfg.base_slippage_bps + self.attempts * self.cfg.step_bps
         px = base * (1 - bps / 1e4)
-        return round(max(px, self._floor()), 2)
+        return self._px(max(px, self._floor()))
 
     def step(self) -> str:
         if self.status in TERMINAL:
@@ -113,6 +130,7 @@ class Chase:
             if act == "ack":
                 self.attempts += 1
                 self.current = {"key": key, "odno": r.get("odno", ""),
+                                "orgno": r.get("orgno", ""),   # 국내 취소 필수값
                                 "price": px, "placed_at": now,
                                 "qty": self.qty - filled}
             elif act == "unknown":
@@ -127,7 +145,8 @@ class Chase:
         # 3) 살아있는 주문 — 재게시 시간 지났으면 취소 시도
         if now - self.current["placed_at"] >= self.cfg.repost_after_s:
             c = self.deps["cancel"](self.current["key"] + ":cxl", self.symbol,
-                                    self.current["odno"], self.current["qty"])
+                                    self.current["odno"], self.current["qty"],
+                                    orgno=self.current.get("orgno", ""))
             act = c.get("act")
             if act == "canceled":
                 self.current = None               # 다음 step에서 더 공격적 재발주

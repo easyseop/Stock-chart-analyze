@@ -45,16 +45,17 @@ class _Env:
     def _place(self, key, symbol, qty, price):
         self.places.append((key, qty, price))
         act = self.place_acts.pop(0) if self.place_acts else "ack"
-        return {"ok": act == "ack", "act": act, "odno": f"od{len(self.places)}"}
+        return {"ok": act == "ack", "act": act, "odno": f"od{len(self.places)}",
+                "orgno": "00950"}
 
-    def _cancel(self, key, symbol, odno, qty):
-        self.cancels.append((key, odno))
+    def _cancel(self, key, symbol, odno, qty, orgno=""):
+        self.cancels.append((key, odno, orgno))
         act = self.cancel_acts.pop(0) if self.cancel_acts else "canceled"
         return {"ok": act == "canceled", "act": act}
 
 
-def _mk(env, qty=10, ref=100.0, **cfg):
-    return Chase("pos", "AAPL", qty, ref, env.deps(),
+def _mk(env, qty=10, ref=100.0, symbol="AAPL", **cfg):
+    return Chase("pos", symbol, qty, ref, env.deps(),
                  ChaseConfig(**cfg) if cfg else ChaseConfig())
 
 
@@ -81,6 +82,19 @@ def test_reprice_ladder_then_fill():
     env.filled = 10
     assert c.step() == "done"
     print("[PASS] 미체결 → 취소 → 사다리 재발주(−70bp) → done")
+
+
+def test_kr_tick_and_orgno():
+    """국내(6자리 숫자): 지정가는 호가단위 아래로 정렬(정수 원), 취소에 orgno 전달."""
+    env = _Env(10)
+    c = _mk(env, ref=71_000.0, symbol="005930")   # 삼성전자
+    c.step()                                       # 발주1: 71000×(1−30bp)=70787 → tick 100 아래정렬 70700
+    px = env.places[0][2]
+    assert px == 70_700.0 and px == float(int(px)), px   # 정수·호가단위(100) 정렬
+    env.t += 25
+    c.step()                                       # 취소 — orgno 전달돼야
+    assert env.cancels and env.cancels[0][2] == "00950"  # (key, odno, orgno)
+    print("[PASS] 국내 chase: 호가단위 정렬 지정가 + 취소 orgno 전달")
 
 
 def test_floor_respected():
@@ -156,6 +170,7 @@ def test_heartbeat_sla(tmp_path=None):
 def main():
     test_fill_first_try()
     test_reprice_ladder_then_fill()
+    test_kr_tick_and_orgno()
     test_floor_respected()
     test_cancel_unknown_manual_lock()
     test_exhausted_and_timeout()
