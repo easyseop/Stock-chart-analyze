@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated_at": "2026-07-14T06:12:21+09:00",
+ "generated_at": "2026-07-14T06:52:47+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "signals": [
   {
@@ -3225,46 +3225,6 @@
    "norm": -22.6,
    "fresh": false,
    "break_gap": 0.1394,
-   "earnings_d": null,
-   "tactic": null
-  },
-  {
-   "id": "257720-2026-07-14-watch",
-   "code": "257720",
-   "name": "실리콘투",
-   "ccy": "KRW",
-   "group": "watch",
-   "entry_kind": "pullback",
-   "stage": 3,
-   "price": 37600.0,
-   "entry": 37312.4333,
-   "stop": 32213.2726,
-   "target": 47510.7549,
-   "shares_1pct": 19,
-   "range_pos": 0.231,
-   "norm": -30.2,
-   "fresh": false,
-   "break_gap": 0.2687,
-   "earnings_d": null,
-   "tactic": null
-  },
-  {
-   "id": "003380-2026-07-14-watch",
-   "code": "003380",
-   "name": "하림지주",
-   "ccy": "KRW",
-   "group": "watch",
-   "entry_kind": "pullback",
-   "stage": 3,
-   "price": 10360.0,
-   "entry": 8880.0,
-   "stop": 7649.3793,
-   "target": 11341.2413,
-   "shares_1pct": 81,
-   "range_pos": 0.2629,
-   "norm": -39.6,
-   "fresh": false,
-   "break_gap": 0.1034,
    "earnings_d": null,
    "tactic": null
   }
