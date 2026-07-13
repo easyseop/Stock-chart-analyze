@@ -115,10 +115,15 @@ _TR: dict[tuple[str, str, str], str] = {
 
 
 def market_of_symbol(symbol: str) -> str:
-    """심볼 → 시장('KR'|'US'). 국내주식은 6자리 숫자 코드, 미국은 알파벳 티커.
-    라우팅 단일 소스 — kis_orders/sentinel이 이걸로 주문 경로를 가른다."""
-    s = str(symbol).strip()
-    return "KR" if (s.isdigit() and len(s) == 6) else "US"
+    """심볼 → 시장('KR'|'US'). 라우팅 단일 소스 — kis_orders/sentinel이 이걸로
+    주문 경로를 가른다.
+
+    KRX 종목코드는 6자리이고 **앞 5자리가 숫자**(6번째 자리는 보통 숫자지만
+    신형우선주·제N종 등은 문자 K/L… 가능, 예 '00088K'). 미국 티커는 알파벳이라
+    5자리 연속 숫자로 시작하지 않는다 → 앞5자리 숫자+길이6이면 KR.
+    (ccy를 아는 호출부는 market_of_ccy로 넘기는 게 더 견고 — 이건 심볼만 있을 때 폴백.)"""
+    s = str(symbol).strip().upper()
+    return "KR" if (len(s) == 6 and s[:5].isdigit()) else "US"
 
 
 def market_of_ccy(ccy: str) -> str:

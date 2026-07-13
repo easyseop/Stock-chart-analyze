@@ -51,25 +51,24 @@ def boot_reconcile(excgs: tuple[str, ...] = ("NASD", "NYSE", "AMEX")) -> dict:
         _STATE.update(done=True, low=0)
         return {"ok": True, "unknowns": 0, "resolved": 0, "low": 0, "results": []}
 
+    def _is_kr(u: dict) -> bool:
+        return (u.get("market") == "KR"
+                or kis.market_of_symbol(u.get("symbol", "")) == "KR")
+
+    # 국내(KR) UNKNOWN — 자동 대사 보류(fail-closed). 국내 nccs/ccnl 응답 필드명은
+    #   해외(ft_*)와 달라 kis_reconcile.normalize_rows가 아직 매핑하지 못한다([대조필요]).
+    #   검증 안 된 필드로 자동 해소하면 오귀속(이중매도) 위험 → 실측 전까지는 해당
+    #   종목을 **잠금 유지 + P0**로 명시 처리(수동 검토). 조용한 오동작보다 안전.
+    kr_unknowns = [u for u in unknowns if _is_kr(u)]
+    for u in kr_unknowns:
+        _notify(f"🚨 부팅 대사 보류(KR 미검증) — {u.get('symbol')} 잠금 유지, "
+                f"수동 검토 필요. 국내 대사 필드 실측 후 자동화(MANUAL_REVIEW).",
+                critical=True)
+
     all_nccs_rows, all_ccnl_rows = [], []
 
-    # 국내(KR) UNKNOWN — 도메스틱 미체결/체결내역 1회 조회(거래소 구분 없음).
-    if any(kis.market_of_symbol(u.get("symbol", "")) == "KR"
-           or u.get("market") == "KR" for u in unknowns):
-        n = kis.domestic_open_orders()
-        c = kis.domestic_fills()
-        if n is None or c is None:                 # 조회 실패 — fail-closed
-            _notify("🚨 부팅 대사 조회 실패(KR 국내) — 매매 게이트 닫힌 채 유지",
-                    critical=True)
-            return {"ok": False, "unknowns": len(unknowns), "resolved": 0,
-                    "low": 0, "results": []}
-        all_nccs_rows += (n.get("output") or [])
-        all_ccnl_rows += (c.get("output1") or c.get("output") or [])
-
     # 미국(US) UNKNOWN — 필요한 거래소만 조회(유량 절약). meta.excg 없으면 전체.
-    us = [u for u in unknowns
-          if kis.market_of_symbol(u.get("symbol", "")) != "KR"
-          and u.get("market") != "KR"]
+    us = [u for u in unknowns if not _is_kr(u)]
     if us:
         need = {u.get("excg") for u in us if u.get("excg")} or set(excgs)
         for ex in sorted(need):
@@ -83,12 +82,17 @@ def boot_reconcile(excgs: tuple[str, ...] = ("NASD", "NYSE", "AMEX")) -> dict:
             all_nccs_rows += (n.get("output") or [])
             all_ccnl_rows += (c.get("output") or [])
 
+    # reconcile_unknowns는 원장의 모든 UNKNOWN을 훑는다 — KR은 US 행과 안 맞아
+    #   후보 0건 → LOW로 남아 잠금 유지(위 P0와 일관). US만 실제 해소된다.
     results = kis_reconcile.reconcile_unknowns(
         {"rt_cd": "0", "output": all_nccs_rows},
         {"rt_cd": "0", "output": all_ccnl_rows})
     low = [r for r in results if r.get("confidence") == ledger.CONF_LOW]
     resolved = [r for r in results if r.get("confidence") == ledger.CONF_HIGH]
+    kr_syms = {u.get("symbol") for u in kr_unknowns}
     for r in low:
+        if r.get("symbol") in kr_syms:
+            continue                              # KR은 위에서 이미 명시 P0
         _notify(f"🚨 부팅 대사 LOW — {r.get('symbol')}(후보 {r.get('candidates')}) "
                 f"잠금 유지, 수동 검토 필요(MANUAL_REVIEW)", critical=True)
     if resolved:

@@ -85,6 +85,7 @@ def test_market_routing():
     kis, _, _ = _setup(tempfile.mkdtemp())
     assert kis.market_of_symbol("005930") == "KR"     # 삼성전자
     assert kis.market_of_symbol("000660") == "KR"     # SK하이닉스
+    assert kis.market_of_symbol("00088K") == "KR"     # 신형우선주(6번째 문자)
     assert kis.market_of_symbol("AAPL") == "US"
     assert kis.market_of_symbol("BRK.B") == "US"
     assert kis.market_of_symbol("12345") == "US"      # 5자리(코드 아님)
