@@ -2,8 +2,8 @@
  "updated": "2026-07-13",
  "start": 100000000,
  "cash": 38120569,
- "equity": 98622103,
- "ret_pct": -1.38,
+ "equity": 98681503,
+ "ret_pct": -1.32,
  "positions": [
   {
    "code": "MRSH",
@@ -18,7 +18,7 @@
    "opened": "2026-07-06",
    "pl_krw": 431944,
    "pl_pct": 2.3,
-   "price_age_min": 0.5
+   "price_age_min": 0.6
   },
   {
    "code": "STE",
@@ -33,7 +33,7 @@
    "opened": "2026-07-07",
    "pl_krw": 26800,
    "pl_pct": 1.4,
-   "price_age_min": 0.5
+   "price_age_min": 0.6
   },
   {
    "code": "068270",
@@ -41,14 +41,14 @@
    "ccy": "KRW",
    "q": 54,
    "avg": 175348.4128,
-   "price": 174800.0,
+   "price": 175900.0,
    "stop": 157651.1713,
    "target": 212997.6574,
    "half_done": false,
    "opened": "2026-07-07",
-   "pl_krw": -29614,
-   "pl_pct": -0.31,
-   "price_age_min": 0.5
+   "pl_krw": 29786,
+   "pl_pct": 0.31,
+   "price_age_min": 0.6
   },
   {
    "code": "ORC",
@@ -63,7 +63,7 @@
    "opened": "2026-07-08",
    "pl_krw": 0,
    "pl_pct": -0.0,
-   "price_age_min": 0.5
+   "price_age_min": 0.6
   },
   {
    "code": "FND",
@@ -78,7 +78,7 @@
    "opened": "2026-07-08",
    "pl_krw": 445763,
    "pl_pct": 4.46,
-   "price_age_min": 0.5
+   "price_age_min": 0.6
   },
   {
    "code": "HMC",
@@ -93,7 +93,7 @@
    "opened": "2026-07-09",
    "pl_krw": 1192,
    "pl_pct": 0.96,
-   "price_age_min": 0.5
+   "price_age_min": 0.6
   },
   {
    "code": "NU",
@@ -379,7 +379,7 @@
   },
   {
    "d": "2026-07-13",
-   "v": 98622103
+   "v": 98681503
   }
  ],
  "log": [
