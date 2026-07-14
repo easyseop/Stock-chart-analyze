@@ -2,8 +2,8 @@
  "updated": "2026-07-14",
  "start": 100000000,
  "cash": 38120569,
- "equity": 98378460,
- "ret_pct": -1.62,
+ "equity": 98400060,
+ "ret_pct": -1.6,
  "positions": [
   {
    "code": "MRSH",
@@ -18,7 +18,7 @@
    "opened": "2026-07-06",
    "pl_krw": 776275,
    "pl_pct": 4.14,
-   "price_age_min": 0.5
+   "price_age_min": 0.4
   },
   {
    "code": "STE",
@@ -41,13 +41,13 @@
    "ccy": "KRW",
    "q": 54,
    "avg": 175348.4128,
-   "price": 175300.0,
+   "price": 175700.0,
    "stop": 157651.1713,
    "target": 212997.6574,
    "half_done": false,
    "opened": "2026-07-07",
-   "pl_krw": -2614,
-   "pl_pct": -0.03,
+   "pl_krw": 18986,
+   "pl_pct": 0.2,
    "price_age_min": 0.4
   },
   {
@@ -383,7 +383,7 @@
   },
   {
    "d": "2026-07-14",
-   "v": 98378460
+   "v": 98400060
   }
  ],
  "log": [
