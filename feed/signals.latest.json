@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated_at": "2026-07-15T05:59:51+09:00",
+ "generated_at": "2026-07-15T06:44:04+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "signals": [
   {
@@ -1594,6 +1594,26 @@
    }
   },
   {
+   "id": "CRAI-2026-07-15-watch",
+   "code": "CRAI",
+   "name": "CRA International,Inc.",
+   "ccy": "USD",
+   "group": "watch",
+   "entry_kind": "pullback",
+   "stage": 4,
+   "price": 164.12,
+   "entry": 153.7213,
+   "stop": 139.9166,
+   "target": 181.3306,
+   "shares_1pct": 7,
+   "range_pos": 0.3359,
+   "norm": 19.8,
+   "fresh": false,
+   "break_gap": 0.139,
+   "earnings_d": null,
+   "tactic": null
+  },
+  {
    "id": "005830-2026-07-15-watch",
    "code": "005830",
    "name": "DB손해보험",
@@ -1750,26 +1770,6 @@
    "norm": 15.6,
    "fresh": false,
    "break_gap": 0.1679,
-   "earnings_d": null,
-   "tactic": null
-  },
-  {
-   "id": "CRAI-2026-07-15-watch",
-   "code": "CRAI",
-   "name": "CRA International,Inc.",
-   "ccy": "USD",
-   "group": "watch",
-   "entry_kind": "pullback",
-   "stage": 3,
-   "price": 164.12,
-   "entry": 153.7213,
-   "stop": 139.9166,
-   "target": 181.3306,
-   "shares_1pct": 7,
-   "range_pos": 0.3359,
-   "norm": 15.1,
-   "fresh": false,
-   "break_gap": 0.139,
    "earnings_d": null,
    "tactic": null
   },
