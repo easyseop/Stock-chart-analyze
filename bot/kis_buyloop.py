@@ -100,6 +100,14 @@ def _fetch_signals() -> list[dict]:
 
 
 def _cycle() -> None:
+    # 부팅 대사 — 이 프로세스의 매매 게이트(kis_boot.trading_allowed)를 연다.
+    #   파수꾼과 별개 프로세스라 매수 루프도 자체적으로 돌려야 boot 게이트가 열린다.
+    #   UNKNOWN 0건이면 원장 읽기만(가벼움). 실패해도 게이트 닫힌 채 진행(fail-closed).
+    try:
+        from bot import kis_boot
+        kis_boot.boot_reconcile()
+    except Exception as e:
+        print(f"[부팅 대사 오류] {type(e).__name__}: {e}", flush=True)
     sigs = _fetch_signals()
     print(f"신호 {len(sigs)}건 로드 · 'now' 후보 {len(_now_signals(sigs))}건", flush=True)
     for r in run_once(sigs):

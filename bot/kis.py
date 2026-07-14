@@ -553,10 +553,17 @@ def last_price(symbol: str, *, market: str = "US", excg: str = "NASD") -> float 
             return float(((d or {}).get("output") or {}).get("stck_prpr") or 0) or None
         except (TypeError, ValueError):
             return None
-    d = _get("/uapi/overseas-price/v1/quotations/price", "HHDFS00000300",
-             {"AUTH": "", "EXCD": {"NASD": "NAS", "NYSE": "NYS",
-                                   "AMEX": "AMS"}.get(excg, "NAS"), "SYMB": symbol})
-    try:
-        return float(((d or {}).get("output") or {}).get("last") or 0) or None
-    except (TypeError, ValueError):
-        return None
+    # 미국: 신호에 거래소 정보가 없어 excg가 기본값(NASD)이면 NAS→NYS→AMS 순차 시도
+    #   (종목이 NYSE/AMEX면 NAS로 조회 시 시세 없음 → '조회 실패'가 났던 원인).
+    m = {"NASD": "NAS", "NYSE": "NYS", "AMEX": "AMS"}
+    excds = ["NAS", "NYS", "AMS"] if excg == "NASD" else [m.get(excg, "NAS")]
+    for excd in excds:
+        d = _get("/uapi/overseas-price/v1/quotations/price", "HHDFS00000300",
+                 {"AUTH": "", "EXCD": excd, "SYMB": symbol})
+        try:
+            px = float(((d or {}).get("output") or {}).get("last") or 0)
+        except (TypeError, ValueError):
+            px = 0.0
+        if px > 0:
+            return px
+    return None

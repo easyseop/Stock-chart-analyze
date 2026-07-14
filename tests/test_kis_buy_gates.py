@@ -155,8 +155,10 @@ def test_x1_gate_chain_then_sent():
         M["kill"].lower_level(0, ack="op: 테스트")
         assert X.execute_entry("p#1", "AAPL", **kw).gate == "boot"   # 대사 전
         M["kis_boot"]._STATE["done"] = True
-        d = X.execute_entry("p#1", "AAPL", **kw)
-        assert d.gate == "rollout" and "정규장" in d.why             # 주말=세션 닫힘
+        # 세션 닫힘을 명시 모킹(실제 미장 개장 중에도 결정론적으로 rollout에서 멈춤)
+        with mock.patch.object(M["rollout"], "us_regular_open", return_value=False):
+            d = X.execute_entry("p#1", "AAPL", **kw)
+        assert d.gate == "rollout" and "정규장" in d.why
         # 세션만 열린 것으로 모킹 → ownership(미캡처) → 캡처 → sizing/sent
         with mock.patch.object(M["rollout"], "us_regular_open", return_value=True):
             d2 = X.execute_entry("p#1", "AAPL", **kw)
