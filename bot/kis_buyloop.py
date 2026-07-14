@@ -18,7 +18,7 @@ import os
 import sys
 import urllib.request
 
-from bot import kis, kis_buy, settings
+from bot import kis, kis_buy, kis_positions, settings
 
 
 def _now_signals(signals: list[dict]) -> list[dict]:
@@ -78,6 +78,11 @@ def run_once(signals: list[dict], *, fx: float | None = None,
         d = kis_buy.execute_entry(pos_key, code, price_usd=cur,
                                   per_share_risk_usd=per_share, krw_per_usd=fx,
                                   excg=excg, market=market, reason=reason)
+        if d.ok:
+            # 파수꾼이 feed에 없어도 이 손절선으로 보호하도록 기록(브로커-진실 fallback).
+            kis_positions.record(code, stop=float(s["stop"]), ccy=ccy,
+                                 entry=entry, qty=d.qty, name=s.get("name", ""),
+                                 opened=settings.today_kst())
         results.append({"code": code, "gate": d.gate, "ok": d.ok,
                         "qty": d.qty, "why": d.why})
     return results

@@ -23,16 +23,24 @@ def _sig(code="005930", ccy="KRW", entry=100.0, stop=95.0,
             "stage": 3, "norm": 50, **kw}
 
 
+import tempfile
+
+
 def _run(signals, holdings=None, last=100.0, exec_ret=None, mkt_open=True):
     if exec_ret is None:
         exec_ret = kis_buy.BuyDecision(True, "sent", "ack ODNO=1", qty=3)
+    tf = tempfile.NamedTemporaryFile(suffix=".jsonl", delete=False)
+    tf.close()
     with mock.patch.object(BL.kis, "holdings", return_value=holdings), \
          mock.patch.object(BL.kis, "last_price", return_value=last), \
          mock.patch.object(BL.settings, "market_open", return_value=mkt_open), \
+         mock.patch.object(BL.kis_positions, "PATH", tf.name), \
          mock.patch.object(BL.kis_buy, "execute_entry",
                            return_value=exec_ret) as ex:
         res = BL.run_once(signals)
-    return res, ex
+        recorded = BL.kis_positions.load()
+    os.unlink(tf.name)
+    return res, ex, recorded
 
 
 def _g(res, code):
@@ -40,41 +48,43 @@ def _g(res, code):
 
 
 def test_happy_path_executes():
-    res, ex = _run([_sig()], holdings={})
+    res, ex, rec = _run([_sig()], holdings={})
     r = _g(res, "005930")
     assert r["ok"] and r["gate"] == "sent" and r["qty"] == 3
     assert ex.called
     # KR 신호 → market=KR로 execute_entry 호출
     assert ex.call_args.kwargs.get("market") == "KR"
-    print("[PASS] now·미보유·가격근접 → execute_entry 전송")
+    # 성공 진입 → 파수꾼 보호용 손절선 기록됨(브로커-진실 fallback)
+    assert rec.get("005930", {}).get("stop") == 95.0
+    print("[PASS] now·미보유·가격근접 → execute_entry 전송 + 손절선 기록")
 
 
 def test_already_held_skips():
-    res, ex = _run([_sig()], holdings={"005930": 5})
+    res, ex, rec = _run([_sig()], holdings={"005930": 5})
     assert _g(res, "005930")["gate"] == "already" and not ex.called
     print("[PASS] 이미 KIS 보유 → skip(중복매수 금지)")
 
 
 def test_holdings_unknown_skips():
-    res, ex = _run([_sig()], holdings=None)          # 잔고 조회 실패
+    res, ex, rec = _run([_sig()], holdings=None)          # 잔고 조회 실패
     assert _g(res, "005930")["gate"] == "holdings" and not ex.called
     print("[PASS] 잔고 조회실패 → 보수적 skip")
 
 
 def test_price_deviation_skips():
-    res, ex = _run([_sig(entry=100.0)], holdings={}, last=110.0)  # +10% 이탈
+    res, ex, rec = _run([_sig(entry=100.0)], holdings={}, last=110.0)  # +10% 이탈
     assert _g(res, "005930")["gate"] == "tolerance" and not ex.called
     print("[PASS] 가격 괴리(진입가 ±1.5% 밖) → skip")
 
 
 def test_market_closed_skips():
-    res, ex = _run([_sig()], holdings={}, mkt_open=False)
+    res, ex, rec = _run([_sig()], holdings={}, mkt_open=False)
     assert _g(res, "005930")["gate"] == "session" and not ex.called
     print("[PASS] 장외 → skip")
 
 
 def test_non_now_filtered():
-    res, _ = _run([_sig(group="watch"), _sig(code="000660", fresh=False)],
+    res, _, rec = _run([_sig(group="watch"), _sig(code="000660", fresh=False)],
                   holdings={})
     assert res == []                                 # 후보 아님
     print("[PASS] now 아님·미신선 → 후보 제외")
@@ -82,7 +92,7 @@ def test_non_now_filtered():
 
 def test_us_signal_routes_and_fx():
     ex_ret = kis_buy.BuyDecision(True, "sent", "ack", qty=1)
-    res, ex = _run([_sig(code="AAPL", ccy="USD", entry=190.0, stop=185.0)],
+    res, ex, rec = _run([_sig(code="AAPL", ccy="USD", entry=190.0, stop=185.0)],
                    holdings={}, last=190.5, exec_ret=ex_ret)
     assert _g(res, "AAPL")["ok"]
     assert ex.call_args.kwargs.get("market") == "US"

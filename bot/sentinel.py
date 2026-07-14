@@ -165,6 +165,23 @@ class _KisBroker(_PaperBroker):
         from bot import kis_boot
         return kis_boot.boot_reconcile().get("results", [])
 
+    def holdings(self):
+        """KIS 실보유 {symbol.upper(): qty} — 브로커-진실 보호용. **현재 열린 시장만**
+        조회(닫힌 시장은 어차피 못 팜). 하나라도 조회 실패=None(파수꾼이 feed 폴백)."""
+        from bot import kis, settings
+        merged: dict = {}
+        plan = []
+        if settings.market_open("KRW"):
+            plan.append(("KR", "NASD"))
+        if settings.market_open("USD"):
+            plan += [("US", "NASD"), ("US", "NYSE"), ("US", "AMEX")]
+        for market, ex in plan:
+            h = kis.holdings(market, excg=ex)
+            if h is None:
+                return None
+            merged.update(h)
+        return merged
+
 
 class _TossBroker(_PaperBroker):
     """토스증권 어댑터 자리 — API 키 발급 후 이 두 메서드만 구현하면 실전.
@@ -253,7 +270,34 @@ def check_once(broker, state: dict) -> None:
     if not stale:
         state["_stale_warned"] = False
         state["positions"] = {p["code"]: p for p in positions}  # 최신 스냅샷 유지
-    held = state.get("positions", {})
+    feed = state.get("positions", {})
+
+    # 브로커-진실: KIS 실보유를 보호 대상으로(수량=브로커 진실). 손절선은 feed(트레일링)
+    #   우선, 없으면 매수 루프가 기록한 진입 손절선(kis_positions). feed에도 기록에도
+    #   손절선이 없는 KIS 보유는 무보호 → P0(새로 무보호가 된 것만, 알림 폭주 방지).
+    #   브로커 조회 실패=None → feed 폴백(기존 동작 유지, 보호 끊기지 않게).
+    held = feed
+    if hasattr(broker, "holdings"):
+        bh = broker.holdings()
+        if bh is not None:
+            from bot import kis_positions
+            kpos = kis_positions.load()
+            held, unprot = {}, set()
+            for code, qty in bh.items():
+                if int(qty) <= 0:
+                    continue
+                # 손절선 있는 소스 선택 — feed(트레일링) 우선, 없으면 진입 기록.
+                fsrc, ksrc = feed.get(code), kpos.get(code)
+                src = (fsrc if (fsrc and fsrc.get("stop"))
+                       else ksrc if (ksrc and ksrc.get("stop")) else None)
+                if src is None:
+                    unprot.add(code)
+                    continue
+                held[code] = {**src, "code": code, "q": int(qty), "_bt": True}
+            for code in unprot - state.get("_unprot", set()):     # 새 무보호만 알림
+                _notify(f"🚨 손절선 불명 KIS 보유 {code} — 수동 확인 필요(브로커-진실)",
+                        critical=True)
+            state["_unprot"] = unprot
     sent = _load_sent()
     for code, p in held.items():
         if not _market_open(p.get("ccy", "USD")):
@@ -317,9 +361,10 @@ def check_once(broker, state: dict) -> None:
         else:
             state["_hit_" + code] = False
         if fire:
-            # 잔여 수량만 발주 — 이 포지션에서 이미 확인된 체결을 뺀 나머지만.
+            # 발주 수량: 브로커-진실(_bt)이면 실보유 전량(broker_q가 이미 잔여를 반영 —
+            #   filled_for를 또 빼면 이중차감). feed 경로는 원수량−확인체결(잔여만).
             #   (부분체결 후 원수량 재발주 = 초과매도. 시도마다 별도 주문키.)
-            qty_send = qty - ledger.filled_for(key)
+            qty_send = int(qty) if p.get("_bt") else (qty - ledger.filled_for(key))
             if qty_send <= 0:
                 sent[key] = _now_kst().isoformat(timespec="seconds")   # 이미 다 팔림
                 _save_sent(sent)
