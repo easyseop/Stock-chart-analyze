@@ -9,6 +9,7 @@
 |---|---|
 | `sentinel.service` | 파수꾼(매도) 상시 실행(`python -m bot.sentinel`, `SENTINEL_BROKER=kis`) |
 | `buyloop.service` | 매수 루프 — autopaper 'now' 신호를 KIS에 미러 매수(`python -m bot.kis_buyloop --loop`) |
+| `telegram.service` | 텔레그램 조회 봇(읽기전용) — `/보유`·`/종목 <코드>`(`python -m bot.kis_telegram`) |
 | `watchdog.service` | heartbeat 감시 — 60s P0 · 90s 재기동(≤3회/10분) · 120s+ kill L1 |
 | `watchdog.py` | 위 유닛이 실행하는 스크립트 |
 
@@ -58,10 +59,19 @@ sudo systemctl enable --now sentinel.service watchdog.service
 sudo cp /opt/stock/Stock-chart-analyze/infra/server/buyloop.service /etc/systemd/system/
 sudo systemctl enable --now buyloop.service   # ALLOW_BUY=1·KIS_ORDERS_ENABLED=1 확인 후
 
+# 텔레그램 조회 봇(선택, 읽기전용) — /보유·/종목 <코드>:
+sudo cp /opt/stock/Stock-chart-analyze/infra/server/telegram.service /etc/systemd/system/
+sudo systemctl enable --now telegram.service  # TELEGRAM_BOT_TOKEN·CHAT_ID 필요
+
 # 3) 확인
-systemctl status sentinel watchdog buyloop --no-pager
+systemctl status sentinel watchdog buyloop telegram --no-pager
 sudo -u bot python3 /opt/stock/Stock-chart-analyze/scripts/kis_preflight.py
 ```
+
+> **텔레그램 조회 봇(`telegram.service`)** — 읽기전용. 매매 경로가 전혀 없어(조회
+> API만) 토큰이 유출돼도 이 봇으로는 매매 불가. `getUpdates`는 이 프로세스만 쓴다
+> (봇 하나에 `getUpdates` 소비자는 하나여야 함 — 중복 기동 금지, 409 Conflict).
+> 알림 발송(notify)과는 무관: 발송은 sendMessage, 조회는 getUpdates로 분리됨.
 
 ## 모의 봇 켜기 — 최소 순서 (Stage 1.5)
 1. `kis.env` 채우고 `chmod 600` → `kis_arm.py`로 무장(baseline 캡처).

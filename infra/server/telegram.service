@@ -1,0 +1,26 @@
+# 텔레그램 조회 봇 systemd 유닛 — KIS 모의계좌 보유종목/종목상세 조회(읽기전용)
+# 매매 경로 없음(조회 API만). 매수=buyloop, 매도=sentinel과 권한 분리.
+# 설치: infra/server/README.md 참조. 시크릿은 EnvironmentFile(권한 600)로만.
+[Unit]
+Description=stock telegram query bot (read-only KIS balance/detail)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=bot
+WorkingDirectory=/opt/stock/Stock-chart-analyze
+# 시크릿(KIS·TELEGRAM_BOT_TOKEN·TELEGRAM_CHAT_ID)은 이 파일에만(chmod 600, root:bot)
+EnvironmentFile=/etc/stock/kis.env
+# ★ 파수꾼·매수루프와 같은 토큰 캐시 공유 필수(I3: 토큰 발급 1분1회 — flock 직렬화)
+Environment=KIS_TOKEN_CACHE=/opt/stock/kis_token.json
+ExecStart=/usr/bin/python3 -m bot.kis_telegram
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+ProtectSystem=full
+ReadWritePaths=/opt/stock/Stock-chart-analyze /tmp /opt/stock
+
+[Install]
+WantedBy=multi-user.target

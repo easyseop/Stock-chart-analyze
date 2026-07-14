@@ -1,0 +1,273 @@
+"""텔레그램 조회 봇 — KIS 모의계좌 보유종목/종목상세 조회(읽기 전용).
+
+사용자 요청(2026-07-14): 텔레그램에서 보유종목을 조회하면
+  · /보유          → 종목별 수익률·수익금 요약(+통화별 합계)
+  · /종목 <코드>   → 그 종목의 현재가·평단가·손절예상가 상세(실시간 재조회)
+  · 코드만 보내도 상세 조회.
+
+**읽기 전용**: 이 모듈에는 주문 경로가 전혀 없다(조회 API만). 토큰이 유출돼도
+이 봇으로는 매매 불가. 매수는 kis_buyloop, 매도는 sentinel만 담당(권한 분리).
+
+보안: 응답은 **TELEGRAM_CHAT_ID로 지정된 채팅에만**. 다른 사람이 봇에게
+말을 걸어도 무시(chat.id 불일치 → 조용히 버림).
+
+손절예상가 소스는 파수꾼과 동일: feed(트레일링) 우선, 없으면 매수 루프가
+기록한 진입 손절선(kis_positions). 둘 다 없으면 '미설정'.
+
+실행:
+  python -m bot.kis_telegram            # 롱폴링 루프(서버 상시 모드)
+  python -m bot.kis_telegram --once "/보유"   # 1회 응답 출력(로컬 테스트)
+"""
+from __future__ import annotations
+
+import json
+import os
+import sys
+import time
+import urllib.request
+
+_API = "https://api.telegram.org/bot{token}/{method}"
+# US 잔고는 거래소별 조회 → 세 시장 병합(종목이 어디 상장인지 신호에 없음).
+_US_EXCGS = ("NASD", "NYSE", "AMEX")
+
+
+# ── 텔레그램 저수준 ────────────────────────────────────────────────────────
+def _tg(method: str, payload: dict | None = None, *, timeout: int = 40) -> dict:
+    token = os.environ.get("TELEGRAM_BOT_TOKEN") or ""
+    url = _API.format(token=token, method=method)
+    data = json.dumps(payload).encode() if payload is not None else None
+    req = urllib.request.Request(
+        url, data=data,
+        headers={"Content-Type": "application/json"} if data else {})
+    with urllib.request.urlopen(req, timeout=timeout) as r:
+        return json.load(r)
+
+
+# ── 포맷 ──────────────────────────────────────────────────────────────────
+def _m(v, ccy: str, *, signed: bool = False) -> str:
+    """금액 포맷 — KRW='1,234원' / USD='$12.34'. signed면 부호 접두."""
+    try:
+        v = float(v or 0)
+    except (TypeError, ValueError):
+        v = 0.0
+    body = f"{abs(v):,.0f}원" if ccy == "KRW" else f"${abs(v):,.2f}"
+    if signed:
+        return ("+" if v >= 0 else "-") + body
+    return body
+
+
+# ── 데이터 수집(읽기 전용) ─────────────────────────────────────────────────
+def _all_positions() -> tuple[list[dict], bool, bool]:
+    """전 시장 보유 상세 병합. 반환 (rows, any_ok, any_fail).
+
+    KR 1회 + US 거래소 3회 조회. 조회 실패(None)는 any_fail, 성공은 any_ok.
+    any_ok=False(전부 실패)면 호출부가 '조회 실패' 응답.
+    """
+    from bot import kis
+    seen: set[str] = set()
+    rows: list[dict] = []
+    any_ok = any_fail = False
+    queries = [("KR", None)] + [("US", e) for e in _US_EXCGS]
+    for market, excg in queries:
+        r = (kis.positions_detail(market) if market == "KR"
+             else kis.positions_detail(market, excg=excg))
+        if r is None:
+            any_fail = True
+            continue
+        any_ok = True
+        for p in r:
+            if p["code"] in seen:
+                continue
+            seen.add(p["code"])
+            rows.append(p)
+    return rows, any_ok, any_fail
+
+
+def _stop_for(code: str) -> tuple[float | None, str]:
+    """손절예상가 — feed(트레일링) 우선, 없으면 진입기록. 파수꾼과 동일 소스."""
+    code = str(code).upper()
+    try:
+        from bot import sentinel
+        positions, _age = sentinel._fetch_positions()
+        for p in positions:
+            if str(p.get("code") or "").upper() == code and p.get("stop"):
+                return float(p["stop"]), "트레일링"
+    except Exception:
+        pass
+    try:
+        from bot import kis_positions
+        k = kis_positions.load().get(code)
+        if k and k.get("stop"):
+            return float(k["stop"]), "진입 손절선"
+    except Exception:
+        pass
+    return None, "미설정"
+
+
+def _resolve(query: str, positions: list[dict]) -> dict | None:
+    """조회어→보유 종목. 코드 정확일치 우선, 다음 종목명 부분일치."""
+    q = query.strip().upper()
+    for p in positions:
+        if p["code"] == q:
+            return p
+    ql = query.strip().lower()
+    if ql:
+        for p in positions:
+            if ql in str(p["name"]).lower():
+                return p
+    return None
+
+
+# ── 응답 빌더 ──────────────────────────────────────────────────────────────
+def _help_text() -> str:
+    return ("🤖 <b>KIS 모의계좌 조회</b>\n\n"
+            "/보유 — 보유 종목별 수익률·수익금\n"
+            "/종목 &lt;코드&gt; — 현재가·평단가·손절예상가 상세\n"
+            "  예) /종목 005930 · /종목 AAPL\n"
+            "코드만 보내도 상세 조회됩니다.")
+
+
+def _holdings_text() -> str:
+    rows, any_ok, any_fail = _all_positions()
+    if not any_ok:
+        return "⚠️ 잔고 조회 실패 — 잠시 후 다시 시도(KIS 응답 없음)."
+    if not rows:
+        return "📊 보유 종목 없음 (KIS 모의계좌)."
+    lines = ["📊 <b>보유 종목</b> (KIS 모의계좌)", ""]
+    tot: dict[str, list[float]] = {}                 # ccy → [평가, 매입, 손익]
+    for p in sorted(rows, key=lambda x: -float(x["pl_rt"])):
+        sign = "🟢" if p["pl_amt"] >= 0 else "🔴"
+        lines.append(f"{sign} {p['name']}({p['code']})  "
+                     f"{float(p['pl_rt']):+.1f}%  "
+                     f"{_m(p['pl_amt'], p['ccy'], signed=True)}")
+        t = tot.setdefault(p["ccy"], [0.0, 0.0, 0.0])
+        t[0] += float(p["eval_amt"]); t[1] += float(p["buy_amt"])
+        t[2] += float(p["pl_amt"])
+    lines.append("")
+    for ccy, (ev, bu, pl) in tot.items():
+        rt = (pl / bu * 100) if bu else 0.0
+        sign = "🟢" if pl >= 0 else "🔴"
+        lines.append(f"합계 평가 {_m(ev, ccy)} · 손익 {sign} "
+                     f"{_m(pl, ccy, signed=True)} ({rt:+.1f}%)")
+    if any_fail:
+        lines.append("⚠️ 일부 시장 조회 실패 — 목록이 불완전할 수 있음.")
+    lines.append("")
+    lines.append(f"상세: <code>/종목 {rows[0]['code']}</code> 처럼 코드로 조회")
+    return "\n".join(lines)
+
+
+def _detail_text(query: str) -> str:
+    from bot import kis
+    rows, any_ok, _fail = _all_positions()
+    if not any_ok:
+        return "⚠️ 잔고 조회 실패 — 잠시 후 다시 시도(KIS 응답 없음)."
+    p = _resolve(query, rows)
+    if not p:
+        held = ", ".join(x["code"] for x in rows) or "없음"
+        return f"'{query.strip()}' 보유 없음.\n현재 보유: {held}"
+    code, market, ccy = p["code"], p["market"], p["ccy"]
+    avg, qty = float(p["avg"]), int(p["qty"])
+    cur = kis.last_price(code, market=market) or float(p["cur"])   # 실시간 재조회
+    eval_amt = cur * qty if cur else float(p["eval_amt"])
+    buy_amt = avg * qty if avg else float(p["buy_amt"])
+    pl_amt = (cur - avg) * qty if (cur and avg) else float(p["pl_amt"])
+    pl_rt = (cur / avg - 1) * 100 if (cur and avg) else float(p["pl_rt"])
+    stop, ssrc = _stop_for(code)
+    tag = "국내" if market == "KR" else "미국"
+    L = [f"🔎 <b>{p['name']}({code})</b>  [{tag}]", "",
+         f"현재가   {_m(cur, ccy)}  (실시간)",
+         f"평단가   {_m(avg, ccy)}"]
+    if stop is not None:
+        L.append(f"손절예상가 {_m(stop, ccy)}  ({ssrc})")
+        if cur and stop:
+            L.append(f"  └ 현재가가 손절선까지 {(cur / stop - 1) * 100:+.1f}%")
+    else:
+        L.append("손절예상가 미설정 ⚠️ (수동 확인 필요)")
+    L += [f"수량     {qty}주", "",
+          f"평가금액  {_m(eval_amt, ccy)}",
+          f"매입금액  {_m(buy_amt, ccy)}"]
+    sign = "🟢" if pl_amt >= 0 else "🔴"
+    L.append(f"평가손익  {sign} {_m(pl_amt, ccy, signed=True)} ({pl_rt:+.1f}%)")
+    return "\n".join(L)
+
+
+def handle(text: str) -> str:
+    """메시지 텍스트 → 응답 문자열(라우팅). 빈 응답이면 무시."""
+    raw = (text or "").strip()
+    if not raw:
+        return ""
+    parts = raw.lstrip("/").split()
+    cmd = parts[0].lower() if parts else ""
+    if cmd in ("start", "help", "도움", "도움말", "?"):
+        return _help_text()
+    if cmd in ("보유", "잔고", "포지션", "holdings", "positions", "h"):
+        return _holdings_text()
+    if cmd in ("종목", "상세", "detail", "s"):
+        if len(parts) >= 2:
+            return _detail_text(" ".join(parts[1:]))
+        return "사용법: /종목 &lt;코드&gt;  예) /종목 005930"
+    return _detail_text(raw)          # 접두어 없이 코드/이름만 → 상세
+
+
+# ── 롱폴링 루프 ────────────────────────────────────────────────────────────
+def _drain_backlog() -> int:
+    """시작 시 미처리 백로그를 건너뛴다(재시작 시 오래된 조회 재응답 방지)."""
+    try:
+        ups = _tg("getUpdates", {"timeout": 0}, timeout=15).get("result", [])
+        return (ups[-1]["update_id"] + 1) if ups else 0
+    except Exception:
+        return 0
+
+
+def _reply(text: str) -> None:
+    """지정 채팅으로 전송 — notify.send 재사용(TELEGRAM_CHAT_ID로 감)."""
+    try:
+        from bot import notify
+        notify.send(text)
+    except Exception as e:
+        print(f"[전송 오류] {e}", flush=True)
+
+
+def main() -> int:
+    import argparse
+    ap = argparse.ArgumentParser(description="KIS 모의계좌 텔레그램 조회 봇(읽기전용)")
+    ap.add_argument("--once", metavar="TEXT",
+                    help="롱폴링 없이 1회 응답을 출력(로컬 테스트, KIS 키만 필요)")
+    args = ap.parse_args()
+    if args.once is not None:                          # 폴링 전이라 TG 토큰 불필요
+        print(handle(args.once))
+        return 0
+    if not os.environ.get("TELEGRAM_BOT_TOKEN") \
+            or not os.environ.get("TELEGRAM_CHAT_ID"):
+        print("TELEGRAM_BOT_TOKEN·TELEGRAM_CHAT_ID 환경변수 필요", flush=True)
+        return 2
+
+    chat_id = str(os.environ.get("TELEGRAM_CHAT_ID"))
+    offset = _drain_backlog()
+    print("텔레그램 조회 봇 시작 — /보유 · /종목 <코드> (읽기전용)", flush=True)
+    while True:
+        try:
+            res = _tg("getUpdates", {"offset": offset, "timeout": 30}, timeout=40)
+        except Exception as e:
+            print(f"[getUpdates 오류] {type(e).__name__}: {e}", flush=True)
+            time.sleep(3)
+            continue
+        for upd in res.get("result", []):
+            offset = upd["update_id"] + 1
+            msg = upd.get("message") or upd.get("edited_message") or {}
+            if str((msg.get("chat") or {}).get("id")) != chat_id:
+                continue                              # 보안: 지정 채팅만
+            text = (msg.get("text") or "").strip()
+            if not text:
+                continue
+            try:
+                reply = handle(text)
+            except Exception as e:
+                reply = f"오류: {type(e).__name__}: {e}"
+            if reply:
+                _reply(reply)
+
+
+if __name__ == "__main__":
+    sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    sys.exit(main())

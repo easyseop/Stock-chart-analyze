@@ -567,3 +567,66 @@ def last_price(symbol: str, *, market: str = "US", excg: str = "NASD") -> float 
         if px > 0:
             return px
     return None
+
+
+def _f(v) -> float:
+    try:
+        return float(v)
+    except (TypeError, ValueError):
+        return 0.0
+
+
+def positions_detail(market: str = "US", excg: str = "NASD") -> list[dict] | None:
+    """보유 종목 상세(텔레그램 조회용) — 브로커 잔고 스냅샷의 정규화 리스트.
+
+    조회 실패/다중페이지 미완 = None(신뢰 불가 → 호출부 보수 처리).
+    정규화 필드: code·name·qty·avg(평단)·cur(현재가 스냅샷)·eval_amt(평가금액)·
+      buy_amt(매입금액)·pl_amt(평가손익)·pl_rt(평가손익률%)·ccy·market.
+    현재가는 잔고 응답 기준(준실시간) — 단일 종목 상세는 last_price로 재조회 권장.
+    KR/US는 output1 필드명이 다르고 일부 [대조필요] → 후보 키 순차 파싱(방어적).
+    스냅샷 손익 필드가 비면 avg·cur·qty로 보정.
+    """
+    d = domestic_balance() if market == "KR" else overseas_balance(excg=excg)
+    if not d or d.get("rt_cd") != "0":
+        return None
+    if str(d.get("ctx_area_nk100") or d.get("ctx_area_nk200")
+           or d.get("CTX_AREA_NK100") or d.get("CTX_AREA_NK200") or "").strip():
+        return None                               # 다중페이지 미완 → 신뢰 불가
+    ccy = "KRW" if market == "KR" else "USD"
+
+    def pick(r: dict, *keys: str):
+        for k in keys:
+            if r.get(k) not in (None, ""):
+                return r.get(k)
+        return None
+
+    rows: list[dict] = []
+    for r in (d.get("output1") or []):
+        code = str(pick(r, "pdno", "ovrs_pdno") or "").upper()
+        if not code:
+            continue
+        qty = int(_f(pick(r, "hldg_qty", "ovrs_cblc_qty")))
+        if qty <= 0:                              # 잔량 0(정리된 종목) 제외
+            continue
+        avg = _f(pick(r, "pchs_avg_pric", "pchs_avg_unpr", "avg_unpr"))
+        cur = _f(pick(r, "prpr", "now_pric2", "ovrs_now_pric1", "ovrs_now_pric"))
+        eval_amt = _f(pick(r, "evlu_amt", "ovrs_stck_evlu_amt", "frcr_evlu_amt2"))
+        buy_amt = _f(pick(r, "pchs_amt", "frcr_pchs_amt1", "frcr_pchs_amt"))
+        pl_amt = _f(pick(r, "evlu_pfls_amt", "frcr_evlu_pfls_amt",
+                         "ovrs_evlu_pfls_amt"))
+        pl_rt = _f(pick(r, "evlu_pfls_rt", "evlu_pfls_rt1"))
+        if eval_amt <= 0 and cur > 0:             # 스냅샷 결손 → 보정
+            eval_amt = cur * qty
+        if buy_amt <= 0 and avg > 0:
+            buy_amt = avg * qty
+        if pl_amt == 0 and cur > 0 and avg > 0:
+            pl_amt = (cur - avg) * qty
+        if pl_rt == 0 and avg > 0 and cur > 0:
+            pl_rt = (cur / avg - 1) * 100
+        rows.append({
+            "code": code,
+            "name": str(pick(r, "prdt_name", "ovrs_item_name") or code),
+            "qty": qty, "avg": avg, "cur": cur, "eval_amt": eval_amt,
+            "buy_amt": buy_amt, "pl_amt": pl_amt, "pl_rt": pl_rt,
+            "ccy": ccy, "market": market})
+    return rows
