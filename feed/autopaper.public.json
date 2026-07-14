@@ -2,8 +2,8 @@
  "updated": "2026-07-15",
  "start": 100000000,
  "cash": 38120569,
- "equity": 98302263,
- "ret_pct": -1.7,
+ "equity": 98286446,
+ "ret_pct": -1.71,
  "positions": [
   {
    "code": "MRSH",
@@ -11,14 +11,14 @@
    "ccy": "USD",
    "q": 72,
    "avg": 174.3075,
-   "price": 180.2449951171875,
+   "price": 180.09730529785156,
    "stop": 165.3325,
    "target": 192.2575,
    "half_done": false,
    "opened": "2026-07-06",
-   "pl_krw": 635867,
-   "pl_pct": 3.41,
-   "price_age_min": 9.9
+   "pl_krw": 620051,
+   "pl_pct": 3.32,
+   "price_age_min": 6.8
   },
   {
    "code": "STE",
@@ -33,7 +33,7 @@
    "opened": "2026-07-07",
    "pl_krw": -21932,
    "pl_pct": -1.15,
-   "price_age_min": 29.3
+   "price_age_min": 40.2
   },
   {
    "code": "068270",
@@ -48,7 +48,7 @@
    "opened": "2026-07-07",
    "pl_krw": -137614,
    "pl_pct": -1.45,
-   "price_age_min": 29.3
+   "price_age_min": 40.1
   },
   {
    "code": "ORC",
@@ -63,7 +63,7 @@
    "opened": "2026-07-08",
    "pl_krw": 327,
    "pl_pct": 0.81,
-   "price_age_min": 8.6
+   "price_age_min": 5.4
   },
   {
    "code": "FND",
@@ -78,7 +78,7 @@
    "opened": "2026-07-08",
    "pl_krw": 256354,
    "pl_pct": 2.58,
-   "price_age_min": 29.3
+   "price_age_min": 40.1
   },
   {
    "code": "HMC",
@@ -93,7 +93,7 @@
    "opened": "2026-07-09",
    "pl_krw": 2170,
    "pl_pct": 1.76,
-   "price_age_min": 29.3
+   "price_age_min": 40.1
   },
   {
    "code": "NU",
@@ -108,7 +108,7 @@
    "opened": "2026-07-09",
    "pl_krw": 907,
    "pl_pct": 4.57,
-   "price_age_min": 29.3
+   "price_age_min": 40.1
   },
   {
    "code": "LSPD",
@@ -123,7 +123,7 @@
    "opened": "2026-07-09",
    "pl_krw": 12078,
    "pl_pct": 2.89,
-   "price_age_min": 29.2
+   "price_age_min": 40.1
   },
   {
    "code": "SARO",
@@ -138,7 +138,7 @@
    "opened": "2026-07-10",
    "pl_krw": 31132,
    "pl_pct": 0.47,
-   "price_age_min": 29.2
+   "price_age_min": 40.1
   },
   {
    "code": "J",
@@ -153,7 +153,7 @@
    "opened": "2026-07-11",
    "pl_krw": 108046,
    "pl_pct": 0.9,
-   "price_age_min": 29.2
+   "price_age_min": 40.1
   }
  ],
  "pending": [
@@ -387,7 +387,7 @@
   },
   {
    "d": "2026-07-15",
-   "v": 98302263
+   "v": 98286446
   }
  ],
  "log": [
@@ -654,5 +654,13 @@
   }
  ],
  "lane": "bulk",
- "data_stale": []
+ "data_stale": [
+  "STE",
+  "FND",
+  "HMC",
+  "NU",
+  "LSPD",
+  "SARO",
+  "J"
+ ]
 }
