@@ -599,6 +599,12 @@ def _report(st: dict, equity: float) -> None:
     취소(cancel)만 있어도** 보고 — 제안 알림이 기본 OFF가 되면서 액션 알림이
     유일한 텔레그램 소식이므로 '예약 걸림'을 놓치면 안 된다.
     """
+    # 페이퍼 시뮬 체결 알림 기본 OFF(사용자 요청 2026-07-14) — 텔레그램은 KIS 모의계좌
+    #   실매매(매수/매도)만 받는다. 페이퍼 소식이 필요하면 PAPER_TRADE_ALERTS=1.
+    #   (_ev는 소비해 다음 런에 누적되지 않게.)
+    if os.environ.get("PAPER_TRADE_ALERTS") != "1":
+        st.pop("_ev", None)
+        return
     ev = st.pop("_ev", [])
     if not any(x["type"] in ("buy", "sell", "order", "cancel") for x in ev):
         return

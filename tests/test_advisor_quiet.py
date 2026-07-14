@@ -1,8 +1,9 @@
-"""제안 알림 기본 OFF 검증 — 사용자 요청(2026-07-12).
+"""제안·페이퍼 매도 알림 기본 OFF 검증 — 사용자 요청(2026-07-12, 2026-07-14).
 
   1) 기본(플래그 없음): 신선한 now 신호가 있어도 '매수 제안'·'도달' 텔레그램 0건
   2) ADVISOR_SUGGEST_ALERTS=1: 기존대로 매수 제안 발송(스위치 가역성)
-  3) 매도(손절선 터치) 경보는 플래그와 무관하게 계속 발송(보호 알림 유지)
+  3) 페이퍼/피드 매도 제안 경보도 기본 OFF(ADVISOR_ALERTS=1로만 재활성) —
+     실계좌 손절 알림은 KIS 파수꾼(sentinel)이 '🛡️ 파수꾼 매도'로 직접 발송.
 
 실행: python -m tests.test_advisor_quiet
 """
@@ -68,25 +69,50 @@ def test_flag_reenables():
     print("[PASS] ADVISOR_SUGGEST_ALERTS=1 → 제안 발송(가역)")
 
 
-def test_sell_alert_unaffected():
+def test_sell_alert_gated_off_by_default():
+    """페이퍼/피드 매도 제안 경보는 기본 OFF(사용자 요청 2026-07-14).
+
+    실계좌(KIS 모의) 손절은 파수꾼(sentinel)이 실시간가로 감시·집행하고
+    자체 '🛡️ 파수꾼 매도' 알림을 보낸다 → 페이퍼 경보는 중복이라 끈다.
+    감지 카운트(n)는 유지(대시보드·로깅용), 텔레그램 발송만 억제.
+    """
     with tempfile.TemporaryDirectory() as tmp:
+        os.environ.pop("ADVISOR_ALERTS", None)
         advisor, sent = _run(tmp, flag=None)
         with mock.patch.object(advisor, "_quote", return_value=90.0):
             n = advisor.check_sell_alerts(
                 [{"code": "XX", "name": "테스트", "ccy": "USD",
                   "qty": 3, "avg": 100.0, "stop": 95.0, "target": 120.0}],
                 {}, dry_run=False)
-        assert n == 1
-        assert [m for m in sent if "손절" in m], "손절 경보가 억제됨(보호 알림 훼손)"
-    print("[PASS] 보유 손절선 터치 경보는 플래그와 무관하게 발송")
+        assert n == 1                                       # 감지는 계속
+        assert not [m for m in sent if "손절" in m], "기본인데 페이퍼 손절 경보 발송"
+    print("[PASS] 페이퍼 매도 제안 경보 기본 OFF(KIS 파수꾼이 실계좌 담당)")
+
+
+def test_sell_alert_reenables():
+    with tempfile.TemporaryDirectory() as tmp:
+        os.environ["ADVISOR_ALERTS"] = "1"
+        try:
+            advisor, sent = _run(tmp, flag=None)
+            with mock.patch.object(advisor, "_quote", return_value=90.0):
+                advisor.check_sell_alerts(
+                    [{"code": "XX", "name": "테스트", "ccy": "USD",
+                      "qty": 3, "avg": 100.0, "stop": 95.0, "target": 120.0}],
+                    {}, dry_run=False)
+            assert [m for m in sent if "손절" in m], "ADVISOR_ALERTS=1인데 미발송"
+        finally:
+            os.environ.pop("ADVISOR_ALERTS", None)
+    print("[PASS] ADVISOR_ALERTS=1 → 페이퍼 매도 경보 발송(가역)")
 
 
 def main():
     test_default_quiet()
     test_flag_reenables()
-    test_sell_alert_unaffected()
+    test_sell_alert_gated_off_by_default()
+    test_sell_alert_reenables()
     os.environ.pop("ADVISOR_SUGGEST_ALERTS", None)
-    print("\n제안 알림 OFF 스위치 검증 통과 — 액션/보호 알림만 유지.")
+    os.environ.pop("ADVISOR_ALERTS", None)
+    print("\n제안·페이퍼매도 알림 OFF 검증 통과 — KIS 실계좌 매매만 알림.")
 
 
 if __name__ == "__main__":

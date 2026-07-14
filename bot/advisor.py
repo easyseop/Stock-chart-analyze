@@ -278,8 +278,9 @@ def check_sell_alerts(holdings: list[dict], state: dict, dry_run: bool) -> int:
                 f"목표선 {_fmt(target, ccy) if target else '-'}\n"
                 f"⚠️ 차트 기준 제안 · 투자권유 아님."
             )
-            if not dry_run:
-                # 손절 터치는 P0(ntfy 이중화) · 목표 도달(익절)은 좋은 소식이라 텔레그램만.
+            if not dry_run and os.environ.get("ADVISOR_ALERTS") == "1":
+                # 페이퍼/피드 기준 매도 제안 — 기본 OFF(KIS 파수꾼이 실계좌 손절 담당).
+                #   되살리려면 ADVISOR_ALERTS=1. 손절 터치는 P0(ntfy 이중화).
                 notify.send(text, critical=(reason == "손절"))
             else:
                 print(text)

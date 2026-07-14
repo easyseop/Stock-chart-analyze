@@ -83,6 +83,15 @@ def run_once(signals: list[dict], *, fx: float | None = None,
             kis_positions.record(code, stop=float(s["stop"]), ccy=ccy,
                                  entry=entry, qty=d.qty, name=s.get("name", ""),
                                  opened=settings.today_kst())
+            # KIS 모의계좌 실매수 알림(텔레그램) — 사용자 요청: 실계좌 매수/매도만.
+            try:
+                from bot import notify
+                u = "원" if market == "KR" else "$"
+                notify.send(
+                    f"🟢 <b>KIS 매수</b> — {s.get('name', code)}({code})\n"
+                    f"  {d.qty}주 @ {cur}{u} · 손절 {s['stop']}{u}", critical=True)
+            except Exception:
+                pass
         results.append({"code": code, "gate": d.gate, "ok": d.ok,
                         "qty": d.qty, "why": d.why})
     return results
