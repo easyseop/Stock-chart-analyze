@@ -136,6 +136,14 @@ class _KisBroker(_PaperBroker):
             raise SystemExit("KIS appkey/appsecret 환경변수 필요")
         self.env = kis.ENV
 
+    def quote(self, code: str, ccy: str) -> float | None:
+        """시세 — **KIS 현재가 우선**(서버에 FDR/toss 없어도 손절 판단 가능).
+        실패 시 부모(_PaperBroker: toss/FDR)로 폴백."""
+        from bot import kis
+        market = kis.market_of_symbol(code)
+        px = kis.last_price(code, market=market)
+        return px if px is not None else super().quote(code, ccy)
+
     def place_sell(self, code: str, qty: int, reason: str, key: str):
         from bot import kis, kis_orders
         market = kis.market_of_symbol(code)      # 국내 6자리 숫자=KR, 그 외=US
