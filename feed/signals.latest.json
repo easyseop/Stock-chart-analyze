@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated_at": "2026-07-15T15:26:26+09:00",
+ "generated_at": "2026-07-15T16:13:44+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "signals": [
   {
@@ -1095,23 +1095,23 @@
    "group": "watch",
    "entry_kind": "now",
    "stage": 2,
-   "price": 62700.0,
-   "entry": 62700.0,
-   "stop": 54439.0581,
-   "target": 79221.8837,
+   "price": 62400.0,
+   "entry": 62400.0,
+   "stop": 54139.0581,
+   "target": 78921.8837,
    "shares_1pct": 12,
-   "range_pos": 0.0241,
+   "range_pos": 0.0214,
    "norm": -60.7,
    "fresh": true,
-   "break_gap": 0.0162,
+   "break_gap": 0.0113,
    "earnings_d": null,
    "tactic": {
     "stop_pct": 13.2,
     "pb_price": 60000.0,
-    "pb_stop_pct": 9.3,
+    "pb_stop_pct": 9.8,
     "mode": "pullback",
     "label": "⏳ 눌림 지정가만",
-    "desc": "지금 추격 금지(손절폭 13.2%) — <b>60,000원 눌림 지정가만</b>. 눌리면 손절폭 9.3%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
+    "desc": "지금 추격 금지(손절폭 13.2%) — <b>60,000원 눌림 지정가만</b>. 눌리면 손절폭 9.8%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
    }
   },
   {
@@ -2227,23 +2227,23 @@
    "group": "watch",
    "entry_kind": "now",
    "stage": 1,
-   "price": 1038000.0,
-   "entry": 1038000.0,
-   "stop": 898115.6442,
-   "target": 1317768.7116,
+   "price": 1020000.0,
+   "entry": 1020000.0,
+   "stop": 880115.6442,
+   "target": 1299768.7116,
    "shares_1pct": 0,
-   "range_pos": 0.203,
+   "range_pos": 0.1906,
    "norm": -57.4,
    "fresh": true,
-   "break_gap": -0.0022,
+   "break_gap": -0.0195,
    "earnings_d": null,
    "tactic": {
-    "stop_pct": 13.5,
+    "stop_pct": 13.7,
     "pb_price": 995500.0,
-    "pb_stop_pct": 9.8,
+    "pb_stop_pct": 11.6,
     "mode": "pullback",
     "label": "⏳ 눌림 지정가만",
-    "desc": "지금 추격 금지(손절폭 13.5%) — <b>995,500원 눌림 지정가만</b>. 눌리면 손절폭 9.8%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
+    "desc": "지금 추격 금지(손절폭 13.7%) — <b>995,500원 눌림 지정가만</b>. 눌리면 손절폭 11.6%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
    }
   },
   {
@@ -2263,6 +2263,26 @@
    "norm": 19.8,
    "fresh": false,
    "break_gap": 0.139,
+   "earnings_d": null,
+   "tactic": null
+  },
+  {
+   "id": "005830-2026-07-15-watch",
+   "code": "005830",
+   "name": "DB손해보험",
+   "ccy": "KRW",
+   "group": "watch",
+   "entry_kind": "breakout",
+   "stage": 4,
+   "price": 162500.0,
+   "entry": 164000.0,
+   "stop": 148421.3267,
+   "target": 195157.3467,
+   "shares_1pct": 6,
+   "range_pos": 0.463,
+   "norm": -35.8,
+   "fresh": false,
+   "break_gap": 0.1479,
    "earnings_d": null,
    "tactic": null
   },
@@ -2763,26 +2783,6 @@
    "norm": -20.5,
    "fresh": false,
    "break_gap": 0.5698,
-   "earnings_d": null,
-   "tactic": null
-  },
-  {
-   "id": "005830-2026-07-15-watch",
-   "code": "005830",
-   "name": "DB손해보험",
-   "ccy": "KRW",
-   "group": "watch",
-   "entry_kind": "pullback",
-   "stage": 3,
-   "price": 165200.0,
-   "entry": 138278.8,
-   "stop": 122700.1267,
-   "target": 169436.1467,
-   "shares_1pct": 6,
-   "range_pos": 0.4911,
-   "norm": -28.3,
-   "fresh": false,
-   "break_gap": 0.167,
    "earnings_d": null,
    "tactic": null
   }
