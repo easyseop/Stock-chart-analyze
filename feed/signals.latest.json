@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated_at": "2026-07-15T13:14:32+09:00",
+ "generated_at": "2026-07-15T13:28:44+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "signals": [
   {
@@ -1095,23 +1095,23 @@
    "group": "watch",
    "entry_kind": "now",
    "stage": 2,
-   "price": 62900.0,
-   "entry": 62900.0,
-   "stop": 54639.0581,
-   "target": 79421.8837,
+   "price": 62600.0,
+   "entry": 62600.0,
+   "stop": 54339.0581,
+   "target": 79121.8837,
    "shares_1pct": 12,
-   "range_pos": 0.0258,
+   "range_pos": 0.0232,
    "norm": -60.7,
    "fresh": true,
-   "break_gap": 0.0194,
+   "break_gap": 0.0146,
    "earnings_d": null,
    "tactic": {
-    "stop_pct": 13.1,
+    "stop_pct": 13.2,
     "pb_price": 60000.0,
-    "pb_stop_pct": 8.9,
+    "pb_stop_pct": 9.4,
     "mode": "pullback",
     "label": "⏳ 눌림 지정가만",
-    "desc": "지금 추격 금지(손절폭 13.1%) — <b>60,000원 눌림 지정가만</b>. 눌리면 손절폭 8.9%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
+    "desc": "지금 추격 금지(손절폭 13.2%) — <b>60,000원 눌림 지정가만</b>. 눌리면 손절폭 9.4%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
    }
   },
   {
@@ -2254,23 +2254,23 @@
    "group": "watch",
    "entry_kind": "now",
    "stage": 1,
-   "price": 23050.0,
-   "entry": 23050.0,
-   "stop": 20820.7033,
-   "target": 27508.5933,
+   "price": 23000.0,
+   "entry": 23000.0,
+   "stop": 20763.5605,
+   "target": 27472.879,
    "shares_1pct": 44,
-   "range_pos": 0.2511,
+   "range_pos": 0.2479,
    "norm": -30.2,
    "fresh": true,
-   "break_gap": -0.0174,
+   "break_gap": -0.0196,
    "earnings_d": null,
    "tactic": {
     "stop_pct": 9.7,
-    "pb_price": 22909.545,
-    "pb_stop_pct": 9.1,
+    "pb_price": 22125.0,
+    "pb_stop_pct": 6.2,
     "mode": "pullback",
     "label": "⏳ 눌림 지정가만",
-    "desc": "지금 추격 금지(손절폭 9.7% · 단기 이격) — <b>22,910원 눌림 지정가만</b>. 눌리면 손절폭 9.1%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
+    "desc": "지금 추격 금지(손절폭 9.7% · 단기 이격) — <b>22,125원 눌림 지정가만</b>. 눌리면 손절폭 6.2%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
    }
   },
   {
@@ -2281,23 +2281,23 @@
    "group": "watch",
    "entry_kind": "now",
    "stage": 1,
-   "price": 1035000.0,
-   "entry": 1035000.0,
-   "stop": 895115.6442,
-   "target": 1314768.7116,
+   "price": 1038000.0,
+   "entry": 1038000.0,
+   "stop": 898115.6442,
+   "target": 1317768.7116,
    "shares_1pct": 0,
-   "range_pos": 0.201,
+   "range_pos": 0.203,
    "norm": -57.4,
    "fresh": true,
-   "break_gap": -0.005,
+   "break_gap": -0.0022,
    "earnings_d": null,
    "tactic": {
     "stop_pct": 13.5,
     "pb_price": 995500.0,
-    "pb_stop_pct": 10.1,
+    "pb_stop_pct": 9.8,
     "mode": "pullback",
     "label": "⏳ 눌림 지정가만",
-    "desc": "지금 추격 금지(손절폭 13.5%) — <b>995,500원 눌림 지정가만</b>. 눌리면 손절폭 10.1%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
+    "desc": "지금 추격 금지(손절폭 13.5%) — <b>995,500원 눌림 지정가만</b>. 눌리면 손절폭 9.8%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
    }
   },
   {
@@ -2817,6 +2817,26 @@
    "norm": -20.5,
    "fresh": false,
    "break_gap": 0.5698,
+   "earnings_d": null,
+   "tactic": null
+  },
+  {
+   "id": "005830-2026-07-15-watch",
+   "code": "005830",
+   "name": "DB손해보험",
+   "ccy": "KRW",
+   "group": "watch",
+   "entry_kind": "pullback",
+   "stage": 3,
+   "price": 165000.0,
+   "entry": 138278.8,
+   "stop": 122700.1267,
+   "target": 169436.1467,
+   "shares_1pct": 6,
+   "range_pos": 0.4891,
+   "norm": -28.3,
+   "fresh": false,
+   "break_gap": 0.1655,
    "earnings_d": null,
    "tactic": null
   }
