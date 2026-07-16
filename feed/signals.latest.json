@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated_at": "2026-07-16T16:58:27+09:00",
+ "generated_at": "2026-07-16T17:39:00+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "signals": [
   {
@@ -2693,6 +2693,60 @@
     "mode": "pullback",
     "label": "⏳ 눌림 지정가만",
     "desc": "지금 추격 금지(손절폭 11.1% · 단기 이격) — <b>57,850원 눌림 지정가만</b>. 눌리면 손절폭 1.2%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
+   }
+  },
+  {
+   "id": "259960-2026-07-16-watch",
+   "code": "259960",
+   "name": "크래프톤",
+   "ccy": "KRW",
+   "group": "watch",
+   "entry_kind": "now",
+   "stage": 1,
+   "price": 240500.0,
+   "entry": 240500.0,
+   "stop": 213010.2138,
+   "target": 295479.5724,
+   "shares_1pct": 3,
+   "range_pos": 0.2449,
+   "norm": -37.7,
+   "fresh": true,
+   "break_gap": -0.016,
+   "earnings_d": null,
+   "tactic": {
+    "stop_pct": 11.4,
+    "pb_price": 238685.1,
+    "pb_stop_pct": 10.8,
+    "mode": "pullback",
+    "label": "⏳ 눌림 지정가만",
+    "desc": "지금 추격 금지(손절폭 11.4%) — <b>238,685원 눌림 지정가만</b>. 눌리면 손절폭 10.8%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
+   }
+  },
+  {
+   "id": "323410-2026-07-16-watch",
+   "code": "323410",
+   "name": "카카오뱅크",
+   "ccy": "KRW",
+   "group": "watch",
+   "entry_kind": "now",
+   "stage": 1,
+   "price": 23000.0,
+   "entry": 23000.0,
+   "stop": 20706.4694,
+   "target": 27587.0611,
+   "shares_1pct": 43,
+   "range_pos": 0.2479,
+   "norm": -37.7,
+   "fresh": true,
+   "break_gap": -0.017,
+   "earnings_d": null,
+   "tactic": {
+    "stop_pct": 10.0,
+    "pb_price": 22125.0,
+    "pb_stop_pct": 6.4,
+    "mode": "pullback",
+    "label": "⏳ 눌림 지정가만",
+    "desc": "지금 추격 금지(손절폭 10.0% · 단기 이격) — <b>22,125원 눌림 지정가만</b>. 눌리면 손절폭 6.4%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
    }
   },
   {
