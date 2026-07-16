@@ -1,0 +1,15 @@
+# 자동 배포 1회 실행 유닛 — autodeploy.timer가 주기 호출(oneshot).
+# 새 커밋이 있을 때만 pull+재시작. User 계정은 sudoers drop-in으로
+# 'systemctl restart sentinel buyloop telegram'을 NOPASSWD 실행 가능해야 함.
+# ※ 경로/User는 서버 실제 배치에 맞게 수정(이 파일은 /opt/stock 템플릿).
+[Unit]
+Description=stock bots auto-deploy (git pull + restart on new commits)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=bot
+WorkingDirectory=/opt/stock/Stock-chart-analyze
+Environment=AUTODEPLOY_ENV=/etc/stock/kis.env
+ExecStart=/opt/stock/Stock-chart-analyze/infra/server/autodeploy.sh

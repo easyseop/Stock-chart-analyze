@@ -1,0 +1,10 @@
+# 자동 배포 타이머 — 5분마다 원격 브랜치 확인(변경 없으면 무동작·재시작 없음).
+[Unit]
+Description=run stock auto-deploy every 5 minutes
+
+[Timer]
+OnBootSec=2min
+OnUnitActiveSec=5min
+
+[Install]
+WantedBy=timers.target

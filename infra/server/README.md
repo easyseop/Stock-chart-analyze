@@ -12,6 +12,7 @@
 | `telegram.service` | 텔레그램 조회 봇(읽기전용) — `/보유`·`/종목 <코드>`(`python -m bot.kis_telegram`) |
 | `watchdog.service` | heartbeat 감시 — 60s P0 · 90s 재기동(≤3회/10분) · 120s+ kill L1 |
 | `watchdog.py` | 위 유닛이 실행하는 스크립트 |
+| `autodeploy.sh` + `.service`/`.timer` | 자동 배포 — 5분마다 새 커밋 확인, 있으면 pull+재시작(스모크 실패 시 롤백) |
 
 > **손 = 매수(buyloop) + 매도(sentinel) 대칭.** 파수꾼만 켜면 손절만, 둘 다 켜면
 > autopaper 결정을 KIS 모의계좌에 완전 미러(진입+청산). 처음엔 **매도만**(파수꾼)으로
@@ -94,6 +95,20 @@ TRADE_STAGE=mirror
 denylist)·원장(UNKNOWN 잠금·동일종목 in-flight·60s 간격)·사이징(SEED 분모·
 총량 게이트=SEED 초과 투입 불가·매수여력 클램프)·세션(정규장만)·어닝 D-3 skip·
 당일 매도 종목 재진입 쿨다운. 체결 확정은 잔고대사(ack→filled)가 자동 수행.
+
+## 자동 배포 (autodeploy — 수동 pull/restart 대체)
+5분마다 원격 브랜치를 확인해 **새 커밋이 있을 때만** `git pull`(fast-forward만)
+→ 임포트 스모크 → 봇 재시작. 스모크 실패면 롤백하고 기존 코드로 계속(+P0 알림).
+배포/실패 모두 텔레그램으로 알림. 끄기: `sudo systemctl disable --now autodeploy.timer`.
+```bash
+# ① 봇 계정이 재시작만 비번 없이 하도록(sudoers drop-in — 명령 고정이라 안전)
+echo '<USER> ALL=(root) NOPASSWD: /usr/bin/systemctl restart sentinel buyloop telegram' \
+  | sudo tee /etc/sudoers.d/stock-autodeploy && sudo chmod 440 /etc/sudoers.d/stock-autodeploy
+# ② 유닛 설치(경로·User는 서버 배치에 맞게 수정) 후:
+sudo systemctl daemon-reload && sudo systemctl enable --now autodeploy.timer
+```
+주의: env 파일(kis.env) 변경은 자동 배포 대상이 아니다(시크릿은 깃 밖) —
+env를 바꾼 경우엔 여전히 수동 `systemctl restart` 1회 필요.
 
 ## 운영 규칙 (설계 04·REFLECTION 준수)
 - **단일 프로세스 원칙(I3)**: 파수꾼 1개만 KIS 토큰을 쓴다. 루프를 늘리면 반드시
