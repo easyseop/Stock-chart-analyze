@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated_at": "2026-07-16T15:44:20+09:00",
+ "generated_at": "2026-07-16T15:58:44+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "signals": [
   {
@@ -2676,23 +2676,23 @@
    "group": "watch",
    "entry_kind": "now",
    "stage": 1,
-   "price": 63900.0,
-   "entry": 63900.0,
-   "stop": 56771.0616,
-   "target": 78157.8768,
+   "price": 64300.0,
+   "entry": 64300.0,
+   "stop": 57171.0616,
+   "target": 78557.8768,
    "shares_1pct": 14,
-   "range_pos": 0.4317,
+   "range_pos": 0.446,
    "norm": -32.1,
    "fresh": true,
-   "break_gap": -0.0056,
+   "break_gap": 0.0006,
    "earnings_d": null,
    "tactic": {
-    "stop_pct": 11.2,
+    "stop_pct": 11.1,
     "pb_price": 57849.7333,
-    "pb_stop_pct": 1.9,
+    "pb_stop_pct": 1.2,
     "mode": "pullback",
     "label": "⏳ 눌림 지정가만",
-    "desc": "지금 추격 금지(손절폭 11.2%) — <b>57,850원 눌림 지정가만</b>. 눌리면 손절폭 1.9%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
+    "desc": "지금 추격 금지(손절폭 11.1% · 단기 이격) — <b>57,850원 눌림 지정가만</b>. 눌리면 손절폭 1.2%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
    }
   },
   {
@@ -2703,23 +2703,23 @@
    "group": "watch",
    "entry_kind": "now",
    "stage": 1,
-   "price": 1019000.0,
-   "entry": 1019000.0,
-   "stop": 883393.0982,
-   "target": 1290213.8036,
+   "price": 1029000.0,
+   "entry": 1029000.0,
+   "stop": 893393.0982,
+   "target": 1300213.8036,
    "shares_1pct": 0,
-   "range_pos": 0.1899,
+   "range_pos": 0.1968,
    "norm": -65.6,
    "fresh": true,
-   "break_gap": -0.0056,
+   "break_gap": 0.0042,
    "earnings_d": null,
    "tactic": {
-    "stop_pct": 13.3,
+    "stop_pct": 13.2,
     "pb_price": 995000.0,
-    "pb_stop_pct": 11.2,
+    "pb_stop_pct": 10.2,
     "mode": "pullback",
     "label": "⏳ 눌림 지정가만",
-    "desc": "지금 추격 금지(손절폭 13.3%) — <b>995,000원 눌림 지정가만</b>. 눌리면 손절폭 11.2%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
+    "desc": "지금 추격 금지(손절폭 13.2%) — <b>995,000원 눌림 지정가만</b>. 눌리면 손절폭 10.2%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
    }
   },
   {
@@ -3270,15 +3270,15 @@
    "group": "watch",
    "entry_kind": "pullback",
    "stage": 3,
-   "price": 162500.0,
+   "price": 162600.0,
    "entry": 127450.0,
    "stop": 111884.0891,
    "target": 158581.8219,
    "shares_1pct": 6,
-   "range_pos": 0.463,
+   "range_pos": 0.464,
    "norm": -34.9,
    "fresh": false,
-   "break_gap": 0.154,
+   "break_gap": 0.1547,
    "earnings_d": null,
    "tactic": null
   }
