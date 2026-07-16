@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated_at": "2026-07-17T05:58:20+09:00",
+ "generated_at": "2026-07-17T06:46:43+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "signals": [
   {
@@ -2109,6 +2109,26 @@
    }
   },
   {
+   "id": "KKR-2026-07-17-watch",
+   "code": "KKR",
+   "name": "KKR & Co. Inc.",
+   "ccy": "USD",
+   "group": "watch",
+   "entry_kind": "pullback",
+   "stage": 4,
+   "price": 102.75,
+   "entry": 99.7366,
+   "stop": 92.8523,
+   "target": 113.5053,
+   "shares_1pct": 14,
+   "range_pos": 0.282,
+   "norm": 0.0,
+   "fresh": false,
+   "break_gap": 0.096,
+   "earnings_d": null,
+   "tactic": null
+  },
+  {
    "id": "PAYX-2026-07-17-watch",
    "code": "PAYX",
    "name": "Paychex, Inc.",
@@ -2465,26 +2485,6 @@
    "norm": -1.9,
    "fresh": false,
    "break_gap": 0.0667,
-   "earnings_d": null,
-   "tactic": null
-  },
-  {
-   "id": "KKR-2026-07-17-watch",
-   "code": "KKR",
-   "name": "KKR & Co. Inc.",
-   "ccy": "USD",
-   "group": "watch",
-   "entry_kind": "pullback",
-   "stage": 3,
-   "price": 102.75,
-   "entry": 99.7366,
-   "stop": 92.8523,
-   "target": 113.5053,
-   "shares_1pct": 14,
-   "range_pos": 0.282,
-   "norm": -1.9,
-   "fresh": false,
-   "break_gap": 0.096,
    "earnings_d": null,
    "tactic": null
   },
