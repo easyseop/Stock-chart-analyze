@@ -18,6 +18,8 @@
 """
 from __future__ import annotations
 
+import time
+
 from bot import kis, kis_reconcile, ledger
 
 # 모듈 상태 — 이 프로세스에서 부팅 대사가 성공적으로 끝났는가.
@@ -38,6 +40,56 @@ def pending_unknowns() -> list[dict]:
             if o.get("state") == "unknown" and not o.get("reconciled")]
 
 
+def _resolve_acks() -> list[dict]:
+    """접수(ack) 주문의 잔고 기반 체결 확정 — 매 대사 사이클 함께 수행.
+
+    ack가 영원히 미해소로 남으면 파수꾼이 그 종목 손절을 스킵(치명)·재진입 영구
+    차단·미러 캡 인플레이트(2026-07-15 검토). 여기서 잔고로 full-fill을 증명해 푼다.
+    실패(잔고 조회 불가 등)는 조용히 다음 사이클 — 매매 게이트(_STATE)와 무관
+    (ack 관련 위험은 그 자체가 전부 fail-closed 방향: 매도 보류·재진입 차단).
+    """
+    try:
+        aged = [o for o in ledger.open_orders()
+                if o.get("state") in ("submitted", "ack")
+                and (o.get("side") or "").upper() in ("BUY", "SELL")
+                and time.time() - float(o.get("submitted_at") or 0)
+                >= kis_reconcile.ACK_AGE_MIN_S]
+        if not aged:
+            return []
+
+        def _is_kr(u: dict) -> bool:
+            return (u.get("market") == "KR"
+                    or kis.market_of_symbol(u.get("symbol", "")) == "KR")
+
+        hmaps: dict[str, dict | None] = {}
+        if any(_is_kr(o) for o in aged):
+            hmaps["KR"] = kis.holdings("KR")
+        if any(not _is_kr(o) for o in aged):
+            merged: dict | None = {}
+            for ex in ("NASD", "NYSE", "AMEX"):
+                h = kis.holdings("US", excg=ex)
+                if h is None:                      # 하나라도 실패 = US 전체 신뢰 불가
+                    merged = None
+                    break
+                merged.update(h)
+            hmaps["US"] = merged
+        rs = kis_reconcile.resolve_acks_by_balance(hmaps)
+        for r in rs:
+            # 매도 full-fill 확정 → 진입 손절선 기록 정리(보호 대상 아님을 명시)
+            if r.get("side") == "SELL" and int(r.get("residual") or 0) == 0:
+                try:
+                    from bot import kis_positions
+                    kis_positions.close(str(r.get("symbol")))
+                except Exception:
+                    pass
+            _notify(f"✅ 체결 확정(잔고대사) — {r.get('symbol')} "
+                    f"{'매수' if r.get('side') == 'BUY' else '매도'} "
+                    f"{r.get('filled')}주", critical=(r.get("side") == "SELL"))
+        return rs
+    except Exception:
+        return []                                  # 대사 실패가 부팅을 못 깨게
+
+
 def boot_reconcile(excgs: tuple[str, ...] = ("NASD", "NYSE", "AMEX")) -> dict:
     """부팅 대사 1회. 반환 {ok, unknowns, resolved, low, results}.
 
@@ -46,10 +98,12 @@ def boot_reconcile(excgs: tuple[str, ...] = ("NASD", "NYSE", "AMEX")) -> dict:
     · 조회 실패(None)는 fail-closed: ok=False, 게이트 닫힘(재시도는 호출부 몫).
     """
     _STATE["done"] = False
+    acks = _resolve_acks()                        # 접수(ack)→체결 확정(잔고대사)
     unknowns = pending_unknowns()
     if not unknowns:
         _STATE.update(done=True, low=0)
-        return {"ok": True, "unknowns": 0, "resolved": 0, "low": 0, "results": []}
+        return {"ok": True, "unknowns": 0, "resolved": 0, "low": 0,
+                "results": [], "ack_resolved": len(acks)}
 
     def _is_kr(u: dict) -> bool:
         return (u.get("market") == "KR"
@@ -89,7 +143,8 @@ def boot_reconcile(excgs: tuple[str, ...] = ("NASD", "NYSE", "AMEX")) -> dict:
                 return {"ok": False, "unknowns": len(unknowns),
                         "resolved": sum(1 for r in kr_results
                                         if r.get("confidence") == ledger.CONF_HIGH),
-                        "low": kr_low, "results": kr_results}
+                        "low": kr_low, "results": kr_results,
+                        "ack_resolved": len(acks)}
             all_nccs_rows += (n.get("output") or [])
             all_ccnl_rows += (c.get("output") or [])
 
@@ -106,7 +161,7 @@ def boot_reconcile(excgs: tuple[str, ...] = ("NASD", "NYSE", "AMEX")) -> dict:
             for r in resolved), critical=True)
     _STATE.update(done=True, low=len(low))
     return {"ok": True, "unknowns": len(unknowns), "resolved": len(resolved),
-            "low": len(low), "results": results}
+            "low": len(low), "results": results, "ack_resolved": len(acks)}
 
 
 def trading_allowed() -> bool:

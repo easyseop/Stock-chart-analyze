@@ -81,6 +81,20 @@ sudo -u bot python3 /opt/stock/Stock-chart-analyze/scripts/kis_preflight.py
 4. **롤아웃**: `TRADE_STAGE=1.5`(1종목·하루1건). 안정되면 `2.5`→`3`으로.
    비상시 `python -m bot.kill 1 "사유"`(kill-switch L1=신규매수 중지, 손절은 유지).
 
+## 완전 미러 모드 (TRADE_STAGE=mirror, 모의 전용 — 사용자 지정 2026-07-15)
+종목스크리너 페이퍼 시뮬(autopaper)을 **그대로 따라 사는** 모드. autopaper와
+동일 캡: **동시 12종목 · 하루 신규 3건 · 거래당 risk 1% · allowlist 불필요**.
+```bash
+# kis.env에 (ALLOWED_SYMBOLS는 필요 없음 — 넣으면 그 목록만 사는 추가 펜스가 됨):
+KIS_ORDERS_ENABLED=1
+ALLOW_BUY=1
+TRADE_STAGE=mirror
+```
+그대로 유지되는 방어선: kill-switch·부팅 대사·파수꾼 SLA·ownership(baseline
+denylist)·원장(UNKNOWN 잠금·동일종목 in-flight·60s 간격)·사이징(SEED 분모·
+총량 게이트=SEED 초과 투입 불가·매수여력 클램프)·세션(정규장만)·어닝 D-3 skip·
+당일 매도 종목 재진입 쿨다운. 체결 확정은 잔고대사(ack→filled)가 자동 수행.
+
 ## 운영 규칙 (설계 04·REFLECTION 준수)
 - **단일 프로세스 원칙(I3)**: 파수꾼 1개만 KIS 토큰을 쓴다. 루프를 늘리면 반드시
   같은 `KIS_TOKEN_CACHE`(flock)를 공유 — 토큰 발급 1분1회 제한 때문.

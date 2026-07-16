@@ -95,6 +95,8 @@ _TR: dict[tuple[str, str, str], str] = {
 
     ("live", "US", "ccnl"):    "TTTS3035R", ("mock", "US", "ccnl"):    "VTTS3035R",
     ("live", "US", "psamount"): "TTTS3007R", ("mock", "US", "psamount"): "VTTS3007R",
+    # 체결기준현재잔고 — 외화예수금(현금) 조회. 모의 psamount 미지원 대체용 [대조필요]
+    ("live", "US", "present"): "CTRP6504R", ("mock", "US", "present"): "VTRP6504R",
     # 주문(참조용 상수 — 이 파일은 주문을 호출하지 않는다. Stage 1.5 모듈이 사용).
     ("live", "US", "buy"):  "TTTT1002U", ("mock", "US", "buy"):  "VTTT1002U",
     ("live", "US", "sell"): "TTTT1006U", ("mock", "US", "sell"): "VTTT1001U",  # ★비대칭
@@ -375,21 +377,54 @@ def open_orders(excg: str = "NASD") -> dict | None:
                  "CTX_AREA_FK200": "", "CTX_AREA_NK200": ""})
 
 
+def present_balance() -> dict | None:
+    """해외 체결기준현재잔고(inquire-present-balance) — **외화예수금(현금)** 조회.
+
+    모의는 psamount 미지원(실측 확정)이라, 미국주 매수여력의 '하향 클램프' 입력으로
+    이 응답의 USD 현금을 쓴다. TR: live CTRP6504R / mock VTRP6504R.
+    [대조필요] 모의 지원·output 필드명은 서버 실측으로 확정 — 실패 시 None(fail-closed).
+    """
+    acct = account()
+    if not acct or not enabled():
+        return None
+    return _get("/uapi/overseas-stock/v1/trading/inquire-present-balance",
+                tr_id("present"),
+                {**acct, "WCRC_FRCR_DVSN_CD": "02", "NATN_CD": "840",
+                 "TR_MKET_CD": "00", "INQR_DVSN_CD": "00"})
+
+
 def buying_power(symbol: str, price: float, excg: str = "NASD") -> float | None:
     """매수여력(USD) — envelope의 feasibility(하향 클램프) 입력.
 
     · live: `inquire-psamount`(TTTS3007R) — `ord_psbl_frcr_amt`(보유 USD 기준).
       통합증거금 값(echm_af_*)은 cash-only 확인 전 사용 금지(REFLECTION R6) —
       **보수적으로 외화예수금 기준만** 쓴다.
-    · mock: psamount **모의 미지원**(확정) → KIS_MOCK_BUYING_POWER(테스트 셋업용
-      명시 값)만 허용, 없으면 None(=X1 사이징이 0으로 차단, fail-closed).
+    · mock: psamount **모의 미지원**(확정) →
+        ① KIS_MOCK_BUYING_POWER(명시 override — 테스트/비상용)가 있으면 그 값.
+        ② 없으면 체결기준현재잔고의 **USD 예수금**(브로커-진실 현금)을 클램프로.
+        ③ 둘 다 실패 = None(=X1 사이징이 0으로 차단, fail-closed).
+      ※ ②가 없으면 모의 서버에서 매수 사이징이 전부 0으로 막힌다(2026-07-15 검토).
     """
     if IS_MOCK:
         v = os.environ.get("KIS_MOCK_BUYING_POWER")
-        try:
-            return float(v) if v is not None else None
-        except ValueError:
+        if v is not None:
+            try:
+                return float(v)
+            except ValueError:
+                return None
+        d = present_balance()
+        if not d or d.get("rt_cd") != "0":
             return None
+        for row in (d.get("output2") or []):
+            if str(row.get("crcy_cd") or "").upper() not in ("", "USD"):
+                continue                          # 통화 행 구분(빈 값은 단일행 응답 방어)
+            for k in ("frcr_drwg_psbl_amt_1", "frcr_dncl_amt_2", "frcr_dncl_amt"):
+                try:
+                    val = float(row.get(k))
+                    return val                    # 출금가능 우선(가장 보수적 현금)
+                except (TypeError, ValueError):
+                    continue
+        return None
     acct = account()
     if not acct or not enabled():
         return None
@@ -469,13 +504,28 @@ def domestic_fills(start: str = "", end: str = "") -> dict | None:
 def domestic_buying_power(symbol: str, price: float) -> float | None:
     """국내 매수여력(원) — inquire-psbl-order. envelope feasibility 입력.
     · live: `ORD_DVSN=00`(지정가)·현금 기준 `nrcvb_buy_amt`(미수 없는 매수가능금액).
-    · mock: 국내 매수가능 모의 지원 여부 [대조필요] → 미확인 시 명시 환경변수만."""
+    · mock: ① KIS_MOCK_BUYING_POWER(명시 override) → ② 국내잔고 output2의
+      주문가능현금(D+2 정산 기준, 실측 확정 TR VTTC8434R) → ③ None(fail-closed).
+      ※ ②가 없으면 모의 서버에서 국내 매수 사이징이 전부 0으로 막힌다(2026-07-15 검토)."""
     if IS_MOCK:
         v = os.environ.get("KIS_MOCK_BUYING_POWER")
-        try:
-            return float(v) if v is not None else None
-        except ValueError:
+        if v is not None:
+            try:
+                return float(v)
+            except ValueError:
+                return None
+        d = domestic_balance()
+        if not d or d.get("rt_cd") != "0":
             return None
+        out2 = d.get("output2") or []
+        row = out2[0] if isinstance(out2, list) and out2 else (
+            out2 if isinstance(out2, dict) else {})
+        for k in ("prvs_rcdl_excc_amt", "nxdy_excc_amt", "dnca_tot_amt"):
+            try:
+                return float(row.get(k))          # D+2 주문가능현금 우선(보수적)
+            except (TypeError, ValueError):
+                continue
+        return None
     acct = account()
     if not acct or not enabled():
         return None

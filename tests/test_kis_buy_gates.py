@@ -173,12 +173,97 @@ def test_x1_gate_chain_then_sent():
             # rollout의 risk cap과 별개로 envelope이 계산)
             qty_sent = pb.call_args.args[2]
             assert qty_sent == d3.qty > 0
-        # feasibility 미확인(None) → 수량 0 차단(보수적)
-        os.environ.pop("KIS_MOCK_BUYING_POWER")
+        # feasibility 미확인 → 수량 0 차단(보수적). override를 무효값으로 명시해
+        #   present-balance 폴백(네트워크)을 타지 않게 한다(결정론).
+        os.environ["KIS_MOCK_BUYING_POWER"] = "x"
         with mock.patch.object(M["rollout"], "us_regular_open", return_value=True):
             d5 = X.execute_entry("p#3", "AAPL", **kw)
         assert d5.gate == "sizing" and "feasibility" in d5.why, (d5.gate, d5.why)
+        os.environ["KIS_MOCK_BUYING_POWER"] = "50000"
     print("[PASS] X1: env→kill→boot→rollout→ownership→(sizing)→sent 체인")
+
+
+def test_mirror_stage():
+    """완전 미러 프로파일 — autopaper와 동일 캡(12종목·하루3건·risk1%·allowlist 불필요)."""
+    with tempfile.TemporaryDirectory() as tmp:
+        M = _setup(tmp)
+        R = M["rollout"]
+        os.environ["TRADE_STAGE"] = "mirror"
+        os.environ.pop("ALLOWED_SYMBOLS", None)
+        ok, why = R.check_new_entry("ANYTHING", open_positions=0, risk_pct=0.01,
+                                    session_open=True)
+        assert ok, why                                     # allowlist 없이 통과
+        assert R.check_new_entry("X", open_positions=11, risk_pct=0.01,
+                                 session_open=True)[0]     # 11/12 → 허용
+        assert not R.check_new_entry("X", open_positions=12, risk_pct=0.01,
+                                     session_open=True)[0]  # 12/12 → 차단
+        assert not R.check_new_entry("X", open_positions=0, risk_pct=0.02,
+                                     session_open=True)[0]  # risk 1% 캡
+        # 하루 3건(autopaper DAY_ENTRY_MAX 패리티): BUY 3건 기록 후 거부
+        for i in range(3):
+            M["ledger"].record_submit(f"m#{i}", f"S{i}", 1, "x",
+                                      meta={"side": "BUY"})
+        assert not R.check_new_entry("X", open_positions=0, risk_pct=0.01,
+                                     session_open=True)[0]
+        # ALLOWED_SYMBOLS를 설정하면 여전히 그 목록만(선택적 추가 펜스)
+        os.environ["ALLOWED_SYMBOLS"] = "AAPL"
+        assert not R.check_new_entry("TSLA", open_positions=0, risk_pct=0.01,
+                                     session_open=True)[0]
+        os.environ["TRADE_STAGE"] = "1.5"
+    print("[PASS] mirror: 12종목·하루3건·risk1%·allowlist불필요(+선택 펜스 유지)")
+
+
+def test_broker_truth_open_cost_gate():
+    """검토 수정 — costbook이 비어도(미배선 #25) 브로커-진실 open_cost_krw가
+    총량 게이트(deployable=SEED−open_cost)·불변식을 실제로 물게 한다."""
+    with tempfile.TemporaryDirectory() as tmp:
+        M = _setup(tmp)
+        X = M["kis_buy"]
+        os.environ["TRADE_STAGE"] = "mirror"
+        os.environ.pop("ALLOWED_SYMBOLS", None)
+        _ready_all_gates(M, tmp)
+        kw = dict(price_usd=100.0, per_share_risk_usd=5.0, krw_per_usd=1400.0,
+                  risk_pct=0.01)
+        fake = {"ok": True, "act": "ack", "key": "q", "odno": "0001"}
+        with mock.patch.object(M["rollout"], "us_regular_open", return_value=True), \
+             mock.patch("bot.kis_orders.place_buy", return_value=fake):
+            # SEED 1천만 중 브로커 실투입 985만 → 남은 15만 < 1주(14만)×2 → 1주만
+            d = X.execute_entry("q#1", "AAPL", open_cost_krw=9_850_000, **kw)
+            assert d.ok and d.qty == 1, (d.gate, d.qty, d.why)
+            # 실투입 999만 → 남은 1만 < 1주 가격 → sizing 차단(deployable 바인딩)
+            d2 = X.execute_entry("q#2", "TSLA", open_cost_krw=9_990_000, **kw)
+            assert d2.gate == "sizing" and "deployable" in d2.why, (d2.gate, d2.why)
+            # 실투입 > SEED = 설명불가 초과 → 불변식 발동(kill L1 + 차단)
+            d3 = X.execute_entry("q#3", "NVDA", open_cost_krw=11_000_000, **kw)
+            assert d3.gate == "invariant"
+            assert M["kill"].level() >= 1
+        os.environ["TRADE_STAGE"] = "1.5"
+    print("[PASS] 브로커-진실 open_cost → 총량 게이트·불변식 실동작(costbook 공백 보완)")
+
+
+def test_mock_feasibility_fallbacks():
+    """검토 수정 — 모의 매수여력: env 미설정 시 잔고 기반 현금으로 폴백
+    (없으면 사이징 전부 0 → 서버에서 매수 불능이던 구멍)."""
+    with tempfile.TemporaryDirectory() as tmp:
+        M = _setup(tmp)
+        K = M["kis"]
+        os.environ.pop("KIS_MOCK_BUYING_POWER", None)
+        # KR: 국내잔고 output2의 주문가능현금(D+2)
+        with mock.patch.object(K, "_get", return_value={
+                "rt_cd": "0", "output1": [],
+                "output2": [{"prvs_rcdl_excc_amt": "5000000"}]}):
+            assert K.domestic_buying_power("005930", 70000) == 5_000_000
+        # US: 체결기준현재잔고 output2의 USD 예수금(출금가능 우선)
+        with mock.patch.object(K, "_get", return_value={
+                "rt_cd": "0", "output2": [
+                    {"crcy_cd": "USD", "frcr_drwg_psbl_amt_1": "30000.5"}]}):
+            assert K.buying_power("AAPL", 190.0) == 30000.5
+        # 조회 실패 → None(fail-closed) · env override가 항상 우선
+        with mock.patch.object(K, "_get", return_value=None):
+            assert K.buying_power("AAPL", 190.0) is None
+        os.environ["KIS_MOCK_BUYING_POWER"] = "777"
+        assert K.buying_power("AAPL", 190.0) == 777.0
+    print("[PASS] 모의 매수여력 폴백 — KR 잔고현금·US 예수금·실패=None·env 우선")
 
 
 def main():
@@ -187,7 +272,10 @@ def main():
     test_ownership()
     test_costbook()
     test_x1_gate_chain_then_sent()
-    print("\n모든 게이트 체인 테스트 통과 — I6/I7/IS2/IS5/costbook/X1.")
+    test_mirror_stage()
+    test_broker_truth_open_cost_gate()
+    test_mock_feasibility_fallbacks()
+    print("\n모든 게이트 체인 테스트 통과 — I6/I7/IS2/IS5/costbook/X1/mirror.")
 
 
 if __name__ == "__main__":

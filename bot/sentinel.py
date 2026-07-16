@@ -392,9 +392,20 @@ def check_once(broker, state: dict) -> None:
                                       and ledger.filled_for(key) >= qty):
                 sent[key] = _now_kst().isoformat(timespec="seconds")
                 _save_sent(sent)
+                try:                               # 전량 매도 확정 → 진입 기록 정리
+                    from bot import kis_positions
+                    kis_positions.close(code)
+                except Exception:
+                    pass
             if rstate in ("filled", "partial"):
                 _notify(f"🛡️ 파수꾼 매도 — {p.get('name', code)}({code}) "
                         f"{filled}주 @ {px} · {reason}"
+                        + ("" if LIVE else " [DRY-RUN]"), critical=True)
+            elif rstate == "ack":
+                # KIS 정상 경로 — 주문응답은 '접수'까지. 체결 확정·잔여 판단은
+                #   잔고대사(_resolve_acks)가 하고 '✅ 체결 확정' 알림이 뒤따른다.
+                _notify(f"🛡️ 파수꾼 매도 접수 — {p.get('name', code)}({code}) "
+                        f"{qty_send}주 @ {px} · {reason} (체결은 잔고대사로 확정)"
                         + ("" if LIVE else " [DRY-RUN]"), critical=True)
             elif rstate == "unknown":
                 # 응답 불명 — 종목 잠금(원장). 대사 전엔 재발주 금지(초과매도 방지).

@@ -42,12 +42,21 @@ def execute_entry(pos_key: str, symbol: str, *, price_usd: float,
                   excg: str = "NASD", open_positions: int | None = None,
                   risk_pct: float = envelope.DEFAULT_RISK_PCT,
                   reason: str = "진입",
-                  market: str | None = None) -> BuyDecision:
+                  market: str | None = None,
+                  open_cost_krw: float | None = None,
+                  hldg_before: int | None = None) -> BuyDecision:
     """신규 진입 1건 시도. 반환: 어느 게이트에서 왜 멈췄는지까지 항상 보고.
 
     가격/리스크 인자는 **해당 시장의 표시통화**(US=USD, KR=KRW)로 받는다.
     KR이면 이미 원화이므로 krw_per_usd는 1.0을 넘긴다(환산 없음).
-    market=None이면 심볼로 자동 판별(국내 6자리 숫자=KR)."""
+    market=None이면 심볼로 자동 판별(국내 6자리 숫자=KR).
+
+    open_cost_krw: 호출부(매수 루프)가 브로커 잔고에서 계산한 **봇 포지션 투입원가
+      (KRW)**. costbook이 확정체결 배선(#25) 전까지 비어 있어 총량 게이트(deployable=
+      SEED−open_cost)와 불변식이 무력해지는 구멍(2026-07-15 검토)을 브로커-진실로
+      메운다. costbook 값과 **max**로 합성(보수적) — 배선 후에도 안전.
+    hldg_before: 주문 직전 그 종목 보유수량(브로커-진실). 원장 meta로 남아
+      ack(접수)→체결 확정의 잔고-delta 대사 기준이 된다."""
     symbol = symbol.upper()
     market = market or kis.market_of_symbol(symbol)
     # 원화 환산계수: US는 fx(krw_per_usd), KR은 표시통화가 이미 원화 → 1.0.
@@ -92,7 +101,12 @@ def execute_entry(pos_key: str, symbol: str, *, price_usd: float,
     # 7) 사이징(IS3/IS4 — 분모 SEED·총량 게이트·feasibility 하향 클램프)
     seed = envelope.seed_krw()
     t = costbook.totals()
+    # 투입원가: costbook(회계)과 브로커-진실(호출부 전달) 중 **큰 쪽**(보수적).
+    #   costbook 미배선(#25) 동안엔 broker 값이 유일한 실측 — 이게 없으면 총량
+    #   게이트가 SEED 전액을 매 사이클 재배포 가능으로 오판한다(검토 2026-07-15).
     open_cost = costbook.open_cost_total()
+    if open_cost_krw is not None:
+        open_cost = max(open_cost, float(open_cost_krw))
     if not envelope.invariant_ok(seed, open_cost):
         kill.raise_level(1, "kis_buy", f"불변식 위반 open_cost {open_cost:.0f} > SEED")
         return BuyDecision(False, "invariant", "open_cost > SEED — 회계 버그, 신규 중지")
@@ -113,7 +127,8 @@ def execute_entry(pos_key: str, symbol: str, *, price_usd: float,
     # 8) 전송 — kis_orders가 모의 전용 하드블록 등 자체 게이트 재검사
     limit = kis_orders.marketable_limit_price(price_usd, "BUY", market=market)
     res = kis_orders.place_buy(pos_key, symbol, r.qty, limit,
-                               excg=excg, reason=reason, market=market)
+                               excg=excg, reason=reason, market=market,
+                               hldg_before=hldg_before)
     if res.get("ok"):
         return BuyDecision(True, "sent", f"ack ODNO={res.get('odno')}",
                            qty=r.qty, order=res)

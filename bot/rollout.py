@@ -4,10 +4,14 @@
 X1이 이 모듈의 check_new_entry()를 반드시 통과해야 한다.
 
 Stage 프로파일(환경변수 TRADE_STAGE, 기본 "1.5"):
-  1.5  모의 검증:  1종목 · 하루 1건 · risk ≤0.1% · allowlist 필수 · whole-share
-  2    실전 첫 주: 1종목 · 하루 1건 · risk ≤0.1% · allowlist 필수 · US 정규장만
-  2.5  확장:      3종목 · 하루 2건 · risk ≤0.25%
-  3    정상:      5종목 · 하루 3건 · risk ≤1.0%
+  1.5    모의 검증:  1종목 · 하루 1건 · risk ≤0.1% · allowlist 필수 · whole-share
+  2      실전 첫 주: 1종목 · 하루 1건 · risk ≤0.1% · allowlist 필수 · US 정규장만
+  2.5    확장:      3종목 · 하루 2건 · risk ≤0.25%
+  3      정상:      5종목 · 하루 3건 · risk ≤1.0%
+  mirror 완전 미러: 12종목 · 하루 3건 · risk ≤1.0% · allowlist 불필요 —
+         종목스크리너 페이퍼 시뮬(autopaper)과 **동일 캡**(MAX_POS=12·
+         DAY_ENTRY_MAX=3·RISK_PCT=1%)으로 그대로 따라간다(사용자 지정 2026-07-15).
+         모의 전용으로 안전(live는 kis_orders가 Stage 2 게이트 전 하드블록).
 
 공통 강제(전 Stage):
   · **US 정규장만**(I1·Codex B7) — dayMarket/pre/after 신규 진입 hard-off.
@@ -33,6 +37,11 @@ _PROFILES = {
             "allowlist_required": True},
     "3":   {"max_positions": 5, "max_new_per_day": 3, "risk_cap": 0.01,
             "allowlist_required": False},
+    # 완전 미러 — scanner/autopaper.py 상수와 값 일치 필수(바꾸면 둘 다):
+    #   MAX_POS=12 · DAY_ENTRY_MAX=3 · RISK_PCT=0.01. ALLOWED_SYMBOLS를 설정하면
+    #   여전히 그 목록만 산다(선택적 추가 펜스 — allowlist_required만 False).
+    "mirror": {"max_positions": 12, "max_new_per_day": 3, "risk_cap": 0.01,
+               "allowlist_required": False},
 }
 
 

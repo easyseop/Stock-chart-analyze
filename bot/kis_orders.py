@@ -145,7 +145,8 @@ def _order_body(market: str, acct: dict, symbol: str, side: str,
 def place_order(key: str, symbol: str, side: str, qty: int, price: float,
                 *, excg: str = "NASD", reason: str = "",
                 min_interval_s: float = 60.0, market: str | None = None,
-                order_type: str = "limit") -> dict:
+                order_type: str = "limit",
+                hldg_before: int | None = None) -> dict:
     """주문 1건 전송(모의 전용). 반환 {ok, act, key, odno?, orgno?, why?}.
 
     key: 포지션 정체성 멱등키(호출부 소유, 예 '{pos}#{n}'). 같은 키 재호출 금지 —
@@ -153,6 +154,8 @@ def place_order(key: str, symbol: str, side: str, qty: int, price: float,
     market: None이면 심볼로 자동 판별(국내 6자리 숫자=KR, 그 외=US).
     order_type: 'limit'(기본) | 'market'. **시장가는 국내(KR)만** — 미국주는 연속장
          시장가가 없어 요청 시 차단(fail-closed). 국내 손절 체결 보장용(사용자 정책 2026-07-13).
+    hldg_before: 주문 직전 보유수량(호출부가 아는 브로커-진실 값). 원장 meta에 남겨
+         ack(접수)→체결 확정의 잔고-delta 대사 기준으로 쓴다(없으면 자동확정 불가).
     """
     side = side.upper()
     market = market or kis.market_of_symbol(symbol)
@@ -189,10 +192,11 @@ def place_order(key: str, symbol: str, side: str, qty: int, price: float,
     venue = excg if market == "US" else "KRX"
 
     # 원장 선기록(전송 전 — 크래시 대비) + 합성키(타임아웃 대사 근거)
-    ledger.record_submit(key, symbol, qty, reason,
-                         meta={"side": side, "price": float(price),
-                               "excg": excg, "market": market,
-                               "order_type": order_type, "env": kis.ENV})
+    meta = {"side": side, "price": float(price), "excg": excg, "market": market,
+            "order_type": order_type, "env": kis.ENV}
+    if hldg_before is not None:                   # ack→체결 잔고대사 기준(있을 때만)
+        meta["hldg_before"] = int(hldg_before)
+    ledger.record_submit(key, symbol, qty, reason, meta=meta)
     ledger.record_synthetic(key, ledger.synthetic_key(
         acct["CANO"], venue, symbol, side, qty, price,
         time.strftime("%H%M%S")))

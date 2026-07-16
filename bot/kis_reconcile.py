@@ -251,6 +251,81 @@ def reconcile_unknowns_kr(balance: dict | None) -> list[dict]:
     return results
 
 
+ACK_AGE_MIN_S = 90     # ack 해소 최소 나이(초) — 체결 진행 중 잔고 스냅샷 오독 방지
+
+
+def resolve_acks_by_balance(hmaps: dict[str, dict | None],
+                            now_ts: float | None = None) -> list[dict]:
+    """접수(submitted/ack) 주문의 잔고-delta 확정 — KR unknown 대사와 동일한 안전 정리.
+
+    문제(2026-07-15 검토, 치명): KIS 주문응답은 '접수(ack)'까지만 온다 — 체결 통지
+    채널이 없고(모의: nccs/psamount 미지원) ack를 filled로 바꿔주는 코드가 없어
+    ack가 원장에 **영원히** 남는다. 그 결과:
+      ① 파수꾼이 그 종목 손절을 영원히 스킵(open_order_count≥1 → 재발주 금지)
+         = 매수 루프로 산 포지션 전부 **무보호**.
+      ② can_submit이 같은 종목 재진입을 영구 차단(청산 후에도).
+      ③ 미러 캡(n_open)이 in-flight로 영구 인플레이트 → 슬롯 고갈.
+    이 함수가 잔고로 '정확한 full-fill'을 증명할 때만 ack→filled 전이해 셋 다 푼다.
+
+    hmaps: {"KR": {sym: qty}|None, "US": {...}|None} — kis.holdings 결과
+      (None=조회실패/불완전 → 그 시장 항목은 건드리지 않음).
+
+    안전(전부 fail-closed — 하나라도 불충족이면 **그대로 둠**, LOW 강등·동결 외 부작용 없음):
+      · age ≥ ACK_AGE_MIN_S (방금 낸 주문의 부분 체결 스냅샷 오독 방지)
+      · side 명시(BUY/SELL) ∧ intended>0 ∧ meta.hldg_before 기록 존재
+      · 그 심볼의 non-terminal 주문이 정확히 1건(net 귀속 가능)
+      · ownership armed ∧ 심볼이 baseline(사용자 기보유)·동결 아님
+      · delta(BUY: 현재−before / SELL: before−현재)가 intended와 **정확히 일치**
+      · delta 이상치(음수/초과)는 동결+보류(외부 개입 의심 — unknown 대사와 동일)
+    반환: 확정건만 [{key, symbol, side, market, state, filled, residual, via}].
+    """
+    import time as _t
+    from bot import kis, ownership
+    now_ts = _t.time() if now_ts is None else float(now_ts)
+    fold_open = ledger.open_orders()
+    open_count: dict[str, int] = {}
+    for o in fold_open:                            # 심볼별 non-terminal 주문 수
+        s = str(o.get("symbol") or "").upper()
+        open_count[s] = open_count.get(s, 0) + 1
+
+    results: list[dict] = []
+    base = ownership.baseline()
+    for o in fold_open:
+        if o.get("state") not in ("submitted", "ack") or o.get("reconciled"):
+            continue
+        side = (o.get("side") or "").upper()
+        if side not in ("BUY", "SELL"):
+            continue                               # CANCEL 등 — 대상 아님
+        S = str(o.get("symbol") or "").upper()
+        Q = int(o.get("intended") or 0)
+        before = o.get("hldg_before")
+        if not S or Q <= 0 or before is None:
+            continue                               # 기준 없음 — 자동확정 불가(보류)
+        if now_ts - float(o.get("submitted_at") or 0) < ACK_AGE_MIN_S:
+            continue                               # 아직 어림 — 다음 사이클
+        if open_count.get(S, 0) != 1:
+            continue                               # net 귀속 불가(동시 주문) — 보류
+        if base is None or S in base or ownership.is_frozen(S):
+            continue                               # 미armed/사용자 기보유/동결 — 보류
+        market = o.get("market") or kis.market_of_symbol(S)
+        hmap = hmaps.get(market)
+        if hmap is None:
+            continue                               # 그 시장 잔고 조회실패 — 보류
+        now_qty = int(hmap.get(S, 0))
+        before = int(before)
+        delta = (now_qty - before) if side == "BUY" else (before - now_qty)
+        if delta == Q:                             # 정확 full-fill만 자동확정
+            r = ledger.reconcile(o["key"], Q)      # ack→filled + 잠금/카운트 해소
+            results.append({"key": o["key"], "symbol": S, "side": side,
+                            "market": market, "via": "ack-balance", **r})
+        elif delta < 0 or delta > Q:               # 설명불가 변화 = 외부 개입 의심
+            if not ownership.is_frozen(S):
+                ownership.freeze(S, f"ack대사 이상 delta={delta} "
+                                    f"(before={before} now={now_qty} Q={Q} {side})")
+        # 0 ≤ delta < Q: 부분/미체결 가능성 — 자동 결론 금지(다음 사이클 재검사)
+    return results
+
+
 def reconcile_unknowns(nccs: dict | None, ccnl: dict | None,
                        window_s: int = 120) -> list[dict]:
     """원장의 모든 미해소 UNKNOWN을 nccs+ccnl로 대사(신뢰도 판정 포함).
