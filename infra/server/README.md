@@ -83,7 +83,7 @@ sudo -u bot python3 /opt/stock/Stock-chart-analyze/scripts/kis_preflight.py
 
 ## 완전 미러 모드 (TRADE_STAGE=mirror, 모의 전용 — 사용자 지정 2026-07-15)
 종목스크리너 페이퍼 시뮬(autopaper)을 **그대로 따라 사는** 모드. autopaper와
-동일 캡: **동시 12종목 · 하루 신규 3건 · 거래당 risk 1% · allowlist 불필요**.
+동일 캡: **동시 12종목 · 하루 신규 10건 · 거래당 risk 1% · allowlist 불필요**.
 ```bash
 # kis.env에 (ALLOWED_SYMBOLS는 필요 없음 — 넣으면 그 목록만 사는 추가 펜스가 됨):
 KIS_ORDERS_ENABLED=1

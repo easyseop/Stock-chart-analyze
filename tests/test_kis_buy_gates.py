@@ -199,18 +199,21 @@ def test_mirror_stage():
                                      session_open=True)[0]  # 12/12 → 차단
         assert not R.check_new_entry("X", open_positions=0, risk_pct=0.02,
                                      session_open=True)[0]  # risk 1% 캡
-        # 하루 3건(autopaper DAY_ENTRY_MAX 패리티): BUY 3건 기록 후 거부
-        for i in range(3):
+        # 하루 10건(사용자 지정 2026-07-15): 9건까지 허용, 10건째 기록 후 거부
+        for i in range(9):
             M["ledger"].record_submit(f"m#{i}", f"S{i}", 1, "x",
                                       meta={"side": "BUY"})
+        assert R.check_new_entry("X", open_positions=0, risk_pct=0.01,
+                                 session_open=True)[0]      # 9/10 → 허용
+        M["ledger"].record_submit("m#9", "S9", 1, "x", meta={"side": "BUY"})
         assert not R.check_new_entry("X", open_positions=0, risk_pct=0.01,
-                                     session_open=True)[0]
+                                     session_open=True)[0]  # 10/10 → 차단
         # ALLOWED_SYMBOLS를 설정하면 여전히 그 목록만(선택적 추가 펜스)
         os.environ["ALLOWED_SYMBOLS"] = "AAPL"
         assert not R.check_new_entry("TSLA", open_positions=0, risk_pct=0.01,
                                      session_open=True)[0]
         os.environ["TRADE_STAGE"] = "1.5"
-    print("[PASS] mirror: 12종목·하루3건·risk1%·allowlist불필요(+선택 펜스 유지)")
+    print("[PASS] mirror: 12종목·하루10건·risk1%·allowlist불필요(+선택 펜스 유지)")
 
 
 def test_broker_truth_open_cost_gate():
