@@ -261,12 +261,19 @@ def test_mock_feasibility_fallbacks():
                 "rt_cd": "0", "output2": [
                     {"crcy_cd": "USD", "frcr_drwg_psbl_amt_1": "30000.5"}]}):
             assert K.buying_power("AAPL", 190.0) == 30000.5
-        # 조회 실패 → None(fail-closed) · env override가 항상 우선
+        # 조회 실패 → SEED 폴백(비바인딩, 자가치유). SEED 1천만·fx 1380 → US는 원/fx.
+        with mock.patch.object(K, "_get", return_value=None):
+            assert K.domestic_buying_power("005930", 70000) == 10_000_000  # KR=SEED
+            assert abs(K.buying_power("AAPL", 190.0) - 10_000_000 / 1380.0) < 1e-6
+        # SEED 미설정(0)이면 실패 시 None(그땐 사이징 자체가 0)
+        os.environ["BOT_SEED_KRW"] = "0"
         with mock.patch.object(K, "_get", return_value=None):
             assert K.buying_power("AAPL", 190.0) is None
+        os.environ["BOT_SEED_KRW"] = "10000000"
+        # env override는 항상 최우선
         os.environ["KIS_MOCK_BUYING_POWER"] = "777"
         assert K.buying_power("AAPL", 190.0) == 777.0
-    print("[PASS] 모의 매수여력 폴백 — KR 잔고현금·US 예수금·실패=None·env 우선")
+    print("[PASS] 모의 매수여력 — KR현금·US예수금·실패=SEED폴백·SEED0=None·env우선")
 
 
 def main():

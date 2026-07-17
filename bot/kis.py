@@ -393,6 +393,53 @@ def present_balance() -> dict | None:
                  "TR_MKET_CD": "00", "INQR_DVSN_CD": "00"})
 
 
+def _seed_native(ccy: str) -> float | None:
+    """SEED(원)를 해당 통화 단위로 — feasibility 폴백값. USD는 fx로 환산.
+    SEED 미설정(0)이면 None(그땐 사이징 자체가 0이라 매수 없음)."""
+    try:
+        from bot import envelope, settings
+        seed = envelope.seed_krw()
+    except Exception:
+        return None
+    if seed <= 0:
+        return None
+    if ccy == "USD":
+        try:
+            fx = float(settings.FX_USDKRW)
+        except Exception:
+            fx = 1400.0
+        return seed / max(fx, 1e-9)               # 원 시드를 달러로(비바인딩 크기)
+    return seed
+
+
+def _mock_feasibility(balance_fn, ccy: str, cash_keys: tuple[str, ...]):
+    """모의 매수여력 — env override > 잔고현금 조회 > SEED 폴백(비바인딩).
+
+    조회가 실server에서 되면 그 현금(가장 보수)을, 안 되면 SEED로 폴백해
+    feasibility가 안 막고 SEED 총량·종목·risk 게이트가 한도를 잡게 한다.
+    """
+    v = os.environ.get("KIS_MOCK_BUYING_POWER")
+    if v is not None:
+        try:
+            return float(v)
+        except ValueError:
+            return None
+    d = balance_fn()
+    if d and d.get("rt_cd") == "0":
+        out2 = d.get("output2") or []
+        rows = out2 if isinstance(out2, list) else [out2]
+        for row in rows:
+            c = str(row.get("crcy_cd") or "").upper()
+            if ccy == "USD" and c not in ("", "USD"):
+                continue                          # 통화 행 구분(빈 값=단일행 방어)
+            for k in cash_keys:
+                try:
+                    return float(row.get(k))      # 브로커-진실 현금(최우선)
+                except (TypeError, ValueError):
+                    continue
+    return _seed_native(ccy)                      # 조회 실패 → SEED 폴백(자가치유)
+
+
 def buying_power(symbol: str, price: float, excg: str = "NASD") -> float | None:
     """매수여력(USD) — envelope의 feasibility(하향 클램프) 입력.
 
@@ -400,31 +447,18 @@ def buying_power(symbol: str, price: float, excg: str = "NASD") -> float | None:
       통합증거금 값(echm_af_*)은 cash-only 확인 전 사용 금지(REFLECTION R6) —
       **보수적으로 외화예수금 기준만** 쓴다.
     · mock: psamount **모의 미지원**(확정) →
-        ① KIS_MOCK_BUYING_POWER(명시 override — 테스트/비상용)가 있으면 그 값.
+        ① KIS_MOCK_BUYING_POWER(명시 override)가 있으면 그 값.
         ② 없으면 체결기준현재잔고의 **USD 예수금**(브로커-진실 현금)을 클램프로.
-        ③ 둘 다 실패 = None(=X1 사이징이 0으로 차단, fail-closed).
-      ※ ②가 없으면 모의 서버에서 매수 사이징이 전부 0으로 막힌다(2026-07-15 검토).
+        ③ 조회 실패 = **SEED로 폴백**(feasibility 비바인딩) — 모의는 실계좌
+           현금 제약이 무의미하고, 실제 한도는 SEED 총량·종목당 1/3·risk 캡이
+           이미 잡는다. live처럼 0으로 막으면 모의에서 영원히 매수 불가
+           (2026-07-17 실측: VTRP6504R 모의 미지원 확인 → 폴백으로 자가치유).
+           SEED 미설정(0)이면 None(그땐 어차피 사이징 자체가 0).
     """
     if IS_MOCK:
-        v = os.environ.get("KIS_MOCK_BUYING_POWER")
-        if v is not None:
-            try:
-                return float(v)
-            except ValueError:
-                return None
-        d = present_balance()
-        if not d or d.get("rt_cd") != "0":
-            return None
-        for row in (d.get("output2") or []):
-            if str(row.get("crcy_cd") or "").upper() not in ("", "USD"):
-                continue                          # 통화 행 구분(빈 값은 단일행 응답 방어)
-            for k in ("frcr_drwg_psbl_amt_1", "frcr_dncl_amt_2", "frcr_dncl_amt"):
-                try:
-                    val = float(row.get(k))
-                    return val                    # 출금가능 우선(가장 보수적 현금)
-                except (TypeError, ValueError):
-                    continue
-        return None
+        return _mock_feasibility(present_balance, "USD",
+                                 ("frcr_drwg_psbl_amt_1", "frcr_dncl_amt_2",
+                                  "frcr_dncl_amt"))
     acct = account()
     if not acct or not enabled():
         return None
@@ -505,27 +539,12 @@ def domestic_buying_power(symbol: str, price: float) -> float | None:
     """국내 매수여력(원) — inquire-psbl-order. envelope feasibility 입력.
     · live: `ORD_DVSN=00`(지정가)·현금 기준 `nrcvb_buy_amt`(미수 없는 매수가능금액).
     · mock: ① KIS_MOCK_BUYING_POWER(명시 override) → ② 국내잔고 output2의
-      주문가능현금(D+2 정산 기준, 실측 확정 TR VTTC8434R) → ③ None(fail-closed).
-      ※ ②가 없으면 모의 서버에서 국내 매수 사이징이 전부 0으로 막힌다(2026-07-15 검토)."""
+      주문가능현금(D+2, VTTC8434R) → ③ 조회 실패 시 SEED 폴백(비바인딩 —
+      buying_power와 동일 자가치유. 실제 한도는 SEED·종목·risk 게이트가 잡음)."""
     if IS_MOCK:
-        v = os.environ.get("KIS_MOCK_BUYING_POWER")
-        if v is not None:
-            try:
-                return float(v)
-            except ValueError:
-                return None
-        d = domestic_balance()
-        if not d or d.get("rt_cd") != "0":
-            return None
-        out2 = d.get("output2") or []
-        row = out2[0] if isinstance(out2, list) and out2 else (
-            out2 if isinstance(out2, dict) else {})
-        for k in ("prvs_rcdl_excc_amt", "nxdy_excc_amt", "dnca_tot_amt"):
-            try:
-                return float(row.get(k))          # D+2 주문가능현금 우선(보수적)
-            except (TypeError, ValueError):
-                continue
-        return None
+        return _mock_feasibility(domestic_balance, "KRW",
+                                 ("prvs_rcdl_excc_amt", "nxdy_excc_amt",
+                                  "dnca_tot_amt"))
     acct = account()
     if not acct or not enabled():
         return None
