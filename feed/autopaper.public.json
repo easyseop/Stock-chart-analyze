@@ -18,7 +18,7 @@
    "opened": "2026-07-06",
    "pl_krw": 835702,
    "pl_pct": 4.5,
-   "price_age_min": 9.0
+   "price_age_min": 0.5
   },
   {
    "code": "STE",
@@ -33,7 +33,7 @@
    "opened": "2026-07-07",
    "pl_krw": 72017,
    "pl_pct": 3.81,
-   "price_age_min": 8.0
+   "price_age_min": 0.5
   },
   {
    "code": "068270",
@@ -48,7 +48,7 @@
    "opened": "2026-07-07",
    "pl_krw": 24386,
    "pl_pct": 0.26,
-   "price_age_min": 42.4
+   "price_age_min": 0.5
   },
   {
    "code": "ORC",
@@ -63,7 +63,7 @@
    "opened": "2026-07-08",
    "pl_krw": 1066,
    "pl_pct": 2.64,
-   "price_age_min": 7.8
+   "price_age_min": 0.5
   },
   {
    "code": "FND",
@@ -78,7 +78,7 @@
    "opened": "2026-07-08",
    "pl_krw": 340150,
    "pl_pct": 6.89,
-   "price_age_min": 6.8
+   "price_age_min": 0.5
   },
   {
    "code": "HMC",
@@ -93,7 +93,7 @@
    "opened": "2026-07-09",
    "pl_krw": 4906,
    "pl_pct": 3.99,
-   "price_age_min": 42.4
+   "price_age_min": 0.5
   },
   {
    "code": "NU",
@@ -108,7 +108,7 @@
    "opened": "2026-07-09",
    "pl_krw": 673,
    "pl_pct": 3.41,
-   "price_age_min": 42.4
+   "price_age_min": 0.4
   },
   {
    "code": "LSPD",
@@ -123,7 +123,7 @@
    "opened": "2026-07-09",
    "pl_krw": 14090,
    "pl_pct": 3.39,
-   "price_age_min": 42.4
+   "price_age_min": 0.4
   },
   {
    "code": "SARO",
@@ -138,7 +138,7 @@
    "opened": "2026-07-10",
    "pl_krw": -305000,
    "pl_pct": -4.59,
-   "price_age_min": 42.4
+   "price_age_min": 0.4
   },
   {
    "code": "J",
@@ -153,7 +153,7 @@
    "opened": "2026-07-11",
    "pl_krw": 542275,
    "pl_pct": 4.52,
-   "price_age_min": 42.4
+   "price_age_min": 0.4
   }
  ],
  "pending": [
@@ -674,8 +674,6 @@
    "note": "눌림 지정가 주문(추격 금지) — ↗ 돌파후 진행(승률↓) · ③ 돌파후 횡보(대기) · 저점권28% · 체크4/6 · 손절폭10.5%"
   }
  ],
- "lane": "bulk",
- "data_stale": [
-  "068270"
- ]
+ "lane": "fast",
+ "data_stale": []
 }
