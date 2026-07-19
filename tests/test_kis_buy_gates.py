@@ -265,6 +265,11 @@ def test_mock_feasibility_fallbacks():
         with mock.patch.object(K, "_get", return_value=None):
             assert K.domestic_buying_power("005930", 70000) == 10_000_000  # KR=SEED
             assert abs(K.buying_power("AAPL", 190.0) - 10_000_000 / 1380.0) < 1e-6
+        # 조회 성공했지만 현금 0(모의 USD 예수금 0) → SEED 폴백(실측 2026-07-17 버그)
+        with mock.patch.object(K, "_get", return_value={
+                "rt_cd": "0", "output2": [
+                    {"crcy_cd": "USD", "frcr_drwg_psbl_amt_1": "0"}]}):
+            assert abs(K.buying_power("AAPL", 190.0) - 10_000_000 / 1380.0) < 1e-6
         # SEED 미설정(0)이면 실패 시 None(그땐 사이징 자체가 0)
         os.environ["BOT_SEED_KRW"] = "0"
         with mock.patch.object(K, "_get", return_value=None):

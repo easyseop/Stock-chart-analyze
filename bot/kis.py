@@ -413,10 +413,14 @@ def _seed_native(ccy: str) -> float | None:
 
 
 def _mock_feasibility(balance_fn, ccy: str, cash_keys: tuple[str, ...]):
-    """모의 매수여력 — env override > 잔고현금 조회 > SEED 폴백(비바인딩).
+    """모의 매수여력 — env override > 잔고현금(양수) > SEED 폴백(비바인딩).
 
-    조회가 실server에서 되면 그 현금(가장 보수)을, 안 되면 SEED로 폴백해
-    feasibility가 안 막고 SEED 총량·종목·risk 게이트가 한도를 잡게 한다.
+    조회가 실server에서 되고 현금이 **양수면** 그 값(가장 보수적 클램프)을,
+    조회 실패거나 **현금이 0/음수면** SEED로 폴백한다. 후자가 중요:
+    한투 모의계좌는 **원화 시드**만 줘서 USD 예수금이 0이다(2026-07-17 실측:
+    매수여력 0.0). 그 0을 그대로 쓰면 미국주 매수가 전부 막힌다 — 모의에선
+    USD 현금 0이 실제 제약이 아니므로(원화 SEED·종목·risk 게이트가 한도를
+    잡음) SEED 폴백이 맞다.
     """
     v = os.environ.get("KIS_MOCK_BUYING_POWER")
     if v is not None:
@@ -424,6 +428,7 @@ def _mock_feasibility(balance_fn, ccy: str, cash_keys: tuple[str, ...]):
             return float(v)
         except ValueError:
             return None
+    best = 0.0
     d = balance_fn()
     if d and d.get("rt_cd") == "0":
         out2 = d.get("output2") or []
@@ -434,10 +439,10 @@ def _mock_feasibility(balance_fn, ccy: str, cash_keys: tuple[str, ...]):
                 continue                          # 통화 행 구분(빈 값=단일행 방어)
             for k in cash_keys:
                 try:
-                    return float(row.get(k))      # 브로커-진실 현금(최우선)
+                    best = max(best, float(row.get(k)))   # 최대 양수 현금 채택
                 except (TypeError, ValueError):
                     continue
-    return _seed_native(ccy)                      # 조회 실패 → SEED 폴백(자가치유)
+    return best if best > 0 else _seed_native(ccy)  # 0/실패 → SEED 폴백(자가치유)
 
 
 def buying_power(symbol: str, price: float, excg: str = "NASD") -> float | None:
