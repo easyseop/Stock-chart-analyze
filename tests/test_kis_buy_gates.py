@@ -261,14 +261,20 @@ def test_mock_feasibility_fallbacks():
                 "rt_cd": "0", "output2": [
                     {"crcy_cd": "USD", "frcr_drwg_psbl_amt_1": "30000.5"}]}):
             assert K.buying_power("AAPL", 190.0) == 30000.5
-        # 조회 실패 → SEED 폴백(비바인딩, 자가치유). SEED 1천만·fx 1380 → US는 원/fx.
+        # 자동환전: USD 예수금 0(모의 원화계좌)인데 원화 현금 있으면 → 원화/fx 클램프
+        def _by_path(path, tr, params):
+            if "present-balance" in path:         # USD 예수금 0
+                return {"rt_cd": "0", "output2": [
+                    {"crcy_cd": "USD", "frcr_drwg_psbl_amt_1": "0"}]}
+            if "domestic-stock/v1/trading/inquire-balance" in path:
+                return {"rt_cd": "0", "output1": [],
+                        "output2": [{"prvs_rcdl_excc_amt": "9400000"}]}  # 원화 940만
+            return None
+        with mock.patch.object(K, "_get", side_effect=_by_path):
+            assert abs(K.buying_power("AAPL", 190.0) - 9_400_000 / 1380.0) < 1e-6
+        # 조회 전부 실패 → SEED 폴백(비바인딩, 자가치유)
         with mock.patch.object(K, "_get", return_value=None):
             assert K.domestic_buying_power("005930", 70000) == 10_000_000  # KR=SEED
-            assert abs(K.buying_power("AAPL", 190.0) - 10_000_000 / 1380.0) < 1e-6
-        # 조회 성공했지만 현금 0(모의 USD 예수금 0) → SEED 폴백(실측 2026-07-17 버그)
-        with mock.patch.object(K, "_get", return_value={
-                "rt_cd": "0", "output2": [
-                    {"crcy_cd": "USD", "frcr_drwg_psbl_amt_1": "0"}]}):
             assert abs(K.buying_power("AAPL", 190.0) - 10_000_000 / 1380.0) < 1e-6
         # SEED 미설정(0)이면 실패 시 None(그땐 사이징 자체가 0)
         os.environ["BOT_SEED_KRW"] = "0"
