@@ -2,8 +2,8 @@
  "updated": "2026-07-21",
  "start": 100000000,
  "cash": 58183242,
- "equity": 98538115,
- "ret_pct": -1.46,
+ "equity": 98325065,
+ "ret_pct": -1.67,
  "positions": [
   {
    "code": "MRSH",
@@ -11,14 +11,14 @@
    "ccy": "USD",
    "q": 36,
    "avg": 174.3075,
-   "price": 182.1300048828125,
+   "price": 181.90499877929688,
    "stop": 174.3075,
    "target": 192.2575,
    "half_done": true,
    "opened": "2026-07-06",
-   "pl_krw": 416330,
-   "pl_pct": 4.49,
-   "price_age_min": 0.5
+   "pl_krw": 404354,
+   "pl_pct": 4.36,
+   "price_age_min": 8.2
   },
   {
    "code": "STE",
@@ -26,14 +26,14 @@
    "ccy": "USD",
    "q": 6,
    "avg": 213.02,
-   "price": 215.3600006103516,
+   "price": 215.2949981689453,
    "stop": 202.063,
    "target": 234.934,
    "half_done": false,
    "opened": "2026-07-07",
-   "pl_krw": 20757,
-   "pl_pct": 1.1,
-   "price_age_min": 0.5
+   "pl_krw": 20180,
+   "pl_pct": 1.07,
+   "price_age_min": 8.4
   },
   {
    "code": "068270",
@@ -41,14 +41,14 @@
    "ccy": "KRW",
    "q": 54,
    "avg": 175348.4128,
-   "price": 175800.0,
+   "price": 172600.0,
    "stop": 157651.1713,
    "target": 212997.6574,
    "half_done": false,
    "opened": "2026-07-07",
-   "pl_krw": 24386,
-   "pl_pct": 0.26,
-   "price_age_min": 0.5
+   "pl_krw": -148414,
+   "pl_pct": -1.57,
+   "price_age_min": 311.1
   },
   {
    "code": "ORC",
@@ -56,14 +56,14 @@
    "ccy": "USD",
    "q": 4,
    "avg": 6.81,
-   "price": 6.704999923706055,
+   "price": 6.70989990234375,
    "stop": 6.5493,
    "target": 7.3314,
    "half_done": false,
    "opened": "2026-07-08",
-   "pl_krw": -621,
-   "pl_pct": -1.54,
-   "price_age_min": 0.5
+   "pl_krw": -592,
+   "pl_pct": -1.47,
+   "price_age_min": 6.4
   },
   {
    "code": "HMC",
@@ -71,14 +71,14 @@
    "ccy": "USD",
    "q": 3,
    "avg": 27.665,
-   "price": 28.200000762939453,
+   "price": 28.2549991607666,
    "stop": 26.2063,
    "target": 30.5824,
    "half_done": false,
    "opened": "2026-07-09",
-   "pl_krw": 2373,
-   "pl_pct": 1.93,
-   "price_age_min": 0.5
+   "pl_krw": 2617,
+   "pl_pct": 2.13,
+   "price_age_min": 311.1
   },
   {
    "code": "NU",
@@ -86,14 +86,14 @@
    "ccy": "USD",
    "q": 1,
    "avg": 13.335,
-   "price": 14.104999542236328,
+   "price": 13.734999656677246,
    "stop": 12.3253,
    "target": 15.3544,
    "half_done": false,
    "opened": "2026-07-09",
-   "pl_krw": 1138,
-   "pl_pct": 5.77,
-   "price_age_min": 0.5
+   "pl_krw": 591,
+   "pl_pct": 3.0,
+   "price_age_min": 311.1
   },
   {
    "code": "LSPD",
@@ -101,14 +101,14 @@
    "ccy": "USD",
    "q": 28,
    "avg": 10.02,
-   "price": 10.404999732971191,
+   "price": 10.300000190734863,
    "stop": 9.2434,
    "target": 11.6783,
    "half_done": false,
    "opened": "2026-07-09",
-   "pl_krw": 15937,
-   "pl_pct": 3.84,
-   "price_age_min": 0.5
+   "pl_krw": 11591,
+   "pl_pct": 2.79,
+   "price_age_min": 311.1
   },
   {
    "code": "SARO",
@@ -116,14 +116,14 @@
    "ccy": "USD",
    "q": 161,
    "avg": 27.9,
-   "price": 26.604999542236328,
+   "price": 26.674999237060547,
    "stop": 25.8678,
    "target": 31.9643,
    "half_done": false,
    "opened": "2026-07-10",
-   "pl_krw": -308237,
-   "pl_pct": -4.64,
-   "price_age_min": 0.5
+   "pl_krw": -291576,
+   "pl_pct": -4.39,
+   "price_age_min": 311.1
   },
   {
    "code": "J",
@@ -131,14 +131,14 @@
    "ccy": "USD",
    "q": 64,
    "avg": 126.585,
-   "price": 130.09500122070312,
+   "price": 129.6750030517578,
    "stop": 119.2617,
    "target": 141.2316,
    "half_done": false,
    "opened": "2026-07-11",
-   "pl_krw": 332106,
-   "pl_pct": 2.77,
-   "price_age_min": 0.5
+   "pl_krw": 292367,
+   "pl_pct": 2.44,
+   "price_age_min": 311.1
   }
  ],
  "pending": [
@@ -471,7 +471,7 @@
   },
   {
    "d": "2026-07-21",
-   "v": 98538115
+   "v": 98325065
   }
  ],
  "log": [
@@ -788,6 +788,12 @@
    "note": "눌림 지정가 주문(추격 금지) — ↗ 돌파후 진행(승률↓) · ③ 돌파후 횡보(대기) · 저점권28% · 체크4/6 · 손절폭10.5%"
   }
  ],
- "lane": "fast",
- "data_stale": []
+ "lane": "bulk",
+ "data_stale": [
+  "HMC",
+  "NU",
+  "LSPD",
+  "SARO",
+  "J"
+ ]
 }
