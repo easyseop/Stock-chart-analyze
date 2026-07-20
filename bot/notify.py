@@ -42,7 +42,9 @@ def _ntfy(text: str, *, title: str = "P0 ALERT", priority: str = "urgent",
         with urllib.request.urlopen(req, timeout=15) as resp:
             if resp.status >= 300:
                 print(f"[ntfy 전송 실패] {resp.status}")
-    except urllib.error.URLError as e:
+    except Exception as e:      # URLError 외 socket.timeout/TimeoutError/OSError도 흡수
+        #   (감사 수정: 응답읽기 타임아웃은 URLError가 아니라 밖으로 새어, _ntfy가
+        #    텔레그램 전송 앞이라 P0 경보가 양 채널 다 유실됐다. ntfy 실패는 무해.)
         print(f"[ntfy 전송 오류] {e}")
 
 
@@ -71,6 +73,6 @@ def send(text: str, *, critical: bool = False) -> bool:
             if not ok:
                 print(f"[텔레그램 전송 실패] {resp.status}")
             return ok
-    except urllib.error.URLError as e:
-        print(f"[텔레그램 전송 오류] {e}")
-        return False
+    except Exception as e:      # URLError 외 타임아웃/JSON오류도 흡수(감사 수정):
+        print(f"[텔레그램 전송 오류] {e}")   # 응답읽기 타임아웃이 밖으로 새 호출부
+        return False                          # (파수꾼 등)의 사이클을 중단시키지 않게

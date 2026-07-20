@@ -81,11 +81,14 @@ def market_open(ccy: str) -> bool:
             return False
         hm = et.hour * 60 + et.minute
         return 570 <= hm < 960
-    except Exception:                 # tzdata 없으면 기존 고정창 폴백
+    except Exception:                 # tzdata 없을 때만 폴백 — DST 두 체제의 **교집합**
+        #   (EDT 13:30–20:00 ∩ EST 14:30–21:00 = 14:30–20:00 UTC). 합집합(810~1260)은
+        #   실제 폐장 시간에도 '개장'으로 오판(감사 수정 #11). 교집합=보수적(항상 개장인
+        #   구간만) — 가장자리 1시간은 놓쳐도 닫힌 때 열렸다고 오판하진 않는다.
         if now.weekday() >= 5:
             return False
         hm = now.hour * 60 + now.minute
-        return 810 <= hm <= 1260
+        return 870 <= hm < 1200
 
 
 # 제안(추천)형 알림 스위치 — 사용자 요청(2026-07-12): 텔레그램은 '실제 액션'

@@ -23,7 +23,9 @@ import tempfile
 import time
 
 _BASE_DEFAULT = os.path.join(tempfile.gettempdir(), "user_baseline.json")
-_FREEZE_DEFAULT = os.path.join(tempfile.gettempdir(), "symbol_freeze.json")
+# 동결 상태는 **영속 경로**(모듈 옆)로 — /tmp 기본이면 재부팅/청소 시 파일이 사라져
+#   close-only 동결이 조용히 풀린다(감사 수정 #10, fail-open). SYMBOL_FREEZE_PATH로 override.
+_FREEZE_DEFAULT = os.path.join(os.path.dirname(__file__), "symbol_freeze.json")
 
 
 def _bpath() -> str:
@@ -135,8 +137,10 @@ def reconcile_claims(claims: dict[str, int],
     for r in holdings_rows:
         sym = str(r.get("ovrs_pdno") or r.get("pdno") or "").upper()
         try:
-            broker[sym] = broker.get(sym, 0) + int(float(r.get("ovrs_cblc_qty")
-                                                         or r.get("qty") or 0))
+            # 해외 ovrs_cblc_qty · 국내 hldg_qty · 일반 qty (감사 수정 #7: hldg_qty
+            #   누락 시 모든 KR 보유가 broker=0으로 읽혀 claim>broker 오탐 → 오동결).
+            broker[sym] = broker.get(sym, 0) + int(float(
+                r.get("ovrs_cblc_qty") or r.get("hldg_qty") or r.get("qty") or 0))
         except (TypeError, ValueError):
             continue
     issues = []

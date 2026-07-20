@@ -157,9 +157,11 @@ class _KisBroker(_PaperBroker):
                                       market=market, order_type="market")
         else:
             # 미국주는 시장가 부재 → 마켓터블 지정가(급락 시 chase가 보완).
+            #   거래소는 실제 상장처로 해석(감사 수정 #1: NASD 하드코딩 시 NYSE/AMEX
+            #   손절 주문이 live에서 거부돼 무한 재발화·손절 실패).
             limit = kis_orders.marketable_limit_price(px, "SELL", market=market)
             r = kis_orders.place_sell(key, code, qty, limit, reason=reason,
-                                      market=market)
+                                      market=market, excg=kis.us_excg_of(code))
         act = r.get("act")
         if act == "ack":                     # 접수됨(in-flight) — 체결은 대사가 확정
             return {"state": "ack", "filled": 0}

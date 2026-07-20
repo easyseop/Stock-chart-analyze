@@ -221,6 +221,15 @@ def place_order(key: str, symbol: str, side: str, qty: int, price: float,
             ledger.on_result(key, "rejected", 0)
             return {"ok": False, "act": "rate_limited", "key": key,
                     "why": "EGW00201 지속 — P0(집행 불능) 대상"}
+        if act == kis.ACT_REFRESH and attempt == 0:
+            # 401 — 토큰 만료/회전. 강제 재발급 후 1회 재시도(감사 수정: 기존엔
+            #   ACT_REFRESH 분기가 없어 UNKNOWN 잠금으로 빠져 손절이 wedge됐다).
+            kis._token(force=True)
+            continue
+        if act == kis.ACT_REFRESH:                # 재발급 후에도 401 = 확정 거부
+            ledger.on_result(key, "rejected", 0)  # 401은 접수 전 거부 → 주문 미실행
+            return {"ok": False, "act": "auth_fatal", "key": key,
+                    "why": "401 지속(토큰 재발급 후에도) — 인증 확인 필요"}
         if act in (kis.ACT_REJECT, kis.ACT_AUTH_FATAL):
             ledger.on_result(key, "rejected", 0)
             mc = (d or {}).get("msg_cd") or http

@@ -125,6 +125,10 @@ def execute_entry(pos_key: str, symbol: str, *, price_usd: float,
                            f"수량 0 (binding={r.binding}, cap={r.cap_krw:.0f}KRW)")
 
     # 8) 전송 — kis_orders가 모의 전용 하드블록 등 자체 게이트 재검사
+    #   미국주는 실제 상장 거래소로 라우팅(감사 수정 #1: NASD 고정 시 NYSE/AMEX
+    #   매수가 live에서 거부). KR은 excg 무관.
+    if market != "KR":
+        excg = kis.us_excg_of(symbol)
     limit = kis_orders.marketable_limit_price(price_usd, "BUY", market=market)
     res = kis_orders.place_buy(pos_key, symbol, r.qty, limit,
                                excg=excg, reason=reason, market=market,

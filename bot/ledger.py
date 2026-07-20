@@ -87,6 +87,8 @@ def _fold() -> dict:
                         cur["excg"] = meta["excg"]        # 부팅 대사 조회 범위용
                     if meta.get("market"):
                         cur["market"] = meta["market"]    # 국내/해외 대사 라우팅용
+                    if meta.get("price") is not None:
+                        cur["price"] = meta["price"]      # in-flight 원가 추정(총량게이트)
                     if meta.get("hldg_before") is not None:
                         cur["hldg_before"] = meta["hldg_before"]  # 국내 잔고대사 기준
     except FileNotFoundError:
@@ -233,6 +235,15 @@ def reconcile_from_candidates(key: str, candidates: list,
     반환: {state, filled, residual, confidence}. LOW면 state는 unknown 유지."""
     cur = state_of(key) or {}
     intended = cur.get("intended", 0) if intended is None else int(intended)
+    # 후보가 브로커에 **아직 살아있는 주문**(nccs 잔량>0)이면 잠금 유지 —
+    #   잔여를 재발주하면 원주문이 마저 체결돼 초과매도(감사 수정 #6). 완전 체결
+    #   (ccnl 전용·open=False)만 자동 확정.
+    if len(candidates) == 1 and candidates[0].get("open"):
+        _append({"ev": "confidence", "key": key, "confidence": CONF_LOW,
+                 "reason": "order_still_open"})
+        filled = int(cur.get("filled", 0))
+        return {"state": cur.get("state", "unknown"), "filled": filled,
+                "residual": max(0, intended - filled), "confidence": CONF_LOW}
     if len(candidates) == 1:
         filled = max(0, int(candidates[0].get("filled", 0) or 0))
         r = reconcile(key, filled)               # 기존 대사 재사용(잠금 해제)

@@ -93,7 +93,8 @@ def test_low_twin_orders_same_second():
 
 def test_known_odno_excluded():
     """이미 ODNO가 결속된(우리가 아는) 주문의 행은 다른 UNKNOWN의 후보에서 제외 →
-    남는 1행으로 HIGH 확정."""
+    남는 1행(4002)으로 귀속. 단 4002는 아직 미체결(nccs 잔량>0)이라 LOW 잠금
+    유지(초과매도 방지, 감사 #6) + 단일 후보라 ODNO는 결속."""
     with tempfile.TemporaryDirectory() as tmp:
         _fresh(tmp)
         # 주문 A: 정상 접수(ODNO 4001 결속), 아직 미체결(in-flight)
@@ -111,9 +112,11 @@ def test_known_odno_excluded():
                     "ord_tmd": "150002"}]),
             _ccnl([]))
         rb = [r for r in res if r["key"] == "pb#1"][0]
-        assert rb["confidence"] == L.CONF_HIGH and rb["candidates"] == 1
+        # 4002는 아직 미체결(nccs 잔량>0)이라 LOW 잠금 유지(초과매도 방지, 감사 #6).
+        # 단일 후보이므로 ODNO는 결속(늦은 회수용) — 잠금만 유지.
+        assert rb["confidence"] == L.CONF_LOW and rb["candidates"] == 1
         assert L.odno_of("pb#1") == "4002"        # 4001(기결속)이 아닌 4002로
-    print("[PASS] 교차 오귀속 방지: 기결속 ODNO 제외 → 남는 행으로 HIGH")
+    print("[PASS] 교차 오귀속 방지: 기결속 ODNO 제외 → 남는 행으로 결속(LOW 잠금)")
 
 
 def test_time_window_filter():

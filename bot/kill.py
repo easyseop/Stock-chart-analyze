@@ -24,7 +24,9 @@ import os
 import tempfile
 import time
 
-_DEFAULT = os.path.join(tempfile.gettempdir(), "kill_switch.json")
+# 래치는 **영속 경로**(모듈 옆)가 기본 — /tmp면 재부팅/청소 시 올려둔 kill 레벨이
+#   사라져 매매가 조용히 재개된다(감사 수정 #8, fail-open). KILL_STATE_PATH로 override.
+_DEFAULT = os.path.join(os.path.dirname(__file__), "kill_switch.json")
 LOG_PATH = os.path.join(os.path.dirname(__file__), "kill_log.jsonl")
 
 # 액션 → 허용 최대 레벨 (이 레벨 '이하'에서만 허용)
@@ -49,11 +51,15 @@ def _log(ev: dict) -> None:
 
 
 def _read_file() -> int:
+    p = _path()
+    if not os.path.exists(p):
+        return 0                         # 파일 없음 = kill 미설정(정상 L0)
     try:
-        with open(_path(), encoding="utf-8") as f:
+        with open(p, encoding="utf-8") as f:
             return int(json.load(f).get("level", 0))
-    except Exception:
-        return 0
+    except Exception:                    # 파일은 있는데 손상/못읽음 → fail-closed:
+        _log({"ev": "read_error", "path": p, "assumed_level": 1})  # 신규진입 차단
+        return 1                         # (감사 수정: 예전엔 0 반환 = 매매 재개, 위험)
 
 
 def _write_file(lv: int, who: str, why: str) -> None:

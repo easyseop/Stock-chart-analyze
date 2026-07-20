@@ -427,11 +427,13 @@ def _mock_cash(balance_fn, ccy: str, cash_keys: tuple[str, ...]) -> float:
             c = str(row.get("crcy_cd") or "").upper()
             if ccy == "USD" and c not in ("", "USD"):
                 continue                          # 통화 행 구분(빈 값=단일행 방어)
-            for k in cash_keys:
-                try:
-                    best = max(best, float(row.get(k)))
+            for k in cash_keys:                    # 우선순위 순 — 첫 유효 양수 채택
+                try:                               # (max는 여러 잔고필드 중 과대치를
+                    v = float(row.get(k))          #  집어 매수여력을 부풀림 — 감사 수정)
                 except (TypeError, ValueError):
                     continue
+                if v > 0:
+                    return v
     return best
 
 
@@ -603,6 +605,35 @@ def price_limits(symbol: str) -> tuple[float, float] | None:
         return None
 
 
+_US_EXCG_CACHE: dict[str, str] = {}   # symbol → NASD/NYSE/AMEX (프로세스 캐시)
+
+
+def us_excg_of(symbol: str) -> str:
+    """미국 종목의 상장 거래소(NASD/NYSE/AMEX) 판별 — 시세가 잡히는 거래소.
+
+    주문 OVRS_EXCG_CD 정확도용(감사 수정): 코드가 US 주문을 전부 NASD로 보내면
+    NYSE/AMEX 종목이 live에서 거부돼 손절/매수가 실패한다(모의는 관대). 시세
+    조회로 실제 거래소를 찾아 캐시. 판별 실패 시 NASD(기존 동작).
+    """
+    s = str(symbol).upper()
+    if s in _US_EXCG_CACHE:
+        return _US_EXCG_CACHE[s]
+    if not enabled():
+        return "NASD"
+    m = {"NAS": "NASD", "NYS": "NYSE", "AMS": "AMEX"}
+    for excd in ("NAS", "NYS", "AMS"):
+        d = _get("/uapi/overseas-price/v1/quotations/price", "HHDFS00000300",
+                 {"AUTH": "", "EXCD": excd, "SYMB": s})
+        try:
+            px = float(((d or {}).get("output") or {}).get("last") or 0)
+        except (TypeError, ValueError):
+            px = 0.0
+        if px > 0:
+            _US_EXCG_CACHE[s] = m[excd]
+            return m[excd]
+    return "NASD"
+
+
 def holdings(market: str = "US", excg: str = "NASD") -> dict | None:
     """브로커 실보유 {symbol.upper(): qty} — 브로커-진실 대조용(매수루프·파수꾼).
     조회 실패/불완전(연속조회 남음)=None(신뢰 불가 → 호출부 보수 처리).
@@ -610,8 +641,11 @@ def holdings(market: str = "US", excg: str = "NASD") -> dict | None:
     d = domestic_balance() if market == "KR" else overseas_balance(excg=excg)
     if not d or d.get("rt_cd") != "0":
         return None
-    if str(d.get("ctx_area_nk100") or d.get("CTX_AREA_NK100") or "").strip():
-        return None                               # 다중페이지 미완 → 신뢰 불가
+    # 다중페이지 미완 → 신뢰 불가. 국내=NK100, 해외=NK200 (감사 수정: 해외 키 누락 시
+    #   여러 페이지 보유가 조용히 잘려 '미보유'로 오판 → 중복매수/보호 누락 위험).
+    if str(d.get("ctx_area_nk100") or d.get("CTX_AREA_NK100")
+           or d.get("ctx_area_nk200") or d.get("CTX_AREA_NK200") or "").strip():
+        return None
     out: dict[str, int] = {}
     for r in (d.get("output1") or []):
         sym = str(r.get("pdno") or r.get("ovrs_pdno") or "").upper()

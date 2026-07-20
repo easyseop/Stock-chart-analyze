@@ -77,16 +77,19 @@ def normalize_rows(nccs: dict | None, ccnl: dict | None) -> list[dict]:
         if not pdno and not odno:
             return None
         ord_qty = _f(row.get("ft_ord_qty"))
+        still_open = False
         if src == "ccnl":
             filled = _f(row.get("ft_ccld_qty"))
         else:
             nq = _f(row.get("nccs_qty"), default=-1.0)
             cq = _f(row.get("ft_ccld_qty"), default=-1.0)
             filled = cq if cq >= 0 else (max(0.0, ord_qty - nq) if nq >= 0 else 0.0)
+            still_open = nq > 0            # nccs 잔량>0 = 주문 아직 살아있음(체결 대기)
         return {"odno": odno, "pdno": pdno, "side": _side_of(row),
                 "ord_qty": int(round(ord_qty)), "filled": int(round(filled)),
                 "price": _f(row.get("ft_ccld_unpr3") or row.get("ft_ord_unpr3")),
-                "ord_tmd": str(row.get("ord_tmd") or ""), "src": src}
+                "ord_tmd": str(row.get("ord_tmd") or ""), "src": src,
+                "open": still_open}   # 감사 수정 #6: 살아있는 주문은 잔여 재발주 금지
 
     for src, d in (("nccs", nccs), ("ccnl", ccnl)):
         for row in ((d or {}).get("output") or []):
@@ -351,8 +354,10 @@ def reconcile_unknowns(nccs: dict | None, ccnl: dict | None,
                                window_s=window_s)
         r = ledger.reconcile_from_candidates(key, cands,
                                              intended=o.get("intended"))
-        # HIGH로 확정됐고 후보에 ODNO가 있으면 늦게라도 결속(이후 취소/정정 핸들)
-        if r.get("confidence") == ledger.CONF_HIGH and cands and cands[0]["odno"]:
+        # 단일 후보에 ODNO가 있으면 (LOW라도) 결속 — 추적/취소 핸들 확보. 초과매도
+        #   방지는 잠금이 담당(감사 수정 #6: 살아있는 주문은 확정 안 하고 잠금 유지).
+        #   2개+ 모호는 결속 금지(오귀속 방지).
+        if len(cands) == 1 and cands[0].get("odno"):
             ledger.bind_broker_order(key, cands[0]["odno"],
                                      ord_tmd=cands[0].get("ord_tmd", ""))
         results.append({"key": key, "symbol": o.get("symbol"),

@@ -85,11 +85,26 @@ def _broker_state(fx: float) -> tuple[dict, int, float, set[str]] | None:
     open_cost = sum(float(p.get("buy_amt") or 0)
                     * (1.0 if p.get("market") == "KR" else fx)
                     for p in bot_rows)
+    #   in-flight BUY(접수 후 잔고 미반영) — 포지션 수 AND 투입원가에 둘 다 가산.
+    #   (감사 수정 #5: 예전엔 수에만 넣고 원가엔 안 넣어, 총량 게이트가 미체결 매수를
+    #    못 봐 SEED 초과 배포 가능했다.) 원가는 원장 기록가×수량(원화 환산).
     fold = ledger._fold()
-    inflight_buy = {str(v.get("symbol") or "").upper() for v in fold.values()
-                    if (v.get("side") or "").upper() == "BUY"
-                    and v.get("state") in ledger._INFLIGHT}
-    n_open += len({s for s in inflight_buy if s and s not in held})
+    inflight_syms: set[str] = set()
+    for v in fold.values():
+        if (v.get("side") or "").upper() != "BUY" or v.get("state") not in ledger._INFLIGHT:
+            continue
+        s = str(v.get("symbol") or "").upper()
+        if not s or s in held:
+            continue
+        inflight_syms.add(s)
+        try:
+            q = int(v.get("intended") or 0)
+            px = float(v.get("price") or 0)
+            mk = v.get("market") or kis.market_of_symbol(s)
+            open_cost += q * px * (1.0 if mk == "KR" else fx)
+        except (TypeError, ValueError):
+            pass
+    n_open += len(inflight_syms)
     return held, n_open, open_cost, _sold_today(fold)
 
 
