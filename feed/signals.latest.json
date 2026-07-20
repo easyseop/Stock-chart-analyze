@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated_at": "2026-07-20T10:32:54+09:00",
+ "generated_at": "2026-07-20T10:49:37+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "signals": [
   {
@@ -2826,6 +2826,26 @@
    "tactic": null
   },
   {
+   "id": "005830-2026-07-20-watch",
+   "code": "005830",
+   "name": "DB손해보험",
+   "ccy": "KRW",
+   "group": "watch",
+   "entry_kind": "pullback",
+   "stage": 3,
+   "price": 161200.0,
+   "entry": 127450.0,
+   "stop": 111810.2255,
+   "target": 158729.5489,
+   "shares_1pct": 6,
+   "range_pos": 0.4494,
+   "norm": -34.9,
+   "fresh": false,
+   "break_gap": 0.1508,
+   "earnings_d": null,
+   "tactic": null
+  },
+  {
    "id": "FSK-2026-07-20-watch",
    "code": "FSK",
    "name": "FS KKR Capital Corp.",
@@ -2882,26 +2902,6 @@
    "norm": -39.6,
    "fresh": false,
    "break_gap": 0.0667,
-   "earnings_d": null,
-   "tactic": null
-  },
-  {
-   "id": "005830-2026-07-20-watch",
-   "code": "005830",
-   "name": "DB손해보험",
-   "ccy": "KRW",
-   "group": "watch",
-   "entry_kind": "pullback",
-   "stage": 3,
-   "price": 160500.0,
-   "entry": 127450.0,
-   "stop": 111810.2255,
-   "target": 158729.5489,
-   "shares_1pct": 6,
-   "range_pos": 0.4421,
-   "norm": -42.5,
-   "fresh": false,
-   "break_gap": 0.1458,
    "earnings_d": null,
    "tactic": null
   }
