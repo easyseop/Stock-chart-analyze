@@ -188,8 +188,12 @@ async function tick(env) {
     return;                                       // 신선하면 fast 발사는 불필요
   }
 
-  // ── 정체(≥14분) → fast 발사 ─────────────────────────────────────────
-  const d = await dispatch(env, "fast");          // guard가 신선도 재확인(중복 발사 무해)
+  // ── 정체(≥14분) → 발사 ──────────────────────────────────────────────
+  //   한국 장중엔 fast(미국 편향, 국내 미스캔) 대신 kr 발사 — --update-kr +
+  //   스크리너(국내 포함)로 국내 신호까지 생성. 한/미 장은 겹치지 않아 단순 분기.
+  //   (kr 캐시 시딩은 야간 full 크론/수동 full이 담당 — 워커는 갱신 유지)
+  const mode = mkt.kr ? "kr" : "fast";
+  const d = await dispatch(env, mode);            // guard가 신선도 재확인(중복 발사 무해)
   _fireStreak++;
 
   // 발사 검증(F7·B6) — 60초 뒤 dispatch 런이 '실제 생성'됐는지 확인

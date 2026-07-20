@@ -34,8 +34,8 @@ on:
     inputs:
       update:
         type: choice
-        description: "데이터 갱신 범위 — none=재배포만 / fast=매매차선(보유·후보 시세→매매→피드, ~3분, 렌더 없음) / top=상위300 / full=전체(느림)"
-        options: ["none", "fast", "top", "full"]
+        description: "데이터 갱신 범위 — none=재배포만 / fast=매매차선(보유·후보 시세→매매→피드, ~3분, 렌더 없음) / top=상위300 / kr=한국주 갱신+스크리너(국내 장중용) / full=전체(느림)"
+        options: ["none", "fast", "top", "kr", "full"]
         default: "none"
       confirm:
         description: "full 실행 확인 — full일 때만 대문자로 FULL 입력(외부 킥의 무거운 모드 남발 방지)"
@@ -110,6 +110,20 @@ jobs:
               if [ "$age" -lt 1200 ]; then
                 echo "이미 신선(<20분) — 공회전 방지 no-op"
                 run=0
+              fi
+            elif [ "${{ github.event.inputs.update }}" = "kr" ]; then
+              # 국내 장중 갱신(워커가 국내 개장 중 발사) — 한국 폐장이면 no-op,
+              #   최근 빌드가 신선(<12분)하면 no-op(공회전 방지). 네이티브 kr 크론과
+              #   워커가 동시 발사해도 한쪽만 실제 실행되게.
+              kopen=$(python3 -c "import datetime;now=datetime.datetime.now(datetime.timezone.utc);m=now.hour*60+now.minute;print(1 if now.weekday()<5 and 0<=m<=390 else 0)")
+              if [ "$kopen" != "1" ]; then
+                echo "한국 폐장 — kr no-op"; run=0
+              else
+                age=$(curl -sf "https://raw.githubusercontent.com/${{ github.repository }}/state/feed/heartbeat.json?cb=${GITHUB_RUN_ID}" \
+                  | python3 -c 'import json,sys,datetime as d; t=d.datetime.fromisoformat(json.load(sys.stdin)["generated_at"]); print(int((d.datetime.now(t.tzinfo)-t).total_seconds()))' \
+                  2>/dev/null || echo 999999)
+                echo "하트비트 나이: $((age/60))분"
+                if [ "$age" -lt 720 ]; then echo "신선(<12분) — kr no-op"; run=0; fi
               fi
             fi
           fi
