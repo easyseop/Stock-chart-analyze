@@ -2,7 +2,7 @@
  "updated": "2026-07-21",
  "start": 100000000,
  "cash": 58183242,
- "equity": 98259351,
+ "equity": 98263948,
  "ret_pct": -1.74,
  "positions": [
   {
@@ -11,14 +11,14 @@
    "ccy": "USD",
    "q": 36,
    "avg": 174.3075,
-   "price": 180.5200042724609,
+   "price": 180.6199951171875,
    "stop": 174.3075,
    "target": 192.2575,
    "half_done": true,
    "opened": "2026-07-06",
-   "pl_krw": 330642,
-   "pl_pct": 3.56,
-   "price_age_min": 9.3
+   "pl_krw": 335964,
+   "pl_pct": 3.62,
+   "price_age_min": 8.9
   },
   {
    "code": "STE",
@@ -26,14 +26,14 @@
    "ccy": "USD",
    "q": 6,
    "avg": 213.02,
-   "price": 216.16000366210935,
+   "price": 216.0850067138672,
    "stop": 202.063,
    "target": 234.934,
    "half_done": false,
    "opened": "2026-07-07",
-   "pl_krw": 27853,
-   "pl_pct": 1.47,
-   "price_age_min": 9.5
+   "pl_krw": 27188,
+   "pl_pct": 1.44,
+   "price_age_min": 9.0
   },
   {
    "code": "068270",
@@ -48,7 +48,7 @@
    "opened": "2026-07-07",
    "pl_krw": -148414,
    "pl_pct": -1.57,
-   "price_age_min": 148.3
+   "price_age_min": 162.6
   },
   {
    "code": "ORC",
@@ -56,13 +56,13 @@
    "ccy": "USD",
    "q": 4,
    "avg": 6.81,
-   "price": 6.764999866485596,
+   "price": 6.755000114440918,
    "stop": 6.5493,
    "target": 7.3314,
    "half_done": false,
    "opened": "2026-07-08",
-   "pl_krw": -266,
-   "pl_pct": -0.66,
+   "pl_krw": -325,
+   "pl_pct": -0.81,
    "price_age_min": 7.5
   },
   {
@@ -78,7 +78,7 @@
    "opened": "2026-07-09",
    "pl_krw": 2617,
    "pl_pct": 2.13,
-   "price_age_min": 148.3
+   "price_age_min": 162.6
   },
   {
    "code": "NU",
@@ -93,7 +93,7 @@
    "opened": "2026-07-09",
    "pl_krw": 591,
    "pl_pct": 3.0,
-   "price_age_min": 148.3
+   "price_age_min": 162.6
   },
   {
    "code": "LSPD",
@@ -108,7 +108,7 @@
    "opened": "2026-07-09",
    "pl_krw": 11591,
    "pl_pct": 2.79,
-   "price_age_min": 148.3
+   "price_age_min": 162.6
   },
   {
    "code": "SARO",
@@ -123,7 +123,7 @@
    "opened": "2026-07-10",
    "pl_krw": -291576,
    "pl_pct": -4.39,
-   "price_age_min": 148.3
+   "price_age_min": 162.6
   },
   {
    "code": "J",
@@ -138,7 +138,7 @@
    "opened": "2026-07-11",
    "pl_krw": 292367,
    "pl_pct": 2.44,
-   "price_age_min": 148.2
+   "price_age_min": 162.6
   }
  ],
  "pending": [
@@ -471,7 +471,7 @@
   },
   {
    "d": "2026-07-21",
-   "v": 98259351
+   "v": 98263948
   }
  ],
  "log": [
