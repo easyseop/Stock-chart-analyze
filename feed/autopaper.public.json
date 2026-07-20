@@ -2,7 +2,7 @@
  "updated": "2026-07-21",
  "start": 100000000,
  "cash": 58183242,
- "equity": 98325065,
+ "equity": 98328125,
  "ret_pct": -1.67,
  "positions": [
   {
@@ -11,14 +11,14 @@
    "ccy": "USD",
    "q": 36,
    "avg": 174.3075,
-   "price": 181.90499877929688,
+   "price": 182.1000061035156,
    "stop": 174.3075,
    "target": 192.2575,
    "half_done": true,
    "opened": "2026-07-06",
-   "pl_krw": 404354,
-   "pl_pct": 4.36,
-   "price_age_min": 8.2
+   "pl_krw": 414733,
+   "pl_pct": 4.47,
+   "price_age_min": 9.5
   },
   {
    "code": "STE",
@@ -26,14 +26,14 @@
    "ccy": "USD",
    "q": 6,
    "avg": 213.02,
-   "price": 215.2949981689453,
+   "price": 214.47000122070312,
    "stop": 202.063,
    "target": 234.934,
    "half_done": false,
    "opened": "2026-07-07",
-   "pl_krw": 20180,
-   "pl_pct": 1.07,
-   "price_age_min": 8.4
+   "pl_krw": 12862,
+   "pl_pct": 0.68,
+   "price_age_min": 9.6
   },
   {
    "code": "068270",
@@ -48,7 +48,7 @@
    "opened": "2026-07-07",
    "pl_krw": -148414,
    "pl_pct": -1.57,
-   "price_age_min": 311.1
+   "price_age_min": 358.5
   },
   {
    "code": "ORC",
@@ -63,7 +63,7 @@
    "opened": "2026-07-08",
    "pl_krw": -592,
    "pl_pct": -1.47,
-   "price_age_min": 6.4
+   "price_age_min": 53.8
   },
   {
    "code": "HMC",
@@ -78,7 +78,7 @@
    "opened": "2026-07-09",
    "pl_krw": 2617,
    "pl_pct": 2.13,
-   "price_age_min": 311.1
+   "price_age_min": 358.5
   },
   {
    "code": "NU",
@@ -93,7 +93,7 @@
    "opened": "2026-07-09",
    "pl_krw": 591,
    "pl_pct": 3.0,
-   "price_age_min": 311.1
+   "price_age_min": 358.5
   },
   {
    "code": "LSPD",
@@ -108,7 +108,7 @@
    "opened": "2026-07-09",
    "pl_krw": 11591,
    "pl_pct": 2.79,
-   "price_age_min": 311.1
+   "price_age_min": 358.5
   },
   {
    "code": "SARO",
@@ -123,7 +123,7 @@
    "opened": "2026-07-10",
    "pl_krw": -291576,
    "pl_pct": -4.39,
-   "price_age_min": 311.1
+   "price_age_min": 358.5
   },
   {
    "code": "J",
@@ -138,7 +138,7 @@
    "opened": "2026-07-11",
    "pl_krw": 292367,
    "pl_pct": 2.44,
-   "price_age_min": 311.1
+   "price_age_min": 358.5
   }
  ],
  "pending": [
@@ -471,7 +471,7 @@
   },
   {
    "d": "2026-07-21",
-   "v": 98325065
+   "v": 98328125
   }
  ],
  "log": [
@@ -789,11 +789,5 @@
   }
  ],
  "lane": "bulk",
- "data_stale": [
-  "HMC",
-  "NU",
-  "LSPD",
-  "SARO",
-  "J"
- ]
+ "data_stale": []
 }
