@@ -15,7 +15,7 @@ on:
   # 코드(파이썬·설정·이 워크플로)를 푸시하면 자동으로 재빌드·배포(데이터 갱신 없이 ~1~2분).
   #   → 코드 바꿀 때마다 수동으로 Run workflow 할 필요 없음.
   push:
-    branches: ["claude/korean-text-review-o3wmsv"]   # 기본 브랜치만(중복 실행 방지)
+    branches: ["claude/happy-gauss-cwoq21"]   # 기본 브랜치만(중복 실행 방지)
     paths:
       - "scanner/**"
       - "main.py"
@@ -185,6 +185,8 @@ jobs:
     if: needs.guard.outputs.run == '1' && !(github.event_name == 'workflow_dispatch' && github.event.inputs.update == 'fast')
     runs-on: ubuntu-latest
     timeout-minutes: 120
+    outputs:
+      has_public: ${{ steps.pubcheck.outputs.has_public }}   # 산출 없으면 배포 생략(deploy 게이트)
     concurrency:
       group: pages          # lookup·벌크 빌드 직렬화(동시 Pages 배포 충돌 방지)
       cancel-in-progress: false
@@ -223,6 +225,17 @@ jobs:
           MODE: ${{ github.event_name == 'push' && (contains(github.event.head_commit.message, '[update-top]') && 'top' || 'none') || (github.event_name == 'workflow_dispatch' && github.event.inputs.update || (github.event.schedule == '9 22 * * 1-5' && 'full' || (github.event.schedule == '4,19,34,49 0-6 * * 1-5' && 'kr' || 'top'))) }}
         run: |
           echo "갱신 모드: $MODE"
+          # ── 자가치유(브랜치 시딩): actions/cache는 브랜치-스코프라 기본 브랜치를
+          #   교체하면 새 브랜치의 캐시가 비어 있다(실측 2026-07-20: 교체 후 캐시 0종목
+          #   → 분석 산출 없음 → public 미생성 → upload-pages tar 실패 → '빌드 실패' 스팸).
+          #   MODE와 무관하게, 캐시가 사실상 비어 있으면(<50종목) 1회 전체 백필로 시딩.
+          #   시딩 후엔 actions/cache가 캐시를 지속시켜 다음 실행부터 정상(top/none).
+          CACHED=$(python -c "from scanner import cache; print(len(cache.cached_codes()))" 2>/dev/null || echo 0)
+          if [ "${CACHED:-0}" -lt 50 ]; then
+            echo "캐시 비어있음(${CACHED}종목) — 새 브랜치 시딩용 전체 백필 강제(1회, 이후 지속)"
+            python main.py --backfill "${{ env.CHUNK }}" || true
+            python main.py --update || true
+          fi
           if [ "$MODE" = "full" ]; then
             python main.py --backfill "${{ github.event.inputs.backfill || env.CHUNK }}"
             python main.py --update
@@ -276,7 +289,21 @@ jobs:
         run: |
           python -c "from scanner import universe,cache; u=[s for s in universe.load() if s.get('code')][:${{ env.TARGET }}]; rem=sum(1 for s in u if not cache.is_cached(s['code'])); print(f'캐시 {len(cache.cached_codes())}종목 · 남은 백필 {rem} (다음 실행/재실행 때 이어서 채움)')"
 
+      # 산출 확인: public이 없으면(분석 결과 0 등) 배포/업로드를 '실패' 아닌 '생략'으로.
+      #   예전엔 public 부재 시 upload-pages의 tar가 exit 2로 죽어 '빌드 실패' 스팸이
+      #   반복됐다(2026-07-20). 자가치유 백필과 이중 방어 — 스팸 클래스 자체를 봉인.
+      - name: 산출(public) 확인
+        id: pubcheck
+        run: |
+          if [ -f public/index.html ]; then
+            echo "has_public=1" >> "$GITHUB_OUTPUT"
+          else
+            echo "::warning::public/index.html 없음(분석 산출 0) — 이번 배포 생략(빌드는 성공 유지)"
+            echo "has_public=0" >> "$GITHUB_OUTPUT"
+          fi
+
       - uses: actions/upload-pages-artifact@v3
+        if: steps.pubcheck.outputs.has_public == '1'
         with:
           path: public
 
@@ -296,6 +323,7 @@ jobs:
 
   deploy:
     needs: build
+    if: needs.build.outputs.has_public == '1'   # 산출 없으면 배포 생략(아티팩트 부재 실패 방지)
     runs-on: ubuntu-latest
     environment:
       name: github-pages
