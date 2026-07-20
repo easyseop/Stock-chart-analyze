@@ -446,16 +446,14 @@ def _fx() -> float:
 def buying_power(symbol: str, price: float, excg: str = "NASD") -> float | None:
     """매수여력(USD) — envelope의 feasibility(하향 클램프) 입력.
 
-    · live: `inquire-psamount`(TTTS3007R) — `ord_psbl_frcr_amt`(보유 USD 기준).
-      통합증거금 값(echm_af_*)은 cash-only 확인 전 사용 금지(REFLECTION R6) —
-      **보수적으로 외화예수금 기준만** 쓴다.
-    · mock: psamount **모의 미지원**(확정). 매수여력 폴백 체인(자가치유):
-        ① KIS_MOCK_BUYING_POWER(명시 override)가 있으면 그 값.
-        ② 체결기준현재잔고의 **USD 예수금**이 양수면 그 값(가장 보수적 클램프).
-        ③ USD가 0이면 **원화 예수금을 fx로 환산**(자동환전 반영 — 한투 모의는
-           원화 시드만 줘서 USD=0이 정상. 실측 2026-07-17: 매수여력 0.0).
-        ④ 둘 다 없으면 SEED 폴백. SEED도 0이면 None(사이징 자체가 0).
-      원화 클램프(③)를 쓰므로 실제 계좌 현금을 초과 주문하지 않는다(안전 유지).
+    `inquire-psamount`의 `ord_psbl_frcr_amt`(외화예수금 기준 주문가능, USD).
+    통합증거금 값(echm_af_*·frcr_ord_psbl_amt1)은 **안 쓴다**(cash-only, REFLECTION
+    R6 — 원화 환전까지 끌어쓰는 값은 과대 주문 위험). live·mock 동일 소스.
+    · mock: psamount **실측 지원 확인**(2026-07-20, rt_cd=0). 이 값을 그대로 씀.
+      ① KIS_MOCK_BUYING_POWER override가 있으면 우선(테스트/비상).
+      ② psamount 실패 시 국내 원화예수금/fx로 폴백(자동환전 반영, 자가치유),
+         그것도 없으면 SEED 폴백(모의에서 사이징이 0으로 막히는 것 방지).
+    · live: psamount 실패=None(fail-closed, 폴백 없음).
     """
     if IS_MOCK:
         v = os.environ.get("KIS_MOCK_BUYING_POWER")
@@ -464,13 +462,6 @@ def buying_power(symbol: str, price: float, excg: str = "NASD") -> float | None:
                 return float(v)
             except ValueError:
                 return None
-        usd = _mock_cash(present_balance, "USD", _USD_CASH_KEYS)
-        if usd > 0:
-            return usd                            # 실제 USD 예수금(있으면 최우선 클램프)
-        krw = _mock_cash(domestic_balance, "KRW", _KRW_CASH_KEYS)
-        if krw > 0:
-            return krw / max(_fx(), 1e-9)          # 자동환전 — 원화 매수여력을 달러로
-        return _seed_native("USD")                # 조회 전부 실패 → SEED 폴백
     acct = account()
     if not acct or not enabled():
         return None
@@ -478,13 +469,21 @@ def buying_power(symbol: str, price: float, excg: str = "NASD") -> float | None:
              tr_id("psamount"),
              {**acct, "OVRS_EXCG_CD": excg,
               "OVRS_ORD_UNPR": f"{float(price):.2f}", "ITEM_CD": symbol})
-    if not d or d.get("rt_cd") != "0":
-        return None
-    out = d.get("output") or {}
-    try:
-        return float(out.get("ord_psbl_frcr_amt") or 0) or None
-    except (TypeError, ValueError):
-        return None
+    if d and d.get("rt_cd") == "0":
+        out = d.get("output") or {}
+        try:
+            bp = float(out.get("ord_psbl_frcr_amt") or 0)   # 외화예수금 기준(cash-only)
+            if bp > 0:
+                return bp
+        except (TypeError, ValueError):
+            pass
+    if not IS_MOCK:
+        return None                               # live: fail-closed
+    # mock 폴백 — psamount가 0/실패여도 사이징이 막히지 않게(원화예수금/fx → SEED)
+    krw = _mock_cash(domestic_balance, "KRW", _KRW_CASH_KEYS)
+    if krw > 0:
+        return krw / max(_fx(), 1e-9)
+    return _seed_native("USD")
 
 
 def fills(excg: str = "NASD", start: str = "", end: str = "") -> dict | None:

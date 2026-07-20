@@ -245,8 +245,8 @@ def test_broker_truth_open_cost_gate():
 
 
 def test_mock_feasibility_fallbacks():
-    """검토 수정 — 모의 매수여력: env 미설정 시 잔고 기반 현금으로 폴백
-    (없으면 사이징 전부 0 → 서버에서 매수 불능이던 구멍)."""
+    """모의 매수여력: US는 psamount(실측 지원)·ord_psbl_frcr_amt(cash-only, R6),
+    KR은 국내잔고 주문가능현금. 실패 시 원화/fx → SEED 폴백(사이징 0 방지)."""
     with tempfile.TemporaryDirectory() as tmp:
         M = _setup(tmp)
         K = M["kis"]
@@ -256,19 +256,18 @@ def test_mock_feasibility_fallbacks():
                 "rt_cd": "0", "output1": [],
                 "output2": [{"prvs_rcdl_excc_amt": "5000000"}]}):
             assert K.domestic_buying_power("005930", 70000) == 5_000_000
-        # US: 체결기준현재잔고 output2의 USD 예수금(출금가능 우선)
+        # US: psamount의 ord_psbl_frcr_amt(외화예수금 기준 USD, 실측 $92742)
         with mock.patch.object(K, "_get", return_value={
-                "rt_cd": "0", "output2": [
-                    {"crcy_cd": "USD", "frcr_drwg_psbl_amt_1": "30000.5"}]}):
-            assert K.buying_power("AAPL", 190.0) == 30000.5
-        # 자동환전: USD 예수금 0(모의 원화계좌)인데 원화 현금 있으면 → 원화/fx 클램프
+                "rt_cd": "0", "output": {"ord_psbl_frcr_amt": "92742.31",
+                                         "frcr_ord_psbl_amt1": "205873.13"}}):
+            assert K.buying_power("AAPL", 190.0) == 92742.31   # 통합증거금 안 씀(R6)
+        # psamount 실패 시 → 원화예수금/fx 폴백(자동환전, 자가치유)
         def _by_path(path, tr, params):
-            if "present-balance" in path:         # USD 예수금 0
-                return {"rt_cd": "0", "output2": [
-                    {"crcy_cd": "USD", "frcr_drwg_psbl_amt_1": "0"}]}
+            if "inquire-psamount" in path:
+                return {"rt_cd": "1", "msg1": "일시 오류"}     # psamount 실패
             if "domestic-stock/v1/trading/inquire-balance" in path:
                 return {"rt_cd": "0", "output1": [],
-                        "output2": [{"prvs_rcdl_excc_amt": "9400000"}]}  # 원화 940만
+                        "output2": [{"prvs_rcdl_excc_amt": "9400000"}]}
             return None
         with mock.patch.object(K, "_get", side_effect=_by_path):
             assert abs(K.buying_power("AAPL", 190.0) - 9_400_000 / 1380.0) < 1e-6
@@ -284,7 +283,7 @@ def test_mock_feasibility_fallbacks():
         # env override는 항상 최우선
         os.environ["KIS_MOCK_BUYING_POWER"] = "777"
         assert K.buying_power("AAPL", 190.0) == 777.0
-    print("[PASS] 모의 매수여력 — KR현금·US예수금·실패=SEED폴백·SEED0=None·env우선")
+    print("[PASS] 모의 매수여력 — US=psamount(cash-only)·KR현금·실패=폴백·env우선")
 
 
 def main():
