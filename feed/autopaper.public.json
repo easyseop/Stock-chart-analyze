@@ -2,8 +2,8 @@
  "updated": "2026-07-21",
  "start": 100000000,
  "cash": 58183242,
- "equity": 98305122,
- "ret_pct": -1.69,
+ "equity": 98524246,
+ "ret_pct": -1.48,
  "positions": [
   {
    "code": "MRSH",
@@ -11,14 +11,14 @@
    "ccy": "USD",
    "q": 36,
    "avg": 174.3075,
-   "price": 181.41000366210935,
+   "price": 181.0399932861328,
    "stop": 174.3075,
    "target": 192.2575,
    "half_done": true,
    "opened": "2026-07-06",
-   "pl_krw": 378010,
-   "pl_pct": 4.07,
-   "price_age_min": 9.0
+   "pl_krw": 358317,
+   "pl_pct": 3.86,
+   "price_age_min": 0.5
   },
   {
    "code": "STE",
@@ -26,14 +26,14 @@
    "ccy": "USD",
    "q": 6,
    "avg": 213.02,
-   "price": 215.97999572753903,
+   "price": 215.1699981689453,
    "stop": 202.063,
    "target": 234.934,
    "half_done": false,
    "opened": "2026-07-07",
-   "pl_krw": 26256,
-   "pl_pct": 1.39,
-   "price_age_min": 9.1
+   "pl_krw": 19071,
+   "pl_pct": 1.01,
+   "price_age_min": 0.5
   },
   {
    "code": "068270",
@@ -41,14 +41,14 @@
    "ccy": "KRW",
    "q": 54,
    "avg": 175348.4128,
-   "price": 172600.0,
+   "price": 175800.0,
    "stop": 157651.1713,
    "target": 212997.6574,
    "half_done": false,
    "opened": "2026-07-07",
-   "pl_krw": -148414,
-   "pl_pct": -1.57,
-   "price_age_min": 222.7
+   "pl_krw": 24386,
+   "pl_pct": 0.26,
+   "price_age_min": 0.5
   },
   {
    "code": "ORC",
@@ -56,14 +56,14 @@
    "ccy": "USD",
    "q": 4,
    "avg": 6.81,
-   "price": 6.764999866485596,
+   "price": 6.730000019073486,
    "stop": 6.5493,
    "target": 7.3314,
    "half_done": false,
    "opened": "2026-07-08",
-   "pl_krw": -266,
-   "pl_pct": -0.66,
-   "price_age_min": 7.6
+   "pl_krw": -473,
+   "pl_pct": -1.17,
+   "price_age_min": 0.5
   },
   {
    "code": "HMC",
@@ -71,14 +71,14 @@
    "ccy": "USD",
    "q": 3,
    "avg": 27.665,
-   "price": 28.2549991607666,
+   "price": 28.21500015258789,
    "stop": 26.2063,
    "target": 30.5824,
    "half_done": false,
    "opened": "2026-07-09",
-   "pl_krw": 2617,
-   "pl_pct": 2.13,
-   "price_age_min": 222.7
+   "pl_krw": 2439,
+   "pl_pct": 1.99,
+   "price_age_min": 0.5
   },
   {
    "code": "NU",
@@ -86,14 +86,14 @@
    "ccy": "USD",
    "q": 1,
    "avg": 13.335,
-   "price": 13.734999656677246,
+   "price": 14.029999732971191,
    "stop": 12.3253,
    "target": 15.3544,
    "half_done": false,
    "opened": "2026-07-09",
-   "pl_krw": 591,
-   "pl_pct": 3.0,
-   "price_age_min": 222.7
+   "pl_krw": 1027,
+   "pl_pct": 5.21,
+   "price_age_min": 0.5
   },
   {
    "code": "LSPD",
@@ -101,14 +101,14 @@
    "ccy": "USD",
    "q": 28,
    "avg": 10.02,
-   "price": 10.300000190734863,
+   "price": 10.4350004196167,
    "stop": 9.2434,
    "target": 11.6783,
    "half_done": false,
    "opened": "2026-07-09",
-   "pl_krw": 11591,
-   "pl_pct": 2.79,
-   "price_age_min": 222.7
+   "pl_krw": 17179,
+   "pl_pct": 4.14,
+   "price_age_min": 0.5
   },
   {
    "code": "SARO",
@@ -116,14 +116,14 @@
    "ccy": "USD",
    "q": 161,
    "avg": 27.9,
-   "price": 26.674999237060547,
+   "price": 26.614999771118164,
    "stop": 25.8678,
    "target": 31.9643,
    "half_done": false,
    "opened": "2026-07-10",
-   "pl_krw": -291576,
-   "pl_pct": -4.39,
-   "price_age_min": 222.7
+   "pl_krw": -305857,
+   "pl_pct": -4.61,
+   "price_age_min": 0.5
   },
   {
    "code": "J",
@@ -131,14 +131,14 @@
    "ccy": "USD",
    "q": 64,
    "avg": 126.585,
-   "price": 129.6750030517578,
+   "price": 130.5399932861328,
    "stop": 119.2617,
    "target": 141.2316,
    "half_done": false,
    "opened": "2026-07-11",
-   "pl_krw": 292367,
-   "pl_pct": 2.44,
-   "price_age_min": 222.7
+   "pl_krw": 374209,
+   "pl_pct": 3.12,
+   "price_age_min": 0.5
   }
  ],
  "pending": [
@@ -471,7 +471,7 @@
   },
   {
    "d": "2026-07-21",
-   "v": 98305122
+   "v": 98524246
   }
  ],
  "log": [
@@ -788,12 +788,6 @@
    "note": "눌림 지정가 주문(추격 금지) — ↗ 돌파후 진행(승률↓) · ③ 돌파후 횡보(대기) · 저점권28% · 체크4/6 · 손절폭10.5%"
   }
  ],
- "lane": "bulk",
- "data_stale": [
-  "HMC",
-  "NU",
-  "LSPD",
-  "SARO",
-  "J"
- ]
+ "lane": "fast",
+ "data_stale": []
 }
