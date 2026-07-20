@@ -18,7 +18,7 @@
    "opened": "2026-07-06",
    "pl_krw": 421561,
    "pl_pct": 4.52,
-   "price_age_min": 9.8
+   "price_age_min": 9.2
   },
   {
    "code": "STE",
@@ -33,7 +33,7 @@
    "opened": "2026-07-07",
    "pl_krw": 43017,
    "pl_pct": 2.26,
-   "price_age_min": 8.7
+   "price_age_min": 7.9
   },
   {
    "code": "068270",
@@ -48,7 +48,7 @@
    "opened": "2026-07-07",
    "pl_krw": -113314,
    "pl_pct": -1.2,
-   "price_age_min": 28.7
+   "price_age_min": 43.0
   },
   {
    "code": "ORC",
@@ -63,7 +63,7 @@
    "opened": "2026-07-08",
    "pl_krw": 238,
    "pl_pct": 0.59,
-   "price_age_min": 8.0
+   "price_age_min": 7.2
   },
   {
    "code": "FND",
@@ -78,7 +78,7 @@
    "opened": "2026-07-08",
    "pl_krw": 190335,
    "pl_pct": 3.84,
-   "price_age_min": 28.6
+   "price_age_min": 42.9
   },
   {
    "code": "HMC",
@@ -93,7 +93,7 @@
    "opened": "2026-07-09",
    "pl_krw": 2209,
    "pl_pct": 1.79,
-   "price_age_min": 28.6
+   "price_age_min": 42.9
   },
   {
    "code": "NU",
@@ -108,7 +108,7 @@
    "opened": "2026-07-09",
    "pl_krw": 379,
    "pl_pct": 1.91,
-   "price_age_min": 28.6
+   "price_age_min": 42.9
   },
   {
    "code": "LSPD",
@@ -123,7 +123,7 @@
    "opened": "2026-07-09",
    "pl_krw": 15827,
    "pl_pct": 3.79,
-   "price_age_min": 28.6
+   "price_age_min": 42.9
   },
   {
    "code": "SARO",
@@ -138,7 +138,7 @@
    "opened": "2026-07-10",
    "pl_krw": -280193,
    "pl_pct": -4.19,
-   "price_age_min": 28.6
+   "price_age_min": 42.9
   },
   {
    "code": "J",
@@ -153,7 +153,7 @@
    "opened": "2026-07-11",
    "pl_krw": 491695,
    "pl_pct": 4.08,
-   "price_age_min": 28.6
+   "price_age_min": 42.9
   }
  ],
  "pending": [
@@ -700,5 +700,7 @@
   }
  ],
  "lane": "bulk",
- "data_stale": []
+ "data_stale": [
+  "068270"
+ ]
 }
