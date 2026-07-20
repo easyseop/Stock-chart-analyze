@@ -1,9 +1,9 @@
 {
- "updated": "2026-07-20",
+ "updated": "2026-07-21",
  "start": 100000000,
- "cash": 53277803,
- "equity": 98424126,
- "ret_pct": -1.58,
+ "cash": 58183242,
+ "equity": 98263881,
+ "ret_pct": -1.74,
  "positions": [
   {
    "code": "MRSH",
@@ -11,14 +11,14 @@
    "ccy": "USD",
    "q": 36,
    "avg": 174.3075,
-   "price": 179.8000030517578,
+   "price": 180.50999450683597,
    "stop": 174.3075,
    "target": 192.2575,
    "half_done": true,
    "opened": "2026-07-06",
-   "pl_krw": 294116,
-   "pl_pct": 3.15,
-   "price_age_min": 0.4
+   "pl_krw": 330109,
+   "pl_pct": 3.56,
+   "price_age_min": 0.5
   },
   {
    "code": "STE",
@@ -26,14 +26,14 @@
    "ccy": "USD",
    "q": 6,
    "avg": 213.02,
-   "price": 215.2700042724609,
+   "price": 215.80999755859372,
    "stop": 202.063,
    "target": 234.934,
    "half_done": false,
    "opened": "2026-07-07",
-   "pl_krw": 20081,
-   "pl_pct": 1.06,
-   "price_age_min": 0.4
+   "pl_krw": 24748,
+   "pl_pct": 1.31,
+   "price_age_min": 0.5
   },
   {
    "code": "068270",
@@ -48,7 +48,7 @@
    "opened": "2026-07-07",
    "pl_krw": -148414,
    "pl_pct": -1.57,
-   "price_age_min": 0.4
+   "price_age_min": 0.5
   },
   {
    "code": "ORC",
@@ -56,29 +56,14 @@
    "ccy": "USD",
    "q": 4,
    "avg": 6.81,
-   "price": 6.799300193786621,
+   "price": 6.775000095367432,
    "stop": 6.5493,
    "target": 7.3314,
    "half_done": false,
    "opened": "2026-07-08",
-   "pl_krw": -64,
-   "pl_pct": -0.16,
-   "price_age_min": 0.4
-  },
-  {
-   "code": "FND",
-   "name": "Floor & Decor Holdings, Inc.",
-   "ccy": "USD",
-   "q": 61,
-   "avg": 54.6923,
-   "price": 54.310001373291016,
-   "stop": 54.6923,
-   "target": 67.0734,
-   "half_done": true,
-   "opened": "2026-07-08",
-   "pl_krw": -34688,
-   "pl_pct": -0.7,
-   "price_age_min": 0.4
+   "pl_krw": -207,
+   "pl_pct": -0.51,
+   "price_age_min": 0.5
   },
   {
    "code": "HMC",
@@ -86,14 +71,14 @@
    "ccy": "USD",
    "q": 3,
    "avg": 27.665,
-   "price": 28.2549991607666,
+   "price": 28.19499969482422,
    "stop": 26.2063,
    "target": 30.5824,
    "half_done": false,
    "opened": "2026-07-09",
-   "pl_krw": 2633,
-   "pl_pct": 2.13,
-   "price_age_min": 0.4
+   "pl_krw": 2351,
+   "pl_pct": 1.92,
+   "price_age_min": 0.5
   },
   {
    "code": "NU",
@@ -101,14 +86,14 @@
    "ccy": "USD",
    "q": 1,
    "avg": 13.335,
-   "price": 13.734999656677246,
+   "price": 13.845000267028809,
    "stop": 12.3253,
    "target": 15.3544,
    "half_done": false,
    "opened": "2026-07-09",
-   "pl_krw": 595,
-   "pl_pct": 3.0,
-   "price_age_min": 0.4
+   "pl_krw": 754,
+   "pl_pct": 3.82,
+   "price_age_min": 0.5
   },
   {
    "code": "LSPD",
@@ -116,13 +101,13 @@
    "ccy": "USD",
    "q": 28,
    "avg": 10.02,
-   "price": 10.300000190734863,
+   "price": 10.380000114440918,
    "stop": 9.2434,
    "target": 11.6783,
    "half_done": false,
    "opened": "2026-07-09",
-   "pl_krw": 11662,
-   "pl_pct": 2.79,
+   "pl_krw": 14902,
+   "pl_pct": 3.59,
    "price_age_min": 0.4
   },
   {
@@ -131,13 +116,13 @@
    "ccy": "USD",
    "q": 161,
    "avg": 27.9,
-   "price": 26.674999237060547,
+   "price": 26.6299991607666,
    "stop": 25.8678,
    "target": 31.9643,
    "half_done": false,
    "opened": "2026-07-10",
-   "pl_krw": -293364,
-   "pl_pct": -4.39,
+   "pl_krw": -302287,
+   "pl_pct": -4.55,
    "price_age_min": 0.4
   },
   {
@@ -146,13 +131,13 @@
    "ccy": "USD",
    "q": 64,
    "avg": 126.585,
-   "price": 129.6750030517578,
+   "price": 129.83999633789062,
    "stop": 119.2617,
    "target": 141.2316,
    "half_done": false,
    "opened": "2026-07-11",
-   "pl_krw": 294160,
-   "pl_pct": 2.44,
+   "pl_krw": 307978,
+   "pl_pct": 2.57,
    "price_age_min": 0.4
   }
  ],
@@ -210,20 +195,47 @@
     "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권26% · 체크4/6 · 손절폭9.5%"
    },
    "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권26% · 체크4/6 · 손절폭9.5%"
+  },
+  {
+   "code": "VRSK",
+   "name": "Verisk Analytics, Inc.",
+   "ccy": "USD",
+   "limit": 190.174,
+   "stop": 186.8115,
+   "target": 225.2671,
+   "q": 51,
+   "created": "2026-07-21",
+   "atr": 6.4093,
+   "plan": {
+    "entry": 199.63,
+    "stop": 186.8115,
+    "target": 225.2671,
+    "pb": 190.174,
+    "tactic": "pullback"
+   },
+   "ctx": {
+    "mode": "pullback",
+    "fresh": true,
+    "stage": 3,
+    "rp": 29,
+    "rec": 4,
+    "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권29% · 체크4/6 · 손절폭6.4%"
+   },
+   "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권29% · 체크4/6 · 손절폭6.4%"
   }
  ],
- "trades": 2,
- "win_trades": 1,
+ "trades": 3,
+ "win_trades": 2,
  "pos_cap_pct": 33.3,
  "cap_violations": [],
  "rule_violations": [],
- "fx": 1487.46,
+ "fx": 1478.39,
  "stats": {
   "all": {
-   "n": 2,
-   "win": 1,
-   "win_rate": 50,
-   "avg_r": -0.13
+   "n": 3,
+   "win": 2,
+   "win_rate": 67,
+   "avg_r": 0.06
   },
   "by_mode": {
    "full": {
@@ -237,13 +249,19 @@
     "win": 1,
     "win_rate": 100,
     "avg_r": 1.0
+   },
+   "pullback": {
+    "n": 1,
+    "win": 1,
+    "win_rate": 100,
+    "avg_r": 0.45
    }
   },
   "fresh": {
-   "n": 2,
-   "win": 1,
-   "win_rate": 50,
-   "avg_r": -0.13
+   "n": 3,
+   "win": 2,
+   "win_rate": 67,
+   "avg_r": 0.06
   },
   "stale": {
    "n": 0,
@@ -253,24 +271,66 @@
   },
   "by_stage": {
    "3": {
-    "n": 2,
-    "win": 1,
-    "win_rate": 50,
-    "avg_r": -0.13
+    "n": 3,
+    "win": 2,
+    "win_rate": 67,
+    "avg_r": 0.06
    }
   },
   "by_ccy": {
    "USD": {
-    "n": 2,
-    "win": 1,
-    "win_rate": 50,
-    "avg_r": -0.13
+    "n": 3,
+    "win": 2,
+    "win_rate": 67,
+    "avg_r": 0.06
    }
   },
-  "slip_entry_pct": 0.0,
+  "slip_entry_pct": -1.03,
   "slip_stop_pct": -1.44
  },
  "closed": [
+  {
+   "code": "FND",
+   "name": "Floor & Decor Holdings, Inc.",
+   "ccy": "USD",
+   "ctx": {
+    "mode": "pullback",
+    "fresh": true,
+    "stage": 3,
+    "rp": 28,
+    "rec": 4,
+    "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권28% · 체크4/6 · 손절폭9.4%"
+   },
+   "plan": {
+    "entry": 56.435,
+    "stop": 51.1158,
+    "target": 67.0734,
+    "pb": 54.6923,
+    "tactic": "pullback"
+   },
+   "fill": {
+    "avg": 54.6923,
+    "q": 122
+   },
+   "exits": [
+    {
+     "d": "2026-07-17",
+     "q": 61,
+     "price": 58.285,
+     "note": "+1R 절반 익절"
+    },
+    {
+     "d": "2026-07-21",
+     "q": 61,
+     "price": 54.395,
+     "note": "본전 스탑"
+    }
+   ],
+   "opened": "2026-07-08",
+   "closed": "2026-07-21",
+   "pl": 297540,
+   "r": 0.45
+  },
   {
    "code": "CMG",
    "name": "Chipotle Mexican Grill, Inc.",
@@ -408,9 +468,38 @@
   {
    "d": "2026-07-20",
    "v": 98424126
+  },
+  {
+   "d": "2026-07-21",
+   "v": 98263881
   }
  ],
  "log": [
+  {
+   "d": "2026-07-21",
+   "type": "order",
+   "code": "VRSK",
+   "name": "Verisk Analytics, Inc.",
+   "q": 51,
+   "price": 190.174,
+   "ccy": "USD",
+   "amt": 14338718,
+   "note": "눌림 지정가 주문(추격 금지) — 🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권29% · 체크4/6 · 손절폭6.4%"
+  },
+  {
+   "d": "2026-07-21",
+   "type": "sell",
+   "code": "FND",
+   "name": "Floor & Decor Holdings, Inc.",
+   "q": 61,
+   "price": 54.395,
+   "ccy": "USD",
+   "amt": 4905439,
+   "note": "본전 스탑",
+   "pl": -26811,
+   "pl_pct": -0.5,
+   "r": 0.45
+  },
   {
    "d": "2026-07-17",
    "type": "sell",
