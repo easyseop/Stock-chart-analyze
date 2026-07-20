@@ -17,7 +17,7 @@
    이 폴더의 `worker.js` 내용 붙여넣기 → Deploy
 3. **변수 설정**: 워커 → Settings → Variables and Secrets
    - Variable `REPO` = `easyseop/Stock-chart-analyze`
-   - Variable `BRANCH` = `claude/korean-text-review-o3wmsv`
+   - Variable `BRANCH` = `claude/happy-gauss-cwoq21`   (2026-07-20 기본 브랜치 교체)
    - Secret `GH_PAT` = (fine-grained PAT — `github_pat_...` 전체)
    - Secret `TG_TOKEN` = (텔레그램 봇 토큰)
    - Secret `TG_CHAT` = (텔레그램 chat id)

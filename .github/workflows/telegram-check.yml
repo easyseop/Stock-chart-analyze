@@ -8,7 +8,7 @@ name: telegram-check
 on:
   workflow_dispatch:
   push:
-    branches: ["claude/korean-text-review-o3wmsv"]
+    branches: ["claude/happy-gauss-cwoq21"]
     paths: [".github/workflows/telegram-check.yml"]
 
 permissions:

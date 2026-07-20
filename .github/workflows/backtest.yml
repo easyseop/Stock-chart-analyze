@@ -15,7 +15,7 @@ on:
         description: "탐색 보폭(봉) — 작을수록 정밀·느림"
         default: "5"
   push:
-    branches: ["claude/korean-text-review-o3wmsv"]
+    branches: ["claude/happy-gauss-cwoq21"]
     paths: [".github/workflows/backtest.yml"]
   schedule:
     - cron: "0 22 * * 5"    # 토 07:00 KST — 주 1회 최신 데이터로 갱신

@@ -18,7 +18,7 @@
  *
  * 설정(대시보드 → Settings):
  *   [Variables]  REPO="easyseop/Stock-chart-analyze"
- *                BRANCH="claude/korean-text-review-o3wmsv"   // 기본 브랜치
+ *                BRANCH="claude/happy-gauss-cwoq21"   // 기본 브랜치(2026-07-20 교체)
  *   [Secrets]    GH_PAT   — fine-grained PAT(Actions RW + Contents R, 이 repo만)
  *                TG_TOKEN — 텔레그램 봇 토큰
  *                TG_CHAT  — 텔레그램 chat id
