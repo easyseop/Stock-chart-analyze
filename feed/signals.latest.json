@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated_at": "2026-07-20T11:29:23+09:00",
+ "generated_at": "2026-07-20T11:45:10+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "signals": [
   {
@@ -2666,26 +2666,6 @@
    "tactic": null
   },
   {
-   "id": "005830-2026-07-20-watch",
-   "code": "005830",
-   "name": "DB손해보험",
-   "ccy": "KRW",
-   "group": "watch",
-   "entry_kind": "pullback",
-   "stage": 3,
-   "price": 161000.0,
-   "entry": 127450.0,
-   "stop": 111810.2255,
-   "target": 158729.5489,
-   "shares_1pct": 6,
-   "range_pos": 0.4473,
-   "norm": -23.6,
-   "fresh": false,
-   "break_gap": 0.1494,
-   "earnings_d": null,
-   "tactic": null
-  },
-  {
    "id": "GXO-2026-07-20-watch",
    "code": "GXO",
    "name": "GXO Logistics, Inc.",
@@ -2782,6 +2762,26 @@
    "norm": -30.2,
    "fresh": false,
    "break_gap": 0.0539,
+   "earnings_d": null,
+   "tactic": null
+  },
+  {
+   "id": "005830-2026-07-20-watch",
+   "code": "005830",
+   "name": "DB손해보험",
+   "ccy": "KRW",
+   "group": "watch",
+   "entry_kind": "pullback",
+   "stage": 3,
+   "price": 160300.0,
+   "entry": 127450.0,
+   "stop": 111810.2255,
+   "target": 158729.5489,
+   "shares_1pct": 6,
+   "range_pos": 0.44,
+   "norm": -31.1,
+   "fresh": false,
+   "break_gap": 0.1444,
    "earnings_d": null,
    "tactic": null
   },
