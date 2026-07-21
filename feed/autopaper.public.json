@@ -2,8 +2,8 @@
  "updated": "2026-07-22",
  "start": 100000000,
  "cash": 58183242,
- "equity": 98292774,
- "ret_pct": -1.71,
+ "equity": 98336407,
+ "ret_pct": -1.66,
  "positions": [
   {
    "code": "MRSH",
@@ -11,13 +11,13 @@
    "ccy": "USD",
    "q": 36,
    "avg": 174.3075,
-   "price": 181.77999877929688,
+   "price": 182.38999938964844,
    "stop": 174.3075,
    "target": 192.2575,
    "half_done": true,
    "opened": "2026-07-06",
-   "pl_krw": 398404,
-   "pl_pct": 4.29,
+   "pl_krw": 430927,
+   "pl_pct": 4.64,
    "price_age_min": 3.3
   },
   {
@@ -26,13 +26,13 @@
    "ccy": "USD",
    "q": 6,
    "avg": 213.02,
-   "price": 212.25,
+   "price": 212.07000732421875,
    "stop": 202.063,
    "target": 234.934,
    "half_done": false,
    "opened": "2026-07-07",
-   "pl_krw": -6842,
-   "pl_pct": -0.36,
+   "pl_krw": -8442,
+   "pl_pct": -0.45,
    "price_age_min": 3.0
   },
   {
@@ -48,7 +48,7 @@
    "opened": "2026-07-07",
    "pl_krw": -202414,
    "pl_pct": -2.14,
-   "price_age_min": 1.7
+   "price_age_min": 1.6
   },
   {
    "code": "ORC",
@@ -56,13 +56,13 @@
    "ccy": "USD",
    "q": 4,
    "avg": 6.81,
-   "price": 6.784999847412109,
+   "price": 6.755000114440918,
    "stop": 6.5493,
    "target": 7.3314,
    "half_done": false,
    "opened": "2026-07-08",
-   "pl_krw": -148,
-   "pl_pct": -0.37,
+   "pl_krw": -326,
+   "pl_pct": -0.81,
    "price_age_min": 3.0
   },
   {
@@ -71,13 +71,13 @@
    "ccy": "USD",
    "q": 3,
    "avg": 27.665,
-   "price": 28.599199295043945,
+   "price": 28.57999992370605,
    "stop": 26.2063,
    "target": 30.5824,
    "half_done": false,
    "opened": "2026-07-09",
-   "pl_krw": 4151,
-   "pl_pct": 3.38,
+   "pl_krw": 4065,
+   "pl_pct": 3.31,
    "price_age_min": 2.4
   },
   {
@@ -86,13 +86,13 @@
    "ccy": "USD",
    "q": 1,
    "avg": 13.335,
-   "price": 14.3149995803833,
+   "price": 14.265000343322754,
    "stop": 12.3253,
    "target": 15.3544,
    "half_done": false,
    "opened": "2026-07-09",
-   "pl_krw": 1451,
-   "pl_pct": 7.35,
+   "pl_krw": 1377,
+   "pl_pct": 6.97,
    "price_age_min": 2.5
   },
   {
@@ -101,14 +101,14 @@
    "ccy": "USD",
    "q": 28,
    "avg": 10.02,
-   "price": 10.164999961853027,
+   "price": 10.145000457763672,
    "stop": 9.2434,
    "target": 11.6783,
    "half_done": false,
    "opened": "2026-07-09",
-   "pl_krw": 6013,
-   "pl_pct": 1.45,
-   "price_age_min": 2.5
+   "pl_krw": 5184,
+   "pl_pct": 1.25,
+   "price_age_min": 2.4
   },
   {
    "code": "SARO",
@@ -116,13 +116,13 @@
    "ccy": "USD",
    "q": 161,
    "avg": 27.9,
-   "price": 26.82999992370605,
+   "price": 26.920000076293945,
    "stop": 25.8678,
    "target": 31.9643,
    "half_done": false,
    "opened": "2026-07-10",
-   "pl_krw": -255132,
-   "pl_pct": -3.84,
+   "pl_krw": -233672,
+   "pl_pct": -3.51,
    "price_age_min": 2.4
   },
   {
@@ -131,13 +131,13 @@
    "ccy": "USD",
    "q": 64,
    "avg": 126.585,
-   "price": 129.3249969482422,
+   "price": 129.2449951171875,
    "stop": 119.2617,
    "target": 141.2316,
    "half_done": false,
    "opened": "2026-07-11",
-   "pl_krw": 259708,
-   "pl_pct": 2.16,
+   "pl_krw": 252125,
+   "pl_pct": 2.1,
    "price_age_min": 2.5
   }
  ],
@@ -475,7 +475,7 @@
   },
   {
    "d": "2026-07-22",
-   "v": 98292774
+   "v": 98336407
   }
  ],
  "log": [
