@@ -34,10 +34,19 @@ host="$(hostname 2>/dev/null || echo '?')"
 sha="$(git rev-parse --short HEAD 2>/dev/null || echo '?')"
 
 # 유닛 가동상태(시스템 유닛 읽기는 권한 불필요)
+#   · is-active는 inactive여도 상태를 찍고 exit!=0 → `|| echo`를 겹치면 두 줄이
+#     된다(실측 "inactive\nunknown"). head -1로 한 값만.
+#   · 미설치 유닛(unit file 없음)은 감시 대상에서 제외 — 선택 구성요소(예:
+#     watchdog)가 영구 down=1로 잡혀 진짜 장애와 구분 안 되던 것 방지.
 unit_json=""
 down=0
 for u in $UNITS; do
-  st="$(systemctl is-active "$u" 2>/dev/null || echo unknown)"
+  if ! systemctl cat "$u" >/dev/null 2>&1; then
+    unit_json="${unit_json}\"${u}\":\"not_installed\","
+    continue                          # 미설치 = down으로 세지 않음
+  fi
+  st="$(systemctl is-active "$u" 2>/dev/null | head -1)"
+  [ -z "$st" ] && st=unknown
   [ "$st" != "active" ] && down=$((down+1))
   unit_json="${unit_json}\"${u}\":\"${st}\","
 done
