@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated_at": "2026-07-21T14:54:10+09:00",
+ "generated_at": "2026-07-21T15:13:37+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "signals": [
   {
@@ -1898,23 +1898,23 @@
    "group": "watch",
    "entry_kind": "now",
    "stage": 1,
-   "price": 1402000.0,
-   "entry": 1402000.0,
-   "stop": 1262115.8332,
-   "target": 1681768.3336,
+   "price": 1407000.0,
+   "entry": 1407000.0,
+   "stop": 1267115.8332,
+   "target": 1686768.3336,
    "shares_1pct": 0,
-   "range_pos": 0.2292,
+   "range_pos": 0.2358,
    "norm": -47.2,
    "fresh": true,
-   "break_gap": -0.0142,
+   "break_gap": -0.0107,
    "earnings_d": null,
    "tactic": {
-    "stop_pct": 10.0,
+    "stop_pct": 9.9,
     "pb_price": 1327130.4348,
-    "pb_stop_pct": 4.9,
+    "pb_stop_pct": 4.5,
     "mode": "pullback",
     "label": "⏳ 눌림 지정가만",
-    "desc": "지금 추격 금지(손절폭 10.0%) — <b>1,327,130원 눌림 지정가만</b>. 눌리면 손절폭 4.9%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
+    "desc": "지금 추격 금지(손절폭 9.9%) — <b>1,327,130원 눌림 지정가만</b>. 눌리면 손절폭 4.5%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
    }
   },
   {
@@ -1978,26 +1978,6 @@
    "tactic": null
   },
   {
-   "id": "005830-2026-07-21-watch",
-   "code": "005830",
-   "name": "DB손해보험",
-   "ccy": "KRW",
-   "group": "watch",
-   "entry_kind": "pullback",
-   "stage": 3,
-   "price": 162700.0,
-   "entry": 138205.05,
-   "stop": 122182.4023,
-   "target": 170250.3454,
-   "shares_1pct": 6,
-   "range_pos": 0.4651,
-   "norm": -26.4,
-   "fresh": false,
-   "break_gap": 0.1678,
-   "earnings_d": null,
-   "tactic": null
-  },
-  {
    "id": "TMUS-2026-07-21-watch",
    "code": "TMUS",
    "name": "T-Mobile US, Inc.",
@@ -2014,6 +1994,26 @@
    "norm": -34.0,
    "fresh": false,
    "break_gap": 0.095,
+   "earnings_d": null,
+   "tactic": null
+  },
+  {
+   "id": "005830-2026-07-21-watch",
+   "code": "005830",
+   "name": "DB손해보험",
+   "ccy": "KRW",
+   "group": "watch",
+   "entry_kind": "pullback",
+   "stage": 3,
+   "price": 162900.0,
+   "entry": 138205.05,
+   "stop": 122182.4023,
+   "target": 170250.3454,
+   "shares_1pct": 6,
+   "range_pos": 0.4672,
+   "norm": -35.8,
+   "fresh": false,
+   "break_gap": 0.1692,
    "earnings_d": null,
    "tactic": null
   }
