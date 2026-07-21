@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated_at": "2026-07-21T15:49:03+09:00",
+ "generated_at": "2026-07-21T16:18:46+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "signals": [
   {
@@ -1891,6 +1891,33 @@
    }
   },
   {
+   "id": "207940-2026-07-21-watch",
+   "code": "207940",
+   "name": "삼성바이오로직스",
+   "ccy": "KRW",
+   "group": "watch",
+   "entry_kind": "now",
+   "stage": 1,
+   "price": 1395000.0,
+   "entry": 1395000.0,
+   "stop": 1255115.8332,
+   "target": 1674768.3336,
+   "shares_1pct": 0,
+   "range_pos": 0.22,
+   "norm": -47.2,
+   "fresh": true,
+   "break_gap": -0.0191,
+   "earnings_d": null,
+   "tactic": {
+    "stop_pct": 10.0,
+    "pb_price": 1327130.4348,
+    "pb_stop_pct": 5.4,
+    "mode": "pullback",
+    "label": "⏳ 눌림 지정가만",
+    "desc": "지금 추격 금지(손절폭 10.0%) — <b>1,327,130원 눌림 지정가만</b>. 눌리면 손절폭 5.4%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
+   }
+  },
+  {
    "id": "MANH-2026-07-21-watch",
    "code": "MANH",
    "name": "Manhattan Associates, Inc.",
@@ -1978,15 +2005,15 @@
    "group": "watch",
    "entry_kind": "pullback",
    "stage": 3,
-   "price": 161200.0,
+   "price": 161700.0,
    "entry": 138205.05,
    "stop": 122182.4023,
    "target": 170250.3454,
    "shares_1pct": 6,
-   "range_pos": 0.4494,
+   "range_pos": 0.4546,
    "norm": -35.8,
    "fresh": false,
-   "break_gap": 0.157,
+   "break_gap": 0.1606,
    "earnings_d": null,
    "tactic": null
   }
