@@ -2,8 +2,8 @@
  "updated": "2026-07-21",
  "start": 100000000,
  "cash": 58183242,
- "equity": 98307569,
- "ret_pct": -1.69,
+ "equity": 98167169,
+ "ret_pct": -1.83,
  "positions": [
   {
    "code": "MRSH",
@@ -18,7 +18,7 @@
    "opened": "2026-07-06",
    "pl_krw": 414733,
    "pl_pct": 4.47,
-   "price_age_min": 155.5
+   "price_age_min": 173.1
   },
   {
    "code": "STE",
@@ -33,7 +33,7 @@
    "opened": "2026-07-07",
    "pl_krw": 12862,
    "pl_pct": 0.68,
-   "price_age_min": 155.2
+   "price_age_min": 172.8
   },
   {
    "code": "068270",
@@ -41,14 +41,14 @@
    "ccy": "KRW",
    "q": 54,
    "avg": 175348.4128,
-   "price": 172600.0,
+   "price": 170000.0,
    "stop": 157651.1713,
    "target": 212997.6574,
    "half_done": false,
    "opened": "2026-07-07",
-   "pl_krw": -148414,
-   "pl_pct": -1.57,
-   "price_age_min": 28.0
+   "pl_krw": -288814,
+   "pl_pct": -3.05,
+   "price_age_min": 0.7
   },
   {
    "code": "ORC",
@@ -63,7 +63,7 @@
    "opened": "2026-07-08",
    "pl_krw": -591,
    "pl_pct": -1.47,
-   "price_age_min": 155.1
+   "price_age_min": 172.7
   },
   {
    "code": "HMC",
@@ -78,7 +78,7 @@
    "opened": "2026-07-09",
    "pl_krw": 2240,
    "pl_pct": 1.83,
-   "price_age_min": 155.1
+   "price_age_min": 172.7
   },
   {
    "code": "NU",
@@ -93,7 +93,7 @@
    "opened": "2026-07-09",
    "pl_krw": 968,
    "pl_pct": 4.91,
-   "price_age_min": 155.1
+   "price_age_min": 172.7
   },
   {
    "code": "LSPD",
@@ -108,7 +108,7 @@
    "opened": "2026-07-09",
    "pl_krw": 14488,
    "pl_pct": 3.49,
-   "price_age_min": 155.1
+   "price_age_min": 172.7
   },
   {
    "code": "SARO",
@@ -123,7 +123,7 @@
    "opened": "2026-07-10",
    "pl_krw": -297526,
    "pl_pct": -4.48,
-   "price_age_min": 155.1
+   "price_age_min": 172.7
   },
   {
    "code": "J",
@@ -138,7 +138,7 @@
    "opened": "2026-07-11",
    "pl_krw": 274863,
    "pl_pct": 2.29,
-   "price_age_min": 155.0
+   "price_age_min": 172.7
   }
  ],
  "pending": [
@@ -471,7 +471,7 @@
   },
   {
    "d": "2026-07-21",
-   "v": 98307569
+   "v": 98167169
   }
  ],
  "log": [
