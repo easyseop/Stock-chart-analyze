@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated_at": "2026-07-21T11:01:10+09:00",
+ "generated_at": "2026-07-21T11:13:20+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "signals": [
   {
@@ -1010,23 +1010,23 @@
    "group": "now",
    "entry_kind": "now",
    "stage": 3,
-   "price": 40850.0,
-   "entry": 40850.0,
-   "stop": 35986.4355,
-   "target": 50577.129,
+   "price": 40800.0,
+   "entry": 40800.0,
+   "stop": 35929.2926,
+   "target": 50541.4147,
    "shares_1pct": 20,
-   "range_pos": 0.0836,
+   "range_pos": 0.0826,
    "norm": -43.4,
    "fresh": false,
-   "break_gap": 0.147,
+   "break_gap": 0.1456,
    "earnings_d": null,
    "tactic": {
     "stop_pct": 11.9,
     "pb_price": 36550.0,
-    "pb_stop_pct": 1.5,
+    "pb_stop_pct": 1.7,
     "mode": "pullback",
     "label": "⏳ 눌림 지정가만",
-    "desc": "지금 추격 금지(손절폭 11.9% · 돌파후 진행) — <b>36,550원 눌림 지정가만</b>. 눌리면 손절폭 1.5%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
+    "desc": "지금 추격 금지(손절폭 11.9% · 돌파후 진행) — <b>36,550원 눌림 지정가만</b>. 눌리면 손절폭 1.7%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
    }
   },
   {
@@ -2286,6 +2286,26 @@
    "tactic": null
   },
   {
+   "id": "005830-2026-07-21-watch",
+   "code": "005830",
+   "name": "DB손해보험",
+   "ccy": "KRW",
+   "group": "watch",
+   "entry_kind": "pullback",
+   "stage": 3,
+   "price": 162100.0,
+   "entry": 138205.05,
+   "stop": 122510.9737,
+   "target": 169593.2026,
+   "shares_1pct": 6,
+   "range_pos": 0.4588,
+   "norm": -26.4,
+   "fresh": false,
+   "break_gap": 0.1635,
+   "earnings_d": null,
+   "tactic": null
+  },
+  {
    "id": "HURN-2026-07-21-watch",
    "code": "HURN",
    "name": "Huron Consulting Group Inc.",
@@ -2342,26 +2362,6 @@
    "norm": -34.0,
    "fresh": false,
    "break_gap": 0.095,
-   "earnings_d": null,
-   "tactic": null
-  },
-  {
-   "id": "005830-2026-07-21-watch",
-   "code": "005830",
-   "name": "DB손해보험",
-   "ccy": "KRW",
-   "group": "watch",
-   "entry_kind": "pullback",
-   "stage": 3,
-   "price": 162000.0,
-   "entry": 138205.05,
-   "stop": 122510.9737,
-   "target": 169593.2026,
-   "shares_1pct": 6,
-   "range_pos": 0.4578,
-   "norm": -35.8,
-   "fresh": false,
-   "break_gap": 0.1628,
    "earnings_d": null,
    "tactic": null
   },
