@@ -1,0 +1,10 @@
+# 헬스 비콘 타이머 — 5분마다 서버 상태를 ntfy에 발행.
+[Unit]
+Description=run stock health beacon every 5 minutes
+
+[Timer]
+OnBootSec=1min
+OnUnitActiveSec=5min
+
+[Install]
+WantedBy=timers.target

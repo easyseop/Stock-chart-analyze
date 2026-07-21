@@ -110,6 +110,27 @@ sudo systemctl daemon-reload && sudo systemctl enable --now autodeploy.timer
 주의: env 파일(kis.env) 변경은 자동 배포 대상이 아니다(시크릿은 깃 밖) —
 env를 바꾼 경우엔 여전히 수동 `systemctl restart` 1회 필요.
 
+## 헬스 비콘 (원격 세션에서 서버 상태 확인용)
+격리된 원격(웹) 세션은 이 서버에 SSH가 안 된다. 비콘이 5분마다 봇 가동상태를
+ntfy 토픽에 올려두면, 원격에서 그 토픽을 HTTPS로 읽어 상태를 확인할 수 있다.
+**민감정보(잔고·보유수량) 발행 안 함** — 운영 헬스만(가동여부·마지막 원장
+이벤트·에러수). ntfy 토픽은 이름을 알면 읽히니 **추측 어려운 문자열**로.
+```bash
+# ① kis.env에 토픽 추가(추측 어려운 값). 예:
+echo 'export NTFY_HEALTH_TOPIC=stock-health-a1d6048ee21e' | sudo tee -a /etc/stock/kis.env
+# ② 유닛 설치(경로·User는 서버 배치에 맞게 수정) 후:
+sudo systemctl daemon-reload && sudo systemctl enable --now health-beacon.timer
+# ③ 즉시 1회 발행 확인:
+sudo systemctl start health-beacon.service
+```
+발행 내용 읽기(원격/로컬 공통):
+```bash
+curl -s "https://ntfy.sh/<TOPIC>/json?poll=1" | tail   # 최근 캐시 메시지들
+```
+각 메시지의 `message` 필드가 헬스 JSON(`units`·`down`·`ledger_lines`·
+`last_ledger`·`err_1h`). `down>0`이면 ntfy 알림도 high 우선순위로 뜬다.
+끄기: `sudo systemctl disable --now health-beacon.timer`.
+
 ## 운영 규칙 (설계 04·REFLECTION 준수)
 - **단일 프로세스 원칙(I3)**: 파수꾼 1개만 KIS 토큰을 쓴다. 루프를 늘리면 반드시
   같은 `KIS_TOKEN_CACHE`(flock)를 공유 — 토큰 발급 1분1회 제한 때문.

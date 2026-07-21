@@ -1,0 +1,14 @@
+# 헬스 비콘 1회 실행(oneshot) — health-beacon.timer가 5분마다 호출.
+#   봇 운영상태를 ntfy 토픽에 발행(원격 세션에서 서버 상태 확인용).
+# ※ 경로/User는 서버 실제 배치에 맞게 수정(이 파일은 /opt/stock 템플릿).
+[Unit]
+Description=stock server health beacon (publish bot status to ntfy)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=bot
+WorkingDirectory=/opt/stock/Stock-chart-analyze
+Environment=BEACON_ENV=/etc/stock/kis.env
+ExecStart=/opt/stock/Stock-chart-analyze/infra/server/health_beacon.sh
