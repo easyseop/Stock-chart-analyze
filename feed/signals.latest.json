@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated_at": "2026-07-21T13:53:25+09:00",
+ "generated_at": "2026-07-21T14:13:06+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "signals": [
   {
@@ -1010,23 +1010,23 @@
    "group": "now",
    "entry_kind": "now",
    "stage": 3,
-   "price": 41400.0,
-   "entry": 41400.0,
-   "stop": 36472.1498,
-   "target": 51255.7004,
+   "price": 41250.0,
+   "entry": 41250.0,
+   "stop": 36300.7212,
+   "target": 51148.5576,
    "shares_1pct": 20,
-   "range_pos": 0.0943,
+   "range_pos": 0.0914,
    "norm": -43.4,
    "fresh": false,
-   "break_gap": 0.1625,
+   "break_gap": 0.1583,
    "earnings_d": null,
    "tactic": {
-    "stop_pct": 11.9,
+    "stop_pct": 12.0,
     "pb_price": 36550.0,
-    "pb_stop_pct": 0.2,
+    "pb_stop_pct": 0.7,
     "mode": "pullback",
     "label": "⏳ 눌림 지정가만",
-    "desc": "지금 추격 금지(손절폭 11.9% · 돌파후 진행) — <b>36,550원 눌림 지정가만</b>. 눌리면 손절폭 0.2%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
+    "desc": "지금 추격 금지(손절폭 12.0% · 돌파후 진행) — <b>36,550원 눌림 지정가만</b>. 눌리면 손절폭 0.7%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
    }
   },
   {
@@ -1918,33 +1918,6 @@
    }
   },
   {
-   "id": "259960-2026-07-21-watch",
-   "code": "259960",
-   "name": "크래프톤",
-   "ccy": "KRW",
-   "group": "watch",
-   "entry_kind": "now",
-   "stage": 1,
-   "price": 238000.0,
-   "entry": 238000.0,
-   "stop": 208929.7252,
-   "target": 296140.5497,
-   "shares_1pct": 3,
-   "range_pos": 0.2301,
-   "norm": -37.7,
-   "fresh": true,
-   "break_gap": -0.0167,
-   "earnings_d": null,
-   "tactic": {
-    "stop_pct": 12.2,
-    "pb_price": 227777.5,
-    "pb_stop_pct": 8.3,
-    "mode": "pullback",
-    "label": "⏳ 눌림 지정가만",
-    "desc": "지금 추격 금지(손절폭 12.2%) — <b>227,778원 눌림 지정가만</b>. 눌리면 손절폭 8.3%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
-   }
-  },
-  {
    "id": "207940-2026-07-21-watch",
    "code": "207940",
    "name": "삼성바이오로직스",
@@ -1952,23 +1925,23 @@
    "group": "watch",
    "entry_kind": "now",
    "stage": 1,
-   "price": 1403000.0,
-   "entry": 1403000.0,
-   "stop": 1263115.8332,
-   "target": 1682768.3336,
+   "price": 1408000.0,
+   "entry": 1408000.0,
+   "stop": 1268115.8332,
+   "target": 1687768.3336,
    "shares_1pct": 0,
-   "range_pos": 0.2306,
+   "range_pos": 0.2372,
    "norm": -47.2,
    "fresh": true,
-   "break_gap": -0.0135,
+   "break_gap": -0.01,
    "earnings_d": null,
    "tactic": {
-    "stop_pct": 10.0,
+    "stop_pct": 9.9,
     "pb_price": 1327130.4348,
-    "pb_stop_pct": 4.8,
+    "pb_stop_pct": 4.4,
     "mode": "pullback",
     "label": "⏳ 눌림 지정가만",
-    "desc": "지금 추격 금지(손절폭 10.0%) — <b>1,327,130원 눌림 지정가만</b>. 눌리면 손절폭 4.8%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
+    "desc": "지금 추격 금지(손절폭 9.9%) — <b>1,327,130원 눌림 지정가만</b>. 눌리면 손절폭 4.4%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
    }
   },
   {
