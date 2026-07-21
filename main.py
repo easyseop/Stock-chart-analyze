@@ -246,16 +246,24 @@ def main():
         return
 
     if args.update_kr:
-        from scanner import cache
-        kr = [c for c in cache.cached_codes() if len(c) == 6 and c[:5].isdigit()]
+        from scanner import cache, universe
+        # 대상 = 유니버스 한국주 전체(미캐시분은 전체 백필) + 즉석조회로 캐시된
+        #   한국주. 예전엔 '캐시에 이미 있는 한국주만'이라 캐시가 빈 새 브랜치에선
+        #   영원히 0종목(부트스트랩 불능 — 실측 2026-07-21: KR 신호 0 → 국내
+        #   매수 전무). cache.update가 미캐시=전체 백필 / 캐시=증분을 알아서 처리.
+        uni_kr = [s["code"] for s in universe.load()
+                  if s.get("code") and s.get("ccy") == "KRW"]
+        cached_kr = [c for c in cache.cached_codes()
+                     if len(c) == 6 and c[:5].isdigit()]
+        todo = list(dict.fromkeys(uni_kr + cached_kr))   # 순서 보존 중복 제거
         ok = 0
-        for code in kr:
+        for code in todo:
             try:
                 cache.update(code)
                 ok += 1
             except Exception:
                 pass
-        print(f"한국주 일봉 갱신: {ok}/{len(kr)}종목")
+        print(f"한국주 일봉 갱신: {ok}/{len(todo)}종목")
         return
 
     if args.add:
