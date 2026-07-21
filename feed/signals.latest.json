@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated_at": "2026-07-21T14:13:06+09:00",
+ "generated_at": "2026-07-21T14:34:03+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "signals": [
   {
@@ -1003,33 +1003,6 @@
    }
   },
   {
-   "id": "377300-2026-07-21-now",
-   "code": "377300",
-   "name": "카카오페이",
-   "ccy": "KRW",
-   "group": "now",
-   "entry_kind": "now",
-   "stage": 3,
-   "price": 41250.0,
-   "entry": 41250.0,
-   "stop": 36300.7212,
-   "target": 51148.5576,
-   "shares_1pct": 20,
-   "range_pos": 0.0914,
-   "norm": -43.4,
-   "fresh": false,
-   "break_gap": 0.1583,
-   "earnings_d": null,
-   "tactic": {
-    "stop_pct": 12.0,
-    "pb_price": 36550.0,
-    "pb_stop_pct": 0.7,
-    "mode": "pullback",
-    "label": "⏳ 눌림 지정가만",
-    "desc": "지금 추격 금지(손절폭 12.0% · 돌파후 진행) — <b>36,550원 눌림 지정가만</b>. 눌리면 손절폭 0.7%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
-   }
-  },
-  {
    "id": "WVE-2026-07-21-now",
    "code": "WVE",
    "name": "Wave Life Sciences Ltd.",
@@ -1918,6 +1891,33 @@
    }
   },
   {
+   "id": "259960-2026-07-21-watch",
+   "code": "259960",
+   "name": "크래프톤",
+   "ccy": "KRW",
+   "group": "watch",
+   "entry_kind": "now",
+   "stage": 1,
+   "price": 237500.0,
+   "entry": 237500.0,
+   "stop": 208429.7252,
+   "target": 295640.5497,
+   "shares_1pct": 3,
+   "range_pos": 0.2271,
+   "norm": -37.7,
+   "fresh": true,
+   "break_gap": -0.0188,
+   "earnings_d": null,
+   "tactic": {
+    "stop_pct": 12.2,
+    "pb_price": 227777.5,
+    "pb_stop_pct": 8.5,
+    "mode": "pullback",
+    "label": "⏳ 눌림 지정가만",
+    "desc": "지금 추격 금지(손절폭 12.2%) — <b>227,778원 눌림 지정가만</b>. 눌리면 손절폭 8.5%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
+   }
+  },
+  {
    "id": "207940-2026-07-21-watch",
    "code": "207940",
    "name": "삼성바이오로직스",
@@ -1925,23 +1925,23 @@
    "group": "watch",
    "entry_kind": "now",
    "stage": 1,
-   "price": 1408000.0,
-   "entry": 1408000.0,
-   "stop": 1268115.8332,
-   "target": 1687768.3336,
+   "price": 1398000.0,
+   "entry": 1398000.0,
+   "stop": 1258115.8332,
+   "target": 1677768.3336,
    "shares_1pct": 0,
-   "range_pos": 0.2372,
+   "range_pos": 0.224,
    "norm": -47.2,
    "fresh": true,
-   "break_gap": -0.01,
+   "break_gap": -0.017,
    "earnings_d": null,
    "tactic": {
-    "stop_pct": 9.9,
+    "stop_pct": 10.0,
     "pb_price": 1327130.4348,
-    "pb_stop_pct": 4.4,
+    "pb_stop_pct": 5.2,
     "mode": "pullback",
     "label": "⏳ 눌림 지정가만",
-    "desc": "지금 추격 금지(손절폭 9.9%) — <b>1,327,130원 눌림 지정가만</b>. 눌리면 손절폭 4.4%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
+    "desc": "지금 추격 금지(손절폭 10.0%) — <b>1,327,130원 눌림 지정가만</b>. 눌리면 손절폭 5.2%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
    }
   },
   {
@@ -2005,6 +2005,26 @@
    "tactic": null
   },
   {
+   "id": "005830-2026-07-21-watch",
+   "code": "005830",
+   "name": "DB손해보험",
+   "ccy": "KRW",
+   "group": "watch",
+   "entry_kind": "pullback",
+   "stage": 3,
+   "price": 163300.0,
+   "entry": 138205.05,
+   "stop": 122182.4023,
+   "target": 170250.3454,
+   "shares_1pct": 6,
+   "range_pos": 0.4713,
+   "norm": -26.4,
+   "fresh": false,
+   "break_gap": 0.1721,
+   "earnings_d": null,
+   "tactic": null
+  },
+  {
    "id": "TMUS-2026-07-21-watch",
    "code": "TMUS",
    "name": "T-Mobile US, Inc.",
@@ -2021,26 +2041,6 @@
    "norm": -34.0,
    "fresh": false,
    "break_gap": 0.095,
-   "earnings_d": null,
-   "tactic": null
-  },
-  {
-   "id": "005830-2026-07-21-watch",
-   "code": "005830",
-   "name": "DB손해보험",
-   "ccy": "KRW",
-   "group": "watch",
-   "entry_kind": "pullback",
-   "stage": 3,
-   "price": 163400.0,
-   "entry": 138205.05,
-   "stop": 122182.4023,
-   "target": 170250.3454,
-   "shares_1pct": 6,
-   "range_pos": 0.4724,
-   "norm": -35.8,
-   "fresh": false,
-   "break_gap": 0.1728,
    "earnings_d": null,
    "tactic": null
   }
