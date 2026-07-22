@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated_at": "2026-07-22T17:58:54+09:00",
+ "generated_at": "2026-07-22T18:13:02+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "signals": [
   {
@@ -1696,6 +1696,33 @@
    }
   },
   {
+   "id": "010130-2026-07-22-watch",
+   "code": "010130",
+   "name": "고려아연",
+   "ccy": "KRW",
+   "group": "watch",
+   "entry_kind": "now",
+   "stage": 2,
+   "price": 994000.0,
+   "entry": 994000.0,
+   "stop": 858120.13,
+   "target": 1265759.74,
+   "shares_1pct": 0,
+   "range_pos": 0.1726,
+   "norm": -68.9,
+   "fresh": true,
+   "break_gap": 0.0163,
+   "earnings_d": null,
+   "tactic": {
+    "stop_pct": 13.7,
+    "pb_price": 920000.0,
+    "pb_stop_pct": 6.7,
+    "mode": "pullback",
+    "label": "⏳ 눌림 지정가만",
+    "desc": "지금 추격 금지(손절폭 13.7%) — <b>920,000원 눌림 지정가만</b>. 눌리면 손절폭 6.7%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
+   }
+  },
+  {
    "id": "PAY-2026-07-22-watch",
    "code": "PAY",
    "name": "Paymentus Holdings, Inc.",
@@ -2732,6 +2759,60 @@
     "mode": "pullback",
     "label": "⏳ 눌림 지정가만",
     "desc": "지금 추격 금지(손절폭 11.3%) — <b>$8.48 눌림 지정가만</b>. 눌리면 손절폭 5.3%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
+   }
+  },
+  {
+   "id": "241560-2026-07-22-watch",
+   "code": "241560",
+   "name": "두산밥캣",
+   "ccy": "KRW",
+   "group": "watch",
+   "entry_kind": "now",
+   "stage": 1,
+   "price": 63700.0,
+   "entry": 63700.0,
+   "stop": 56422.4207,
+   "target": 78255.1587,
+   "shares_1pct": 13,
+   "range_pos": 0.4245,
+   "norm": -32.1,
+   "fresh": true,
+   "break_gap": 0.0049,
+   "earnings_d": null,
+   "tactic": {
+    "stop_pct": 11.4,
+    "pb_price": 57818.9641,
+    "pb_stop_pct": 2.4,
+    "mode": "pullback",
+    "label": "⏳ 눌림 지정가만",
+    "desc": "지금 추격 금지(손절폭 11.4%) — <b>57,819원 눌림 지정가만</b>. 눌리면 손절폭 2.4%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
+   }
+  },
+  {
+   "id": "112610-2026-07-22-watch",
+   "code": "112610",
+   "name": "씨에스윈드",
+   "ccy": "KRW",
+   "group": "watch",
+   "entry_kind": "now",
+   "stage": 1,
+   "price": 39550.0,
+   "entry": 39550.0,
+   "stop": 33764.8659,
+   "target": 51120.2682,
+   "shares_1pct": 17,
+   "range_pos": 0.0667,
+   "norm": -52.8,
+   "fresh": true,
+   "break_gap": -0.0042,
+   "earnings_d": null,
+   "tactic": {
+    "stop_pct": 14.6,
+    "pb_price": 39033.3333,
+    "pb_stop_pct": 13.5,
+    "mode": "pullback",
+    "label": "⏳ 눌림 지정가만",
+    "desc": "지금 추격 금지(손절폭 14.6%) — <b>39,033원 눌림 지정가만</b>. 눌리면 손절폭 13.5%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
    }
   },
   {
