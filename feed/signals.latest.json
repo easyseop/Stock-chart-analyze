@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated_at": "2026-07-22T14:30:10+09:00",
+ "generated_at": "2026-07-22T14:45:17+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "signals": [
   {
@@ -1192,6 +1192,33 @@
    }
   },
   {
+   "id": "377300-2026-07-22-now",
+   "code": "377300",
+   "name": "카카오페이",
+   "ccy": "KRW",
+   "group": "now",
+   "entry_kind": "now",
+   "stage": 3,
+   "price": 41600.0,
+   "entry": 41600.0,
+   "stop": 36647.0983,
+   "target": 51505.8034,
+   "shares_1pct": 20,
+   "range_pos": 0.0982,
+   "norm": -43.4,
+   "fresh": false,
+   "break_gap": 0.1868,
+   "earnings_d": null,
+   "tactic": {
+    "stop_pct": 11.9,
+    "pb_price": null,
+    "pb_stop_pct": null,
+    "mode": "pullback",
+    "label": "⏳ 눌림 지정가만",
+    "desc": "지금 추격 금지(손절폭 11.9% · 돌파후 진행) — 받칠 지지에 눌릴 때까지 대기"
+   }
+  },
+  {
    "id": "103140-2026-07-22-now",
    "code": "103140",
    "name": "풍산",
@@ -1199,23 +1226,23 @@
    "group": "now",
    "entry_kind": "now",
    "stage": 3,
-   "price": 62500.0,
-   "entry": 62500.0,
-   "stop": 55063.8755,
-   "target": 77372.2491,
+   "price": 62300.0,
+   "entry": 62300.0,
+   "stop": 54849.5897,
+   "target": 77200.8205,
    "shares_1pct": 13,
-   "range_pos": 0.0318,
+   "range_pos": 0.03,
    "norm": -65.6,
    "fresh": false,
-   "break_gap": 0.0886,
+   "break_gap": 0.0851,
    "earnings_d": null,
    "tactic": {
-    "stop_pct": 11.9,
+    "stop_pct": 12.0,
     "pb_price": 58900.0,
-    "pb_stop_pct": 6.5,
+    "pb_stop_pct": 6.9,
     "mode": "pullback",
     "label": "⏳ 눌림 지정가만",
-    "desc": "지금 추격 금지(손절폭 11.9% · 돌파후 진행) — <b>58,900원 눌림 지정가만</b>. 눌리면 손절폭 6.5%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
+    "desc": "지금 추격 금지(손절폭 12.0% · 돌파후 진행) — <b>58,900원 눌림 지정가만</b>. 눌리면 손절폭 6.9%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
    }
   },
   {
@@ -2769,23 +2796,23 @@
    "group": "watch",
    "entry_kind": "now",
    "stage": 1,
-   "price": 1397000.0,
-   "entry": 1397000.0,
-   "stop": 1260821.8451,
-   "target": 1669356.3098,
+   "price": 1390000.0,
+   "entry": 1390000.0,
+   "stop": 1253250.4165,
+   "target": 1663499.167,
    "shares_1pct": 0,
-   "range_pos": 0.2227,
+   "range_pos": 0.2134,
    "norm": -47.2,
    "fresh": true,
-   "break_gap": -0.0146,
+   "break_gap": -0.0195,
    "earnings_d": null,
    "tactic": {
-    "stop_pct": 9.7,
+    "stop_pct": 9.8,
     "pb_price": 1330434.7826,
-    "pb_stop_pct": 5.2,
+    "pb_stop_pct": 5.8,
     "mode": "pullback",
     "label": "⏳ 눌림 지정가만",
-    "desc": "지금 추격 금지(손절폭 9.7%) — <b>1,330,435원 눌림 지정가만</b>. 눌리면 손절폭 5.2%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
+    "desc": "지금 추격 금지(손절폭 9.8%) — <b>1,330,435원 눌림 지정가만</b>. 눌리면 손절폭 5.8%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
    }
   },
   {
@@ -3085,26 +3112,6 @@
    "norm": -22.6,
    "fresh": false,
    "break_gap": 0.1205,
-   "earnings_d": null,
-   "tactic": null
-  },
-  {
-   "id": "377300-2026-07-22-watch",
-   "code": "377300",
-   "name": "카카오페이",
-   "ccy": "KRW",
-   "group": "watch",
-   "entry_kind": "pullback",
-   "stage": 3,
-   "price": 41850.0,
-   "entry": 36550.0,
-   "stop": 31597.0983,
-   "target": 46455.8034,
-   "shares_1pct": 20,
-   "range_pos": 0.103,
-   "norm": -43.4,
-   "fresh": false,
-   "break_gap": 0.1939,
    "earnings_d": null,
    "tactic": null
   }
