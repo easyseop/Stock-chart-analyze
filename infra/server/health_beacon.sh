@@ -77,18 +77,24 @@ err1h="$(journalctl $(for u in $UNITS; do printf -- '-u %s ' "$u"; done) \
 #   err_last    : 최근 24시간 마지막 에러 라인 — err_1h의 정체
 tg_env=0
 [ -n "${TELEGRAM_BOT_TOKEN:-}" ] && [ -n "${TELEGRAM_CHAT_ID:-}" ] && tg_env=1
-#   '장 아님'(장외 정상 노이즈)은 걸러서 — 장중의 실제 게이트 판정만 남긴다.
-bl_tail="$(journalctl -u buyloop --since '14 hours ago' --no-pager -o cat 2>/dev/null \
-           | grep -v '장 아님' | tail -12)"
+#   '장 아님'·사이클 헤더는 걸러서 — 개별 신호의 실제 게이트 판정만 남긴다.
+bl_tail="$(journalctl -u buyloop --since '16 hours ago' --no-pager -o cat 2>/dev/null \
+           | grep -E '^\s+(✓|·)' | grep -v '\[session\]' | tail -12)"
+#   게이트 히스토그램(16시간 집계) — 어느 게이트가 몇 건 걸렀는지 총계. 꼬리가
+#   최근 노이즈에 밀려도 밤새 판정 분포는 이 한 줄로 확정된다.
+gate_hist="$(journalctl -u buyloop --since '16 hours ago' --no-pager -o cat 2>/dev/null \
+             | grep -oE '\[[a-z_]+\]' | sort | uniq -c | sort -rn | head -8 \
+             | awk '{printf "%s=%s ", $2, $1}')"
 err_last="$(journalctl $(for u in $UNITS; do printf -- '-u %s ' "$u"; done) \
             --since '24 hours ago' -p err --no-pager -o cat 2>/dev/null | tail -2)"
-extra="$(BL="$bl_tail" EL="$err_last" python3 -c '
+extra="$(BL="$bl_tail" EL="$err_last" GH="$gate_hist" python3 -c '
 import os, json
 trim = lambda s, n=6: [l[:200] for l in (s or "").splitlines()[-n:]]
 print(json.dumps({"buyloop_tail": trim(os.environ.get("BL",""), 12),
+                  "gate_hist": (os.environ.get("GH","") or "").strip()[:300],
                   "err_last": trim(os.environ.get("EL",""), 2)},
                  ensure_ascii=False)[1:-1])' 2>/dev/null)"
-[ -z "$extra" ] && extra='"buyloop_tail":[],"err_last":[]'
+[ -z "$extra" ] && extra='"buyloop_tail":[],"gate_hist":"","err_last":[]'
 
 body="{\"ts\":\"$now\",\"host\":\"$host\",\"sha\":\"$sha\",\"units\":$unit_json,\"down\":$down,\"ledger_lines\":${lines:-0},\"last_ledger\":\"${last_led}\",\"err_1h\":${err1h},\"tg_env\":${tg_env},${extra}}"
 
