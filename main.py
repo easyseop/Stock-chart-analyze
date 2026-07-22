@@ -390,10 +390,29 @@ def _rank_cached(n: int, us_only: bool = False) -> list[str]:
     return [c for _s, _n, c in ranked[:n]]
 
 
+def _held_codes() -> list[str]:
+    """모의투자(autopaper) 보유·대기 종목 — 시세 신선도가 손절 관리에 직결.
+
+    상위 N 랭킹은 '지금 점수'라 며칠 전 산 보유종목이 밀려난다(실측 2026-07-22:
+    전체 백필로 캐시 3천 종목이 되자 보유 5종목이 상위 600 밖 → 시세 정체 경보)."""
+    try:
+        import json as _json
+        import os as _os
+        with open(_os.path.join("data_cache", "autopaper.json"),
+                  encoding="utf-8") as f:
+            st = _json.load(f)
+        return [str(c).upper()
+                for c in list(st.get("pos") or {}) + list(st.get("pending") or {})]
+    except Exception:
+        return []
+
+
 def _update_top(n: int):
-    """전환후보 상위 N종목의 '일봉'만 증분 갱신(장중용 — 전체 5천 갱신보다 훨씬 빠름)."""
+    """전환후보 상위 N종목 + **보유·대기 종목**의 일봉 증분 갱신(장중용)."""
     from scanner import cache
-    targets = _rank_cached(n)
+    ranked = _rank_cached(n)
+    held = [c for c in _held_codes() if c not in ranked]
+    targets = ranked + held
     ok = 0
     for code in targets:
         try:
@@ -401,7 +420,7 @@ def _update_top(n: int):
             ok += 1
         except Exception:
             pass
-    print(f"장중 일봉 갱신(상위 {len(targets)}종목) · 성공 {ok}")
+    print(f"장중 일봉 갱신(상위 {len(ranked)}+보유 {len(held)}종목) · 성공 {ok}")
 
 
 def _update_hourly(n: int):
