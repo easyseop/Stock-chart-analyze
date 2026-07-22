@@ -115,8 +115,32 @@ try:
     out["inflight_buys"] = {"n": len(inflight),
                             "syms": sorted({str(f[k].get("symbol") or "")
                                             for k in inflight})[:15]}
+    # 원장 전체 요약 — 봇이 역사적으로 뭘 샀/팔았나(수량·금액 미발행, 심볼만)
+    bought = sorted({str(v.get("symbol") or "") for v in f.values()
+                     if (v.get("side") or "").upper() == "BUY"
+                     and int(v.get("filled") or 0) > 0})
+    sold = sorted({str(v.get("symbol") or "") for v in f.values()
+                   if (v.get("side") or "").upper() == "SELL"
+                   and int(v.get("filled") or 0) > 0})
+    out["ledger_hist"] = {"buy_filled": bought[:20], "sell_filled": sold[:20]}
 except Exception as e:
     out["inflight_buys"] = {"err": type(e).__name__}
+try:
+    # 봇 자체 포지션 기록(매수 시 기록·매도 시 close) — 봇이 아는 자기 보유
+    import collections
+    opens = {}
+    with open("bot/kis_positions.jsonl", encoding="utf-8") as fp:
+        for line in fp:
+            try: e = json.loads(line)
+            except Exception: continue
+            c = str(e.get("code") or "").upper()
+            if e.get("ev") == "close": opens.pop(c, None)
+            elif e.get("ev") == "open" and c: opens[c] = True
+    out["kis_positions_open"] = sorted(opens)[:20]
+except FileNotFoundError:
+    out["kis_positions_open"] = "no_file"
+except Exception as e:
+    out["kis_positions_open"] = type(e).__name__
 print(json.dumps(out, ensure_ascii=False)[:600])' 2>/dev/null)"
 [ -z "$diag" ] && diag='{}'
 extra="$(BL="$bl_tail" EL="$err_last" GH="$gate_hist" python3 -c '
