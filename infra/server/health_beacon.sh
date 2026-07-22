@@ -66,8 +66,9 @@ else
 fi
 
 # 최근 1시간 에러 로그 수(best-effort; 권한 없으면 -1)
+#   -o cat: 매치 0건일 때 "-- No entries --" 1줄이 세어지던 오탐 방지(실측 2026-07-22).
 err1h="$(journalctl $(for u in $UNITS; do printf -- '-u %s ' "$u"; done) \
-          --since '1 hour ago' -p err --no-pager 2>/dev/null | wc -l | tr -d ' ')"
+          --since '1 hour ago' -p err --no-pager -o cat 2>/dev/null | wc -l | tr -d ' ')"
 [ -z "$err1h" ] && err1h=-1
 
 # 원격 진단 필드(2026-07-22 매수 0건·알림 누락 조사) — 값이 아닌 '상태'만:
@@ -76,13 +77,15 @@ err1h="$(journalctl $(for u in $UNITS; do printf -- '-u %s ' "$u"; done) \
 #   err_last    : 최근 24시간 마지막 에러 라인 — err_1h의 정체
 tg_env=0
 [ -n "${TELEGRAM_BOT_TOKEN:-}" ] && [ -n "${TELEGRAM_CHAT_ID:-}" ] && tg_env=1
-bl_tail="$(journalctl -u buyloop --since '14 hours ago' --no-pager -o cat 2>/dev/null | tail -8)"
+#   '장 아님'(장외 정상 노이즈)은 걸러서 — 장중의 실제 게이트 판정만 남긴다.
+bl_tail="$(journalctl -u buyloop --since '14 hours ago' --no-pager -o cat 2>/dev/null \
+           | grep -v '장 아님' | tail -12)"
 err_last="$(journalctl $(for u in $UNITS; do printf -- '-u %s ' "$u"; done) \
             --since '24 hours ago' -p err --no-pager -o cat 2>/dev/null | tail -2)"
 extra="$(BL="$bl_tail" EL="$err_last" python3 -c '
 import os, json
 trim = lambda s, n=6: [l[:200] for l in (s or "").splitlines()[-n:]]
-print(json.dumps({"buyloop_tail": trim(os.environ.get("BL",""), 8),
+print(json.dumps({"buyloop_tail": trim(os.environ.get("BL",""), 12),
                   "err_last": trim(os.environ.get("EL",""), 2)},
                  ensure_ascii=False)[1:-1])' 2>/dev/null)"
 [ -z "$extra" ] && extra='"buyloop_tail":[],"err_last":[]'
