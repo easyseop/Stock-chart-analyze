@@ -1,8 +1,8 @@
 {
  "updated": "2026-07-22",
  "start": 100000000,
- "cash": 58183242,
- "equity": 98067802,
+ "cash": 51971202,
+ "equity": 98070557,
  "ret_pct": -1.93,
  "positions": [
   {
@@ -18,7 +18,7 @@
    "opened": "2026-07-06",
    "pl_krw": 166213,
    "pl_pct": 1.79,
-   "price_age_min": 9.6
+   "price_age_min": 24.7
   },
   {
    "code": "STE",
@@ -26,14 +26,14 @@
    "ccy": "USD",
    "q": 6,
    "avg": 213.02,
-   "price": 210.67999267578125,
+   "price": 210.9900054931641,
    "stop": 202.063,
    "target": 234.934,
    "half_done": false,
    "opened": "2026-07-07",
-   "pl_krw": -20793,
-   "pl_pct": -1.1,
-   "price_age_min": 7.6
+   "pl_krw": -18039,
+   "pl_pct": -0.95,
+   "price_age_min": 7.9
   },
   {
    "code": "068270",
@@ -48,7 +48,7 @@
    "opened": "2026-07-07",
    "pl_krw": -283414,
    "pl_pct": -2.99,
-   "price_age_min": 294.6
+   "price_age_min": 309.6
   },
   {
    "code": "ORC",
@@ -78,22 +78,7 @@
    "opened": "2026-07-09",
    "pl_krw": 3976,
    "pl_pct": 3.24,
-   "price_age_min": 840.2
-  },
-  {
-   "code": "NU",
-   "name": "Nu Holdings Ltd.",
-   "ccy": "USD",
-   "q": 1,
-   "avg": 13.335,
-   "price": 14.390000343322754,
-   "stop": 12.3253,
-   "target": 15.3544,
-   "half_done": false,
-   "opened": "2026-07-09",
-   "pl_krw": 1562,
-   "pl_pct": 7.91,
-   "price_age_min": 832.8
+   "price_age_min": 855.3
   },
   {
    "code": "LSPD",
@@ -108,7 +93,7 @@
    "opened": "2026-07-09",
    "pl_krw": 9538,
    "pl_pct": 2.3,
-   "price_age_min": 836.4
+   "price_age_min": 851.4
   },
   {
    "code": "SARO",
@@ -123,7 +108,7 @@
    "opened": "2026-07-10",
    "pl_krw": -185984,
    "pl_pct": -2.8,
-   "price_age_min": 827.8
+   "price_age_min": 842.8
   },
   {
    "code": "J",
@@ -138,7 +123,22 @@
    "opened": "2026-07-11",
    "pl_krw": 289565,
    "pl_pct": 2.41,
-   "price_age_min": 838.4
+   "price_age_min": 853.4
+  },
+  {
+   "code": "MAIN",
+   "name": "Main Street Capital Corporation",
+   "ccy": "USD",
+   "q": 78,
+   "avg": 53.96,
+   "price": 53.959999084472656,
+   "stop": 51.5808,
+   "target": 58.7184,
+   "half_done": false,
+   "opened": "2026-07-22",
+   "pl_krw": 0,
+   "pl_pct": -0.0,
+   "price_age_min": 9.8
   }
  ],
  "pending": [
@@ -224,18 +224,18 @@
    "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권29% · 체크4/6 · 손절폭6.4%"
   }
  ],
- "trades": 3,
- "win_trades": 2,
+ "trades": 4,
+ "win_trades": 3,
  "pos_cap_pct": 33.3,
  "cap_violations": [],
  "rule_violations": [],
  "fx": 1481.0,
  "stats": {
   "all": {
-   "n": 3,
-   "win": 2,
-   "win_rate": 67,
-   "avg_r": 0.06
+   "n": 4,
+   "win": 3,
+   "win_rate": 75,
+   "avg_r": 0.3
   },
   "by_mode": {
    "full": {
@@ -245,10 +245,10 @@
     "avg_r": -1.26
    },
    "half": {
-    "n": 1,
-    "win": 1,
+    "n": 2,
+    "win": 2,
     "win_rate": 100,
-    "avg_r": 1.0
+    "avg_r": 1.02
    },
    "pullback": {
     "n": 1,
@@ -258,10 +258,10 @@
    }
   },
   "fresh": {
-   "n": 3,
-   "win": 2,
-   "win_rate": 67,
-   "avg_r": 0.06
+   "n": 4,
+   "win": 3,
+   "win_rate": 75,
+   "avg_r": 0.3
   },
   "stale": {
    "n": 0,
@@ -271,24 +271,60 @@
   },
   "by_stage": {
    "3": {
-    "n": 3,
-    "win": 2,
-    "win_rate": 67,
-    "avg_r": 0.06
+    "n": 4,
+    "win": 3,
+    "win_rate": 75,
+    "avg_r": 0.3
    }
   },
   "by_ccy": {
    "USD": {
-    "n": 3,
-    "win": 2,
-    "win_rate": 67,
-    "avg_r": 0.06
+    "n": 4,
+    "win": 3,
+    "win_rate": 75,
+    "avg_r": 0.3
    }
   },
-  "slip_entry_pct": -1.03,
+  "slip_entry_pct": -0.77,
   "slip_stop_pct": -1.44
  },
  "closed": [
+  {
+   "code": "NU",
+   "name": "Nu Holdings Ltd.",
+   "ccy": "USD",
+   "ctx": {
+    "mode": "half",
+    "fresh": true,
+    "stage": 3,
+    "rp": 27,
+    "rec": 4,
+    "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권27% · 체크4/6 · 손절폭7.6%"
+   },
+   "plan": {
+    "entry": 13.335,
+    "stop": 12.3253,
+    "target": 15.3544,
+    "pb": null,
+    "tactic": "half"
+   },
+   "fill": {
+    "avg": 13.335,
+    "q": 1
+   },
+   "exits": [
+    {
+     "d": "2026-07-22",
+     "q": 1,
+     "price": 14.39,
+     "note": "+1R 절반 익절"
+    }
+   ],
+   "opened": "2026-07-09",
+   "closed": "2026-07-22",
+   "pl": 1562,
+   "r": 1.03
+  },
   {
    "code": "FND",
    "name": "Floor & Decor Holdings, Inc.",
@@ -475,10 +511,37 @@
   },
   {
    "d": "2026-07-22",
-   "v": 98067802
+   "v": 98070557
   }
  ],
  "log": [
+  {
+   "d": "2026-07-22",
+   "type": "buy",
+   "code": "MAIN",
+   "name": "Main Street Capital Corporation",
+   "q": 78,
+   "price": 53.96,
+   "ccy": "USD",
+   "amt": 6233351,
+   "note": "즉시 분할 — 🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권27% · 체크4/6 · 손절폭4.4%",
+   "stop": 51.5808,
+   "target": 58.7184
+  },
+  {
+   "d": "2026-07-22",
+   "type": "sell",
+   "code": "NU",
+   "name": "Nu Holdings Ltd.",
+   "q": 1,
+   "price": 14.39,
+   "ccy": "USD",
+   "amt": 21312,
+   "note": "+1R 절반 익절",
+   "pl": 1562,
+   "pl_pct": 7.9,
+   "r": 1.03
+  },
   {
    "d": "2026-07-21",
    "type": "order",
@@ -795,7 +858,6 @@
  "lane": "bulk",
  "data_stale": [
   "HMC",
-  "NU",
   "LSPD",
   "SARO",
   "J"
