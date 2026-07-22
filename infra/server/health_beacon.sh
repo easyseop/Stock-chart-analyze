@@ -87,6 +87,38 @@ gate_hist="$(journalctl -u buyloop --since '16 hours ago' --no-pager -o cat 2>/d
              | awk '{printf "%s=%s ", $2, $1}')"
 err_last="$(journalctl $(for u in $UNITS; do printf -- '-u %s ' "$u"; done) \
             --since '24 hours ago' -p err --no-pager -o cat 2>/dev/null | tail -2)"
+#   n_open=12 부풀림 판별(2026-07-22): baseline 파일 상태 + 원장 in-flight BUY 수.
+#   전부 로컬 파일 읽기(API 0회) — 심볼은 KIS 종목코드뿐(수량·금액 미발행).
+diag="$(python3 -c '
+import os, sys, json, time
+sys.path.insert(0, ".")
+out = {}
+try:
+    from bot import ownership
+    bp = ownership._bpath()
+    if os.path.exists(bp):
+        st = os.stat(bp)
+        try: n = len(json.load(open(bp)).get("symbols", []))
+        except Exception: n = -1
+        out["baseline"] = {"path": bp, "n": n,
+                           "age_h": round((time.time()-st.st_mtime)/3600, 1)}
+    else:
+        out["baseline"] = {"path": bp, "missing": True}
+except Exception as e:
+    out["baseline"] = {"err": type(e).__name__}
+try:
+    from bot import ledger
+    f = ledger._fold()
+    inflight = [k for k, v in f.items()
+                if (v.get("side") or "").upper() == "BUY"
+                and v.get("state") in ledger._INFLIGHT]
+    out["inflight_buys"] = {"n": len(inflight),
+                            "syms": sorted({str(f[k].get("symbol") or "")
+                                            for k in inflight})[:15]}
+except Exception as e:
+    out["inflight_buys"] = {"err": type(e).__name__}
+print(json.dumps(out, ensure_ascii=False)[:600])' 2>/dev/null)"
+[ -z "$diag" ] && diag='{}'
 extra="$(BL="$bl_tail" EL="$err_last" GH="$gate_hist" python3 -c '
 import os, json
 trim = lambda s, n=6: [l[:200] for l in (s or "").splitlines()[-n:]]
@@ -96,7 +128,7 @@ print(json.dumps({"buyloop_tail": trim(os.environ.get("BL",""), 12),
                  ensure_ascii=False)[1:-1])' 2>/dev/null)"
 [ -z "$extra" ] && extra='"buyloop_tail":[],"gate_hist":"","err_last":[]'
 
-body="{\"ts\":\"$now\",\"host\":\"$host\",\"sha\":\"$sha\",\"units\":$unit_json,\"down\":$down,\"ledger_lines\":${lines:-0},\"last_ledger\":\"${last_led}\",\"err_1h\":${err1h},\"tg_env\":${tg_env},${extra}}"
+body="{\"ts\":\"$now\",\"host\":\"$host\",\"sha\":\"$sha\",\"units\":$unit_json,\"down\":$down,\"ledger_lines\":${lines:-0},\"last_ledger\":\"${last_led}\",\"err_1h\":${err1h},\"tg_env\":${tg_env},\"diag\":${diag},${extra}}"
 
 prio="default"; tags="hospital"
 [ "$down" -gt 0 ] && { prio="high"; tags="rotating_light"; }
