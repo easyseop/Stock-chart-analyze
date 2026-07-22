@@ -70,7 +70,24 @@ err1h="$(journalctl $(for u in $UNITS; do printf -- '-u %s ' "$u"; done) \
           --since '1 hour ago' -p err --no-pager 2>/dev/null | wc -l | tr -d ' ')"
 [ -z "$err1h" ] && err1h=-1
 
-body="{\"ts\":\"$now\",\"host\":\"$host\",\"sha\":\"$sha\",\"units\":$unit_json,\"down\":$down,\"ledger_lines\":${lines:-0},\"last_ledger\":\"${last_led}\",\"err_1h\":${err1h}}"
+# 원격 진단 필드(2026-07-22 매수 0건·알림 누락 조사) — 값이 아닌 '상태'만:
+#   tg_env      : 이 env(kis.env)에 텔레그램 토큰·챗ID가 있는가(존재 여부만, 값 미발행)
+#   buyloop_tail: 최근 14시간 buyloop 저널 꼬리(게이트 판정 라인) — 왜 안 샀는지
+#   err_last    : 최근 24시간 마지막 에러 라인 — err_1h의 정체
+tg_env=0
+[ -n "${TELEGRAM_BOT_TOKEN:-}" ] && [ -n "${TELEGRAM_CHAT_ID:-}" ] && tg_env=1
+bl_tail="$(journalctl -u buyloop --since '14 hours ago' --no-pager -o cat 2>/dev/null | tail -8)"
+err_last="$(journalctl $(for u in $UNITS; do printf -- '-u %s ' "$u"; done) \
+            --since '24 hours ago' -p err --no-pager -o cat 2>/dev/null | tail -2)"
+extra="$(BL="$bl_tail" EL="$err_last" python3 -c '
+import os, json
+trim = lambda s, n=6: [l[:200] for l in (s or "").splitlines()[-n:]]
+print(json.dumps({"buyloop_tail": trim(os.environ.get("BL",""), 8),
+                  "err_last": trim(os.environ.get("EL",""), 2)},
+                 ensure_ascii=False)[1:-1])' 2>/dev/null)"
+[ -z "$extra" ] && extra='"buyloop_tail":[],"err_last":[]'
+
+body="{\"ts\":\"$now\",\"host\":\"$host\",\"sha\":\"$sha\",\"units\":$unit_json,\"down\":$down,\"ledger_lines\":${lines:-0},\"last_ledger\":\"${last_led}\",\"err_1h\":${err1h},\"tg_env\":${tg_env},${extra}}"
 
 prio="default"; tags="hospital"
 [ "$down" -gt 0 ] && { prio="high"; tags="rotating_light"; }
