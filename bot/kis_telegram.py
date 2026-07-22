@@ -152,7 +152,10 @@ def _holdings_text() -> str:
     if any_fail:
         lines.append("⚠️ 일부 시장 조회 실패 — 목록이 불완전할 수 있음.")
     lines.append("")
-    lines.append(f"상세: <code>/종목 {rows[0]['code']}</code> 처럼 코드로 조회")
+    # 목록 손익은 잔고 스냅샷(준실시간) 기준 — 모의는 시세가 밀릴 수 있어
+    #   정확값은 종목 상세(실시간 재조회)로 안내(사용자 혼동 방지 2026-07-23).
+    lines.append("※ 손익은 준실시간(잔고 스냅샷) 기준 · 정확값은 아래 상세로")
+    lines.append(f"상세: <code>/종목 {rows[0]['code']}</code> 처럼 코드로 조회 (실시간)")
     return "\n".join(lines)
 
 
