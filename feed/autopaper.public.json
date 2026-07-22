@@ -2,8 +2,8 @@
  "updated": "2026-07-22",
  "start": 100000000,
  "cash": 51971202,
- "equity": 98070557,
- "ret_pct": -1.93,
+ "equity": 98048488,
+ "ret_pct": -1.95,
  "positions": [
   {
    "code": "MRSH",
@@ -18,7 +18,7 @@
    "opened": "2026-07-06",
    "pl_krw": 166213,
    "pl_pct": 1.79,
-   "price_age_min": 24.7
+   "price_age_min": 69.7
   },
   {
    "code": "STE",
@@ -26,13 +26,13 @@
    "ccy": "USD",
    "q": 6,
    "avg": 213.02,
-   "price": 210.9900054931641,
+   "price": 209.8350067138672,
    "stop": 202.063,
    "target": 234.934,
    "half_done": false,
    "opened": "2026-07-07",
-   "pl_krw": -18039,
-   "pl_pct": -0.95,
+   "pl_krw": -28302,
+   "pl_pct": -1.5,
    "price_age_min": 7.9
   },
   {
@@ -48,7 +48,7 @@
    "opened": "2026-07-07",
    "pl_krw": -283414,
    "pl_pct": -2.99,
-   "price_age_min": 309.6
+   "price_age_min": 354.7
   },
   {
    "code": "ORC",
@@ -63,7 +63,7 @@
    "opened": "2026-07-08",
    "pl_krw": -444,
    "pl_pct": -1.1,
-   "price_age_min": 7.6
+   "price_age_min": 7.7
   },
   {
    "code": "HMC",
@@ -78,7 +78,7 @@
    "opened": "2026-07-09",
    "pl_krw": 3976,
    "pl_pct": 3.24,
-   "price_age_min": 855.3
+   "price_age_min": 900.3
   },
   {
    "code": "LSPD",
@@ -93,7 +93,7 @@
    "opened": "2026-07-09",
    "pl_krw": 9538,
    "pl_pct": 2.3,
-   "price_age_min": 851.4
+   "price_age_min": 896.5
   },
   {
    "code": "SARO",
@@ -108,7 +108,7 @@
    "opened": "2026-07-10",
    "pl_krw": -185984,
    "pl_pct": -2.8,
-   "price_age_min": 842.8
+   "price_age_min": 887.9
   },
   {
    "code": "J",
@@ -123,7 +123,7 @@
    "opened": "2026-07-11",
    "pl_krw": 289565,
    "pl_pct": 2.41,
-   "price_age_min": 853.4
+   "price_age_min": 898.5
   },
   {
    "code": "MAIN",
@@ -131,14 +131,14 @@
    "ccy": "USD",
    "q": 78,
    "avg": 53.96,
-   "price": 53.959999084472656,
+   "price": 53.8577995300293,
    "stop": 51.5808,
    "target": 58.7184,
    "half_done": false,
    "opened": "2026-07-22",
-   "pl_krw": 0,
-   "pl_pct": -0.0,
-   "price_age_min": 9.8
+   "pl_krw": -11806,
+   "pl_pct": -0.19,
+   "price_age_min": 10.1
   }
  ],
  "pending": [
@@ -511,7 +511,7 @@
   },
   {
    "d": "2026-07-22",
-   "v": 98070557
+   "v": 98048488
   }
  ],
  "log": [
@@ -857,6 +857,7 @@
  ],
  "lane": "bulk",
  "data_stale": [
+  "MRSH",
   "HMC",
   "LSPD",
   "SARO",
