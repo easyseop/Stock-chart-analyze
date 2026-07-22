@@ -135,8 +135,23 @@ try:
             except Exception: continue
             c = str(e.get("code") or "").upper()
             if e.get("ev") == "close": opens.pop(c, None)
-            elif e.get("ev") == "open" and c: opens[c] = True
+            elif e.get("ev") == "open" and c: opens[c] = e   # 최신 open 이벤트 보존
     out["kis_positions_open"] = sorted(opens)[:20]
+    # 봇 투입 총액 추정(진입가×수량, USD는 FX 환산) — 합계 1개 숫자만 발행
+    #   (SEED 총량 게이트 검증용, 사용자 요청 2026-07-22). 개별 금액 미발행.
+    try:
+        from bot import settings as _st
+        fxv = float(getattr(_st, "FX_USDKRW", 1380.0))
+    except Exception:
+        fxv = 1380.0
+    tot = 0.0
+    for c, e in opens.items():
+        try:
+            q = float(e.get("qty") or 0); px = float(e.get("entry") or 0)
+            tot += q * px * (fxv if e.get("ccy") == "USD" else 1.0)
+        except Exception:
+            pass
+    out["bot_cost_krw_est"] = round(tot)
 except FileNotFoundError:
     out["kis_positions_open"] = "no_file"
 except Exception as e:
