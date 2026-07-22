@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated_at": "2026-07-22T15:30:41+09:00",
+ "generated_at": "2026-07-22T15:47:12+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "signals": [
   {
@@ -1189,33 +1189,6 @@
     "mode": "pullback",
     "label": "⏳ 눌림 지정가만",
     "desc": "지금 추격 금지(손절폭 10.6% · 돌파후 진행) — <b>$5.69 눌림 지정가만</b>. 눌리면 손절폭 9.0%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
-   }
-  },
-  {
-   "id": "377300-2026-07-22-now",
-   "code": "377300",
-   "name": "카카오페이",
-   "ccy": "KRW",
-   "group": "now",
-   "entry_kind": "now",
-   "stage": 3,
-   "price": 41500.0,
-   "entry": 41500.0,
-   "stop": 36547.0983,
-   "target": 51405.8034,
-   "shares_1pct": 20,
-   "range_pos": 0.0962,
-   "norm": -43.4,
-   "fresh": false,
-   "break_gap": 0.1839,
-   "earnings_d": null,
-   "tactic": {
-    "stop_pct": 11.9,
-    "pb_price": 36550.0,
-    "pb_stop_pct": 0.0,
-    "mode": "pullback",
-    "label": "⏳ 눌림 지정가만",
-    "desc": "지금 추격 금지(손절폭 11.9% · 돌파후 진행) — <b>36,550원 눌림 지정가만</b>. 눌리면 손절폭 0.0%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
    }
   },
   {
@@ -2762,33 +2735,6 @@
    }
   },
   {
-   "id": "207940-2026-07-22-watch",
-   "code": "207940",
-   "name": "삼성바이오로직스",
-   "ccy": "KRW",
-   "group": "watch",
-   "entry_kind": "now",
-   "stage": 1,
-   "price": 1393000.0,
-   "entry": 1393000.0,
-   "stop": 1255821.8451,
-   "target": 1667356.3098,
-   "shares_1pct": 0,
-   "range_pos": 0.2174,
-   "norm": -47.2,
-   "fresh": true,
-   "break_gap": -0.0174,
-   "earnings_d": null,
-   "tactic": {
-    "stop_pct": 9.8,
-    "pb_price": 1330434.7826,
-    "pb_stop_pct": 5.6,
-    "mode": "pullback",
-    "label": "⏳ 눌림 지정가만",
-    "desc": "지금 추격 금지(손절폭 9.8%) — <b>1,330,435원 눌림 지정가만</b>. 눌리면 손절폭 5.6%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
-   }
-  },
-  {
    "id": "LW-2026-07-22-watch",
    "code": "LW",
    "name": "Lamb Weston Holdings, Inc.",
@@ -3085,6 +3031,26 @@
    "norm": -22.6,
    "fresh": false,
    "break_gap": 0.1205,
+   "earnings_d": null,
+   "tactic": null
+  },
+  {
+   "id": "005830-2026-07-22-watch",
+   "code": "005830",
+   "name": "DB손해보험",
+   "ccy": "KRW",
+   "group": "watch",
+   "entry_kind": "pullback",
+   "stage": 3,
+   "price": 165800.0,
+   "entry": 138205.05,
+   "stop": 121841.1628,
+   "target": 170932.8243,
+   "shares_1pct": 6,
+   "range_pos": 0.4974,
+   "norm": -23.6,
+   "fresh": false,
+   "break_gap": 0.1964,
    "earnings_d": null,
    "tactic": null
   }
