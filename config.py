@@ -204,9 +204,11 @@ CONSENSUS_VETO_ACTIVE = False     # False=기록전용(Phase 0) · True=실제 �
 #   지지 반등을 노려 더 일찍 산다. falling-knife 방지 위해 '터치'가 아니라 '반등'을 봄.
 SHELF_ENABLED = True
 SHELF_LOW_ZONE = 0.50        # 52주 범위 하단 이 비율 이내(저점권)만
-SHELF_NEAR_VAL = 0.03        # 최근 저가가 VAL의 이 비율 이내로 눌렸다 = 지지 터치
+SHELF_NEAR_VAL = 0.05        # 최근 저가가 VAL의 이 비율 이내로 눌렸다 = 지지 터치
+                             #   (0.03→0.05 완화 2026-07-23: 진단상 밸류영역 안 ~417종목
+                             #    중 '터치'가 바인딩 조건. 상단마감·신저가아님은 유지=안전판)
 SHELF_OVERHEAD_MAX = 0.55    # 머리 위 물량(overhead)이 이 비율 초과면 제외(저항 과다)
-SHELF_VOL_MULT = 1.2         # 반등 캔들 거래대금 하한(평균 대비)
+SHELF_VOL_MULT = 1.1         # 반등 캔들 거래대금 하한(평균 대비, 1.2→1.1 완화)
 SHELF_STOP_BUF = 0.02        # 손절 = VAL × (1 − 이 버퍼) — 매물대 하단 붕괴 = 논리 무효
 SHELF_MIN_RR = 1.5           # 최소 손익비(목표가 이보다 낮으면 신호 버림)
 
