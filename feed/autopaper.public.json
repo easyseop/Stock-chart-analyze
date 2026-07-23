@@ -2,8 +2,8 @@
  "updated": "2026-07-23",
  "start": 100000000,
  "cash": 51971202,
- "equity": 98135679,
- "ret_pct": -1.86,
+ "equity": 98124879,
+ "ret_pct": -1.88,
  "positions": [
   {
    "code": "MRSH",
@@ -41,13 +41,13 @@
    "ccy": "KRW",
    "q": 54,
    "avg": 175348.4128,
-   "price": 172700.0,
+   "price": 172500.0,
    "stop": 157651.1713,
    "target": 212997.6574,
    "half_done": false,
    "opened": "2026-07-07",
-   "pl_krw": -143014,
-   "pl_pct": -1.51,
+   "pl_krw": -153814,
+   "pl_pct": -1.62,
    "price_age_min": 7.1
   },
   {
@@ -63,7 +63,7 @@
    "opened": "2026-07-08",
    "pl_krw": -708,
    "pl_pct": -1.76,
-   "price_age_min": 8.1
+   "price_age_min": 8.0
   },
   {
    "code": "HMC",
@@ -515,7 +515,7 @@
   },
   {
    "d": "2026-07-23",
-   "v": 98135679
+   "v": 98124879
   }
  ],
  "log": [
