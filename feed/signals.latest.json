@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated_at": "2026-07-23T13:45:54+09:00",
+ "generated_at": "2026-07-23T14:01:55+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "signals": [
   {
@@ -902,23 +902,23 @@
    "group": "now",
    "entry_kind": "now",
    "stage": 3,
-   "price": 64300.0,
-   "entry": 64300.0,
-   "stop": 56938.9048,
-   "target": 79022.1905,
+   "price": 64400.0,
+   "entry": 64400.0,
+   "stop": 57038.9048,
+   "target": 79122.1905,
    "shares_1pct": 13,
-   "range_pos": 0.0477,
+   "range_pos": 0.0485,
    "norm": -65.6,
    "fresh": false,
-   "break_gap": 0.1412,
+   "break_gap": 0.143,
    "earnings_d": null,
    "tactic": {
     "stop_pct": 11.4,
     "pb_price": 58900.0,
-    "pb_stop_pct": 3.3,
+    "pb_stop_pct": 3.2,
     "mode": "pullback",
     "label": "⏳ 눌림 지정가만",
-    "desc": "지금 추격 금지(손절폭 11.4% · 돌파후 진행) — <b>58,900원 눌림 지정가만</b>. 눌리면 손절폭 3.3%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
+    "desc": "지금 추격 금지(손절폭 11.4% · 돌파후 진행) — <b>58,900원 눌림 지정가만</b>. 눌리면 손절폭 3.2%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
    }
   },
   {
@@ -1390,19 +1390,26 @@
    "name": "농심",
    "ccy": "KRW",
    "group": "watch",
-   "entry_kind": "breakout",
+   "entry_kind": "now",
    "stage": 2,
-   "price": 363500.0,
-   "entry": 370000.0,
-   "stop": 343443.6404,
-   "target": 423112.7193,
+   "price": 362500.0,
+   "entry": 362500.0,
+   "stop": 335943.6404,
+   "target": 415612.7193,
    "shares_1pct": 3,
-   "range_pos": 0.1712,
-   "norm": -49.1,
+   "range_pos": 0.1673,
+   "norm": -39.6,
    "fresh": true,
-   "break_gap": 0.0126,
+   "break_gap": 0.0098,
    "earnings_d": null,
-   "tactic": null
+   "tactic": {
+    "stop_pct": 7.3,
+    "pb_price": 350306.25,
+    "pb_stop_pct": 4.1,
+    "mode": "half",
+    "label": "⚖ 반반 진입",
+    "desc": "손절폭 7.3% — 절반은 현재가, 절반은 눌림 350,306원 지정가(거기선 손절폭 4.1%)"
+   }
   },
   {
    "id": "112610-2026-07-23-watch",
@@ -1432,23 +1439,23 @@
    "group": "watch",
    "entry_kind": "now",
    "stage": 2,
-   "price": 1030000.0,
-   "entry": 1030000.0,
-   "stop": 897397.2636,
-   "target": 1295205.4728,
+   "price": 1029000.0,
+   "entry": 1029000.0,
+   "stop": 896397.2636,
+   "target": 1294205.4728,
    "shares_1pct": 0,
-   "range_pos": 0.1975,
+   "range_pos": 0.1968,
    "norm": -68.9,
    "fresh": true,
-   "break_gap": 0.0701,
+   "break_gap": 0.069,
    "earnings_d": null,
    "tactic": {
     "stop_pct": 12.9,
     "pb_price": 920000.0,
-    "pb_stop_pct": 2.5,
+    "pb_stop_pct": 2.6,
     "mode": "pullback",
     "label": "⏳ 눌림 지정가만",
-    "desc": "지금 추격 금지(손절폭 12.9% · 단기 이격) — <b>920,000원 눌림 지정가만</b>. 눌리면 손절폭 2.5%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
+    "desc": "지금 추격 금지(손절폭 12.9% · 단기 이격) — <b>920,000원 눌림 지정가만</b>. 눌리면 손절폭 2.6%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
    }
   },
   {
@@ -2066,33 +2073,6 @@
    }
   },
   {
-   "id": "015760-2026-07-23-watch",
-   "code": "015760",
-   "name": "한국전력",
-   "ccy": "KRW",
-   "group": "watch",
-   "entry_kind": "now",
-   "stage": 1,
-   "price": 35400.0,
-   "entry": 35400.0,
-   "stop": 31533.7768,
-   "target": 43132.4465,
-   "shares_1pct": 25,
-   "range_pos": 0.0907,
-   "norm": -50.0,
-   "fresh": true,
-   "break_gap": -0.0162,
-   "earnings_d": null,
-   "tactic": {
-    "stop_pct": 10.9,
-    "pb_price": 32000.0,
-    "pb_stop_pct": 1.5,
-    "mode": "pullback",
-    "label": "⏳ 눌림 지정가만",
-    "desc": "지금 추격 금지(손절폭 10.9% · 단기 이격) — <b>32,000원 눌림 지정가만</b>. 눌리면 손절폭 1.5%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
-   }
-  },
-  {
    "id": "PYPL-2026-07-23-watch",
    "code": "PYPL",
    "name": "PayPal Holdings, Inc.",
@@ -2360,15 +2340,15 @@
    "group": "watch",
    "entry_kind": "pullback",
    "stage": 3,
-   "price": 43100.0,
+   "price": 43000.0,
    "entry": 36550.0,
    "stop": 31200.877,
    "target": 47248.2461,
    "shares_1pct": 18,
-   "range_pos": 0.1273,
+   "range_pos": 0.1254,
    "norm": -43.4,
    "fresh": false,
-   "break_gap": 0.2496,
+   "break_gap": 0.2467,
    "earnings_d": null,
    "tactic": null
   }
