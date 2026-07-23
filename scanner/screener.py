@@ -518,6 +518,34 @@ def _signals_json(results: list[dict]) -> str:
             #   full=시장가 분할, half=절반 시장가+절반 pb_price 지정가, pullback=pb_price 지정가만
             "tactic": _plan_tactic(r),
         })
+    # 매물대 반등 신호(슬리브 B) — A와 별개 스트림(group="shelf"). autopaper(A)는
+    #   picks["now"]만 보므로 무관. 매수루프 B가 group=="shelf"로 필터해 별도 예산 집행.
+    for r in results:
+        cs = gates.classify_shelf(r)
+        if cs["group"] is None:
+            continue
+        sh = r.get("shelf") or {}
+        sigs.append({
+            "id": f'{r["code"]}-{day}-shelf',
+            "code": r["code"], "name": r["name"], "ccy": r.get("ccy", "USD"),
+            "group": "shelf", "entry_kind": "shelf",
+            "stage": 0,
+            "price": round(float((r.get("sr") or {}).get("price") or 0), 4),
+            "entry": float(sh.get("entry") or 0),
+            "stop": float(sh.get("stop") or 0),
+            "target": float(sh.get("target") or 0),
+            "shares_1pct": 0,
+            "range_pos": round(float(r.get("range_pos", 0.5)), 4),
+            "norm": round(float(r.get("norm", 0)), 1),
+            "bear_share": round(gates.consensus_bear(r), 3),
+            "shelf": {"poc": sh.get("poc"), "val": sh.get("val"),
+                      "vah": sh.get("vah"), "rr": sh.get("rr"),
+                      "overhead": sh.get("overhead")},
+            "fresh": True,          # 반등 확인 신호는 당일 신선(늦은 미러 방지는 ±허용가로)
+            "break_gap": None,
+            "earnings_d": earnings.days_until(r["code"]),
+            "tactic": "full",
+        })
     sigs.sort(key=lambda s: (s["group"], not s["fresh"], -s["stage"], -s["norm"]))
     return json.dumps({
         "version": 1,

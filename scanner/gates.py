@@ -48,6 +48,33 @@ def _stop_pct(r: dict) -> float:
     return (entry - stop) / entry if entry else 0.0
 
 
+def classify_shelf(r: dict) -> dict:
+    """매물대 반등 슬리브(B) 판정 — {'group': 'shelf'|None, 'reasons': [...]}.
+
+    A와 별개 신호 스트림. **하락추세 veto는 적용하지 않는다**(B는 전환 미확정·
+    하락 중 지지 반등을 노림). 대신 잡주·저유동·이미폭등 하드 제외는 유지."""
+    if not getattr(config, "SHELF_ENABLED", False):
+        return {"group": None, "reasons": ["shelf 비활성"]}
+    reasons = []
+    if plan.junk(r):
+        reasons.append("동전주·심한 부실")
+    ccy = r.get("ccy", "USD")
+    turn = r.get("turnover", 0) or 0
+    liq_min = config.LIQ_MIN_KRW if ccy == "KRW" else config.LIQ_MIN_USD
+    if turn < liq_min:
+        reasons.append("저유동성(잡주)")
+    ext = r.get("ext") or {}
+    rs_rel = (r.get("rs") or {}).get("rel") or 0
+    if rs_rel >= config.BLOWOFF_RATIO or ext.get("ma120_stretch", 0) >= config.BLOWOFF_RATIO:
+        reasons.append("이미 폭등")           # 꼭대기 매물대 매수 방지(B에도 적용)
+    if reasons:
+        return {"group": None, "reasons": reasons}
+    sh = r.get("shelf") or {}
+    if not sh.get("ok"):
+        return {"group": None, "reasons": [sh.get("reason", "매물대 미충족")]}
+    return {"group": "shelf", "reasons": []}
+
+
 def consensus_bear(r: dict) -> float:
     """방향성 8개 지표 중 '음(-)=팔자' 비율(0~1). 보조지표 다수결 필터용.
 

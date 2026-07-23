@@ -126,6 +126,9 @@ def analyze(frames: dict[str, pd.DataFrame], meta: dict, bench=None) -> dict:
     chase_note = (f"🔺 이미 많이 올라 타점이 멂(MA20 +{stretch*100:.0f}% · "
                   f"최근저점 대비 +{runup10*100:.0f}%) — 눌림 대기 권장" if chase else "")
 
+    # 매물대 반등 신호(슬리브 B) — 전환 미확정이어도 지지 반등 확인 시 매수 후보.
+    shelf = _shelf_signal(d, supply, volume, range_pos)
+
     terms = []
     for blk in (regime, trend, rs, newhigh, market, rsi, sr, volume,
                 trendline, supply, risk):
@@ -133,6 +136,7 @@ def analyze(frames: dict[str, pd.DataFrame], meta: dict, bench=None) -> dict:
     terms.append("정규화점수")
 
     return {
+        "shelf": shelf,
         "code": meta["code"], "name": meta["name"], "ccy": meta["ccy"],
         "regime": regime, "trend": trend, "rsi": rsi, "sr": sr,
         "rs": rs, "newhigh": newhigh, "market": market,
@@ -149,6 +153,54 @@ def analyze(frames: dict[str, pd.DataFrame], meta: dict, bench=None) -> dict:
         "trend_oneline": trend_oneline, "chase": chase, "chase_note": chase_note,
         "transition_stage": stage, "transition_label": stage_label,
     }
+
+
+def _shelf_signal(d, sup: dict, volume: dict, range_pos: float) -> dict:
+    """매물대 반등 신호(슬리브 B). 반환 {ok, entry, stop, target, reason, ...}.
+
+    A(전환확정)와 달리 추세 전환을 기다리지 않는다 — 큰 매물대(장기 POC/밸류영역)
+    지지 위에서 **되돌아 오른 캔들**을 확인해 매수. '터치 즉시'가 아니라 '반등'을
+    봐서 지지 붕괴(떨어지는 칼)를 거른다. 손절=밸류 하단(VAL) 아래(논리 무효점).
+    """
+    if not getattr(config, "SHELF_ENABLED", False):
+        return {"ok": False, "reason": "비활성"}
+    lng = sup.get("long") or {}
+    price = float(sup.get("price") or 0)
+    val = float(lng.get("val") or 0)
+    poc = float(sup.get("long_poc") or 0)
+    vah = float(lng.get("vah") or 0)
+    overhead = float((sup.get("pnl") or {}).get("overhead") or 1.0)
+    if not (price > 0 and val > 0 and vah > val):
+        return {"ok": False, "reason": "매물대 정보 없음"}
+    if range_pos > config.SHELF_LOW_ZONE:
+        return {"ok": False, "reason": f"저점권 아님(범위 {range_pos*100:.0f}%)"}
+    if not (val <= price <= vah):
+        return {"ok": False, "reason": "밸류영역 밖(지지대 아님)"}
+    if overhead > config.SHELF_OVERHEAD_MAX:
+        return {"ok": False, "reason": f"머리 위 물량 과다({overhead*100:.0f}%)"}
+    # 반등 확인: ①최근 3봉 저가가 VAL 근처까지 눌림 ②오늘 종가 VAL 위 회복
+    #   ③오늘 캔들 상단 마감(양봉성) ④거래대금 동반 ⑤신저가 아님(20봉)
+    recent_low = float(d["Low"].iloc[-3:].min())
+    hi = float(d["High"].iloc[-1]); lo = float(d["Low"].iloc[-1]); cl = price
+    touched = recent_low <= val * (1 + config.SHELF_NEAR_VAL)
+    reclaimed = cl > val
+    upper_close = ((cl - lo) / (hi - lo) >= 0.5) if hi > lo else False
+    vol_ok = volume.get("mult", 0.0) >= config.SHELF_VOL_MULT
+    not_fresh_low = lo > float(d["Low"].iloc[-20:].min())
+    checks = {"터치": touched, "회복": reclaimed, "상단마감": upper_close,
+              "거래량": vol_ok, "신저가아님": not_fresh_low}
+    missing = [k for k, v in checks.items() if not v]
+    if missing:
+        return {"ok": False, "reason": "반등 미확인(" + "·".join(missing) + ")"}
+    stop = val * (1 - config.SHELF_STOP_BUF)
+    target = vah if vah > price else price + 2 * (price - stop)
+    rr = (target - price) / (price - stop) if price > stop else 0.0
+    if rr < config.SHELF_MIN_RR:
+        return {"ok": False, "reason": f"손익비 부족({rr:.1f})"}
+    return {"ok": True, "entry": round(price, 4), "stop": round(stop, 4),
+            "target": round(target, 4), "rr": round(rr, 2),
+            "poc": round(poc, 4), "val": round(val, 4), "vah": round(vah, 4),
+            "overhead": round(overhead, 3), "reason": "매물대 지지 반등"}
 
 
 def _support_below(price, sr, levels, trend):
