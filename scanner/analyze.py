@@ -178,11 +178,13 @@ def _shelf_signal(d, sup: dict, volume: dict, range_pos: float) -> dict:
         return {"ok": False, "reason": "밸류영역 밖(지지대 아님)"}
     if overhead > config.SHELF_OVERHEAD_MAX:
         return {"ok": False, "reason": f"머리 위 물량 과다({overhead*100:.0f}%)"}
-    # 반등 확인: ①최근 3봉 저가가 VAL 근처까지 눌림 ②오늘 종가 VAL 위 회복
-    #   ③오늘 캔들 상단 마감(양봉성) ④거래대금 동반 ⑤신저가 아님(20봉)
+    # 반등 확인: ①최근 3봉 저가가 매물대 본체(POC)까지 눌림 ②종가가 밸류 바닥(VAL)
+    #   위 유지(붕괴 아님) ③오늘 캔들 상단 마감(양봉성) ④거래대금 동반 ⑤신저가 아님.
+    #   지지 기준을 VAL(최하단)→POC(최대 거래 노드)로: 사용자 원안('거래량 터진 곳')
+    #   에 충실 + 매물대 본체 지지를 잡아 신호 빈도 정상화(2026-07-23 진단 반영).
     recent_low = float(d["Low"].iloc[-3:].min())
     hi = float(d["High"].iloc[-1]); lo = float(d["Low"].iloc[-1]); cl = price
-    touched = recent_low <= val * (1 + config.SHELF_NEAR_VAL)
+    touched = recent_low <= poc * (1 + config.SHELF_NEAR_VAL)
     reclaimed = cl > val
     upper_close = ((cl - lo) / (hi - lo) >= 0.5) if hi > lo else False
     vol_ok = volume.get("mult", 0.0) >= config.SHELF_VOL_MULT
@@ -192,7 +194,11 @@ def _shelf_signal(d, sup: dict, volume: dict, range_pos: float) -> dict:
     missing = [k for k, v in checks.items() if not v]
     if missing:
         return {"ok": False, "reason": "반등 미확인(" + "·".join(missing) + ")"}
-    stop = val * (1 - config.SHELF_STOP_BUF)
+    stop = recent_low * (1 - config.SHELF_STOP_BUF)   # 반등한 저점 아래(지지 무효점)
+    if price <= stop:
+        return {"ok": False, "reason": "손절선 무효"}
+    if (price - stop) / price > config.SHELF_MAX_STOP:
+        return {"ok": False, "reason": f"손절폭 과대({(price-stop)/price*100:.0f}%)"}
     target = vah if vah > price else price + 2 * (price - stop)
     rr = (target - price) / (price - stop) if price > stop else 0.0
     if rr < config.SHELF_MIN_RR:
