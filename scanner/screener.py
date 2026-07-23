@@ -509,6 +509,7 @@ def _signals_json(results: list[dict]) -> str:
             "shares_1pct": risk.get("shares", 0),      # 계좌 1% 리스크 기준 수량
             "range_pos": round(float(r.get("range_pos", 0.5)), 4),
             "norm": round(float(r.get("norm", 0)), 1),
+            "bear_share": round(gates.consensus_bear(r), 3),  # 보조지표 팔자 비율(다수결 필터 캘리브)
             "fresh": _freshness(r)[0],           # 갓 전환(추세선 부근) 여부 — 우선순위↑
             "break_gap": (round(r["break_gap"], 4)
                           if r.get("break_gap") is not None else None),

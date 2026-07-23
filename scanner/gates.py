@@ -48,6 +48,19 @@ def _stop_pct(r: dict) -> float:
     return (entry - stop) / entry if entry else 0.0
 
 
+def consensus_bear(r: dict) -> float:
+    """방향성 8개 지표 중 '음(-)=팔자' 비율(0~1). 보조지표 다수결 필터용.
+
+    module_scores(각 -2..+2)에서 <0 개수 / 전체. 0점(중립)은 팔자로 세지 않는다.
+    분모는 실제로 점수가 산출된 모듈 수(누락 대비). 데이터 없으면 0.0."""
+    ms = r.get("module_scores") or {}
+    vals = [v for v in ms.values() if isinstance(v, (int, float))]
+    if not vals:
+        return 0.0
+    bear = sum(1 for v in vals if v < 0)
+    return bear / len(vals)
+
+
 # ── 추천 분류(단일 진입점) ────────────────────────────────────────────
 
 def classify(r: dict) -> dict:
@@ -82,6 +95,12 @@ def classify(r: dict) -> dict:
             return {"group": None, "reasons": ["손절폭 과대(지금진입)"]}
         if already_ran:
             return {"group": None, "reasons": ["최근 3개월 급등(고점 추격)"]}
+        # 보조지표 다수결(사용자 요청) — 8개 지표 무게가 강하게 팔자면 거부.
+        #   ACTIVE=False면 기록만(bear_share는 screener가 신호에 남김).
+        bear = consensus_bear(r)
+        if config.CONSENSUS_VETO_ACTIVE and bear >= config.CONSENSUS_BEAR_VETO:
+            return {"group": None,
+                    "reasons": [f"보조지표 다수 팔자({bear*100:.0f}%)"]}
         return {"group": "now", "reasons": []}
 
     if stage in (1, 2) or (stage >= 3 and kind in ("pullback", "breakout")):
