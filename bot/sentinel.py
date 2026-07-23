@@ -273,12 +273,15 @@ def check_once(broker, state: dict) -> None:
     _reconcile_open(broker)                    # 먼저 UNKNOWN 대사(잠금 해제 기회)
     positions, age = _fetch_positions()
     stale = age is not None and age > FEED_STALE_MIN
-    if stale and not state.get("_stale_warned"):
-        state["_stale_warned"] = True
+    # 경보는 '장중 + 최소 3시간 간격'에서만 — 장외엔 빌드가 안 돌아 피드 낡음이
+    #   정상이고(정적 손절선으로 보호는 계속), 반복 스팸만 됐다(실측 2026-07-24:
+    #   밤새 시간마다 발생). 손절 보호 로직 자체는 아래 그대로 — 경보만 조용히.
+    market_live = _market_open("USD") or _market_open("KRW")
+    if stale and market_live and (time.time() - state.get("_stale_last", 0)) > 3 * 3600:
+        state["_stale_last"] = time.time()
         _notify(f"⚠️ 파수꾼: 포지션 피드 {age:.0f}분 낡음 — 알고 있던 "
                 f"손절선으로 보호 계속(신규 판단은 보류)", critical=True)
     if not stale:
-        state["_stale_warned"] = False
         state["positions"] = {p["code"]: p for p in positions}  # 최신 스냅샷 유지
     feed = state.get("positions", {})
 
