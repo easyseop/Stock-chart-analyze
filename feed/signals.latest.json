@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated_at": "2026-07-23T07:44:44+09:00",
+ "generated_at": "2026-07-23T10:30:43+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "signals": [
   {
@@ -830,7 +830,7 @@
    "norm": -22.6,
    "fresh": false,
    "break_gap": 0.0556,
-   "earnings_d": 19,
+   "earnings_d": 18,
    "tactic": {
     "stop_pct": 6.0,
     "pb_price": 66.28,
@@ -895,6 +895,33 @@
    }
   },
   {
+   "id": "103140-2026-07-23-now",
+   "code": "103140",
+   "name": "풍산",
+   "ccy": "KRW",
+   "group": "now",
+   "entry_kind": "now",
+   "stage": 3,
+   "price": 62400.0,
+   "entry": 62400.0,
+   "stop": 55253.1905,
+   "target": 76693.6191,
+   "shares_1pct": 13,
+   "range_pos": 0.0309,
+   "norm": -65.6,
+   "fresh": false,
+   "break_gap": 0.1075,
+   "earnings_d": null,
+   "tactic": {
+    "stop_pct": 11.5,
+    "pb_price": 58900.0,
+    "pb_stop_pct": 6.2,
+    "mode": "pullback",
+    "label": "⏳ 눌림 지정가만",
+    "desc": "지금 추격 금지(손절폭 11.5% · 돌파후 진행) — <b>58,900원 눌림 지정가만</b>. 눌리면 손절폭 6.2%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
+   }
+  },
+  {
    "id": "AEO-2026-07-23-watch",
    "code": "AEO",
    "name": "American Eagle Outfitters, Inc.",
@@ -911,7 +938,7 @@
    "norm": 1.9,
    "fresh": true,
    "break_gap": 0.0357,
-   "earnings_d": 42,
+   "earnings_d": 41,
    "tactic": null
   },
   {
@@ -931,7 +958,7 @@
    "norm": -1.9,
    "fresh": true,
    "break_gap": 0.0388,
-   "earnings_d": 16,
+   "earnings_d": 15,
    "tactic": null
   },
   {
@@ -1152,7 +1179,7 @@
    "norm": -18.9,
    "fresh": true,
    "break_gap": 0.0465,
-   "earnings_d": 8,
+   "earnings_d": 7,
    "tactic": {
     "stop_pct": 11.8,
     "pb_price": 17.1244,
@@ -1358,6 +1385,26 @@
    }
   },
   {
+   "id": "112610-2026-07-23-watch",
+   "code": "112610",
+   "name": "씨에스윈드",
+   "ccy": "KRW",
+   "group": "watch",
+   "entry_kind": "pullback",
+   "stage": 2,
+   "price": 42150.0,
+   "entry": 39951.25,
+   "stop": 34115.054,
+   "target": 51623.6419,
+   "shares_1pct": 17,
+   "range_pos": 0.1276,
+   "norm": -49.1,
+   "fresh": true,
+   "break_gap": 0.0786,
+   "earnings_d": null,
+   "tactic": null
+  },
+  {
    "id": "010130-2026-07-23-watch",
    "code": "010130",
    "name": "고려아연",
@@ -1365,23 +1412,23 @@
    "group": "watch",
    "entry_kind": "now",
    "stage": 2,
-   "price": 994000.0,
-   "entry": 994000.0,
-   "stop": 858120.13,
-   "target": 1265759.74,
+   "price": 1000000.0,
+   "entry": 1000000.0,
+   "stop": 870397.2636,
+   "target": 1259205.4728,
    "shares_1pct": 0,
-   "range_pos": 0.1726,
+   "range_pos": 0.1767,
    "norm": -68.9,
    "fresh": true,
-   "break_gap": 0.0163,
+   "break_gap": 0.0389,
    "earnings_d": null,
    "tactic": {
-    "stop_pct": 13.7,
+    "stop_pct": 13.0,
     "pb_price": 920000.0,
-    "pb_stop_pct": 6.7,
+    "pb_stop_pct": 5.4,
     "mode": "pullback",
     "label": "⏳ 눌림 지정가만",
-    "desc": "지금 추격 금지(손절폭 13.7%) — <b>920,000원 눌림 지정가만</b>. 눌리면 손절폭 6.7%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
+    "desc": "지금 추격 금지(손절폭 13.0%) — <b>920,000원 눌림 지정가만</b>. 눌리면 손절폭 5.4%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
    }
   },
   {
@@ -1563,7 +1610,7 @@
    "norm": 8.5,
    "fresh": true,
    "break_gap": -0.0106,
-   "earnings_d": 6,
+   "earnings_d": 5,
    "tactic": {
     "stop_pct": 3.6,
     "pb_price": null,
@@ -1590,7 +1637,7 @@
    "norm": 7.5,
    "fresh": true,
    "break_gap": -0.0034,
-   "earnings_d": 27,
+   "earnings_d": 26,
    "tactic": {
     "stop_pct": 7.8,
     "pb_price": 33.2332,
@@ -1972,60 +2019,6 @@
    }
   },
   {
-   "id": "241560-2026-07-23-watch",
-   "code": "241560",
-   "name": "두산밥캣",
-   "ccy": "KRW",
-   "group": "watch",
-   "entry_kind": "now",
-   "stage": 1,
-   "price": 63700.0,
-   "entry": 63700.0,
-   "stop": 56422.4207,
-   "target": 78255.1587,
-   "shares_1pct": 13,
-   "range_pos": 0.4245,
-   "norm": -32.1,
-   "fresh": true,
-   "break_gap": 0.0049,
-   "earnings_d": null,
-   "tactic": {
-    "stop_pct": 11.4,
-    "pb_price": 57818.9641,
-    "pb_stop_pct": 2.4,
-    "mode": "pullback",
-    "label": "⏳ 눌림 지정가만",
-    "desc": "지금 추격 금지(손절폭 11.4%) — <b>57,819원 눌림 지정가만</b>. 눌리면 손절폭 2.4%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
-   }
-  },
-  {
-   "id": "112610-2026-07-23-watch",
-   "code": "112610",
-   "name": "씨에스윈드",
-   "ccy": "KRW",
-   "group": "watch",
-   "entry_kind": "now",
-   "stage": 1,
-   "price": 39550.0,
-   "entry": 39550.0,
-   "stop": 33764.8659,
-   "target": 51120.2682,
-   "shares_1pct": 17,
-   "range_pos": 0.0667,
-   "norm": -52.8,
-   "fresh": true,
-   "break_gap": -0.0042,
-   "earnings_d": null,
-   "tactic": {
-    "stop_pct": 14.6,
-    "pb_price": 39033.3333,
-    "pb_stop_pct": 13.5,
-    "mode": "pullback",
-    "label": "⏳ 눌림 지정가만",
-    "desc": "지금 추격 금지(손절폭 14.6%) — <b>39,033원 눌림 지정가만</b>. 눌리면 손절폭 13.5%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
-   }
-  },
-  {
    "id": "PYPL-2026-07-23-watch",
    "code": "PYPL",
    "name": "PayPal Holdings, Inc.",
@@ -2286,22 +2279,22 @@
    "tactic": null
   },
   {
-   "id": "005830-2026-07-23-watch",
-   "code": "005830",
-   "name": "DB손해보험",
+   "id": "377300-2026-07-23-watch",
+   "code": "377300",
+   "name": "카카오페이",
    "ccy": "KRW",
    "group": "watch",
    "entry_kind": "pullback",
    "stage": 3,
-   "price": 165400.0,
-   "entry": 138205.05,
-   "stop": 121841.1628,
-   "target": 170932.8243,
-   "shares_1pct": 6,
-   "range_pos": 0.4932,
-   "norm": -23.6,
+   "price": 42600.0,
+   "entry": 36550.0,
+   "stop": 31643.7341,
+   "target": 46362.5318,
+   "shares_1pct": 20,
+   "range_pos": 0.1176,
+   "norm": -43.4,
    "fresh": false,
-   "break_gap": 0.1936,
+   "break_gap": 0.2351,
    "earnings_d": null,
    "tactic": null
   }
