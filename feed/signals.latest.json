@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated_at": "2026-07-23T10:30:43+09:00",
+ "generated_at": "2026-07-23T10:47:11+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "signals": [
   {
@@ -1392,15 +1392,15 @@
    "group": "watch",
    "entry_kind": "pullback",
    "stage": 2,
-   "price": 42150.0,
+   "price": 41850.0,
    "entry": 39951.25,
    "stop": 34115.054,
    "target": 51623.6419,
    "shares_1pct": 17,
-   "range_pos": 0.1276,
+   "range_pos": 0.1206,
    "norm": -49.1,
    "fresh": true,
-   "break_gap": 0.0786,
+   "break_gap": 0.071,
    "earnings_d": null,
    "tactic": null
   },
@@ -1412,23 +1412,23 @@
    "group": "watch",
    "entry_kind": "now",
    "stage": 2,
-   "price": 1000000.0,
-   "entry": 1000000.0,
-   "stop": 870397.2636,
-   "target": 1259205.4728,
+   "price": 1013000.0,
+   "entry": 1013000.0,
+   "stop": 883397.2636,
+   "target": 1272205.4728,
    "shares_1pct": 0,
-   "range_pos": 0.1767,
+   "range_pos": 0.1857,
    "norm": -68.9,
    "fresh": true,
-   "break_gap": 0.0389,
+   "break_gap": 0.0524,
    "earnings_d": null,
    "tactic": {
-    "stop_pct": 13.0,
+    "stop_pct": 12.8,
     "pb_price": 920000.0,
-    "pb_stop_pct": 5.4,
+    "pb_stop_pct": 4.0,
     "mode": "pullback",
     "label": "⏳ 눌림 지정가만",
-    "desc": "지금 추격 금지(손절폭 13.0%) — <b>920,000원 눌림 지정가만</b>. 눌리면 손절폭 5.4%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
+    "desc": "지금 추격 금지(손절폭 12.8% · 단기 이격) — <b>920,000원 눌림 지정가만</b>. 눌리면 손절폭 4.0%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
    }
   },
   {
@@ -2286,15 +2286,15 @@
    "group": "watch",
    "entry_kind": "pullback",
    "stage": 3,
-   "price": 42600.0,
+   "price": 42650.0,
    "entry": 36550.0,
    "stop": 31643.7341,
    "target": 46362.5318,
    "shares_1pct": 20,
-   "range_pos": 0.1176,
+   "range_pos": 0.1186,
    "norm": -43.4,
    "fresh": false,
-   "break_gap": 0.2351,
+   "break_gap": 0.2365,
    "earnings_d": null,
    "tactic": null
   }
