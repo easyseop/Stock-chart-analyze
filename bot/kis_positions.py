@@ -25,11 +25,13 @@ def _append(ev: dict) -> None:
 
 
 def record(code: str, *, stop: float, ccy: str, entry: float | None = None,
-           qty: int | None = None, name: str = "", opened: str = "") -> None:
-    """봇 진입 시 손절선 기록(매수 루프가 execute_entry 성공 후 호출)."""
+           qty: int | None = None, name: str = "", opened: str = "",
+           sleeve: str = "A") -> None:
+    """봇 진입 시 손절선 기록(매수 루프가 execute_entry 성공 후 호출).
+    sleeve: 'A'(전환확정) / 'B'(매물대 반등) — 슬리브별 예산·통계 분리용."""
     _append({"ev": "open", "code": str(code).upper(), "stop": float(stop),
              "ccy": ccy, "entry": entry, "qty": qty, "name": name,
-             "opened": opened})
+             "opened": opened, "sleeve": sleeve})
 
 
 def close(code: str) -> None:
@@ -59,7 +61,8 @@ def load() -> dict:
                     st[code] = {"code": code, "stop": ev.get("stop"),
                                 "ccy": ev.get("ccy"), "entry": ev.get("entry"),
                                 "qty": ev.get("qty"), "name": ev.get("name", ""),
-                                "opened": ev.get("opened", "")}
+                                "opened": ev.get("opened", ""),
+                                "sleeve": ev.get("sleeve", "A")}
     except FileNotFoundError:
         pass
     return st

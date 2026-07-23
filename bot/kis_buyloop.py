@@ -56,14 +56,16 @@ def _sold_today(fold: dict) -> set[str]:
     return out
 
 
-def _broker_state(fx: float) -> tuple[dict, int, float, set[str]] | None:
-    """미러 게이트 입력(브로커-진실): (보유맵, 봇 포지션 수, 봇 투입원가KRW, 당일매도).
+def _broker_state(fx: float):
+    """미러 게이트 입력(브로커-진실). 반환:
+       (held, held_cost{code:원가KRW}, inflight{sym:(원가KRW, sleeve)}, sold_today)
+    또는 조회 실패 시 None.
 
-    · 보유는 KR + 미 3거래소 **병합** — NYSE/AMEX 보유가 NASD 조회에 안 잡혀
-      중복매수로 이어지는 구멍(검토 2026-07-15) 차단.
-    · 봇 포지션 = 잔고 − baseline(사용자 기보유). 원장의 in-flight BUY(접수 후
-      잔고 미반영 창)도 수에 가산 — ack 직후 과다 진입 방지.
-    · 어느 조회든 실패(None)면 전체 None — 전역 캡 검증 불가 = 이번 사이클 안 산다.
+    · 보유는 KR + 미 3거래소 병합(중복매수 구멍 차단).
+    · held_cost = 잔고 − baseline(사용자 기보유)의 종목별 투입원가(원화).
+    · inflight = 원장의 in-flight BUY(접수 후 잔고 미반영). sleeve는 pos_key
+      접두("sb:"=B, 그 외=A)로 판별 — 슬리브별 예산 분리(A/B가 서로 잠식 방지).
+    · 종목별로 반환해 호출부가 슬리브별로 n_open·open_cost를 파티션한다.
     """
     from bot import ledger, ownership
     rows: dict[str, dict] = {}
@@ -80,48 +82,84 @@ def _broker_state(fx: float) -> tuple[dict, int, float, set[str]] | None:
             rows.setdefault(p["code"], p)
     held = {c: int(p["qty"]) for c, p in rows.items()}
     base = ownership.baseline() or set()
-    bot_rows = [p for c, p in rows.items() if c not in base]
-    n_open = len(bot_rows)
-    open_cost = sum(float(p.get("buy_amt") or 0)
-                    * (1.0 if p.get("market") == "KR" else fx)
-                    for p in bot_rows)
-    #   in-flight BUY(접수 후 잔고 미반영) — 포지션 수 AND 투입원가에 둘 다 가산.
-    #   (감사 수정 #5: 예전엔 수에만 넣고 원가엔 안 넣어, 총량 게이트가 미체결 매수를
-    #    못 봐 SEED 초과 배포 가능했다.) 원가는 원장 기록가×수량(원화 환산).
+    held_cost = {c: float(p.get("buy_amt") or 0)
+                 * (1.0 if p.get("market") == "KR" else fx)
+                 for c, p in rows.items() if c not in base}
     fold = ledger._fold()
-    inflight_syms: set[str] = set()
-    for v in fold.values():
+    inflight: dict[str, tuple[float, str]] = {}
+    for k, v in fold.items():
         if (v.get("side") or "").upper() != "BUY" or v.get("state") not in ledger._INFLIGHT:
             continue
         s = str(v.get("symbol") or "").upper()
         if not s or s in held:
             continue
-        inflight_syms.add(s)
         try:
             q = int(v.get("intended") or 0)
             px = float(v.get("price") or 0)
             mk = v.get("market") or kis.market_of_symbol(s)
-            open_cost += q * px * (1.0 if mk == "KR" else fx)
+            cost = q * px * (1.0 if mk == "KR" else fx)
         except (TypeError, ValueError):
-            pass
-    n_open += len(inflight_syms)
-    return held, n_open, open_cost, _sold_today(fold)
+            cost = 0.0
+        sleeve = "B" if str(k).startswith("sb:") else "A"
+        inflight[s] = (cost, sleeve)
+    return held, held_cost, inflight, _sold_today(fold)
+
+
+def _partition(held_cost: dict, inflight: dict, sleeve: str,
+               b_codes: set) -> tuple[int, float]:
+    """슬리브별 (봇 포지션 수, 투입원가KRW). b_codes=현재 B가 보유한 종목 집합.
+       held 종목은 b_codes로, inflight는 원장 sleeve 태그로 귀속."""
+    def _mine(code):
+        return (code in b_codes) if sleeve == "B" else (code not in b_codes)
+    n = 0
+    cost = 0.0
+    for c, cst in held_cost.items():
+        if _mine(c):
+            n += 1
+            cost += cst
+    for s, (cst, sl) in inflight.items():
+        if sl == sleeve:
+            n += 1
+            cost += cst
+    return n, cost
+
+
+def _b_held_codes(held: dict) -> set:
+    """현재 보유 중 슬리브 B가 산 종목 집합(kis_positions 태그 기준)."""
+    try:
+        recs = kis_positions.load()
+    except Exception:
+        return set()
+    return {c for c, info in recs.items()
+            if info.get("sleeve") == "B" and c in held}
+
+
+def _shelf_cands(signals: list[dict]) -> list[dict]:
+    """매물대 반등(B) 후보 — group='shelf'·진입/손절 유효. 손익비 높은 순."""
+    c = [s for s in signals if s.get("group") == "shelf"
+         and s.get("entry") and s.get("stop")]
+    c.sort(key=lambda s: -float((s.get("shelf") or {}).get("rr") or 0))
+    return c
 
 
 def run_once(signals: list[dict], *, fx: float | None = None,
-             excg_of: dict | None = None, reason: str = "미러진입") -> list[dict]:
-    """'now' 신호를 KIS에 미러 매수 시도. 반환: 종목별 {code, gate, ok?, qty?, why}.
+             excg_of: dict | None = None, reason: str = "미러진입",
+             sleeve: str = "A", group: str = "now",
+             seed_krw: float | None = None) -> list[dict]:
+    """신호를 KIS에 미러 매수 시도. 반환: 종목별 {code, gate, ok?, qty?, why}.
 
-    fx: USD→KRW 환율(미국주 원화 사이징용). None이면 settings.FX_USDKRW.
-    excg_of: {code: 'NASD'|'NYSE'|'AMEX'} 미국 거래소 매핑(없으면 NASD).
+    sleeve/group: 'A'/'now'=전환확정(기본) · 'B'/'shelf'=매물대 반등(별도 예산).
+    seed_krw: 이 슬리브 전용 SEED(None이면 execute_entry가 기본 BOT_SEED_KRW).
+    fx: USD→KRW 환율. excg_of: {code: 거래소}.
     """
     fx = float(fx or settings.FX_USDKRW)
     excg_of = excg_of or {}
     results: list[dict] = []
 
+    src = _shelf_cands(signals) if group == "shelf" else _now_signals(signals)
     # 1차 게이트(브로커 조회 전) — 세션·어닝. 후보가 없으면 잔고 조회도 안 한다.
     cand: list[dict] = []
-    for s in _now_signals(signals):
+    for s in src:
         code = str(s["code"]).upper()
         if not settings.market_open(s.get("ccy", "USD")):
             results.append({"code": code, "gate": "session", "why": "장 아님"})
@@ -145,7 +183,11 @@ def run_once(signals: list[dict], *, fx: float | None = None,
             results.append({"code": str(s["code"]).upper(), "gate": "holdings",
                             "why": "잔고 조회실패/불완전 — skip"})
         return results
-    held, n_open, open_cost, sold_today = st
+    held, held_cost, inflight, sold_today = st
+    b_codes = _b_held_codes(held)
+    #   슬리브별 파티션 — A/B가 서로의 종목 수·투입원가를 세지 않게(예산 잠식 방지).
+    n_open, open_cost = _partition(held_cost, inflight, sleeve, b_codes)
+    prefix = "sb:" if sleeve == "B" else "kb:"
 
     for s in cand:
         code = str(s["code"]).upper()
@@ -153,7 +195,7 @@ def run_once(signals: list[dict], *, fx: float | None = None,
         market = kis.market_of_ccy(ccy)
         excg = excg_of.get(code, "NASD")
 
-        if code in held:                           # 브로커-진실: 이미 보유 = 중복 금지
+        if code in held:                           # 브로커-진실: 이미 보유 = 중복 금지(A·B 공통)
             results.append({"code": code, "gate": "already",
                             "why": f"이미 KIS 보유 {held[code]}주"}); continue
         if code in sold_today:                     # 당일 손절 종목 재진입 금지(패리티)
@@ -170,29 +212,28 @@ def run_once(signals: list[dict], *, fx: float | None = None,
         if per_share <= 0:
             results.append({"code": code, "gate": "input", "why": "손절폭 무효"}); continue
 
-        pos_key = f"kb:{s.get('id') or code}"
-        # 브로커-진실 캡 입력: n_open(수량 캡)·open_cost(총량 게이트) + 사이클 내
-        #   즉시 누적. hldg_before=0(위 already 게이트로 신규 진입만 옴 — ack 대사 기준).
+        pos_key = f"{prefix}{s.get('id') or code}"
         d = kis_buy.execute_entry(pos_key, code, price_usd=cur,
                                   per_share_risk_usd=per_share, krw_per_usd=fx,
                                   excg=excg, market=market, reason=reason,
                                   open_positions=n_open, open_cost_krw=open_cost,
-                                  hldg_before=0)
+                                  hldg_before=0, seed_krw=seed_krw)
         if d.ok:
-            # 파수꾼이 feed에 없어도 이 손절선으로 보호하도록 기록(브로커-진실 fallback).
+            # 파수꾼이 feed에 없어도 이 손절선으로 보호(브로커-진실 fallback) + 슬리브 태그.
             kis_positions.record(code, stop=float(s["stop"]), ccy=ccy,
                                  entry=entry, qty=d.qty, name=s.get("name", ""),
-                                 opened=settings.today_kst())
-            # 사이클 내 상태 갱신 — 같은 스냅샷으로 연속 매수해 캡/SEED를 뚫는 것 방지.
+                                 opened=settings.today_kst(), sleeve=sleeve)
             held[code] = d.qty
             n_open += 1
             open_cost += d.qty * cur * (1.0 if market == "KR" else fx)
-            # KIS 모의계좌 실매수 알림(텔레그램) — 사용자 요청: 실계좌 매수/매도만.
+            if sleeve == "B":
+                b_codes.add(code)
             try:
                 from bot import notify
                 u = "원" if market == "KR" else "$"
+                tag = " (매물대B)" if sleeve == "B" else ""
                 notify.send(
-                    f"🟢 <b>KIS 매수</b> — {s.get('name', code)}({code})\n"
+                    f"🟢 <b>KIS 매수{tag}</b> — {s.get('name', code)}({code})\n"
                     f"  {d.qty}주 @ {cur}{u} · 손절 {s['stop']}{u}", critical=True)
             except Exception:
                 pass
@@ -223,10 +264,20 @@ def _cycle() -> None:
     except Exception as e:
         print(f"[부팅 대사 오류] {type(e).__name__}: {e}", flush=True)
     sigs = _fetch_signals()
-    print(f"신호 {len(sigs)}건 로드 · 'now' 후보 {len(_now_signals(sigs))}건", flush=True)
-    for r in run_once(sigs):
+    print(f"신호 {len(sigs)}건 로드 · 'now' {len(_now_signals(sigs))}건 · "
+          f"'shelf' {len(_shelf_cands(sigs))}건", flush=True)
+    for r in run_once(sigs):                          # 슬리브 A(전환확정)
         mark = "✓ 전송" if r.get("ok") else "·"
         print(f"  {mark} {r['code']} [{r['gate']}] {r.get('why', '')}", flush=True)
+    # 슬리브 B(매물대 반등) — BOT_SEED_SB_KRW 설정 시에만(별도 예산 테스트).
+    from bot import envelope
+    sb = envelope.seed_krw_sb()
+    if sb > 0:
+        for r in run_once(sigs, sleeve="B", group="shelf", seed_krw=sb,
+                          reason="매물대B"):
+            mark = "✓ 전송" if r.get("ok") else "·"
+            print(f"  [B] {mark} {r['code']} [{r['gate']}] {r.get('why', '')}",
+                  flush=True)
 
 
 def main() -> int:

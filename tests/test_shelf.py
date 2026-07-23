@@ -92,12 +92,32 @@ def test_classify_shelf():
     print("[PASS] classify_shelf: 하드제외 우선·shelf ok면 group=shelf")
 
 
+def test_partition_budget_isolation():
+    """A/B 슬리브가 서로의 종목 수·투입원가를 세지 않아야(예산 잠식 방지)."""
+    from bot import kis_buyloop as BL
+    held_cost = {"AAA": 100.0, "BBB": 200.0, "CCC": 300.0}   # CCC=B, 나머지=A
+    inflight = {"DDD": (50.0, "A"), "EEE": (60.0, "B")}
+    b_codes = {"CCC"}
+    na, ca = BL._partition(held_cost, inflight, "A", b_codes)
+    nb, cb = BL._partition(held_cost, inflight, "B", b_codes)
+    assert (na, ca) == (3, 350.0), (na, ca)   # AAA+BBB 보유 + DDD in-flight
+    assert (nb, cb) == (2, 360.0), (nb, cb)   # CCC 보유 + EEE in-flight
+    # shelf 후보 필터·정렬(RR 높은 순)
+    sigs = [{"group": "now", "code": "X", "entry": 1, "stop": 0.9},
+            {"group": "shelf", "code": "Y", "entry": 10, "stop": 9, "shelf": {"rr": 1.6}},
+            {"group": "shelf", "code": "Z", "entry": 10, "stop": 9, "shelf": {"rr": 2.4}}]
+    c = BL._shelf_cands(sigs)
+    assert [x["code"] for x in c] == ["Z", "Y"], c
+    print("[PASS] 슬리브 예산 분리(파티션) + shelf 후보 필터/정렬")
+
+
 def main():
     test_bounce_ok()
     test_falling_knife_rejected()
     test_low_volume_rejected()
     test_overhead_and_zone()
     test_classify_shelf()
+    test_partition_budget_isolation()
     print("\n매물대 반등 슬리브(B) 신호 엔진 통과 — 반등확인 매수·falling-knife 거부.")
 
 

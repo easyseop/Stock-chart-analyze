@@ -124,6 +124,7 @@ def _help_text() -> str:
             "/보유 — 보유 종목별 수익률·수익금\n"
             "/종목 &lt;코드&gt; — 현재가·평단가·손절예상가 상세\n"
             "  예) /종목 005930 · /종목 AAPL\n"
+            "/슬리브 — 매물대(B) 슬리브 종목별 수익률\n"
             "코드만 보내도 상세 조회됩니다.")
 
 
@@ -209,6 +210,9 @@ def handle(text: str) -> str:
         if len(parts) >= 2:
             return _detail_text(" ".join(parts[1:]))
         return "사용법: /종목 &lt;코드&gt;  예) /종목 005930"
+    if cmd in ("슬리브", "매물대", "sleeve", "b"):
+        from bot import sleeve_stats
+        return sleeve_stats.report_text()
     return _detail_text(raw)          # 접두어 없이 코드/이름만 → 상세
 
 

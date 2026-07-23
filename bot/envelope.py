@@ -34,6 +34,14 @@ def seed_krw() -> float:
         return 0.0
 
 
+def seed_krw_sb() -> float:
+    """슬리브 B(매물대 반등) 전용 시드(KRW) — BOT_SEED_SB_KRW. 미설정=0(B 비활성)."""
+    try:
+        return float(os.environ.get("BOT_SEED_SB_KRW", "0"))
+    except ValueError:
+        return 0.0
+
+
 def bot_cash(seed: float, total_buy_cost: float, total_sell_proceeds: float,
              topup: float = 0.0, withdraw: float = 0.0) -> float:
     """봇 현금 = SEED + 입금 − 출금 − Σ매수원가 + Σ매도실현액(실현손익 반영).

@@ -44,7 +44,8 @@ def execute_entry(pos_key: str, symbol: str, *, price_usd: float,
                   reason: str = "진입",
                   market: str | None = None,
                   open_cost_krw: float | None = None,
-                  hldg_before: int | None = None) -> BuyDecision:
+                  hldg_before: int | None = None,
+                  seed_krw: float | None = None) -> BuyDecision:
     """신규 진입 1건 시도. 반환: 어느 게이트에서 왜 멈췄는지까지 항상 보고.
 
     가격/리스크 인자는 **해당 시장의 표시통화**(US=USD, KR=KRW)로 받는다.
@@ -99,7 +100,8 @@ def execute_entry(pos_key: str, symbol: str, *, price_usd: float,
         return BuyDecision(False, "ledger", "원장 게이트(잠금/in-flight/간격)")
 
     # 7) 사이징(IS3/IS4 — 분모 SEED·총량 게이트·feasibility 하향 클램프)
-    seed = envelope.seed_krw()
+    #   seed_krw 오버라이드: 슬리브 B(매물대)는 자체 SEED로 사이징(A와 예산 분리).
+    seed = float(seed_krw) if seed_krw is not None else envelope.seed_krw()
     t = costbook.totals()
     # 투입원가: costbook(회계)과 브로커-진실(호출부 전달) 중 **큰 쪽**(보수적).
     #   costbook 미배선(#25) 동안엔 broker 값이 유일한 실측 — 이게 없으면 총량
