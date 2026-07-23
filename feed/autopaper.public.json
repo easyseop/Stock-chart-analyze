@@ -1,9 +1,9 @@
 {
- "updated": "2026-07-23",
+ "updated": "2026-07-24",
  "start": 100000000,
- "cash": 51971202,
- "equity": 98108679,
- "ret_pct": -1.89,
+ "cash": 41977405,
+ "equity": 98092888,
+ "ret_pct": -1.91,
  "positions": [
   {
    "code": "MRSH",
@@ -11,14 +11,14 @@
    "ccy": "USD",
    "q": 36,
    "avg": 174.3075,
-   "price": 175.99000549316406,
+   "price": 176.44000244140625,
    "stop": 174.3075,
    "target": 192.2575,
    "half_done": true,
    "opened": "2026-07-06",
-   "pl_krw": 89393,
-   "pl_pct": 0.97,
-   "price_age_min": 60.8
+   "pl_krw": 113096,
+   "pl_pct": 1.22,
+   "price_age_min": 4.7
   },
   {
    "code": "STE",
@@ -26,14 +26,14 @@
    "ccy": "USD",
    "q": 6,
    "avg": 213.02,
-   "price": 210.57000732421875,
+   "price": 213.17999267578125,
    "stop": 202.063,
    "target": 234.934,
    "half_done": false,
    "opened": "2026-07-07",
-   "pl_krw": -21695,
-   "pl_pct": -1.15,
-   "price_age_min": 61.9
+   "pl_krw": 1414,
+   "pl_pct": 0.08,
+   "price_age_min": 5.9
   },
   {
    "code": "068270",
@@ -48,7 +48,7 @@
    "opened": "2026-07-07",
    "pl_krw": -170014,
    "pl_pct": -1.8,
-   "price_age_min": 60.8
+   "price_age_min": 4.7
   },
   {
    "code": "ORC",
@@ -56,14 +56,14 @@
    "ccy": "USD",
    "q": 4,
    "avg": 6.81,
-   "price": 6.690000057220459,
+   "price": 6.599999904632568,
    "stop": 6.5493,
    "target": 7.3314,
    "half_done": false,
    "opened": "2026-07-08",
-   "pl_krw": -708,
-   "pl_pct": -1.76,
-   "price_age_min": 61.8
+   "pl_krw": -1237,
+   "pl_pct": -3.08,
+   "price_age_min": 5.7
   },
   {
    "code": "HMC",
@@ -71,14 +71,14 @@
    "ccy": "USD",
    "q": 3,
    "avg": 27.665,
-   "price": 28.530000686645508,
+   "price": 28.075000762939453,
    "stop": 26.2063,
    "target": 30.5824,
    "half_done": false,
    "opened": "2026-07-09",
-   "pl_krw": 3830,
-   "pl_pct": 3.13,
-   "price_age_min": 60.8
+   "pl_krw": 1812,
+   "pl_pct": 1.48,
+   "price_age_min": 4.7
   },
   {
    "code": "LSPD",
@@ -86,14 +86,14 @@
    "ccy": "USD",
    "q": 28,
    "avg": 10.02,
-   "price": 9.760000228881836,
+   "price": 9.524999618530272,
    "stop": 9.2434,
    "target": 11.6783,
    "half_done": false,
    "opened": "2026-07-09",
-   "pl_krw": -10744,
-   "pl_pct": -2.59,
-   "price_age_min": 60.8
+   "pl_krw": -20418,
+   "pl_pct": -4.94,
+   "price_age_min": 4.7
   },
   {
    "code": "SARO",
@@ -101,14 +101,14 @@
    "ccy": "USD",
    "q": 161,
    "avg": 27.9,
-   "price": 27.57999992370605,
+   "price": 28.399999618530277,
    "stop": 25.8678,
    "target": 31.9643,
    "half_done": false,
    "opened": "2026-07-10",
-   "pl_krw": -76036,
-   "pl_pct": -1.15,
-   "price_age_min": 60.7
+   "pl_krw": 118591,
+   "pl_pct": 1.79,
+   "price_age_min": 4.7
   },
   {
    "code": "J",
@@ -116,14 +116,14 @@
    "ccy": "USD",
    "q": 64,
    "avg": 126.585,
-   "price": 130.5,
+   "price": 131.85000610351562,
    "stop": 119.2617,
    "target": 141.2316,
    "half_done": false,
    "opened": "2026-07-11",
-   "pl_krw": 369789,
-   "pl_pct": 3.09,
-   "price_age_min": 60.7
+   "pl_krw": 496403,
+   "pl_pct": 4.16,
+   "price_age_min": 4.7
   },
   {
    "code": "MAIN",
@@ -131,14 +131,29 @@
    "ccy": "USD",
    "q": 78,
    "avg": 53.96,
-   "price": 53.63999938964844,
+   "price": 53.0,
    "stop": 51.5808,
    "target": 58.7184,
    "half_done": false,
    "opened": "2026-07-22",
-   "pl_krw": -36837,
-   "pl_pct": -0.59,
-   "price_age_min": 63.7
+   "pl_krw": -110312,
+   "pl_pct": -1.78,
+   "price_age_min": 7.5
+  },
+  {
+   "code": "SHOP",
+   "name": "Shopify Inc.",
+   "ccy": "USD",
+   "q": 59,
+   "avg": 114.9801,
+   "price": 112.30999755859376,
+   "stop": 105.7277,
+   "target": 138.8546,
+   "half_done": false,
+   "opened": "2026-07-24",
+   "pl_krw": -232079,
+   "pl_pct": -2.32,
+   "price_age_min": 4.7
   }
  ],
  "pending": [
@@ -168,33 +183,6 @@
     "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권38% · 체크4/6 · 손절폭7.0%"
    },
    "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권38% · 체크4/6 · 손절폭7.0%"
-  },
-  {
-   "code": "SHOP",
-   "name": "Shopify Inc.",
-   "ccy": "USD",
-   "limit": 114.9801,
-   "stop": 105.7277,
-   "target": 138.8546,
-   "q": 59,
-   "created": "2026-07-07",
-   "atr": 5.5211,
-   "plan": {
-    "entry": 116.77,
-    "stop": 105.7277,
-    "target": 138.8546,
-    "pb": 114.9801,
-    "tactic": "pullback"
-   },
-   "ctx": {
-    "mode": "pullback",
-    "fresh": true,
-    "stage": 3,
-    "rp": 26,
-    "rec": 4,
-    "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권26% · 체크4/6 · 손절폭9.5%"
-   },
-   "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권26% · 체크4/6 · 손절폭9.5%"
   },
   {
    "code": "VRSK",
@@ -229,7 +217,7 @@
  "pos_cap_pct": 33.3,
  "cap_violations": [],
  "rule_violations": [],
- "fx": 1475.85,
+ "fx": 1473.18,
  "stats": {
   "all": {
    "n": 4,
@@ -516,9 +504,26 @@
   {
    "d": "2026-07-23",
    "v": 98108679
+  },
+  {
+   "d": "2026-07-24",
+   "v": 98092888
   }
  ],
  "log": [
+  {
+   "d": "2026-07-24",
+   "type": "buy",
+   "code": "SHOP",
+   "name": "Shopify Inc.",
+   "q": 59,
+   "price": 114.9801,
+   "ccy": "USD",
+   "amt": 9993797,
+   "note": "눌림 지정가 체결 — 🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권26% · 체크4/6 · 손절폭9.5%",
+   "stop": 105.7277,
+   "target": 138.8546
+  },
   {
    "d": "2026-07-22",
    "type": "buy",
@@ -860,14 +865,5 @@
   }
  ],
  "lane": "bulk",
- "data_stale": [
-  "MRSH",
-  "STE",
-  "ORC",
-  "HMC",
-  "LSPD",
-  "SARO",
-  "J",
-  "MAIN"
- ]
+ "data_stale": []
 }
