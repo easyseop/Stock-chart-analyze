@@ -1,18 +1,18 @@
 {
  "version": 1,
- "generated_at": "2026-07-23T23:06:08+09:00",
+ "generated_at": "2026-07-23T23:25:51+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "shelf_debug": {
-  "ok": 0,
+  "ok": 5,
   "reasons": {
    "밸류영역 밖(지지대 아님)": 1177,
-   "반등 미확인(터치·거래량)": 213,
    "매물대 정보 없음": 175,
-   "반등 미확인(터치·상단마감·거래량)": 172,
+   "반등 미확인(터치·거래량)": 125,
+   "반등 미확인(터치·상단마감·거래량)": 113,
+   "반등 미확인(거래량)": 109,
+   "반등 미확인(상단마감·거래량)": 81,
    "저점권 아님(범위 93%)": 68,
-   "저점권 아님(범위 84%)": 67,
-   "저점권 아님(범위 92%)": 64,
-   "저점권 아님(범위 90%)": 64
+   "저점권 아님(범위 84%)": 67
   }
  },
  "signals": [
@@ -967,6 +967,90 @@
     "label": "⏳ 눌림 지정가만",
     "desc": "지금 추격 금지(손절폭 11.5% · 돌파후 진행) — <b>58,900원 눌림 지정가만</b>. 눌리면 손절폭 2.0%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
    }
+  },
+  {
+   "id": "WAL-2026-07-23-shelf",
+   "code": "WAL",
+   "name": "Western Alliance Bancorporation",
+   "ccy": "USD",
+   "group": "shelf",
+   "entry_kind": "shelf",
+   "stage": 0,
+   "price": 80.5,
+   "entry": 80.5,
+   "stop": 77.8071,
+   "target": 88.7231,
+   "shares_1pct": 0,
+   "range_pos": 0.4674,
+   "norm": -7.5,
+   "bear_share": 0.25,
+   "shelf": {
+    "poc": 79.5619,
+    "val": 74.3269,
+    "vah": 88.7231,
+    "rr": 3.05,
+    "overhead": 0.543
+   },
+   "fresh": true,
+   "break_gap": null,
+   "earnings_d": null,
+   "tactic": "full"
+  },
+  {
+   "id": "MNRO-2026-07-23-shelf",
+   "code": "MNRO",
+   "name": "Monro, Inc.",
+   "ccy": "USD",
+   "group": "shelf",
+   "entry_kind": "shelf",
+   "stage": 0,
+   "price": 17.07,
+   "entry": 17.07,
+   "stop": 16.2876,
+   "target": 18.3277,
+   "shares_1pct": 0,
+   "range_pos": 0.4129,
+   "norm": -22.6,
+   "bear_share": 0.375,
+   "shelf": {
+    "poc": 16.8715,
+    "val": 14.9298,
+    "vah": 18.3277,
+    "rr": 1.61,
+    "overhead": 0.477
+   },
+   "fresh": true,
+   "break_gap": null,
+   "earnings_d": null,
+   "tactic": "full"
+  },
+  {
+   "id": "PUK-2026-07-23-shelf",
+   "code": "PUK",
+   "name": "Prudential Public Limited Company",
+   "ccy": "USD",
+   "group": "shelf",
+   "entry_kind": "shelf",
+   "stage": 0,
+   "price": 28.88,
+   "entry": 28.88,
+   "stop": 27.4302,
+   "target": 31.0706,
+   "shares_1pct": 0,
+   "range_pos": 0.4562,
+   "norm": -35.8,
+   "bear_share": 0.375,
+   "shelf": {
+    "poc": 27.1248,
+    "val": 26.7302,
+    "vah": 31.0706,
+    "rr": 1.51,
+    "overhead": 0.407
+   },
+   "fresh": true,
+   "break_gap": null,
+   "earnings_d": null,
+   "tactic": "full"
   },
   {
    "id": "AEO-2026-07-23-watch",
