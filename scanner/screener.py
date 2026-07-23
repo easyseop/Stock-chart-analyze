@@ -547,10 +547,17 @@ def _signals_json(results: list[dict]) -> str:
             "tactic": "full",
         })
     sigs.sort(key=lambda s: (s["group"], not s["fresh"], -s["stage"], -s["norm"]))
+    # 매물대(B) 진단 — 왜 shelf 신호가 적은지 사유별 집계(0건 원인 규명용).
+    from collections import Counter
+    shelf_reasons = Counter((r.get("shelf") or {}).get("reason", "?")
+                            for r in results)
+    shelf_ok = sum(1 for r in results if (r.get("shelf") or {}).get("ok"))
     return json.dumps({
         "version": 1,
         "generated_at": now.strftime("%Y-%m-%dT%H:%M:%S+09:00"),   # KST
         "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
+        "shelf_debug": {"ok": shelf_ok,
+                        "reasons": dict(shelf_reasons.most_common(8))},
         "signals": sigs,
     }, ensure_ascii=False, indent=1)
 

@@ -77,9 +77,9 @@ err1h="$(journalctl $(for u in $UNITS; do printf -- '-u %s ' "$u"; done) \
 #   err_last    : 최근 24시간 마지막 에러 라인 — err_1h의 정체
 tg_env=0
 [ -n "${TELEGRAM_BOT_TOKEN:-}" ] && [ -n "${TELEGRAM_CHAT_ID:-}" ] && tg_env=1
-#   '장 아님'·사이클 헤더는 걸러서 — 개별 신호의 실제 게이트 판정만 남긴다.
+#   개별 신호 판정 라인(A: '  · CODE', B: '  [B] · CODE')만 — 장외노이즈 제외.
 bl_tail="$(journalctl -u buyloop --since '16 hours ago' --no-pager -o cat 2>/dev/null \
-           | grep -E '^\s+(✓|·)' | grep -v '\[session\]' | tail -12)"
+           | grep -E '^[[:space:]]+(\[B\] )?(✓|·)' | grep -v '\[session\]' | tail -12)"
 #   게이트 히스토그램(16시간 집계) — 어느 게이트가 몇 건 걸렀는지 총계. 꼬리가
 #   최근 노이즈에 밀려도 밤새 판정 분포는 이 한 줄로 확정된다.
 gate_hist="$(journalctl -u buyloop --since '16 hours ago' --no-pager -o cat 2>/dev/null \
