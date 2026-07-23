@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated_at": "2026-07-24T06:14:28+09:00",
+ "generated_at": "2026-07-24T06:27:29+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "shelf_debug": {
   "ok": 5,
@@ -8,9 +8,9 @@
    "밸류영역 밖(지지대 아님)": 1186,
    "매물대 정보 없음": 175,
    "반등 미확인(터치·거래량)": 125,
-   "반등 미확인(터치·상단마감·거래량)": 116,
-   "반등 미확인(거래량)": 108,
-   "반등 미확인(상단마감·거래량)": 81,
+   "반등 미확인(터치·상단마감·거래량)": 114,
+   "반등 미확인(거래량)": 107,
+   "반등 미확인(상단마감·거래량)": 80,
    "저점권 아님(범위 84%)": 66,
    "저점권 아님(범위 87%)": 65
   }
@@ -549,6 +549,34 @@
    }
   },
   {
+   "id": "GPK-2026-07-24-now",
+   "code": "GPK",
+   "name": "Graphic Packaging Holding Company",
+   "ccy": "USD",
+   "group": "now",
+   "entry_kind": "now",
+   "stage": 4,
+   "price": 10.99,
+   "entry": 10.99,
+   "stop": 10.1395,
+   "target": 12.6909,
+   "shares_1pct": 117,
+   "range_pos": 0.147,
+   "norm": -13.2,
+   "bear_share": 0.25,
+   "fresh": false,
+   "break_gap": 0.0783,
+   "earnings_d": null,
+   "tactic": {
+    "stop_pct": 7.7,
+    "pb_price": null,
+    "pb_stop_pct": null,
+    "mode": "pullback",
+    "label": "⏳ 눌림 지정가만",
+    "desc": "지금 추격 금지(손절폭 7.7% · 돌파후 진행) — 받칠 지지에 눌릴 때까지 대기"
+   }
+  },
+  {
    "id": "PCTY-2026-07-24-now",
    "code": "PCTY",
    "name": "Paylocity Holding Corporation",
@@ -602,34 +630,6 @@
     "mode": "pullback",
     "label": "⏳ 눌림 지정가만",
     "desc": "지금 추격 금지(손절폭 8.0% · 돌파후 진행) — 받칠 지지에 눌릴 때까지 대기"
-   }
-  },
-  {
-   "id": "GPK-2026-07-24-now",
-   "code": "GPK",
-   "name": "Graphic Packaging Holding Company",
-   "ccy": "USD",
-   "group": "now",
-   "entry_kind": "now",
-   "stage": 3,
-   "price": 10.99,
-   "entry": 10.99,
-   "stop": 10.1395,
-   "target": 12.6909,
-   "shares_1pct": 117,
-   "range_pos": 0.147,
-   "norm": -15.1,
-   "bear_share": 0.25,
-   "fresh": false,
-   "break_gap": 0.0783,
-   "earnings_d": null,
-   "tactic": {
-    "stop_pct": 7.7,
-    "pb_price": null,
-    "pb_stop_pct": null,
-    "mode": "pullback",
-    "label": "⏳ 눌림 지정가만",
-    "desc": "지금 추격 금지(손절폭 7.7% · 돌파후 진행) — 받칠 지지에 눌릴 때까지 대기"
    }
   },
   {
@@ -1718,6 +1718,27 @@
    }
   },
   {
+   "id": "CRC-2026-07-24-watch",
+   "code": "CRC",
+   "name": "California Resources Corporation",
+   "ccy": "USD",
+   "group": "watch",
+   "entry_kind": "breakout",
+   "stage": 4,
+   "price": 54.25,
+   "entry": 54.49,
+   "stop": 51.2125,
+   "target": 61.0449,
+   "shares_1pct": 30,
+   "range_pos": 0.383,
+   "norm": -33.6,
+   "bear_share": 0.375,
+   "fresh": false,
+   "break_gap": 0.0608,
+   "earnings_d": null,
+   "tactic": null
+  },
+  {
    "id": "005830-2026-07-24-watch",
    "code": "005830",
    "name": "DB손해보험",
@@ -1735,27 +1756,6 @@
    "bear_share": 0.375,
    "fresh": false,
    "break_gap": 0.2,
-   "earnings_d": null,
-   "tactic": null
-  },
-  {
-   "id": "CRC-2026-07-24-watch",
-   "code": "CRC",
-   "name": "California Resources Corporation",
-   "ccy": "USD",
-   "group": "watch",
-   "entry_kind": "breakout",
-   "stage": 3,
-   "price": 54.25,
-   "entry": 54.49,
-   "stop": 51.2125,
-   "target": 61.0449,
-   "shares_1pct": 30,
-   "range_pos": 0.383,
-   "norm": -36.9,
-   "bear_share": 0.375,
-   "fresh": false,
-   "break_gap": 0.0608,
    "earnings_d": null,
    "tactic": null
   },
