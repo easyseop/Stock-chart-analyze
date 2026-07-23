@@ -77,6 +77,16 @@ err1h="$(journalctl $(for u in $UNITS; do printf -- '-u %s ' "$u"; done) \
 #   err_last    : 최근 24시간 마지막 에러 라인 — err_1h의 정체
 tg_env=0
 [ -n "${TELEGRAM_BOT_TOKEN:-}" ] && [ -n "${TELEGRAM_CHAT_ID:-}" ] && tg_env=1
+# 각 프로세스가 '실제로' 텔레그램 토큰을 물고 있나(/proc environ) — 매수 알림
+#   누락 진단(2026-07-23). buyloop이 0인데 telegram이 1이면 원인 확정.
+_tg_in_proc() {
+  local pid; pid="$(pgrep -f "$1" 2>/dev/null | head -1)"
+  { [ -n "$pid" ] && [ -r "/proc/$pid/environ" ]; } || { echo '"?"'; return; }
+  if tr '\0' '\n' < "/proc/$pid/environ" 2>/dev/null | grep -q '^TELEGRAM_BOT_TOKEN='; then
+    echo 1; else echo 0; fi
+}
+tg_buyloop="$(_tg_in_proc bot.kis_buyloop)"
+tg_teleg="$(_tg_in_proc bot.kis_telegram)"
 #   개별 신호 판정 라인(A: '  · CODE', B: '  [B] · CODE')만 — 장외노이즈 제외.
 bl_tail="$(journalctl -u buyloop --since '16 hours ago' --no-pager -o cat 2>/dev/null \
            | grep -E '^[[:space:]]+(\[B\] )?(✓|·)' | grep -v '\[session\]' | tail -12)"

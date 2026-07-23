@@ -19,6 +19,41 @@ import urllib.request
 
 _HTML_TAG = re.compile(r"<[^>]+>")   # ntfy 본문용: 텔레그램 HTML 제거
 
+_ENV_LOADED = False
+_ENV_KEYS = ("TELEGRAM_BOT_TOKEN", "TELEGRAM_CHAT_ID", "NTFY_TOPIC", "NTFY_SERVER")
+_ENV_LINE = re.compile(r"^\s*(?:export\s+)?(" + "|".join(_ENV_KEYS) + r")\s*=\s*(.*)$")
+
+
+def _ensure_env() -> None:
+    """알림 자격증명 폴백 — os.environ에 토큰이 없으면 kis.env를 직접 파싱해 채운다.
+
+    systemd `EnvironmentFile`은 `export KEY=val` 형식을 못 읽어(실측: telegram·
+    buyloop 프로세스에 토큰 미주입 → 매수 알림 조용히 유실) 이 폴백이 필요하다.
+    1회만 시도(_ENV_LOADED). 이미 설정된 값은 안 덮음(setdefault). 실패는 무시.
+    값은 절대 로그·예외에 담지 않는다."""
+    global _ENV_LOADED
+    if _ENV_LOADED:
+        return
+    _ENV_LOADED = True
+    if os.environ.get("TELEGRAM_BOT_TOKEN") and os.environ.get("TELEGRAM_CHAT_ID"):
+        return                                  # 이미 있으면 파일 안 읽음
+    for p in (os.environ.get("AUTODEPLOY_ENV"), os.environ.get("BEACON_ENV"),
+              "/etc/stock/kis.env", os.path.expanduser("~/kis.env")):
+        if not p:
+            continue
+        try:
+            with open(p, encoding="utf-8") as f:
+                for line in f:
+                    m = _ENV_LINE.match(line)
+                    if m:
+                        v = m.group(2).strip().strip('"').strip("'")
+                        if v:
+                            os.environ.setdefault(m.group(1), v)
+        except OSError:
+            continue
+        if os.environ.get("TELEGRAM_BOT_TOKEN"):
+            break
+
 
 def _ntfy(text: str, *, title: str = "P0 ALERT", priority: str = "urgent",
           tags: str = "rotating_light,warning") -> None:
@@ -28,6 +63,7 @@ def _ntfy(text: str, *, title: str = "P0 ALERT", priority: str = "urgent",
     주의: HTTP 헤더는 latin-1만 허용 → Title/Priority/Tags는 반드시 ASCII로.
       한글·이모지는 **본문에만** 넣는다(본문은 UTF-8, 실측으로 이모지까지 OK).
     """
+    _ensure_env()
     topic = os.environ.get("NTFY_TOPIC")
     if not topic:
         return
@@ -53,6 +89,7 @@ def send(text: str, *, critical: bool = False) -> bool:
 
     반환값은 항상 '텔레그램 성공 여부'(기존 호출부 의미 유지) — ntfy 결과는 무관.
     """
+    _ensure_env()            # env에 토큰 없으면 kis.env에서 폴백 로드(매수 알림 유실 방지)
     if critical:
         _ntfy(text)          # NTFY_TOPIC 설정 시에만 발행(미설정=무동작·무네트워크)
     token = os.environ.get("TELEGRAM_BOT_TOKEN")
