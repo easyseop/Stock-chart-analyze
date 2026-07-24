@@ -10,12 +10,16 @@
 ## 1. 현재 Git 상태
 
 - 기본 브랜치: `claude/happy-gauss-cwoq21`
-- 현재 개발 브랜치: `codex/p0-order-protection` (외부 최종 승인, 배포 준비)
-- 안전 수정 기준 커밋: `106065d2` (PR #77 병합 결과)
+- 현재 개발 브랜치: `codex/p0-order-protection` (배포 결과 문서화용)
+- Oracle 배포 코드: `4c073eb2` (PR #79 병합 결과)
 - 활성 로컬 복제본: `/Users/seop/Documents/매매봇/Stock-chart-analyze-deploy`
 - 기존 `Stock-chart-analyze-site`는 iCloud가 일부 `.git/refs`를 dataless로 바꿔
   HEAD가 끊겼다. 작업 파일은 보존하고 기준 커밋+검토 diff를 새 복제본에 복원했다.
 - 웹 통합 PR: [#77 KIS 준실시간 차트와 오늘 브리핑 추가](https://github.com/easyseop/Stock-chart-analyze/pull/77)
+- 주문 안전성 PR: [#78 KIS 주문 안전성과 체결 회계 강화](https://github.com/easyseop/Stock-chart-analyze/pull/78)
+- PR #78 병합 커밋: `3d2a2c5a`
+- 회계 지연 알림 집계 PR: [#79 체결 회계 지연 알림을 1개로 집계](https://github.com/easyseop/Stock-chart-analyze/pull/79)
+- PR #79 병합 커밋: `4c073eb2`
 - 병합 PR: [#75 Oracle KIS 검증과 알림 안정성 보강](https://github.com/easyseop/Stock-chart-analyze/pull/75)
 - PR #75 병합 커밋: `468ad0cf`
 - 리뷰 수정 커밋: `7ebe0d97`, 테스트 격리·인수인계 커밋: `79a67c51`
@@ -104,9 +108,9 @@ Oracle 자산 대시보드, 코드 push 무거래 보정이 PR #72와 #73을 통
 - “지금 확인할 것”에서는 손절 위험을 목표 도달보다 먼저 정렬한다.
 - 320~360px 하단 6개 메뉴가 잘리지 않도록 폭·말줄임·간격을 보강했다.
 
-이 웹 변경은 매매 주문 코드를 추가하거나 변경하지 않는다. Oracle 운영 서버는 아직
-기본 브랜치 `claude/happy-gauss-cwoq21`의 기존 버전을 실행 중이므로 PR 병합과
-안전한 배포 전까지 새 브리핑·계산 모듈은 서버에 반영되지 않는다.
+이 웹 변경은 매매 주문 코드를 추가하거나 변경하지 않는다. PR #77 병합 뒤 Oracle
+운영 서버에도 반영했으며, 개인 화면은 파수꾼 공유 캐시를 이용해 KIS 호출을 늘리지
+않고 서비스 중이다.
 
 ### 매매 운영 안정성
 
@@ -124,7 +128,8 @@ Oracle 자산 대시보드, 코드 push 무거래 보정이 PR #72와 #73을 통
 
 외부 안전성 보고서 `검토보고서_주문경합_총시드_손절.md`의 P0 4건, P1 12건,
 P2 1건, P3 1건을 기준 커밋 `106065d2`에 대조했고 모두 로컬
-`codex/p0-order-protection`에서 수정했다. 아직 커밋·push·Oracle 배포하지 않았다.
+`codex/p0-order-protection`에서 수정했다. PR #78·#79로 병합하고 Oracle
+`4c073eb2`까지 단계배포했다.
 
 핵심 완료 내용:
 
@@ -191,6 +196,11 @@ P2는 브로커가 실체결가를 오래 제공하지 않을 때 미회계 예�
 새 복제본에서 의존성을 다시 설치한 뒤 전체 Python 독립 테스트 `41/41`이 통과했다.
 기존 복제본의 가상환경은 iCloud dataless 때문에 pandas 본체가 비어 있었고, 이는
 새 독립 가상환경 재생성으로 해소했다.
+
+Oracle에서도 전체 Python 독립 테스트 `41/41`과 회계 지연 집계 테스트를 통과했다.
+배포 첫 buyloop 사이클에서 신규 후보 FRPT·TM·SBSW가 모두 L1로 차단됐고, 과거
+미회계 예약 16건은 텔레그램 16개가 아니라 요약 경보 1개로 처리됐다. 이 경보는
+신규 주문이나 체결 알림이 아니라 운영자 확인용이며 주문 상태를 변경하지 않는다.
 
 ### 지표와 전략 연결
 
@@ -351,22 +361,36 @@ SSH 주소·개인키·KIS 인증값은 계속 Git 밖에만 둔다. 2026-07-24 
 - KIS 환경 파일: `/home/ubuntu/kis.env`(권한 600, 값은 기록하지 않음)
 - 서비스 사용자: `ubuntu`
 - Python 의존성: 저장소의 `.venv`; 서버에 `python3.10-venv` 설치
-- 배포 브랜치: `claude/happy-gauss-cwoq21` (`106065d2`)
+- 배포 브랜치: `claude/happy-gauss-cwoq21` (`4c073eb2`)
 - `portfolio-web.service`: enabled/active
 - 기존 `sentinel`, `buyloop`, `telegram`: 수정 코드 적용 후 재시작, 모두 active
 - `autodeploy.timer`: active. 재시작 대상에 `portfolio-web`까지 포함
 
-2026-07-25 재확인:
+2026-07-25 PR #78·#79 단계배포 결과:
 
 - kill-switch L1: `buy_new=False`, `protect_sell=True`
-- 환경 플래그: `ALLOW_BUY=1`, `KIS_ORDERS_ENABLED=1`, `SENTINEL_LIVE=0`
-- 현재 서버 코드는 `SENTINEL_LIVE=0`도 KIS SELL을 막지 못하던 구버전이다. 로컬
-  수정 배포 뒤에는 이 플래그가 진짜 전송 게이트가 되므로 모의 보호매도를 유지하려면
-  파수꾼 배포 단계에서 `SENTINEL_LIVE=1`을 명시해야 한다.
+- KIS 환경은 `mock`이며 `SENTINEL_LIVE=1`로 모의계좌의 보호 SELL만 실제 전송
+  가능하게 했다. 이는 KIS 실전계좌 전환이 아니다. 신규 BUY는 L1이 계속 차단한다.
+- `buyloop.service`는 시스템 Python 대신 저장소 `.venv`를 사용한다. 배포 뒤 첫
+  사이클에서 pandas 성과 추적 오류가 사라졌고 서비스 재시작 횟수는 0이었다.
+- 파수꾼과 개인 웹이 함께 읽는 캐시는
+  `/home/ubuntu/Stock-chart-analyze/data_cache/kis_market_snapshot.json`이며
+  권한 600이다. Oracle의 systemd `PrivateTmp` 때문에 `/tmp` 기본값이 프로세스마다
+  갈라지는 문제를 이 영속 경로로 보정했다.
+- 개인 API는 KIS mock 보유 17종목, `partial=false`, `read_only=true`,
+  `source=sentinel_shared_cache`, 브라우저 갱신 5초를 반환했다. `/app/` GET은
+  200, POST는 405이며 리스너는 계속 `127.0.0.1:8765`뿐이다.
+- 배포 전 환경 파일과 주문 상태는 각각
+  `/home/ubuntu/kis.env.pre-pr78`,
+  `/home/ubuntu/stock-backups/pre-pr78-20260725.tgz`로 권한 600 백업했다.
 - KIS mock 미국 보유 17종목, 매입금액 합계 `$25,133.71`, 평가금액 `$25,161.12`.
   적용 환율 1,380원 기준 매입원가는 약 3,468만원이다. 명목 총시드 3,500만원 이하는
   맞지만 새 정책의 5% 완충 후 운영한도 3,325만원은 약 143만원 초과하므로 신규매수를
   계속 막고 자연 청산으로 한도 아래가 될 때까지 기다린다.
+- 업그레이드 전 체결된 BUY 16건은 새 `accounted` 표식이 없어 예약으로 남아 있다.
+  이 중 브로커 잔고가 0인 BAM, 보호수량 25와 브로커수량 13이 다른 LW도 있어 자동
+  일괄이관하면 중복 장부나 잘못된 보호수량을 만들 수 있다. 감시 경보는 발송됐지만
+  예약은 안전하게 유지했다. 주문별 대사·마이그레이션 전에는 L1을 해제하지 않는다.
 
 저장소의 일반 배포 유닛은 `/opt/stock` 표준 구성을 계속 유지한다. 실제 서버에는
 `/etc/systemd/system/portfolio-web.service.d/oracle-ubuntu.conf` 드롭인으로 사용자,
@@ -409,22 +433,19 @@ GitHub API 기준 Pages는 public이고 최신 배포와 GitHub 호스팅 스모
 
 ## 9. 다음 작업 순서
 
-Oracle 초기 배포, KIS 모의계좌 실데이터 조회, PR #75 병합, Oracle 기본 브랜치 복귀,
-자동배포 무변경 스모크는 완료됐다. `sentinel`, `buyloop`, `telegram`,
-`portfolio-web`도 2026-07-25에 다시 active 상태로 확인했다. 서버 작업트리는
-`106065d2`에서 clean이고, KIS mock 17개 미국 보유행의 숫자 필드가 모두 유한하며
-개인 API는 GET 200·read-only다.
+P0/P1 수정 외부 승인, PR #78·#79 병합, Oracle 단계배포, KIS mock 실데이터,
+전체 Python `41/41`, L1 신규매수 차단, 원장 건강성, 공유 캐시와 개인 웹 검증까지
+완료했다. 서버 작업트리는 `4c073eb2`에서 clean이고 보호매도는 유지된다.
 
-1. `docs/ORDER_SAFETY_REREVIEW_2.md`와 갱신된 로컬 전체 diff를 외부 검토자에게
-   전달한다.
-2. 승인 전에는 커밋·push·Oracle 배포하지 않는다. Oracle kill-switch L1을 유지한다.
-3. 승인 뒤에도 한 번에 신규매수를 열지 않는다. 먼저 커밋·push한 뒤 Oracle에
-   파수꾼/원장/공유리미터/웹을 배포하고, `SENTINEL_LIVE=1`을 모의 보호매도에 맞춰
-   명시한다. 새 코드는 이 값이 0이면 실제 KIS SELL을 하지 않는다.
-4. 서비스 4개, 원장 건강성, 공유 캐시, KIS mock 잔고, dry-run→live 경계를 다시
-   확인한 뒤 buyloop 코드를 배포한다. L1은 계속 유지한다.
-5. 장애 주입 10개와 모의 주문·체결 대사를 서버에서도 실행하되 알림 자격증명
-   폴백을 끈다. 신규매수 재개에는 사용자 승인과 operator ack가 필요하다.
-6. Ubuntu에는 `6.8.0-1058-oracle`이 설치됐지만 현재 `6.8.0-1049-oracle`로
-   실행 중이라 재부팅 필요 표시가 남아 있다. 매매 시간 밖에서 재부팅하고 네
-   서비스를 재확인한다.
+1. 업그레이드 전 BUY 16건을 주문별로 브로커 체결·보호 포지션과 대사한다. BAM과
+   LW 불일치를 먼저 확인하고, 검증된 주문만 durable `accounted`로 이관한다.
+2. 총시드가 5% 완충 후 운영한도 아래인지 다시 계산하고, 모의계좌 10세션 이상
+   주문·부분체결·취소·손절·경보 무결성을 관찰한다.
+3. 1~2가 끝난 뒤에만 사용자 승인과 operator ack를 받아 L1 해제를 별도 수행한다.
+   현재 배포 완료가 신규매수 재개 승인을 뜻하지 않는다.
+4. KIS 실전계좌 전환과 live 하드블록 해제는 별도 단계다. 장애 주입 10개와 모의
+   관찰이 모두 유지되는지 재검증한 뒤 명시적 사용자 승인 없이는 진행하지 않는다.
+5. Ubuntu에는 `6.8.0-1058-oracle`이 설치됐지만 현재 `6.8.0-1049-oracle`로
+   실행 중이라 재부팅 필요 표시가 남아 있다. 매매 시간 밖에서 재부팅하고
+   `sentinel`, `buyloop`, `telegram`, `portfolio-web`, `autodeploy.timer`를
+   다시 확인한다.
