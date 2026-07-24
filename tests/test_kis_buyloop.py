@@ -41,7 +41,7 @@ def _rows_of(holdings, market, excg):
 
 
 def _run(signals, holdings=None, last=100.0, exec_ret=None, mkt_open=True,
-         fold=None, pd=None):
+         fold=None, pd=None, run_kwargs=None):
     """holdings: {code: qty}|None(None=잔고 조회실패). pd: positions_detail 대체."""
     if exec_ret is None:
         exec_ret = kis_buy.BuyDecision(True, "sent", "ack ODNO=1", qty=3)
@@ -62,7 +62,7 @@ def _run(signals, holdings=None, last=100.0, exec_ret=None, mkt_open=True,
          mock.patch("bot.ledger._fold", return_value=fold or {}), \
          mock.patch.object(BL.kis_buy, "execute_entry",
                            return_value=exec_ret) as ex:
-        res = BL.run_once(signals)
+        res = BL.run_once(signals, **(run_kwargs or {}))
         recorded = BL.kis_positions.load()
         with open(lf.name, encoding="utf-8") as f:
             ledger_events = [json.loads(x) for x in f if x.strip()]
@@ -207,6 +207,70 @@ def test_tactic_pullback_uses_limit_without_chasing():
     print("[PASS] tactic=pullback: 현재가 추격 없이 눌림가 전량 지정가")
 
 
+def test_b_sleeve_survives_balance_before_position_reconcile():
+    """B ACK가 잔고에 먼저 보이면 kis_positions 전에도 B 원가/개수로 남아야."""
+    import time as _t
+    fold = {"sb:alk": {
+        "symbol": "005930", "side": "BUY", "state": "ack",
+        "submitted_at": _t.time(), "intended": 8, "filled": 0,
+        "hldg_before": 0, "price": 100.0, "market": "KR",
+        "sleeve": "B", "pos_key": "sb:alk"}}
+    sig = _sig(code="000660", group="shelf")
+    _, ex, _, _ = _run(
+        [sig], holdings={"005930": 8}, fold=fold,
+        run_kwargs={"sleeve": "B", "group": "shelf", "seed_krw": 5_000_000})
+    kw = ex.call_args.kwargs
+    assert kw["open_positions"] == 1
+    assert kw["open_cost_krw"] == 800.0
+    assert kw["total_open_cost_krw"] == 800.0
+    print("[PASS] B ACK→잔고 선반영→kpos 지연에도 B 귀속·예산 유지")
+
+
+def test_unfilled_b_plan_does_not_retag_existing_a_holding():
+    """미제출 B 계획만으로 기존 A 보유가 B 원가·포지션으로 이동하지 않는다."""
+    import time as _t
+    fold = {"sb:planned": {
+        "symbol": "005930", "side": "BUY", "state": "planned",
+        "created_at": _t.time(), "intended": 2, "filled": 0,
+        "price": 90.0, "market": "KR", "sleeve": "B",
+        "pos_key": "sb:planned"}}
+    sig = _sig(code="000660", group="shelf")
+    _, ex, _, _ = _run(
+        [sig], holdings={"005930": 5}, fold=fold,
+        run_kwargs={"sleeve": "B", "group": "shelf", "seed_krw": 5_000_000})
+    kw = ex.call_args.kwargs
+    assert kw["open_positions"] == 1   # B 계획 자체는 B의 열린 예약 포지션
+    assert kw["open_cost_krw"] == 2 * 90
+    assert kw["total_open_cost_krw"] == 5 * 100 + 2 * 90
+    print("[PASS] 미체결 B 계획은 기존 A 보유를 재태깅하지 않고 예약만 B에 반영")
+
+
+def test_partial_and_multiple_same_symbol_reservations_are_summed():
+    """보유 6 + 1차잔량4 + 눌림계획5를 같은 B 포지션 1개·원가 전부로 계산."""
+    import time as _t
+    fold = {
+        "sb:alk": {
+            "symbol": "005930", "side": "BUY", "state": "partial",
+            "submitted_at": _t.time(), "intended": 10, "filled": 0,
+            "hldg_before": 0, "price": 100.0, "market": "KR",
+            "sleeve": "B", "pos_key": "sb:alk", "open": True},
+        "sb:alk:pb": {
+            "symbol": "005930", "side": "BUY", "state": "planned",
+            "created_at": _t.time() + 1, "intended": 5, "filled": 0,
+            "price": 90.0, "market": "KR", "sleeve": "B",
+            "pos_key": "sb:alk"},
+    }
+    sig = _sig(code="000660", group="shelf")
+    _, ex, _, _ = _run(
+        [sig], holdings={"005930": 6}, fold=fold,
+        run_kwargs={"sleeve": "B", "group": "shelf", "seed_krw": 5_000_000})
+    kw = ex.call_args.kwargs
+    assert kw["open_positions"] == 1
+    assert kw["open_cost_krw"] == 600 + 4 * 100 + 5 * 90
+    assert kw["total_open_cost_krw"] == 1450
+    print("[PASS] 동종목 부분잔량·계획 예약 누적, dict 덮어쓰기 제거")
+
+
 def main():
     test_happy_path_executes()
     test_already_held_skips()
@@ -222,6 +286,9 @@ def main():
     test_us_signal_routes_and_fx()
     test_tactic_half_creates_persistent_second_order()
     test_tactic_pullback_uses_limit_without_chasing()
+    test_b_sleeve_survives_balance_before_position_reconcile()
+    test_unfilled_b_plan_does_not_retag_existing_a_holding()
+    test_partial_and_multiple_same_symbol_reservations_are_summed()
     print("\n매수 루프 검증 통과 — 브로커-진실 미러(중복·괴리·장외·어닝·쿨다운·캡 누적).")
 
 

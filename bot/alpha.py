@@ -8,11 +8,14 @@
     — "하락할 때 덜 떨어지고 상승할 때 더 오른다"의 표준 수치화. 일별 기록이
     쌓여야 의미(≥5일부터 표시).
 
-측정 방식(플로우 중립·정직한 한계):
-  · 세션 중 계좌% = (Σ평가손익 − 세션시작 Σ평가손익) / Σ매입금액 — 장중 신규
-    매수는 손익 0으로 들어와 왜곡 없음. 지수%도 세션 시작가 대비(동일 기준).
-  · 누적 = Σ평가손익(KRW 환산) / SEED 합 vs 최초 관측 시점 지수 대비 등락.
-    (실현손익은 아직 미배선 — 매도 발생 시 오차 생김, costbook #25에서 개선.)
+측정 방식(플로우 중립):
+  · KIS 봇 보유 평가액을 NAV로 보고, costbook의 매수·매도 현금흐름을 각 관측
+    구간에서 제거한 TWR을 누적한다. 신규매수·부분매도·시드 크기가 수익률을
+    희석하거나 부풀리지 않고 가격 변화와 실현손익만 남는다.
+  · 미국 평가는 환율을 포함한다. 두 지수는 전일 종가를 0%로 맞추며, 첫 배포일처럼
+    전일 carry가 없을 때만 첫 관측값 기준이라고 명시한다.
+  · 종목 선택 품질은 계좌 TWR과 섞지 않고 장 시작 보유종목의 전일종가 대비
+    동일가중 평균을 별도 지표로 제공한다.
   · 사용자 기보유(baseline)는 집계에서 제외 — 봇 전략 성과만 잰다.
 
 배선: 매수루프 _cycle()이 5분마다 tick() 호출(실패는 무해 — 매매에 영향 0).
@@ -26,8 +29,9 @@ import os
 import time
 import urllib.parse
 import urllib.request
+from zoneinfo import ZoneInfo
 
-from bot import kis, kis_positions, notify, settings
+from bot import costbook, kis, kis_positions, notify, settings
 
 STATE_PATH = os.environ.get(
     "ALPHA_STATE_PATH", os.path.join(os.path.dirname(__file__), "alpha_state.json"))
@@ -41,18 +45,29 @@ _US_EXCGS = ("NASD", "NYSE", "AMEX")
 
 
 # ── 데이터 수집 ────────────────────────────────────────────────
-def _yahoo_last(sym: str) -> float | None:
-    """지수 현재 레벨(야후 v8, 무키). 실패=None(틱 건너뜀)."""
+def _yahoo_quote(sym: str) -> dict | None:
+    """지수 현재 레벨+전일 종가(야후 v8). 실패=None."""
     url = ("https://query1.finance.yahoo.com/v8/finance/chart/"
            + urllib.parse.quote(sym) + "?range=1d&interval=5m")
     req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
     try:
         with urllib.request.urlopen(req, timeout=10) as r:
             m = json.load(r)["chart"]["result"][0]["meta"]
-        v = m.get("regularMarketPrice")
-        return float(v) if v else None
+        current = m.get("regularMarketPrice")
+        previous = (m.get("regularMarketPreviousClose")
+                    or m.get("chartPreviousClose"))
+        if not current:
+            return None
+        return {"current": float(current),
+                "previous_close": float(previous) if previous else None}
     except Exception:
         return None
+
+
+def _yahoo_last(sym: str) -> float | None:
+    """구버전 호출 호환용 현재값."""
+    quote = _yahoo_quote(sym)
+    return quote["current"] if quote else None
 
 
 def _broker_rows(market: str | None = None) -> list[dict] | None:
@@ -118,27 +133,141 @@ def _pct(pl_delta: float, cost: float) -> float:
     return (pl_delta / cost * 100.0) if cost > 0 else 0.0
 
 
+def nav_inputs(agg: dict, mkt: str) -> dict:
+    """보유 평가액과 누적 매매 현금흐름으로 시장×전략 NAV 입력을 만든다.
+
+    보유만 보는 화면에서 매수는 +평가액/+외부흐름, 매도는 -평가액/-외부흐름으로
+    상쇄된다. 따라서 종목 교체나 시드 크기가 수익률을 희석하지 않고 가격·실현손익
+    변화만 TWR에 남는다.
+    """
+    fx = 1.0 if mkt == "KR" else float(settings.FX_USDKRW)
+    out = {}
+    for sleeve in ("A", "B"):
+        bucket = agg[mkt][sleeve]
+        flows = costbook.market_totals(mkt, sleeve)
+        out[sleeve] = {
+            "value": (float(bucket["cost"]) + float(bucket["pl"])) * fx,
+            "flow": float(flows["buy_cost"]) - float(flows["sell_proceeds"]),
+        }
+    out["account"] = {
+        "value": out["A"]["value"] + out["B"]["value"],
+        "flow": out["A"]["flow"] + out["B"]["flow"],
+    }
+    return out
+
+
+def holdings_equal_weight(rows: list[dict], mkt: str, recs: dict,
+                          baseline: set, today: str,
+                          start_codes: set[str] | None = None) -> dict:
+    """장 시작 전부터 보유한 종목의 전일종가 대비 수익률을 동일가중 평균한다.
+
+    스캐너가 이미 가진 일봉 캐시만 읽고 네트워크를 추가 호출하지 않는다. 오늘
+    신규매수는 장 시작 보유가 아니므로 제외한다. 캐시가 없는 종목은 coverage에
+    반영하고 추측하지 않는다.
+    """
+    from scanner import cache
+    by_sleeve = {"A": [], "B": []}
+    eligible = 0
+    for row in rows:
+        code = str(row.get("code") or "").upper()
+        market = ("KR" if row.get("market") == "KR" or row.get("ccy") == "KRW"
+                  else "US")
+        if not code or market != mkt or code in baseline:
+            continue
+        if start_codes is not None and code not in start_codes:
+            continue                              # 장중 신규·수동 매수도 섞지 않음
+        rec = recs.get(code) or {}
+        opened = str(rec.get("opened") or "")
+        if not opened or opened >= today:
+            continue                              # 추적일 불명·오늘 신규는 장시작 보유 아님
+        eligible += 1
+        frame = cache.load(code)                  # 캐시만: 없다고 신규 수집 금지
+        if frame is None or frame.empty:
+            continue
+        try:
+            prior = frame[frame.index.strftime("%Y-%m-%d") < today]
+            prev = float(prior["Close"].iloc[-1])
+            cur = float(row.get("cur") or 0)
+        except (KeyError, IndexError, TypeError, ValueError):
+            continue
+        if prev <= 0 or cur <= 0:
+            continue
+        sleeve = "B" if str(rec.get("sleeve") or "A").upper() == "B" else "A"
+        by_sleeve[sleeve].append((cur / prev - 1.0) * 100.0)
+    all_values = by_sleeve["A"] + by_sleeve["B"]
+    avg = lambda values: (sum(values) / len(values)) if values else None
+    return {
+        "account": avg(all_values), "A": avg(by_sleeve["A"]),
+        "B": avg(by_sleeve["B"]), "covered": len(all_values),
+        "eligible": eligible,
+    }
+
+
+def _twr_step(day: dict, nav: dict) -> dict[str, float]:
+    """한 관측 구간의 외부흐름을 제거해 일중 TWR을 누적한다."""
+    values = {}
+    prev = day.setdefault("nav_prev", {})
+    wealth = day.setdefault("wealth", {"account": 1.0, "A": 1.0, "B": 1.0})
+    for key in ("account", "A", "B"):
+        cur_value = float((nav.get(key) or {}).get("value") or 0)
+        cur_flow = float((nav.get(key) or {}).get("flow") or 0)
+        old = prev.get(key)
+        if old and float(old.get("value") or 0) > 0:
+            external = cur_flow - float(old.get("flow") or 0)
+            interval = (cur_value - float(old["value"]) - external) / float(old["value"])
+            # 데이터 손상/통화 급변으로 -100% 이하가 나오면 그 틱은 누적하지 않는다.
+            if interval > -1 and abs(interval) < 5:
+                wealth[key] = float(wealth.get(key, 1.0)) * (1.0 + interval)
+        prev[key] = {"value": cur_value, "flow": cur_flow}
+        values[key] = (float(wealth.get(key, 1.0)) - 1.0) * 100.0
+    day["nav_last"] = {key: dict(value) for key, value in prev.items()}
+    return values
+
+
 def session_update(st: dict, mkt: str, agg: dict, idx: dict,
-                   now_hhmm: str, today: str) -> dict:
+                   now_hhmm: str, today: str, *,
+                   nav: dict | None = None,
+                   idx_previous_close: dict | None = None,
+                   holdings_daily: dict | None = None,
+                   holding_start_codes: set[str] | None = None) -> dict:
     """세션 상태 갱신 → 계좌·A/B·모든 지수를 같은 0% 기준으로 저장."""
     day = st.setdefault("day", {}).get(mkt)
     tot_pl = agg[mkt]["A"]["pl"] + agg[mkt]["B"]["pl"]
     tot_cost = agg[mkt]["A"]["cost"] + agg[mkt]["B"]["cost"]
-    if not day or day.get("date") != today:                 # 세션 첫 틱 = 기준
+    carry = (st.get("carry") or {}).get(mkt)
+    nav_mode = nav is not None
+    if (not day or day.get("date") != today
+            or (nav_mode and day.get("calc_version") != 3)):
+        use_carry = bool(carry and nav_mode)
         day = {"date": today, "pl0": tot_pl,
                "a_pl0": agg[mkt]["A"]["pl"], "b_pl0": agg[mkt]["B"]["pl"],
-               "idx0": {k: v for k, v in idx.items()}, "series": [],
+               "idx0": {
+                   k: ((idx_previous_close or {}).get(k) if use_carry
+                       and (idx_previous_close or {}).get(k) else v)
+                   for k, v in idx.items()},
+               "series": [],
                "series_v2": [],
-               "opened": True, "closed": False}
+               "opened": True, "closed": False,
+               "calc_version": 3 if nav_mode else 2,
+               "basis": ("previous_close" if use_carry else "first_sample"),
+               "holding_start_codes": sorted(holding_start_codes or set())}
+        if use_carry:
+            day["nav_prev"] = carry.get("nav_last") or {}
+            day["wealth"] = {"account": 1.0, "A": 1.0, "B": 1.0}
         st["day"][mkt] = day
     day.setdefault("a_pl0", agg[mkt]["A"]["pl"])
     day.setdefault("b_pl0", agg[mkt]["B"]["pl"])
     day.setdefault("idx0", {k: v for k, v in idx.items()})
     day.setdefault("series", [])
     day.setdefault("series_v2", [])
-    acct = _pct(tot_pl - day["pl0"], tot_cost)
-    a = _pct(agg[mkt]["A"]["pl"] - day["a_pl0"], agg[mkt]["A"]["cost"])
-    b = _pct(agg[mkt]["B"]["pl"] - day["b_pl0"], agg[mkt]["B"]["cost"])
+    day.setdefault("holding_start_codes", sorted(holding_start_codes or set()))
+    if nav_mode:
+        twr = _twr_step(day, nav)
+        acct, a, b = twr["account"], twr["A"], twr["B"]
+    else:
+        acct = _pct(tot_pl - day["pl0"], tot_cost)
+        a = _pct(agg[mkt]["A"]["pl"] - day["a_pl0"], agg[mkt]["A"]["cost"])
+        b = _pct(agg[mkt]["B"]["pl"] - day["b_pl0"], agg[mkt]["B"]["cost"])
     ipct = {}
     for name, v in idx.items():
         v0 = day["idx0"].get(name)
@@ -154,6 +283,15 @@ def session_update(st: dict, mkt: str, agg: dict, idx: dict,
         "A": round(a, 4),
         "B": round(b, 4),
         "indices": {name: round(value, 4) for name, value in ipct.items()},
+        "holdings": {
+            key: (round(value, 4) if value is not None else None)
+            for key, value in (holdings_daily or {}).items()
+        },
+        "daily_indices": {
+            name: round((value / (idx_previous_close or {}).get(name) - 1) * 100, 4)
+            for name, value in idx.items()
+            if (idx_previous_close or {}).get(name)
+        },
     }
     if day["series_v2"] and day["series_v2"][-1].get("t") == now_hhmm:
         day["series_v2"][-1] = point
@@ -248,6 +386,7 @@ def dashboard_snapshot(st: dict | None = None) -> dict:
         markets[market] = {
             "label": labels[market],
             "date": day.get("date"),
+            "basis": day.get("basis") or "first_sample",
             "indices": [name for _symbol, name in IDX[market]],
             "series": series[-SERIES_MAX * 4:],
         }
@@ -266,14 +405,16 @@ def dashboard_snapshot(st: dict | None = None) -> dict:
             "A": (float(row["a"]) if row.get("a") is not None else None),
             "B": (float(row["b"]) if row.get("b") is not None else None),
             "indices": {str(k): float(v) for k, v in indices.items()},
+            "holdings": dict(row.get("holdings") or {}),
+            "daily_indices": dict(row.get("daily_indices") or {}),
         })
     return {
-        "version": 2,
+        "version": 3,
         "generated_at": st.get("updated_at"),
         "sample_seconds": SAMPLE_SECONDS,
         "markets": markets,
         "days": days,
-        "basis": "KIS 봇 보유 평가손익 기준",
+        "basis": "KIS 봇 보유 NAV/TWR · 매매 현금흐름 제거 · 미국은 환율 포함",
     }
 
 
@@ -286,14 +427,15 @@ def tick(now: datetime.datetime | None = None) -> None:
     """매수루프가 5분마다 호출. 세션 중 스냅샷·알림, 세션 종료 시 마감 요약."""
     now = now or datetime.datetime.now(
         datetime.timezone(datetime.timedelta(hours=9)))
-    today = now.strftime("%Y-%m-%d")
     st = _load()
     for mkt, ccy in (("US", "USD"), ("KR", "KRW")):
+        session_day = (now.astimezone(ZoneInfo("America/New_York")).date().isoformat()
+                       if mkt == "US" else now.date().isoformat())
         live = settings.market_open(ccy)
         day = (st.get("day") or {}).get(mkt)
         if not live:
             #  세션 방금 끝났으면 마감 요약 1회
-            if day and day.get("date") == today and day.get("series") \
+            if day and day.get("date") == session_day and day.get("series") \
                     and not day.get("closed"):
                 day["closed"] = True
                 _close_alert(st, mkt, day)
@@ -321,13 +463,41 @@ def tick(now: datetime.datetime | None = None) -> None:
         if cost <= 0:
             continue                                    # 이 시장 보유 없음 — 비교 무의미
         idx = {}
+        idx_previous = {}
         for sym, name in IDX[mkt]:
-            v = _yahoo_last(sym)
-            if v:
-                idx[name] = v
+            quote = _yahoo_quote(sym)
+            if quote:
+                idx[name] = quote["current"]
+                if quote.get("previous_close"):
+                    idx_previous[name] = quote["previous_close"]
         if not idx:
             continue                                    # 지수 조회 실패 — 건너뜀
-        r = session_update(st, mkt, agg, idx, now.strftime("%H:%M"), today)
+        existing_day = (st.get("day") or {}).get(mkt) or {}
+        persisted_start = (
+            existing_day.get("holding_start_codes")
+            if existing_day.get("date") == session_day else None)
+        if persisted_start is None:
+            start_codes = set()
+            for row in rows:
+                code = str(row.get("code") or "").upper()
+                row_market = (
+                    "KR" if row.get("market") == "KR" or row.get("ccy") == "KRW"
+                    else "US")
+                if not code or row_market != mkt or code in baseline:
+                    continue
+                opened = str((recs.get(code) or {}).get("opened") or "")
+                if not opened or opened >= session_day:
+                    continue
+                start_codes.add(code)
+        else:
+            start_codes = {str(code).upper() for code in persisted_start}
+        r = session_update(
+            st, mkt, agg, idx, now.strftime("%H:%M"), session_day,
+            nav=nav_inputs(agg, mkt), idx_previous_close=idx_previous,
+            holdings_daily=holdings_equal_weight(
+                rows, mkt, recs, baseline, session_day,
+                start_codes=start_codes),
+            holding_start_codes=start_codes)
         st.setdefault("sampled_at", {})[mkt] = now.timestamp()
         first = len(r["series"]) == 1
         last_alert = st.setdefault("alert", {}).get(mkt, 0)
@@ -373,7 +543,12 @@ def _close_alert(st: dict, mkt: str, day: dict) -> None:
         "d": day["date"], "mkt": mkt, "acct": acct, "idx": ipct,
         "a": rich.get("A"), "b": rich.get("B"),
         "indices": rich.get("indices") or {IDX[mkt][0][1]: ipct},
+        "holdings": rich.get("holdings") or {},
+        "daily_indices": rich.get("daily_indices") or {},
     })
+    if day.get("nav_last"):
+        st.setdefault("carry", {})[mkt] = {
+            "date": day.get("date"), "nav_last": day["nav_last"]}
     del days[:-120]                                      # 최근 120일만 보관
     cap = capture_stats(days, mkt)
     name = "미장·나스닥" if mkt == "US" else "국장·코스피"

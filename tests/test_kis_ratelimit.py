@@ -11,12 +11,21 @@
 from __future__ import annotations
 
 import os
+import multiprocessing
 import sys
+import tempfile
 import time
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from bot.kis_ratelimit import SecondBucket, for_env
+
+
+def _shared_worker(path, ready, start, result):
+    bucket = SecondBucket(2, order_reserve=1, shared_path=path)
+    ready.put(True)
+    start.wait(5)
+    result.put(bucket.try_acquire("data"))
 
 
 def test_mock_data_capacity_and_order_reserve():
@@ -51,7 +60,7 @@ def test_blocking_acquire_short():
 
 
 def test_live_capacities():
-    b = for_env(is_mock=False)                          # 20/s, reserve 2
+    b = SecondBucket(20, order_reserve=2)               # 20/s, reserve 2
     t0 = 3000.0
     got_data = sum(b.try_acquire("data", now=t0 + i * 0.001) for i in range(30))
     assert got_data == 18, f"data 용량 오류: {got_data}(기대 18)"
@@ -60,11 +69,44 @@ def test_live_capacities():
     print("[PASS] 실전 20/s: data 18·order 예약 2(총 20)")
 
 
+def test_shared_bucket_combines_process_instances():
+    with tempfile.TemporaryDirectory() as tmp:
+        path = os.path.join(tmp, "rate.json")
+        a = SecondBucket(2, order_reserve=1, shared_path=path)
+        b = SecondBucket(2, order_reserve=1, shared_path=path)
+        t0 = 4000.0
+        assert a.try_acquire("data", now=t0)
+        assert not b.try_acquire("data", now=t0 + 0.1)
+        assert b.try_acquire("order", now=t0 + 0.2)
+        assert not a.try_acquire("order", now=t0 + 0.3)
+    print("[PASS] 서로 다른 인스턴스가 호스트 공용 버킷 한도를 합산")
+
+
+def test_shared_bucket_combines_processes():
+    with tempfile.TemporaryDirectory() as tmp:
+        path = os.path.join(tmp, "rate.json")
+        ctx = multiprocessing.get_context("fork")
+        ready, result, start = ctx.Queue(), ctx.Queue(), ctx.Event()
+        ps = [ctx.Process(target=_shared_worker,
+                          args=(path, ready, start, result)) for _ in range(2)]
+        for p in ps:
+            p.start()
+        ready.get(timeout=5); ready.get(timeout=5)
+        start.set()
+        got = [result.get(timeout=5), result.get(timeout=5)]
+        for p in ps:
+            p.join(5)
+        assert sorted(got) == [False, True], got
+    print("[PASS] 두 프로세스 data 호출 합계도 모의 예약한도(1/s) 준수")
+
+
 def main():
     test_mock_data_capacity_and_order_reserve()
     test_window_slides()
     test_blocking_acquire_short()
     test_live_capacities()
+    test_shared_bucket_combines_process_instances()
+    test_shared_bucket_combines_processes()
     print("\n모든 리미터 테스트 통과 — 사전 억제·order 예약·짧은 대기.")
 
 

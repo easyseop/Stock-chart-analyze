@@ -200,13 +200,17 @@ def test_sentinel_kr_uses_market():
     importlib.reload(S)
     br = object.__new__(S._KisBroker)            # __init__(키 검증) 우회
     br.quote = lambda code, ccy: 70_000.0
-    with mock.patch("bot.kis_orders.place_sell",
+    with mock.patch.object(S, "LIVE", True), \
+         mock.patch("bot.kis.sellable_holdings", return_value={"005930": 2}), \
+         mock.patch("bot.kis_orders.place_sell",
                     return_value={"ok": True, "act": "ack"}) as ps:
         br.place_sell("005930", 2, "손절", "k#1")
         assert ps.call_args.kwargs.get("order_type") == "market"
         assert ps.call_args.kwargs.get("market") == "KR"
     # 미국은 order_type 미지정(지정가)
-    with mock.patch("bot.kis_orders.place_sell",
+    with mock.patch.object(S, "LIVE", True), \
+         mock.patch("bot.kis.sellable_holdings", return_value={"AAPL": 2}), \
+         mock.patch("bot.kis_orders.place_sell",
                     return_value={"ok": True, "act": "ack"}) as ps2:
         br.place_sell("AAPL", 2, "손절", "k#2")
         assert ps2.call_args.kwargs.get("order_type") is None
@@ -230,9 +234,12 @@ def test_kr_cancel_body():
     print("[PASS] 국내 취소 바디(KRX_FWDG_ORD_ORGNO·domestic 경로)")
 
 
-def test_no_self_block_after_pre_record():
-    """파수꾼이 hldg_before 남기려 place_sell 전에 record_submit해도, place_order가
-    자기 주문키를 in-flight로 오인해 스스로를 막지 않아야 한다(자기 차단 버그 회귀)."""
+def test_pre_record_key_reuse_is_blocked():
+    """이미 기록된 주문키를 다시 전송하면 안 된다.
+
+    실제 파수꾼은 kis_orders.try_record_submit이 검사+선기록을 원자 처리한다.
+    별도 pre-record 후 같은 키를 허용하면 두 프로세스가 같은 주문을 보낼 수 있다.
+    """
     with tempfile.TemporaryDirectory() as tmp:
         _, L, KO = _setup(tmp)
         # 파수꾼 pre-record(메타에 hldg_before) — send 이전 크래시 대비 기록
@@ -242,12 +249,12 @@ def test_no_self_block_after_pre_record():
         with mock.patch("urllib.request.urlopen", _recording_urlopen(cap)):
             r = KO.place_sell("k#1", "005930", 1, 71_000, market="KR",
                               order_type="market", min_interval_s=0.0)
-        assert r["ok"] and r["act"] == "ack", r        # 차단되지 않고 전송됨
-        # 다른 키의 동일종목 주문은 여전히 차단(in-flight 보호 유지)
+        assert r["act"] == "blocked", r
+        # 다른 키의 동일종목 주문도 in-flight 보호로 차단
         r2 = KO.place_sell("k#2", "005930", 1, 71_000, market="KR",
                            order_type="market", min_interval_s=0.0)
         assert r2["act"] == "blocked", r2
-    print("[PASS] pre-record 자기 차단 없음 + 타 주문 in-flight 보호 유지")
+    print("[PASS] pre-record 키 재전송 차단 + 동일종목 in-flight 보호 유지")
 
 
 def test_session_gate_routing():
@@ -283,7 +290,7 @@ def main():
     test_us_market_blocked()
     test_sentinel_kr_uses_market()
     test_kr_cancel_body()
-    test_no_self_block_after_pre_record()
+    test_pre_record_key_reuse_is_blocked()
     test_session_gate_routing()
     for k in list(os.environ):
         if k.startswith("KIS_"):

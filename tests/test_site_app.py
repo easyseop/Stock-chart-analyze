@@ -138,14 +138,12 @@ def test_oracle_service_is_loopback_read_only_dashboard():
 
 
 def test_portfolio_snapshot_cache_avoids_kis_poll_bursts():
-    payload = {"positions": [], "refresh_seconds": 60}
     with mock.patch("bot.market_cache.portfolio", return_value=None), \
-            mock.patch.object(portfolio_web, "_portfolio_cache", None), \
-            mock.patch.object(portfolio_web, "portfolio_snapshot",
-                              return_value=payload) as snapshot:
-        assert portfolio_web.cached_portfolio_snapshot() is payload
-        assert portfolio_web.cached_portfolio_snapshot() is payload
-    assert snapshot.call_count == 1
+            mock.patch.object(portfolio_web, "portfolio_snapshot") as snapshot:
+        payload = portfolio_web.cached_portfolio_snapshot()
+    assert payload["source"] == "shared_cache_unavailable"
+    assert payload["positions"] == []
+    snapshot.assert_not_called()
 
 
 def test_shared_cache_serves_fast_without_kis_balance_calls():

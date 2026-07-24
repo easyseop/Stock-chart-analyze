@@ -11,8 +11,12 @@
 from __future__ import annotations
 
 import importlib
+import io
+import json
 import os
 import sys
+import urllib.error
+from unittest import mock
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -98,12 +102,55 @@ def test_no_order_path_present():
     print("[PASS] 주문 경로 없음(Stage 0 안전)")
 
 
+def test_sellable_holdings_never_guesses_total():
+    kis = _reload()
+    balance = {"rt_cd": "0", "output1": [{
+        "ovrs_pdno": "ALK", "ovrs_cblc_qty": "8", "ord_psbl_qty": "3"}]}
+    with mock.patch.object(kis, "overseas_balance", return_value=balance):
+        assert kis.sellable_holdings("US", excg="NYSE") == {"ALK": 3}
+    # 매도가능 필드가 빠졌다고 총보유 8주로 폴백하면 초과매도 위험.
+    del balance["output1"][0]["ord_psbl_qty"]
+    with mock.patch.object(kis, "overseas_balance", return_value=balance):
+        assert kis.sellable_holdings("US", excg="NYSE") is None
+    print("[PASS] 주문 직전 수량=ord_psbl_qty, 필드 누락 시 총보유 추측 금지")
+
+
+def test_get_retry_acquires_each_http_slot():
+    kis = _reload(key="k", sec="s")
+    state = {"n": 0}
+
+    class Resp(io.BytesIO):
+        status = 200
+        def __enter__(self): return self
+        def __exit__(self, *args): return False
+
+    def fake(req, timeout=None):
+        state["n"] += 1
+        if state["n"] == 1:
+            body = json.dumps(
+                {"rt_cd": "1", "msg_cd": "EGW00201"}).encode()
+            raise urllib.error.HTTPError(req.full_url, 500, "rate", {},
+                                         io.BytesIO(body))
+        return Resp(json.dumps({"rt_cd": "0", "output": {}}).encode())
+
+    with mock.patch.object(kis, "_token", return_value="tok"), \
+         mock.patch.object(kis._LIMITER, "acquire",
+                           return_value=True) as acquire, \
+         mock.patch("urllib.request.urlopen", side_effect=fake), \
+         mock.patch("time.sleep"):
+        out = kis._get("/test", "TR", {})
+    assert out["rt_cd"] == "0" and acquire.call_count == 2
+    print("[PASS] GET 재시도도 HTTP마다 공용 유량 슬롯 재획득")
+
+
 def main():
     test_disabled_without_keys()
     test_tr_id_us_sell_asymmetry()
     test_tr_id_missing_raises()
     test_classify_error()
     test_no_order_path_present()
+    test_sellable_holdings_never_guesses_total()
+    test_get_retry_acquires_each_http_slot()
     print("\n모든 KIS 어댑터 테스트 통과.")
 
 

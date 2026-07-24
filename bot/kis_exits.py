@@ -101,6 +101,81 @@ def decide_b(target: float, price: float, qty: int,
     return acts
 
 
+def _half_base(code: str, rec: dict) -> str:
+    return f"xe:{code}:half:{rec.get('opened', '')}"
+
+
+def _half_progress(code: str, rec: dict, xs: dict) -> dict:
+    """절반익절 주문들의 브로커 확인 체결만 합산한다.
+
+    ACK(접수)는 0주 체결이다. 부분체결 주문이 끝나면 확인된 수량을 보존하고 잔여만
+    새 키로 재시도한다. 상태 파일이 주문 직후 쓰이기 전에 프로세스가 죽어도 원장 키
+    접두사로 주문을 복구할 수 있다.
+    """
+    base = _half_base(code, rec)
+    orders = ledger.orders_for(code, side="SELL", key_prefix=base)
+    target = int(xs.get("half_target") or 0)
+    if target <= 0 and orders:
+        target = int(orders[0].get("intended") or 0)
+    filled = sum(max(0, int(o.get("filled") or 0)) for o in orders)
+    open_keys = {o["key"] for o in ledger.open_orders(code, side="SELL")}
+    pending = any(o["key"] in open_keys for o in orders)
+    xs["half_target"] = target
+    xs["half_filled"] = min(target, filled) if target > 0 else filled
+    xs["half_keys"] = [o["key"] for o in orders]
+    return {"base": base, "target": target, "filled": filled,
+            "residual": max(0, target - filled), "pending": pending,
+            "attempts": len(orders)}
+
+
+def _capture_order_result(key: str, code: str, qty: int, reason: str,
+                          result) -> tuple[str, int]:
+    """테스트/레거시 브로커의 즉시 결과도 원장 상태로 정규화한다.
+
+    KIS 어댑터는 kis_orders 안에서 이미 선기록한다. 없는 경우에만 여기서 선기록해
+    절반익절의 확인 상태가 프로세스 메모리에만 남지 않게 한다.
+    """
+    if isinstance(result, dict):
+        state = str(result.get("state") or "rejected")
+        filled = max(0, int(result.get("filled") or 0))
+        open_order = result.get("open")
+        if open_order is None and state == "partial":
+            open_order = False                    # 즉시 partial 보고는 그 응답 기준 종료
+    else:
+        state, filled = (("filled", int(qty)) if result else ("rejected", 0))
+        open_order = False
+    cur = ledger.state_of(key)
+    if cur is None:
+        ledger.record_submit(key, code, int(qty), reason,
+                             meta={"side": "SELL"})
+        cur = ledger.state_of(key)
+    if (str((cur or {}).get("state") or "") != state
+            or int((cur or {}).get("filled") or 0) != filled):
+        ledger.on_result(
+            key, state, filled,
+            open_order=(False if state in ("filled", "rejected")
+                        else open_order))
+    return state, filled
+
+
+def _confirm_half_if_complete(code: str, rec: dict, xs: dict,
+                              entry: float, cur_stop: float) -> bool:
+    """목표 수량의 체결이 원장에서 확인된 뒤에만 half·본전 손절을 확정."""
+    progress = _half_progress(code, rec, xs)
+    if progress["target"] <= 0 or progress["filled"] < progress["target"]:
+        return False
+    xs["half"] = True
+    if not xs.get("half_stop_raised"):
+        if entry > cur_stop:
+            kis_positions.raise_stop(code, entry)
+        xs["half_stop_raised"] = True
+        notify.send(
+            f"✅ <b>KIS 익절 +1R 절반 체결 확정</b> — {code} "
+            f"{progress['target']}주 · 손절선 본전으로",
+            critical=True)
+    return True
+
+
 def manage(broker, held: dict, today: str) -> None:
     """봇 보유(진입 기록 있는 종목)에 청산 규칙 적용. 파수꾼이 매 사이클 호출."""
     kpos = kis_positions.load()
@@ -110,22 +185,51 @@ def manage(broker, held: dict, today: str) -> None:
         rec = kpos.get(code)
         if not rec or not rec.get("entry"):
             continue                            # 봇 진입 기록 없음(기보유 등) — 제외
-        if ledger.open_order_count(code) >= 1:
-            continue                            # in-flight 있으면 건드리지 않음
-        price = broker.quote(code, p.get("ccy", "USD"))
-        if not price or price <= 0:
-            continue
         xs = st.setdefault(code, {"half": False, "high": 0.0})
+        before = json.dumps(xs, sort_keys=True)
         entry = float(rec["entry"])
         stop0 = float(rec.get("stop0") or rec.get("stop") or 0)
         cur_stop = float(p.get("stop") or rec.get("stop") or 0)
         qty = int(p.get("q") or 0)
+
+        # 이전 사이클 ACK/부분체결을 먼저 확정한다. 접수만으로 half=True가 되지 않는다.
+        if _confirm_half_if_complete(code, rec, xs, entry, cur_stop):
+            cur_stop = max(cur_stop, entry)
+        if json.dumps(xs, sort_keys=True) != before:
+            changed = True
+        # 살아있는 SELL/취소만 새 청산을 전면 막는다. BUY 잔량 때문에 손절선
+        # 래칫까지 멈추면 보호가 후퇴한다. 다만 실제 매도 액션은 아래에서 BUY
+        # 취소확인 뒤에만 허용해 추가체결과의 초과매도 경합을 막는다.
+        if (ledger.open_order_count(code, side="SELL") >= 1
+                or ledger.open_order_count(code, side="CANCEL") >= 1):
+            st[code] = xs
+            continue
+        price = broker.quote(code, p.get("ccy", "USD"))
+        if not price or price <= 0:
+            st[code] = xs
+            continue
         if rec.get("sleeve") == "B":               # B 전용 청산(목표 VAH·타임스탑)
             acts = decide_b(float(rec.get("target") or 0), price, qty,
                             rec.get("opened", ""), today)
         else:
             acts = decide(entry, stop0, cur_stop, price, qty, xs,
                           rec.get("opened", ""), today)
+        has_open_buy = ledger.open_order_count(code, side="BUY") >= 1
+        wants_sell = any(act[0] in ("half_sell", "sell") for act in acts)
+        if has_open_buy and wants_sell:
+            # 실제 KIS 경로는 미체결 BUY를 취소 접수만으로 믿지 않고 브로커
+            # 미체결 목록에서 소멸할 때까지 확인한다. 테스트/레거시 브로커는
+            # 그 대사를 증명할 수 없으므로 매도를 보수적으로 미룬다.
+            if str(getattr(broker, "name", "")).lower().startswith("kis"):
+                from bot import kis_pending
+                if not kis_pending.cancel_open_buys_for_protection(code):
+                    st[code] = xs
+                    changed = changed or json.dumps(xs, sort_keys=True) != before
+                    continue
+            else:
+                st[code] = xs
+                changed = changed or json.dumps(xs, sort_keys=True) != before
+                continue
         for act in acts:
             changed = True
             if act[0] == "raise":
@@ -134,20 +238,35 @@ def manage(broker, held: dict, today: str) -> None:
                             f"(이익 보호 래칫)")
             elif act[0] == "half_done":            # 1주 — 매도 없이 본전 래칫만
                 xs["half"] = True
+                xs["half_stop_raised"] = True
                 if entry > cur_stop:
                     kis_positions.raise_stop(code, entry)
                     notify.send(f"🔒 <b>손절선 본전</b> — {code} (+1R 도달, 1주라 홀드)")
             elif act[0] == "half_sell":
-                sq = int(act[1])
-                key = f"xe:{code}:half:{rec.get('opened','')}"
+                progress = _half_progress(code, rec, xs)
+                if progress["target"] <= 0:
+                    xs["half_target"] = int(act[1])
+                    progress = _half_progress(code, rec, xs)
+                sq = int(progress["residual"])
+                if sq <= 0:
+                    _confirm_half_if_complete(code, rec, xs, entry, cur_stop)
+                    continue
+                key = f"{progress['base']}#{progress['attempts'] + 1}"
                 r = broker.place_sell(code, sq, "익절 +1R 절반", key)
-                ok = bool(r) if not isinstance(r, dict) else r.get("state") in ("ack", "filled")
-                if ok:                             # 성공 후에만 half 확정(P0 수정)
-                    xs["half"] = True
-                    if entry > cur_stop:
-                        kis_positions.raise_stop(code, entry)
+                rstate, filled = _capture_order_result(
+                    key, code, sq, "익절 +1R 절반", r)
+                confirmed = _confirm_half_if_complete(
+                    code, rec, xs, entry, cur_stop)
+                if rstate == "ack":
+                    status = "접수 · 체결 확인 대기(손절선 유지)"
+                elif rstate == "partial" and filled > 0:
+                    status = f"부분체결 {filled}주 · 잔여는 확인 후 재시도"
+                elif confirmed:
+                    status = "체결 확정 · 손절선 본전으로"
+                else:
+                    status = "실패/미확정 — 다음 사이클 대사·재시도"
                 notify.send(f"💰 <b>KIS 익절 +1R 절반</b> — {code} {sq}주 매도 "
-                            f"{'접수 · 손절선 본전으로' if ok else '실패 — 다음 사이클 재시도'}",
+                            f"{status}",
                             critical=True)
             elif act[0] == "sell":
                 _, sq, why = act

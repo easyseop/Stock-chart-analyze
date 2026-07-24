@@ -26,7 +26,7 @@ import os
 import sys
 import urllib.request
 
-from bot import kis, kis_buy, kis_pending, kis_positions, settings
+from bot import envelope, kis, kis_buy, kis_pending, kis_positions, settings
 
 _US_EXCGS = ("NASD", "NYSE", "AMEX")   # 보유 병합용 — NYSE/AMEX 보유 누락 방지
 _KST = datetime.timezone(datetime.timedelta(hours=9))
@@ -58,14 +58,16 @@ def _sold_today(fold: dict) -> set[str]:
 
 def _broker_state(fx: float):
     """미러 게이트 입력(브로커-진실). 반환:
-       (held, held_cost{code:원가KRW}, inflight{sym:(원가KRW, sleeve)}, sold_today)
+       (held, held_cost{code:원가KRW}, reservations[list], sold_today,
+        held_sleeves{code:A|B})
     또는 조회 실패 시 None.
 
     · 보유는 KR + 미 3거래소 병합(중복매수 구멍 차단).
     · held_cost = 잔고 − baseline(사용자 기보유)의 종목별 투입원가(원화).
-    · inflight = 원장의 in-flight BUY(접수 후 잔고 미반영). sleeve는 pos_key
-      접두("sb:"=B, 그 외=A)로 판별 — 슬리브별 예산 분리(A/B가 서로 잠식 방지).
-    · 종목별로 반환해 호출부가 슬리브별로 n_open·open_cost를 파티션한다.
+    · reservations = 원장의 in-flight/planned BUY **잔여수량 전부**. 같은 종목 여러
+      계획을 리스트로 보존하고 부분체결 뒤 잔량도 버리지 않는다.
+    · 잔고에 먼저 보인 보유의 sleeve도 원장 pos_key/sleeve로 귀속해 대사 전 B가
+      A로 기본귀속되지 않게 한다.
     """
     from bot import ledger, ownership
     rows: dict[str, dict] = {}
@@ -86,53 +88,94 @@ def _broker_state(fx: float):
                  * (1.0 if p.get("market") == "KR" else fx)
                  for c, p in rows.items() if c not in base}
     fold = ledger._fold()
-    inflight: dict[str, tuple[float, str]] = {}
+    try:
+        recorded = kis_positions.load()
+    except Exception:
+        recorded = {}
+
+    def order_sleeve(key: str, order: dict) -> str:
+        tagged = str(order.get("sleeve") or "").upper()
+        identity = str(order.get("pos_key") or key)
+        return "B" if tagged == "B" or identity.startswith("sb:") else "A"
+
+    held_sleeves = {
+        code: ("B" if (recorded.get(code) or {}).get("sleeve") == "B" else "A")
+        for code in held
+    }
+    # 실제 체결 징후가 있는 최신 BUY만 대사 전 보유 귀속의 진실로 쓴다. 미제출
+    # planned/미체결 주문이 기존 A 보유종목을 B로 재태깅하면 슬리브 회계가 흔들린다.
+    tagged_orders = sorted(
+        fold.items(),
+        key=lambda item: float(item[1].get("submitted_at")
+                               or item[1].get("created_at") or 0))
+    for key, order in tagged_orders:
+        symbol = str(order.get("symbol") or "").upper()
+        if symbol not in held or str(order.get("side") or "").upper() != "BUY":
+            continue
+        if str(order.get("state") or "") == "planned":
+            continue
+        before = order.get("hldg_before")
+        try:
+            confirmed = max(0, int(order.get("filled") or 0))
+            before_qty = int(before or 0)
+        except (TypeError, ValueError):
+            continue
+        if confirmed <= 0 and (
+                before is None or int(held[symbol]) <= before_qty):
+            continue                              # 미체결 주문 — 기존 귀속 유지
+        held_sleeves[symbol] = order_sleeve(key, order)
+
+    reservations: list[dict] = []
     for k, v in fold.items():
         if ((v.get("side") or "").upper() != "BUY"
                 or v.get("state") not in (ledger._INFLIGHT | {"planned"})):
             continue
         s = str(v.get("symbol") or "").upper()
-        if not s or s in held:
+        if not s or (v.get("state") == "partial" and v.get("open") is False):
             continue
         try:
-            q = int(v.get("intended") or 0)
+            intended = max(0, int(v.get("intended") or 0))
+            confirmed = max(0, int(v.get("filled") or 0))
+            if v.get("state") != "planned" and s in held:
+                if v.get("hldg_before") is not None:
+                    delta = max(0, int(held[s]) - int(v.get("hldg_before") or 0))
+                    confirmed = max(confirmed, min(intended, delta))
+                elif s not in recorded:            # 전환 전 원장 메타의 보수적 복구
+                    confirmed = max(confirmed, min(intended, int(held[s])))
+            q = max(0, intended - confirmed)
             px = float(v.get("price") or v.get("limit") or 0)
             mk = v.get("market") or kis.market_of_symbol(s)
             cost = q * px * (1.0 if mk == "KR" else fx)
         except (TypeError, ValueError):
-            cost = 0.0
-        sleeve = "B" if str(k).startswith("sb:") else "A"
-        inflight[s] = (cost, sleeve)
-    return held, held_cost, inflight, _sold_today(fold)
+            q, cost = 0, 0.0
+        if q > 0:
+            reservations.append({
+                "key": k, "symbol": s, "qty": q, "cost": cost,
+                "sleeve": order_sleeve(k, v)})
+    return held, held_cost, reservations, _sold_today(fold), held_sleeves
 
 
-def _partition(held_cost: dict, inflight: dict, sleeve: str,
-               b_codes: set) -> tuple[int, float]:
-    """슬리브별 (봇 포지션 수, 투입원가KRW). b_codes=현재 B가 보유한 종목 집합.
-       held 종목은 b_codes로, inflight는 원장 sleeve 태그로 귀속."""
-    def _mine(code):
-        return (code in b_codes) if sleeve == "B" else (code not in b_codes)
-    n = 0
+def _partition(held_cost: dict, reservations: list[dict], sleeve: str,
+               held_sleeves: dict[str, str]) -> tuple[int, float]:
+    """슬리브별 distinct 포지션 수와 held+예약 원가. 동종목 예약은 모두 합산."""
+    if isinstance(held_sleeves, set):             # 이전 호출 계약 호환
+        held_sleeves = {
+            code: ("B" if code in held_sleeves else "A") for code in held_cost}
+    if isinstance(reservations, dict):             # 이전 테스트/도구 계약 호환
+        reservations = [
+            {"symbol": symbol, "cost": value[0], "sleeve": value[1]}
+            for symbol, value in reservations.items()]
+    codes = set()
     cost = 0.0
     for c, cst in held_cost.items():
-        if _mine(c):
-            n += 1
+        if held_sleeves.get(c, "A") == sleeve:
+            codes.add(c)
             cost += cst
-    for s, (cst, sl) in inflight.items():
-        if sl == sleeve:
-            n += 1
-            cost += cst
-    return n, cost
-
-
-def _b_held_codes(held: dict) -> set:
-    """현재 보유 중 슬리브 B가 산 종목 집합(kis_positions 태그 기준)."""
-    try:
-        recs = kis_positions.load()
-    except Exception:
-        return set()
-    return {c for c, info in recs.items()
-            if info.get("sleeve") == "B" and c in held}
+    for reservation in reservations:
+        if reservation["sleeve"] == sleeve:
+            codes.add(reservation["symbol"])
+            cost += float(reservation["cost"])
+    return len(codes), cost
 
 
 def _shelf_cands(signals: list[dict]) -> list[dict]:
@@ -184,10 +227,17 @@ def run_once(signals: list[dict], *, fx: float | None = None,
             results.append({"code": str(s["code"]).upper(), "gate": "holdings",
                             "why": "잔고 조회실패/불완전 — skip"})
         return results
-    held, held_cost, inflight, sold_today = st
-    b_codes = _b_held_codes(held)
+    held, held_cost, reservations, sold_today, held_sleeves = st
     #   슬리브별 파티션 — A/B가 서로의 종목 수·투입원가를 세지 않게(예산 잠식 방지).
-    n_open, open_cost = _partition(held_cost, inflight, sleeve, b_codes)
+    n_open, open_cost = _partition(
+        held_cost, reservations, sleeve, held_sleeves)
+    total_open_cost = (sum(float(v) for v in held_cost.values())
+                       + sum(float(r["cost"]) for r in reservations))
+    total_held_cost = sum(float(v) for v in held_cost.values())
+    sleeve_held_cost = sum(
+        float(cost) for code, cost in held_cost.items()
+        if held_sleeves.get(code, "A") == sleeve)
+    operating_limit = envelope.operating_limit_krw()
     prefix = "sb:" if sleeve == "B" else "kb:"
 
     for s in cand:
@@ -245,6 +295,10 @@ def run_once(signals: list[dict], *, fx: float | None = None,
                                   per_share_risk_usd=per_share, krw_per_usd=fx,
                                   excg=excg, market=market, reason=reason,
                                   open_positions=n_open, open_cost_krw=open_cost,
+                                  total_open_cost_krw=total_open_cost,
+                                  held_cost_krw=sleeve_held_cost,
+                                  total_held_cost_krw=total_held_cost,
+                                  operating_limit_krw=operating_limit,
                                   hldg_before=0, seed_krw=seed_krw,
                                   sleeve=sleeve,
                                   limit_price=pb if mode == "pullback" else None,
@@ -267,8 +321,11 @@ def run_once(signals: list[dict], *, fx: float | None = None,
             reserve_px = ((d.qty * order_px + pending_qty * pb) / reserve_qty
                           if reserve_qty > 0 else order_px)
             open_cost += reserve_qty * reserve_px * (1.0 if market == "KR" else fx)
+            total_open_cost += reserve_qty * reserve_px * (
+                1.0 if market == "KR" else fx)
+            held_sleeves[code] = sleeve
             if sleeve == "B":
-                b_codes.add(code)
+                held_sleeves[code] = "B"
             try:
                 from bot import notify
                 u = "원" if market == "KR" else "$"
@@ -328,6 +385,16 @@ def _cycle() -> None:
     except Exception as e:
         print(f"[부팅 대사 오류] {type(e).__name__}: {e}", flush=True)
     try:
+        from bot import kis_accounting
+        watch = kis_accounting.monitor_unaccounted_fills()
+        if watch.get("pending"):
+            print(f"[체결 회계 감시] 미회계 예약 {watch['pending']}건 · "
+                  f"신규 알림 {len(watch.get('alerts') or [])}건", flush=True)
+    except Exception as e:
+        # 감시 실패가 주문 안전 게이트를 약화하지 않는다. 미회계 예약은 ledger가
+        # 계속 보존하므로 초과지출 대신 신규매수 가용성만 낮아진다.
+        print(f"[체결 회계 감시 오류] {type(e).__name__}: {e}", flush=True)
+    try:
         for p in kis_pending.process():
             print(f"  [대기] {p.get('key')} {p.get('act')} {p.get('why','')}",
                   flush=True)
@@ -340,8 +407,7 @@ def _cycle() -> None:
         mark = "✓ 전송" if r.get("ok") else "·"
         print(f"  {mark} {r['code']} [{r['gate']}] {r.get('why', '')}", flush=True)
     # 슬리브 B(매물대 반등) — BOT_SEED_SB_KRW 설정 시에만(별도 예산 테스트).
-    from bot import envelope
-    sb = envelope.seed_krw_sb()
+    sb = envelope.sleeve_limit_krw("B")
     if sb > 0:
         for r in run_once(sigs, sleeve="B", group="shelf", seed_krw=sb,
                           reason="매물대B"):

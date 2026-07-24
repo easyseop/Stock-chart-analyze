@@ -108,12 +108,15 @@ PORTFOLIO = {
 }
 
 PERFORMANCE = {
-    "version": 2, "generated_at": datetime.now(timezone.utc).isoformat(),
-    "sample_seconds": 300, "basis": "KIS 봇 보유 평가손익 기준",
+    "version": 3, "generated_at": datetime.now(timezone.utc).isoformat(),
+    "sample_seconds": 300,
+    "basis": "KIS 봇 보유 NAV/TWR · 매매 현금흐름 제거 · 미국은 환율 포함",
     "markets": {
         "US": {"label": "미국", "date": "2026-07-24",
+               "basis": "previous_close",
                "indices": ["나스닥", "S&P500"], "series": []},
         "KR": {"label": "한국", "date": "2026-07-24",
+               "basis": "previous_close",
                "indices": ["코스피", "코스닥"], "series": []},
     },
     "days": [], "environment": "mock", "read_only": True,
@@ -125,7 +128,14 @@ for market, index_names in (("US", ["나스닥", "S&P500"]),
             "t": f"{9 + i // 12:02d}:{(i % 12) * 5:02d}",
             "account": round(i * .035 + ((i % 5) - 2) * .04, 3),
             "A": round(i * .041, 3), "B": round(i * .018 - .12, 3),
+            "holdings": {"account": round(i * .03 + .11, 3),
+                         "A": round(i * .035, 3), "B": round(i * .016, 3),
+                         "covered": 7, "eligible": 8},
             "indices": {
+                index_names[0]: round(i * .025, 3),
+                index_names[1]: round(i * .019 - .05, 3),
+            },
+            "daily_indices": {
                 index_names[0]: round(i * .025, 3),
                 index_names[1]: round(i * .019 - .05, 3),
             },

@@ -135,12 +135,22 @@ def boot_reconcile(excgs: tuple[str, ...] = ("NASD", "NYSE", "AMEX")) -> dict:
     · 조회 실패(None)는 fail-closed: ok=False, 게이트 닫힘(재시도는 호출부 몫).
     """
     _STATE["done"] = False
+    health = ledger.corruption_status()
+    if not health["healthy"]:
+        _notify(f"🚨 주문 원장 손상({health['lines']}) — 신규 매매 전면 차단, "
+                "수동 복구 필요", critical=True)
+        return {"ok": False, "unknowns": 0, "resolved": 0, "low": 0,
+                "results": [], "ack_resolved": 0,
+                "ledger_corrupt_lines": health["lines"]}
     acks = _resolve_acks()                        # 접수(ack)→체결 확정(잔고대사)
+    stale = ledger.promote_stale_submitted(
+        kis_reconcile.ACK_AGE_MIN_S)              # 크래시 창 submitted→UNKNOWN 잠금
     unknowns = pending_unknowns()
     if not unknowns:
         _STATE.update(done=True, low=0)
         return {"ok": True, "unknowns": 0, "resolved": 0, "low": 0,
-                "results": [], "ack_resolved": len(acks)}
+                "results": [], "ack_resolved": len(acks),
+                "stale_promoted": len(stale)}
 
     def _is_kr(u: dict) -> bool:
         return (u.get("market") == "KR"
@@ -181,7 +191,8 @@ def boot_reconcile(excgs: tuple[str, ...] = ("NASD", "NYSE", "AMEX")) -> dict:
                         "resolved": sum(1 for r in kr_results
                                         if r.get("confidence") == ledger.CONF_HIGH),
                         "low": kr_low, "results": kr_results,
-                        "ack_resolved": len(acks)}
+                        "ack_resolved": len(acks),
+                        "stale_promoted": len(stale)}
             all_nccs_rows += (n.get("output") or [])
             all_ccnl_rows += (c.get("output") or [])
 
@@ -198,10 +209,11 @@ def boot_reconcile(excgs: tuple[str, ...] = ("NASD", "NYSE", "AMEX")) -> dict:
             for r in resolved), critical=True)
     _STATE.update(done=True, low=len(low))
     return {"ok": True, "unknowns": len(unknowns), "resolved": len(resolved),
-            "low": len(low), "results": results, "ack_resolved": len(acks)}
+            "low": len(low), "results": results, "ack_resolved": len(acks),
+            "stale_promoted": len(stale)}
 
 
 def trading_allowed() -> bool:
     """신규 매매 허용 게이트 — 부팅 대사가 이 프로세스에서 완료됐어야 True.
     (LOW 잔존은 종목별 잠금이 이미 막으므로 전체 게이트는 열되, 그 종목은 잠김.)"""
-    return bool(_STATE["done"])
+    return bool(_STATE["done"] and ledger.ledger_healthy())

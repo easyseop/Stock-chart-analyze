@@ -94,10 +94,66 @@ def test_unknown_reconcile_recovers_accounting():
         print("[PASS] UNKNOWN→ccnl HIGH: 실제 체결가·수량으로 원가/포지션 복구")
 
 
+def test_accounting_retry_after_crash_is_idempotent():
+    """costbook/position 기록 뒤 accounted 직전 크래시가 나도 재시도 중복 0."""
+    with tempfile.TemporaryDirectory() as tmp, \
+         mock.patch.object(L, "LEDGER_PATH", os.path.join(tmp, "orders.jsonl")), \
+         mock.patch.object(P, "PATH", os.path.join(tmp, "positions.jsonl")), \
+         mock.patch.dict(os.environ, {"COSTBOOK_PATH": os.path.join(tmp, "cost.jsonl")}):
+        L.record_submit("buy:crash", "AAPL", 3, meta=_meta())
+        L.on_result("buy:crash", "filled", 3, fill_price=100.0,
+                    fill_price_source="ccnl", open_order=False)
+        with mock.patch.object(
+                L, "_append_unlocked",
+                side_effect=OSError("accounted 직전 크래시")):
+            try:
+                A.sync_fill("buy:crash")
+                raise AssertionError("fault injection이 발생하지 않음")
+            except OSError:
+                pass
+        assert C.open_qty("AAPL") == 3 and P.load()["AAPL"]["qty"] == 3
+        assert int(L.state_of("buy:crash").get("accounted") or 0) == 0
+
+        retried = A.sync_fill("buy:crash")
+        assert retried["ok"] and retried["delta"] == 3
+        assert C.open_qty("AAPL") == 3 and P.load()["AAPL"]["qty"] == 3
+        assert L.state_of("buy:crash")["accounted"] == 3
+        print("[PASS] 회계 마지막 기록 fault→재시도해도 costbook/포지션 중복 0")
+
+
+def test_unaccounted_fill_alerts_once_after_three_cycles():
+    """실체결가 미확인으로 예약이 묶이면 3회 뒤 1회 경보하고 회계 후 정리한다."""
+    with tempfile.TemporaryDirectory() as tmp, \
+         mock.patch.object(L, "LEDGER_PATH", os.path.join(tmp, "orders.jsonl")), \
+         mock.patch.object(A, "WATCH_PATH", os.path.join(tmp, "watch.json")), \
+         mock.patch("bot.notify.send", return_value=True) as send:
+        L.record_submit("buy:watch", "AAPL", 3, meta=_meta())
+        L.on_result("buy:watch", "filled", 3, open_order=False)
+
+        assert A.monitor_unaccounted_fills(alert_cycles=3)["alerts"] == []
+        assert A.monitor_unaccounted_fills(alert_cycles=3)["alerts"] == []
+        third = A.monitor_unaccounted_fills(alert_cycles=3)
+        assert third["pending"] == 1 and third["alerts"][0]["cycles"] == 3
+        assert send.call_count == 1
+        message = send.call_args.args[0]
+        assert "filled=3 accounted=0" in message and "예약은 계속 유지" in message
+
+        fourth = A.monitor_unaccounted_fills(alert_cycles=3)
+        assert fourth["pending"] == 1 and fourth["alerts"] == []
+        assert send.call_count == 1
+
+        L.mark_accounted("buy:watch", 3)
+        done = A.monitor_unaccounted_fills(alert_cycles=3)
+        assert done["pending"] == 0 and A._watch_load()["items"] == {}
+        print("[PASS] filled>accounted 3회 지속 시 1회 경보·회계 후 감시 정리")
+
+
 def main():
     test_partial_fill_then_final_and_sell()
     test_sleeve_isolation_and_reject()
     test_unknown_reconcile_recovers_accounting()
+    test_accounting_retry_after_crash_is_idempotent()
+    test_unaccounted_fill_alerts_once_after_three_cycles()
     print("\nKIS 체결 회계 검증 통과.")
 
 

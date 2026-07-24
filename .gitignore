@@ -20,9 +20,11 @@ bot/order_ledger.jsonl
 bot/kill_log.jsonl
 bot/costbook.jsonl
 bot/kis_positions.jsonl
+bot/kis_accounting_watch.json
 bot/symbol_freeze.json
 bot/kill_switch.json
 bot/user_baseline.json
 bot/alpha_state.json
 bot/kis_exits_state.json
 bot/daily_loss.json
+bot/*.lock

@@ -117,12 +117,15 @@ def test_success_binds_odno():
 def test_rate_limited_retry_then_ok():
     with tempfile.TemporaryDirectory() as tmp:
         _, L, KO = _setup(tmp)
-        with mock.patch("urllib.request.urlopen",
+        with mock.patch.object(KO._LIMITER, "acquire",
+                               return_value=True) as acquire, \
+             mock.patch("urllib.request.urlopen",
                         _fake_urlopen([_RATE, _OK_ORDER])), \
              mock.patch("time.sleep"):                # 백오프 즉시 통과
             r = KO.place_sell("p2#1", "TSLA", 1, 200.0)
         assert r["ok"] and r["act"] == "ack"
-    print("[PASS] EGW00201 → 1.2s 백오프 1회 → 성공")
+        assert acquire.call_count == 2
+    print("[PASS] EGW00201 → 재시도 HTTP마다 슬롯 1개(총2) → 성공")
 
 
 def test_rate_limited_persistent_p0():
@@ -178,10 +181,14 @@ def test_cancel_paths():
         with mock.patch("urllib.request.urlopen", _fake_urlopen([ok_cxl])):
             r = KO.cancel_order("c1", "AAPL", "0001569157", 3)
         assert r["ok"] and r["act"] == "canceled"
+        with mock.patch.object(KO, "_post",
+                               side_effect=AssertionError("중복 취소 전송")):
+            dup = KO.cancel_order("c1", "AAPL", "0001569157", 3)
+        assert dup["act"] == "blocked" and "키 재사용" in dup["why"]
         with mock.patch("urllib.request.urlopen", _fake_urlopen(["timeout"])):
             r = KO.cancel_order("c2", "AAPL", "0001569157", 3)
         assert r["act"] == "unknown" and L.is_locked("AAPL")   # 원주문 생사 불명
-    print("[PASS] 취소: 성공 / 응답유실 → unknown·잠금(원주문 재조회 필요)")
+    print("[PASS] 취소: 키 재사용 차단 / 응답유실 → unknown·잠금(원주문 재조회 필요)")
 
 
 def test_marketable_price():

@@ -56,6 +56,12 @@ FEED_STALE_ALERT_MIN = 60  # 경보는 이보다 더 오래 정체일 때만(공
                            #   정상 — 브레인은 15분마다 확인하나 새 데이터 없으면 heartbeat
                            #   미갱신. 60분+ = 진짜 빌드 장애로 간주. 실측 2026-07-24)
 HARD_BUFFER = 0.01         # 하드 손절 = 손절가 −1% 이탈 시 즉시
+try:
+    BROKER_HOLDINGS_MAX_AGE_SEC = int(
+        os.environ.get("BROKER_HOLDINGS_MAX_AGE_SEC", "60"))
+except ValueError:
+    BROKER_HOLDINGS_MAX_AGE_SEC = 60
+BROKER_HOLDINGS_MAX_AGE_SEC = max(10, min(300, BROKER_HOLDINGS_MAX_AGE_SEC))
 SENT_PATH = os.path.join(os.path.dirname(__file__), "sentinel_sent.json")
 LIVE = os.environ.get("SENTINEL_LIVE") == "1"      # 명시해야만 실주문
 _CHASES: dict[str, dict] = {}                       # US 손절 chase(프로세스 내 활성 상태)
@@ -122,9 +128,9 @@ class _PaperBroker:
         except Exception:
             return None
 
-    def place_sell(self, code: str, qty: int, reason: str, key: str) -> bool:
+    def place_sell(self, code: str, qty: int, reason: str, key: str) -> dict:
         print(f"  [DRY-RUN] 매도 {code} {qty}주 — {reason} (key={key})")
-        return True
+        return {"state": "dry_run", "filled": 0, "qty": int(qty)}
 
 
 class _KisBroker(_PaperBroker):
@@ -164,8 +170,27 @@ class _KisBroker(_PaperBroker):
         return px
 
     def place_sell(self, code: str, qty: int, reason: str, key: str):
+        # 이 플래그가 실제 KIS 전송의 최종 게이트다. 브로커 선택만 KIS여도
+        # SENTINEL_LIVE가 없으면 잔고조회·주문 API를 전혀 부르지 않는다.
+        if not LIVE:
+            print(f"  [DRY-RUN] KIS 매도 {code} {qty}주 — {reason} (key={key})")
+            return {"state": "dry_run", "filled": 0, "qty": int(qty),
+                    "why": "SENTINEL_LIVE != 1"}
         from bot import kis, kis_orders
         market = kis.market_of_symbol(code)      # 국내 6자리 숫자=KR, 그 외=US
+        excg = "KRX" if market == "KR" else kis.us_excg_of(code)
+        # 주문 직전 잔고를 다시 읽는다. 사이클 시작 잔고나 공개 feed 수량으로 주문하면
+        # 그 사이 수동매도·부분체결과 경합해 초과매도할 수 있다.
+        fresh = (kis.sellable_holdings("KR") if market == "KR"
+                 else kis.sellable_holdings("US", excg=excg))
+        if fresh is None:
+            return {"state": "rejected", "filled": 0, "qty": 0,
+                    "why": "주문 직전 KIS 잔고 조회 실패"}
+        safe_qty = min(max(0, int(qty)),
+                       max(0, int(fresh.get(str(code).upper(), 0))))
+        if safe_qty <= 0:
+            return {"state": "rejected", "filled": 0, "qty": 0,
+                    "why": "주문 직전 KIS 매도가능 보유 0"}
         try:
             from bot import kis_positions, settings
             rec = kis_positions.load().get(code, {})
@@ -184,24 +209,27 @@ class _KisBroker(_PaperBroker):
         if market == "KR":
             # 국내 손절은 **시장가**(체결 보장 — 사용자 정책 2026-07-13). 국내는
             #   미국과 달리 연속장 시장가가 있어 미체결 방치 위험을 없앤다.
-            r = kis_orders.place_sell(key, code, qty, px, reason=reason,
+            r = kis_orders.place_sell(key, code, safe_qty, px, reason=reason,
                                       market=market, order_type="market",
-                                      hldg_before=qty, order_meta=order_meta)
+                                      hldg_before=safe_qty, order_meta=order_meta,
+                                      min_interval_s=0)
         else:
             # 미국주는 시장가 부재 → 마켓터블 지정가(급락 시 chase가 보완).
             #   거래소는 실제 상장처로 해석(감사 수정 #1: NASD 하드코딩 시 NYSE/AMEX
             #   손절 주문이 live에서 거부돼 무한 재발화·손절 실패).
             limit = kis_orders.marketable_limit_price(px, "SELL", market=market)
-            r = kis_orders.place_sell(key, code, qty, limit, reason=reason,
-                                      market=market, excg=kis.us_excg_of(code),
-                                      hldg_before=qty, order_meta=order_meta)
+            r = kis_orders.place_sell(key, code, safe_qty, limit, reason=reason,
+                                      market=market, excg=excg,
+                                      hldg_before=safe_qty, order_meta=order_meta,
+                                      min_interval_s=0)
         act = r.get("act")
         if act == "ack":                     # 접수됨(in-flight) — 체결은 대사가 확정
-            return {"state": "ack", "filled": 0}
+            return {"state": "ack", "filled": 0, "qty": safe_qty}
         if act == "unknown":                 # 응답 유실 — 원장이 이미 잠금
-            return {"state": "unknown", "filled": 0}
+            return {"state": "unknown", "filled": 0, "qty": safe_qty}
         # blocked/reject/rate_limited — 명시 실패(체결 없음)
-        return {"state": "rejected", "filled": 0}
+        return {"state": "rejected", "filled": 0, "qty": safe_qty,
+                "why": r.get("why") or act}
 
     def reconcile_unknowns(self):
         """UNKNOWN 대사 — nccs+ccnl 기반(kis_boot 재사용). 반환: 대사 결과 목록."""
@@ -210,7 +238,8 @@ class _KisBroker(_PaperBroker):
 
     def holdings(self):
         """KIS 실보유 {symbol.upper(): qty} — 브로커-진실 보호용. **현재 열린 시장만**
-        조회(닫힌 시장은 어차피 못 팜). 하나라도 조회 실패=None(파수꾼이 feed 폴백).
+        조회(닫힌 시장은 어차피 못 팜). 하나라도 조회 실패=None. KIS 파수꾼은
+        공개 feed 수량으로 폴백하지 않고 짧은 마지막-정상 캐시만 사용할 수 있다.
 
         같은 잔고 응답의 평단·평가손익도 공유 캐시에 저장한다. 별도 API 호출은 없고
         portfolio-web의 중복 4콜을 없애 order-plane 예약 슬롯을 보존한다."""
@@ -268,7 +297,10 @@ def _new_us_chase(code: str, qty: int, ref_price: float, pos_key: str,
                   "ref_price": float(ref_price)}
 
     def place(key, symbol, amount, price):
-        h = kis.holdings("US", excg=excg)
+        if not LIVE:
+            return {"ok": False, "act": "dry_run", "qty": int(amount),
+                    "why": "SENTINEL_LIVE != 1"}
+        h = kis.sellable_holdings("US", excg=excg)
         if h is None:
             return {"ok": False, "act": "blocked", "why": "잔고 조회실패"}
         safe_qty = min(int(amount), max(0, int(h.get(symbol, 0))))
@@ -282,6 +314,9 @@ def _new_us_chase(code: str, qty: int, ref_price: float, pos_key: str,
         return r
 
     def cancel(key, symbol, odno, amount, orgno=""):
+        if not LIVE:
+            return {"ok": False, "act": "dry_run",
+                    "why": "SENTINEL_LIVE != 1"}
         return kis_orders.cancel_order(
             key, symbol, odno, amount, excg=excg, orgno=orgno, market="US")
 
@@ -456,18 +491,47 @@ def check_once(broker, state: dict) -> None:
         state["positions"] = {p["code"]: p for p in positions}  # 최신 스냅샷 유지
     feed = state.get("positions", {})
 
-    # 브로커-진실: KIS 실보유를 보호 대상으로(수량=브로커 진실). 손절선은 feed(트레일링)
-    #   우선, 없으면 매수 루프가 기록한 진입 손절선(kis_positions). feed에도 기록에도
-    #   손절선이 없는 KIS 보유는 무보호 → P0(새로 무보호가 된 것만, 알림 폭주 방지).
-    #   브로커 조회 실패=None → feed 폴백(기존 동작 유지, 보호 끊기지 않게).
+    # 브로커-진실: KIS 실보유를 보호 대상으로(수량=브로커 진실). 공개 paper feed는
+    # 손절선 참고일 뿐, KIS 수량의 대체 진실이 아니다. 조회 실패 때 feed 수량으로
+    # 매도하면 다른 계좌/지연 스냅샷을 실계좌 주문으로 바꾸는 치명적 경계 위반이다.
     held = feed
+    is_kis_truth = str(getattr(broker, "name", "")).lower() == "kis"
     if hasattr(broker, "holdings"):
         bh = broker.holdings()
+        used_cached_holdings = False
+        if bh is not None and is_kis_truth:
+            state["_broker_holdings"] = {
+                str(k).upper(): int(v) for k, v in bh.items()}
+            state["_broker_holdings_at"] = time.time()
+            state["_broker_holdings_failed"] = False
+        elif bh is None and is_kis_truth:
+            cached = state.get("_broker_holdings")
+            cached_at = float(state.get("_broker_holdings_at") or 0)
+            cache_age = time.time() - cached_at
+            if isinstance(cached, dict) and cache_age <= BROKER_HOLDINGS_MAX_AGE_SEC:
+                bh = dict(cached)
+                used_cached_holdings = True
+                if not state.get("_broker_holdings_failed"):
+                    _notify(
+                        f"🚨 KIS 잔고 조회 실패 — 마지막 정상 잔고 "
+                        f"{max(0, cache_age):.0f}초 전 스냅샷으로 감시만 계속. "
+                        "주문 직전 재조회 실패 시 매도 차단",
+                        critical=True)
+                state["_broker_holdings_failed"] = True
+            else:
+                bh = {}                           # 절대 공개 feed 수량으로 폴백하지 않음
+                if not state.get("_broker_holdings_failed"):
+                    _notify(
+                        "🚨 KIS 잔고 조회 실패·정상 캐시 만료 — 실계좌 수량 불명으로 "
+                        "자동매도 차단. 즉시 수동 확인 필요",
+                        critical=True)
+                state["_broker_holdings_failed"] = True
         if bh is not None:
             from bot import kis_positions
             kpos = kis_positions.load()
-            held, unprot = {}, set()
+            held, unprot, provisional = {}, set(), set()
             for code, qty in bh.items():
+                code = str(code).upper()
                 if int(qty) <= 0:
                     continue
                 # 손절선 소스 — feed(트레일링)와 로컬 진입/래칫 기록 중 **높은 쪽**.
@@ -477,26 +541,53 @@ def check_once(broker, state: dict) -> None:
                 fstop = float(fsrc.get("stop") or 0) if fsrc else 0.0
                 kstop = float(ksrc.get("stop") or 0) if ksrc else 0.0
                 if fstop <= 0 and kstop <= 0:
-                    unprot.add(code)
-                    continue
-                src = fsrc if fstop >= kstop else ksrc
+                    pending = ledger.provisional_buy_protection(code)
+                    if not pending or pending.get("ambiguous"):
+                        unprot.add(code)
+                        continue
+                    provisional.add(code)
+                    src = {
+                        "name": pending.get("name") or code,
+                        "ccy": pending.get("ccy")
+                               or ("KRW" if pending.get("market") == "KR" else "USD"),
+                        "opened": pending.get("opened") or "?",
+                        "sleeve": pending.get("sleeve") or "A",
+                        "pos_key": pending.get("pos_key") or pending.get("key"),
+                    }
+                    fstop = float(pending["stop"])
+                else:
+                    src = fsrc if fstop >= kstop else ksrc
                 held[code] = {**src, "stop": max(fstop, kstop),
-                              "code": code, "q": int(qty), "_bt": True}
+                              "code": code, "q": int(qty), "_bt": True,
+                              "_broker_cache": used_cached_holdings,
+                              "_provisional": code in provisional}
             for code in unprot - state.get("_unprot", set()):     # 새 무보호만 알림
                 _notify(f"🚨 손절선 불명 KIS 보유 {code} — 수동 확인 필요(브로커-진실)",
                         critical=True)
+                try:
+                    from bot import ownership
+                    ownership.freeze(code, "KIS 실보유 손절선 불명 — 수동 확인")
+                except Exception:
+                    pass
+            for code in provisional - state.get("_provisional", set()):
+                _notify(
+                    f"🟡 KIS 보유 {code} — 주문 접수 후 대사 중. "
+                    f"원장 임시 손절선 {held[code]['stop']:.4g}로 보호 유지",
+                    critical=True)
             state["_unprot"] = unprot
+            state["_provisional"] = provisional
     sent = _load_sent()
-    active_chases = _advance_us_chases(held, sent) if isinstance(broker, _KisBroker) else set()
+    active_chases = (_advance_us_chases(held, sent)
+                     if LIVE and isinstance(broker, _KisBroker) else set())
     for code, p in held.items():
         if code in active_chases:
             continue                              # chase가 이 종목의 유일한 매도 주체
         if not _market_open(p.get("ccy", "USD")):
             continue
-        # 미해소 in-flight 주문(submitted/ack/unknown) 있으면 재발주 전면 금지 —
-        #   (대사 전 재발주 = 초과매도. is_locked는 unknown만 봐 wedged ack/submitted를
-        #    놓치므로 open_order_count로 넓게 막는다 — 검증 지적 반영.)
-        if ledger.open_order_count(code) >= 1:
+        # 살아있는 SELL/취소는 중복 매도를 막는다. BUY는 손절 판단까지 막지 않고,
+        # 실제 발화 시 아래에서 잔량 취소→취소 확인→실잔고 재조회 순으로 정리한다.
+        if (ledger.open_order_count(code, side="SELL") >= 1
+                or ledger.open_order_count(code, side="CANCEL") >= 1):
             continue
         stop = p.get("stop")
         qty = p.get("q", 0)
@@ -537,6 +628,11 @@ def check_once(broker, state: dict) -> None:
         key = f'{broker.name}:{acct}:{code}:{opened}:sell'
         if key in sent:
             continue
+        # dry-run 판정은 현재 프로세스에서만 중복 알림을 누른다. 이를 영속 sent에
+        # 넣으면 나중에 SENTINEL_LIVE=1로 재시작해도 같은 포지션의 실제 손절이
+        # 이미 끝난 것으로 오인되므로 절대 디스크 멱등키로 승격하지 않는다.
+        if not LIVE and key in state.setdefault("_dry_run_seen", set()):
+            continue
         px = broker.quote(code, p.get("ccy", "USD"))
         if px is None:
             continue
@@ -552,6 +648,21 @@ def check_once(broker, state: dict) -> None:
         else:
             state["_hit_" + code] = False
         if fire:
+            if is_kis_truth and ledger.open_orders(code, side="BUY"):
+                from bot import kis_pending
+                if not kis_pending.cancel_open_buys_for_protection(code):
+                    continue                       # 취소 접수/대사 중 — 동시 SELL 금지
+                # 취소 확인 뒤의 보유만 매도한다. 사이클 시작 수량을 재사용하지 않는다.
+                refreshed = broker.holdings()
+                if refreshed is None:
+                    _notify(
+                        f"🚨 {code} BUY 취소 확인 후 KIS 잔고 재조회 실패 — "
+                        "수량 불명으로 손절 매도 보류",
+                        critical=True)
+                    continue
+                qty = max(0, int(refreshed.get(code, 0)))
+                p["q"] = qty
+                p["_broker_cache"] = False
             # 발주 수량: 브로커-진실(_bt)이면 실보유 전량(broker_q가 이미 잔여를 반영 —
             #   filled_for를 또 빼면 이중차감). feed 경로는 원수량−확인체결(잔여만).
             #   (부분체결 후 원수량 재발주 = 초과매도. 시도마다 별도 주문키.)
@@ -564,7 +675,7 @@ def check_once(broker, state: dict) -> None:
             # 취소확정→잔여수량→가격사다리를 전담한다. 국내 시장가는 기존 경로 유지.
             try:
                 from bot import kis as _kis
-                is_kis_us = (isinstance(broker, _KisBroker)
+                is_kis_us = (LIVE and isinstance(broker, _KisBroker)
                              and _kis.market_of_symbol(code) == "US")
             except Exception:
                 is_kis_us = False
@@ -581,10 +692,14 @@ def check_once(broker, state: dict) -> None:
             # 국내 잔고대사 기준: 이 주문 직전 보유수량(=잔여 qty_send, 파수꾼이 이미
             #   아는 값이라 손절 핫패스에 API 호출 추가 없음) + 방향·시장 명시 기록.
             from bot import kis as _kis
-            ledger.record_submit(okey, code, qty_send, reason,   # send 이전 기록(크래시 대비)
-                                 meta={"side": "SELL",
-                                       "market": _kis.market_of_symbol(code),
-                                       "hldg_before": int(qty_send)})
+            # KIS 실전은 kis_orders.try_record_submit이 게이트 검사+선기록을 하나의
+            # flock 임계구역에서 처리한다. dry-run/테스트 브로커만 여기서 기록한다.
+            if not (LIVE and isinstance(broker, _KisBroker)):
+                ledger.record_submit(
+                    okey, code, qty_send, reason,
+                    meta={"side": "SELL",
+                          "market": _kis.market_of_symbol(code),
+                          "hldg_before": int(qty_send)})
             res = broker.place_sell(code, qty_send, reason, okey)
             rstate, filled = _norm_result(res, qty_send)
             ledger.on_result(okey, rstate, filled,
@@ -608,6 +723,11 @@ def check_once(broker, state: dict) -> None:
                     kis_positions.close(code)
                 except Exception:
                     pass
+            elif rstate == "dry_run":
+                state.setdefault("_dry_run_seen", set()).add(key)
+                _notify(f"🧪 파수꾼 모의 판단 — {p.get('name', code)}({code}) "
+                        f"{qty_send}주 매도 조건 충족 · {reason} [전송 안 함]",
+                        critical=False)
             if rstate in ("filled", "partial"):
                 _notify(f"🛡️ 파수꾼 매도 — {p.get('name', code)}({code}) "
                         f"{filled}주 @ {px} · {reason}"
@@ -622,12 +742,18 @@ def check_once(broker, state: dict) -> None:
                 # 응답 불명 — 종목 잠금(원장). 대사 전엔 재발주 금지(초과매도 방지).
                 _notify(f"⚠️ 파수꾼 주문 응답 불명(UNKNOWN) — {code} 대사까지 잠금. "
                         f"수동 확인 권장.", critical=True)
+            elif rstate == "rejected":
+                detail = res.get("why") if isinstance(res, dict) else ""
+                _notify(
+                    f"🚨 파수꾼 매도 차단/거부 — {code} {qty_send}주 · "
+                    f"{detail or '브로커 응답 확인 필요'}",
+                    critical=True)
 
     # ── KIS 청산 관리(익절/래칫/타임스탑) — 정합성 점검(2026-07-24) 반영 ──
     #   손절은 위 루프가, 이익 실현은 kis_exits가: +1R 절반익절·본전/트레일 래칫·
     #   21일 타임스탑을 KIS 봇 보유에 직접 집행(전략 A 프로파일, R단위 근사).
     #   KIS 브로커에서만(name 접두) — dry-run/테스트 FakeBroker엔 미작동.
-    if str(getattr(broker, "name", "")).lower().startswith("kis"):
+    if LIVE and str(getattr(broker, "name", "")).lower().startswith("kis"):
         try:
             from bot import kis_exits, settings as _cfg
             kis_exits.manage(broker, held, _cfg.today_kst())

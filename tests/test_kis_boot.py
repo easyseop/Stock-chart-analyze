@@ -146,16 +146,25 @@ def test_sentinel_kis_place_sell_mapping():
         # ack / unknown / blocked 3경로 정규화 확인 (kis_orders·quote 모킹)
         for act, want in (("ack", "ack"), ("unknown", "unknown"),
                           ("blocked", "rejected")):
-            with mock.patch.object(br, "quote", return_value=100.0), \
+            with mock.patch.object(sn, "LIVE", True), \
+                 mock.patch.object(br, "quote", return_value=100.0), \
+                 mock.patch("bot.kis.sellable_holdings", return_value={"AAPL": 3}), \
                  mock.patch("bot.kis_orders.place_sell",
                             return_value={"ok": act == "ack", "act": act,
                                           "key": "k", "odno": "1"}):
                 r = br.place_sell("AAPL", 3, "손절", "k#1")
             assert r["state"] == want, f"{act}→{r['state']} (기대 {want})"
         # 시세 없으면 발주 보류(rejected)
-        with mock.patch.object(br, "quote", return_value=None):
+        with mock.patch.object(sn, "LIVE", True), \
+             mock.patch.object(br, "quote", return_value=None), \
+             mock.patch("bot.kis.sellable_holdings", return_value={"AAPL": 3}):
             r = br.place_sell("AAPL", 3, "손절", "k#2")
         assert r["state"] == "rejected"
+        with mock.patch.object(sn, "LIVE", False), \
+             mock.patch("bot.kis.sellable_holdings") as balance, \
+             mock.patch("bot.kis_orders.place_sell") as place:
+            r = br.place_sell("AAPL", 3, "손절", "k#dry")
+        assert r["state"] == "dry_run" and not balance.called and not place.called
         # 매수 경로 부재(매도 전용 원칙)
         assert not hasattr(br, "place_buy") and not hasattr(br, "buy")
     print("[PASS] X4: place_sell 정규화(ack/unknown/rejected)·매수 경로 없음")

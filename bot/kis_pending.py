@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import datetime
 
-from bot import kis, kis_buy, kis_orders, ledger
+from bot import envelope, kis, kis_buy, kis_orders, ledger, notify, settings
 
 PENDING_DAYS = 21
 _KST = datetime.timezone(datetime.timedelta(hours=9))
@@ -67,10 +67,105 @@ def _cancel_confirmed(o: dict) -> bool:
         str(r.get("odno") or "") == odno and r.get("open") for r in rows)
 
 
+def _cancel_family_state(base: str) -> str:
+    """취소 시도 묶음 상태: retry | accepted | uncertain.
+
+    확정 거부만 새 시도를 허용한다. 접수 완료나 응답유실/전송중 시도가 있으면
+    같은 원주문에 두 번째 취소 HTTP를 보내지 않는다.
+    """
+    attempts = [
+        o for o in ledger.orders_for(key_prefix=base)
+        if o["key"] == base or o["key"].startswith(base + "#")
+    ]
+    if any(o.get("state") == "filled" for o in attempts):
+        return "accepted"
+    if any(o.get("state") != "rejected" for o in attempts):
+        return "uncertain"
+    return "retry"
+
+
+def _next_cancel_key(base: str) -> str:
+    """확정 거부 뒤 재시도할 때마다 충돌하지 않는 취소 원장키."""
+    return f"{base}#{ledger.attempts(base) + 1}"
+
+
+def cancel_open_buys_for_protection(symbol: str) -> bool:
+    """손절 전에 같은 종목의 미체결 BUY 잔량을 안전하게 없앤다.
+
+    반환 True는 모든 BUY 계획/원주문이 브로커 조회로 종료 확인됐다는 뜻이다.
+    취소 API의 성공 응답은 접수일 뿐이므로 그 사이클에는 False를 반환한다. 호출부는
+    다음 사이클에서 취소 확인 후 실잔고를 다시 읽고, 확인된 수량만 보호 매도한다.
+    ODNO가 없거나 조회가 모호하면 추측 취소/동시 매도를 하지 않고 수동 잠금한다.
+    """
+    symbol = str(symbol or "").upper()
+    ready = True
+    for o in ledger.open_orders(symbol, side="BUY"):
+        key = str(o.get("key") or "")
+        state = str(o.get("state") or "")
+        if state == "planned":
+            ledger.finish_plan(key, "cancelled", "손절 우선 — 미제출 BUY 계획 취소")
+            continue
+        if state == "partial" and o.get("open") is False:
+            ledger.mark_cancelled(key, "손절 우선 — 부분체결 후 잔량 종료 확인")
+            continue
+        if state == "cancel_pending":
+            if not _cancel_confirmed(o):
+                ready = False
+                continue
+            cur = ledger.state_of(key) or {}
+            if cur.get("state") != "filled":
+                ledger.mark_cancelled(key, "손절 우선 — BUY 취소 확인")
+            continue
+
+        intended = int(o.get("intended") or 0)
+        filled = int(o.get("filled") or 0)
+        residual = max(0, intended - filled)
+        odno = str(o.get("odno") or "")
+        if residual <= 0:
+            # 수량상 완료여도 대사 상태가 끝나지 않았다면 새 SELL을 내지 않는다.
+            ready = False
+            continue
+        if not odno:
+            ready = False
+            notify.send(
+                f"🚨 {symbol} 손절 대기 — 미체결 BUY 주문번호 불명({state}). "
+                "대사/수동 확인 전 동시 매도 금지",
+                critical=True)
+            continue
+        market = o.get("market") or kis.market_of_symbol(symbol)
+        excg = o.get("excg") or ("KRX" if market == "KR"
+                                  else kis.us_excg_of(symbol))
+        cxl_base = key + ":protect-cxl"
+        cxl_state = _cancel_family_state(cxl_base)
+        if cxl_state == "accepted":
+            # 취소 HTTP 성공 직후 프로세스가 죽어 원주문 전이를 못 남긴 경우 복구.
+            ledger.on_result(key, "cancel_pending", filled, open_order=True)
+            ready = False
+            continue
+        if cxl_state == "uncertain":
+            ready = False                       # 응답유실/전송중 — 중복 취소 금지
+            continue
+        r = kis_orders.cancel_order(
+            _next_cancel_key(cxl_base), symbol, odno, residual, excg=excg,
+            orgno=str(o.get("orgno") or ""), market=market,
+            attempt_group=cxl_base)
+        if r.get("act") == "canceled":
+            ledger.on_result(key, "cancel_pending", filled, open_order=True)
+        else:
+            notify.send(
+                f"🚨 {symbol} 손절 전 BUY 취소 실패({r.get('act')}) — "
+                "확인 전 보호 매도 보류",
+                critical=True)
+        ready = False                              # 취소 '접수' 당일은 미확정
+    return ready and not ledger.open_orders(symbol, side="BUY")
+
+
 def process(*, today: str | None = None, quote_fn=None) -> list[dict]:
     """계획 제출·손절 이탈·21일 만료를 처리한다. 판단 불가는 주문을 늘리지 않는다."""
     out: list[dict] = []
-    for o in ledger.pending_orders():
+    pending = ledger.pending_orders()
+    budget_state = None
+    for o in pending:
         key, symbol = o["key"], str(o.get("symbol") or "").upper()
         market = o.get("market") or kis.market_of_symbol(symbol)
         excg = o.get("excg") or ("KRX" if market == "KR" else kis.us_excg_of(symbol))
@@ -110,9 +205,20 @@ def process(*, today: str | None = None, quote_fn=None) -> list[dict]:
             residual = max(0, int(o.get("intended") or 0) - int(o.get("filled") or 0))
             if not odno or residual <= 0:
                 continue
+            cxl_base = key + ":cxl"
+            cxl_state = _cancel_family_state(cxl_base)
+            if cxl_state == "accepted":
+                ledger.on_result(
+                    key, "cancel_pending", int(o.get("filled") or 0),
+                    open_order=True)
+                out.append({"key": key, "act": "cancel_pending", "why": why})
+                continue
+            if cxl_state == "uncertain":
+                continue                        # 응답유실/전송중 — 중복 취소 금지
             r = kis_orders.cancel_order(
-                key + ":cxl", symbol, odno, residual, excg=excg,
-                orgno=str(o.get("orgno") or ""), market=market)
+                _next_cancel_key(cxl_base), symbol, odno, residual, excg=excg,
+                orgno=str(o.get("orgno") or ""), market=market,
+                attempt_group=cxl_base)
             if r.get("act") == "canceled":
                 # 취소 API 성공은 접수일 수 있다. 미체결 목록에서 사라질 때까지 원주문을
                 # in-flight로 유지해 새 주문·중복 매수를 막는다.
@@ -133,9 +239,28 @@ def process(*, today: str | None = None, quote_fn=None) -> list[dict]:
             ledger.finish_plan(key, "rejected", "1차 주문 미체결")
             out.append({"key": key, "act": "rejected", "why": "1차 주문 미체결"})
             continue
-        held = kis.holdings(market, excg=excg) if market == "US" else kis.holdings("KR")
-        if held is None:
-            continue                              # 잔고 불명 — 다음 사이클
+        if budget_state is None:
+            # 메인 매수루프와 같은 held+in-flight+planned 스냅샷을 사용한다. 별도
+            # 빈 계좌/기본 A seed로 계획 주문을 사이징하던 우회 경로를 없앤다.
+            from bot import kis_buyloop
+            budget_state = kis_buyloop._broker_state(settings.FX_USDKRW)
+        if budget_state is None:
+            continue                              # 브로커 진실 불명 — 다음 사이클
+        held, held_cost, reservations, _, held_sleeves = budget_state
+        sleeve = str(o.get("sleeve") or "A")
+        # 지금 제출하려는 계획은 이미 reservations에 잡혀 있다. 기존 예약을 한 번
+        # 빼고 execute_entry의 worst-case 신규수량으로 교체해야 이중 차감이 없다.
+        current_reservation = next(
+            (r for r in reservations if r.get("key") == key), None)
+        reservations[:] = [r for r in reservations if r.get("key") != key]
+        open_positions, open_cost = kis_buyloop._partition(
+            held_cost, reservations, sleeve, held_sleeves)
+        total_open_cost = (sum(float(v) for v in held_cost.values())
+                           + sum(float(r["cost"]) for r in reservations))
+        total_held_cost = sum(float(v) for v in held_cost.values())
+        sleeve_held_cost = sum(
+            float(cost) for code, cost in held_cost.items()
+            if held_sleeves.get(code, "A") == sleeve)
         limit = float(o.get("limit") or 0)
         if not (stop < limit):
             ledger.finish_plan(key, "rejected", "limit/stop 무효")
@@ -147,9 +272,23 @@ def process(*, today: str | None = None, quote_fn=None) -> list[dict]:
             key, symbol, price_usd=limit, per_share_risk_usd=limit - stop,
             krw_per_usd=float(o.get("fx") or 0), excg=excg, market=market,
             reason="눌림 지정가", hldg_before=int(held.get(symbol, 0)),
-            seed_krw=None, sleeve=str(o.get("sleeve") or "A"),
+            seed_krw=envelope.sleeve_limit_krw(sleeve), sleeve=sleeve,
+            open_positions=open_positions, open_cost_krw=open_cost,
+            total_open_cost_krw=total_open_cost,
+            held_cost_krw=sleeve_held_cost,
+            total_held_cost_krw=total_held_cost,
+            operating_limit_krw=envelope.operating_limit_krw(),
             limit_price=limit, qty_cap=int(o.get("intended") or 0),
             order_meta=meta)
+        if d.ok:
+            reserved_qty = int(d.planned_qty or d.qty)
+            cost = reserved_qty * limit * (1.0 if market == "KR"
+                                            else float(o.get("fx") or 0))
+            reservations.append({
+                "key": key, "symbol": symbol, "qty": reserved_qty,
+                "cost": cost, "sleeve": sleeve})
+        elif current_reservation:
+            reservations.append(current_reservation)
         out.append({"key": key, "act": d.gate, "ok": d.ok, "qty": d.qty,
                     "why": d.why})
     return out

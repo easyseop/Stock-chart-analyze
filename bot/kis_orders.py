@@ -177,16 +177,11 @@ def place_order(key: str, symbol: str, side: str, qty: int, price: float,
         return {"ok": False, "act": "blocked", "key": key, "why": "qty/price 무효"}
     if order_type == "limit" and float(price) <= 0:
         return {"ok": False, "act": "blocked", "key": key, "why": "지정가 0 이하"}
-    # exclude_key=key: 호출부(파수꾼)가 이 키를 이미 선기록했을 수 있으므로 자기
-    #   주문을 in-flight로 오인해 스스로를 막지 않게 한다(자기 차단 버그 수정).
-    if not ledger.can_submit(symbol, min_interval_s=min_interval_s,
-                             exclude_key=key):
+    # 빠른 읽기 게이트. 실제 검사+선기록은 아래 try_record_submit의 프로세스 공용
+    # 임계구역에서 다시 원자적으로 수행한다.
+    if not ledger.can_submit(symbol, min_interval_s=min_interval_s):
         return {"ok": False, "act": "blocked", "key": key,
                 "why": "원장 게이트(잠금/in-flight/간격)"}
-    if not _LIMITER.acquire("order", timeout=5.0):
-        return {"ok": False, "act": "rate_limited", "key": key,
-                "why": "order-plane 유량 슬롯 없음(5s)"}
-
     acct = kis.account()
     tr = kis.tr_id("buy" if side == "BUY" else "sell", market=market)
     body = _order_body(market, acct, symbol, side, qty, price, excg, key, order_type)
@@ -197,18 +192,29 @@ def place_order(key: str, symbol: str, side: str, qty: int, price: float,
             "order_type": order_type, "env": kis.ENV}
     allowed_meta = {"pos_key", "sleeve", "fx", "ccy", "stop", "target",
                     "name", "opened", "tactic", "pending", "parent_key",
-                    "chase", "ref_price"}
+                    "chase", "ref_price", "reservation_cost_krw",
+                    "budget_total_held_krw", "budget_total_limit_krw",
+                    "budget_sleeve_held_krw", "budget_sleeve_limit_krw"}
     for mk, mv in (order_meta or {}).items():
         if mk in allowed_meta and mv is not None:
             meta[mk] = mv
     if hldg_before is not None:                   # ack→체결 잔고대사 기준(있을 때만)
         meta["hldg_before"] = int(hldg_before)
-    ledger.record_submit(key, symbol, qty, reason, meta=meta)
+    if not ledger.try_record_submit(
+            key, symbol, qty, reason, meta=meta,
+            min_interval_s=min_interval_s):
+        return {"ok": False, "act": "blocked", "key": key,
+                "why": "원장 원자 게이트(경합/손상/키 재사용)"}
     ledger.record_synthetic(key, ledger.synthetic_key(
         acct["CANO"], venue, symbol, side, qty, price,
         time.strftime("%H%M%S")))
 
     for attempt in (0, 1):
+        # 첫 전송뿐 아니라 401/EGW00201 재시도도 실제 HTTP 1건이다.
+        if not _LIMITER.acquire("order", timeout=5.0):
+            ledger.on_result(key, "rejected", 0)
+            return {"ok": False, "act": "rate_limited", "key": key,
+                    "why": "order-plane 유량 슬롯 없음(5s)"}
         d, http = _post(_PATHS[market]["order"], tr, body)
         act = kis.classify_error((d or {}).get("rt_cd"), (d or {}).get("msg_cd"),
                                  http, is_order=True)
@@ -263,7 +269,8 @@ def place_buy(key: str, symbol: str, qty: int, price: float, **kw) -> dict:
 
 def cancel_order(key: str, symbol: str, odno: str, qty: int,
                  *, excg: str = "NASD", orgno: str = "",
-                 market: str | None = None) -> dict:
+                 market: str | None = None,
+                 attempt_group: str | None = None) -> dict:
     """주문 취소(모의 전용). 취소 응답 유실=원주문 생사 불명 → unknown 잠금(§16).
     key: 취소 자체의 원장 키(원주문 키와 별개, 예 '{orig_key}:cxl').
     orgno: 국내 취소는 KRX_FWDG_ORD_ORGNO(원주문 응답의 orgno) 필수 — place 응답에서 받아 전달."""
@@ -273,9 +280,6 @@ def cancel_order(key: str, symbol: str, odno: str, qty: int,
         return {"ok": False, "act": "blocked", "key": key, "why": why}
     if not odno:
         return {"ok": False, "act": "blocked", "key": key, "why": "ODNO 없음"}
-    if not _LIMITER.acquire("order", timeout=5.0):
-        return {"ok": False, "act": "rate_limited", "key": key,
-                "why": "order-plane 유량 슬롯 없음(5s)"}
     acct = kis.account()
     if market == "KR":
         body = {**acct, "KRX_FWDG_ORD_ORGNO": str(orgno), "ORGN_ODNO": str(odno),
@@ -286,9 +290,19 @@ def cancel_order(key: str, symbol: str, odno: str, qty: int,
                 "ORGN_ODNO": str(odno), "RVSE_CNCL_DVSN_CD": "02",
                 "ORD_QTY": str(int(qty)), "OVRS_ORD_UNPR": "0",
                 "ORD_SVR_DVSN_CD": "0"}
-    ledger.record_submit(key, symbol, 0, "취소",
-                         meta={"side": "CANCEL", "orgn_odno": str(odno),
-                               "market": market})
+    if not ledger.try_record_cancel(
+            key, symbol, "취소",
+            meta={"side": "CANCEL", "orgn_odno": str(odno),
+                  "market": market},
+            attempt_group=attempt_group):
+        return {"ok": False, "act": "blocked", "key": key,
+                "why": "취소 원장 게이트(손상/키 재사용)"}
+    if not _LIMITER.acquire("order", timeout=5.0):
+        # 아직 HTTP를 보내지 않았으므로 확정 거부로 닫는다. submitted를 남기면
+        # 부팅 대사 때 전송되지 않은 취소를 UNKNOWN으로 오인한다.
+        ledger.on_result(key, "rejected", 0)
+        return {"ok": False, "act": "rate_limited", "key": key,
+                "why": "order-plane 유량 슬롯 없음(5s)"}
     d, http = _post(_PATHS[market]["cancel"], kis.tr_id("rvsecncl", market=market),
                     body)
     act = kis.classify_error((d or {}).get("rt_cd"), (d or {}).get("msg_cd"),

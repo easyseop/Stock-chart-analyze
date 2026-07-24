@@ -76,5 +76,11 @@ def sla_status(age: float | None, has_positions: bool) -> str:
 
 
 def entry_allowed(has_positions: bool) -> bool:
-    """신규 진입 허용? — SLA가 hard_disable이면 False(매수 실행기 X1이 사용)."""
-    return sla_status(age_s(), has_positions) != HARD_DISABLE
+    """신규 진입 허용?
+
+    첫 포지션도 진입 직후부터 손절 보호가 필요하다. 따라서 보유 유무와 무관하게
+    heartbeat가 실제 존재하고 hard 한도(120초) 안일 때만 매수를 허용한다.
+    `has_positions`는 하위호환 인자이며 알림용 sla_status 판정에만 의미가 있다.
+    """
+    age = age_s()
+    return age is not None and age <= AGE_HARD_S

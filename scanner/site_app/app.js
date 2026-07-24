@@ -310,10 +310,10 @@ function updateHero() {
     number.textContent = formatPercent(returnValue);
     unit.textContent = "";
     kicker.textContent = latest
-      ? `${market.label} KIS 보유 평가 · 지수와 같은 시작점`
+      ? `${market.label} KIS NAV/TWR · 지수와 같은 기준점`
       : "모의투자 누적 수익률";
     description.textContent = latest
-      ? "전략 A·B와 시장지수를 모두 0%에서 시작해 상대 성과를 비교합니다."
+      ? "매수·매도 금액 변화는 제거하고 전략 A·B와 시장지수의 실제 성과를 비교합니다."
       : "지수 비교 데이터가 쌓이기 전에는 기존 모의투자 성과를 표시합니다.";
   }
 }
@@ -1134,8 +1134,13 @@ function performanceRows(market, range) {
       account: point.account,
       A: point.A,
       B: point.B,
+      holdings: point.holdings?.account,
+      holdingsCovered: point.holdings?.covered,
+      holdingsEligible: point.holdings?.eligible,
       ...Object.fromEntries(indexNames.map((name) =>
         [`idx:${name}`, point.indices?.[name]])),
+      ...Object.fromEntries(indexNames.map((name) =>
+        [`dailyidx:${name}`, point.daily_indices?.[name]])),
     }));
   }
   const limit = range === "1m" ? 30 : range === "3m" ? 90 : 10000;
@@ -1147,8 +1152,13 @@ function performanceRows(market, range) {
       account: row.account,
       A: row.A,
       B: row.B,
+      holdings: row.holdings?.account,
+      holdingsCovered: row.holdings?.covered,
+      holdingsEligible: row.holdings?.eligible,
       ...Object.fromEntries(indexNames.map((name) =>
-        [`idx:${name}`, row.indices?.[name]])),
+        [`idx:${name}`, row.daily_indices?.[name] ?? row.indices?.[name]])),
+      ...Object.fromEntries(indexNames.map((name) =>
+        [`dailyidx:${name}`, row.daily_indices?.[name] ?? row.indices?.[name]])),
     }));
   const current = marketDoc.series?.at(-1);
   if (current && marketDoc.date && !daily.some((row) => row.label === marketDoc.date.slice(5))) {
@@ -1157,11 +1167,17 @@ function performanceRows(market, range) {
       account: current.account,
       A: current.A,
       B: current.B,
+      holdings: current.holdings?.account,
+      holdingsCovered: current.holdings?.covered,
+      holdingsEligible: current.holdings?.eligible,
       ...Object.fromEntries(indexNames.map((name) =>
         [`idx:${name}`, current.indices?.[name]])),
+      ...Object.fromEntries(indexNames.map((name) =>
+        [`dailyidx:${name}`, current.daily_indices?.[name]])),
     });
   }
-  const keys = ["account", "A", "B", ...indexNames.map((name) => `idx:${name}`)];
+  const keys = ["account", "A", "B", "holdings",
+    ...indexNames.map((name) => `idx:${name}`)];
   const cumulative = Object.fromEntries(keys.map((key) => [key, 0]));
   return daily.map((row) => {
     const out = { label: row.label };
@@ -1178,6 +1194,8 @@ function performanceRows(market, range) {
       cumulative[key] = ((1 + cumulative[key] / 100) * (1 + value / 100) - 1) * 100;
       out[key] = cumulative[key];
     });
+    out.holdingsCovered = row.holdingsCovered;
+    out.holdingsEligible = row.holdingsEligible;
     return out;
   });
 }
@@ -1232,6 +1250,15 @@ function renderKisPerformance() {
   const latest = rows.at(-1) || {};
   const indexNames = marketDoc.indices || [];
   const primary = indexNames[0];
+  const basisLabel = marketDoc.basis === "previous_close"
+    ? "전일 마감" : "오늘 첫 수집";
+  const holdingsValue = optionalNumber(latest.holdings);
+  const dailyIndexValue = optionalNumber(latest[`dailyidx:${primary}`])
+    ?? optionalNumber(latest[`idx:${primary}`]);
+  const holdingsAlpha = holdingsValue !== null && dailyIndexValue !== null
+    ? holdingsValue - dailyIndexValue : null;
+  const coverage = Number(latest.holdingsCovered || 0);
+  const eligible = Number(latest.holdingsEligible || 0);
   const alphaValue = latest.account !== null && latest.account !== undefined &&
     latest[`idx:${primary}`] !== null && latest[`idx:${primary}`] !== undefined &&
     Number.isFinite(Number(latest.account)) && Number.isFinite(Number(latest[`idx:${primary}`]))
@@ -1252,15 +1279,16 @@ function renderKisPerformance() {
     </div>
     ${rows.length ? `
       <div class="performance-grid performance-kis-grid">
-        <div class="performance-card"><small>KIS 보유 평가</small><strong class="${finite(latest.account) >= 0 ? "gain" : "loss"}">${performanceValue(latest.account)}</strong><p>${range === "today" ? "장 시작" : "선택 기간"} 대비</p></div>
+        <div class="performance-card"><small>KIS NAV/TWR</small><strong class="${finite(latest.account) >= 0 ? "gain" : "loss"}">${performanceValue(latest.account)}</strong><p>${range === "today" ? basisLabel : "선택 기간"} 대비</p></div>
         <div class="performance-card"><small>전략 A · 전환</small><strong>${performanceValue(latest.A)}</strong><p>A 보유 종목 기준</p></div>
         <div class="performance-card"><small>전략 B · 매물대</small><strong>${performanceValue(latest.B)}</strong><p>B 보유 종목 기준</p></div>
         <div class="performance-card"><small>${escapeHTML(primary || "주 지수")} 대비</small><strong class="${finite(alphaValue) >= 0 ? "gain" : "loss"}">${performanceValue(alphaValue)}</strong><p>초과수익률(%p)</p></div>
+        <div class="performance-card"><small>장 시작 보유 · 동일가중</small><strong class="${finite(holdingsValue) >= 0 ? "gain" : "loss"}">${performanceValue(holdingsValue)}</strong><p>${escapeHTML(primary || "주 지수")} 대비 ${performanceValue(holdingsAlpha).replace("%", "%p")} · ${coverage}/${eligible}종목</p></div>
       </div>
       ${performanceInsights(rows, indexNames)}
       <div class="performance-chart-card">
         <div class="chart-head">
-          <div><strong>${escapeHTML(marketDoc.label || market)} 시장 비교</strong><span>모든 선을 같은 0% 기준으로 비교</span></div>
+          <div><strong>${escapeHTML(marketDoc.label || market)} 시장 비교</strong><span>${escapeHTML(basisLabel)}을 0%로 맞춰 비교</span></div>
           <span class="live-pill">${age === null ? "기록 중" : age === 0 ? "방금 갱신" : `${age}분 전`}</span>
         </div>
         <canvas id="performance-chart" role="img" aria-label="KIS 전략과 시장지수 수익률 비교 차트"></canvas>
@@ -1270,7 +1298,7 @@ function renderKisPerformance() {
           <span><i class="legend-violet"></i>전략 B</span>
           ${indexNames.map((name, index) => `<span><i class="${index ? "legend-amber" : "legend-muted"}"></i>${escapeHTML(name)}</span>`).join("")}
         </div>
-        <p class="chart-note">${escapeHTML(state.performance?.basis || "KIS 봇 보유 평가손익 기준")} · ${finite(state.performance?.sample_seconds, 300) / 60}분 간격. 과거가 없는 지수는 지금부터 쌓입니다.</p>
+        <p class="chart-note">${escapeHTML(state.performance?.basis || "KIS 봇 보유 NAV/TWR 기준")} · ${finite(state.performance?.sample_seconds, 300) / 60}분 간격. 첫 수집일 뒤부터 전일 마감 기준으로 이어집니다.</p>
       </div>` :
       emptyState("지수 비교 데이터를 쌓는 중이에요",
         "장중 첫 수집이 완료되면 전략 A·B와 나스닥·S&P500·코스피·코스닥 차트가 자동으로 나타납니다.")}

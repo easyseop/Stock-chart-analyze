@@ -13,10 +13,12 @@ from __future__ import annotations
 import os
 import sys
 import tempfile
+from unittest import mock
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from bot import kis_exits as X
+from bot import ledger as L
 from bot import kis_positions as KP
 
 
@@ -93,6 +95,91 @@ def test_sleeve_b_exits():
     print("[PASS] B 전용 청산 — VAH 목표·타임스탑, +1R/트레일 미적용")
 
 
+class _SeqBroker:
+    def __init__(self, results):
+        self.results = list(results)
+        self.calls = []
+
+    def quote(self, code, ccy):
+        return 111.0
+
+    def place_sell(self, code, qty, reason, key):
+        self.calls.append((code, qty, key))
+        return self.results.pop(0)
+
+
+def _manage_env(tmp):
+    KP.PATH = os.path.join(tmp, "kis_positions.jsonl")
+    L.LEDGER_PATH = os.path.join(tmp, "orders.jsonl")
+    X.STATE_PATH = os.path.join(tmp, "exits.json")
+    KP.record("ACK", stop=90.0, ccy="USD", entry=100.0, qty=10,
+              opened="2026-07-20", pos_key="kb:ack")
+    return {"ACK": {"code": "ACK", "q": 10, "ccy": "USD", "stop": 90.0}}
+
+
+def test_half_ack_is_not_fill():
+    """접수(ACK, filled=0)만으로 half/본전 손절을 확정하면 안 된다."""
+    with tempfile.TemporaryDirectory() as tmp, mock.patch.object(X.notify, "send"):
+        held = _manage_env(tmp)
+        broker = _SeqBroker([{"state": "ack", "filled": 0}])
+        X.manage(broker, held, "2026-07-25")
+        state1 = X._load()["ACK"]
+        assert state1["half"] is False
+        assert KP.load()["ACK"]["stop"] == 90.0
+        orders = L.orders_for("ACK", side="SELL")
+        assert len(orders) == 1 and orders[0]["state"] == "ack"
+
+        # 다음 대사에서 목표 5주 체결이 확인된 뒤에만 본전으로 올린다.
+        L.on_result(orders[0]["key"], "filled", 5, open_order=False)
+        X.manage(broker, held, "2026-07-25")
+        state2 = X._load()["ACK"]
+        assert state2["half"] is True
+        assert KP.load()["ACK"]["stop"] == 100.0
+        assert len(broker.calls) == 1
+    print("[PASS] 절반익절 ACK≠체결 — 5주 체결 대사 후에만 half·본전 확정")
+
+
+def test_half_partial_retries_only_residual():
+    """부분체결 2주는 보존하고 목표 5주 중 잔여 3주만 새 키로 재시도."""
+    with tempfile.TemporaryDirectory() as tmp, mock.patch.object(X.notify, "send"):
+        held = _manage_env(tmp)
+        broker = _SeqBroker([
+            {"state": "partial", "filled": 2, "open": False},
+            {"state": "filled", "filled": 3},
+        ])
+        X.manage(broker, held, "2026-07-25")
+        assert X._load()["ACK"]["half"] is False
+        assert KP.load()["ACK"]["stop"] == 90.0
+        X.manage(broker, held, "2026-07-25")
+        assert [c[1] for c in broker.calls] == [5, 3]
+        assert X._load()["ACK"]["half"] is True
+        assert KP.load()["ACK"]["stop"] == 100.0
+    print("[PASS] 절반익절 부분체결 2주 + 잔여 3주만 재시도·확정")
+
+
+def test_open_buy_does_not_block_stop_ratchet_but_defers_sell():
+    """BUY 잔량은 보호선 상향을 막지 않되, 취소 대사 없는 매도와 경합하지 않는다."""
+    with tempfile.TemporaryDirectory() as tmp, mock.patch.object(X.notify, "send"):
+        held = _manage_env(tmp)
+        L.record_submit(
+            "buy:open", "ACK", 2, "추가매수",
+            meta={"side": "BUY", "market": "US"})
+        # 이미 half가 확정된 상태면 BUY가 열려 있어도 트레일 보호선은 올린다.
+        X._save({"ACK": {"half": True, "half_stop_raised": True,
+                         "high": 120.0}})
+        broker = _SeqBroker([])
+        X.manage(broker, held, "2026-07-25")
+        assert KP.load()["ACK"]["stop"] == 105.0
+        assert not broker.calls
+
+        # half 미확정 상태의 실제 매도는 BUY 취소 대사를 증명할 수 없으면 보류한다.
+        X._save({"ACK": {"half": False, "high": 0.0}})
+        X.manage(broker, held, "2026-07-25")
+        assert X._load()["ACK"]["half"] is False
+        assert not broker.calls
+    print("[PASS] BUY 잔량 중 래칫은 계속·매도는 취소 대사 전 보류")
+
+
 def main():
     test_half_proposal_and_fail_retry()
     test_trail_ratchet_only_up()
@@ -100,6 +187,9 @@ def main():
     test_no_action_zone()
     test_raise_stop_ledger()
     test_sleeve_b_exits()
+    test_half_ack_is_not_fill()
+    test_half_partial_retries_only_residual()
+    test_open_buy_does_not_block_stop_ratchet_but_defers_sell()
     print("\nKIS 청산 관리자 검증 통과 — 익절/래칫/타임스탑/B청산.")
 
 

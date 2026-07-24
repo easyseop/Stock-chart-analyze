@@ -45,6 +45,10 @@ def execute_entry(pos_key: str, symbol: str, *, price_usd: float,
                   reason: str = "진입",
                   market: str | None = None,
                   open_cost_krw: float | None = None,
+                  total_open_cost_krw: float | None = None,
+                  held_cost_krw: float | None = None,
+                  total_held_cost_krw: float | None = None,
+                  operating_limit_krw: float | None = None,
                   hldg_before: int | None = None,
                   seed_krw: float | None = None,
                   sleeve: str = "A",
@@ -88,10 +92,10 @@ def execute_entry(pos_key: str, symbol: str, *, price_usd: float,
     if not kis_boot.trading_allowed():
         return BuyDecision(False, "boot", "부팅 대사 미완료(fail-closed)")
 
-    # 4) 파수꾼 생존성(R4) — 보유가 있는데 파수꾼 죽어있으면 신규 금지
+    # 4) 파수꾼 생존성(R4) — 첫 포지션도 보호자 heartbeat 없이는 진입 금지
     has_pos = (open_positions or 0) > 0 or costbook.open_cost_total(sleeve) > 0
     if not heartbeat.entry_allowed(has_pos):
-        return BuyDecision(False, "sla", "파수꾼 heartbeat SLA hard_disable")
+        return BuyDecision(False, "sla", "파수꾼 heartbeat 없음/120초 초과")
 
     # 5) 롤아웃 가드(I7+I1)
     n_open = open_positions if open_positions is not None else sum(
@@ -113,7 +117,8 @@ def execute_entry(pos_key: str, symbol: str, *, price_usd: float,
 
     # 8) 사이징(IS3/IS4 — 분모 SEED·총량 게이트·feasibility 하향 클램프)
     #   seed_krw 오버라이드: 슬리브 B(매물대)는 자체 SEED로 사이징(A와 예산 분리).
-    seed = float(seed_krw) if seed_krw is not None else envelope.seed_krw()
+    seed = (float(seed_krw) if seed_krw is not None
+            else envelope.sleeve_limit_krw(sleeve))
     t = costbook.totals(sleeve)
     # 투입원가: costbook(회계)과 브로커-진실(호출부 전달) 중 **큰 쪽**(보수적).
     #   costbook 미배선(#25) 동안엔 broker 값이 유일한 실측 — 이게 없으면 총량
@@ -128,8 +133,22 @@ def execute_entry(pos_key: str, symbol: str, *, price_usd: float,
     if not envelope.invariant_ok(seed, open_cost):
         kill.raise_level(1, "kis_buy", f"불변식 위반 open_cost {open_cost:.0f} > SEED")
         return BuyDecision(False, "invariant", "open_cost > SEED — 회계 버그, 신규 중지")
-    dep = envelope.deployable(
+    sleeve_dep = envelope.deployable(
         seed, envelope.bot_cash(seed, t["buy_cost"], t["sell_proceeds"]), open_cost)
+    total_open = (float(total_open_cost_krw) if total_open_cost_krw is not None
+                  else costbook.open_cost_total("A") + costbook.open_cost_total("B"))
+    operating_limit = (float(operating_limit_krw)
+                       if operating_limit_krw is not None
+                       else envelope.operating_limit_krw())
+    if total_open > operating_limit + 1e-6:
+        kill.raise_level(
+            1, "kis_buy",
+            f"A+B 예약원가 {total_open:.0f} > 운영한도 {operating_limit:.0f}")
+        return BuyDecision(
+            False, "total_invariant",
+            "A+B held+in-flight+planned > operating limit — 신규 중지")
+    dep = min(sleeve_dep, envelope.combined_deployable(
+        total_open, operating_limit=operating_limit))
     bp_native = kis.buying_power_of(symbol, price_usd, market=market, excg=excg)
     feas_krw = bp_native * fx if bp_native is not None else None
     r = envelope.size_buy(price_usd * fx,
@@ -140,13 +159,23 @@ def execute_entry(pos_key: str, symbol: str, *, price_usd: float,
                           risk_pct=risk_pct)
     planned_qty = r.qty
     frac = min(1.0, max(0.0, float(qty_fraction)))
-    send_qty = r.qty if frac >= 1.0 else max(1, int(r.qty * frac))
+    # sizing 0을 half 전술이 1주로 승격시키면 fail-closed 사슬이 깨진다.
+    send_qty = r.qty if frac >= 1.0 else (
+        max(1, int(r.qty * frac)) if r.qty >= 1 and frac > 0 else 0)
     if qty_cap is not None:
         send_qty = min(send_qty, max(0, int(qty_cap)))
     if send_qty < 1:
         return BuyDecision(False, "sizing",
                            f"수량 0 (binding={r.binding}, cap={r.cap_krw:.0f}KRW)",
                            planned_qty=planned_qty)
+    if held_cost_krw is None or total_held_cost_krw is None:
+        # 최종 원자 게이트는 브로커가 확인한 A/B 보유원가와 원장의 모든 예약을
+        # 같은 flock 안에서 합쳐야 한다. 호출부가 이 스냅샷을 주지 않으면
+        # 개별 사이징이 맞아도 다른 프로세스와의 합산을 증명할 수 없으므로 전송 금지.
+        return BuyDecision(
+            False, "budget",
+            "브로커 총시드 스냅샷 없음 — 원자 예산 게이트 불가",
+            planned_qty=planned_qty)
 
     # 9) 전송 — kis_orders가 모의 전용 하드블록 등 자체 게이트 재검사
     #   미국주는 실제 상장 거래소로 라우팅(감사 수정 #1: NASD 고정 시 NYSE/AMEX
@@ -155,8 +184,29 @@ def execute_entry(pos_key: str, symbol: str, *, price_usd: float,
         excg = kis.us_excg_of(symbol)
     limit = (float(limit_price) if limit_price is not None
              else kis_orders.marketable_limit_price(price_usd, "BUY", market=market))
-    meta = {"pos_key": pos_key, "sleeve": sleeve, "fx": fx,
-            "ccy": "KRW" if market == "KR" else "USD", **(order_meta or {})}
+    reservation_qty = (min(planned_qty, max(0, int(qty_cap)))
+                       if qty_cap is not None else planned_qty)
+    meta = {
+        "pos_key": pos_key, "sleeve": sleeve, "fx": fx,
+        "ccy": "KRW" if market == "KR" else "USD",
+        # half는 1차+후속 계획 전체를 첫 submit부터 예약한다. 후속 plan은 parent가
+        # 열려 있는 동안 원장 합산에서 제외되고, parent 종료 뒤 예약을 이어받는다.
+        "reservation_cost_krw": reservation_qty * limit * fx,
+        **(order_meta or {}),
+    }
+    # 잔고 대사 직후 KIS holdings 반영이 늦을 수 있으므로, 체결회계 원장과
+    # 브로커 보유원가 중 큰 값을 최종 held 바닥으로 사용한다. 이미 반영된 값은
+    # 서로 중복합산하지 않고 max로 합성해 과대·과소 예약을 모두 피한다.
+    accounted_sleeve = costbook.open_cost_total(sleeve)
+    accounted_total = costbook.open_cost_total("A") + costbook.open_cost_total("B")
+    meta.update({
+        "budget_total_held_krw": max(
+            float(total_held_cost_krw), accounted_total),
+        "budget_total_limit_krw": operating_limit,
+        "budget_sleeve_held_krw": max(
+            float(held_cost_krw), accounted_sleeve),
+        "budget_sleeve_limit_krw": seed,
+    })
     res = kis_orders.place_buy(pos_key, symbol, send_qty, limit,
                                excg=excg, reason=reason, market=market,
                                hldg_before=hldg_before, order_meta=meta)
