@@ -305,14 +305,18 @@ def check_once(broker, state: dict) -> None:
             for code, qty in bh.items():
                 if int(qty) <= 0:
                     continue
-                # 손절선 있는 소스 선택 — feed(트레일링) 우선, 없으면 진입 기록.
+                # 손절선 소스 — feed(트레일링)와 로컬 진입/래칫 기록 중 **높은 쪽**.
+                #   (코덱스 P1 반영: 같은 티커라도 feed의 낮은 손절선이 KIS에서
+                #    이미 올린 본전/트레일 래칫을 덮어 보호가 후퇴하던 충돌 제거.)
                 fsrc, ksrc = feed.get(code), kpos.get(code)
-                src = (fsrc if (fsrc and fsrc.get("stop"))
-                       else ksrc if (ksrc and ksrc.get("stop")) else None)
-                if src is None:
+                fstop = float(fsrc.get("stop") or 0) if fsrc else 0.0
+                kstop = float(ksrc.get("stop") or 0) if ksrc else 0.0
+                if fstop <= 0 and kstop <= 0:
                     unprot.add(code)
                     continue
-                held[code] = {**src, "code": code, "q": int(qty), "_bt": True}
+                src = fsrc if fstop >= kstop else ksrc
+                held[code] = {**src, "stop": max(fstop, kstop),
+                              "code": code, "q": int(qty), "_bt": True}
             for code in unprot - state.get("_unprot", set()):     # 새 무보호만 알림
                 _notify(f"🚨 손절선 불명 KIS 보유 {code} — 수동 확인 필요(브로커-진실)",
                         critical=True)

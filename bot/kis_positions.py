@@ -26,12 +26,12 @@ def _append(ev: dict) -> None:
 
 def record(code: str, *, stop: float, ccy: str, entry: float | None = None,
            qty: int | None = None, name: str = "", opened: str = "",
-           sleeve: str = "A") -> None:
+           sleeve: str = "A", target: float | None = None) -> None:
     """봇 진입 시 손절선 기록(매수 루프가 execute_entry 성공 후 호출).
-    sleeve: 'A'(전환확정) / 'B'(매물대 반등) — 슬리브별 예산·통계 분리용."""
+    sleeve: 'A'/'B' — 슬리브별 예산·통계·청산 분리. target: B의 목표가(VAH)."""
     _append({"ev": "open", "code": str(code).upper(), "stop": float(stop),
              "ccy": ccy, "entry": entry, "qty": qty, "name": name,
-             "opened": opened, "sleeve": sleeve})
+             "opened": opened, "sleeve": sleeve, "target": target})
 
 
 def close(code: str) -> None:
@@ -69,7 +69,8 @@ def load() -> dict:
                                 "ccy": ev.get("ccy"), "entry": ev.get("entry"),
                                 "qty": ev.get("qty"), "name": ev.get("name", ""),
                                 "opened": ev.get("opened", ""),
-                                "sleeve": ev.get("sleeve", "A")}
+                                "sleeve": ev.get("sleeve", "A"),
+                                "target": ev.get("target")}
                 elif ev.get("ev") == "raise" and code in st:
                     try:                        # 래칫: 올리기만(내림 무시)
                         new = float(ev.get("stop") or 0)

@@ -224,9 +224,15 @@ def run_once(signals: list[dict], *, fx: float | None = None,
                                   hldg_before=0, seed_krw=seed_krw)
         if d.ok:
             # 파수꾼이 feed에 없어도 이 손절선으로 보호(브로커-진실 fallback) + 슬리브 태그.
+            tgt = None
+            try:                                   # B 청산용 목표가(VAH) 보존
+                tgt = float(s.get("target") or 0) or None
+            except (TypeError, ValueError):
+                pass
             kis_positions.record(code, stop=float(s["stop"]), ccy=ccy,
                                  entry=entry, qty=d.qty, name=s.get("name", ""),
-                                 opened=settings.today_kst(), sleeve=sleeve)
+                                 opened=settings.today_kst(), sleeve=sleeve,
+                                 target=tgt)
             held[code] = d.qty
             n_open += 1
             open_cost += d.qty * cur * (1.0 if market == "KR" else fx)
@@ -246,12 +252,31 @@ def run_once(signals: list[dict], *, fx: float | None = None,
     return results
 
 
+SIGNAL_MAX_AGE_MIN = 45   # 신호 피드가 이보다 낡으면 매수 전면 생략(코덱스 P1 반영)
+
+
 def _fetch_signals() -> list[dict]:
+    """신호 로드 + 신선도 게이트 — generated_at이 45분 이상 낡으면 빈 목록.
+
+    빌드는 15분 주기라 45분 정체 = 파이프라인 장애. 낡은 지표로 신규 진입하는
+    것을 fail-closed로 차단(가격 ±1.5% 게이트는 있었지만 지표 신선도는 미검증이던
+    구멍). 파수꾼 손절은 이 게이트와 무관하게 계속."""
     for url in settings.SIGNALS_SOURCES:
         try:
             with urllib.request.urlopen(
                     url + "?cb=" + str(os.getpid()), timeout=15) as r:
-                return (json.load(r) or {}).get("signals", [])
+                d = json.load(r) or {}
+            try:
+                import datetime as _dt
+                t = _dt.datetime.fromisoformat(d.get("generated_at", ""))
+                age = (_dt.datetime.now(t.tzinfo) - t).total_seconds() / 60
+                if age > SIGNAL_MAX_AGE_MIN:
+                    print(f"[신선도] 신호 {age:.0f}분 낡음(>{SIGNAL_MAX_AGE_MIN}) "
+                          f"— 이번 사이클 매수 생략", flush=True)
+                    return []
+            except (ValueError, TypeError):
+                pass                       # 시각 파싱 불가 — 기존 동작(신호 사용)
+            return d.get("signals", [])
         except Exception:
             continue
     return []
