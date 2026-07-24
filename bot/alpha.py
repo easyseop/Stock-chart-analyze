@@ -167,6 +167,30 @@ def chart_url(series: list, idx_name: str, title: str) -> str:
             + urllib.parse.quote(json.dumps(cfg, separators=(",", ":"))))
 
 
+def publish_dash(st: dict) -> None:
+    """대시보드용 컴팩트 상태를 ntfy 토픽에 발행 — 웹 perf.html이 조회.
+
+    퍼센트만(금액·수량·계좌 없음). 4KB 한도 안: 세션 시리즈 40점·일별 30일."""
+    try:
+        day = {}
+        for mkt, d in (st.get("day") or {}).items():
+            if d.get("series"):
+                s = d["series"]
+                step = max(1, len(s) // 40)
+                day[mkt] = {"date": d.get("date"), "series": s[::step][-40:]}
+        payload = {"day": day, "days": (st.get("days") or [])[-30:]}
+        body = json.dumps(payload, ensure_ascii=False,
+                          separators=(",", ":")).encode("utf-8")
+        req = urllib.request.Request(
+            "https://ntfy.sh/" + settings.ALPHA_DASH_TOPIC, data=body,
+            method="POST", headers={"Title": "alpha-dash", "Priority": "min",
+                                    "Content-Type": "application/json"})
+        with urllib.request.urlopen(req, timeout=10):
+            pass
+    except Exception:
+        pass                                       # 발행 실패 무해(다음 틱 재시도)
+
+
 # ── 메인 틱 ────────────────────────────────────────────────────
 def _fmt(v: float) -> str:
     return f"{v:+.2f}%"
@@ -188,6 +212,7 @@ def tick(now: datetime.datetime | None = None) -> None:
                 day["closed"] = True
                 _close_alert(st, mkt, day)
                 _save(st)
+                publish_dash(st)               # 마감 요약도 대시보드에 반영
             continue
         rows = _broker_rows()
         if rows is None:
@@ -224,6 +249,7 @@ def tick(now: datetime.datetime | None = None) -> None:
             st["alert"][mkt] = time.time()
             _mid_alert(st, mkt, r)
         _save(st)
+        publish_dash(st)                       # 웹 대시보드(perf.html)용 발행
 
 
 def _vs_line(acct: float, ipct: dict) -> str:

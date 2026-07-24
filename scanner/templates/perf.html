@@ -1,0 +1,132 @@
+<!DOCTYPE html><html lang="ko"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>성과 vs 지수</title>
+<style>
+  body{margin:0;font-family:-apple-system,'Segoe UI','Noto Sans KR',sans-serif;
+    background:#f1f5f9;color:#1e293b;line-height:1.6}
+  header{background:#0f172a;color:#fff;padding:14px 20px}
+  header a{color:#7dd3fc;font-size:13px;text-decoration:none}
+  header h1{margin:5px 0 0;font-size:18px}
+  .wrap{max-width:820px;margin:0 auto;padding:16px}
+  .card{background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:16px 18px;margin-bottom:14px}
+  h2{font-size:15px;margin:2px 0 10px;color:#0f172a}
+  canvas{width:100%;height:auto;display:block}
+  .kpi{display:flex;gap:10px;flex-wrap:wrap;margin:4px 0 8px}
+  .kpi div{background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:8px 12px;font-size:13px}
+  .kpi b{font-size:16px}
+  .up{color:#16a34a}.dn{color:#dc2626}
+  .note{font-size:12.5px;color:#64748b}
+  .leg{font-size:12px;color:#64748b;margin-top:4px}
+  .leg i{display:inline-block;width:10px;height:10px;border-radius:2px;margin:0 4px 0 10px;vertical-align:-1px}
+</style></head><body>
+<header><a href="index.html">&larr; 스크리너</a>
+<h1>📊 성과 vs 지수 — 우리 전략(KIS)을 하나의 ETF처럼</h1></header>
+<div class="wrap">
+<div class="card"><span class="note" id="status">서버 데이터 불러오는 중…</span></div>
+<div id="content"></div>
+<div class="card note">
+읽는 법: <b>선이 지수 위에 있으면 그날 시장을 이긴 것</b>. 하락일에 덜 빠지고(방어),
+상승일에 더 오르는지(공격)를 아래 캡처 지표로 요약합니다. 데이터는 서버가 장중
+5분마다 발행(퍼센트만) — 페이지를 열 때마다 최신값을 읽습니다.
+</div>
+</div>
+<script>
+const TOPIC = "stock-alpha-c81f4e2b9d";                 // 서버 발행 토픽(퍼센트만)
+const $ = (h) => { const d = document.createElement("div"); d.innerHTML = h; return d.firstElementChild; };
+const f = (v) => (v >= 0 ? "+" : "") + v.toFixed(2) + "%";
+const cls = (v) => v >= 0 ? "up" : "dn";
+
+function line(canvas, labels, seriesList, colors, names) {
+  const W = canvas.width = canvas.clientWidth * 2, H = canvas.height = 360;
+  const c = canvas.getContext("2d"); c.scale(1, 1);
+  const all = seriesList.flat().filter(v => isFinite(v));
+  if (!all.length) return;
+  let lo = Math.min(0, ...all), hi = Math.max(0, ...all);
+  const pad = (hi - lo) * 0.15 || 0.5; lo -= pad; hi += pad;
+  const L = 70, R = 14, T = 14, B = 34;
+  const x = (i) => L + (W - L - R) * (labels.length < 2 ? 0.5 : i / (labels.length - 1));
+  const y = (v) => T + (H - T - B) * (1 - (v - lo) / (hi - lo));
+  c.font = "20px sans-serif"; c.fillStyle = "#94a3b8"; c.strokeStyle = "#e2e8f0";
+  for (let g = 0; g <= 4; g++) {                        // 그리드 + y라벨
+    const v = lo + (hi - lo) * g / 4, yy = y(v);
+    c.beginPath(); c.moveTo(L, yy); c.lineTo(W - R, yy); c.stroke();
+    c.fillText(f(v), 4, yy + 6);
+  }
+  c.strokeStyle = "#cbd5e1"; c.beginPath();             // 0% 기준선
+  c.moveTo(L, y(0)); c.lineTo(W - R, y(0)); c.stroke();
+  const step = Math.max(1, Math.ceil(labels.length / 8));
+  labels.forEach((lb, i) => { if (i % step === 0) c.fillText(lb, x(i) - 20, H - 8); });
+  seriesList.forEach((s, k) => {
+    c.strokeStyle = colors[k]; c.lineWidth = 3; c.beginPath();
+    s.forEach((v, i) => { const px = x(i), py = y(v);
+      i ? c.lineTo(px, py) : c.moveTo(px, py); });
+    c.stroke();
+  });
+}
+
+function capture(rows) {
+  if (rows.length < 5) return "누적 " + rows.length + "일 — 5일부터 캡처 통계 표시";
+  const up = rows.filter(r => r.idx > 0), dn = rows.filter(r => r.idx < 0);
+  const s = (a, k) => a.reduce((t, r) => t + r[k], 0);
+  const parts = ["(" + rows.length + "일)"];
+  if (up.length) parts.push("상승일 캡처 " + Math.round(s(up, "acct") / s(up, "idx") * 100) + "%");
+  if (dn.length) parts.push("하락일 캡처 " + Math.round(s(dn, "acct") / s(dn, "idx") * 100) + "% (낮을수록 방어)");
+  parts.push("지수 이긴 날 " + Math.round(rows.filter(r => r.acct > r.idx).length / rows.length * 100) + "%");
+  return parts.join(" · ");
+}
+
+function render(d) {
+  const root = document.getElementById("content");
+  root.innerHTML = "";
+  const MK = { US: ["미장", "나스닥"], KR: ["국장", "코스피"] };
+  for (const [mkt, [label, idxn]] of Object.entries(MK)) {
+    const day = (d.day || {})[mkt];
+    if (day && day.series && day.series.length) {
+      const last = day.series[day.series.length - 1];
+      const diff = last[1] - last[2];
+      const card = $(`<div class="card"><h2>오늘 ${label} 세션 (${day.date}, 시작 대비)</h2>
+        <div class="kpi"><div>우리 전략 <b class="${cls(last[1])}">${f(last[1])}</b></div>
+        <div>${idxn} <b class="${cls(last[2])}">${f(last[2])}</b></div>
+        <div>지수 대비 <b class="${cls(diff)}">${f(diff)}p</b></div></div>
+        <canvas></canvas>
+        <div class="leg"><i style="background:#16a34a"></i>우리 전략<i style="background:#64748b"></i>${idxn}</div></div>`);
+      root.appendChild(card);
+      line(card.querySelector("canvas"), day.series.map(p => p[0]),
+           [day.series.map(p => p[1]), day.series.map(p => p[2])],
+           ["#16a34a", "#64748b"]);
+    }
+    const rows = (d.days || []).filter(r => r.mkt === mkt);
+    if (rows.length) {
+      let cum = 0;
+      const cumAlpha = rows.map(r => +(cum += r.acct - r.idx).toFixed(2));
+      const card = $(`<div class="card"><h2>${label} 일별 추이 (최근 ${rows.length}일)</h2>
+        <canvas></canvas>
+        <div class="leg"><i style="background:#16a34a"></i>우리(일별)<i style="background:#64748b"></i>지수(일별)<i style="background:#2563eb"></i>누적 초과수익(알파)</div>
+        <div class="note" style="margin-top:6px">${capture(rows)}</div></div>`);
+      root.appendChild(card);
+      line(card.querySelector("canvas"), rows.map(r => r.d.slice(5)),
+           [rows.map(r => r.acct), rows.map(r => r.idx), cumAlpha],
+           ["#16a34a", "#64748b", "#2563eb"]);
+    }
+  }
+  if (!root.children.length)
+    root.appendChild($('<div class="card note">아직 세션 데이터가 없습니다 — 다음 장중부터 쌓입니다.</div>'));
+}
+
+fetch("https://ntfy.sh/" + TOPIC + "/json?poll=1")
+  .then(r => r.text())
+  .then(t => {
+    const msgs = t.trim().split("\n").filter(Boolean).map(x => { try { return JSON.parse(x); } catch (e) { return null; } })
+      .filter(m => m && m.event === "message" && m.title === "alpha-dash");
+    if (!msgs.length) throw new Error("no data");
+    const d = JSON.parse(msgs[msgs.length - 1].message);
+    document.getElementById("status").textContent =
+      "마지막 서버 발행: " + new Date(msgs[msgs.length - 1].time * 1000).toLocaleString("ko-KR");
+    render(d);
+  })
+  .catch(() => {
+    document.getElementById("status").textContent =
+      "아직 발행된 데이터가 없습니다 — 다음 장중(미장 22:30~/국장 09:00~)부터 서버가 5분마다 발행합니다.";
+  });
+</script>
+</body></html>

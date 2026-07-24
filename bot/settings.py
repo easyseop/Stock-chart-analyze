@@ -36,6 +36,10 @@ FX_USDKRW = 1380.0           # 달러 환산(달러 시그널 수량 계산용)
 ENTRY_TOLERANCE = 0.015      # 실시간가가 시그널 진입가 ±1.5% 이내일 때만 매수
 import os as _os_shelf
 SHELF_MAX_POS = int(_os_shelf.environ.get("SHELF_MAX_POS", "4"))
+
+# 성과 대시보드 발행 토픽(ntfy) — 서버(alpha)가 5분마다 발행, 웹 perf.html이 조회.
+#   퍼센트만 담아 공개 무해(금액·계좌정보 없음). 헬스 토픽과 독립(그쪽 노출 방지).
+ALPHA_DASH_TOPIC = _os_shelf.environ.get("NTFY_ALPHA_TOPIC", "stock-alpha-c81f4e2b9d")
 #   ↑ 매물대 슬리브(B) 동시 보유 상한. 정합성 점검(2026-07-24): 롤아웃 캡이
 #     슬리브별로 각각 적용돼 A(12)+B(12)=24까지 가능하던 구멍 → B 전용 소형
 #     상한으로 총노출을 A 12 + B 4 = 16으로 제한(B 예산 5M이면 4~5개가 자연 상한).

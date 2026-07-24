@@ -467,6 +467,8 @@ def build(results: list[dict], frames_map: dict[str, dict],
         fp.write(_REPO and _trigger_page())   # 웹 즉석 조회(워크플로 트리거) 페이지
     with open(os.path.join(out_dir, "guide.html"), "w", encoding="utf-8") as fp:
         fp.write(_tmpl("guide.html"))          # 매매 가이드(읽기 전용 안내)
+    with open(os.path.join(out_dir, "perf.html"), "w", encoding="utf-8") as fp:
+        fp.write(_tmpl("perf.html"))           # 성과 vs 지수 대시보드(서버 발행 조회)
     with open(os.path.join(out_dir, "start.html"), "w", encoding="utf-8") as fp:
         fp.write(_tmpl("start.html"))          # 3분 시작 가이드(처음 사용자용)
     with open(os.path.join(out_dir, "paper.html"), "w", encoding="utf-8") as fp:
