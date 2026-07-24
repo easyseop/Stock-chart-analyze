@@ -75,6 +75,25 @@ python main.py --cache --dashboard  # 캐시 기반으로 빠르게 분석/대�
 `--demo`는 네트워크가 막힌 환경에서 파이프라인 로직을 확인하기 위한 모드다.
 실데이터 신호를 보려면 FinanceDataReader가 외부(야후/KRX)에 접속 가능한 환경에서 실행해야 한다.
 
+## 읽기 전용 웹앱
+
+기존 GitHub Pages와 매매용 `public/api/*.json`은 그대로 유지하고, 새 화면만
+`/app/`에 추가한다. 화면은 `signals.json`, `paper_auto.json`, `track.json`을
+읽어서 정렬·필터·검색·시각화만 수행하며 점수나 매매 판단을 다시 계산하지 않는다.
+
+```bash
+# 정적 자산만 public/app/에 발행(기존 public/api와 index.html은 변경하지 않음)
+python -m scanner.siteapp --out-dir public
+
+# 실제 KIS 보유 종목·평단·손익·가격 그래프를 로컬에서만 조회
+python -m bot.portfolio_web --port 8765
+# 브라우저: http://127.0.0.1:8765/app/
+```
+
+`portfolio_web`은 항상 `127.0.0.1`에만 열리고 GET 조회만 허용한다. 기존 KIS
+환경 설정을 읽지만 계좌번호·키·토큰을 브라우저에 전달하지 않으며 주문 모듈을
+불러오지 않는다. 공개 Pages의 **내 자산** 탭에는 실제 계좌 정보가 나타나지 않는다.
+
 ## 출력 예시
 ```
 [종목명 CODE]                       심리: 🟢 강세 (정규화 +58점)
