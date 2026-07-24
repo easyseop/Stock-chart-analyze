@@ -11,8 +11,7 @@
 
 - 기본 브랜치: `claude/happy-gauss-cwoq21`
 - 현재 작업 브랜치: `codex/oracle-portfolio-service`
-- 진행 중 PR: [#72 오라클 KIS 대시보드와 실매매 안정성 보강](https://github.com/easyseop/Stock-chart-analyze/pull/72)
-- PR 상태: Draft, CI 일부 실패
+- 통합 PR: [#72 오라클 KIS 대시보드와 실매매 안정성 보강](https://github.com/easyseop/Stock-chart-analyze/pull/72)
 - 현재 브랜치 주요 커밋:
   - `be0dd7a` — Oracle 보유자산 서비스와 조용한 알림 정책
   - `f2dc1ed` — 주문·체결·대사·일일손실 안전장치 통합
@@ -92,15 +91,13 @@ git diff --check
 검증 범위에는 매수 현금, 일일손실, 중복주문, 부분체결, UNKNOWN 대사, 국내/미국
 주문 라우팅, 손절 chase, 지표 매핑, 알림 필터, 공개/개인 웹 안전 경계가 포함된다.
 
-## 4. 현재 CI 실패 원인과 다음 수정
+## 4. CI 테스트 격리 보정
 
-PR #72의 `Site UI CI`는 통과했다. 새 `CI`의 전체 회귀 테스트만 실패한다.
+PR #72에서 발견된 `tests/test_fastsafe.py`의 테스트 격리 누락을 보정했다.
 
-원인은 운영 코드가 아니라 `tests/test_fastsafe.py`의 테스트 격리 누락이다. GitHub
-Actions에서는 `GITHUB_ACTIONS=true`이므로 테스트가 실제 `state` 브랜치의
-`autopaper.snapshot.json`을 복구해 테스트용 빈 계좌를 오염시킨다.
-
-승인 후 적용할 최소 수정:
+GitHub Actions에서는 `GITHUB_ACTIONS=true`이므로 테스트가 실제 `state` 브랜치의
+`autopaper.snapshot.json`을 복구해 테스트용 빈 계좌를 오염시킬 수 있었다. 각
+테스트의 `_fresh()` 초기화에서 다음과 같이 운영 스냅샷 복구를 끈다.
 
 ```python
 def _fresh(tmp: str) -> None:
@@ -109,8 +106,7 @@ def _fresh(tmp: str) -> None:
 ```
 
 이 수정은 테스트에서만 운영 스냅샷 복구를 끄며 실제 자동매매 복구 로직은 변경하지
-않는다. 수정 후 `python -m tests.test_fastsafe`, 전체 회귀 테스트, GitHub CI를 다시
-확인한다.
+않는다. 로컬 검증도 `GITHUB_ACTIONS=true` 조건으로 실행해 CI 환경을 재현한다.
 
 ## 5. 다른 노트북에서 이어가기
 
@@ -136,8 +132,9 @@ gh pr checks 72
 
 다른 노트북의 Codex에 전달할 문장:
 
-> `docs/CODEX_HANDOFF.md`를 먼저 읽고, PR #72의 CI 실패 수정부터 이어서 진행해줘.
-> 완료 단위마다 현재 브랜치에 커밋·푸시하고 이 인수인계서도 갱신해줘.
+> `docs/CODEX_HANDOFF.md`를 먼저 읽고, Oracle 서버 배포와 실계정 조회 검증부터
+> 이어서 진행해줘. 완료 단위마다 별도 `codex/` 브랜치에 커밋·푸시하고 이
+> 인수인계서도 갱신해줘.
 
 ## 6. Oracle 배포 미완료
 
@@ -198,11 +195,9 @@ GitHub API 기준 Pages는 public이고 최근 배포는 성공했다. 다만 20
 
 ## 8. 남은 순서
 
-1. `tests/test_fastsafe.py` 테스트 격리 수정.
-2. PR #72 전체 CI 통과 확인.
-3. Draft 해제 후 PR #72 병합.
-4. 중복 PR #70 닫기.
-5. GitHub Pages 새 배포와 `/app/` 스모크 확인.
-6. Oracle SSH 정보 확인 후 `portfolio-web.service` 설치.
-7. KIS 모의계좌 실제 보유종목 수·평단·현재가·손익 15초 갱신 검증.
-8. 작업 완료 단위마다 이 문서 갱신 → 커밋 → 현재 브랜치 푸시.
+1. PR #72 전체 CI 통과 확인 후 병합.
+2. 중복 PR #70 닫기.
+3. GitHub Pages 새 배포와 `/app/` 스모크 확인.
+4. Oracle SSH 정보 확인 후 `portfolio-web.service` 설치.
+5. KIS 모의계좌 실제 보유종목 수·평단·현재가·손익 15초 갱신 검증.
+6. 작업 완료 단위마다 이 문서 갱신 → 커밋 → 현재 브랜치 푸시.
