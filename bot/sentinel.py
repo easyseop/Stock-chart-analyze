@@ -42,7 +42,11 @@ import urllib.request
 
 from bot import ledger
 
-POLL_SEC = 20              # 장중 폴링 주기(초) — 손절 보호용이라 짧게
+try:
+    POLL_SEC = int(os.environ.get("SENTINEL_POLL_SECONDS", "20"))
+except ValueError:
+    POLL_SEC = 20
+POLL_SEC = max(5, min(60, POLL_SEC))  # 장중 폴링: 오설정 폭주·과도한 지연 모두 제한
 FEED_URLS = (              # 포지션/손절선 소스 — state 브랜치 우선, Pages 폴백
     "https://raw.githubusercontent.com/easyseop/Stock-chart-analyze/state/feed/autopaper.public.json",
     "https://easyseop.github.io/Stock-chart-analyze/api/paper_auto.json",

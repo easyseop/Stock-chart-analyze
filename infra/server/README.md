@@ -15,6 +15,11 @@
 | `watchdog.py` | 위 유닛이 실행하는 스크립트 |
 | `autodeploy.sh` + `.service`/`.timer` | 자동 배포 — 5분마다 새 커밋 확인, 있으면 pull+재시작(스모크 실패 시 롤백) |
 
+기본 장중 주기는 파수꾼 시세 20초, KIS 보유자산 화면 15초, 매수 신호 확인
+60초다. 각각 `SENTINEL_POLL_SECONDS`(5~60), `PORTFOLIO_REFRESH_SECONDS`(5~300),
+`BUYLOOP_POLL_SECONDS`(10~300)로 조정한다. 너무 짧은 오설정은 코드에서 제한해
+KIS 호출 폭주가 매매 안정성을 해치지 않게 한다.
+
 > **손 = 매수(buyloop) + 매도(sentinel) 대칭.** 파수꾼만 켜면 손절만, 둘 다 켜면
 > autopaper 결정을 KIS 모의계좌에 완전 미러(진입+청산). 처음엔 **매도만**(파수꾼)으로
 > 검증하고, 안정되면 매수 루프를 켜는 걸 권장.

@@ -359,10 +359,18 @@ def _cycle() -> None:
 def main() -> int:
     import argparse
     import time
+    try:
+        poll_default = int(os.environ.get("BUYLOOP_POLL_SECONDS", "60"))
+    except ValueError:
+        poll_default = 60
+    poll_default = max(10, min(300, poll_default))
     ap = argparse.ArgumentParser(description="KIS 미러 매수 루프(기본 1회)")
     ap.add_argument("--loop", action="store_true", help="POLL초마다 반복(서버 모드)")
-    ap.add_argument("--poll", type=int, default=300, help="반복 주기(초, 기본 300)")
+    ap.add_argument("--poll", type=int, default=poll_default,
+                    help=f"반복 주기(초, 기본 {poll_default}; 10초 미만 금지)")
     args = ap.parse_args()
+    if args.poll < 10:
+        raise SystemExit("--poll은 KIS 호출 경합 방지를 위해 10초 이상이어야 합니다")
     if not args.loop:
         _cycle()
         return 0
