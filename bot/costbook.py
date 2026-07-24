@@ -21,22 +21,32 @@ from __future__ import annotations
 
 import json
 import os
+import time
+import datetime
 
 BOOK_PATH = os.path.join(os.path.dirname(__file__), "costbook.jsonl")
 
 
 def _append(ev: dict) -> None:
     path = os.environ.get("COSTBOOK_PATH", BOOK_PATH)
+    ev.setdefault("ts", time.time())
     os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
     with open(path, "a", encoding="utf-8") as f:
         f.write(json.dumps(ev, ensure_ascii=False) + "\n")
 
 
+def _day_kst(ts: float | None = None) -> str:
+    kst = datetime.timezone(datetime.timedelta(hours=9))
+    return datetime.datetime.fromtimestamp(ts or time.time(), kst).date().isoformat()
+
+
 def _fold() -> dict:
-    """{pos_key: {symbol, qty, cost_krw}} — 열린 lot들. 닫힌 lot은 qty 0."""
+    """열린 lot·슬리브별 현금흐름·일별 실현손익을 원장에서 재구성."""
     path = os.environ.get("COSTBOOK_PATH", BOOK_PATH)
     lots: dict = {}
     totals = {"buy_cost": 0.0, "sell_proceeds": 0.0}
+    by_sleeve: dict[str, dict] = {}
+    daily: dict[str, float] = {}
     try:
         with open(path, encoding="utf-8") as f:
             for line in f:
@@ -50,53 +60,95 @@ def _fold() -> dict:
                 k = ev.get("key")
                 if ev.get("ev") == "add":
                     cur = lots.setdefault(k, {"symbol": ev.get("symbol"),
-                                              "qty": 0, "cost_krw": 0.0})
+                                              "qty": 0, "cost_krw": 0.0,
+                                              "sleeve": ev.get("sleeve", "A")})
+                    cur["sleeve"] = ev.get("sleeve") or cur.get("sleeve", "A")
                     cur["qty"] += int(ev.get("qty", 0))
                     cur["cost_krw"] += float(ev.get("cost_krw", 0.0))
                     totals["buy_cost"] += float(ev.get("cost_krw", 0.0))
+                    sl = cur["sleeve"]
+                    sb = by_sleeve.setdefault(sl, {"buy_cost": 0.0,
+                                                   "sell_proceeds": 0.0})
+                    sb["buy_cost"] += float(ev.get("cost_krw", 0.0))
                 elif ev.get("ev") == "close" and k in lots:
                     cur = lots[k]
                     q = min(int(ev.get("qty", 0)), cur["qty"])
+                    cost_closed = 0.0
                     if cur["qty"] > 0:
-                        cur["cost_krw"] -= cur["cost_krw"] * (q / cur["qty"])
+                        cost_closed = cur["cost_krw"] * (q / cur["qty"])
+                        cur["cost_krw"] -= cost_closed
                     cur["qty"] -= q
-                    totals["sell_proceeds"] += float(ev.get("proceeds_krw", 0.0))
+                    proceeds = float(ev.get("proceeds_krw", 0.0))
+                    totals["sell_proceeds"] += proceeds
+                    sl = ev.get("sleeve") or cur.get("sleeve", "A")
+                    sb = by_sleeve.setdefault(sl, {"buy_cost": 0.0,
+                                                   "sell_proceeds": 0.0})
+                    sb["sell_proceeds"] += proceeds
+                    pnl = float(ev.get("realized_pnl_krw",
+                                       proceeds - cost_closed))
+                    day = ev.get("day_kst") or _day_kst(float(ev.get("ts") or 0))
+                    daily[day] = daily.get(day, 0.0) + pnl
     except FileNotFoundError:
         pass
-    return {"lots": lots, "totals": totals}
+    return {"lots": lots, "totals": totals, "by_sleeve": by_sleeve,
+            "daily_realized": daily}
 
 
 def add_lot(pos_key: str, symbol: str, qty: int, fill_price: float,
-            fx: float = 1.0, commission_krw: float = 0.0) -> float:
+            fx: float = 1.0, commission_krw: float = 0.0,
+            sleeve: str = "A") -> float:
     """매수 확정 체결 기록. 반환: 이번 lot의 cost_krw(fx로 고정)."""
     cost = float(fill_price) * int(qty) * float(fx) + float(commission_krw)
     _append({"ev": "add", "key": pos_key, "symbol": symbol, "qty": int(qty),
              "cost_krw": cost, "fill_price": float(fill_price), "fx": float(fx),
-             "commission_krw": float(commission_krw)})
+             "commission_krw": float(commission_krw), "sleeve": sleeve})
     return cost
 
 
-def close_lot(pos_key: str, qty: int, proceeds_krw: float) -> None:
-    """매도 확정 체결 기록 — proceeds(수수료·세금 차감 후 실현액) 환입."""
+def close_lot(pos_key: str, qty: int, proceeds_krw: float,
+              *, sleeve: str | None = None, day_kst: str | None = None) -> float:
+    """매도 확정 체결 기록. 반환은 이번 체결의 실현손익(원)."""
+    cur = _fold()["lots"].get(pos_key) or {"qty": 0, "cost_krw": 0.0,
+                                           "sleeve": sleeve or "A"}
+    q = min(max(0, int(qty)), int(cur.get("qty", 0)))
+    cost_closed = (float(cur.get("cost_krw", 0.0)) * q / int(cur["qty"])
+                   if int(cur.get("qty", 0)) > 0 else 0.0)
+    pnl = float(proceeds_krw) - cost_closed
     _append({"ev": "close", "key": pos_key, "qty": int(qty),
-             "proceeds_krw": float(proceeds_krw)})
+             "proceeds_krw": float(proceeds_krw),
+             "cost_closed_krw": cost_closed, "realized_pnl_krw": pnl,
+             "sleeve": sleeve or cur.get("sleeve", "A"),
+             "day_kst": day_kst or _day_kst()})
+    return pnl
 
 
-def open_cost_total() -> float:
-    return sum(l["cost_krw"] for l in _fold()["lots"].values() if l["qty"] > 0)
-
-
-def open_cost_symbol(symbol: str) -> float:
+def open_cost_total(sleeve: str | None = None) -> float:
     return sum(l["cost_krw"] for l in _fold()["lots"].values()
-               if l["qty"] > 0 and l.get("symbol") == symbol)
+               if l["qty"] > 0 and (sleeve is None or l.get("sleeve", "A") == sleeve))
 
 
-def open_qty(symbol: str) -> int:
+def open_cost_symbol(symbol: str, sleeve: str | None = None) -> float:
+    return sum(l["cost_krw"] for l in _fold()["lots"].values()
+               if l["qty"] > 0 and l.get("symbol") == symbol
+               and (sleeve is None or l.get("sleeve", "A") == sleeve))
+
+
+def open_qty(symbol: str, sleeve: str | None = None) -> int:
     """봇 claim 수량(원장 관점) — IS5 비대칭 대사·매도 상한 입력."""
     return sum(l["qty"] for l in _fold()["lots"].values()
-               if l.get("symbol") == symbol)
+               if l.get("symbol") == symbol
+               and (sleeve is None or l.get("sleeve", "A") == sleeve))
 
 
-def totals() -> dict:
+def totals(sleeve: str | None = None) -> dict:
     """{buy_cost, sell_proceeds} — envelope.bot_cash 입력."""
-    return dict(_fold()["totals"])
+    f = _fold()
+    if sleeve is None:
+        return dict(f["totals"])
+    return dict(f["by_sleeve"].get(
+        sleeve, {"buy_cost": 0.0, "sell_proceeds": 0.0}))
+
+
+def realized_on(day_kst: str | None = None) -> float:
+    """KST 날짜의 실현손익. 일일 신규매수 서킷브레이커의 단일 입력."""
+    return float(_fold()["daily_realized"].get(day_kst or _day_kst(), 0.0))

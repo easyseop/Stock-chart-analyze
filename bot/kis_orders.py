@@ -146,7 +146,8 @@ def place_order(key: str, symbol: str, side: str, qty: int, price: float,
                 *, excg: str = "NASD", reason: str = "",
                 min_interval_s: float = 60.0, market: str | None = None,
                 order_type: str = "limit",
-                hldg_before: int | None = None) -> dict:
+                hldg_before: int | None = None,
+                order_meta: dict | None = None) -> dict:
     """주문 1건 전송(모의 전용). 반환 {ok, act, key, odno?, orgno?, why?}.
 
     key: 포지션 정체성 멱등키(호출부 소유, 예 '{pos}#{n}'). 같은 키 재호출 금지 —
@@ -194,6 +195,12 @@ def place_order(key: str, symbol: str, side: str, qty: int, price: float,
     # 원장 선기록(전송 전 — 크래시 대비) + 합성키(타임아웃 대사 근거)
     meta = {"side": side, "price": float(price), "excg": excg, "market": market,
             "order_type": order_type, "env": kis.ENV}
+    allowed_meta = {"pos_key", "sleeve", "fx", "ccy", "stop", "target",
+                    "name", "opened", "tactic", "pending", "parent_key",
+                    "chase", "ref_price"}
+    for mk, mv in (order_meta or {}).items():
+        if mk in allowed_meta and mv is not None:
+            meta[mk] = mv
     if hldg_before is not None:                   # ack→체결 잔고대사 기준(있을 때만)
         meta["hldg_before"] = int(hldg_before)
     ledger.record_submit(key, symbol, qty, reason, meta=meta)

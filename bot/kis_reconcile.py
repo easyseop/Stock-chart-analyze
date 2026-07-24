@@ -105,6 +105,97 @@ def normalize_rows(nccs: dict | None, ccnl: dict | None) -> list[dict]:
     return list(out.values())
 
 
+def normalize_domestic_rows(nccs: dict | None, ccnl: dict | None) -> list[dict]:
+    """국내 정정취소가능/일별체결 응답을 해외와 같은 공통 행으로 정규화."""
+    out: dict[str, dict] = {}
+
+    def rows_of(d):
+        return ((d or {}).get("output1") or (d or {}).get("output") or [])
+
+    def norm(row: dict, src: str) -> dict | None:
+        odno = str(row.get("odno") or row.get("ODNO") or "").strip()
+        pdno = str(row.get("pdno") or row.get("PDNO") or "").strip().upper()
+        if not odno and not pdno:
+            return None
+        oq = int(round(_f(row.get("ord_qty") or row.get("ORD_QTY"))))
+        filled = int(round(_f(row.get("tot_ccld_qty") or row.get("ccld_qty")
+                              or row.get("ft_ccld_qty"))))
+        rem = _f(row.get("rmn_qty") or row.get("nccs_qty")
+                 or row.get("ord_psbl_qty"), default=-1.0)
+        if src == "nccs" and filled <= 0 and rem >= 0:
+            filled = max(0, oq - int(round(rem)))
+        return {"odno": odno, "pdno": pdno, "side": _side_of(row),
+                "ord_qty": oq, "filled": filled,
+                "price": _f(row.get("avg_prvs") or row.get("avg_prc")
+                            or row.get("ccld_unpr") or row.get("ord_unpr")),
+                "ord_tmd": str(row.get("ord_tmd") or ""),
+                "src": "kr-" + src, "open": src == "nccs" and rem != 0}
+
+    for src, d in (("nccs", nccs), ("ccnl", ccnl)):
+        for row in rows_of(d):
+            n = norm(row, src)
+            if not n:
+                continue
+            k = n["odno"] or f"{src}:{id(row)}"
+            if k in out and src == "ccnl":
+                out[k].update({kk: n[kk] for kk in
+                               ("filled", "price", "src") if n[kk] or kk == "src"})
+                out[k]["open"] = False
+            else:
+                out.setdefault(k, n)
+    return list(out.values())
+
+
+def resolve_acks_from_rows(rows: list[dict]) -> list[dict]:
+    """ODNO가 결속된 ack/partial 주문을 실제 체결행으로 갱신하고 즉시 회계한다."""
+    from bot import kis_accounting
+    results = []
+    by_odno: dict[str, list[dict]] = {}
+    for row in rows:
+        if row.get("odno"):
+            by_odno.setdefault(str(row["odno"]), []).append(row)
+    for o in ledger.open_orders():
+        if o.get("state") not in ("submitted", "ack", "partial", "cancel_pending"):
+            continue
+        odno = str(o.get("odno") or "")
+        symbol = str(o.get("symbol") or "").upper()
+        side = str(o.get("side") or "").upper()
+        matches = [r for r in by_odno.get(odno, [])
+                   if str(r.get("pdno") or "").upper() == symbol
+                   and (not r.get("side") or not side or r.get("side") == side)]
+        if not odno or len(matches) != 1:
+            continue                              # 모호하면 잔고 대사로도 자동 귀속하지 않음
+        row = matches[0]
+        intended = int(o.get("intended") or 0)
+        filled = min(intended, max(0, int(row.get("filled") or 0)))
+        price = float(row.get("price") or 0) or None
+        opened = bool(row.get("open"))
+        if filled >= intended and intended > 0:
+            r = ledger.reconcile(o["key"], filled, fill_price=price,
+                                 fill_price_source=str(row.get("src") or "broker"),
+                                 open_order=False)
+        elif filled > 0:
+            ledger.on_result(o["key"], "partial", filled, fill_price=price,
+                             fill_price_source=str(row.get("src") or "broker"),
+                             open_order=opened)
+            r = {"state": "partial", "filled": filled,
+                 "residual": max(0, intended - filled), "fill_price": price,
+                 "open": opened}
+        elif not opened:
+            ledger.on_result(o["key"], "rejected", 0, open_order=False)
+            r = {"state": "rejected", "filled": 0, "residual": intended,
+                 "fill_price": None, "open": False}
+        else:
+            continue
+        acct = kis_accounting.sync_fill(
+            o["key"], filled_qty=filled, fill_price=price,
+            fill_price_source=str(row.get("src") or "broker"))
+        results.append({"key": o["key"], "symbol": o.get("symbol"),
+                        "side": o.get("side"), "market": o.get("market"),
+                        "via": "broker-fills", "accounting": acct, **r})
+    return results
+
+
 def candidates_for(unknown: dict, rows: list[dict], known_odnos: set[str],
                    window_s: int = 120) -> list[dict]:
     """UNKNOWN 주문 1건의 후보 행들. unknown: 원장 fold 항목
@@ -258,7 +349,9 @@ ACK_AGE_MIN_S = 90     # ack 해소 최소 나이(초) — 체결 진행 중 잔
 
 
 def resolve_acks_by_balance(hmaps: dict[str, dict | None],
-                            now_ts: float | None = None) -> list[dict]:
+                            now_ts: float | None = None,
+                            fill_prices: dict[str, dict[str, float]] | None = None
+                            ) -> list[dict]:
     """접수(submitted/ack) 주문의 잔고-delta 확정 — KR unknown 대사와 동일한 안전 정리.
 
     문제(2026-07-15 검토, 치명): KIS 주문응답은 '접수(ack)'까지만 온다 — 체결 통지
@@ -283,7 +376,7 @@ def resolve_acks_by_balance(hmaps: dict[str, dict | None],
     반환: 확정건만 [{key, symbol, side, market, state, filled, residual, via}].
     """
     import time as _t
-    from bot import kis, ownership
+    from bot import kis, kis_accounting, ownership
     now_ts = _t.time() if now_ts is None else float(now_ts)
     fold_open = ledger.open_orders()
     open_count: dict[str, int] = {}
@@ -318,9 +411,17 @@ def resolve_acks_by_balance(hmaps: dict[str, dict | None],
         before = int(before)
         delta = (now_qty - before) if side == "BUY" else (before - now_qty)
         if delta == Q:                             # 정확 full-fill만 자동확정
-            r = ledger.reconcile(o["key"], Q)      # ack→filled + 잠금/카운트 해소
+            price = ((fill_prices or {}).get(market) or {}).get(S)
+            source = "balance-average" if price else "submitted-fallback"
+            price = float(price or o.get("price") or 0) or None
+            r = ledger.reconcile(o["key"], Q, fill_price=price,
+                                 fill_price_source=source)
+            acct = kis_accounting.sync_fill(
+                o["key"], filled_qty=Q, fill_price=price,
+                fill_price_source=source)
             results.append({"key": o["key"], "symbol": S, "side": side,
-                            "market": market, "via": "ack-balance", **r})
+                            "market": market, "via": "ack-balance",
+                            "accounting": acct, **r})
         elif delta < 0 or delta > Q:               # 설명불가 변화 = 외부 개입 의심
             if not ownership.is_frozen(S):
                 ownership.freeze(S, f"ack대사 이상 delta={delta} "
@@ -336,7 +437,7 @@ def reconcile_unknowns(nccs: dict | None, ccnl: dict | None,
     반환: [{key, symbol, confidence, state, filled, residual, candidates}].
     HIGH만 자동 확정되고(잠금 해제), LOW는 잠금 유지 — 호출부는 LOW를 P0로 알릴 것.
     """
-    from bot import kis
+    from bot import kis, kis_accounting
     rows = normalize_rows(nccs, ccnl)
     fold_open = ledger.open_orders()
     # 이미 결속된 ODNO들 — 다른 UNKNOWN의 후보에서 제외(교차 오귀속 방지)
@@ -360,6 +461,10 @@ def reconcile_unknowns(nccs: dict | None, ccnl: dict | None,
         if len(cands) == 1 and cands[0].get("odno"):
             ledger.bind_broker_order(key, cands[0]["odno"],
                                      ord_tmd=cands[0].get("ord_tmd", ""))
+        if len(cands) == 1 and int(r.get("filled") or 0) > 0:
+            r["accounting"] = kis_accounting.sync_fill(
+                key, filled_qty=int(r["filled"]), fill_price=r.get("fill_price"),
+                fill_price_source=str(cands[0].get("src") or "broker"))
         results.append({"key": key, "symbol": o.get("symbol"),
                         "candidates": len(cands), **r})
     return results

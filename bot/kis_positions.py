@@ -26,12 +26,31 @@ def _append(ev: dict) -> None:
 
 def record(code: str, *, stop: float, ccy: str, entry: float | None = None,
            qty: int | None = None, name: str = "", opened: str = "",
-           sleeve: str = "A", target: float | None = None) -> None:
+           sleeve: str = "A", target: float | None = None,
+           pos_key: str = "") -> None:
     """봇 진입 시 손절선 기록(매수 루프가 execute_entry 성공 후 호출).
     sleeve: 'A'/'B' — 슬리브별 예산·통계·청산 분리. target: B의 목표가(VAH)."""
     _append({"ev": "open", "code": str(code).upper(), "stop": float(stop),
              "ccy": ccy, "entry": entry, "qty": qty, "name": name,
-             "opened": opened, "sleeve": sleeve, "target": target})
+             "opened": opened, "sleeve": sleeve, "target": target,
+             "pos_key": pos_key})
+
+
+def apply_buy_fill(code: str, *, qty: int, price: float, stop: float,
+                   ccy: str, pos_key: str, name: str = "", opened: str = "",
+                   sleeve: str = "A", target: float | None = None) -> None:
+    """확정된 매수 체결만 포지션에 반영한다. ack 단계에서는 호출하지 않는다."""
+    _append({"ev": "buy_fill", "code": str(code).upper(), "qty": int(qty),
+             "price": float(price), "stop": float(stop), "ccy": ccy,
+             "pos_key": pos_key, "name": name, "opened": opened,
+             "sleeve": sleeve, "target": target})
+
+
+def apply_sell_fill(code: str, *, qty: int, price: float,
+                    pos_key: str = "") -> None:
+    """확정된 매도 체결 수량만 차감한다. 잔량 0이면 fold에서 자동 소멸한다."""
+    _append({"ev": "sell_fill", "code": str(code).upper(), "qty": int(qty),
+             "price": float(price), "pos_key": pos_key})
 
 
 def close(code: str) -> None:
@@ -70,7 +89,34 @@ def load() -> dict:
                                 "qty": ev.get("qty"), "name": ev.get("name", ""),
                                 "opened": ev.get("opened", ""),
                                 "sleeve": ev.get("sleeve", "A"),
-                                "target": ev.get("target")}
+                                "target": ev.get("target"),
+                                "pos_key": ev.get("pos_key", "")}
+                elif ev.get("ev") == "buy_fill":
+                    q = max(0, int(ev.get("qty") or 0))
+                    px = float(ev.get("price") or 0)
+                    if q <= 0 or px <= 0:
+                        continue
+                    if code not in st:
+                        stop = float(ev.get("stop") or 0)
+                        st[code] = {"code": code, "stop": stop, "stop0": stop,
+                                    "ccy": ev.get("ccy"), "entry": px, "qty": q,
+                                    "name": ev.get("name", ""),
+                                    "opened": ev.get("opened", ""),
+                                    "sleeve": ev.get("sleeve", "A"),
+                                    "target": ev.get("target"),
+                                    "pos_key": ev.get("pos_key", "")}
+                    else:
+                        cur = st[code]
+                        old_q = max(0, int(cur.get("qty") or 0))
+                        old_px = float(cur.get("entry") or 0)
+                        cur["entry"] = ((old_px * old_q + px * q) / (old_q + q)
+                                        if old_q + q > 0 else px)
+                        cur["qty"] = old_q + q
+                elif ev.get("ev") == "sell_fill" and code in st:
+                    st[code]["qty"] = max(
+                        0, int(st[code].get("qty") or 0) - int(ev.get("qty") or 0))
+                    if st[code]["qty"] <= 0:
+                        st.pop(code, None)
                 elif ev.get("ev") == "raise" and code in st:
                     try:                        # 래칫: 올리기만(내림 무시)
                         new = float(ev.get("stop") or 0)
