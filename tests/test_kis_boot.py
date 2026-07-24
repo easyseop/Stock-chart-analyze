@@ -15,6 +15,7 @@ import importlib
 import os
 import sys
 import tempfile
+import time
 from unittest import mock
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -105,6 +106,37 @@ def test_low_keeps_lock():
     print("[PASS] LOW(후보2) → 종목 잠금 유지·전체 게이트는 열림")
 
 
+def test_fill_notifications_use_explicit_trade_category():
+    with tempfile.TemporaryDirectory() as tmp:
+        _, _, B = _setup(tmp)
+        now = time.time()
+        aged = [{
+            "state": "ack", "side": "BUY", "submitted_at": now - 200,
+            "market": "US", "symbol": "AAPL", "excg": "NASD",
+        }]
+        resolved = [
+            {"symbol": "AAPL", "side": "BUY", "filled": 1, "residual": 0},
+            {"symbol": "TSLA", "side": "SELL", "filled": 2, "residual": 1},
+        ]
+        with mock.patch.object(B.ledger, "open_orders", side_effect=[aged, []]), \
+             mock.patch.object(B.kis, "open_orders",
+                               return_value={"rt_cd": "0", "output": []}), \
+             mock.patch.object(B.kis, "fills",
+                               return_value={"rt_cd": "0", "output": []}), \
+             mock.patch.object(B.kis_reconcile, "resolve_acks_from_rows",
+                               return_value=resolved), \
+             mock.patch.object(B.kis_reconcile, "resolve_acks_by_balance",
+                               return_value=[]), \
+             mock.patch.object(B, "_notify") as send:
+            assert B._resolve_acks() == resolved
+        assert send.call_count == 2
+        assert send.call_args_list[0].kwargs == {
+            "critical": False, "category": "trade"}
+        assert send.call_args_list[1].kwargs == {
+            "critical": True, "category": "trade"}
+    print("[PASS] 매수·매도 체결확정 → 문구와 무관한 명시적 trade 분류")
+
+
 def test_sentinel_kis_place_sell_mapping():
     with tempfile.TemporaryDirectory() as tmp:
         _setup(tmp)
@@ -134,6 +166,7 @@ def main():
     test_high_resolution()
     test_query_failure_fail_closed()
     test_low_keeps_lock()
+    test_fill_notifications_use_explicit_trade_category()
     test_sentinel_kis_place_sell_mapping()
     print("\n모든 O4/X4 테스트 통과 — 부팅 대사 게이트·파수꾼 KIS 배선.")
 

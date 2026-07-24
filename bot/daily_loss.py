@@ -63,6 +63,18 @@ def status(*, seed_total: float | None = None, realized: float | None = None,
         out = {"day": day, "latched": True, "allowed": False,
                "realized": realized, "threshold": threshold}
         _save(out)
+        # 차단 상태를 먼저 영속화한다. 알림 채널 장애가 매수 차단을 되돌리면 안 된다.
+        try:
+            from bot import notify
+            notify.send(
+                f"🛑 일일 손실 서킷브레이커 발동 — 당일 실현 {realized:.0f}원 "
+                f"≤ 한도 {threshold:.0f}원. 신규 매수 중단"
+                "(손절·청산은 계속, KST 자정 리셋).",
+                critical=True,
+                category="trade",
+            )
+        except Exception:
+            pass
         return out
     # 전일 래치는 KST 날짜가 바뀌면 자동 무효. 새 날짜 상태를 남겨 운영자가 확인 가능.
     out = {"day": day, "latched": False, "allowed": True,

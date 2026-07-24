@@ -94,7 +94,7 @@ def test_oracle_service_is_loopback_read_only_dashboard():
     assert "EnvironmentFile=/etc/stock/kis.env" in unit
     assert "KIS_TOKEN_CACHE=/opt/stock/kis_token.json" in unit
     assert "python3 -m bot.portfolio_web --port 8765" in unit
-    assert "PORTFOLIO_REFRESH_SECONDS=15" in unit
+    assert "PORTFOLIO_REFRESH_SECONDS=60" in unit
     assert "NoNewPrivileges=true" in unit
     assert 'ThreadingHTTPServer(("127.0.0.1"' in server
     for forbidden in ("bot.kis_orders", "bot.kis_buyloop", "bot.sentinel"):
@@ -102,7 +102,7 @@ def test_oracle_service_is_loopback_read_only_dashboard():
 
 
 def test_portfolio_snapshot_cache_avoids_kis_poll_bursts():
-    payload = {"positions": [], "refresh_seconds": 15}
+    payload = {"positions": [], "refresh_seconds": 60}
     with mock.patch.object(portfolio_web, "_portfolio_cache", None), \
             mock.patch.object(portfolio_web, "portfolio_snapshot",
                               return_value=payload) as snapshot:

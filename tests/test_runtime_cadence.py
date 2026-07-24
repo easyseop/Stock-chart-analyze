@@ -17,7 +17,7 @@ def test_service_cadence_contract():
     assert "BUYLOOP_POLL_SECONDS=60" in buy
     assert "--poll 300" not in buy
     assert "SENTINEL_POLL_SECONDS=20" in sent
-    assert "PORTFOLIO_REFRESH_SECONDS=15" in portfolio
+    assert "PORTFOLIO_REFRESH_SECONDS=60" in portfolio
 
 
 def test_sentinel_poll_setting_is_bounded():
@@ -33,7 +33,28 @@ def test_sentinel_poll_setting_is_bounded():
     assert out.strip() == "60"
 
 
+def test_portfolio_refresh_default_and_bounds():
+    env = {**os.environ, "PYTHONPATH": str(ROOT)}
+    env.pop("PORTFOLIO_REFRESH_SECONDS", None)
+    command = (
+        "from bot.portfolio_web import PORTFOLIO_REFRESH_SECONDS; "
+        "print(PORTFOLIO_REFRESH_SECONDS)"
+    )
+    out = subprocess.check_output(
+        [sys.executable, "-c", command], cwd=ROOT, env=env, text=True)
+    assert out.strip() == "60"
+    env["PORTFOLIO_REFRESH_SECONDS"] = "1"
+    out = subprocess.check_output(
+        [sys.executable, "-c", command], cwd=ROOT, env=env, text=True)
+    assert out.strip() == "5"
+    env["PORTFOLIO_REFRESH_SECONDS"] = "999"
+    out = subprocess.check_output(
+        [sys.executable, "-c", command], cwd=ROOT, env=env, text=True)
+    assert out.strip() == "300"
+
+
 if __name__ == "__main__":
     test_service_cadence_contract()
     test_sentinel_poll_setting_is_bounded()
+    test_portfolio_refresh_default_and_bounds()
     print("[PASS] 오라클 서비스 주기 설정·폭주 방지 경계")
