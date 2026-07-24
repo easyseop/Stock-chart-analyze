@@ -10,9 +10,10 @@
 ## 1. 현재 Git 상태
 
 - 기본 브랜치: `claude/happy-gauss-cwoq21`
-- 현재 작업 브랜치: `codex/fix-review-and-oracle-validation`
-- 검토 PR: [#75 Oracle KIS 검증과 알림 안정성 보강](https://github.com/easyseop/Stock-chart-analyze/pull/75)
-- 리뷰 수정 커밋: `7ebe0d97` — 알림 2건과 보유자산 폴링 경합 보정
+- 현재 문서 마감 브랜치: `codex/finalize-pr75-handoff`
+- 병합 PR: [#75 Oracle KIS 검증과 알림 안정성 보강](https://github.com/easyseop/Stock-chart-analyze/pull/75)
+- PR #75 병합 커밋: `468ad0cf`
+- 리뷰 수정 커밋: `7ebe0d97`, 테스트 격리·인수인계 커밋: `79a67c51`
 - 통합 PR: [#72 오라클 KIS 대시보드와 실매매 안정성 보강](https://github.com/easyseop/Stock-chart-analyze/pull/72)
 - PR #72 병합 커밋: `b88eee1`
 - 중복 Draft PR #70: 통합 확인 후 닫음
@@ -196,9 +197,9 @@ gh run list --limit 10
 
 다른 노트북의 Codex에 전달할 문장:
 
-> `docs/CODEX_HANDOFF.md`를 먼저 읽고, Draft PR #75의 클로드 리뷰와 병합 후
-> Oracle 기본 브랜치 복귀부터 이어서 진행해줘. 완료 단위마다 별도 `codex/`
-> 브랜치에 커밋·푸시하고 이 인수인계서도 갱신해줘.
+> `docs/CODEX_HANDOFF.md`를 먼저 읽고 현재 운영 상태를 확인해줘. PR #75 병합과
+> Oracle 기본 브랜치 복귀는 완료됐다. 새 변경은 별도 `codex/` 브랜치에
+> 커밋·푸시하고 이 인수인계서도 갱신해줘.
 
 ## 7. Oracle 배포 — 완료
 
@@ -209,7 +210,7 @@ SSH 주소·개인키·KIS 인증값은 계속 Git 밖에만 둔다. 2026-07-24 
 - KIS 환경 파일: `/home/ubuntu/kis.env`(권한 600, 값은 기록하지 않음)
 - 서비스 사용자: `ubuntu`
 - Python 의존성: 저장소의 `.venv`; 서버에 `python3.10-venv` 설치
-- 배포 브랜치: `codex/fix-review-and-oracle-validation`
+- 배포 브랜치: `claude/happy-gauss-cwoq21` (`468ad0cf`)
 - `portfolio-web.service`: enabled/active
 - 기존 `sentinel`, `buyloop`, `telegram`: 수정 코드 적용 후 재시작, 모두 active
 - `autodeploy.timer`: active. 재시작 대상에 `portfolio-web`까지 포함
@@ -255,12 +256,14 @@ GitHub API 기준 Pages는 public이고 최신 배포와 GitHub 호스팅 스모
 
 ## 9. 다음 작업 순서
 
-Oracle 배포와 KIS 모의계좌 실데이터 검증은 완료됐다. 다음은 검토·병합 단계다.
+Oracle 배포, KIS 모의계좌 실데이터 검증, PR #75 병합, Oracle 기본 브랜치 복귀,
+자동배포 무변경 스모크는 완료됐다. `sentinel`, `buyloop`, `telegram`,
+`portfolio-web`도 모두 active 상태로 재확인했다.
 
-1. Draft PR #75에서 클로드 리뷰를 받고 알림·경합 수정과 테스트 격리 보정을 확인한다.
-2. 승인 후에만 `claude/happy-gauss-cwoq21`에 병합한다. 직접 push하지 않는다.
-3. 병합 뒤 Oracle 저장소를 기본 브랜치로 다시 전환하고, 자동배포 무변경 스모크와
-   `sentinel`, `buyloop`, `telegram`, `portfolio-web` active 상태를 재확인한다.
-4. Ubuntu 패키지 점검에서 대기 중인 커널 업그레이드가 표시됐다. 매매 시간 밖의
+남은 필수 개발 작업은 없다. 운영 유지보수만 남아 있다.
+
+1. Ubuntu 패키지 점검에서 대기 중인 커널 업그레이드가 표시됐다. 매매 시간 밖의
    별도 유지보수 창에서만 재부팅하고 네 서비스를 다시 확인한다. 이번 배포에서는
    매매 공백을 만들지 않기 위해 재부팅하지 않았다.
+2. 이후 새 기능이나 리뷰 수정은 기본 브랜치에 직접 push하지 말고 별도 `codex/`
+   브랜치와 PR로 진행한다.
