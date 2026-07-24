@@ -13,16 +13,30 @@
 from __future__ import annotations
 
 import os
+import multiprocessing
 import sys
 import tempfile
+import time
+from unittest import mock
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import bot.ledger as L
+from bot import costbook as C
 
 
 def _fresh(tmp):
     L.LEDGER_PATH = os.path.join(tmp, "order_ledger.jsonl")
+
+
+def _race_submit(path, ready, start, results):
+    import bot.ledger as child_ledger
+    child_ledger.LEDGER_PATH = path
+    ready.put(True)
+    start.wait(5)
+    ok = child_ledger.try_record_submit(
+        f"race:{os.getpid()}", "AAPL", 1, min_interval_s=0)
+    results.put(ok)
 
 
 def main() -> int:
@@ -170,6 +184,142 @@ def main() -> int:
                          f"after={allowed_after}")
         else:
             print("  [PASS] can_submit: 동시금지·60초간격·경과후허용")
+
+    # 12) 방향별 경합 + 주문 메타의 임시 손절선 복구
+    with tempfile.TemporaryDirectory() as tmp:
+        _fresh(tmp)
+        L.record_submit("kb:alk", "ALK", 8, "신규매수", meta={
+            "side": "BUY", "market": "US", "stop": 88.5,
+            "ccy": "USD", "pos_key": "kb:alk", "opened": "2026-07-25"})
+        L.bind_broker_order("kb:alk", "BUY1")
+        L.on_result("kb:alk", "ack", 0, open_order=True)
+        buy_open = L.open_order_count("ALK", side="BUY")
+        sell_open = L.open_order_count("ALK", side="SELL")
+        protection = L.provisional_buy_protection("ALK")
+        if buy_open != 1 or sell_open != 0:
+            fails.append(f"방향별 open count 오류: BUY={buy_open} SELL={sell_open}")
+        elif not protection or protection.get("ambiguous") \
+                or protection.get("stop") != 88.5:
+            fails.append(f"BUY 임시 손절 복구 오류: {protection}")
+        else:
+            print("  [PASS] BUY/SELL 경합 분리 + ACK 대사 중 임시 손절선 복구")
+
+    # 13) append는 파일 내용과 새 파일 이름을 fsync해 전원손실 창을 닫는다.
+    with tempfile.TemporaryDirectory() as tmp:
+        _fresh(tmp)
+        real_fsync = os.fsync
+        with mock.patch.object(L.os, "fsync", wraps=real_fsync) as sync:
+            L.record_submit("durable", "AAPL", 1)
+        if sync.call_count < 2:
+            fails.append(f"fsync 누락: {sync.call_count}회(파일+디렉터리 기대)")
+        else:
+            print("  [PASS] append 후 파일+디렉터리 fsync")
+
+    # 14) JSONL 손상은 건너뛰고 거래를 계속하지 않고 전면 fail-closed한다.
+    with tempfile.TemporaryDirectory() as tmp:
+        _fresh(tmp)
+        L.record_submit("good", "AAPL", 1)
+        with open(L.LEDGER_PATH, "ab") as fp:
+            fp.write(b'{"ev":"submit","key":"torn"')
+        status = L.corruption_status()
+        if status["healthy"] or L.can_submit("MSFT") or "*" not in L.locked_symbols():
+            fails.append(f"손상 원장 fail-closed 실패: {status}")
+        else:
+            print(f"  [PASS] 원장 손상 줄 {status['lines']} → 신규 주문 전면 차단")
+
+    # 15) 두 프로세스의 검사+기록 경합에서도 하나만 submit을 확보한다.
+    with tempfile.TemporaryDirectory() as tmp:
+        _fresh(tmp)
+        ctx = multiprocessing.get_context("fork")
+        ready, results = ctx.Queue(), ctx.Queue()
+        start = ctx.Event()
+        ps = [ctx.Process(target=_race_submit,
+                          args=(L.LEDGER_PATH, ready, start, results))
+              for _ in range(2)]
+        for p in ps:
+            p.start()
+        ready.get(timeout=5); ready.get(timeout=5)
+        start.set()
+        got = [results.get(timeout=5), results.get(timeout=5)]
+        for p in ps:
+            p.join(5)
+        if sorted(got) != [False, True]:
+            fails.append(f"프로세스 원자 게이트 실패: {got}")
+        else:
+            print("  [PASS] 프로세스 동시 경합 → submit 정확히 1건")
+
+    # 16) 오래된 submitted는 UNKNOWN 잠금으로 승격되어 대사만 허용한다.
+    with tempfile.TemporaryDirectory() as tmp:
+        _fresh(tmp)
+        t0 = time.time() - 200
+        L._append({"ev": "submit", "key": "stale", "symbol": "TSLA",
+                   "intended": 2, "filled": 0, "state": "submitted",
+                   "meta": {"side": "BUY", "hldg_before": 0}, "ts": t0})
+        promoted = L.promote_stale_submitted(90, now=t0 + 100)
+        if len(promoted) != 1 or L.state_of("stale")["state"] != "unknown" \
+                or not L.is_locked("TSLA"):
+            fails.append(f"stale submitted 승격 실패: {promoted}")
+        else:
+            print("  [PASS] stale submitted → UNKNOWN·종목 잠금")
+
+    # 17) 서로 다른 종목/프로세스라도 A+B 예산 예약은 같은 원장 잠금에서 합산.
+    with tempfile.TemporaryDirectory() as tmp:
+        _fresh(tmp)
+        with mock.patch.dict(
+                os.environ,
+                {"COSTBOOK_PATH": os.path.join(tmp, "costbook.jsonl")}):
+            common = {
+                "side": "BUY", "market": "KR", "sleeve": "A", "price": 100,
+                "fx": 1, "reservation_cost_krw": 600,
+                "budget_total_held_krw": 400,
+                "budget_total_limit_krw": 1000,
+                "budget_sleeve_held_krw": 400,
+                "budget_sleeve_limit_krw": 1000,
+            }
+            first = L.try_record_submit(
+                "budget:1", "AAA", 6, meta=common, min_interval_s=0)
+            second = L.try_record_submit(
+                "budget:2", "BBB", 1,
+                meta={**common, "reservation_cost_krw": 1},
+                min_interval_s=0)
+        if not first or second:
+            fails.append(f"원자 총예산 예약 실패: first={first} second={second}")
+        else:
+            print("  [PASS] 다른 종목 동시 후보도 A+B 총예산 원자 예약으로 초과 차단")
+
+    # 18) filled→costbook/accounted 전환창에도 예약 유지 + 오래된 held 스냅샷 보정.
+    with tempfile.TemporaryDirectory() as tmp:
+        _fresh(tmp)
+        with mock.patch.dict(
+                os.environ,
+                {"COSTBOOK_PATH": os.path.join(tmp, "costbook.jsonl")}):
+            meta = {
+                "side": "BUY", "market": "KR", "sleeve": "A", "price": 100,
+                "fx": 1, "reservation_cost_krw": 1000,
+            }
+            L.record_submit("handoff:old", "AAA", 10, meta=meta)
+            L.on_result("handoff:old", "filled", 10, open_order=False)
+            stale = {
+                **meta, "reservation_cost_krw": 1,
+                "budget_total_held_krw": 0,
+                "budget_total_limit_krw": 1000,
+                "budget_sleeve_held_krw": 0,
+                "budget_sleeve_limit_krw": 1000,
+            }
+            blocked_before = not L.try_record_submit(
+                "handoff:before", "BBB", 1, meta=stale, min_interval_s=0)
+            C.add_lot("pos:old", "AAA", 10, 100, fx=1, sleeve="A")
+            L.mark_accounted("handoff:old", 10)
+            # 호출부가 여전히 0원이라는 오래된 브로커 스냅샷을 넘겨도 flock 안의
+            # durable costbook 1000원을 읽어 초과 주문을 막아야 한다.
+            blocked_after = not L.try_record_submit(
+                "handoff:after", "CCC", 1, meta=stale, min_interval_s=0)
+        if not (blocked_before and blocked_after):
+            fails.append(
+                "filled→accounted 총시드 전환창/오래된 스냅샷 차단 실패: "
+                f"before={blocked_before} after={blocked_after}")
+        else:
+            print("  [PASS] filled→durable costbook 전환창·stale held에도 총시드 유지")
 
     print()
     if fails:

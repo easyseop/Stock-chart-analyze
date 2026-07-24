@@ -17,7 +17,7 @@ def test_operational_chase_dependencies():
          mock.patch.object(L, "LEDGER_PATH", os.path.join(tmp, "orders.jsonl")), \
          mock.patch("bot.kis.us_excg_of", return_value="NASD"), \
          mock.patch("bot.kis.last_price", return_value=99.0), \
-         mock.patch("bot.kis.holdings", return_value={"AAPL": 10}), \
+         mock.patch("bot.kis.sellable_holdings", return_value={"AAPL": 10}), \
          mock.patch("bot.kis.open_orders", return_value={"rt_cd": "0", "output": []}), \
          mock.patch("bot.kis.fills", side_effect=lambda **_: fills[0]):
         placed = []
@@ -31,7 +31,8 @@ def test_operational_chase_dependencies():
             L.on_result(key, "ack", 0)
             return {"ok": True, "act": "ack", "odno": f"OD{len(placed)}"}
 
-        with mock.patch("bot.kis_orders.place_sell", side_effect=place), \
+        with mock.patch.object(S, "LIVE", True), \
+             mock.patch("bot.kis_orders.place_sell", side_effect=place), \
              mock.patch("bot.kis_orders.cancel_order",
                         return_value={"ok": True, "act": "canceled"}):
             ch = S._new_us_chase(

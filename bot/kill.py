@@ -62,7 +62,7 @@ def _read_file() -> int:
         return 1                         # (감사 수정: 예전엔 0 반환 = 매매 재개, 위험)
 
 
-def _write_file(lv: int, who: str, why: str) -> None:
+def _write_file(lv: int, who: str, why: str) -> bool:
     p = _path()
     tmp = f"{p}.{os.getpid()}.tmp"
     try:
@@ -71,11 +71,15 @@ def _write_file(lv: int, who: str, why: str) -> None:
             f.flush()
             os.fsync(f.fileno())
         os.replace(tmp, p)
+        return True
     except Exception:
         try:
             os.unlink(tmp)
         except OSError:
             pass
+        _log({"ev": "write_error", "path": p, "requested_level": lv,
+              "who": who, "why": why})
+        return False
 
 
 def level() -> int:
@@ -94,7 +98,8 @@ def raise_level(lv: int, who: str, why: str) -> int:
     cur = level()
     if lv <= cur:
         return cur
-    _write_file(lv, who, why)
+    if not _write_file(lv, who, why):
+        return cur                              # 성공처럼 목표 레벨을 반환하지 않음
     _log({"ev": "raise", "from": cur, "to": lv, "who": who, "why": why})
     try:
         from bot import notify
@@ -114,7 +119,8 @@ def lower_level(lv: int, *, ack: str) -> int:
         return cur
     if int(os.environ.get("KILL_LEVEL", "0") or 0) > lv:
         raise PermissionError("환경변수 KILL_LEVEL이 더 높음 — env부터 내려야 함")
-    _write_file(lv, "operator", ack)
+    if not _write_file(lv, "operator", ack):
+        return cur
     _log({"ev": "lower", "from": cur, "to": lv, "who": "operator", "ack": ack})
     return lv
 
@@ -125,3 +131,34 @@ def allows(action: str) -> bool:
     if mx is None:
         return False
     return level() <= mx
+
+
+def main(argv: list[str] | None = None) -> int:
+    """운영자가 문서의 `python -m bot.kill LEVEL 사유`를 그대로 쓸 수 있는 CLI."""
+    import argparse
+    ap = argparse.ArgumentParser(description="매매봇 kill-switch 조회·변경")
+    ap.add_argument("level", nargs="?", type=int, help="목표 레벨(0~4)")
+    ap.add_argument("reason", nargs="*", help="변경 사유(감사 로그에 기록)")
+    ap.add_argument("--who", default=os.environ.get("USER", "operator"),
+                    help="상향 수행자")
+    ap.add_argument("--lower", action="store_true",
+                    help="레벨 하향(operator ack로 사유 필수)")
+    args = ap.parse_args(argv)
+    if args.level is None:
+        print(f"L{level()}")
+        return 0
+    why = " ".join(args.reason).strip()
+    if not why:
+        ap.error("레벨 변경 사유가 필요합니다")
+    if args.lower:
+        out = lower_level(args.level, ack=why)
+    else:
+        out = raise_level(args.level, args.who, why)
+    print(f"L{out}")
+    reached = (out == max(0, min(4, args.level)) if args.lower
+               else out >= max(0, min(4, args.level)))
+    return 0 if reached else 2
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

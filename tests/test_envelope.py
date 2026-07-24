@@ -83,12 +83,39 @@ def test_whole_share_and_guards():
     print("[PASS] whole-share·stage_cap·SEED 미설정 차단·불변식")
 
 
+def test_combined_operating_seed_and_buffer():
+    old = {k: os.environ.get(k) for k in (
+        "BOT_OPERATING_TOTAL_KRW", "BOT_OPERATING_BUFFER_PCT",
+        "BOT_SEED_KRW", "BOT_SEED_SB_KRW")}
+    try:
+        os.environ.update({
+            "BOT_OPERATING_TOTAL_KRW": "35000000",
+            "BOT_OPERATING_BUFFER_PCT": "0.05",
+            "BOT_SEED_KRW": "30000000",
+            "BOT_SEED_SB_KRW": "5000000",
+        })
+        assert E.operating_total_krw() == 35_000_000
+        assert E.operating_limit_krw() == 33_250_000
+        assert E.sleeve_limit_krw("A") == 28_500_000
+        assert E.sleeve_limit_krw("B") == 4_750_000
+        assert E.combined_deployable(33_000_000) == 250_000
+        assert E.combined_deployable(34_000_000) == 0
+    finally:
+        for key, value in old.items():
+            if value is None:
+                os.environ.pop(key, None)
+            else:
+                os.environ[key] = value
+    print("[PASS] 총시드 3500만 단일진실·5% 완충·A/B 30:5 배분·교차잔여")
+
+
 def main():
     test_bug1_seed_not_equity()
     test_bug2_aggregate_gate()
     test_feasibility_downward_only()
     test_pnl_binding_directions()
     test_whole_share_and_guards()
+    test_combined_operating_seed_and_buffer()
     print("\n모든 봉투/사이징 테스트 통과 — 확정 버그 2개 수정 검증.")
 
 

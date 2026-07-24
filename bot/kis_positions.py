@@ -9,19 +9,62 @@ append-only JSONL(원장 철학) — 다중 프로세스(매수루프 write / �
 """
 from __future__ import annotations
 
+from contextlib import contextmanager
+import fcntl
 import json
 import os
+import threading
 import time
 
 PATH = os.environ.get("KIS_POSITIONS_PATH",
                       os.path.join(os.path.dirname(__file__), "kis_positions.jsonl"))
+_THREAD_LOCK = threading.RLock()
+
+
+@contextmanager
+def _file_lock(exclusive: bool):
+    lock_path = PATH + ".lock"
+    os.makedirs(os.path.dirname(lock_path) or ".", exist_ok=True)
+    with _THREAD_LOCK:
+        fd = os.open(lock_path, os.O_RDWR | os.O_CREAT, 0o600)
+        try:
+            os.chmod(lock_path, 0o600)
+            fcntl.flock(fd, fcntl.LOCK_EX if exclusive else fcntl.LOCK_SH)
+            yield
+        finally:
+            try:
+                fcntl.flock(fd, fcntl.LOCK_UN)
+            finally:
+                os.close(fd)
 
 
 def _append(ev: dict) -> None:
+    """포지션/손절 메타를 프로세스 잠금+fsync로 영속한다."""
     ev.setdefault("ts", time.time())
-    os.makedirs(os.path.dirname(PATH) or ".", exist_ok=True)
-    with open(PATH, "a", encoding="utf-8") as f:
-        f.write(json.dumps(ev, ensure_ascii=False) + "\n")
+    parent = os.path.dirname(PATH) or "."
+    os.makedirs(parent, exist_ok=True)
+    payload = (json.dumps(ev, ensure_ascii=False, separators=(",", ":"))
+               + "\n").encode("utf-8")
+    with _file_lock(True):
+        existed = os.path.exists(PATH)
+        fd = os.open(PATH, os.O_WRONLY | os.O_CREAT | os.O_APPEND, 0o600)
+        try:
+            os.chmod(PATH, 0o600)
+            view = memoryview(payload)
+            while view:
+                written = os.write(fd, view)
+                if written <= 0:
+                    raise OSError("kis_positions append made no progress")
+                view = view[written:]
+            os.fsync(fd)
+        finally:
+            os.close(fd)
+        if not existed:
+            dfd = os.open(parent, os.O_RDONLY)
+            try:
+                os.fsync(dfd)
+            finally:
+                os.close(dfd)
 
 
 def record(code: str, *, stop: float, ccy: str, entry: float | None = None,
@@ -38,19 +81,22 @@ def record(code: str, *, stop: float, ccy: str, entry: float | None = None,
 
 def apply_buy_fill(code: str, *, qty: int, price: float, stop: float,
                    ccy: str, pos_key: str, name: str = "", opened: str = "",
-                   sleeve: str = "A", target: float | None = None) -> None:
+                   sleeve: str = "A", target: float | None = None,
+                   event_id: str = "") -> None:
     """확정된 매수 체결만 포지션에 반영한다. ack 단계에서는 호출하지 않는다."""
     _append({"ev": "buy_fill", "code": str(code).upper(), "qty": int(qty),
              "price": float(price), "stop": float(stop), "ccy": ccy,
              "pos_key": pos_key, "name": name, "opened": opened,
-             "sleeve": sleeve, "target": target})
+             "sleeve": sleeve, "target": target,
+             "event_id": str(event_id or "")})
 
 
 def apply_sell_fill(code: str, *, qty: int, price: float,
-                    pos_key: str = "") -> None:
+                    pos_key: str = "", event_id: str = "") -> None:
     """확정된 매도 체결 수량만 차감한다. 잔량 0이면 fold에서 자동 소멸한다."""
     _append({"ev": "sell_fill", "code": str(code).upper(), "qty": int(qty),
-             "price": float(price), "pos_key": pos_key})
+             "price": float(price), "pos_key": pos_key,
+             "event_id": str(event_id or "")})
 
 
 def close(code: str) -> None:
@@ -67,63 +113,72 @@ def raise_stop(code: str, stop: float) -> None:
 def load() -> dict:
     """{code: {stop, ccy, entry, qty, name, opened}} — 열린 것만. 최신 open 우선."""
     st: dict = {}
+    seen_events: set[str] = set()
     try:
-        with open(PATH, encoding="utf-8") as f:
-            for line in f:
-                line = line.strip()
-                if not line:
-                    continue
-                try:
-                    ev = json.loads(line)
-                except Exception:
-                    continue
-                code = str(ev.get("code") or "").upper()
-                if not code:
-                    continue
-                if ev.get("ev") == "close":
-                    st.pop(code, None)
-                elif ev.get("ev") == "open":
-                    st[code] = {"code": code, "stop": ev.get("stop"),
-                                "stop0": ev.get("stop"),   # 진입 손절(R 계산 기준, 래칫 불변)
-                                "ccy": ev.get("ccy"), "entry": ev.get("entry"),
-                                "qty": ev.get("qty"), "name": ev.get("name", ""),
-                                "opened": ev.get("opened", ""),
-                                "sleeve": ev.get("sleeve", "A"),
-                                "target": ev.get("target"),
-                                "pos_key": ev.get("pos_key", "")}
-                elif ev.get("ev") == "buy_fill":
-                    q = max(0, int(ev.get("qty") or 0))
-                    px = float(ev.get("price") or 0)
-                    if q <= 0 or px <= 0:
+        with _file_lock(False):
+            with open(PATH, encoding="utf-8") as f:
+                for line in f:
+                    line = line.strip()
+                    if not line:
                         continue
-                    if code not in st:
-                        stop = float(ev.get("stop") or 0)
-                        st[code] = {"code": code, "stop": stop, "stop0": stop,
-                                    "ccy": ev.get("ccy"), "entry": px, "qty": q,
-                                    "name": ev.get("name", ""),
+                    try:
+                        ev = json.loads(line)
+                    except Exception:
+                        continue
+                    event_id = str(ev.get("event_id") or "")
+                    if event_id and event_id in seen_events:
+                        continue
+                    code = str(ev.get("code") or "").upper()
+                    if not code:
+                        continue
+                    if ev.get("ev") == "close":
+                        st.pop(code, None)
+                    elif ev.get("ev") == "open":
+                        st[code] = {"code": code, "stop": ev.get("stop"),
+                                    "stop0": ev.get("stop"),   # 진입 손절(R 계산 기준, 래칫 불변)
+                                    "ccy": ev.get("ccy"), "entry": ev.get("entry"),
+                                    "qty": ev.get("qty"), "name": ev.get("name", ""),
                                     "opened": ev.get("opened", ""),
                                     "sleeve": ev.get("sleeve", "A"),
                                     "target": ev.get("target"),
                                     "pos_key": ev.get("pos_key", "")}
-                    else:
-                        cur = st[code]
-                        old_q = max(0, int(cur.get("qty") or 0))
-                        old_px = float(cur.get("entry") or 0)
-                        cur["entry"] = ((old_px * old_q + px * q) / (old_q + q)
-                                        if old_q + q > 0 else px)
-                        cur["qty"] = old_q + q
-                elif ev.get("ev") == "sell_fill" and code in st:
-                    st[code]["qty"] = max(
-                        0, int(st[code].get("qty") or 0) - int(ev.get("qty") or 0))
-                    if st[code]["qty"] <= 0:
-                        st.pop(code, None)
-                elif ev.get("ev") == "raise" and code in st:
-                    try:                        # 래칫: 올리기만(내림 무시)
-                        new = float(ev.get("stop") or 0)
-                        if new > float(st[code].get("stop") or 0):
-                            st[code]["stop"] = new
-                    except (TypeError, ValueError):
-                        pass
+                    elif ev.get("ev") == "buy_fill":
+                        q = max(0, int(ev.get("qty") or 0))
+                        px = float(ev.get("price") or 0)
+                        if q <= 0 or px <= 0:
+                            continue
+                        if code not in st:
+                            stop = float(ev.get("stop") or 0)
+                            st[code] = {"code": code, "stop": stop, "stop0": stop,
+                                        "ccy": ev.get("ccy"), "entry": px, "qty": q,
+                                        "name": ev.get("name", ""),
+                                        "opened": ev.get("opened", ""),
+                                        "sleeve": ev.get("sleeve", "A"),
+                                        "target": ev.get("target"),
+                                        "pos_key": ev.get("pos_key", "")}
+                        else:
+                            cur = st[code]
+                            old_q = max(0, int(cur.get("qty") or 0))
+                            old_px = float(cur.get("entry") or 0)
+                            cur["entry"] = (
+                                (old_px * old_q + px * q) / (old_q + q)
+                                if old_q + q > 0 else px)
+                            cur["qty"] = old_q + q
+                    elif ev.get("ev") == "sell_fill" and code in st:
+                        st[code]["qty"] = max(
+                            0, int(st[code].get("qty") or 0)
+                            - int(ev.get("qty") or 0))
+                        if st[code]["qty"] <= 0:
+                            st.pop(code, None)
+                    elif ev.get("ev") == "raise" and code in st:
+                        try:                        # 래칫: 올리기만(내림 무시)
+                            new = float(ev.get("stop") or 0)
+                            if new > float(st[code].get("stop") or 0):
+                                st[code]["stop"] = new
+                        except (TypeError, ValueError):
+                            pass
+                    if event_id:
+                        seen_events.add(event_id)
     except FileNotFoundError:
         pass
     return st

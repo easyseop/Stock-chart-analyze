@@ -23,12 +23,18 @@ def _frames() -> tuple[dict, pd.DataFrame]:
     }, index=idx)
 
     def bars(rule: str) -> pd.DataFrame:
-        return daily.resample(rule).agg({
-            "Open": "first", "High": "max", "Low": "min",
-            "Close": "last", "Volume": "sum",
-        }).dropna()
+        aliases = ("ME", "M") if rule == "M" else (rule,)
+        for alias in aliases:
+            try:
+                return daily.resample(alias).agg({
+                    "Open": "first", "High": "max", "Low": "min",
+                    "Close": "last", "Volume": "sum",
+                }).dropna()
+            except ValueError:
+                continue
+        raise AssertionError(f"지원되지 않는 resample rule: {rule}")
 
-    return {"D": daily, "W": bars("W-FRI"), "M": bars("ME")}, daily
+    return {"D": daily, "W": bars("W-FRI"), "M": bars("M")}, daily
 
 
 def test_analysis_maps_all_directional_and_risk_indicators():

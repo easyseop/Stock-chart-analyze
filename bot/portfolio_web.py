@@ -67,8 +67,9 @@ def _position_meta(code: str) -> dict:
 def portfolio_snapshot() -> dict:
     """국내·미국 보유를 중복 없이 합쳐 브라우저용 최소 필드로 정규화.
 
-    이 함수는 공유 캐시가 없거나 낡았을 때만 호출되는 60초 폴백이다. 성공한 시장
-    결과는 공유 캐시에 합쳐 이후 브라우저 요청이 KIS를 다시 부르지 않게 한다.
+    명시적 진단/검증용 직접 KIS 조회다. 브라우저 HTTP 경로는 이 함수를 호출하지
+    않고 ``cached_portfolio_snapshot``의 공유 캐시만 읽는다. 성공한 시장 결과는
+    공유 캐시에 합쳐 이후 브라우저 요청이 KIS를 다시 부르지 않게 한다.
     """
     from bot import kis, market_cache
 
@@ -126,8 +127,11 @@ def portfolio_snapshot() -> dict:
 
 
 def cached_portfolio_snapshot() -> dict:
-    """공유 캐시 우선, 없을 때만 설정 주기의 KIS 잔고 폴백을 재사용."""
-    global _portfolio_cache
+    """공유 캐시만 읽는다. 웹 요청은 KIS REST를 직접 호출하지 않는다.
+
+    파수꾼/매수루프가 갱신한 캐시가 없거나 낡으면 명시적인 unavailable 응답을
+    돌려준다. 브라우저 새로고침이 KIS 호출량이나 주문 슬롯을 잠식하지 않는다.
+    """
     try:
         from bot import kis, market_cache, settings
         shared = market_cache.portfolio(
@@ -142,13 +146,17 @@ def cached_portfolio_snapshot() -> dict:
             }
     except Exception:
         pass
-    now = time.monotonic()
-    with _portfolio_lock:
-        if _portfolio_cache and now - _portfolio_cache[0] < PORTFOLIO_REFRESH_SECONDS:
-            return _portfolio_cache[1]
-        payload = portfolio_snapshot()
-        _portfolio_cache = (time.monotonic(), payload)
-        return payload
+    return {
+        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "environment": os.environ.get("KIS_ENV", "mock"),
+        "refresh_seconds": PORTFOLIO_BROWSER_REFRESH_SECONDS,
+        "positions": [],
+        "partial": True,
+        "failed_markets": ["shared_cache"],
+        "read_only": True,
+        "source": "shared_cache_unavailable",
+        "message": "서버 공용 잔고 캐시를 기다리는 중입니다.",
+    }
 
 
 def chart_snapshot(code: str, days: int = 180) -> dict:

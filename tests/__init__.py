@@ -10,3 +10,6 @@ os.environ["NOTIFY_ENV_FALLBACK"] = "0"
 os.environ["TELEGRAM_BOT_TOKEN"] = ""
 os.environ["TELEGRAM_CHAT_ID"] = ""
 os.environ["NTFY_TOPIC"] = ""
+# 운영 프로세스의 호스트 공용 초당 버킷과 테스트 호출을 분리한다.
+os.environ.setdefault("KIS_RATE_STATE_PATH",
+                      f"/tmp/stock-kis-rate-test-{os.getpid()}.json")

@@ -314,12 +314,14 @@ def _get(path: str, tr: str, params: dict) -> dict | None:
     tok = _token()
     if not tok:
         return None
-    if not _LIMITER.acquire("data", timeout=10.0):   # 사전 억제(EGW00201 예방)
-        print(f"[kis] GET {path} 유량 대기 초과 — 건너뜀")
-        return None
     k, s = _cred()
     url = BASE_URL + path + "?" + urllib.parse.urlencode(params)
     for attempt in range(3):
+        # 재시도도 별도 HTTP 호출이다. 매 attempt마다 공용 버킷 슬롯을 소비해야
+        # 여러 프로세스 합산 초당 한도가 정확히 유지된다.
+        if not _LIMITER.acquire("data", timeout=10.0):
+            print(f"[kis] GET {path} 유량 대기 초과 — 건너뜀")
+            return None
         headers = {"content-type": "application/json; charset=utf-8",
                    "authorization": f"Bearer {tok}",
                    "appkey": k, "appsecret": s, "tr_id": tr, "custtype": "P"}
@@ -657,6 +659,35 @@ def holdings(market: str = "US", excg: str = "NASD") -> dict | None:
             return None
         if q:
             out[sym] = out.get(sym, 0) + q
+    return out
+
+
+def sellable_holdings(market: str = "US", excg: str = "NASD") -> dict | None:
+    """주문 직전 매도가능수량 {symbol: ord_psbl_qty}.
+
+    총보유(hldg_qty/ovrs_cblc_qty)는 미체결 매도·결제 상태 때문에 실제 주문가능수량과
+    다를 수 있다. 보호 매도 핫패스는 이 값을 사용하며, 필드가 없거나 응답이
+    불완전하면 총보유로 추측하지 않고 None으로 실패시킨다.
+    """
+    d = domestic_balance() if market == "KR" else overseas_balance(excg=excg)
+    if not d or d.get("rt_cd") != "0":
+        return None
+    if str(d.get("ctx_area_nk100") or d.get("CTX_AREA_NK100")
+           or d.get("ctx_area_nk200") or d.get("CTX_AREA_NK200") or "").strip():
+        return None
+    out: dict[str, int] = {}
+    for row in (d.get("output1") or []):
+        symbol = str(row.get("pdno") or row.get("ovrs_pdno") or "").upper()
+        raw = row.get("ord_psbl_qty")
+        if not symbol:
+            continue
+        if raw in (None, ""):
+            return None                            # 총보유로 폴백하면 초과매도 위험
+        try:
+            qty = max(0, int(float(raw)))
+        except (TypeError, ValueError):
+            return None
+        out[symbol] = out.get(symbol, 0) + qty
     return out
 
 

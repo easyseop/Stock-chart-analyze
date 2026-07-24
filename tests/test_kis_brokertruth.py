@@ -4,7 +4,7 @@
   2) feed에 없어도 KIS 보유를 매수루프 기록 손절선으로 보호(무보호 공백 제거)
   3) 매도 수량 = 브로커 실보유(feed q 아님 — 초과매도 방지)
   4) 손절선 불명 KIS 보유 → 무보호 P0(새 것만)
-  5) 브로커 조회 실패(None) → feed 폴백(보호 안 끊김)
+  5) 브로커 조회 실패(None) → 공개 feed 수량으로 실계좌 매도 금지
 
 실행: python -m tests.test_kis_brokertruth
 """
@@ -44,6 +44,7 @@ def _setup(tmp, feed, age=None):
     sn.SENT_PATH = os.path.join(tmp, "sent.json")
     L.LEDGER_PATH = os.path.join(tmp, "ledger.jsonl")
     KP.PATH = os.path.join(tmp, "kispos.jsonl")
+    os.environ["SYMBOL_FREEZE_PATH"] = os.path.join(tmp, "freeze.json")
     sn._market_open = lambda ccy: True
     sn._notify = lambda text, **kw: NOTES.append(text)
     sn._fetch_positions = lambda: (feed, age)
@@ -103,7 +104,7 @@ def test_unprotected_alert():
     print("[PASS] 손절선 불명 KIS 보유 → 무보호 P0(새 것만)")
 
 
-def test_holdings_none_feed_fallback():
+def test_holdings_none_blocks_public_feed_qty():
     global NOTES
     with tempfile.TemporaryDirectory() as tmp:
         NOTES = []
@@ -112,8 +113,9 @@ def test_holdings_none_feed_fallback():
         _setup(tmp, feed=feed)
         br = FakeKisBroker({"AAPL": 98.0}, None)   # 잔고 조회 실패
         sn.check_once(br, {})
-        assert br.sells and br.sells[0][1] == 4    # feed 기준으로 계속 보호
-    print("[PASS] 브로커 조회 실패 → feed 폴백(보호 안 끊김)")
+        assert not br.sells                         # paper feed q=4로 실주문 금지
+        assert any("잔고 조회 실패" in n for n in NOTES)
+    print("[PASS] 브로커 조회 실패 → 공개 feed 수량 매도 금지·P0 경보")
 
 
 def main():
@@ -121,7 +123,7 @@ def main():
     test_protects_kis_only_position()
     test_sell_qty_is_broker_truth()
     test_unprotected_alert()
-    test_holdings_none_feed_fallback()
+    test_holdings_none_blocks_public_feed_qty()
     print("\n브로커-진실 보호 검증 통과 — KIS 실보유 손절·초과매도 방지·무보호 경보.")
 
 

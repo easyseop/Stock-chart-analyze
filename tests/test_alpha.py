@@ -12,6 +12,7 @@ from __future__ import annotations
 import os
 import sys
 import tempfile
+from unittest import mock
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -64,6 +65,70 @@ def test_session_and_flow_neutral():
     print("[PASS] 세션 기준점 + A/B·복수지수 + 플로우 중립")
 
 
+def test_nav_twr_uses_previous_close_and_removes_trade_flows():
+    st = {"carry": {"US": {"date": "2026-07-23", "nav_last": {
+        "account": {"value": 1000.0, "flow": 1000.0},
+        "A": {"value": 1000.0, "flow": 1000.0},
+        "B": {"value": 0.0, "flow": 0.0},
+    }}}}
+    agg = {"US": {"A": {"cost": 0.0, "pl": 0.0},
+                  "B": {"cost": 0.0, "pl": 0.0}},
+           "KR": {"A": {"cost": 0.0, "pl": 0.0},
+                  "B": {"cost": 0.0, "pl": 0.0}}}
+    nav1 = {
+        "account": {"value": 1120.0, "flow": 1100.0},
+        "A": {"value": 1120.0, "flow": 1100.0},
+        "B": {"value": 0.0, "flow": 0.0},
+    }
+    first = alpha.session_update(
+        st, "US", agg, {"나스닥": 20200.0}, "22:35", "2026-07-24",
+        nav=nav1, idx_previous_close={"나스닥": 20000.0})
+    assert abs(first["acct"] - 2.0) < 1e-9
+    assert abs(first["idx"]["나스닥"] - 1.0) < 1e-9
+    assert st["day"]["US"]["basis"] == "previous_close"
+    # 500원어치를 같은 가격에 매도: 보유평가 -500, 순유입 flow -500 → 수익률 불변.
+    nav2 = {
+        "account": {"value": 620.0, "flow": 600.0},
+        "A": {"value": 620.0, "flow": 600.0},
+        "B": {"value": 0.0, "flow": 0.0},
+    }
+    second = alpha.session_update(
+        st, "US", agg, {"나스닥": 20200.0}, "22:40", "2026-07-24",
+        nav=nav2, idx_previous_close={"나스닥": 20000.0})
+    assert abs(second["acct"] - 2.0) < 1e-9
+    print("[PASS] NAV/TWR: 전일종가 기준 + 매수·매도 현금흐름 제거")
+
+
+def test_holdings_equal_weight_uses_starting_positions_only():
+    import pandas as pd
+    rows = [
+        {**_row("AAA", "US", 100, 10), "cur": 110},
+        {**_row("BBB", "US", 100, -10), "cur": 90},
+        {**_row("NEW", "US", 100, 20), "cur": 120},
+        {**_row("MANUAL_NEW", "US", 100, 30), "cur": 130},
+    ]
+    frames = {
+        code: pd.DataFrame(
+            {"Close": [100.0]},
+            index=pd.to_datetime(["2026-07-23"]))
+        for code in ("AAA", "BBB", "NEW", "MANUAL_NEW")
+    }
+    recs = {
+        "AAA": {"opened": "2026-07-22", "sleeve": "A"},
+        "BBB": {"opened": "2026-07-22", "sleeve": "B"},
+        "NEW": {"opened": "2026-07-24", "sleeve": "A"},
+    }
+    with mock.patch("scanner.cache.load", side_effect=lambda code: frames.get(code)):
+        out = alpha.holdings_equal_weight(
+            rows, "US", recs, set(), "2026-07-24",
+            # 첫 틱 스냅샷에 수동매수가 섞여도 opened 추적일이 없으면 제외.
+            start_codes={"AAA", "BBB", "MANUAL_NEW"})
+    assert abs(out["account"]) < 1e-9              # +10%와 -10% 동일가중=0%
+    assert abs(out["A"] - 10.0) < 1e-9 and abs(out["B"] + 10.0) < 1e-9
+    assert out["covered"] == 2 and out["eligible"] == 2
+    print("[PASS] 장시작 보유만 전일종가 대비 동일가중(봇·수동 신규 제외)")
+
+
 def test_capture_stats():
     days = [{"d": f"d{i}", "mkt": "US", "acct": a, "idx": ix}
             for i, (a, ix) in enumerate(
@@ -110,6 +175,8 @@ def test_dashboard_snapshot_is_percentage_only():
 def main():
     test_aggregate()
     test_session_and_flow_neutral()
+    test_nav_twr_uses_previous_close_and_removes_trade_flows()
+    test_holdings_equal_weight_uses_starting_positions_only()
     test_capture_stats()
     test_state_roundtrip()
     test_dashboard_snapshot_is_percentage_only()

@@ -45,6 +45,8 @@ BOT_SEED_KRW=10000000
 TRADE_STAGE=1.5
 # ★ 매수·매도 루프가 같은 토큰 캐시 공유(I3: 발급 1분1회 — flock 직렬화)
 KIS_TOKEN_CACHE=/opt/stock/kis_token.json
+# BUY 체결은 확인됐지만 durable 회계가 3사이클 지연되면 운영자에게 1회 경보
+KIS_ACCOUNTING_ALERT_CYCLES=3
 # 주문·매수는 명시적으로만(기본 봉인):
 # KIS_ORDERS_ENABLED=1     # ← 주문 전송 게이트(매도·매수 공통)
 # ALLOW_BUY=1              # ← 매수 루프 게이트(이게 없으면 매수 시도 자체 봉인)
@@ -150,6 +152,12 @@ TRADE_STAGE=mirror
 denylist)·원장(UNKNOWN 잠금·동일종목 in-flight·60s 간격)·사이징(SEED 분모·
 총량 게이트=SEED 초과 투입 불가·매수여력 클램프)·세션(정규장만)·어닝 D-3 skip·
 당일 매도 종목 재진입 쿨다운. 체결 확정은 잔고대사(ack→filled)가 자동 수행.
+
+체결은 확인됐지만 브로커 체결가가 없어 costbook 반영이 늦어지면 원장 예약은
+계속 유지돼 신규매수가 보수적으로 줄어든다. buyloop는 이 상태가 기본 3사이클
+지속되면 치명 운영 알림을 한 번 보내며, 회계가 끝나면 감시 상태를 자동 정리한다.
+원장 flock은 비재귀이므로 락 보유 코드는 `_fold_unlocked`/`_append_unlocked`만
+호출하고 잠금 순서는 `ledger > {costbook, kis_positions}`를 지킨다.
 
 ## 자동 배포 (autodeploy — 수동 pull/restart 대체)
 5분마다 원격 브랜치를 확인해 **새 커밋이 있을 때만** `git pull`(fast-forward만)

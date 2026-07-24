@@ -24,6 +24,7 @@ from dataclasses import dataclass
 
 DEFAULT_RISK_PCT = 0.01          # 포지션당 리스크 1% (of SEED)
 DEFAULT_POS_CAP = 1.0 / 3.0      # 종목당 최대 SEED의 1/3
+DEFAULT_OPERATING_BUFFER_PCT = 0.05
 
 
 def seed_krw() -> float:
@@ -40,6 +41,52 @@ def seed_krw_sb() -> float:
         return float(os.environ.get("BOT_SEED_SB_KRW", "0"))
     except ValueError:
         return 0.0
+
+
+def operating_total_krw() -> float:
+    """A+B가 공유하는 단일 총시드.
+
+    새 배포는 BOT_OPERATING_TOTAL_KRW를 명시한다. 전환 전 환경과 테스트 호환을 위해
+    미설정이면 A/B 명목시드 합을 사용하지만, 교차 게이트는 어느 경우든 이 합계 하나만
+    본다.
+    """
+    try:
+        explicit = float(os.environ.get("BOT_OPERATING_TOTAL_KRW", "0"))
+    except ValueError:
+        explicit = 0.0
+    return explicit if explicit > 0 else max(0.0, seed_krw()) + max(0.0, seed_krw_sb())
+
+
+def operating_buffer_pct() -> float:
+    try:
+        value = float(os.environ.get(
+            "BOT_OPERATING_BUFFER_PCT", str(DEFAULT_OPERATING_BUFFER_PCT)))
+    except ValueError:
+        value = DEFAULT_OPERATING_BUFFER_PCT
+    return min(0.25, max(0.0, value))
+
+
+def operating_limit_krw() -> float:
+    """실제 A+B 주문에 쓸 수 있는 총액 = 총시드 − 운영 완충."""
+    return operating_total_krw() * (1.0 - operating_buffer_pct())
+
+
+def sleeve_limit_krw(sleeve: str) -> float:
+    """운영한도 안의 A/B 배분. 명목 30:5 비율을 유지하고 합은 운영한도 이하."""
+    a = max(0.0, seed_krw())
+    b = max(0.0, seed_krw_sb())
+    denom = a + b
+    if denom <= 0:
+        return 0.0
+    weight = b / denom if str(sleeve).upper() == "B" else a / denom
+    return operating_limit_krw() * weight
+
+
+def combined_deployable(total_open_cost: float,
+                        *, operating_limit: float | None = None) -> float:
+    """A+B 확정·예약원가 합계에 대한 교차 게이트 잔여액."""
+    limit = operating_limit_krw() if operating_limit is None else float(operating_limit)
+    return max(0.0, limit - max(0.0, float(total_open_cost)))
 
 
 def bot_cash(seed: float, total_buy_cost: float, total_sell_proceeds: float,

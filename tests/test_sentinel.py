@@ -15,6 +15,7 @@ import json
 import os
 import sys
 import tempfile
+from unittest import mock
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -42,6 +43,7 @@ POS = {"code": "TT", "name": "테스트", "ccy": "USD", "q": 10, "stop": 100.0}
 def _setup(tmp, feed_positions, age=None):
     sn.SENT_PATH = os.path.join(tmp, "sent.json")
     L.LEDGER_PATH = os.path.join(tmp, "ledger.jsonl")   # 원장도 tmp로(전역 오염 방지)
+    os.environ["SYMBOL_FREEZE_PATH"] = os.path.join(tmp, "freeze.json")
     sn._market_open = lambda ccy: True
     sn._notify = lambda text, **kw: NOTES.append(text)
     sn._fetch_positions = lambda: (feed_positions, age)
@@ -84,6 +86,44 @@ def main() -> int:
             fails.append(f"멱등 위반 — 중복 매도: {len(bk.sells)}회")
         else:
             print("  [PASS] 소프트 2연속 확인 + 멱등키 중복 차단")
+
+    # dry-run 판정을 영속 완료로 쓰면 LIVE 전환 뒤 같은 포지션 손절이 영구 누락된다.
+    with tempfile.TemporaryDirectory() as tmp:
+        NOTES = []
+        _setup(tmp, [dict(POS)])
+        class DryTruthKis(FakeBroker):
+            name = "kis"
+
+            def holdings(self):
+                return {"TT": 10}
+
+            def place_sell(self, code, qty, reason, key):
+                self.sells.append((code, qty, reason, key))
+                return {"state": "dry_run", "filled": 0}
+
+        dry = DryTruthKis({"TT": 98.0})
+        with mock.patch.object(sn, "LIVE", False), \
+             mock.patch("bot.kis_positions.load", return_value={}), \
+             mock.patch("bot.kis_exits.manage"):
+            sn.check_once(dry, {})
+        if sn._load_sent():
+            fails.append("dry-run 판단이 영속 sent 완료로 기록됨")
+        else:
+            class LiveTruthKis(FakeBroker):
+                name = "kis"
+
+                def holdings(self):
+                    return {"TT": 10}
+
+            live = LiveTruthKis({"TT": 98.0})
+            with mock.patch.object(sn, "LIVE", True), \
+                 mock.patch("bot.kis_positions.load", return_value={}), \
+                 mock.patch("bot.kis_exits.manage"):
+                sn.check_once(live, {})             # 프로세스 재시작과 같은 새 메모리
+            if len(live.sells) != 1:
+                fails.append("dry-run 뒤 LIVE 전환에서 실제 손절이 멱등키로 막힘")
+            else:
+                print("  [PASS] dry-run은 영속 완료 아님 → LIVE 전환 뒤 손절 가능")
 
     # ④ 피드 stale — 알고 있던 포지션으로 보호 지속
     with tempfile.TemporaryDirectory() as tmp:
@@ -166,6 +206,118 @@ def main() -> int:
                 fails.append("완결 후 추가 주문 발생(초과매도)")
             else:
                 print("  [PASS] UNKNOWN→잠금→대사→잔여만(10→7) 재주문, 초과매도 없음")
+
+    # ⑨ KIS 잔고 조회 실패 — 공개 paper feed 수량으로 실계좌 매도 금지
+    class FailedKis(FakeBroker):
+        name = "kis"
+
+        def holdings(self):
+            return None
+
+    with tempfile.TemporaryDirectory() as tmp:
+        NOTES = []
+        _setup(tmp, [dict(POS)])
+        bk = FailedKis({"TT": 98.0})
+        st = {}
+        with mock.patch("bot.kis_exits.manage"):
+            sn.check_once(bk, st)
+        if bk.sells:
+            fails.append(f"KIS 잔고 실패인데 feed 수량으로 매도함: {bk.sells}")
+        elif not any("잔고 조회 실패" in n for n in NOTES):
+            fails.append("KIS 잔고 실패 P0 경보 누락")
+        else:
+            print("  [PASS] KIS 잔고 실패 → 공개 feed 수량 매도 금지·P0 경보")
+
+    # ⑩ KIS 잔고가 포지션 기록보다 먼저 보이면 BUY 원장의 손절선으로 보호 유지
+    class TruthKis(FakeBroker):
+        name = "kis"
+
+        def __init__(self, prices, holdings):
+            super().__init__(prices)
+            self.current_holdings = holdings
+            self.holding_calls = 0
+
+        def holdings(self):
+            self.holding_calls += 1
+            return dict(self.current_holdings)
+
+    with tempfile.TemporaryDirectory() as tmp:
+        NOTES = []
+        _setup(tmp, [])
+        L.record_submit("kb:alk", "ALK", 8, meta={
+            "side": "BUY", "market": "US", "stop": 88.0, "ccy": "USD",
+            "pos_key": "kb:alk", "opened": "2026-07-25", "name": "Alaska"})
+        L.bind_broker_order("kb:alk", "OD-BUY")
+        L.on_result("kb:alk", "ack", 0, open_order=True)
+        bk = TruthKis({"ALK": 100.0}, {"ALK": 8})
+        with mock.patch("bot.kis_positions.load", return_value={}), \
+             mock.patch("bot.kis_exits.manage"):
+            sn.check_once(bk, {})
+        if bk.sells:
+            fails.append("임시 손절선 위인데 매도됨")
+        elif not any("대사 중" in n and "88" in n for n in NOTES):
+            fails.append(f"ACK 대사 중 임시 손절 알림 누락: {NOTES}")
+        else:
+            print("  [PASS] 잔고 선반영·포지션 기록 지연 → BUY 원장 손절선으로 보호")
+
+    # ⑪ 손절과 BUY 잔량 경합 — 취소 확인 뒤 실잔고 재조회 수량만 SELL
+    with tempfile.TemporaryDirectory() as tmp:
+        NOTES = []
+        pos = {"code": "ALK", "name": "Alaska", "ccy": "USD", "q": 8,
+               "stop": 100.0, "opened": "2026-07-25"}
+        _setup(tmp, [pos])
+        L.record_submit("kb:alk", "ALK", 8, meta={
+            "side": "BUY", "market": "US", "stop": 100.0, "ccy": "USD"})
+        L.bind_broker_order("kb:alk", "OD-BUY")
+        L.on_result("kb:alk", "partial", 3, open_order=True)
+        bk = TruthKis({"ALK": 98.0}, {"ALK": 3})
+        with mock.patch("bot.kis_pending.cancel_open_buys_for_protection",
+                        side_effect=[False, True]), \
+             mock.patch("bot.kis_positions.load", return_value={}), \
+             mock.patch("bot.kis_positions.close"), \
+             mock.patch("bot.kis_exits.manage"):
+            sn.check_once(bk, {})                 # 취소 접수/확인 전 — SELL 금지
+            if bk.sells:
+                fails.append("BUY 취소 확인 전에 손절 SELL 동시 발주")
+            sn.check_once(bk, {})                 # 확인 뒤 잔고 3주 재조회 → 3주만
+        if [s[1] for s in bk.sells] != [3]:
+            fails.append(f"BUY 취소 뒤 실잔고 수량 매도 오류: {bk.sells}")
+        elif bk.holding_calls < 3:                # 사이클 2회 + 취소확인 뒤 재조회
+            fails.append("BUY 취소 확인 뒤 KIS 실잔고 재조회 누락")
+        else:
+            print("  [PASS] BUY 잔량 취소확인 → KIS 실잔고 재조회 → 3주만 손절")
+
+    # ⑫ KIS 주문 직전 보유 재조회 — 사이클 수량 8이어도 실제 3주만 전송
+    with tempfile.TemporaryDirectory() as tmp:
+        L.LEDGER_PATH = os.path.join(tmp, "ledger.jsonl")
+        kb = object.__new__(sn._KisBroker)
+        kb.quote = lambda *_: 100.0
+        with mock.patch.object(sn, "LIVE", True), \
+             mock.patch("bot.kis.market_of_symbol", return_value="US"), \
+             mock.patch("bot.kis.us_excg_of", return_value="NYSE"), \
+             mock.patch("bot.kis.sellable_holdings", return_value={"ALK": 3}), \
+             mock.patch("bot.kis_positions.load", return_value={}), \
+             mock.patch("bot.kis_orders.place_sell",
+                        return_value={"act": "ack"}) as place:
+            out = kb.place_sell("ALK", 8, "손절", "sell:alk#1")
+        sent_qty = place.call_args.args[2]
+        if sent_qty != 3 or place.call_args.kwargs["hldg_before"] != 3:
+            fails.append(f"주문 직전 잔고 clamp 실패: qty={sent_qty}")
+        elif out.get("qty") != 3:
+            fails.append(f"실제 전송 수량 반환 누락: {out}")
+        else:
+            print("  [PASS] 주문 직전 KIS 보유 재조회·요청 8→실보유 3주 clamp")
+
+        with mock.patch.object(sn, "LIVE", True), \
+             mock.patch("bot.kis.market_of_symbol", return_value="US"), \
+             mock.patch("bot.kis.us_excg_of", return_value="NYSE"), \
+             mock.patch("bot.kis.sellable_holdings", return_value=None), \
+             mock.patch("bot.kis_orders.place_sell") as blocked_place:
+            blocked = kb.place_sell("ALK", 8, "손절", "sell:alk#2")
+        if blocked["state"] != "rejected" or blocked_place.called:
+            fails.append(f"주문 직전 매도가능수량 실패인데 발주됨: {blocked}")
+        else:
+            print("  [PASS] 주문 직전 매도가능수량 조회 실패 → 전송 전 차단")
 
     # ⑤ 매수 경로 부재(보안 원칙)
     src = open(os.path.join(os.path.dirname(sn.__file__), "sentinel.py"),

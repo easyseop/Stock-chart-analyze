@@ -124,7 +124,13 @@ def resample(df_daily: pd.DataFrame, rule: str,
     code = {"W": "W-FRI", "M": "ME"}.get(rule, rule)
     agg = {"Open": "first", "High": "max", "Low": "min",
            "Close": "last", "Volume": "sum"}
-    out = df_daily.resample(code).agg(agg).dropna(subset=["Close"])
+    try:
+        out = df_daily.resample(code).agg(agg).dropna(subset=["Close"])
+    except ValueError:
+        if rule != "M":
+            raise
+        # pandas<2.2는 월말 별칭 M, 최신은 ME를 요구한다.
+        out = df_daily.resample("M").agg(agg).dropna(subset=["Close"])
 
     if drop_unclosed and len(out) > 1:
         # 마지막 구간의 라벨(그 주 금요일/그 달 말일)이 '오늘'보다 미래면

@@ -34,7 +34,10 @@ def _setup(tmp):
         "SYMBOL_FREEZE_PATH": os.path.join(tmp, "freeze.json"),
         "SENTINEL_HEARTBEAT_PATH": os.path.join(tmp, "hb.json"),
         "COSTBOOK_PATH": os.path.join(tmp, "cost.jsonl"),
-        "BOT_SEED_KRW": "10000000", "TRADE_STAGE": "1.5",
+        "BOT_SEED_KRW": "10000000",
+        "BOT_OPERATING_TOTAL_KRW": "10000000",
+        "BOT_OPERATING_BUFFER_PCT": "0",
+        "TRADE_STAGE": "1.5",
         "ALLOWED_SYMBOLS": "AAPL", "ALLOW_BUY": "1",
         "KIS_MOCK_BUYING_POWER": "50000",      # USD (모의 psamount 미지원 대체)
     })
@@ -129,7 +132,14 @@ def test_costbook():
         assert abs(left - cost * 0.6) < 1e-6 and C.open_qty("AAPL") == 6
         t = C.totals()
         assert t["buy_cost"] == cost and t["sell_proceeds"] == 560_000
-    print("[PASS] costbook: fx 고정 원가·부분청산 비례차감·totals")
+        mt = C.market_totals("US", "A")
+        assert mt["buy_cost"] == cost and mt["sell_proceeds"] == 560_000
+        snap = C.budget_snapshot()
+        assert snap and abs(snap["total"] - left) < 1e-6
+        with open(os.environ["COSTBOOK_PATH"], "ab") as fp:
+            fp.write(b'{"ev":"add","key":"torn"')
+        assert C.budget_snapshot() is None          # 총시드 게이트는 손상 시 fail-closed
+    print("[PASS] costbook: durable 원가·부분청산·총시드 스냅샷·손상 fail-closed")
 
 
 def _ready_all_gates(M, tmp):
@@ -145,7 +155,8 @@ def test_x1_gate_chain_then_sent():
         X = M["kis_buy"]
         # Stage 1.5 risk cap(0.1%)에 맞춘 호출 — 기본 1%면 rollout이 막는 게 정상
         kw = dict(price_usd=100.0, per_share_risk_usd=5.0, krw_per_usd=1400.0,
-                  risk_pct=0.001)
+                  risk_pct=0.001, held_cost_krw=0.0,
+                  total_held_cost_krw=0.0)
         # 게이트가 순서대로 막는다
         os.environ["ALLOW_BUY"] = "0"
         assert X.execute_entry("p#1", "AAPL", **kw).gate == "env"
@@ -155,6 +166,9 @@ def test_x1_gate_chain_then_sent():
         M["kill"].lower_level(0, ack="op: 테스트")
         assert X.execute_entry("p#1", "AAPL", **kw).gate == "boot"   # 대사 전
         M["kis_boot"]._STATE["done"] = True
+        # 첫 포지션도 heartbeat 없으면 SLA에서 막힌다.
+        assert X.execute_entry("p#1", "AAPL", **kw).gate == "sla"
+        M["heartbeat"].write()
         # 세션 닫힘을 명시 모킹(실제 미장 개장 중에도 결정론적으로 rollout에서 멈춤)
         with mock.patch.object(M["rollout"], "us_regular_open", return_value=False):
             d = X.execute_entry("p#1", "AAPL", **kw)
@@ -226,7 +240,8 @@ def test_broker_truth_open_cost_gate():
         os.environ.pop("ALLOWED_SYMBOLS", None)
         _ready_all_gates(M, tmp)
         kw = dict(price_usd=100.0, per_share_risk_usd=5.0, krw_per_usd=1400.0,
-                  risk_pct=0.01)
+                  risk_pct=0.01, held_cost_krw=9_850_000,
+                  total_held_cost_krw=9_850_000)
         fake = {"ok": True, "act": "ack", "key": "q", "odno": "0001"}
         with mock.patch.object(M["rollout"], "us_regular_open", return_value=True), \
              mock.patch("bot.kis_orders.place_buy", return_value=fake):
@@ -234,14 +249,107 @@ def test_broker_truth_open_cost_gate():
             d = X.execute_entry("q#1", "AAPL", open_cost_krw=9_850_000, **kw)
             assert d.ok and d.qty == 1, (d.gate, d.qty, d.why)
             # 실투입 999만 → 남은 1만 < 1주 가격 → sizing 차단(deployable 바인딩)
-            d2 = X.execute_entry("q#2", "TSLA", open_cost_krw=9_990_000, **kw)
+            d2 = X.execute_entry(
+                "q#2", "TSLA", open_cost_krw=9_990_000,
+                **{**kw, "held_cost_krw": 9_990_000,
+                   "total_held_cost_krw": 9_990_000})
             assert d2.gate == "sizing" and "deployable" in d2.why, (d2.gate, d2.why)
             # 실투입 > SEED = 설명불가 초과 → 불변식 발동(kill L1 + 차단)
-            d3 = X.execute_entry("q#3", "NVDA", open_cost_krw=11_000_000, **kw)
+            d3 = X.execute_entry(
+                "q#3", "NVDA", open_cost_krw=11_000_000,
+                **{**kw, "held_cost_krw": 11_000_000,
+                   "total_held_cost_krw": 11_000_000})
             assert d3.gate == "invariant"
             assert M["kill"].level() >= 1
         os.environ["TRADE_STAGE"] = "1.5"
     print("[PASS] 브로커-진실 open_cost → 총량 게이트·불변식 실동작(costbook 공백 보완)")
+
+
+def test_half_never_promotes_zero_sizing():
+    """half 전술이 size_buy=0을 max(1, ...)로 1주 승격시키지 않는다."""
+    with tempfile.TemporaryDirectory() as tmp:
+        M = _setup(tmp)
+        X = M["kis_buy"]
+        _ready_all_gates(M, tmp)
+        os.environ["KIS_MOCK_BUYING_POWER"] = "x"   # feasibility=None → qty 0
+        kw = dict(price_usd=100.0, per_share_risk_usd=5.0,
+                  krw_per_usd=1400.0, risk_pct=0.001, qty_fraction=0.5)
+        with mock.patch.object(M["rollout"], "us_regular_open", return_value=True), \
+             mock.patch("bot.kis_orders.place_buy") as place:
+            decision = X.execute_entry("half#0", "AAPL", **kw)
+        assert decision.gate == "sizing" and decision.qty == 0
+        assert not place.called
+    print("[PASS] half sizing 0 → 1주 강제 승격 없이 주문 차단")
+
+
+def test_combined_a_b_total_gate():
+    """A/B 각 명목한도 안이어도 합계가 총시드-5% 완충을 넘으면 차단."""
+    with tempfile.TemporaryDirectory() as tmp:
+        M = _setup(tmp)
+        X = M["kis_buy"]
+        os.environ.update({
+            "BOT_OPERATING_TOTAL_KRW": "35000000",
+            "BOT_OPERATING_BUFFER_PCT": "0.05",
+            "BOT_SEED_KRW": "30000000",
+            "BOT_SEED_SB_KRW": "5000000",
+            "TRADE_STAGE": "mirror",
+        })
+        os.environ.pop("ALLOWED_SYMBOLS", None)
+        _ready_all_gates(M, tmp)
+        kw = dict(price_usd=100.0, per_share_risk_usd=5.0,
+                  krw_per_usd=1400.0, risk_pct=0.01,
+                  seed_krw=30_000_000, open_cost_krw=29_000_000,
+                  total_open_cost_krw=33_500_000,
+                  operating_limit_krw=33_250_000)
+        with mock.patch.object(M["rollout"], "us_regular_open", return_value=True), \
+             mock.patch("bot.kis_orders.place_buy") as place:
+            decision = X.execute_entry("sum#1", "AAPL", **kw)
+        assert decision.gate == "total_invariant"
+        assert M["kill"].level() >= 1 and not place.called
+    print("[PASS] A 2900만+B 450만 각 명목내·합계 3350만 → 5%완충 한도 차단")
+
+
+def test_gap_price_reserves_marketable_limit_not_stale_quote():
+    """급변 시 현재가가 아니라 실제 발주 상한(마켓터블 지정가)으로 예산 예약."""
+    with tempfile.TemporaryDirectory() as tmp:
+        M = _setup(tmp)
+        X = M["kis_buy"]
+        os.environ["TRADE_STAGE"] = "mirror"
+        os.environ.pop("ALLOWED_SYMBOLS", None)
+        _ready_all_gates(M, tmp)
+        fake = {"ok": True, "act": "ack", "key": "gap", "odno": "1"}
+        with mock.patch.object(M["rollout"], "us_regular_open", return_value=True), \
+             mock.patch("bot.kis_orders.place_buy", return_value=fake) as place:
+            decision = X.execute_entry(
+                "gap#1", "AAPL", price_usd=100.0,
+                per_share_risk_usd=5.0, krw_per_usd=1400.0,
+                risk_pct=0.01, held_cost_krw=0.0,
+                total_held_cost_krw=0.0)
+        sent_limit = float(place.call_args.args[3])
+        meta = place.call_args.kwargs["order_meta"]
+        assert sent_limit > 100.0
+        assert abs(meta["reservation_cost_krw"]
+                   - decision.planned_qty * sent_limit * 1400.0) < 1e-6
+        assert meta["reservation_cost_krw"] > decision.planned_qty * 100 * 1400
+    print("[PASS] 갭/슬리피지 예산은 stale 현재가 아닌 BUY 지정가 상한으로 예약")
+
+
+def test_missing_broker_budget_snapshot_blocks_send():
+    """호출부가 A/B 브로커 원가를 생략하면 원자 총시드 검증을 우회할 수 없다."""
+    with tempfile.TemporaryDirectory() as tmp:
+        M = _setup(tmp)
+        X = M["kis_buy"]
+        os.environ["TRADE_STAGE"] = "mirror"
+        os.environ.pop("ALLOWED_SYMBOLS", None)
+        _ready_all_gates(M, tmp)
+        with mock.patch.object(M["rollout"], "us_regular_open", return_value=True), \
+             mock.patch("bot.kis_orders.place_buy") as place:
+            decision = X.execute_entry(
+                "budget#missing", "AAPL", price_usd=100.0,
+                per_share_risk_usd=5.0, krw_per_usd=1400.0,
+                risk_pct=0.01)
+        assert decision.gate == "budget" and not place.called
+    print("[PASS] 브로커 A/B 원가 스냅샷 없으면 원자 총시드 게이트 fail-closed")
 
 
 def test_mock_feasibility_fallbacks():
@@ -294,6 +402,10 @@ def main():
     test_x1_gate_chain_then_sent()
     test_mirror_stage()
     test_broker_truth_open_cost_gate()
+    test_half_never_promotes_zero_sizing()
+    test_combined_a_b_total_gate()
+    test_gap_price_reserves_marketable_limit_not_stale_quote()
+    test_missing_broker_budget_snapshot_blocks_send()
     test_mock_feasibility_fallbacks()
     print("\n모든 게이트 체인 테스트 통과 — I6/I7/IS2/IS5/costbook/X1/mirror.")
 

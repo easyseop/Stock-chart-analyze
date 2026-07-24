@@ -1,6 +1,6 @@
 # Codex 개발 인수인계
 
-마지막 갱신: 2026-07-24  
+마지막 갱신: 2026-07-25
 저장소: `easyseop/Stock-chart-analyze`
 
 이 문서는 다른 노트북이나 새 Codex 작업에서 개발을 바로 이어가기 위한 현재 상태,
@@ -10,7 +10,11 @@
 ## 1. 현재 Git 상태
 
 - 기본 브랜치: `claude/happy-gauss-cwoq21`
-- 현재 개발 브랜치: `codex/kis-realtime-charts-benchmarks`
+- 현재 개발 브랜치: `codex/p0-order-protection` (외부 최종 승인, 배포 준비)
+- 안전 수정 기준 커밋: `106065d2` (PR #77 병합 결과)
+- 활성 로컬 복제본: `/Users/seop/Documents/매매봇/Stock-chart-analyze-deploy`
+- 기존 `Stock-chart-analyze-site`는 iCloud가 일부 `.git/refs`를 dataless로 바꿔
+  HEAD가 끊겼다. 작업 파일은 보존하고 기준 커밋+검토 diff를 새 복제본에 복원했다.
 - 웹 통합 PR: [#77 KIS 준실시간 차트와 오늘 브리핑 추가](https://github.com/easyseop/Stock-chart-analyze/pull/77)
 - 병합 PR: [#75 Oracle KIS 검증과 알림 안정성 보강](https://github.com/easyseop/Stock-chart-analyze/pull/75)
 - PR #75 병합 커밋: `468ad0cf`
@@ -116,6 +120,77 @@ Oracle 자산 대시보드, 코드 push 무거래 보정이 PR #72와 #73을 통
 - 매수 신호 확인 60초, 파수꾼 시세 확인 20초, 보유자산 화면 60초.
 - 각 주기는 환경변수로 조정 가능하며 너무 짧거나 긴 값은 코드에서 제한.
 
+#### 2026-07-25 주문 보호·총시드·성과 전량 수정 — 외부 최종 승인
+
+외부 안전성 보고서 `검토보고서_주문경합_총시드_손절.md`의 P0 4건, P1 12건,
+P2 1건, P3 1건을 기준 커밋 `106065d2`에 대조했고 모두 로컬
+`codex/p0-order-protection`에서 수정했다. 아직 커밋·push·Oracle 배포하지 않았다.
+
+핵심 완료 내용:
+
+- BUY 잔량 취소 **확정** 뒤 최신 KIS 잔고와 주문 직전 매도가능수량만으로 손절한다.
+  ACK 0주는 절반익절이나 본전 래칫으로 확정하지 않으며, 부분체결 잔여만 재시도한다.
+- 잔고 선반영에는 BUY 원장의 유일한 stop으로 임시 보호한다. 후보 없음/충돌,
+  잔고 실패, 주문번호 불명은 추측 대신 동결·경보·주문 차단이다.
+- A/B 대사 전 귀속, 동종목 복수 예약, pending B를 하나의 브로커+원장 스냅샷으로
+  계산한다. 총시드 3,500만원에서 기본 5% 완충을 먼저 제외하고 A:B=30:5 비율로
+  2,850만원/475만원을 배분한다.
+- sizing 0의 1주 승격을 제거하고, 첫 매수도 파수꾼 heartbeat를 요구한다. 최종 BUY
+  호출에 브로커 A/B 원가가 없으면 원자 총시드 게이트를 우회하지 못하고 차단한다.
+- 모든 KIS HTTP 재시도는 새 슬롯을 쓰며 sentinel/buyloop/웹의 유량을 flock 공용
+  파일에서 합산한다. 웹은 공유 캐시만 읽고 KIS REST를 직접 호출하지 않는다.
+- `SENTINEL_LIVE`를 실제 KIS SELL/chase 전송 게이트로 만들었다. dry-run 판단은
+  영속 완료로 쓰지 않아 나중 live 보호를 막지 않는다.
+- 주문 원장은 fsync+디렉터리 fsync, 프로세스 flock, 손상 전면 fail-closed,
+  stale submitted→UNKNOWN, 원자 검사+기록, 중복 취소 키 차단을 갖는다.
+- 계좌 성과는 매수·매도 현금흐름을 제거한 시장×A/B TWR로 바꿨다. 종목 선택 품질은
+  장 시작 보유종목의 전일종가 대비 동일가중 평균으로 분리하고 장중 수동 신규매수도
+  제외한다. 지수도 전일종가 기준이며 첫 배포일만 첫 표본 기준이라고 표시한다.
+
+장애 주입 10개와 추가 경계검사를 자동화했고 Python 독립 테스트 모듈 `41/41`,
+사이트 계산 Node 테스트 `5/5`, compileall, JavaScript 문법, `git diff --check`가
+통과했다. 1280px·390px·320px 실물 화면에서 자산, 종목별 준실시간 차트, 지수 비교,
+하단 6메뉴를 확인했고 가로 넘침과 브라우저 warning/error는 없었다.
+
+최종 외부 재검토 요청서는 `docs/ORDER_SAFETY_FINAL_REVIEW.md`다. 기존
+`docs/P0_ORDER_PROTECTION_REVIEW.md`는 첫 P0 묶음의 역사 기록이다.
+
+직전 재검토에서 기존 18건 중 16건은 `HOLDS`였으나, 취소 확정실패 뒤 고정 취소키가
+재시도를 막는 P0 E와 BUY `filled`→costbook 전환창의 총시드 과소계상 P1 Q1이
+발견됐다. 두 건과 함께 비차단 2건도 로컬에서 추가 수정했다.
+
+- 취소는 `:protect-cxl#N`/`:cxl#N` 고유 시도키를 사용한다. 앞 시도가 확정
+  `rejected`일 때만 재시도하고, `submitted/unknown/filled`이면 새 HTTP를 막는다.
+  취소 성공 직후 크래시는 다음 사이클이 원주문 `cancel_pending` 상태만 복구한다.
+- terminal BUY도 `accounted < filled`인 동안 예약을 유지한다. 최종 submit flock
+  안에서 durable costbook을 재조회해 오래된 브로커 원가와 max로 합친다.
+- costbook·KIS 보호 포지션은 flock+O_APPEND+파일/디렉터리 fsync를 사용한다.
+  체결 `event_id`로 `accounted` 직전 크래시 재시도도 lot·보호수량 중복이 없다.
+  costbook 손상은 신규매수 fail-closed다.
+- 미체결 B 계획의 기존 A 보유 재태깅을 막고, 장 시작 동일가중은
+  `opened < session_day`가 증명되는 추적 포지션만 포함한다.
+
+추가 fault-injection을 포함해 Python `41/41`, Node 계산 `5/5`, compileall,
+JavaScript 문법, `git diff --check`가 다시 통과했다. 2차 최종 재검토 요청서는
+`docs/ORDER_SAFETY_REREVIEW_2.md`다.
+
+외부 최종 판정은 **승인**이다. P0 E와 P1 Q1의 적대적 반례, 잠금 교착, 기존 주문
+불변식 회귀가 모두 닫혔고 병합·Oracle 단계배포 가능 판정을 받았다. 남은 비차단
+P2는 브로커가 실체결가를 오래 제공하지 않을 때 미회계 예약이 계속 남는 가용성
+문제다. 안전 방향은 초과지출이 아니라 신규매수 차단이므로 다음 감시를 추가했다.
+
+- buyloop가 `filled > accounted` BUY를 매 사이클 확인한다.
+- 기본 3회 연속 지속 시 운영자에게 치명 알림을 한 번 보내고 회계 완료 시 상태를
+  정리한다.
+- `KIS_ACCOUNTING_ALERT_CYCLES`는 2~60 범위이며 기본값은 3이다.
+- 감시 파일은 `bot/kis_accounting_watch.json`(0600, Git 제외)이다.
+- 원장 flock은 비재귀다. 잠금 보유 경로는 `_unlocked` 변형만 호출하며 잠금 계층은
+  `ledger > {costbook, kis_positions}` 단방향, 네트워크 호출 중 파일 락 보유 금지다.
+
+새 복제본에서 의존성을 다시 설치한 뒤 전체 Python 독립 테스트 `41/41`이 통과했다.
+기존 복제본의 가상환경은 iCloud dataless 때문에 pandas 본체가 비어 있었고, 이는
+새 독립 가상환경 재생성으로 해소했다.
+
 ### 지표와 전략 연결
 
 - 점수 모듈 8개: 추세/다중 TF, 상대강도, 52주 신고가, 시장방향, 거래량,
@@ -138,15 +213,11 @@ Oracle 자산 대시보드, 코드 push 무거래 보정이 PR #72와 #73을 통
 로컬에서 아래 검증이 모두 통과했다.
 
 ```bash
-python3 -m compileall -q bot scanner tests
-
-for test in tests/test_*.py; do
-  module="${test%.py}"
-  module="${module//\//.}"
-  python3 -m "$module"
-done
-
-node --check scanner/site_app/app.js
+python -m tests.run_all
+python -m compileall -q bot scanner tests
+/Users/seop/.nvm/versions/node/v24.15.0/bin/node --check scanner/site_app/app.js
+/Users/seop/.nvm/versions/node/v24.15.0/bin/node --check scanner/site_app/portfolio_math.js
+/Users/seop/.nvm/versions/node/v24.15.0/bin/node --test tests/site_math.test.js
 git diff --check
 ```
 
@@ -279,10 +350,22 @@ SSH 주소·개인키·KIS 인증값은 계속 Git 밖에만 둔다. 2026-07-24 
 - KIS 환경 파일: `/home/ubuntu/kis.env`(권한 600, 값은 기록하지 않음)
 - 서비스 사용자: `ubuntu`
 - Python 의존성: 저장소의 `.venv`; 서버에 `python3.10-venv` 설치
-- 배포 브랜치: `claude/happy-gauss-cwoq21` (`468ad0cf`)
+- 배포 브랜치: `claude/happy-gauss-cwoq21` (`106065d2`)
 - `portfolio-web.service`: enabled/active
 - 기존 `sentinel`, `buyloop`, `telegram`: 수정 코드 적용 후 재시작, 모두 active
 - `autodeploy.timer`: active. 재시작 대상에 `portfolio-web`까지 포함
+
+2026-07-25 재확인:
+
+- kill-switch L1: `buy_new=False`, `protect_sell=True`
+- 환경 플래그: `ALLOW_BUY=1`, `KIS_ORDERS_ENABLED=1`, `SENTINEL_LIVE=0`
+- 현재 서버 코드는 `SENTINEL_LIVE=0`도 KIS SELL을 막지 못하던 구버전이다. 로컬
+  수정 배포 뒤에는 이 플래그가 진짜 전송 게이트가 되므로 모의 보호매도를 유지하려면
+  파수꾼 배포 단계에서 `SENTINEL_LIVE=1`을 명시해야 한다.
+- KIS mock 미국 보유 17종목, 매입금액 합계 `$25,133.71`, 평가금액 `$25,161.12`.
+  적용 환율 1,380원 기준 매입원가는 약 3,468만원이다. 명목 총시드 3,500만원 이하는
+  맞지만 새 정책의 5% 완충 후 운영한도 3,325만원은 약 143만원 초과하므로 신규매수를
+  계속 막고 자연 청산으로 한도 아래가 될 때까지 기다린다.
 
 저장소의 일반 배포 유닛은 `/opt/stock` 표준 구성을 계속 유지한다. 실제 서버에는
 `/etc/systemd/system/portfolio-web.service.d/oracle-ubuntu.conf` 드롭인으로 사용자,
@@ -327,21 +410,20 @@ GitHub API 기준 Pages는 public이고 최신 배포와 GitHub 호스팅 스모
 
 Oracle 초기 배포, KIS 모의계좌 실데이터 조회, PR #75 병합, Oracle 기본 브랜치 복귀,
 자동배포 무변경 스모크는 완료됐다. `sentinel`, `buyloop`, `telegram`,
-`portfolio-web`도 active 상태로 확인했다.
+`portfolio-web`도 2026-07-25에 다시 active 상태로 확인했다. 서버 작업트리는
+`106065d2`에서 clean이고, KIS mock 17개 미국 보유행의 숫자 필드가 모두 유한하며
+개인 API는 GET 200·read-only다.
 
-이후 실제 장중 ALK/SIG 주문 순서를 재검토하면서, 이전 리뷰 범위 밖의 주문 경합과
-총시드 안전 후보가 발견됐다. 아직 매매 코드는 수정하지 않았으며 외부 교차검토용
-문서는 `docs/NEXT_TRADING_SAFETY_REVIEW.md`다.
-
-1. 웹 UX 변경은 PR #77로 기본 브랜치에 통합한다. 기본 브랜치에 직접 push하지 않는다.
-2. `docs/NEXT_TRADING_SAFETY_REVIEW.md`를 외부 검토자에게 전달하고 P0/P1 판정,
-   오탐 여부, 최소 수정 순서를 교차검증한다.
-3. 검토 전에는 주문 상태·시드·파수꾼 코드를 성급히 변경하거나 Oracle에 배포하지
-   않는다. 필요하면 사용자의 명시적 승인 후 **신규매수만** 일시 중지하고 손절·매도
-   파수꾼은 유지한다.
-4. 확인된 P0부터 별도 `codex/` 브랜치에서 수정한다. ACK→잔고→체결 순서 뒤바꿈,
-   부분체결, 프로세스 재시작, KIS 유량초과 장애 주입 테스트를 필수로 한다.
-5. 웹과 매매 안전 수정이 각각 검토·병합된 뒤 Oracle에 순차 배포한다. 파수꾼을 먼저
-   확인하고 매수 루프를 마지막에 연다.
-6. Ubuntu 패키지 점검에서 대기 중인 커널 업그레이드는 매매 시간 밖의 별도
-   유지보수 창에서만 재부팅하고 네 서비스를 다시 확인한다.
+1. `docs/ORDER_SAFETY_REREVIEW_2.md`와 갱신된 로컬 전체 diff를 외부 검토자에게
+   전달한다.
+2. 승인 전에는 커밋·push·Oracle 배포하지 않는다. Oracle kill-switch L1을 유지한다.
+3. 승인 뒤에도 한 번에 신규매수를 열지 않는다. 먼저 커밋·push한 뒤 Oracle에
+   파수꾼/원장/공유리미터/웹을 배포하고, `SENTINEL_LIVE=1`을 모의 보호매도에 맞춰
+   명시한다. 새 코드는 이 값이 0이면 실제 KIS SELL을 하지 않는다.
+4. 서비스 4개, 원장 건강성, 공유 캐시, KIS mock 잔고, dry-run→live 경계를 다시
+   확인한 뒤 buyloop 코드를 배포한다. L1은 계속 유지한다.
+5. 장애 주입 10개와 모의 주문·체결 대사를 서버에서도 실행하되 알림 자격증명
+   폴백을 끈다. 신규매수 재개에는 사용자 승인과 operator ack가 필요하다.
+6. Ubuntu에는 `6.8.0-1058-oracle`이 설치됐지만 현재 `6.8.0-1049-oracle`로
+   실행 중이라 재부팅 필요 표시가 남아 있다. 매매 시간 밖에서 재부팅하고 네
+   서비스를 재확인한다.
