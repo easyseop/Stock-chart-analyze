@@ -11,7 +11,7 @@
 
 - 기본 브랜치: `claude/happy-gauss-cwoq21`
 - 현재 개발 브랜치: `codex/p0-order-protection` (배포 결과 문서화용)
-- Oracle 배포 코드: `4c073eb2` (PR #79 병합 결과)
+- Oracle 배포 코드: `750a087e` (PR #81 병합 결과)
 - 활성 로컬 복제본: `/Users/seop/Documents/매매봇/Stock-chart-analyze-deploy`
 - 기존 `Stock-chart-analyze-site`는 iCloud가 일부 `.git/refs`를 dataless로 바꿔
   HEAD가 끊겼다. 작업 파일은 보존하고 기준 커밋+검토 diff를 새 복제본에 복원했다.
@@ -20,6 +20,8 @@
 - PR #78 병합 커밋: `3d2a2c5a`
 - 회계 지연 알림 집계 PR: [#79 체결 회계 지연 알림을 1개로 집계](https://github.com/easyseop/Stock-chart-analyze/pull/79)
 - PR #79 병합 커밋: `4c073eb2`
+- 파수꾼 중복 시세 제거 PR: [#81 파수꾼 KIS 중복 시세 조회 제거](https://github.com/easyseop/Stock-chart-analyze/pull/81)
+- PR #81 병합 커밋: `750a087e`
 - 병합 PR: [#75 Oracle KIS 검증과 알림 안정성 보강](https://github.com/easyseop/Stock-chart-analyze/pull/75)
 - PR #75 병합 커밋: `468ad0cf`
 - 리뷰 수정 커밋: `7ebe0d97`, 테스트 격리·인수인계 커밋: `79a67c51`
@@ -128,8 +130,8 @@ Oracle 자산 대시보드, 코드 push 무거래 보정이 PR #72와 #73을 통
 
 외부 안전성 보고서 `검토보고서_주문경합_총시드_손절.md`의 P0 4건, P1 12건,
 P2 1건, P3 1건을 기준 커밋 `106065d2`에 대조했고 모두 로컬
-`codex/p0-order-protection`에서 수정했다. PR #78·#79로 병합하고 Oracle
-`4c073eb2`까지 단계배포했다.
+`codex/p0-order-protection`에서 수정했다. PR #78·#79·#81로 병합하고 Oracle
+`750a087e`까지 단계배포했다.
 
 핵심 완료 내용:
 
@@ -361,7 +363,7 @@ SSH 주소·개인키·KIS 인증값은 계속 Git 밖에만 둔다. 2026-07-24 
 - KIS 환경 파일: `/home/ubuntu/kis.env`(권한 600, 값은 기록하지 않음)
 - 서비스 사용자: `ubuntu`
 - Python 의존성: 저장소의 `.venv`; 서버에 `python3.10-venv` 설치
-- 배포 브랜치: `claude/happy-gauss-cwoq21` (`4c073eb2`)
+- 배포 브랜치: `claude/happy-gauss-cwoq21` (주문 실행 코드 `750a087e`)
 - `portfolio-web.service`: enabled/active
 - 기존 `sentinel`, `buyloop`, `telegram`: 수정 코드 적용 후 재시작, 모두 active
 - `autodeploy.timer`: active. 재시작 대상에 `portfolio-web`까지 포함
@@ -377,7 +379,8 @@ SSH 주소·개인키·KIS 인증값은 계속 Git 밖에만 둔다. 2026-07-24 
   사이클이 약 100초가 되고 heartbeat가 60초 P0 경계를 넘었다. 같은 사이클의 KIS
   잔고 현재가를 손절 판단과 웹 캐시에 재사용하도록 보정했다. 잔고 조회가 실패하거나
   현재가가 없을 때만 기존 종목별 현재가 조회로 폴백하며, 직전 사이클 가격은
-  재사용하지 않는다.
+  재사용하지 않는다. Oracle 재배포 뒤 새 PID의 연속 세 사이클은 약 25~43초로
+  측정돼 모두 P0 60초 경계 안에서 heartbeat를 갱신했다.
 - 파수꾼과 개인 웹이 함께 읽는 캐시는
   `/home/ubuntu/Stock-chart-analyze/data_cache/kis_market_snapshot.json`이며
   권한 600이다. Oracle의 systemd `PrivateTmp` 때문에 `/tmp` 기본값이 프로세스마다
@@ -440,7 +443,8 @@ GitHub API 기준 Pages는 public이고 최신 배포와 GitHub 호스팅 스모
 
 P0/P1 수정 외부 승인, PR #78·#79 병합, Oracle 단계배포, KIS mock 실데이터,
 전체 Python `41/41`, L1 신규매수 차단, 원장 건강성, 공유 캐시와 개인 웹 검증까지
-완료했다. 서버 작업트리는 `4c073eb2`에서 clean이고 보호매도는 유지된다.
+완료했다. 서버의 주문 실행 코드는 `750a087e`, 작업트리는 clean이고 보호매도는
+유지된다.
 
 1. 업그레이드 전 BUY 16건을 주문별로 브로커 체결·보호 포지션과 대사한다. BAM과
    LW 불일치를 먼저 확인하고, 검증된 주문만 durable `accounted`로 이관한다.
