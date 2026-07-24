@@ -11,6 +11,7 @@
 
 - 기본 브랜치: `claude/happy-gauss-cwoq21`
 - 현재 개발 브랜치: `codex/kis-realtime-charts-benchmarks`
+- 웹 통합 PR: [#77 KIS 준실시간 차트와 오늘 브리핑 추가](https://github.com/easyseop/Stock-chart-analyze/pull/77)
 - 병합 PR: [#75 Oracle KIS 검증과 알림 안정성 보강](https://github.com/easyseop/Stock-chart-analyze/pull/75)
 - PR #75 병합 커밋: `468ad0cf`
 - 리뷰 수정 커밋: `7ebe0d97`, 테스트 격리·인수인계 커밋: `79a67c51`
@@ -332,7 +333,7 @@ Oracle 초기 배포, KIS 모의계좌 실데이터 조회, PR #75 병합, Oracl
 총시드 안전 후보가 발견됐다. 아직 매매 코드는 수정하지 않았으며 외부 교차검토용
 문서는 `docs/NEXT_TRADING_SAFETY_REVIEW.md`다.
 
-1. 웹 UX 변경을 별도 PR로 병합한다. 기본 브랜치에 직접 push하지 않는다.
+1. 웹 UX 변경은 PR #77로 기본 브랜치에 통합한다. 기본 브랜치에 직접 push하지 않는다.
 2. `docs/NEXT_TRADING_SAFETY_REVIEW.md`를 외부 검토자에게 전달하고 P0/P1 판정,
    오탐 여부, 최소 수정 순서를 교차검증한다.
 3. 검토 전에는 주문 상태·시드·파수꾼 코드를 성급히 변경하거나 Oracle에 배포하지
