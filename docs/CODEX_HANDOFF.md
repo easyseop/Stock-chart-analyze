@@ -182,6 +182,7 @@ P2는 브로커가 실체결가를 오래 제공하지 않을 때 미회계 예�
 - buyloop가 `filled > accounted` BUY를 매 사이클 확인한다.
 - 기본 3회 연속 지속 시 운영자에게 치명 알림을 한 번 보내고 회계 완료 시 상태를
   정리한다.
+- 여러 종목이 함께 임계값에 도달해도 사이클당 요약 알림 1개만 보낸다.
 - `KIS_ACCOUNTING_ALERT_CYCLES`는 2~60 범위이며 기본값은 3이다.
 - 감시 파일은 `bot/kis_accounting_watch.json`(0600, Git 제외)이다.
 - 원장 flock은 비재귀다. 잠금 보유 경로는 `_unlocked` 변형만 호출하며 잠금 계층은
