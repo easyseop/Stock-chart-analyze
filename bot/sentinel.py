@@ -149,16 +149,24 @@ class _KisBroker(_PaperBroker):
         if not kis.enabled():
             raise SystemExit("KIS appkey/appsecret 환경변수 필요")
         self.env = kis.ENV
+        self._balance_quotes: dict[str, float] = {}
 
     def quote(self, code: str, ccy: str) -> float | None:
         """시세 — **KIS 현재가 우선**(서버에 FDR/toss 없어도 손절 판단 가능).
-        실패 시 부모(_PaperBroker: toss/FDR)로 폴백.
+        같은 사이클의 잔고 응답에 현재가가 있으면 재사용하고, 없을 때만 종목별
+        KIS 현재가를 조회한다. 실패 시 부모(_PaperBroker: toss/FDR)로 폴백.
 
         웹은 이 값을 서버 내부 공유 캐시에서 읽는다. 웹 때문에 KIS 호출을 추가하지
         않고도 파수꾼과 같은 속도로 현재가를 갱신하려는 배선이다."""
         from bot import kis
-        market = kis.market_of_symbol(code)
-        px = kis.last_price(code, market=market)
+        code = str(code).upper()
+        try:
+            px = float(getattr(self, "_balance_quotes", {}).get(code) or 0)
+        except (TypeError, ValueError):
+            px = 0.0
+        if px <= 0:
+            market = kis.market_of_symbol(code)
+            px = kis.last_price(code, market=market)
         if px is None:
             px = super().quote(code, ccy)
         if px is not None:
@@ -245,6 +253,10 @@ class _KisBroker(_PaperBroker):
         portfolio-web의 중복 4콜을 없애 order-plane 예약 슬롯을 보존한다."""
         from bot import kis, kis_positions, market_cache, settings
         merged: dict = {}
+        # 실패한 잔고 사이클에서 직전 가격을 재사용하지 않는다. 아래 모든 시장 조회가
+        # 성공한 뒤에만 새 스냅샷으로 교체한다.
+        self._balance_quotes = {}
+        balance_quotes: dict[str, float] = {}
         plan = []
         if settings.market_open("KRW"):
             plan.append(("KR", "NASD"))
@@ -262,6 +274,12 @@ class _KisBroker(_PaperBroker):
                     continue
                 bucket.setdefault(code, row)
                 merged[code] = int(row.get("qty") or 0)
+                try:
+                    cur = float(row.get("cur") or 0)
+                except (TypeError, ValueError):
+                    cur = 0.0
+                if cur > 0:
+                    balance_quotes[code] = cur
         try:
             recs = kis_positions.load()
         except Exception:
@@ -282,6 +300,7 @@ class _KisBroker(_PaperBroker):
                 market_cache.update_market(market, enriched)
             except Exception:
                 pass                              # 화면 캐시 실패가 손절을 막으면 안 됨
+        self._balance_quotes = balance_quotes
         return merged
 
 

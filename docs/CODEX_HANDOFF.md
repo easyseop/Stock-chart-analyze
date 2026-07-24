@@ -373,6 +373,11 @@ SSH 주소·개인키·KIS 인증값은 계속 Git 밖에만 둔다. 2026-07-24 
   가능하게 했다. 이는 KIS 실전계좌 전환이 아니다. 신규 BUY는 L1이 계속 차단한다.
 - `buyloop.service`는 시스템 Python 대신 저장소 `.venv`를 사용한다. 배포 뒤 첫
   사이클에서 pandas 성과 추적 오류가 사라졌고 서비스 재시작 횟수는 0이었다.
+- 최초 실측에서 파수꾼이 잔고에 포함된 현재가를 다시 종목별 KIS API로 조회해 한
+  사이클이 약 100초가 되고 heartbeat가 60초 P0 경계를 넘었다. 같은 사이클의 KIS
+  잔고 현재가를 손절 판단과 웹 캐시에 재사용하도록 보정했다. 잔고 조회가 실패하거나
+  현재가가 없을 때만 기존 종목별 현재가 조회로 폴백하며, 직전 사이클 가격은
+  재사용하지 않는다.
 - 파수꾼과 개인 웹이 함께 읽는 캐시는
   `/home/ubuntu/Stock-chart-analyze/data_cache/kis_market_snapshot.json`이며
   권한 600이다. Oracle의 systemd `PrivateTmp` 때문에 `/tmp` 기본값이 프로세스마다
