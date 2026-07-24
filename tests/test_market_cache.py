@@ -76,14 +76,29 @@ def test_sentinel_reuses_its_balance_response_for_web():
             mock.patch("bot.kis_positions.load",
                        return_value={"AAPL": {"sleeve": "B", "stop": 180}}), \
             mock.patch("bot.market_cache.update_market",
-                       side_effect=lambda market, rows: calls.append((market, rows))):
+                       side_effect=lambda market, rows: calls.append((market, rows))), \
+            mock.patch("bot.market_cache.update_quote") as update_quote, \
+            mock.patch("bot.kis.last_price") as last_price:
         held = broker.holdings()
+        quote = broker.quote("AAPL", "USD")
     assert held == {"AAPL": 2}
     assert query.call_count == 4                 # 기존 KR+미 3거래소와 같은 호출 수
+    assert quote == 200 and not last_price.called  # 잔고 현재가 재사용 — 종목별 호출 0
+    update_quote.assert_called_once_with("AAPL", 200.0)
     assert {market for market, _rows in calls} == {"KR", "US"}
     apple = next(row for market, rows in calls if market == "US"
                  for row in rows if row["code"] == "AAPL")
     assert apple["sleeve"] == "B" and apple["stop"] == 180
+
+    broker._balance_quotes = {"STALE": 999.0}
+    with mock.patch("bot.settings.market_open", return_value=True), \
+            mock.patch("bot.kis.positions_detail", return_value=None):
+        assert broker.holdings() is None
+    assert broker._balance_quotes == {}          # 실패 사이클은 직전 가격 재사용 금지
+    with mock.patch("bot.kis.last_price", return_value=123.0) as fallback, \
+            mock.patch("bot.market_cache.update_quote"):
+        assert broker.quote("STALE", "USD") == 123.0
+    fallback.assert_called_once()
 
 
 def main():
