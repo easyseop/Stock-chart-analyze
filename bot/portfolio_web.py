@@ -32,7 +32,9 @@ ROOT = Path(__file__).resolve().parents[1]
 APP_DIR = ROOT / "scanner" / "site_app"
 PUBLIC_API = "https://easyseop.github.io/Stock-chart-analyze/api"
 PUBLIC_FILES = frozenset(("signals.json", "paper_auto.json", "track.json"))
-STATIC_FILES = frozenset(("index.html", "app.css", "app.js", "og.png", "og-v2.png"))
+STATIC_FILES = frozenset((
+    "index.html", "app.css", "portfolio_math.js", "app.js", "og.png", "og-v2.png",
+))
 SYMBOL_RE = re.compile(r"^[A-Z0-9][A-Z0-9.\-]{0,14}$")
 US_EXCHANGES = ("NASD", "NYSE", "AMEX")
 PORTFOLIO_REFRESH_SECONDS = max(

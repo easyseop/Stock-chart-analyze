@@ -95,11 +95,15 @@ PORTFOLIO = {
         {"code": "AAPL", "name": "Apple", "market": "US", "ccy": "USD",
          "qty": 12, "avg": 189.40, "cur": 214.42, "eval_amt": 2573.04,
          "buy_amt": 2272.80, "pl_amt": 300.24, "pl_rt": 13.21,
-         "entry": 189.40, "stop": 201.00, "target": 238.50, "sleeve": "A"},
+         "entry": 189.40, "stop": 201.00, "target": 215.50, "sleeve": "A"},
         {"code": "005930", "name": "삼성전자", "market": "KR", "ccy": "KRW",
          "qty": 24, "avg": 75200, "cur": 80300, "eval_amt": 1927200,
          "buy_amt": 1804800, "pl_amt": 122400, "pl_rt": 6.78,
-         "entry": 75200, "stop": 75400, "target": 89000, "sleeve": "B"},
+         "entry": 75200, "stop": 79800, "target": 89000, "sleeve": "B"},
+        {"code": "NVDA", "name": "NVIDIA", "market": "US", "ccy": "USD",
+         "qty": 2, "avg": 180.00, "cur": 173.00, "eval_amt": 346.00,
+         "buy_amt": 360.00, "pl_amt": -14.00, "pl_rt": -3.89,
+         "entry": 180.00, "stop": 0, "target": 0, "sleeve": "A"},
     ],
 }
 
@@ -129,8 +133,8 @@ for market, index_names in (("US", ["나스닥", "S&P500"]),
 
 
 def _chart(code: str) -> dict:
-    base = 188 if code == "AAPL" else 72000
-    step = 1.8 if code == "AAPL" else 610
+    base = 188 if code == "AAPL" else 166 if code == "NVDA" else 72000
+    step = 1.8 if code == "AAPL" else 1.45 if code == "NVDA" else 610
     points = []
     start = datetime(2026, 1, 2, tzinfo=timezone.utc)
     for i in range(120):
@@ -152,8 +156,8 @@ def _chart(code: str) -> dict:
 
 def _quotes(code: str) -> dict:
     now = datetime.now(timezone.utc).timestamp()
-    base = 214.0 if code == "AAPL" else 80300.0
-    step = .12 if code == "AAPL" else 18.0
+    base = 214.0 if code == "AAPL" else 173.0 if code == "NVDA" else 80300.0
+    step = .12 if code == "AAPL" else .16 if code == "NVDA" else 18.0
     return {
         "code": code, "source": "sentinel_shared_cache", "read_only": True,
         "generated_at": datetime.now(timezone.utc).isoformat(),
@@ -185,7 +189,10 @@ class Handler(BaseHTTPRequestHandler):
         state, section = parts[0], parts[1]
         if section == "app":
             asset = parts[2] if len(parts) > 2 else "index.html"
-            if asset not in {"index.html", "app.css", "app.js", "og.png", "og-v2.png"}:
+            if asset not in {
+                "index.html", "app.css", "portfolio_math.js", "app.js",
+                "og.png", "og-v2.png",
+            }:
                 self._json(404, {"error": "asset"})
                 return
             path = APP / asset

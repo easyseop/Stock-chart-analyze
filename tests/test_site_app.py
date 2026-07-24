@@ -24,6 +24,7 @@ def test_static_publish_is_additive():
         assert target == root / "app"
         assert (target / "index.html").is_file()
         assert (target / "app.css").is_file()
+        assert (target / "portfolio_math.js").is_file()
         assert (target / "app.js").is_file()
         assert (target / "og-v2.png").is_file()
         assert api.read_text(encoding="utf-8") == '{"contract":"keep"}'
@@ -41,6 +42,30 @@ def test_public_app_uses_only_allowed_read_sources():
     for forbidden in ("KIS_LIVE_APPKEY", "APPSECRET", "/order", "place_buy",
                       "place_sell", "client_secret"):
         assert forbidden not in js
+
+
+def test_decision_brief_uses_existing_read_only_data():
+    html = (siteapp.SOURCE_DIR / "index.html").read_text(encoding="utf-8")
+    js = (siteapp.SOURCE_DIR / "app.js").read_text(encoding="utf-8")
+    math_js = (siteapp.SOURCE_DIR / "portfolio_math.js").read_text(encoding="utf-8")
+    css = (siteapp.SOURCE_DIR / "app.css").read_text(encoding="utf-8")
+
+    assert 'data-view="briefing"' in html
+    assert "오늘 브리핑" in html
+    assert '<script src="portfolio_math.js" defer></script>' in html
+    for feature in ("positionAttention", "positionPlanMarkup",
+                    "performanceInsights", "renderBriefing"):
+        assert f"function {feature}" in js
+    for feature in ("positionDistances", "strategyStats",
+                    "concentrationRows", "maximumDrawdown"):
+        assert f"function {feature}" in math_js
+    assert "손절선 또는 목표선 3% 안" in js
+    assert "보호선 정보 없음" in js
+    assert "남은 손익비" in js
+    assert "초 동안 갱신되지 않았습니다" in js
+    assert "통화가 다른 자산은 억지로 합산하지 않습니다." in js
+    assert ".attention-card" in css and ".insight-grid" in css
+    assert "/api/risk" not in js
 
 
 def test_portfolio_snapshot_deduplicates_exchange_queries():
@@ -107,6 +132,7 @@ def test_oracle_service_is_loopback_read_only_dashboard():
     assert "PORTFOLIO_REFRESH_SECONDS=60" in unit
     assert "NoNewPrivileges=true" in unit
     assert 'ThreadingHTTPServer(("127.0.0.1"' in server
+    assert '"portfolio_math.js"' in server
     for forbidden in ("bot.kis_orders", "bot.kis_buyloop", "bot.sentinel"):
         assert forbidden not in server
 
@@ -155,6 +181,7 @@ if __name__ == "__main__":
     tests = [
         test_static_publish_is_additive,
         test_public_app_uses_only_allowed_read_sources,
+        test_decision_brief_uses_existing_read_only_data,
         test_portfolio_snapshot_deduplicates_exchange_queries,
         test_chart_is_display_only_existing_ohlcv_series,
         test_oracle_service_is_loopback_read_only_dashboard,

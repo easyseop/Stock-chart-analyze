@@ -1,5 +1,13 @@
 "use strict";
 
+const {
+  optionalNumber,
+  positionDistances,
+  strategyStats,
+  concentrationRows,
+  maximumDrawdown,
+} = globalThis.PortfolioMath;
+
 const API = Object.freeze({
   signals: "../api/signals.json",
   paper: "../api/paper_auto.json",
@@ -11,6 +19,7 @@ const API = Object.freeze({
 });
 
 const VIEW_META = Object.freeze({
+  briefing: { eyebrow: "TODAY · DECISION BRIEF", title: "오늘 브리핑" },
   now: { eyebrow: "STRATEGY A · REVERSAL", title: "전략 A · 진입 후보", group: "now" },
   watch: { eyebrow: "STRATEGY A · WATCH", title: "전략 A · 관찰 후보", group: "watch" },
   shelf: { eyebrow: "STRATEGY B", title: "매물대 반등 후보", group: "shelf" },
@@ -19,7 +28,7 @@ const VIEW_META = Object.freeze({
 });
 
 const state = {
-  view: "now",
+  view: "briefing",
   market: "all",
   query: "",
   sort: "stage",
@@ -165,7 +174,11 @@ async function refreshPortfolio() {
     state.performanceError = error;
   }
   updateFreshness();
-  if (state.view === "portfolio") {
+  if (state.view === "briefing") {
+    updateHero();
+    renderBriefing();
+    refreshOpenPortfolioDetail();
+  } else if (state.view === "portfolio") {
     updateHero();
     renderPortfolio();
     refreshOpenPortfolioDetail();
@@ -191,12 +204,16 @@ function updateFreshness() {
   const alert = $("#data-alert");
   alert.className = "alert hidden";
 
-  if (state.view === "portfolio" && state.portfolio) {
+  if ((state.view === "portfolio" || state.view === "briefing") && state.portfolio) {
     const seconds = Number(state.portfolio.price_age_seconds);
     freshness.className = `freshness ${Number.isFinite(seconds) && seconds <= 90 ? "fresh" : "neutral"}`;
     freshness.textContent = Number.isFinite(seconds)
       ? `${Math.max(0, Math.round(seconds))}초 전 시세`
       : "KIS 잔고 조회";
+    if (Number.isFinite(seconds) && seconds > 90) {
+      alert.className = "alert";
+      alert.textContent = `보유종목 시세가 ${Math.round(seconds)}초 동안 갱신되지 않았습니다. 현재가·손익·보호선 거리를 매매 판단에 사용하기 전에 파수꾼 상태를 확인하세요.`;
+    }
     return;
   }
   if (state.view === "performance" && state.performance) {
@@ -254,7 +271,20 @@ function updateHero() {
   const description = $("#hero-description");
   hero.classList.remove("hidden");
 
-  if (VIEW_META[state.view].group) {
+  if (state.view === "briefing") {
+    const positions = state.portfolio?.positions || [];
+    const attention = positions.flatMap(positionAttention);
+    const freshSignals = (state.signalsDoc?.signals || []).filter((item) => item.fresh);
+    number.textContent = (state.portfolio ? attention.length : freshSignals.length)
+      .toLocaleString("ko-KR");
+    unit.textContent = state.portfolio ? "확인" : "새 후보";
+    kicker.textContent = state.portfolio ? "오늘 먼저 볼 것" : "오늘의 새 신호";
+    description.textContent = state.portfolio
+      ? attention.length
+        ? "보호선과 목표선에 가까운 종목부터 보여드려요. 아래에서 전략과 시장 대비 성과까지 이어서 확인하세요."
+        : "현재 보호선에 급하게 가까운 종목은 없습니다. 전략 A·B와 시장 대비 성과를 함께 확인하세요."
+      : "공개 화면에서는 새 신호와 모의성과를 요약합니다. KIS 보유자산 브리핑은 Oracle 로컬 화면에서만 보여요.";
+  } else if (VIEW_META[state.view].group) {
     const items = groupSignals(VIEW_META[state.view].group);
     number.textContent = items.length.toLocaleString("ko-KR");
     unit.textContent = "종목";
@@ -426,6 +456,237 @@ function shelfDetail(shelf, ccy) {
   </div>`;
 }
 
+function positionAttention(position) {
+  const { stopPct, targetPct } = positionDistances(position);
+  const items = [];
+  if (!(optionalNumber(position.stop) > 0)) {
+    items.push({
+      position, tone: "danger", priority: -200,
+      title: "보호선 정보 없음",
+      detail: "봇 보호 기준을 확인할 수 없습니다. 수동 검토가 필요합니다.",
+    });
+  }
+  if (stopPct !== null && stopPct <= 0) {
+    items.push({
+      position, tone: "danger", priority: -100 + stopPct,
+      title: "손절선 도달",
+      detail: `현재가가 보호선보다 ${Math.abs(stopPct).toFixed(1)}% 낮습니다.`,
+    });
+  } else if (stopPct !== null && stopPct <= 3) {
+    items.push({
+      position, tone: "warning", priority: stopPct,
+      title: "손절선 근접",
+      detail: `보호선까지 ${stopPct.toFixed(1)}% 남았습니다.`,
+    });
+  }
+  if (targetPct !== null && targetPct <= 0) {
+    items.push({
+      position, tone: "success", priority: 10 + Math.abs(targetPct),
+      title: "목표가 도달",
+      detail: `현재가가 목표선보다 ${Math.abs(targetPct).toFixed(1)}% 높습니다.`,
+    });
+  } else if (targetPct !== null && targetPct <= 3) {
+    items.push({
+      position, tone: "success", priority: 20 + targetPct,
+      title: "목표가 근접",
+      detail: `목표선까지 ${targetPct.toFixed(1)}% 남았습니다.`,
+    });
+  }
+  return items.sort((a, b) => a.priority - b.priority).slice(0, 1);
+}
+
+function positionPlanMarkup(position) {
+  const { stopPct, targetPct, progress } = positionDistances(position);
+  const missingProtection = stopPct === null
+    ? `<span class="plan-missing">보호선 정보 없음 · 수동 확인</span>` : "";
+  if (stopPct === null && targetPct === null) {
+    return missingProtection;
+  }
+  const stopText = stopPct === null ? "손절선 없음"
+    : stopPct <= 0 ? `손절선 ${Math.abs(stopPct).toFixed(1)}% 이탈`
+      : `손절까지 ${stopPct.toFixed(1)}%`;
+  const targetText = targetPct === null ? "목표선 없음"
+    : targetPct <= 0 ? `목표 ${Math.abs(targetPct).toFixed(1)}% 초과`
+      : `목표까지 ${targetPct.toFixed(1)}%`;
+  return `${missingProtection}<span class="plan-distance">
+    <span class="${stopPct !== null && stopPct <= 3 ? "loss" : ""}">${escapeHTML(stopText)}</span>
+    <span class="${targetPct !== null && targetPct <= 3 ? "gain" : ""}">${escapeHTML(targetText)}</span>
+  </span>
+  ${progress === null ? "" : `<span class="plan-track" aria-label="손절선에서 목표선까지 현재 위치">
+    <progress max="100" value="${progress.toFixed(1)}">${progress.toFixed(1)}%</progress>
+  </span>`}`;
+}
+
+function positionPlanDetailMarkup(position) {
+  const stop = optionalNumber(position.stop);
+  const target = optionalNumber(position.target);
+  const current = optionalNumber(position.cur);
+  if (!(stop > 0) && !(target > 0)) {
+    return `<div class="position-plan-box danger">
+      <div><small>매매 계획 기준</small><strong>보호선과 목표선 정보가 없습니다.</strong></div>
+      <span class="plan-missing">봇 원장 연결 또는 수동 보호 기준 확인 필요</span>
+    </div>`;
+  }
+  const labels = [
+    stop > 0 ? `손절 ${formatPrice(stop, position.ccy)}` : "",
+    target > 0 ? `목표 ${formatPrice(target, position.ccy)}` : "",
+    current > 0 && stop > 0 && current > stop && target > current
+      ? `남은 손익비 ${((target - current) / (current - stop)).toFixed(2)}R` : "",
+  ].filter(Boolean).join(" · ");
+  return `<div class="position-plan-box">
+    <div><small>매매 계획 기준</small><strong>${escapeHTML(labels)}</strong></div>
+    ${positionPlanMarkup(position)}
+  </div>`;
+}
+
+function strategyRateLabels(stats) {
+  return Object.entries(stats.markets).map(([ccy, row]) => {
+    const rate = row.buy > 0 ? row.pl / row.buy * 100 : 0;
+    return `<span class="${rate >= 0 ? "gain" : "loss"}">${ccy === "KRW" ? "한국" : "미국"} ${formatPercent(rate)}</span>`;
+  }).join("");
+}
+
+function briefingAttentionCard(item) {
+  const { position } = item;
+  return `<button class="attention-card ${item.tone}" type="button"
+      data-open-position="${escapeHTML(position.code)}">
+    <span class="attention-icon">${item.tone === "danger" ? "!" : item.tone === "warning" ? "△" : "✓"}</span>
+    <span>
+      <small>${escapeHTML(item.title)} · ${escapeHTML(position.code)}</small>
+      <strong>${escapeHTML(position.name || position.code)}</strong>
+      <p>${escapeHTML(item.detail)}</p>
+    </span>
+    <span class="attention-price">${formatPrice(position.cur, position.ccy)}</span>
+  </button>`;
+}
+
+function briefingStrategyCard(sleeve, stats) {
+  const usToday = state.performance?.markets?.US?.series?.at(-1)?.[sleeve];
+  const krToday = state.performance?.markets?.KR?.series?.at(-1)?.[sleeve];
+  return `<button class="brief-card strategy-card" type="button"
+      data-go-view="${sleeve === "A" ? "now" : "shelf"}">
+    <span class="brief-card-top">
+      <span class="badge ${sleeve === "B" ? "shelf" : "strategy-a"}">전략 ${sleeve}</span>
+      <span>보유 현황</span>
+    </span>
+    <strong>${stats.count}종목</strong>
+    <p>오늘 미국 ${performanceValue(usToday)} · 한국 ${performanceValue(krToday)}</p>
+    <span class="strategy-rate-row">${strategyRateLabels(stats) || "<span>현재 보유 없음</span>"}</span>
+  </button>`;
+}
+
+function briefingMarketCard(market) {
+  const doc = state.performance?.markets?.[market] || {};
+  const latest = doc.series?.at(-1);
+  const indices = doc.indices || [];
+  if (!latest) {
+    return `<button class="brief-card market-card" type="button" data-go-view="performance">
+      <span class="brief-card-top"><b>${escapeHTML(doc.label || market)}</b><span>기록 중</span></span>
+      <strong>—</strong><p>장중 첫 비교값을 기다리고 있어요.</p>
+    </button>`;
+  }
+  const account = optionalNumber(latest.account);
+  const available = indices.map((name) => ({
+    name, value: optionalNumber(latest.indices?.[name]),
+  })).filter((row) => row.value !== null);
+  const beats = account === null ? 0 : available.filter((row) => account > row.value).length;
+  const indexLabel = available.length === 1 ? "지수" : "두 지수";
+  const comparison = !available.length || account === null ? "지수 기록 중"
+    : beats === available.length ? `${indexLabel}보다 앞섬`
+      : beats === 0 ? `${indexLabel}보다 뒤처짐` : "지수별 엇갈림";
+  const tone = beats === available.length ? "gain" : beats === 0 ? "loss" : "";
+  const indexText = available.map((row) =>
+    `${escapeHTML(row.name)} ${performanceValue(row.value)}`).join(" · ");
+  return `<button class="brief-card market-card" type="button" data-go-view="performance"
+      data-performance-market-target="${escapeHTML(market)}">
+    <span class="brief-card-top"><b>${escapeHTML(doc.label || market)}</b><span class="${tone}">${escapeHTML(comparison)}</span></span>
+    <strong class="${account !== null && account >= 0 ? "gain" : "loss"}">${performanceValue(account)}</strong>
+    <p>${indexText || "지수 값을 기다리고 있어요."}</p>
+  </button>`;
+}
+
+function briefingSignalCard(view, label, description) {
+  if (!state.signalsDoc) {
+    return `<button class="brief-card signal-brief-card" type="button" data-go-view="${view}">
+      <span class="brief-card-top"><b>${escapeHTML(label)}</b><span class="loss">연결 확인</span></span>
+      <strong>—</strong><p>신호 데이터를 불러오지 못했습니다.</p>
+    </button>`;
+  }
+  const group = VIEW_META[view].group;
+  const rows = groupSignals(group);
+  const fresh = rows.filter((row) => row.fresh).length;
+  return `<button class="brief-card signal-brief-card" type="button" data-go-view="${view}">
+    <span class="brief-card-top"><b>${escapeHTML(label)}</b><span>${fresh ? `NEW ${fresh}` : "새 신호 없음"}</span></span>
+    <strong>${rows.length}종목</strong>
+    <p>${escapeHTML(description)}</p>
+  </button>`;
+}
+
+function renderBriefing() {
+  const positions = state.portfolio?.positions || [];
+  const attention = positions.flatMap(positionAttention)
+    .sort((a, b) => a.priority - b.priority);
+  const strategies = strategyStats(positions);
+  const concentrations = concentrationRows(positions);
+  const privateSection = state.portfolio ? `
+    <section class="brief-section">
+      <div class="section-head">
+        <div><span>1</span><h2>지금 확인할 것</h2></div>
+        <button type="button" data-go-view="portfolio">내 자산 전체 보기 →</button>
+      </div>
+      ${attention.length ? `<div class="attention-list">${attention.map(briefingAttentionCard).join("")}</div>` :
+        `<div class="calm-card"><span>✓</span><div><strong>급하게 보호선을 확인할 종목이 없어요</strong><p>손절선 또는 목표선 3% 안에 들어온 종목이 생기면 여기에 먼저 표시됩니다.</p></div></div>`}
+    </section>
+    <section class="brief-section">
+      <div class="section-head"><div><span>2</span><h2>전략 A와 B</h2></div><p>금액 대신 시장별 수익률로 비교</p></div>
+      <div class="brief-grid strategy-brief-grid">
+        ${briefingStrategyCard("A", strategies.A)}
+        ${briefingStrategyCard("B", strategies.B)}
+        <div class="brief-card concentration-card">
+          <span class="brief-card-top"><b>시장별 집중도</b><span>한 종목 비중</span></span>
+          ${concentrations.length ? concentrations.map((row) =>
+            `<div class="concentration-row"><span>${row.ccy === "KRW" ? "한국" : "미국"} · ${escapeHTML(row.name)}</span><strong class="${row.tone}">${row.weight.toFixed(0)}%</strong></div>`
+          ).join("") : "<p>현재 보유 없음</p>"}
+          <p>통화가 다른 자산은 억지로 합산하지 않습니다.</p>
+        </div>
+      </div>
+    </section>
+    <section class="brief-section">
+      <div class="section-head"><div><span>3</span><h2>시장보다 잘하고 있나</h2></div><button type="button" data-go-view="performance">자세히 비교 →</button></div>
+      <div class="brief-grid market-brief-grid">
+        ${briefingMarketCard("US")}
+        ${briefingMarketCard("KR")}
+      </div>
+    </section>` : `
+    <div class="local-gate briefing-gate">
+      <span class="state-icon">⌂</span>
+      <h2>KIS 보유종목 브리핑은 Oracle 화면에서만 보여요</h2>
+      <p>공개 사이트에는 계좌와 보유종목을 보내지 않습니다. 아래 공개 신호와 모의성과는 그대로 확인할 수 있어요.</p>
+    </div>`;
+  content.innerHTML = `
+    ${privateSection}
+    <section class="brief-section">
+      <div class="section-head"><div><span>${state.portfolio ? "4" : "1"}</span><h2>오늘의 새 후보</h2></div><p>조건을 낮추지 않은 실제 신호 수</p></div>
+      <div class="brief-grid signal-brief-grid">
+        ${briefingSignalCard("now", "전략 A", "전환이 확인된 진입 후보")}
+        ${briefingSignalCard("watch", "A 관찰", "조건 충족을 기다리는 후보")}
+        ${briefingSignalCard("shelf", "전략 B", "매물대 반등 진입 후보")}
+      </div>
+    </section>`;
+  $$("[data-go-view]", content).forEach((button) =>
+    button.addEventListener("click", () => {
+      if (button.dataset.performanceMarketTarget) {
+        state.performanceMarket = button.dataset.performanceMarketTarget;
+      }
+      setView(button.dataset.goView);
+    }));
+  $$("[data-open-position]", content).forEach((button) =>
+    button.addEventListener("click", () => {
+      const position = positions.find((row) => row.code === button.dataset.openPosition);
+      if (position) openPortfolioDetail(position);
+    }));
+}
+
 function portfolioTotals(positions) {
   const totals = {};
   positions.forEach((position) => {
@@ -457,6 +718,7 @@ function portfolioCard(position) {
         ${Number(position.qty).toLocaleString("ko-KR")}주 · 평균 ${formatPrice(position.avg, position.ccy)}
         · 손익 ${formatPrice(position.pl_amt, position.ccy, true)}
       </span>
+      ${positionPlanMarkup(position)}
     </button>`;
 }
 
@@ -523,6 +785,7 @@ function openPortfolioDetail(position) {
       <div class="detail-box"><small>평균 단가</small><strong>${formatPrice(position.avg, position.ccy)}</strong></div>
       <div class="detail-box"><small>평가 손익</small><strong id="detail-live-pl" class="${tone}">${formatPercent(position.pl_rt)}</strong></div>
     </div>
+    ${positionPlanDetailMarkup(position)}
     <div class="chart-wrap">
       <div class="chart-head">
         <div>
@@ -924,6 +1187,43 @@ function performanceValue(value) {
     ? formatPercent(Number(value), 2) : "—";
 }
 
+function performanceInsights(rows, indexNames) {
+  const latest = rows.at(-1) || {};
+  const a = optionalNumber(latest.A);
+  const b = optionalNumber(latest.B);
+  const account = optionalNumber(latest.account);
+  const strategyTitle = a === null || b === null ? "전략 비교 기록 중"
+    : a === b ? "전략 A·B 동률"
+      : `전략 ${a > b ? "A" : "B"} 우세`;
+  const strategyDetail = a === null || b === null
+    ? "두 전략 값이 모두 쌓이면 차이를 보여드립니다."
+    : `두 전략 차이 ${Math.abs(a - b).toFixed(2)}%p`;
+  const indices = indexNames.map((name) => ({
+    name, value: optionalNumber(latest[`idx:${name}`]),
+  })).filter((row) => row.value !== null);
+  const beats = account === null ? [] : indices.filter((row) => account > row.value);
+  const marketTitle = account === null || !indices.length ? "시장 비교 기록 중"
+    : beats.length === indices.length
+      ? `KIS가 ${indices.length === 1 ? "지수보다" : "두 지수"} 앞섬`
+      : beats.length === 0
+        ? `KIS가 ${indices.length === 1 ? "지수보다" : "두 지수"} 뒤처짐`
+        : "지수별 성과 엇갈림";
+  const marketDetail = indices.map((row) =>
+    `${row.name} 대비 ${account === null ? "—" : performanceValue(account - row.value).replace("%", "%p")}`)
+    .join(" · ") || "지수 값을 기다리고 있어요.";
+  const drawdown = maximumDrawdown(rows);
+  const drawdownTitle = drawdown === null ? "낙폭 기록 중"
+    : drawdown > -0.01 ? "고점 유지" : `고점 대비 ${drawdown.toFixed(2)}%`;
+  const drawdownDetail = drawdown === null
+    ? "비교할 시점이 두 개 이상 필요합니다."
+    : "선택 기간 중 계좌 평가의 최대 낙폭";
+  return `<div class="insight-grid">
+    <div class="insight-card"><small>전략 대결</small><strong>${escapeHTML(strategyTitle)}</strong><p>${escapeHTML(strategyDetail)}</p></div>
+    <div class="insight-card"><small>시장 판정</small><strong>${escapeHTML(marketTitle)}</strong><p>${escapeHTML(marketDetail)}</p></div>
+    <div class="insight-card"><small>흔들림</small><strong>${escapeHTML(drawdownTitle)}</strong><p>${escapeHTML(drawdownDetail)}</p></div>
+  </div>`;
+}
+
 function renderKisPerformance() {
   const market = state.performanceMarket;
   const marketDoc = state.performance?.markets?.[market] || {};
@@ -957,6 +1257,7 @@ function renderKisPerformance() {
         <div class="performance-card"><small>전략 B · 매물대</small><strong>${performanceValue(latest.B)}</strong><p>B 보유 종목 기준</p></div>
         <div class="performance-card"><small>${escapeHTML(primary || "주 지수")} 대비</small><strong class="${finite(alphaValue) >= 0 ? "gain" : "loss"}">${performanceValue(alphaValue)}</strong><p>초과수익률(%p)</p></div>
       </div>
+      ${performanceInsights(rows, indexNames)}
       <div class="performance-chart-card">
         <div class="chart-head">
           <div><strong>${escapeHTML(marketDoc.label || market)} 시장 비교</strong><span>모든 선을 같은 0% 기준으로 비교</span></div>
@@ -1105,13 +1406,18 @@ function render() {
     renderLoading();
     return;
   }
-  if (VIEW_META[state.view].group) renderSignals();
+  if (state.view === "briefing") renderBriefing();
+  else if (VIEW_META[state.view].group) renderSignals();
   else if (state.view === "portfolio") renderPortfolio();
   else renderPerformance();
   $("[data-retry]", content)?.addEventListener("click", () => loadData());
 }
 
 function initializeControls() {
+  $(".brand").addEventListener("click", (event) => {
+    event.preventDefault();
+    setView("briefing");
+  });
   $$("[data-view]").forEach((button) =>
     button.addEventListener("click", () => setView(button.dataset.view)));
   $$(".filter-chip").forEach((button) => {
@@ -1165,7 +1471,7 @@ function boot() {
   }
   initializeControls();
   const hashView = location.hash.replace("#", "");
-  setView(VIEW_META[hashView] ? hashView : "now", { updateHash: false });
+  setView(VIEW_META[hashView] ? hashView : "briefing", { updateHash: false });
   loadData().finally(schedulePortfolioRefresh);
   setInterval(() => loadData({ quiet: true }), 60_000);
 }
