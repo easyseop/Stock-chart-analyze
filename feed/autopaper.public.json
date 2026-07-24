@@ -1,9 +1,9 @@
 {
  "updated": "2026-07-25",
  "start": 100000000,
- "cash": 48337536,
- "equity": 98525163,
- "ret_pct": -1.47,
+ "cash": 48375453,
+ "equity": 98484251,
+ "ret_pct": -1.52,
  "positions": [
   {
    "code": "MRSH",
@@ -11,14 +11,14 @@
    "ccy": "USD",
    "q": 36,
    "avg": 174.3075,
-   "price": 178.36000061035156,
+   "price": 178.4149932861328,
    "stop": 174.3075,
    "target": 192.2575,
    "half_done": true,
    "opened": "2026-07-06",
-   "pl_krw": 212925,
-   "pl_pct": 2.32,
-   "price_age_min": 7.5
+   "pl_krw": 215814,
+   "pl_pct": 2.36,
+   "price_age_min": 7.3
   },
   {
    "code": "STE",
@@ -26,14 +26,14 @@
    "ccy": "USD",
    "q": 6,
    "avg": 213.02,
-   "price": 214.1300048828125,
+   "price": 214.1150054931641,
    "stop": 202.063,
    "target": 234.934,
    "half_done": false,
    "opened": "2026-07-07",
-   "pl_krw": 9720,
-   "pl_pct": 0.52,
-   "price_age_min": 7.5
+   "pl_krw": 9589,
+   "pl_pct": 0.51,
+   "price_age_min": 7.3
   },
   {
    "code": "068270",
@@ -48,22 +48,7 @@
    "opened": "2026-07-07",
    "pl_krw": 121586,
    "pl_pct": 1.28,
-   "price_age_min": 7.5
-  },
-  {
-   "code": "ORC",
-   "name": "Orchid Island Capital, Inc.",
-   "ccy": "USD",
-   "q": 4,
-   "avg": 6.81,
-   "price": 6.51800012588501,
-   "stop": 6.5493,
-   "target": 7.3314,
-   "half_done": false,
-   "opened": "2026-07-08",
-   "pl_krw": -1705,
-   "pl_pct": -4.29,
-   "price_age_min": 7.5
+   "price_age_min": 7.3
   },
   {
    "code": "HMC",
@@ -71,14 +56,14 @@
    "ccy": "USD",
    "q": 3,
    "avg": 27.665,
-   "price": 28.2450008392334,
+   "price": 28.229999542236328,
    "stop": 26.2063,
    "target": 30.5824,
    "half_done": false,
    "opened": "2026-07-09",
-   "pl_krw": 2540,
-   "pl_pct": 2.1,
-   "price_age_min": 9.5
+   "pl_krw": 2474,
+   "pl_pct": 2.04,
+   "price_age_min": 8.8
   },
   {
    "code": "LSPD",
@@ -86,14 +71,14 @@
    "ccy": "USD",
    "q": 28,
    "avg": 10.02,
-   "price": 9.864999771118164,
+   "price": 9.854999542236328,
    "stop": 9.2434,
    "target": 11.6783,
    "half_done": false,
    "opened": "2026-07-09",
-   "pl_krw": -6334,
-   "pl_pct": -1.55,
-   "price_age_min": 7.5
+   "pl_krw": -6743,
+   "pl_pct": -1.65,
+   "price_age_min": 7.3
   },
   {
    "code": "SARO",
@@ -101,14 +86,14 @@
    "ccy": "USD",
    "q": 161,
    "avg": 27.9,
-   "price": 28.3799991607666,
+   "price": 28.395000457763672,
    "stop": 25.8678,
    "target": 31.9643,
    "half_done": false,
    "opened": "2026-07-10",
-   "pl_krw": 112789,
-   "pl_pct": 1.72,
-   "price_age_min": 7.5
+   "pl_krw": 116314,
+   "pl_pct": 1.77,
+   "price_age_min": 7.3
   },
   {
    "code": "J",
@@ -116,14 +101,14 @@
    "ccy": "USD",
    "q": 32,
    "avg": 126.585,
-   "price": 134.98500061035156,
+   "price": 134.4600067138672,
    "stop": 126.585,
    "target": 141.2316,
    "half_done": true,
    "opened": "2026-07-11",
-   "pl_krw": 392311,
-   "pl_pct": 6.64,
-   "price_age_min": 7.4
+   "pl_krw": 367792,
+   "pl_pct": 6.22,
+   "price_age_min": 7.3
   },
   {
    "code": "MAIN",
@@ -131,14 +116,14 @@
    "ccy": "USD",
    "q": 78,
    "avg": 53.96,
-   "price": 53.09000015258789,
+   "price": 53.05500030517578,
    "stop": 51.5808,
    "target": 58.7184,
    "half_done": false,
    "opened": "2026-07-22",
-   "pl_krw": -99041,
-   "pl_pct": -1.61,
-   "price_age_min": 7.4
+   "pl_krw": -103025,
+   "pl_pct": -1.68,
+   "price_age_min": 7.3
   },
   {
    "code": "SHOP",
@@ -146,14 +131,14 @@
    "ccy": "USD",
    "q": 59,
    "avg": 114.9801,
-   "price": 113.4499969482422,
+   "price": 113.23999786376952,
    "stop": 105.7277,
    "target": 138.8546,
    "half_done": false,
    "opened": "2026-07-24",
-   "pl_krw": -131757,
-   "pl_pct": -1.33,
-   "price_age_min": 7.4
+   "pl_krw": -149840,
+   "pl_pct": -1.51,
+   "price_age_min": 7.3
   }
  ],
  "pending": [
@@ -210,9 +195,36 @@
     "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권29% · 체크4/6 · 손절폭6.4%"
    },
    "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권29% · 체크4/6 · 손절폭6.4%"
+  },
+  {
+   "code": "FRPT",
+   "name": "Freshpet, Inc.",
+   "ccy": "USD",
+   "limit": 52.1708,
+   "stop": 51.7003,
+   "target": 68.6494,
+   "q": 89,
+   "created": "2026-07-25",
+   "atr": 2.8248,
+   "plan": {
+    "entry": 57.35,
+    "stop": 51.7003,
+    "target": 68.6494,
+    "pb": 52.1708,
+    "tactic": "pullback"
+   },
+   "ctx": {
+    "mode": "pullback",
+    "fresh": true,
+    "stage": 3,
+    "rp": 28,
+    "rec": 3,
+    "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권28% · 체크3/6 · 손절폭9.9%"
+   },
+   "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권28% · 체크3/6 · 손절폭9.9%"
   }
  ],
- "trades": 4,
+ "trades": 5,
  "win_trades": 3,
  "pos_cap_pct": 33.3,
  "cap_violations": [],
@@ -220,17 +232,17 @@
  "fx": 1459.49,
  "stats": {
   "all": {
-   "n": 4,
+   "n": 5,
    "win": 3,
-   "win_rate": 75,
-   "avg_r": 0.3
+   "win_rate": 60,
+   "avg_r": 0.01
   },
   "by_mode": {
    "full": {
-    "n": 1,
+    "n": 2,
     "win": 0,
     "win_rate": 0,
-    "avg_r": -1.26
+    "avg_r": -1.21
    },
    "half": {
     "n": 2,
@@ -246,10 +258,10 @@
    }
   },
   "fresh": {
-   "n": 4,
+   "n": 5,
    "win": 3,
-   "win_rate": 75,
-   "avg_r": 0.3
+   "win_rate": 60,
+   "avg_r": 0.01
   },
   "stale": {
    "n": 0,
@@ -259,24 +271,60 @@
   },
   "by_stage": {
    "3": {
-    "n": 4,
+    "n": 5,
     "win": 3,
-    "win_rate": 75,
-    "avg_r": 0.3
+    "win_rate": 60,
+    "avg_r": 0.01
    }
   },
   "by_ccy": {
    "USD": {
-    "n": 4,
+    "n": 5,
     "win": 3,
-    "win_rate": 75,
-    "avg_r": 0.3
+    "win_rate": 60,
+    "avg_r": 0.01
    }
   },
-  "slip_entry_pct": -0.77,
-  "slip_stop_pct": -1.44
+  "slip_entry_pct": -0.62,
+  "slip_stop_pct": -1.14
  },
  "closed": [
+  {
+   "code": "ORC",
+   "name": "Orchid Island Capital, Inc.",
+   "ccy": "USD",
+   "ctx": {
+    "mode": "full",
+    "fresh": true,
+    "stage": 3,
+    "rp": 20,
+    "rec": 4,
+    "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권20% · 체크4/6 · 손절폭3.8%"
+   },
+   "plan": {
+    "entry": 6.81,
+    "stop": 6.5493,
+    "target": 7.3314,
+    "pb": null,
+    "tactic": "full"
+   },
+   "fill": {
+    "avg": 6.81,
+    "q": 4
+   },
+   "exits": [
+    {
+     "d": "2026-07-25",
+     "q": 4,
+     "price": 6.495,
+     "note": "손절"
+    }
+   ],
+   "opened": "2026-07-08",
+   "closed": "2026-07-25",
+   "pl": -1839,
+   "r": -1.16
+  },
   {
    "code": "NU",
    "name": "Nu Holdings Ltd.",
@@ -511,10 +559,35 @@
   },
   {
    "d": "2026-07-25",
-   "v": 98525163
+   "v": 98484251
   }
  ],
  "log": [
+  {
+   "d": "2026-07-25",
+   "type": "order",
+   "code": "FRPT",
+   "name": "Freshpet, Inc.",
+   "q": 89,
+   "price": 52.1708,
+   "ccy": "USD",
+   "amt": 6776706,
+   "note": "눌림 지정가 주문(추격 금지) — 🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권28% · 체크3/6 · 손절폭9.9%"
+  },
+  {
+   "d": "2026-07-25",
+   "type": "sell",
+   "code": "ORC",
+   "name": "Orchid Island Capital, Inc.",
+   "q": 4,
+   "price": 6.495,
+   "ccy": "USD",
+   "amt": 37918,
+   "note": "손절",
+   "pl": -1839,
+   "pl_pct": -4.6,
+   "r": -1.16
+  },
   {
    "d": "2026-07-24",
    "type": "sell",
