@@ -6,14 +6,16 @@ const API = Object.freeze({
   track: "../api/track.json",
   portfolio: "../api/portfolio.json",
   chart: "../api/chart.json",
+  quotes: "../api/quotes.json",
+  performance: "../api/performance.json",
 });
 
 const VIEW_META = Object.freeze({
-  now: { eyebrow: "MARKET SIGNALS", title: "오늘의 진입 후보", group: "now" },
-  watch: { eyebrow: "WATCHLIST", title: "조금 더 지켜볼 종목", group: "watch" },
+  now: { eyebrow: "STRATEGY A · REVERSAL", title: "전략 A · 진입 후보", group: "now" },
+  watch: { eyebrow: "STRATEGY A · WATCH", title: "전략 A · 관찰 후보", group: "watch" },
   shelf: { eyebrow: "STRATEGY B", title: "매물대 반등 후보", group: "shelf" },
   portfolio: { eyebrow: "PRIVATE · READ ONLY", title: "내 자산" },
-  performance: { eyebrow: "FORWARD TEST", title: "모의투자 성과" },
+  performance: { eyebrow: "KIS vs MARKET", title: "성과 · 지수 비교" },
 });
 
 const state = {
@@ -25,8 +27,12 @@ const state = {
   paper: null,
   track: null,
   portfolio: null,
+  performance: null,
+  performanceMarket: "US",
+  performanceRange: "today",
   publicError: null,
   portfolioError: null,
+  performanceError: null,
   loading: true,
 };
 
@@ -125,6 +131,15 @@ async function loadData({ quiet = false } = {}) {
     state.portfolio = null;
     state.portfolioError = error;
   }
+  if (isPrivateDashboard()) {
+    try {
+      state.performance = await fetchJSON(API.performance, 10000);
+      state.performanceError = null;
+    } catch (error) {
+      state.performance = null;
+      state.performanceError = error;
+    }
+  }
 
   state.loading = false;
   refresh.classList.remove("spinning");
@@ -143,9 +158,20 @@ async function refreshPortfolio() {
   } catch (error) {
     state.portfolioError = error;
   }
+  try {
+    state.performance = await fetchJSON(API.performance, 10000);
+    state.performanceError = null;
+  } catch (error) {
+    state.performanceError = error;
+  }
+  updateFreshness();
   if (state.view === "portfolio") {
     updateHero();
     renderPortfolio();
+    refreshOpenPortfolioDetail();
+  } else if (state.view === "performance") {
+    updateHero();
+    renderPerformance();
   }
 }
 
@@ -153,7 +179,7 @@ function schedulePortfolioRefresh() {
   if (portfolioTimer) clearTimeout(portfolioTimer);
   if (!isPrivateDashboard()) return;
   const seconds = Math.max(5, Math.min(300,
-    finite(state.portfolio?.refresh_seconds, 15)));
+    finite(state.portfolio?.refresh_seconds, 5)));
   portfolioTimer = setTimeout(async () => {
     await refreshPortfolio();
     schedulePortfolioRefresh();
@@ -165,6 +191,21 @@ function updateFreshness() {
   const alert = $("#data-alert");
   alert.className = "alert hidden";
 
+  if (state.view === "portfolio" && state.portfolio) {
+    const seconds = Number(state.portfolio.price_age_seconds);
+    freshness.className = `freshness ${Number.isFinite(seconds) && seconds <= 90 ? "fresh" : "neutral"}`;
+    freshness.textContent = Number.isFinite(seconds)
+      ? `${Math.max(0, Math.round(seconds))}초 전 시세`
+      : "KIS 잔고 조회";
+    return;
+  }
+  if (state.view === "performance" && state.performance) {
+    const minutes = relativeMinutes(state.performance.generated_at);
+    freshness.className = `freshness ${minutes !== null && minutes <= 10 ? "fresh" : "neutral"}`;
+    freshness.textContent = minutes === null ? "성과 기록 중"
+      : minutes === 0 ? "방금 갱신" : `${minutes}분 전 성과`;
+    return;
+  }
   if (!state.signalsDoc) {
     freshness.className = "freshness error";
     freshness.textContent = "불러오기 실패";
@@ -201,6 +242,7 @@ function setView(view, { updateHash = true } = {}) {
   $("#page-eyebrow").textContent = VIEW_META[view].eyebrow;
   $("#page-title").textContent = VIEW_META[view].title;
   $("#signal-toolbar").classList.toggle("hidden", !VIEW_META[view].group);
+  updateFreshness();
   render();
 }
 
@@ -216,12 +258,12 @@ function updateHero() {
     const items = groupSignals(VIEW_META[state.view].group);
     number.textContent = items.length.toLocaleString("ko-KR");
     unit.textContent = "종목";
-    kicker.textContent = state.view === "now" ? "오늘 포착된 흐름" :
-      state.view === "watch" ? "다음 전환을 기다리는 흐름" : "매물대 반등 전략";
+    kicker.textContent = state.view === "now" ? "전략 A · 전환 확인" :
+      state.view === "watch" ? "전략 A · 전환 대기" : "전략 B · 매물대 반등";
     description.textContent = state.view === "now"
-      ? "매매 봇과 똑같은 신호 한 벌을 읽기 전용으로 보여드려요."
+      ? "하락에서 상승으로 전환이 확인된 전략 A의 실제 KIS 진입 후보입니다."
       : state.view === "watch"
-        ? "관찰 목록은 매수 지시가 아닙니다. 전환이 확인될 때까지 기다리는 종목이에요."
+        ? "전략 A 후보 중 아직 매수 조건을 완전히 충족하지 않은 관찰 종목입니다."
         : "전략 B로 분류된 매물대 반등 후보를 원본 값 그대로 표시합니다.";
   } else if (state.view === "portfolio") {
     const positions = state.portfolio?.positions || [];
@@ -232,11 +274,17 @@ function updateHero() {
       ? "주문 기능과 분리된 조회 전용 연결입니다. 정보는 이 브라우저 밖으로 공개되지 않아요."
       : "실제 보유 정보는 공개 사이트에 표시하지 않습니다. 로컬 대시보드를 실행하면 이곳에서 확인할 수 있어요.";
   } else {
-    const returnValue = finite(state.paper?.ret_pct);
+    const market = state.performance?.markets?.[state.performanceMarket];
+    const latest = market?.series?.at(-1);
+    const returnValue = latest ? finite(latest.account) : finite(state.paper?.ret_pct);
     number.textContent = formatPercent(returnValue);
     unit.textContent = "";
-    kicker.textContent = "모의투자 누적 수익률";
-    description.textContent = "실제 계좌가 아닌 전략 검증용 모의투자 성과입니다.";
+    kicker.textContent = latest
+      ? `${market.label} KIS 보유 평가 · 지수와 같은 시작점`
+      : "모의투자 누적 수익률";
+    description.textContent = latest
+      ? "전략 A·B와 시장지수를 모두 0%에서 시작해 상대 성과를 비교합니다."
+      : "지수 비교 데이터가 쌓이기 전에는 기존 모의투자 성과를 표시합니다.";
   }
 }
 
@@ -268,6 +316,8 @@ function signalCard(signal) {
   const tactic = signal.tactic || {};
   const badges = [
     signal.fresh ? `<span class="badge new">NEW</span>` : "",
+    signal.group === "now" ? `<span class="badge strategy-a">전략 A</span>` : "",
+    signal.group === "watch" ? `<span class="badge strategy-a">A 관찰</span>` : "",
     tactic.label ? `<span class="badge tactic">${escapeHTML(tactic.label)}</span>` : "",
     signal.group === "shelf" ? `<span class="badge shelf">전략 B</span>` : "",
   ].join("");
@@ -389,6 +439,7 @@ function portfolioTotals(positions) {
 
 function portfolioCard(position) {
   const tone = finite(position.pl_amt) >= 0 ? "gain" : "loss";
+  const sleeve = String(position.sleeve || "A").toUpperCase() === "B" ? "B" : "A";
   return `
     <button class="portfolio-card" type="button" data-position="${escapeHTML(position.code)}">
       <span class="card-head">
@@ -396,7 +447,7 @@ function portfolioCard(position) {
           <span class="ticker">${escapeHTML(position.code)} · ${marketLabel(position.ccy)}</span>
           <span class="stock-name">${escapeHTML(position.name)}</span>
         </span>
-        <span class="badge">${escapeHTML(position.sleeve || "A")} 전략</span>
+        <span class="badge ${sleeve === "B" ? "shelf" : "strategy-a"}">전략 ${sleeve}</span>
       </span>
       <span class="portfolio-value">
         <strong>${formatPrice(position.eval_amt, position.ccy)}</strong>
@@ -435,9 +486,13 @@ function renderPortfolio() {
   }).join("");
   const partial = state.portfolio.partial
     ? `<div class="alert">일부 시장 조회가 지연돼 목록이 완전하지 않을 수 있습니다.</div>` : "";
+  const age = state.portfolio.price_age_seconds;
+  const liveText = Number.isFinite(Number(age))
+    ? `현재가 약 ${Math.max(0, Math.round(Number(age)))}초 전`
+    : `${finite(state.portfolio.refresh_seconds, 60)}초마다 잔고 갱신`;
   content.innerHTML = `
     <div class="private-banner"><span>●</span> ${escapeHTML(state.portfolio.environment || "KIS")} 계좌
-      · ${finite(state.portfolio.refresh_seconds, 15)}초마다 KIS 잔고 갱신
+      · ${escapeHTML(liveText)}
       · 주문 기능과 분리된 로컬 조회</div>
     ${partial}
     <div class="portfolio-summary">${summary}</div>
@@ -454,100 +509,190 @@ function openPortfolioDetail(position) {
   $("#detail-market").textContent = `${marketLabel(position.ccy)} · ${position.code}`;
   $("#detail-title").textContent = position.name || position.code;
   const tone = finite(position.pl_amt) >= 0 ? "gain" : "loss";
+  const sleeve = String(position.sleeve || "A").toUpperCase() === "B" ? "B" : "A";
+  dialog.dataset.position = position.code;
+  dialog.dataset.chartMode = isPrivateDashboard() ? "live" : "daily";
+  dialog.dataset.chartDays = "90";
   $("#detail-content").innerHTML = `
-    <div class="detail-price">${formatPrice(position.cur, position.ccy)}</div>
+    <div class="detail-price-row">
+      <div class="detail-price" id="detail-live-price">${formatPrice(position.cur, position.ccy)}</div>
+      <span class="badge ${sleeve === "B" ? "shelf" : "strategy-a"}">전략 ${sleeve}</span>
+    </div>
     <div class="detail-grid">
       <div class="detail-box"><small>보유 수량</small><strong>${Number(position.qty).toLocaleString("ko-KR")}주</strong></div>
       <div class="detail-box"><small>평균 단가</small><strong>${formatPrice(position.avg, position.ccy)}</strong></div>
-      <div class="detail-box"><small>평가 손익</small><strong class="${tone}">${formatPercent(position.pl_rt)}</strong></div>
+      <div class="detail-box"><small>평가 손익</small><strong id="detail-live-pl" class="${tone}">${formatPercent(position.pl_rt)}</strong></div>
     </div>
     <div class="chart-wrap">
-      <div class="chart-head"><strong>최근 6개월 가격</strong><span>기존 스캐너 일봉 · 표시 전용</span></div>
+      <div class="chart-head">
+        <div>
+          <strong id="chart-title">준실시간 가격</strong>
+          <span id="chart-updated">파수꾼 시세 공유 · KIS 추가 호출 없음</span>
+        </div>
+        <div class="chart-mode-row">
+          <button class="chart-chip active" type="button" data-chart-mode="live">실시간</button>
+          <button class="chart-chip" type="button" data-chart-mode="daily">일봉</button>
+        </div>
+      </div>
+      <div class="chart-range-row daily-ranges hidden">
+        <button class="chart-chip" type="button" data-chart-days="30">1개월</button>
+        <button class="chart-chip active" type="button" data-chart-days="90">3개월</button>
+        <button class="chart-chip" type="button" data-chart-days="180">6개월</button>
+        <button class="chart-chip" type="button" data-chart-days="365">1년</button>
+      </div>
       <div class="chart-loading" id="chart-loading">가격 그래프를 불러오고 있어요.</div>
-      <canvas id="price-chart" class="hidden" role="img" aria-label="${escapeHTML(position.name)} 최근 가격 그래프"></canvas>
+      <canvas id="price-chart" class="hidden" role="img" aria-label="${escapeHTML(position.name)} 가격 차트"></canvas>
+      <div class="chart-legend" id="price-chart-legend"></div>
     </div>`;
   dialog.showModal();
-  loadChart(position);
+  $$("[data-chart-mode]", $("#detail-content")).forEach((button) => {
+    button.addEventListener("click", () => {
+      dialog.dataset.chartMode = button.dataset.chartMode;
+      $$("[data-chart-mode]", $("#detail-content")).forEach((item) =>
+        item.classList.toggle("active", item === button));
+      $(".daily-ranges", $("#detail-content")).classList.toggle(
+        "hidden", button.dataset.chartMode !== "daily");
+      loadPortfolioChart(position);
+    });
+  });
+  $$("[data-chart-days]", $("#detail-content")).forEach((button) => {
+    button.addEventListener("click", () => {
+      dialog.dataset.chartDays = button.dataset.chartDays;
+      $$("[data-chart-days]", $("#detail-content")).forEach((item) =>
+        item.classList.toggle("active", item === button));
+      loadPortfolioChart(position);
+    });
+  });
+  loadPortfolioChart(position);
 }
 
-async function loadChart(position) {
-  const loading = $("#chart-loading");
-  const canvas = $("#price-chart");
-  try {
-    const url = `${API.chart}?code=${encodeURIComponent(position.code)}&days=180`;
-    const chart = await fetchJSON(url, 30000);
-    if (!chart.points?.length) throw new Error("empty chart");
-    loading.classList.add("hidden");
-    canvas.classList.remove("hidden");
-    drawLineChart(canvas, chart.points, position);
-  } catch (error) {
-    loading.textContent = "가격 이력을 불러오지 못했습니다. 보유·현재가 정보는 정상적으로 유지됩니다.";
+function refreshOpenPortfolioDetail() {
+  if (!dialog.open || !dialog.dataset.position) return;
+  const position = (state.portfolio?.positions || []).find(
+    (item) => item.code === dialog.dataset.position);
+  if (!position) return;
+  const price = $("#detail-live-price");
+  const pl = $("#detail-live-pl");
+  if (price) price.textContent = formatPrice(position.cur, position.ccy);
+  if (pl) {
+    pl.textContent = formatPercent(position.pl_rt);
+    pl.className = finite(position.pl_amt) >= 0 ? "gain" : "loss";
+  }
+  if (dialog.dataset.chartMode === "live") loadPortfolioChart(position, { quiet: true });
+  else {
+    const canvas = $("#price-chart");
+    if (canvas?._chartData) {
+      canvas._chartData.position = position;
+      redrawChart(canvas);
+    }
   }
 }
 
-function drawLineChart(canvas, points, position) {
-  canvas._chartData = { points, position };
+async function loadPortfolioChart(position, { quiet = false } = {}) {
+  const loading = $("#chart-loading");
+  const canvas = $("#price-chart");
+  const legend = $("#price-chart-legend");
+  if (!loading || !canvas) return;
+  if (!quiet) {
+    loading.classList.remove("hidden");
+    canvas.classList.add("hidden");
+    legend.innerHTML = "";
+  }
+  const mode = dialog.dataset.chartMode || "live";
+  try {
+    if (mode === "live") {
+      const url = `${API.quotes}?code=${encodeURIComponent(position.code)}&limit=900`;
+      const chart = await fetchJSON(url, 10000);
+      const points = [...(chart.points || [])];
+      if (!points.length && finite(position.cur) > 0) {
+        points.push({ ts: Date.now() / 1000, price: finite(position.cur) });
+      }
+      if (!points.length) throw new Error("empty live chart");
+      $("#chart-title").textContent = "준실시간 가격";
+      const age = state.portfolio?.price_age_seconds;
+      $("#chart-updated").textContent = Number.isFinite(Number(age))
+        ? `현재가 약 ${Math.round(Number(age))}초 전 · 파수꾼 공유`
+        : "파수꾼 시세가 쌓이는 중";
+      loading.classList.add("hidden");
+      canvas.classList.remove("hidden");
+      drawLivePriceChart(canvas, points, position);
+      legend.innerHTML = chartLegend([
+        ["현재가", "blue"], ["평균매수가", "violet"],
+        ["손절", "red"], ["목표", "green"],
+      ]);
+    } else {
+      const days = Number(dialog.dataset.chartDays || 90);
+      const url = `${API.chart}?code=${encodeURIComponent(position.code)}&days=${days}`;
+      const chart = await fetchJSON(url, 30000);
+      if (!chart.points?.length) throw new Error("empty daily chart");
+      $("#chart-title").textContent = `${days >= 365 ? "1년" : days >= 180 ? "6개월" : days >= 90 ? "3개월" : "1개월"} 일봉`;
+      $("#chart-updated").textContent = "캔들·거래량·이동평균 · 현재가는 준실시간";
+      loading.classList.add("hidden");
+      canvas.classList.remove("hidden");
+      drawCandleChart(canvas, chart.points, position);
+      legend.innerHTML = chartLegend([
+        ["상승", "green"], ["하락", "red"], ["MA20", "blue"],
+        ["MA60", "amber"], ["MA120", "violet"],
+      ]);
+    }
+    loading.classList.add("hidden");
+    canvas.classList.remove("hidden");
+  } catch (error) {
+    if (!quiet) {
+      loading.textContent = mode === "live"
+        ? "준실시간 시세가 아직 쌓이지 않았습니다. 일봉 차트는 바로 볼 수 있어요."
+        : "가격 이력을 불러오지 못했습니다. 보유·현재가 정보는 정상적으로 유지됩니다.";
+    }
+  }
+}
+
+function chartLegend(items) {
+  return items.map(([label, tone]) =>
+    `<span><i class="legend-${tone}"></i>${escapeHTML(label)}</span>`).join("");
+}
+
+function chartCanvas(canvas, height = 320) {
   const ratio = Math.min(window.devicePixelRatio || 1, 2);
   const rect = canvas.getBoundingClientRect();
   const width = Math.max(300, rect.width);
-  const height = 260;
   canvas.width = width * ratio;
   canvas.height = height * ratio;
   const ctx = canvas.getContext("2d");
   ctx.scale(ratio, ratio);
-
   const css = getComputedStyle(document.documentElement);
-  const color = css.getPropertyValue("--blue").trim();
-  const grid = css.getPropertyValue("--line").trim();
-  const muted = css.getPropertyValue("--muted").trim();
-  const values = points.map((point) => finite(point.close)).filter((value) => value > 0);
-  const reference = [position.avg, position.stop, position.entry].map(finite).filter((value) => value > 0);
-  const min = Math.min(...values, ...reference);
-  const max = Math.max(...values, ...reference);
-  const span = Math.max(max - min, max * .02, 1);
-  const pad = { left: 12, right: 48, top: 16, bottom: 26 };
-  const x = (index) => pad.left + index / Math.max(1, values.length - 1) * (width - pad.left - pad.right);
-  const y = (value) => pad.top + (max - value) / span * (height - pad.top - pad.bottom);
-
   ctx.clearRect(0, 0, width, height);
-  ctx.strokeStyle = grid;
+  return {
+    ctx, css, width, height,
+    colors: {
+      blue: css.getPropertyValue("--blue").trim(),
+      green: css.getPropertyValue("--green").trim(),
+      red: css.getPropertyValue("--red").trim(),
+      amber: css.getPropertyValue("--amber").trim(),
+      violet: css.getPropertyValue("--violet").trim(),
+      grid: css.getPropertyValue("--line").trim(),
+      muted: css.getPropertyValue("--muted").trim(),
+      surface: css.getPropertyValue("--surface").trim(),
+    },
+  };
+}
+
+function chartGrid(ctx, colors, width, top, bottom, left, right) {
+  ctx.strokeStyle = colors.grid;
   ctx.lineWidth = 1;
   for (let i = 0; i < 4; i += 1) {
-    const gy = pad.top + i / 3 * (height - pad.top - pad.bottom);
+    const gy = top + i / 3 * (bottom - top);
     ctx.beginPath();
-    ctx.moveTo(pad.left, gy);
-    ctx.lineTo(width - pad.right, gy);
+    ctx.moveTo(left, gy);
+    ctx.lineTo(width - right, gy);
     ctx.stroke();
   }
+}
 
-  const gradient = ctx.createLinearGradient(0, pad.top, 0, height - pad.bottom);
-  gradient.addColorStop(0, `${color}45`);
-  gradient.addColorStop(1, `${color}00`);
-  ctx.beginPath();
-  values.forEach((value, index) => {
-    if (index === 0) ctx.moveTo(x(index), y(value));
-    else ctx.lineTo(x(index), y(value));
-  });
-  ctx.lineTo(x(values.length - 1), height - pad.bottom);
-  ctx.lineTo(x(0), height - pad.bottom);
-  ctx.closePath();
-  ctx.fillStyle = gradient;
-  ctx.fill();
-
-  ctx.beginPath();
-  values.forEach((value, index) => {
-    if (index === 0) ctx.moveTo(x(index), y(value));
-    else ctx.lineTo(x(index), y(value));
-  });
-  ctx.strokeStyle = color;
-  ctx.lineWidth = 2.5;
-  ctx.lineJoin = "round";
-  ctx.lineCap = "round";
-  ctx.stroke();
-
+function chartReferenceLines(ctx, colors, position, y, left, rightX) {
   const lines = [
-    ["평균", finite(position.avg), css.getPropertyValue("--violet").trim()],
-    ["손절", finite(position.stop), css.getPropertyValue("--red").trim()],
+    ["평균", finite(position.avg), colors.violet],
+    ["손절", finite(position.stop), colors.red],
+    ["목표", finite(position.target), colors.green],
   ].filter(([, value]) => value > 0);
   ctx.font = "10px -apple-system, sans-serif";
   lines.forEach(([label, value, lineColor]) => {
@@ -556,19 +701,155 @@ function drawLineChart(canvas, points, position) {
     ctx.setLineDash([5, 4]);
     ctx.strokeStyle = lineColor;
     ctx.beginPath();
-    ctx.moveTo(pad.left, lineY);
-    ctx.lineTo(width - pad.right, lineY);
+    ctx.moveTo(left, lineY);
+    ctx.lineTo(rightX, lineY);
     ctx.stroke();
     ctx.restore();
     ctx.fillStyle = lineColor;
-    ctx.fillText(label, width - pad.right + 5, lineY + 3);
+    ctx.fillText(label, rightX + 5, lineY + 3);
   });
+}
 
-  ctx.fillStyle = muted;
+function drawLivePriceChart(canvas, points, position) {
+  canvas._chartData = { kind: "live", points, position };
+  const { ctx, colors, width, height } = chartCanvas(canvas);
+  const pad = { left: 12, right: 50, top: 18, bottom: 28 };
+  const values = points.map((point) => finite(point.price)).filter((value) => value > 0);
+  const refs = [position.avg, position.stop, position.target].map(finite).filter((value) => value > 0);
+  const min = Math.min(...values, ...refs);
+  const max = Math.max(...values, ...refs);
+  const span = Math.max(max - min, max * .01, 1e-6);
+  const x = (index) => pad.left + index / Math.max(1, values.length - 1) *
+    (width - pad.left - pad.right);
+  const y = (value) => pad.top + (max - value) / span *
+    (height - pad.top - pad.bottom);
+  chartGrid(ctx, colors, width, pad.top, height - pad.bottom, pad.left, pad.right);
+  const gradient = ctx.createLinearGradient(0, pad.top, 0, height - pad.bottom);
+  gradient.addColorStop(0, `${colors.blue}48`);
+  gradient.addColorStop(1, `${colors.blue}00`);
+  ctx.beginPath();
+  values.forEach((value, index) => index
+    ? ctx.lineTo(x(index), y(value))
+    : ctx.moveTo(x(index), y(value)));
+  ctx.lineTo(x(values.length - 1), height - pad.bottom);
+  ctx.lineTo(x(0), height - pad.bottom);
+  ctx.closePath();
+  ctx.fillStyle = gradient;
+  ctx.fill();
+  ctx.beginPath();
+  values.forEach((value, index) => index
+    ? ctx.lineTo(x(index), y(value))
+    : ctx.moveTo(x(index), y(value)));
+  ctx.strokeStyle = colors.blue;
+  ctx.lineWidth = 2.5;
+  ctx.lineJoin = "round";
+  ctx.lineCap = "round";
+  ctx.stroke();
+  const lastX = x(values.length - 1);
+  const lastY = y(values.at(-1));
+  ctx.beginPath();
+  ctx.arc(lastX, lastY, 4, 0, Math.PI * 2);
+  ctx.fillStyle = colors.blue;
+  ctx.fill();
+  chartReferenceLines(ctx, colors, position, y, pad.left, width - pad.right);
+  ctx.fillStyle = colors.muted;
+  ctx.font = "10px -apple-system, sans-serif";
+  const timeLabel = (point) => new Date(finite(point.ts) * 1000).toLocaleTimeString(
+    "ko-KR", { hour: "2-digit", minute: "2-digit" });
+  ctx.fillText(timeLabel(points[0]), pad.left, height - 7);
+  const lastLabel = timeLabel(points.at(-1));
+  ctx.fillText(lastLabel, width - pad.right - ctx.measureText(lastLabel).width, height - 7);
+}
+
+function drawSeries(ctx, points, key, color, x, y) {
+  let started = false;
+  ctx.beginPath();
+  points.forEach((point, index) => {
+    const value = Number(point[key]);
+    if (!Number.isFinite(value) || value <= 0) return;
+    if (!started) {
+      ctx.moveTo(x(index), y(value));
+      started = true;
+    } else {
+      ctx.lineTo(x(index), y(value));
+    }
+  });
+  if (started) {
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 1.35;
+    ctx.lineJoin = "round";
+    ctx.stroke();
+  }
+}
+
+function drawCandleChart(canvas, points, position) {
+  canvas._chartData = { kind: "daily", points, position };
+  const { ctx, colors, width, height } = chartCanvas(canvas);
+  const pad = { left: 12, right: 50, top: 16, bottom: 25 };
+  const volumeHeight = 58;
+  const priceBottom = height - pad.bottom - volumeHeight - 12;
+  const priceValues = points.flatMap((point) =>
+    [finite(point.high), finite(point.low), finite(point.ma20),
+      finite(point.ma60), finite(point.ma120)]).filter((value) => value > 0);
+  const refs = [position.avg, position.stop, position.target, position.cur]
+    .map(finite).filter((value) => value > 0);
+  const min = Math.min(...priceValues, ...refs);
+  const max = Math.max(...priceValues, ...refs);
+  const span = Math.max(max - min, max * .02, 1e-6);
+  const step = (width - pad.left - pad.right) / Math.max(1, points.length);
+  const x = (index) => pad.left + step * (index + .5);
+  const y = (value) => pad.top + (max - value) / span * (priceBottom - pad.top);
+  const maxVolume = Math.max(...points.map((point) => finite(point.volume)), 1);
+  chartGrid(ctx, colors, width, pad.top, priceBottom, pad.left, pad.right);
+  points.forEach((point, index) => {
+    const open = finite(point.open), close = finite(point.close);
+    const high = finite(point.high), low = finite(point.low);
+    if (!(open > 0 && close > 0 && high > 0 && low > 0)) return;
+    const up = close >= open;
+    const color = up ? colors.green : colors.red;
+    const center = x(index);
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(center, y(high));
+    ctx.lineTo(center, y(low));
+    ctx.stroke();
+    const bodyTop = Math.min(y(open), y(close));
+    const bodyHeight = Math.max(1.5, Math.abs(y(open) - y(close)));
+    const bodyWidth = Math.max(1.5, Math.min(8, step * .64));
+    ctx.fillStyle = color;
+    ctx.fillRect(center - bodyWidth / 2, bodyTop, bodyWidth, bodyHeight);
+    const volume = finite(point.volume);
+    const volumeTop = height - pad.bottom - volume / maxVolume * volumeHeight;
+    ctx.globalAlpha = .35;
+    ctx.fillRect(center - bodyWidth / 2, volumeTop, bodyWidth,
+      height - pad.bottom - volumeTop);
+    ctx.globalAlpha = 1;
+  });
+  drawSeries(ctx, points, "ma20", colors.blue, x, y);
+  drawSeries(ctx, points, "ma60", colors.amber, x, y);
+  drawSeries(ctx, points, "ma120", colors.violet, x, y);
+  chartReferenceLines(ctx, colors, position, y, pad.left, width - pad.right);
+  if (finite(position.cur) > 0) {
+    const liveY = y(finite(position.cur));
+    ctx.fillStyle = colors.blue;
+    ctx.fillRect(width - pad.right - 4, liveY - 2, 8, 4);
+  }
+  ctx.fillStyle = colors.muted;
   ctx.font = "10px -apple-system, sans-serif";
   ctx.fillText(points[0].date.slice(2), pad.left, height - 7);
   const lastLabel = points.at(-1).date.slice(2);
   ctx.fillText(lastLabel, width - pad.right - ctx.measureText(lastLabel).width, height - 7);
+}
+
+function redrawChart(canvas) {
+  const data = canvas?._chartData;
+  if (!data) return;
+  if (data.kind === "live") drawLivePriceChart(canvas, data.points, data.position);
+  else if (data.kind === "daily") drawCandleChart(canvas, data.points, data.position);
+  else if (data.kind === "performance") {
+    drawPerformanceChart(canvas, data.rows, data.keys, data.labels);
+  }
 }
 
 function readTrackStat(...keys) {
@@ -581,7 +862,209 @@ function readTrackStat(...keys) {
   return null;
 }
 
+function performanceRows(market, range) {
+  const marketDoc = state.performance?.markets?.[market] || {};
+  const indexNames = marketDoc.indices || [];
+  if (range === "today") {
+    return (marketDoc.series || []).map((point) => ({
+      label: point.t,
+      account: point.account,
+      A: point.A,
+      B: point.B,
+      ...Object.fromEntries(indexNames.map((name) =>
+        [`idx:${name}`, point.indices?.[name]])),
+    }));
+  }
+  const limit = range === "1m" ? 30 : range === "3m" ? 90 : 10000;
+  const daily = (state.performance?.days || [])
+    .filter((row) => row.market === market)
+    .slice(-limit)
+    .map((row) => ({
+      label: row.date?.slice(5) || "—",
+      account: row.account,
+      A: row.A,
+      B: row.B,
+      ...Object.fromEntries(indexNames.map((name) =>
+        [`idx:${name}`, row.indices?.[name]])),
+    }));
+  const current = marketDoc.series?.at(-1);
+  if (current && marketDoc.date && !daily.some((row) => row.label === marketDoc.date.slice(5))) {
+    daily.push({
+      label: marketDoc.date.slice(5),
+      account: current.account,
+      A: current.A,
+      B: current.B,
+      ...Object.fromEntries(indexNames.map((name) =>
+        [`idx:${name}`, current.indices?.[name]])),
+    });
+  }
+  const keys = ["account", "A", "B", ...indexNames.map((name) => `idx:${name}`)];
+  const cumulative = Object.fromEntries(keys.map((key) => [key, 0]));
+  return daily.map((row) => {
+    const out = { label: row.label };
+    keys.forEach((key) => {
+      if (row[key] === null || row[key] === undefined) {
+        out[key] = null;
+        return;
+      }
+      const value = Number(row[key]);
+      if (!Number.isFinite(value)) {
+        out[key] = null;
+        return;
+      }
+      cumulative[key] = ((1 + cumulative[key] / 100) * (1 + value / 100) - 1) * 100;
+      out[key] = cumulative[key];
+    });
+    return out;
+  });
+}
+
+function performanceValue(value) {
+  return value !== null && value !== undefined && Number.isFinite(Number(value))
+    ? formatPercent(Number(value), 2) : "—";
+}
+
+function renderKisPerformance() {
+  const market = state.performanceMarket;
+  const marketDoc = state.performance?.markets?.[market] || {};
+  const range = state.performanceRange;
+  const rows = performanceRows(market, range);
+  const latest = rows.at(-1) || {};
+  const indexNames = marketDoc.indices || [];
+  const primary = indexNames[0];
+  const alphaValue = latest.account !== null && latest.account !== undefined &&
+    latest[`idx:${primary}`] !== null && latest[`idx:${primary}`] !== undefined &&
+    Number.isFinite(Number(latest.account)) && Number.isFinite(Number(latest[`idx:${primary}`]))
+    ? Number(latest.account) - Number(latest[`idx:${primary}`])
+    : null;
+  const age = relativeMinutes(state.performance?.generated_at);
+  content.innerHTML = `
+    <div class="performance-controls">
+      <div class="chart-range-row">
+        <button class="chart-chip ${market === "US" ? "active" : ""}" type="button" data-performance-market="US">미국 · 나스닥/S&amp;P500</button>
+        <button class="chart-chip ${market === "KR" ? "active" : ""}" type="button" data-performance-market="KR">한국 · 코스피/코스닥</button>
+      </div>
+      <div class="chart-range-row">
+        ${[["today", "오늘"], ["1m", "1개월"], ["3m", "3개월"], ["all", "전체"]]
+          .map(([value, label]) => `<button class="chart-chip ${range === value ? "active" : ""}" type="button" data-performance-range="${value}">${label}</button>`)
+          .join("")}
+      </div>
+    </div>
+    ${rows.length ? `
+      <div class="performance-grid performance-kis-grid">
+        <div class="performance-card"><small>KIS 보유 평가</small><strong class="${finite(latest.account) >= 0 ? "gain" : "loss"}">${performanceValue(latest.account)}</strong><p>${range === "today" ? "장 시작" : "선택 기간"} 대비</p></div>
+        <div class="performance-card"><small>전략 A · 전환</small><strong>${performanceValue(latest.A)}</strong><p>A 보유 종목 기준</p></div>
+        <div class="performance-card"><small>전략 B · 매물대</small><strong>${performanceValue(latest.B)}</strong><p>B 보유 종목 기준</p></div>
+        <div class="performance-card"><small>${escapeHTML(primary || "주 지수")} 대비</small><strong class="${finite(alphaValue) >= 0 ? "gain" : "loss"}">${performanceValue(alphaValue)}</strong><p>초과수익률(%p)</p></div>
+      </div>
+      <div class="performance-chart-card">
+        <div class="chart-head">
+          <div><strong>${escapeHTML(marketDoc.label || market)} 시장 비교</strong><span>모든 선을 같은 0% 기준으로 비교</span></div>
+          <span class="live-pill">${age === null ? "기록 중" : age === 0 ? "방금 갱신" : `${age}분 전`}</span>
+        </div>
+        <canvas id="performance-chart" role="img" aria-label="KIS 전략과 시장지수 수익률 비교 차트"></canvas>
+        <div class="chart-legend">
+          <span><i class="legend-blue"></i>KIS 전체</span>
+          <span><i class="legend-green"></i>전략 A</span>
+          <span><i class="legend-violet"></i>전략 B</span>
+          ${indexNames.map((name, index) => `<span><i class="${index ? "legend-amber" : "legend-muted"}"></i>${escapeHTML(name)}</span>`).join("")}
+        </div>
+        <p class="chart-note">${escapeHTML(state.performance?.basis || "KIS 봇 보유 평가손익 기준")} · ${finite(state.performance?.sample_seconds, 300) / 60}분 간격. 과거가 없는 지수는 지금부터 쌓입니다.</p>
+      </div>` :
+      emptyState("지수 비교 데이터를 쌓는 중이에요",
+        "장중 첫 수집이 완료되면 전략 A·B와 나스닥·S&P500·코스피·코스닥 차트가 자동으로 나타납니다.")}
+  `;
+  $$("[data-performance-market]", content).forEach((button) =>
+    button.addEventListener("click", () => {
+      state.performanceMarket = button.dataset.performanceMarket;
+      renderPerformance();
+      updateHero();
+    }));
+  $$("[data-performance-range]", content).forEach((button) =>
+    button.addEventListener("click", () => {
+      state.performanceRange = button.dataset.performanceRange;
+      renderPerformance();
+    }));
+  const canvas = $("#performance-chart");
+  if (canvas && rows.length) {
+    const keys = ["account", "A", "B", ...indexNames.map((name) => `idx:${name}`)];
+    const labels = {
+      account: "KIS 전체", A: "전략 A", B: "전략 B",
+      ...Object.fromEntries(indexNames.map((name) => [`idx:${name}`, name])),
+    };
+    requestAnimationFrame(() => drawPerformanceChart(canvas, rows, keys, labels));
+  }
+}
+
+function drawPerformanceChart(canvas, rows, keys, labels) {
+  canvas._chartData = { kind: "performance", rows, keys, labels };
+  const { ctx, colors, width, height } = chartCanvas(canvas, 340);
+  const pad = { left: 18, right: 48, top: 20, bottom: 28 };
+  const values = rows.flatMap((row) => keys.flatMap((key) =>
+    row[key] === null || row[key] === undefined ? [] : [Number(row[key])]))
+    .filter(Number.isFinite);
+  const rawMin = Math.min(0, ...values);
+  const rawMax = Math.max(0, ...values);
+  const extra = Math.max((rawMax - rawMin) * .12, .2);
+  const min = rawMin - extra, max = rawMax + extra;
+  const span = Math.max(max - min, .1);
+  const x = (index) => pad.left + index / Math.max(1, rows.length - 1) *
+    (width - pad.left - pad.right);
+  const y = (value) => pad.top + (max - value) / span *
+    (height - pad.top - pad.bottom);
+  chartGrid(ctx, colors, width, pad.top, height - pad.bottom, pad.left, pad.right);
+  ctx.strokeStyle = colors.muted;
+  ctx.globalAlpha = .55;
+  ctx.beginPath();
+  ctx.moveTo(pad.left, y(0));
+  ctx.lineTo(width - pad.right, y(0));
+  ctx.stroke();
+  ctx.globalAlpha = 1;
+  const palette = {
+    account: colors.blue, A: colors.green, B: colors.violet,
+  };
+  let indexNo = 0;
+  keys.forEach((key) => {
+    const color = palette[key] || (indexNo++ ? colors.amber : colors.muted);
+    let started = false;
+    ctx.beginPath();
+    rows.forEach((row, index) => {
+      if (row[key] === null || row[key] === undefined) return;
+      const value = Number(row[key]);
+      if (!Number.isFinite(value)) return;
+      if (!started) {
+        ctx.moveTo(x(index), y(value));
+        started = true;
+      } else {
+        ctx.lineTo(x(index), y(value));
+      }
+    });
+    if (started) {
+      ctx.strokeStyle = color;
+      ctx.lineWidth = key === "account" ? 2.7 : 1.55;
+      ctx.lineJoin = "round";
+      ctx.lineCap = "round";
+      ctx.stroke();
+    }
+  });
+  ctx.fillStyle = colors.muted;
+  ctx.font = "10px -apple-system, sans-serif";
+  ctx.fillText(rows[0].label || "", pad.left, height - 7);
+  const lastLabel = rows.at(-1).label || "";
+  ctx.fillText(lastLabel, width - pad.right - ctx.measureText(lastLabel).width, height - 7);
+  ctx.fillText(`${max.toFixed(1)}%`, width - pad.right + 5, pad.top + 4);
+  ctx.fillText(`${min.toFixed(1)}%`, width - pad.right + 5, height - pad.bottom);
+}
+
 function renderPerformance() {
+  if (isPrivateDashboard()) {
+    renderKisPerformance();
+    return;
+  }
+  renderPaperPerformance();
+}
+
+function renderPaperPerformance() {
   const paper = state.paper || {};
   const ret = finite(paper.ret_pct);
   const trades = finite(paper.trades);
@@ -652,15 +1135,24 @@ function initializeControls() {
     const next = root.dataset.theme === "dark" ? "light" : "dark";
     root.dataset.theme = next;
     localStorage.setItem("flow-theme", next);
+    requestAnimationFrame(() => {
+      redrawChart($("#price-chart:not(.hidden)"));
+      redrawChart($("#performance-chart"));
+    });
   });
-  $("#dialog-close").addEventListener("click", () => dialog.close());
+  $("#dialog-close").addEventListener("click", () => {
+    dialog.close();
+    delete dialog.dataset.position;
+  });
   dialog.addEventListener("click", (event) => {
-    if (event.target === dialog) dialog.close();
+    if (event.target === dialog) {
+      dialog.close();
+      delete dialog.dataset.position;
+    }
   });
   window.addEventListener("resize", () => {
-    const canvas = $("#price-chart:not(.hidden)");
-    if (!canvas || !canvas._chartData) return;
-    drawLineChart(canvas, canvas._chartData.points, canvas._chartData.position);
+    redrawChart($("#price-chart:not(.hidden)"));
+    redrawChart($("#performance-chart"));
   });
 }
 

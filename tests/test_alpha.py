@@ -38,20 +38,30 @@ def test_session_and_flow_neutral():
     st = {}
     agg1 = {"US": {"A": {"cost": 1000.0, "pl": 0.0}, "B": {"cost": 0.0, "pl": 0.0}},
             "KR": {"A": {"cost": 0.0, "pl": 0.0}, "B": {"cost": 0.0, "pl": 0.0}}}
-    r1 = alpha.session_update(st, "US", agg1, {"나스닥": 20000.0}, "22:30", "2026-07-24")
+    r1 = alpha.session_update(
+        st, "US", agg1, {"나스닥": 20000.0, "S&P500": 6000.0},
+        "22:30", "2026-07-24")
     assert r1["acct"] == 0.0 and r1["idx"]["나스닥"] == 0.0     # 기준점
     # 지수 +1%, 계좌 pl +20 (2%)
     agg2 = {"US": {"A": {"cost": 1000.0, "pl": 20.0}, "B": {"cost": 0.0, "pl": 0.0}},
             "KR": agg1["KR"]}
-    r2 = alpha.session_update(st, "US", agg2, {"나스닥": 20200.0}, "23:30", "2026-07-24")
+    r2 = alpha.session_update(
+        st, "US", agg2, {"나스닥": 20200.0, "S&P500": 6030.0},
+        "23:30", "2026-07-24")
     assert abs(r2["acct"] - 2.0) < 1e-9 and abs(r2["idx"]["나스닥"] - 1.0) < 1e-9
+    assert abs(r2["idx"]["S&P500"] - .5) < 1e-9
     # 장중 신규 매수(B에 cost 500, pl 0 추가) → 계좌%가 크게 안 튐(분모만 증가)
     agg3 = {"US": {"A": {"cost": 1000.0, "pl": 20.0}, "B": {"cost": 500.0, "pl": 0.0}},
             "KR": agg1["KR"]}
-    r3 = alpha.session_update(st, "US", agg3, {"나스닥": 20200.0}, "23:35", "2026-07-24")
+    r3 = alpha.session_update(
+        st, "US", agg3, {"나스닥": 20200.0, "S&P500": 6030.0},
+        "23:35", "2026-07-24")
     assert abs(r3["acct"] - (20.0 / 1500.0 * 100)) < 1e-9      # 왜곡 없음(희석만)
     assert len(st["day"]["US"]["series"]) == 3
-    print("[PASS] 세션 기준점 + 지수/계좌% + 플로우 중립")
+    rich = st["day"]["US"]["series_v2"][-1]
+    assert rich["A"] == 2.0 and rich["B"] == 0.0
+    assert set(rich["indices"]) == {"나스닥", "S&P500"}
+    print("[PASS] 세션 기준점 + A/B·복수지수 + 플로우 중립")
 
 
 def test_capture_stats():
@@ -68,8 +78,33 @@ def test_state_roundtrip():
     with tempfile.TemporaryDirectory() as tmp:
         alpha.STATE_PATH = os.path.join(tmp, "alpha_state.json")
         alpha._save({"x": 1})
-        assert alpha._load() == {"x": 1}
+        loaded = alpha._load()
+        assert loaded["x"] == 1 and loaded.get("updated_at")
     print("[PASS] 상태 저장/복원")
+
+
+def test_dashboard_snapshot_is_percentage_only():
+    st = {
+        "updated_at": "2026-07-24T00:00:00+00:00",
+        "day": {"US": {
+            "date": "2026-07-24",
+            "series_v2": [{
+                "t": "23:00", "account": 1.2, "A": 1.5, "B": -.2,
+                "indices": {"나스닥": .8, "S&P500": .6},
+            }],
+        }},
+        "days": [{
+            "d": "2026-07-23", "mkt": "KR", "acct": .5, "idx": .2,
+            "a": .4, "b": .7, "indices": {"코스피": .2, "코스닥": .3},
+        }],
+    }
+    payload = alpha.dashboard_snapshot(st)
+    assert payload["markets"]["US"]["series"][0]["A"] == 1.5
+    assert payload["markets"]["US"]["indices"] == ["나스닥", "S&P500"]
+    assert payload["markets"]["KR"]["indices"] == ["코스피", "코스닥"]
+    assert payload["days"][0]["indices"]["코스닥"] == .3
+    assert "positions" not in payload and "amount" not in payload
+    print("[PASS] 개인 웹 성과 스냅샷 — A/B·4대 지수·퍼센트 전용")
 
 
 def main():
@@ -77,6 +112,7 @@ def main():
     test_session_and_flow_neutral()
     test_capture_stats()
     test_state_roundtrip()
+    test_dashboard_snapshot_is_percentage_only()
     print("\n알파 추적 검증 통과 — 집계·세션기준·캡처통계.")
 
 

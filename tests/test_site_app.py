@@ -25,6 +25,7 @@ def test_static_publish_is_additive():
         assert (target / "index.html").is_file()
         assert (target / "app.css").is_file()
         assert (target / "app.js").is_file()
+        assert (target / "og-v2.png").is_file()
         assert api.read_text(encoding="utf-8") == '{"contract":"keep"}'
         assert index.read_text(encoding="utf-8") == "legacy-site"
 
@@ -35,6 +36,8 @@ def test_public_app_uses_only_allowed_read_sources():
     assert "../api/paper_auto.json" in js
     assert "../api/track.json" in js
     assert "../api/portfolio.json" in js
+    assert "../api/quotes.json" in js
+    assert "../api/performance.json" in js
     for forbidden in ("KIS_LIVE_APPKEY", "APPSECRET", "/order", "place_buy",
                       "place_sell", "client_secret"):
         assert forbidden not in js
@@ -57,7 +60,10 @@ def test_portfolio_snapshot_deduplicates_exchange_queries():
             return kr
         return us if excg in ("NASD", "NYSE") else []
 
-    with mock.patch("bot.kis.positions_detail", side_effect=positions), \
+    with tempfile.TemporaryDirectory() as td, \
+            mock.patch.dict("os.environ", {
+                "KIS_MARKET_CACHE_PATH": str(Path(td) / "market.json")}), \
+            mock.patch("bot.kis.positions_detail", side_effect=positions), \
             mock.patch.object(portfolio_web, "_position_meta",
                               return_value={"entry": 0.0, "stop": 0.0, "sleeve": "A"}):
         payload = portfolio_web.portfolio_snapshot()
@@ -70,7 +76,7 @@ def test_portfolio_snapshot_deduplicates_exchange_queries():
     assert "APPSECRET" not in encoded and "CANO" not in encoded
 
 
-def test_chart_is_display_only_existing_close_series():
+def test_chart_is_display_only_existing_ohlcv_series():
     import pandas as pd
     frame = pd.DataFrame(
         {"Open": [9, 10], "High": [11, 12], "Low": [8, 9],
@@ -80,10 +86,14 @@ def test_chart_is_display_only_existing_close_series():
         payload = portfolio_web.chart_snapshot("AAPL", 180)
     assert payload["source"] == "existing-scanner-cache"
     assert payload["points"] == [
-        {"date": "2026-07-23", "close": 10.0},
-        {"date": "2026-07-24", "close": 11.5},
+        {"date": "2026-07-23", "open": 9.0, "high": 11.0, "low": 8.0,
+         "close": 10.0, "volume": 100, "ma20": None, "ma60": None,
+         "ma120": None},
+        {"date": "2026-07-24", "open": 10.0, "high": 12.0, "low": 9.0,
+         "close": 11.5, "volume": 120, "ma20": None, "ma60": None,
+         "ma120": None},
     ]
-    assert set(payload["points"][0]) == {"date", "close"}
+    assert payload["interval"] == "1d" and payload["read_only"] is True
 
 
 def test_oracle_service_is_loopback_read_only_dashboard():
@@ -103,7 +113,8 @@ def test_oracle_service_is_loopback_read_only_dashboard():
 
 def test_portfolio_snapshot_cache_avoids_kis_poll_bursts():
     payload = {"positions": [], "refresh_seconds": 60}
-    with mock.patch.object(portfolio_web, "_portfolio_cache", None), \
+    with mock.patch("bot.market_cache.portfolio", return_value=None), \
+            mock.patch.object(portfolio_web, "_portfolio_cache", None), \
             mock.patch.object(portfolio_web, "portfolio_snapshot",
                               return_value=payload) as snapshot:
         assert portfolio_web.cached_portfolio_snapshot() is payload
@@ -111,14 +122,45 @@ def test_portfolio_snapshot_cache_avoids_kis_poll_bursts():
     assert snapshot.call_count == 1
 
 
+def test_shared_cache_serves_fast_without_kis_balance_calls():
+    shared = {
+        "generated_at": "2026-07-24T00:00:00+00:00",
+        "positions": [], "partial": False, "failed_markets": [],
+        "read_only": True, "source": "sentinel_shared_cache",
+        "price_age_seconds": 3.2,
+    }
+    with mock.patch("bot.market_cache.portfolio", return_value=shared), \
+            mock.patch.object(portfolio_web, "portfolio_snapshot") as direct:
+        payload = portfolio_web.cached_portfolio_snapshot()
+    assert payload["source"] == "sentinel_shared_cache"
+    assert payload["refresh_seconds"] == portfolio_web.PORTFOLIO_BROWSER_REFRESH_SECONDS
+    direct.assert_not_called()
+
+
+def test_performance_snapshot_contains_percentages_only():
+    fixture = {
+        "version": 2, "generated_at": "2026-07-24T00:00:00+00:00",
+        "sample_seconds": 300, "markets": {}, "days": [],
+        "basis": "KIS 봇 보유 평가손익 기준",
+    }
+    with mock.patch("bot.alpha.dashboard_snapshot", return_value=fixture):
+        payload = portfolio_web.performance_snapshot()
+    encoded = json.dumps(payload)
+    assert payload["read_only"] is True
+    for forbidden in ("CANO", "APPSECRET", "qty", "eval_amt", "buy_amt"):
+        assert forbidden not in encoded
+
+
 if __name__ == "__main__":
     tests = [
         test_static_publish_is_additive,
         test_public_app_uses_only_allowed_read_sources,
         test_portfolio_snapshot_deduplicates_exchange_queries,
-        test_chart_is_display_only_existing_close_series,
+        test_chart_is_display_only_existing_ohlcv_series,
         test_oracle_service_is_loopback_read_only_dashboard,
         test_portfolio_snapshot_cache_avoids_kis_poll_bursts,
+        test_shared_cache_serves_fast_without_kis_balance_calls,
+        test_performance_snapshot_contains_percentages_only,
     ]
     for test in tests:
         test()
