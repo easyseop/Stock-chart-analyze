@@ -278,6 +278,12 @@ def _cycle() -> None:
             mark = "✓ 전송" if r.get("ok") else "·"
             print(f"  [B] {mark} {r['code']} [{r['gate']}] {r.get('why', '')}",
                   flush=True)
+    # 성과 vs 지수 추적(알파) — 실패해도 매매에 영향 0(무해).
+    try:
+        from bot import alpha
+        alpha.tick()
+    except Exception as e:
+        print(f"[알파 추적 오류] {type(e).__name__}: {e}", flush=True)
 
 
 def main() -> int:

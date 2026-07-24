@@ -94,22 +94,45 @@ def send(text: str, *, critical: bool = False) -> bool:
         _ntfy(text)          # NTFY_TOPIC 설정 시에만 발행(미설정=무동작·무네트워크)
     token = os.environ.get("TELEGRAM_BOT_TOKEN")
     chat_id = os.environ.get("TELEGRAM_CHAT_ID")
-    if not token or not chat_id:
-        print("[드라이런 — TELEGRAM_BOT_TOKEN/CHAT_ID 미설정]\n" + text + "\n")
-        return False
-    url = f"https://api.telegram.org/bot{token}/sendMessage"
-    payload = json.dumps({
+    return _tg_call("sendMessage", {
         "chat_id": chat_id, "text": text,
         "parse_mode": "HTML", "disable_web_page_preview": True,
-    }).encode("utf-8")
+    }) if token and chat_id else _dry(text)
+
+
+def send_photo(photo_url: str, caption: str = "") -> bool:
+    """사진 전송(그래프 등) — photo_url을 텔레그램이 직접 fetch. 실패=False.
+
+    호출부는 False면 send(텍스트)로 폴백할 것(그래프 없이도 정보는 전달)."""
+    _ensure_env()
+    token = os.environ.get("TELEGRAM_BOT_TOKEN")
+    chat_id = os.environ.get("TELEGRAM_CHAT_ID")
+    if not token or not chat_id:
+        return _dry("[사진] " + caption)
+    return _tg_call("sendPhoto", {
+        "chat_id": chat_id, "photo": photo_url,
+        "caption": caption, "parse_mode": "HTML",
+    })
+
+
+def _dry(text: str) -> bool:
+    print("[드라이런 — TELEGRAM_BOT_TOKEN/CHAT_ID 미설정]\n" + text + "\n")
+    return False
+
+
+def _tg_call(method: str, payload: dict) -> bool:
+    """텔레그램 API 공통 호출(sendMessage/sendPhoto). 어떤 실패도 밖으로 안 던짐."""
+    token = os.environ.get("TELEGRAM_BOT_TOKEN")
+    url = f"https://api.telegram.org/bot{token}/{method}"
     req = urllib.request.Request(
-        url, data=payload, headers={"Content-Type": "application/json"})
+        url, data=json.dumps(payload).encode("utf-8"),
+        headers={"Content-Type": "application/json"})
     try:
-        with urllib.request.urlopen(req, timeout=15) as resp:
+        with urllib.request.urlopen(req, timeout=20) as resp:
             ok = json.load(resp).get("ok", False)
             if not ok:
-                print(f"[텔레그램 전송 실패] {resp.status}")
+                print(f"[텔레그램 {method} 실패] {resp.status}")
             return ok
     except Exception as e:      # URLError 외 타임아웃/JSON오류도 흡수(감사 수정):
-        print(f"[텔레그램 전송 오류] {e}")   # 응답읽기 타임아웃이 밖으로 새 호출부
+        print(f"[텔레그램 {method} 오류] {e}")   # 응답읽기 타임아웃이 밖으로 새 호출부
         return False                          # (파수꾼 등)의 사이클을 중단시키지 않게
