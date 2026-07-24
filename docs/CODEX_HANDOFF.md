@@ -93,11 +93,12 @@ git diff --check
 
 ## 4. CI 테스트 격리 보정
 
-PR #72에서 발견된 `tests/test_fastsafe.py`의 테스트 격리 누락을 보정했다.
+PR #72에서 발견된 자동매매 회귀 테스트의 운영 상태 격리 누락을 보정했다.
 
 GitHub Actions에서는 `GITHUB_ACTIONS=true`이므로 테스트가 실제 `state` 브랜치의
-`autopaper.snapshot.json`을 복구해 테스트용 빈 계좌를 오염시킬 수 있었다. 각
-테스트의 `_fresh()` 초기화에서 다음과 같이 운영 스냅샷 복구를 끈다.
+`autopaper.snapshot.json`을 복구해 테스트용 빈 계좌를 오염시킬 수 있었다.
+`fastsafe`, `killswitch`, `phase0`, `pos_cap`, `trail` 테스트의 `_fresh()`
+초기화에서 다음과 같이 운영 스냅샷 복구를 끈다.
 
 ```python
 def _fresh(tmp: str) -> None:
