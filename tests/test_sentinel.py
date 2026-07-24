@@ -92,15 +92,16 @@ def main() -> int:
         bk = FakeBroker({"TT": 150.0})          # 손절 위 — 매도 없음
         st = {}
         sn.check_once(bk, st)                   # 신선한 피드로 스냅샷 확보
-        sn._fetch_positions = lambda: ([], 999)  # 피드가 낡음(빈 목록 무시돼야)
+        sn._fetch_positions = lambda: ([], 999)  # 피드가 낡음(999분 > 경보임계 60)
+        sn._market_open = lambda ccy: True       # 장중 고정(경보는 장중에만)
         bk.prices["TT"] = 98.0                   # 그 사이 급락
         sn.check_once(bk, st)
         if len(bk.sells) != 1:
             fails.append("stale 피드에서 보호 실패 — 기존 손절선 미집행")
-        elif not any("낡음" in n for n in NOTES):
+        elif not any("정체" in n for n in NOTES):
             fails.append("stale 경보 미발송")
         else:
-            print("  [PASS] 피드 stale에도 기존 손절선으로 보호 + 경보 1회")
+            print("  [PASS] 피드 stale에도 기존 손절선으로 보호 + 정체 경보 1회")
 
     # ⑦ 트레일로 손절선이 바뀌어도 같은 포지션엔 재발화 없음(멱등키=포지션 정체성)
     with tempfile.TemporaryDirectory() as tmp:
