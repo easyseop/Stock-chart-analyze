@@ -61,19 +61,54 @@ def _resolve_acks() -> list[dict]:
             return (u.get("market") == "KR"
                     or kis.market_of_symbol(u.get("symbol", "")) == "KR")
 
+        # 1순위는 주문·체결내역(ODNO) — 실제 체결가·부분체결을 얻을 수 있다.
+        fill_rows = []
+        if any(_is_kr(o) for o in aged):
+            fill_rows += kis_reconcile.normalize_domestic_rows(
+                kis.domestic_open_orders(), kis.domestic_fills())
+        if any(not _is_kr(o) for o in aged):
+            need = {o.get("excg") for o in aged if not _is_kr(o) and o.get("excg")} \
+                   or {"NASD", "NYSE", "AMEX"}
+            for ex in sorted(need):
+                fill_rows += kis_reconcile.normalize_rows(
+                    kis.open_orders(excg=ex), kis.fills(excg=ex))
+        rs = kis_reconcile.resolve_acks_from_rows(fill_rows)
+
+        # 체결내역이 아직 안 보이는 모의/지연 구간은 기존 잔고 delta로 보수적 확정.
+        aged = [o for o in ledger.open_orders()
+                if o.get("state") in ("submitted", "ack")
+                and (o.get("side") or "").upper() in ("BUY", "SELL")
+                and time.time() - float(o.get("submitted_at") or 0)
+                >= kis_reconcile.ACK_AGE_MIN_S]
         hmaps: dict[str, dict | None] = {}
+        fill_prices: dict[str, dict[str, float]] = {}
         if any(_is_kr(o) for o in aged):
             hmaps["KR"] = kis.holdings("KR")
+            if kis.enabled():
+                rows = kis.positions_detail("KR")
+                if rows is not None:
+                    fill_prices["KR"] = {r["code"]: float(r.get("avg") or 0)
+                                         for r in rows if float(r.get("avg") or 0) > 0}
         if any(not _is_kr(o) for o in aged):
             merged: dict | None = {}
+            avgs: dict[str, float] | None = {}
             for ex in ("NASD", "NYSE", "AMEX"):
                 h = kis.holdings("US", excg=ex)
                 if h is None:                      # 하나라도 실패 = US 전체 신뢰 불가
                     merged = None
                     break
                 merged.update(h)
+                if kis.enabled() and avgs is not None:
+                    rows = kis.positions_detail("US", excg=ex)
+                    if rows is None:
+                        avgs = None
+                    else:
+                        avgs.update({r["code"]: float(r.get("avg") or 0)
+                                     for r in rows if float(r.get("avg") or 0) > 0})
             hmaps["US"] = merged
-        rs = kis_reconcile.resolve_acks_by_balance(hmaps)
+            if avgs is not None:
+                fill_prices["US"] = avgs
+        rs += kis_reconcile.resolve_acks_by_balance(hmaps, fill_prices=fill_prices)
         for r in rs:
             # 매도 full-fill 확정 → 진입 손절선 기록 정리(보호 대상 아님을 명시)
             if r.get("side") == "SELL" and int(r.get("residual") or 0) == 0:

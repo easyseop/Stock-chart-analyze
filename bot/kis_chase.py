@@ -32,10 +32,10 @@ from dataclasses import dataclass, field
 class ChaseConfig:
     base_slippage_bps: int = 30      # 1차 발주: 현재가 −30bp
     step_bps: int = 40               # 재발주마다 40bp씩 공격적으로
-    max_slippage_bps: int = 200      # floor: ref −2% 아래로는 절대 안 팖
+    max_slippage_bps: int = 200      # 기본 floor: ref −2%(운영 배선은 −3%)
     max_chase: int = 3               # 발주 시도 총 횟수(1차 포함)
-    repost_after_s: float = 20.0     # 미체결 이 초 경과 시 취소→재발주
-    max_time_to_exit_s: float = 120.0  # 전체 손절 SLA — 초과 시 사람 호출
+    repost_after_s: float = 20.0     # 기본값(운영 배선은 60초)
+    max_time_to_exit_s: float = 120.0
 
 
 TERMINAL = {"done", "exhausted", "timeout", "manual_lock"}
@@ -108,6 +108,27 @@ class Chase:
             self.status = "done"
             return self.status
 
+        # 취소 접수와 취소 확정은 다르다. 운영 배선은 nccs에서 원주문이 사라진 것을
+        # 확인한 뒤에만 current를 비우고 잔여 재주문으로 넘어간다.
+        if self.current and self.current.get("cancel_pending"):
+            confirm = self.deps.get("cancel_confirmed")
+            try:
+                done = bool(confirm(self.current)) if confirm else True
+            except Exception:
+                done = False
+            if not done:
+                return self.status
+            mark = self.deps.get("mark_cancelled")
+            if mark:
+                mark(self.current)
+            self.current = None
+            # 취소 확인 조회가 취소 중 추가 체결을 원장에 반영했을 수 있다. 재주문
+            # 수량을 계산하기 전에 반드시 최신 누적 체결을 다시 읽는다.
+            filled = int(self.deps["filled_total"]())
+            if filled >= self.qty:
+                self.status = "done"
+                return self.status
+
         # 1) 전체 SLA
         if now - self.t0 > self.cfg.max_time_to_exit_s:
             self.status = "timeout"
@@ -129,10 +150,12 @@ class Chase:
             act = r.get("act")
             if act == "ack":
                 self.attempts += 1
+                placed_qty = min(self.qty - filled,
+                                 max(0, int(r.get("qty", self.qty - filled))))
                 self.current = {"key": key, "odno": r.get("odno", ""),
                                 "orgno": r.get("orgno", ""),   # 국내 취소 필수값
                                 "price": px, "placed_at": now,
-                                "qty": self.qty - filled}
+                                "qty": placed_qty}
             elif act == "unknown":
                 self.status = "manual_lock"       # 원장이 종목 잠금 — 자동 재개 금지
                 return self.status
@@ -149,7 +172,10 @@ class Chase:
                                     orgno=self.current.get("orgno", ""))
             act = c.get("act")
             if act == "canceled":
-                self.current = None               # 다음 step에서 더 공격적 재발주
+                if self.deps.get("cancel_confirmed"):
+                    self.current["cancel_pending"] = True
+                else:
+                    self.current = None           # 테스트/확정형 어댑터는 기존 의미 유지
             elif act == "unknown":
                 self.status = "manual_lock"       # 원주문 생사 불명 — 이중매도 차단
                 return self.status

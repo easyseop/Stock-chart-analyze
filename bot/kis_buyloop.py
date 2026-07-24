@@ -26,7 +26,7 @@ import os
 import sys
 import urllib.request
 
-from bot import kis, kis_buy, kis_positions, settings
+from bot import kis, kis_buy, kis_pending, kis_positions, settings
 
 _US_EXCGS = ("NASD", "NYSE", "AMEX")   # 보유 병합용 — NYSE/AMEX 보유 누락 방지
 _KST = datetime.timezone(datetime.timedelta(hours=9))
@@ -88,14 +88,15 @@ def _broker_state(fx: float):
     fold = ledger._fold()
     inflight: dict[str, tuple[float, str]] = {}
     for k, v in fold.items():
-        if (v.get("side") or "").upper() != "BUY" or v.get("state") not in ledger._INFLIGHT:
+        if ((v.get("side") or "").upper() != "BUY"
+                or v.get("state") not in (ledger._INFLIGHT | {"planned"})):
             continue
         s = str(v.get("symbol") or "").upper()
         if not s or s in held:
             continue
         try:
             q = int(v.get("intended") or 0)
-            px = float(v.get("price") or 0)
+            px = float(v.get("price") or v.get("limit") or 0)
             mk = v.get("market") or kis.market_of_symbol(s)
             cost = q * px * (1.0 if mk == "KR" else fx)
         except (TypeError, ValueError):
@@ -209,33 +210,63 @@ def run_once(signals: list[dict], *, fx: float | None = None,
         if not cur or cur <= 0:
             results.append({"code": code, "gate": "quote", "why": "현재가 조회 실패"}); continue
         entry = float(s["entry"])
-        if entry <= 0 or abs(cur - entry) / entry > settings.ENTRY_TOLERANCE:
+        tactic = s.get("tactic") or {}
+        mode = (str(tactic.get("mode") or "full") if isinstance(tactic, dict)
+                else str(tactic or "full"))
+        try:
+            pb = float(tactic.get("pb_price") or 0) if isinstance(tactic, dict) else 0.0
+        except (TypeError, ValueError):
+            pb = 0.0
+        stop = float(s["stop"])
+        if entry <= 0:
+            results.append({"code": code, "gate": "input", "why": "진입가 무효"}); continue
+        if mode in ("full", "half") and abs(cur - entry) / entry > settings.ENTRY_TOLERANCE:
             results.append({"code": code, "gate": "tolerance",
                             "why": f"가격 괴리 {cur} vs 진입 {entry}"}); continue
-        per_share = entry - float(s["stop"])
+        if mode in ("half", "pullback") and not (stop < pb < entry):
+            results.append({"code": code, "gate": "tactic",
+                            "why": f"{mode} 눌림가 무효({pb})"}); continue
+        order_px = pb if mode == "pullback" else cur
+        per_share = order_px - stop
         if per_share <= 0:
             results.append({"code": code, "gate": "input", "why": "손절폭 무효"}); continue
 
         pos_key = f"{prefix}{s.get('id') or code}"
-        d = kis_buy.execute_entry(pos_key, code, price_usd=cur,
+        opened = settings.today_kst()
+        tgt = None
+        try:
+            tgt = float(s.get("target") or 0) or None
+        except (TypeError, ValueError):
+            pass
+        order_meta = {"pos_key": pos_key, "sleeve": sleeve, "stop": stop,
+                      "target": tgt, "name": s.get("name", ""), "opened": opened,
+                      "tactic": mode, "pending": mode == "pullback"}
+        d = kis_buy.execute_entry(pos_key, code, price_usd=order_px,
                                   per_share_risk_usd=per_share, krw_per_usd=fx,
                                   excg=excg, market=market, reason=reason,
                                   open_positions=n_open, open_cost_krw=open_cost,
-                                  hldg_before=0, seed_krw=seed_krw)
+                                  hldg_before=0, seed_krw=seed_krw,
+                                  sleeve=sleeve,
+                                  limit_price=pb if mode == "pullback" else None,
+                                  qty_fraction=0.5 if mode == "half" else 1.0,
+                                  order_meta=order_meta)
         if d.ok:
-            # 파수꾼이 feed에 없어도 이 손절선으로 보호(브로커-진실 fallback) + 슬리브 태그.
-            tgt = None
-            try:                                   # B 청산용 목표가(VAH) 보존
-                tgt = float(s.get("target") or 0) or None
-            except (TypeError, ValueError):
-                pass
-            kis_positions.record(code, stop=float(s["stop"]), ccy=ccy,
-                                 entry=entry, qty=d.qty, name=s.get("name", ""),
-                                 opened=settings.today_kst(), sleeve=sleeve,
-                                 target=tgt)
-            held[code] = d.qty
+            # ack는 체결이 아니다. 보호 포지션·원가장부는 대사가 실체결을 확인한 뒤
+            # kis_accounting이 만든다. half의 잔여만 원장에 영속 계획으로 예약한다.
+            pending_qty = 0
+            if mode == "half":
+                pending_qty = max(0, int(d.planned_qty or d.qty) - int(d.qty))
+                if pending_qty > 0:
+                    kis_pending.create_half_plan(
+                        pos_key + ":pb", code, pending_qty, parent_key=pos_key,
+                        limit=pb, stop=stop, market=market, excg=excg, fx=fx,
+                        sleeve=sleeve, meta=order_meta)
+            reserve_qty = int(d.planned_qty or d.qty)
+            held[code] = reserve_qty
             n_open += 1
-            open_cost += d.qty * cur * (1.0 if market == "KR" else fx)
+            reserve_px = ((d.qty * order_px + pending_qty * pb) / reserve_qty
+                          if reserve_qty > 0 else order_px)
+            open_cost += reserve_qty * reserve_px * (1.0 if market == "KR" else fx)
             if sleeve == "B":
                 b_codes.add(code)
             try:
@@ -243,12 +274,15 @@ def run_once(signals: list[dict], *, fx: float | None = None,
                 u = "원" if market == "KR" else "$"
                 tag = " (매물대B)" if sleeve == "B" else ""
                 notify.send(
-                    f"🟢 <b>KIS 매수{tag}</b> — {s.get('name', code)}({code})\n"
-                    f"  {d.qty}주 @ {cur}{u} · 손절 {s['stop']}{u}", critical=True)
+                    f"🟢 <b>KIS 매수 주문 접수{tag}</b> — {s.get('name', code)}({code})\n"
+                    f"  전술 {mode} · 1차 {d.qty}주"
+                    + (f" · 눌림대기 {pending_qty}주 @ {pb}{u}" if pending_qty else "")
+                    + f" · 손절 {s['stop']}{u}", critical=True)
             except Exception:
                 pass
         results.append({"code": code, "gate": d.gate, "ok": d.ok,
-                        "qty": d.qty, "why": d.why})
+                        "qty": d.qty, "planned_qty": d.planned_qty,
+                        "tactic": mode, "why": d.why})
     return results
 
 
@@ -292,6 +326,12 @@ def _cycle() -> None:
         kis_boot.boot_reconcile()
     except Exception as e:
         print(f"[부팅 대사 오류] {type(e).__name__}: {e}", flush=True)
+    try:
+        for p in kis_pending.process():
+            print(f"  [대기] {p.get('key')} {p.get('act')} {p.get('why','')}",
+                  flush=True)
+    except Exception as e:
+        print(f"[대기 주문 오류] {type(e).__name__}: {e}", flush=True)
     sigs = _fetch_signals()
     print(f"신호 {len(sigs)}건 로드 · 'now' {len(_now_signals(sigs))}건 · "
           f"'shelf' {len(_shelf_cands(sigs))}건", flush=True)
