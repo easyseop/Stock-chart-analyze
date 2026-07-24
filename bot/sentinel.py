@@ -48,6 +48,9 @@ FEED_URLS = (              # 포지션/손절선 소스 — state 브랜치 우�
     "https://easyseop.github.io/Stock-chart-analyze/api/paper_auto.json",
 )
 FEED_STALE_MIN = 30        # 피드가 이보다 낡으면 '보호 모드'(기존 손절선만 유지)
+FEED_STALE_ALERT_MIN = 60  # 경보는 이보다 더 오래 정체일 때만(공회전 30~40분 gap은
+                           #   정상 — 브레인은 15분마다 확인하나 새 데이터 없으면 heartbeat
+                           #   미갱신. 60분+ = 진짜 빌드 장애로 간주. 실측 2026-07-24)
 HARD_BUFFER = 0.01         # 하드 손절 = 손절가 −1% 이탈 시 즉시
 SENT_PATH = os.path.join(os.path.dirname(__file__), "sentinel_sent.json")
 LIVE = os.environ.get("SENTINEL_LIVE") == "1"      # 명시해야만 실주문
@@ -272,15 +275,18 @@ def check_once(broker, state: dict) -> None:
     """한 사이클: 피드 → 장중 보유 종목 시세 → 하드/소프트 손절 판단."""
     _reconcile_open(broker)                    # 먼저 UNKNOWN 대사(잠금 해제 기회)
     positions, age = _fetch_positions()
-    stale = age is not None and age > FEED_STALE_MIN
-    # 경보는 '장중 + 최소 3시간 간격'에서만 — 장외엔 빌드가 안 돌아 피드 낡음이
-    #   정상이고(정적 손절선으로 보호는 계속), 반복 스팸만 됐다(실측 2026-07-24:
-    #   밤새 시간마다 발생). 손절 보호 로직 자체는 아래 그대로 — 경보만 조용히.
+    stale = age is not None and age > FEED_STALE_MIN                 # 보호모드 진입(정적손절)
+    alert_stale = age is not None and age > FEED_STALE_ALERT_MIN     # 경보는 더 긴 창만
+    # 경보 = '장중 + 진짜 정체(60분+)'일 때만 1회. 장외엔 빌드가 안 돌아 정체가
+    #   정상 → 침묵. 공회전으로 인한 30~40분 gap도 정상 → 무시. 60분+ = 실제 빌드
+    #   장애 신호. 손절 보호(정적손절선)는 항상 계속되므로 P0 아닌 일반 알림.
     market_live = _market_open("USD") or _market_open("KRW")
-    if stale and market_live and (time.time() - state.get("_stale_last", 0)) > 3 * 3600:
-        state["_stale_last"] = time.time()
-        _notify(f"⚠️ 파수꾼: 포지션 피드 {age:.0f}분 낡음 — 알고 있던 "
-                f"손절선으로 보호 계속(신규 판단은 보류)", critical=True)
+    if alert_stale and market_live and not state.get("_stale_warned"):
+        state["_stale_warned"] = True
+        _notify(f"⚠️ 파수꾼: 포지션 피드 {age:.0f}분 정체(빌드 지연 추정) — "
+                f"손절 보호는 계속(정적 손절선)")
+    if not alert_stale or not market_live:
+        state["_stale_warned"] = False          # 신선해지거나 장 닫히면 래치 해제
     if not stale:
         state["positions"] = {p["code"]: p for p in positions}  # 최신 스냅샷 유지
     feed = state.get("positions", {})
