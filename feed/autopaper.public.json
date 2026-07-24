@@ -2,8 +2,8 @@
  "updated": "2026-07-24",
  "start": 100000000,
  "cash": 41977405,
- "equity": 98264436,
- "ret_pct": -1.74,
+ "equity": 98199636,
+ "ret_pct": -1.8,
  "positions": [
   {
    "code": "MRSH",
@@ -33,7 +33,7 @@
    "opened": "2026-07-07",
    "pl_krw": -21037,
    "pl_pct": -1.12,
-   "price_age_min": 7.6
+   "price_age_min": 7.9
   },
   {
    "code": "068270",
@@ -41,13 +41,13 @@
    "ccy": "KRW",
    "q": 54,
    "avg": 175348.4128,
-   "price": 176400.0,
+   "price": 175200.0,
    "stop": 157651.1713,
    "target": 212997.6574,
    "half_done": false,
    "opened": "2026-07-07",
-   "pl_krw": 56786,
-   "pl_pct": 0.6,
+   "pl_krw": -8014,
+   "pl_pct": -0.08,
    "price_age_min": 6.6
   },
   {
@@ -138,7 +138,7 @@
    "opened": "2026-07-22",
    "pl_krw": -96523,
    "pl_pct": -1.56,
-   "price_age_min": 9.3
+   "price_age_min": 9.8
   },
   {
    "code": "SHOP",
@@ -507,7 +507,7 @@
   },
   {
    "d": "2026-07-24",
-   "v": 98264436
+   "v": 98199636
   }
  ],
  "log": [
