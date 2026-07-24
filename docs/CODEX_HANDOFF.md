@@ -10,15 +10,17 @@
 ## 1. 현재 Git 상태
 
 - 기본 브랜치: `claude/happy-gauss-cwoq21`
-- 현재 작업 브랜치: `codex/oracle-portfolio-service`
+- 현재 후속 작업 브랜치: `codex/silent-push-deploy`
 - 통합 PR: [#72 오라클 KIS 대시보드와 실매매 안정성 보강](https://github.com/easyseop/Stock-chart-analyze/pull/72)
+- PR #72 병합 커밋: `b88eee1`
+- 중복 Draft PR #70: 통합 확인 후 닫음
 - 현재 브랜치 주요 커밋:
   - `be0dd7a` — Oracle 보유자산 서비스와 조용한 알림 정책
   - `f2dc1ed` — 주문·체결·대사·일일손실 안전장치 통합
   - `bfc8997` — 장중 폴링 주기와 지표 합의 게이트 보강
 
-이 브랜치에는 과거 `codex/trading-safety-large-5`의 안전성 개선 커밋이 이미
-통합돼 있다. PR #72가 병합되면 기존 Draft PR #70은 중복이므로 닫아도 된다.
+기본 브랜치에는 과거 `codex/trading-safety-large-5`의 안전성 개선 커밋과
+Oracle 자산 대시보드가 PR #72를 통해 통합돼 있다.
 
 ## 2. 완료된 개발
 
@@ -111,7 +113,21 @@ def _fresh(tmp: str) -> None:
 이 수정은 테스트에서만 운영 스냅샷 복구를 끄며 실제 자동매매 복구 로직은 변경하지
 않는다. 로컬 검증도 `GITHUB_ACTIONS=true` 조건으로 실행해 CI 환경을 재현한다.
 
-## 5. 다른 노트북에서 이어가기
+## 5. 코드 push 배포와 매매 분리
+
+기본 브랜치에 PR을 병합하면 `daily-scan`의 push 실행이 사이트를 재배포한다. 이전에는
+`MODE=none`이어도 스크리너 생성 과정에서 모의계좌를 갱신하고 텔레그램 시크릿을
+전달해 코드 배포만으로 모의 체결 알림이 발생할 수 있었다.
+
+후속 보정에서는 push 실행에 `AUTOPAPER_READ_ONLY=1`을 적용한다.
+
+- 모의계좌 신규진입·청산·대기주문을 실행하지 않음
+- 매매 분산 락과 `state` 브랜치 백업에 접근하지 않음
+- 텔레그램·ntfy 자격증명을 스크리너에 전달하지 않음
+- 공개 화면을 위한 읽기 전용 `paper_auto.json` 스냅샷만 생성
+- 정기·수동 데이터/매매 실행과 빌드·배포 실패 경보는 기존대로 유지
+
+## 6. 다른 노트북에서 이어가기
 
 GitHub CLI 인증 후 아래 순서로 시작한다.
 
@@ -120,8 +136,8 @@ gh auth status
 git clone https://github.com/easyseop/Stock-chart-analyze.git
 cd Stock-chart-analyze
 git fetch --all --prune
-git switch codex/oracle-portfolio-service
-git pull --ff-only
+git switch claude/happy-gauss-cwoq21
+git pull --ff-only origin claude/happy-gauss-cwoq21
 python3 -m pip install -r requirements.txt
 ```
 
@@ -129,8 +145,8 @@ python3 -m pip install -r requirements.txt
 
 ```bash
 git status --short --branch
-gh pr view 72
-gh pr checks 72
+gh pr list
+gh run list --limit 10
 ```
 
 다른 노트북의 Codex에 전달할 문장:
@@ -139,7 +155,7 @@ gh pr checks 72
 > 이어서 진행해줘. 완료 단위마다 별도 `codex/` 브랜치에 커밋·푸시하고 이
 > 인수인계서도 갱신해줘.
 
-## 6. Oracle 배포 미완료
+## 7. Oracle 배포 미완료
 
 Oracle 서버의 SSH 주소와 Mac에 저장된 개인키 경로를 아직 확인하지 못해 서버 설치는
 진행되지 않았다. 개인키 내용이나 비밀번호를 채팅·Git에 붙이지 말고 다음 정보만
@@ -188,7 +204,7 @@ ssh -N -L 8765:127.0.0.1:8765 ubuntu@오라클주소
 터널을 유지한 상태로 <http://127.0.0.1:8765/app/>에 접속한다. OCI 보안 목록이나
 Ubuntu 방화벽에서 8765 포트를 공개하지 않는다.
 
-## 7. 공개 사이트 접속 참고
+## 8. 공개 사이트 접속 참고
 
 GitHub API 기준 Pages는 public이고 최근 배포는 성공했다. 다만 2026-07-24 현재
 작업 중인 Mac 네트워크에서는 `easyseop.github.io:443` 연결이 IPv4/IPv6 모두
@@ -196,11 +212,10 @@ GitHub API 기준 Pages는 public이고 최근 배포는 성공했다. 다만 20
 확인됐다. 다른 네트워크/모바일 핫스팟으로 확인하거나, 개인 KIS 화면은 Oracle SSH
 터널 경로를 사용한다.
 
-## 8. 남은 순서
+## 9. 남은 순서
 
-1. PR #72 전체 CI 통과 확인 후 병합.
-2. 중복 PR #70 닫기.
-3. GitHub Pages 새 배포와 `/app/` 스모크 확인.
-4. Oracle SSH 정보 확인 후 `portfolio-web.service` 설치.
-5. KIS 모의계좌 실제 보유종목 수·평단·현재가·손익 15초 갱신 검증.
-6. 작업 완료 단위마다 이 문서 갱신 → 커밋 → 현재 브랜치 푸시.
+1. 코드 push 배포-매매 분리 후속 PR 전체 CI 통과 후 병합.
+2. GitHub Pages 새 배포와 `/app/` 스모크 확인.
+3. Oracle SSH 정보 확인 후 `portfolio-web.service` 설치.
+4. KIS 모의계좌 실제 보유종목 수·평단·현재가·손익 15초 갱신 검증.
+5. 작업 완료 단위마다 이 문서 갱신 → 커밋 → 현재 브랜치 푸시.

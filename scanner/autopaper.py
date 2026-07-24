@@ -654,11 +654,14 @@ def update(results: list[dict], picks: dict, out_dir: str = "public") -> dict:
     st = _load()
     st["_ev"] = []
     _update_fx(st)                         # 환산율 갱신(하루 1회, 실패 시 직전값)
+    publish_only = os.environ.get("AUTOPAPER_READ_ONLY", "").strip().lower() in (
+        "1", "true", "on", "yes")
     # 매매 분산 락(F8) — 다른 차선(fast/bulk)이 매매 중이면 이번 런은 관리·표시만.
     #   held면 상태를 저장하지도 않는다(낡은 사본으로 최신 스냅샷을 덮지 않게).
+    # 코드 push 재배포는 표시 스냅샷만 만들고 락·매매·저장·알림에 관여하지 않는다.
     run_id = os.environ.get("GITHUB_RUN_ID", "local")
-    lock = _trading_lock_status(run_id)
-    trade_ok = lock != "held"
+    lock = "off" if publish_only else _trading_lock_status(run_id)
+    trade_ok = not publish_only and lock != "held"
     px = {}
     for r in results:
         p = (r.get("sr") or {}).get("price")
@@ -746,7 +749,7 @@ def update(results: list[dict], picks: dict, out_dir: str = "public") -> dict:
     stale_held = [c for c, p in st["pos"].items()
                   if _market_open(p["ccy"])
                   and (_price_age_min(c) or 0) > STALE_HELD_MIN]
-    if stale_held and st.get("_stale_day") != _today():
+    if trade_ok and stale_held and st.get("_stale_day") != _today():
         st["_stale_day"] = _today()
         try:
             from bot import notify
@@ -924,6 +927,9 @@ def update(results: list[dict], picks: dict, out_dir: str = "public") -> dict:
             hist.append({"d": today, "v": round(equity)})
         st["hist"] = hist[-400:]
         _save(st)
+    elif publish_only:
+        print("[autopaper] 코드 배포 전용 — 매매·상태 저장·알림 생략"
+              "(표시 스냅샷만 생성)")
     else:
         # 락 미보유 — 낡은 사본으로 최신 스냅샷·계좌를 덮지 않는다(저장 생략).
         print("[autopaper] 락 미보유 런 — 상태 저장·알림 생략(표시 데이터만 생성)")
@@ -959,7 +965,9 @@ def update(results: list[dict], picks: dict, out_dir: str = "public") -> dict:
         "lane": os.environ.get("LANE", "bulk"),   # 이 결과를 만든 차선(fast/bulk)
         "data_stale": stale_held,          # 시세 정체 중인 보유 종목(F5 감시)
     }
-    if not trade_ok:
+    if publish_only:
+        out["publish_only"] = True         # 코드 push 재배포 — 계좌 무변경 증빙
+    elif not trade_ok:
         out["lock_skipped"] = True         # 매매 생략 런(락 미보유) 표시
     os.makedirs(os.path.join(out_dir, "api"), exist_ok=True)
     with open(os.path.join(out_dir, "api", "paper_auto.json"), "w",
