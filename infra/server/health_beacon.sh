@@ -77,16 +77,25 @@ err1h="$(journalctl $(for u in $UNITS; do printf -- '-u %s ' "$u"; done) \
 #   err_last    : 최근 24시간 마지막 에러 라인 — err_1h의 정체
 tg_env=0
 [ -n "${TELEGRAM_BOT_TOKEN:-}" ] && [ -n "${TELEGRAM_CHAT_ID:-}" ] && tg_env=1
-# 각 프로세스가 '실제로' 텔레그램 토큰을 물고 있나(/proc environ) — 매수 알림
+# 각 프로세스가 '실제로' 특정 env 키를 물고 있나(/proc environ) — 매수 알림
 #   누락 진단(2026-07-23). buyloop이 0인데 telegram이 1이면 원인 확정.
-_tg_in_proc() {
-  local pid; pid="$(pgrep -f "$1" 2>/dev/null | head -1)"
+#   인자: $1=프로세스 패턴, $2=env 키(기본 TELEGRAM_BOT_TOKEN). 값이 아닌 존재여부만.
+_key_in_proc() {
+  local pid key; pid="$(pgrep -f "$1" 2>/dev/null | head -1)"
+  key="${2:-TELEGRAM_BOT_TOKEN}"
   { [ -n "$pid" ] && [ -r "/proc/$pid/environ" ]; } || { echo '"?"'; return; }
-  if tr '\0' '\n' < "/proc/$pid/environ" 2>/dev/null | grep -q '^TELEGRAM_BOT_TOKEN='; then
+  if tr '\0' '\n' < "/proc/$pid/environ" 2>/dev/null | grep -q "^${key}="; then
     echo 1; else echo 0; fi
 }
-tg_buyloop="$(_tg_in_proc bot.kis_buyloop)"
-tg_teleg="$(_tg_in_proc bot.kis_telegram)"
+tg_buyloop="$(_key_in_proc bot.kis_buyloop)"
+tg_teleg="$(_key_in_proc bot.kis_telegram)"
+# ★ 새 일일손실 서킷브레이커(2026-07-24)는 seed 미로드 시 신규매수를 전면 차단한다.
+#   → buyloop 프로세스가 BOT_SEED_KRW를 실제로 물고 있는지 상시 자가점검(값 미발행).
+#   seed_buyloop=0이면 systemd EnvironmentFile이 export형식을 못 읽는 등 env 유실 →
+#   매수가 조용히 멎기 전에 원격에서 즉시 감지 가능.
+seed_buyloop="$(_key_in_proc bot.kis_buyloop BOT_SEED_KRW)"
+seed_env=0
+[ -n "${BOT_SEED_KRW:-}" ] && seed_env=1
 #   개별 신호 판정 라인(A: '  · CODE', B: '  [B] · CODE')만 — 장외노이즈 제외.
 bl_tail="$(journalctl -u buyloop --since '16 hours ago' --no-pager -o cat 2>/dev/null \
            | grep -E '^[[:space:]]+(\[B\] )?(✓|·)' | grep -v '\[session\]' | tail -12)"
@@ -177,7 +186,7 @@ print(json.dumps({"buyloop_tail": trim(os.environ.get("BL",""), 12),
                  ensure_ascii=False)[1:-1])' 2>/dev/null)"
 [ -z "$extra" ] && extra='"buyloop_tail":[],"gate_hist":"","err_last":[]'
 
-body="{\"ts\":\"$now\",\"host\":\"$host\",\"sha\":\"$sha\",\"units\":$unit_json,\"down\":$down,\"ledger_lines\":${lines:-0},\"last_ledger\":\"${last_led}\",\"err_1h\":${err1h},\"tg_env\":${tg_env},\"diag\":${diag},${extra}}"
+body="{\"ts\":\"$now\",\"host\":\"$host\",\"sha\":\"$sha\",\"units\":$unit_json,\"down\":$down,\"ledger_lines\":${lines:-0},\"last_ledger\":\"${last_led}\",\"err_1h\":${err1h},\"tg_env\":${tg_env},\"tg_buyloop\":${tg_buyloop},\"seed_env\":${seed_env},\"seed_buyloop\":${seed_buyloop},\"diag\":${diag},${extra}}"
 
 prio="default"; tags="hospital"
 [ "$down" -gt 0 ] && { prio="high"; tags="rotating_light"; }
