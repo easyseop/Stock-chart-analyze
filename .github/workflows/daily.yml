@@ -266,10 +266,13 @@ jobs:
       - name: 스크리너 생성(캐시 전체 — 즉석조회 추가분 포함, 네트워크 0)
         env:
           BUILD_SHA: ${{ github.sha }}   # 같은 코드면 증분 렌더, 코드 바뀌면 전체 재렌더
-          # 자동 모의투자 체결 보고(매수/매도 시 텔레그램) — 미설정이면 조용히 생략
-          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}   # 규칙위반·시세정체 P0 이중화(미설정=무동작)
+          # 코드 push는 사이트 재배포 전용: 모의계좌·락·상태·알림을 건드리지 않는다.
+          # 정기/수동 데이터·매매 실행만 실제 알림 자격증명을 받는다.
+          AUTOPAPER_READ_ONLY: ${{ github.event_name == 'push' && '1' || '0' }}
+          TELEGRAM_BOT_TOKEN: ${{ github.event_name != 'push' && secrets.TELEGRAM_BOT_TOKEN || '' }}
+          TELEGRAM_CHAT_ID: ${{ github.event_name != 'push' && secrets.TELEGRAM_CHAT_ID || '' }}
+          NTFY_TOPIC: ${{ github.event_name != 'push' && secrets.NTFY_TOPIC || '' }}
+          NOTIFY_MODE: trade_only
           KILL_NEW_ENTRIES: ${{ vars.KILL_NEW_ENTRIES }}   # 긴급정지(변수 켜면 신규진입만 중단)
         run: python main.py --cache --scan-cached --screener --screener-dir public
 
@@ -279,6 +282,7 @@ jobs:
       #   커밋 — 계좌 리셋 사고 원천 차단 + 매매 이력 감사 가능.
       #   실패해도 빌드는 계속(::warning) — 다음 빌드가 재시도.
       - name: 계좌 상태 백업(state 브랜치) + 매매 락 해제
+        if: github.event_name != 'push'
         env:
           LANE: bulk
           TG_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}

@@ -4,6 +4,7 @@
   2) 시세 낡음 — 지정가 체결 보류: 낡은 가격으로 체결 판단하지 않는다
   3) 매매 분산 락(F8) — 락 미보유 런은 매매·저장을 생략(표시만)
   4) saved_at — 저장마다 갱신(차선 간 최신성 비교의 기준)
+  5) 코드 push 배포 — 모의매매·상태저장·알림 없이 표시 스냅샷만 생성
 
 실행: python -m tests.test_fastsafe
 """
@@ -109,13 +110,53 @@ def main() -> int:
         else:
             print("  [PASS] saved_at 기록(차선 간 최신성 비교 가능)")
 
+    # 5) 코드 push 재배포 — 매매·상태·락·알림과 완전 분리
+    with tempfile.TemporaryDirectory() as tmp:
+        _fresh(tmp)
+        ap.update([_row("HOLD", 10_000)],
+                  {"now": [_item("HOLD", 10_000, 9_500)]}, out_dir=tmp)
+        before = open(ap.STATE_PATH, "rb").read()
+        ap._trading_lock_status = lambda run_id: (_ for _ in ()).throw(
+            AssertionError("배포 전용 런이 매매 락에 접근함"))
+        from bot import notify
+        original_send = notify.send
+        notify.send = lambda *args, **kwargs: (_ for _ in ()).throw(
+            AssertionError("배포 전용 런이 알림을 전송함"))
+        os.environ["AUTOPAPER_READ_ONLY"] = "1"
+        try:
+            out = ap.update([_row("HOLD", 9_000), _row("DEPLOY", 10_000)],
+                            {"now": [_item("DEPLOY", 10_000, 9_500)]},
+                            out_dir=tmp)
+        finally:
+            os.environ.pop("AUTOPAPER_READ_ONLY", None)
+            notify.send = original_send
+        after = open(ap.STATE_PATH, "rb").read()
+        with open(".github/workflows/daily.yml", encoding="utf-8") as fp:
+            workflow = fp.read()
+        wiring = (
+            "AUTOPAPER_READ_ONLY: ${{ github.event_name == 'push' && '1' || '0' }}"
+            in workflow
+            and "if: github.event_name != 'push'" in workflow
+        )
+        codes = {row["code"] for row in out["positions"]}
+        if codes != {"HOLD"} or out["pending"]:
+            fails.append("코드 push 배포 전용 런이 모의계좌를 변경함")
+        elif not out.get("publish_only"):
+            fails.append("배포 전용 표시(publish_only) 누락")
+        elif before != after:
+            fails.append("코드 push 배포 전용 런이 계좌 상태를 저장함")
+        elif not wiring:
+            fails.append("daily.yml 배포 전용 안전 배선 누락")
+        else:
+            print("  [PASS] 코드 push → 매매·상태·락·알림 없는 표시 전용")
+
     print()
     if fails:
         print("❌ 실패:")
         for f in fails:
             print("   -", f)
         return 1
-    print("✅ 빠른 차선 안전장치 4종 전부 통과.")
+    print("✅ 빠른 차선 안전장치 5종 전부 통과.")
     return 0
 
 
