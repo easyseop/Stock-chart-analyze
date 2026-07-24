@@ -16,6 +16,7 @@ from __future__ import annotations
 import argparse
 from datetime import datetime, timezone
 import json
+import math
 import mimetypes
 import os
 from pathlib import Path
@@ -31,11 +32,18 @@ ROOT = Path(__file__).resolve().parents[1]
 APP_DIR = ROOT / "scanner" / "site_app"
 PUBLIC_API = "https://easyseop.github.io/Stock-chart-analyze/api"
 PUBLIC_FILES = frozenset(("signals.json", "paper_auto.json", "track.json"))
-STATIC_FILES = frozenset(("index.html", "app.css", "app.js", "og.png"))
+STATIC_FILES = frozenset((
+    "index.html", "app.css", "portfolio_math.js", "app.js", "og.png", "og-v2.png",
+))
 SYMBOL_RE = re.compile(r"^[A-Z0-9][A-Z0-9.\-]{0,14}$")
 US_EXCHANGES = ("NASD", "NYSE", "AMEX")
 PORTFOLIO_REFRESH_SECONDS = max(
     5, min(300, int(os.environ.get("PORTFOLIO_REFRESH_SECONDS", "60"))))
+PORTFOLIO_BROWSER_REFRESH_SECONDS = max(
+    3, min(30, int(os.environ.get("PORTFOLIO_BROWSER_REFRESH_SECONDS", "5"))))
+PORTFOLIO_SHARED_CACHE_MAX_AGE_SECONDS = max(
+    30, min(300, int(os.environ.get(
+        "PORTFOLIO_SHARED_CACHE_MAX_AGE_SECONDS", "90"))))
 _portfolio_lock = threading.Lock()
 _portfolio_cache: tuple[float, dict] | None = None
 
@@ -50,17 +58,24 @@ def _position_meta(code: str) -> dict:
     return {
         "entry": float(row.get("entry") or row.get("avg") or 0),
         "stop": float(row.get("stop") or 0),
+        "target": float(row.get("target") or 0),
         "sleeve": str(row.get("sleeve") or "A"),
+        "opened": str(row.get("opened") or ""),
     }
 
 
 def portfolio_snapshot() -> dict:
-    """국내·미국 보유를 중복 없이 합쳐 브라우저용 최소 필드로 정규화."""
-    from bot import kis
+    """국내·미국 보유를 중복 없이 합쳐 브라우저용 최소 필드로 정규화.
+
+    이 함수는 공유 캐시가 없거나 낡았을 때만 호출되는 60초 폴백이다. 성공한 시장
+    결과는 공유 캐시에 합쳐 이후 브라우저 요청이 KIS를 다시 부르지 않게 한다.
+    """
+    from bot import kis, market_cache
 
     seen: set[str] = set()
     rows: list[dict] = []
     failures: list[str] = []
+    by_market: dict[str, list[dict]] = {"KR": [], "US": []}
     queries = [("KR", None)] + [("US", excg) for excg in US_EXCHANGES]
     for market, excg in queries:
         result = (kis.positions_detail("KR") if market == "KR"
@@ -74,7 +89,7 @@ def portfolio_snapshot() -> dict:
                 continue
             seen.add(code)
             meta = _position_meta(code)
-            rows.append({
+            normalized = {
                 "code": code,
                 "name": str(raw.get("name") or code),
                 "market": str(raw.get("market") or market),
@@ -87,7 +102,16 @@ def portfolio_snapshot() -> dict:
                 "pl_amt": float(raw.get("pl_amt") or 0),
                 "pl_rt": float(raw.get("pl_rt") or 0),
                 **meta,
-            })
+            }
+            rows.append(normalized)
+            by_market[market].append(normalized)
+    failed_markets = {item.split(":", 1)[0] for item in failures}
+    for market in ("KR", "US"):
+        if market not in failed_markets:
+            try:
+                market_cache.update_market(market, by_market[market])
+            except Exception:
+                pass                                  # 화면 캐시는 조회 결과를 망치지 않음
     rows.sort(key=lambda row: float(row["eval_amt"]), reverse=True)
     return {
         "generated_at": datetime.now(timezone.utc).isoformat(),
@@ -97,12 +121,27 @@ def portfolio_snapshot() -> dict:
         "partial": bool(failures),
         "failed_markets": failures,
         "read_only": True,
+        "source": "kis_balance_fallback",
     }
 
 
 def cached_portfolio_snapshot() -> dict:
-    """설정 주기 안에서는 같은 잔고를 재사용해 KIS·매매 루프와 API 경합을 막는다."""
+    """공유 캐시 우선, 없을 때만 설정 주기의 KIS 잔고 폴백을 재사용."""
     global _portfolio_cache
+    try:
+        from bot import kis, market_cache, settings
+        shared = market_cache.portfolio(
+            open_max_age=PORTFOLIO_SHARED_CACHE_MAX_AGE_SECONDS,
+            market_open=lambda market: settings.market_open(
+                "KRW" if market == "KR" else "USD"))
+        if shared is not None:
+            return {
+                **shared,
+                "environment": kis.ENV,
+                "refresh_seconds": PORTFOLIO_BROWSER_REFRESH_SECONDS,
+            }
+    except Exception:
+        pass
     now = time.monotonic()
     with _portfolio_lock:
         if _portfolio_cache and now - _portfolio_cache[0] < PORTFOLIO_REFRESH_SECONDS:
@@ -113,10 +152,10 @@ def cached_portfolio_snapshot() -> dict:
 
 
 def chart_snapshot(code: str, days: int = 180) -> dict:
-    """기존 스캐너의 일봉 캐시를 그대로 읽어 종가 시계열만 반환한다.
+    """기존 스캐너의 일봉 캐시를 읽어 캔들·거래량·이동평균을 반환한다.
 
-    기술지표·점수·매매 판단은 계산하지 않는다. 캐시가 없을 때만 기존 수집기를
-    호출하며, 결과는 스캐너가 원래 사용하던 로컬 캐시에 저장된다.
+    매매 판단은 계산하지 않는다. 캐시가 없을 때만 기존 수집기를 호출하며, 결과는
+    스캐너가 원래 사용하던 로컬 캐시에 저장된다. 이동평균은 표시 전용이다.
     """
     symbol = str(code).strip().upper()
     if not SYMBOL_RE.fullmatch(symbol):
@@ -124,17 +163,66 @@ def chart_snapshot(code: str, days: int = 180) -> dict:
     days = max(20, min(365, int(days)))
     from scanner import cache
     frames = cache.frames(symbol, refresh=False)
-    daily = frames["D"].tail(days)
-    points = [
-        {"date": idx.strftime("%Y-%m-%d"), "close": round(float(row["Close"]), 4)}
-        for idx, row in daily.iterrows()
-        if float(row["Close"]) > 0
-    ]
+    daily = frames["D"].tail(max(days, 120))
+    closes: list[float] = []
+    all_points: list[dict] = []
+    for idx, row in daily.iterrows():
+        close = float(row.get("Close") or 0)
+        if not math.isfinite(close) or close <= 0:
+            continue
+        closes.append(close)
+
+        def price(key: str, fallback: float) -> float:
+            try:
+                value = float(row.get(key))
+                return value if math.isfinite(value) and value > 0 else fallback
+            except (TypeError, ValueError):
+                return fallback
+
+        def ma(period: int):
+            if len(closes) < period:
+                return None
+            return round(sum(closes[-period:]) / period, 4)
+
+        all_points.append({
+            "date": idx.strftime("%Y-%m-%d"),
+            "open": round(price("Open", close), 4),
+            "high": round(price("High", close), 4),
+            "low": round(price("Low", close), 4),
+            "close": round(close, 4),
+            "volume": max(0, int(price("Volume", 0))),
+            "ma20": ma(20),
+            "ma60": ma(60),
+            "ma120": ma(120),
+        })
+    points = all_points[-days:]
     return {
         "code": symbol,
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "points": points,
         "source": "existing-scanner-cache",
+        "interval": "1d",
+        "read_only": True,
+    }
+
+
+def quote_snapshot(code: str, limit: int = 900) -> dict:
+    """파수꾼이 이미 읽은 보유종목 현재가 이력. 이 경로는 KIS를 호출하지 않는다."""
+    symbol = str(code).strip().upper()
+    if not SYMBOL_RE.fullmatch(symbol):
+        raise ValueError("invalid symbol")
+    from bot import market_cache
+    return market_cache.quote_history(symbol, limit=limit)
+
+
+def performance_snapshot() -> dict:
+    """KIS 전략 성과와 지수 비교. 금액·수량 없이 퍼센트만 반환한다."""
+    from bot import alpha, kis
+    payload = alpha.dashboard_snapshot()
+    return {
+        **payload,
+        "environment": kis.ENV,
+        "read_only": True,
     }
 
 
@@ -206,6 +294,15 @@ class PortfolioHandler(BaseHTTPRequestHandler):
                 code = (q.get("code") or [""])[0]
                 days = int((q.get("days") or ["180"])[0])
                 self._json(200, chart_snapshot(code, days))
+                return
+            if path == "/api/quotes.json":
+                q = parse_qs(parsed.query)
+                code = (q.get("code") or [""])[0]
+                limit = int((q.get("limit") or ["900"])[0])
+                self._json(200, quote_snapshot(code, limit))
+                return
+            if path == "/api/performance.json":
+                self._json(200, performance_snapshot())
                 return
             if path.startswith("/api/"):
                 name = path.rsplit("/", 1)[-1]

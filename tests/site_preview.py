@@ -89,32 +89,82 @@ TRACK = {"generated_at": datetime.now(timezone.utc).isoformat(),
 PORTFOLIO = {
     "generated_at": datetime.now(timezone.utc).isoformat(),
     "environment": "mock", "partial": False, "failed_markets": [],
-    "read_only": True,
+    "read_only": True, "refresh_seconds": 5, "price_age_seconds": 3,
+    "source": "sentinel_shared_cache",
     "positions": [
         {"code": "AAPL", "name": "Apple", "market": "US", "ccy": "USD",
          "qty": 12, "avg": 189.40, "cur": 214.42, "eval_amt": 2573.04,
          "buy_amt": 2272.80, "pl_amt": 300.24, "pl_rt": 13.21,
-         "entry": 189.40, "stop": 201.00, "sleeve": "A"},
+         "entry": 189.40, "stop": 201.00, "target": 215.50, "sleeve": "A"},
         {"code": "005930", "name": "삼성전자", "market": "KR", "ccy": "KRW",
          "qty": 24, "avg": 75200, "cur": 80300, "eval_amt": 1927200,
          "buy_amt": 1804800, "pl_amt": 122400, "pl_rt": 6.78,
-         "entry": 75200, "stop": 75400, "sleeve": "A"},
+         "entry": 75200, "stop": 79800, "target": 89000, "sleeve": "B"},
+        {"code": "NVDA", "name": "NVIDIA", "market": "US", "ccy": "USD",
+         "qty": 2, "avg": 180.00, "cur": 173.00, "eval_amt": 346.00,
+         "buy_amt": 360.00, "pl_amt": -14.00, "pl_rt": -3.89,
+         "entry": 180.00, "stop": 0, "target": 0, "sleeve": "A"},
     ],
 }
 
+PERFORMANCE = {
+    "version": 2, "generated_at": datetime.now(timezone.utc).isoformat(),
+    "sample_seconds": 300, "basis": "KIS 봇 보유 평가손익 기준",
+    "markets": {
+        "US": {"label": "미국", "date": "2026-07-24",
+               "indices": ["나스닥", "S&P500"], "series": []},
+        "KR": {"label": "한국", "date": "2026-07-24",
+               "indices": ["코스피", "코스닥"], "series": []},
+    },
+    "days": [], "environment": "mock", "read_only": True,
+}
+for market, index_names in (("US", ["나스닥", "S&P500"]),
+                            ("KR", ["코스피", "코스닥"])):
+    for i in range(24):
+        PERFORMANCE["markets"][market]["series"].append({
+            "t": f"{9 + i // 12:02d}:{(i % 12) * 5:02d}",
+            "account": round(i * .035 + ((i % 5) - 2) * .04, 3),
+            "A": round(i * .041, 3), "B": round(i * .018 - .12, 3),
+            "indices": {
+                index_names[0]: round(i * .025, 3),
+                index_names[1]: round(i * .019 - .05, 3),
+            },
+        })
+
 
 def _chart(code: str) -> dict:
-    base = 188 if code == "AAPL" else 72000
-    step = 1.8 if code == "AAPL" else 610
+    base = 188 if code == "AAPL" else 166 if code == "NVDA" else 72000
+    step = 1.8 if code == "AAPL" else 1.45 if code == "NVDA" else 610
     points = []
     start = datetime(2026, 1, 2, tzinfo=timezone.utc)
     for i in range(120):
         wave = ((i % 13) - 6) * step * .33
+        close = round(base + i * step * .19 + wave, 2)
+        opened = close - step * .4
         points.append({
             "date": (start + timedelta(days=i)).strftime("%Y-%m-%d"),
-            "close": round(base + i * step * .19 + wave, 2),
+            "open": round(opened, 2), "high": round(max(opened, close) + step, 2),
+            "low": round(min(opened, close) - step, 2), "close": close,
+            "volume": 1_000_000 + i * 12000,
+            "ma20": close - step * .8 if i >= 19 else None,
+            "ma60": close - step * 1.7 if i >= 59 else None,
+            "ma120": close - step * 2.4 if i >= 119 else None,
         })
-    return {"code": code, "source": "preview-fixture", "points": points}
+    return {"code": code, "source": "preview-fixture", "interval": "1d",
+            "read_only": True, "points": points}
+
+
+def _quotes(code: str) -> dict:
+    now = datetime.now(timezone.utc).timestamp()
+    base = 214.0 if code == "AAPL" else 173.0 if code == "NVDA" else 80300.0
+    step = .12 if code == "AAPL" else .16 if code == "NVDA" else 18.0
+    return {
+        "code": code, "source": "sentinel_shared_cache", "read_only": True,
+        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "points": [{"ts": now - (59 - i) * 20,
+                    "price": round(base + ((i % 9) - 4) * step + i * step * .04, 2)}
+                   for i in range(60)],
+    }
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -139,7 +189,10 @@ class Handler(BaseHTTPRequestHandler):
         state, section = parts[0], parts[1]
         if section == "app":
             asset = parts[2] if len(parts) > 2 else "index.html"
-            if asset not in {"index.html", "app.css", "app.js", "og.png"}:
+            if asset not in {
+                "index.html", "app.css", "portfolio_math.js", "app.js",
+                "og.png", "og-v2.png",
+            }:
                 self._json(404, {"error": "asset"})
                 return
             path = APP / asset
@@ -168,6 +221,11 @@ class Handler(BaseHTTPRequestHandler):
         elif name == "chart.json" and state == "portfolio":
             code = (parse_qs(parsed.query).get("code") or ["AAPL"])[0]
             self._json(200, _chart(code))
+        elif name == "quotes.json" and state == "portfolio":
+            code = (parse_qs(parsed.query).get("code") or ["AAPL"])[0]
+            self._json(200, _quotes(code))
+        elif name == "performance.json" and state == "portfolio":
+            self._json(200, PERFORMANCE)
         else:
             self._json(404, {"error": "endpoint"})
 

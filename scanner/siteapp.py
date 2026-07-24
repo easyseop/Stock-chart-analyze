@@ -12,7 +12,9 @@ import shutil
 
 
 SOURCE_DIR = Path(__file__).with_name("site_app")
-ASSETS = ("index.html", "app.css", "app.js", "og.png")
+ASSETS = (
+    "index.html", "app.css", "portfolio_math.js", "app.js", "og.png", "og-v2.png",
+)
 
 
 def publish(out_dir: str = "public") -> str:

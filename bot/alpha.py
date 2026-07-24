@@ -32,8 +32,10 @@ from bot import kis, kis_positions, notify, settings
 STATE_PATH = os.environ.get(
     "ALPHA_STATE_PATH", os.path.join(os.path.dirname(__file__), "alpha_state.json"))
 ALERT_MIN = int(os.environ.get("ALPHA_ALERT_MIN", "60"))   # 중간 알림 간격(분)
+SAMPLE_SECONDS = max(
+    60, min(900, int(os.environ.get("ALPHA_SAMPLE_SECONDS", "300"))))
 SERIES_MAX = 48                                            # 그래프 포인트 상한
-IDX = {"US": [("^IXIC", "나스닥")],
+IDX = {"US": [("^IXIC", "나스닥"), ("^GSPC", "S&P500")],
        "KR": [("^KS11", "코스피"), ("^KQ11", "코스닥")]}
 _US_EXCGS = ("NASD", "NYSE", "AMEX")
 
@@ -53,8 +55,17 @@ def _yahoo_last(sym: str) -> float | None:
         return None
 
 
-def _broker_rows() -> list[dict] | None:
-    """KR+미 3거래소 병합 보유행. 하나라도 실패 = None(이번 틱 건너뜀)."""
+def _broker_rows(market: str | None = None) -> list[dict] | None:
+    """보유행. 파수꾼 공유 캐시 우선, 없을 때만 KIS 잔고를 직접 조회."""
+    if market in ("KR", "US"):
+        try:
+            from bot import market_cache
+            cached = market_cache.positions_for_market(
+                market, max_age=90)
+            if cached is not None:
+                return cached
+        except Exception:
+            pass
     rows: dict[str, dict] = {}
     kr = kis.positions_detail("KR")
     if kr is None:
@@ -95,6 +106,7 @@ def _load() -> dict:
 
 
 def _save(st: dict) -> None:
+    st["updated_at"] = datetime.datetime.now(datetime.timezone.utc).isoformat()
     tmp = STATE_PATH + ".tmp"
     with open(tmp, "w", encoding="utf-8") as f:
         json.dump(st, f, ensure_ascii=False)
@@ -108,7 +120,7 @@ def _pct(pl_delta: float, cost: float) -> float:
 
 def session_update(st: dict, mkt: str, agg: dict, idx: dict,
                    now_hhmm: str, today: str) -> dict:
-    """세션 상태 갱신 → {acct, idx:{name:pct}, a, b, series} (세션시작 대비 %)."""
+    """세션 상태 갱신 → 계좌·A/B·모든 지수를 같은 0% 기준으로 저장."""
     day = st.setdefault("day", {}).get(mkt)
     tot_pl = agg[mkt]["A"]["pl"] + agg[mkt]["B"]["pl"]
     tot_cost = agg[mkt]["A"]["cost"] + agg[mkt]["B"]["cost"]
@@ -116,21 +128,43 @@ def session_update(st: dict, mkt: str, agg: dict, idx: dict,
         day = {"date": today, "pl0": tot_pl,
                "a_pl0": agg[mkt]["A"]["pl"], "b_pl0": agg[mkt]["B"]["pl"],
                "idx0": {k: v for k, v in idx.items()}, "series": [],
+               "series_v2": [],
                "opened": True, "closed": False}
         st["day"][mkt] = day
+    day.setdefault("a_pl0", agg[mkt]["A"]["pl"])
+    day.setdefault("b_pl0", agg[mkt]["B"]["pl"])
+    day.setdefault("idx0", {k: v for k, v in idx.items()})
+    day.setdefault("series", [])
+    day.setdefault("series_v2", [])
     acct = _pct(tot_pl - day["pl0"], tot_cost)
     a = _pct(agg[mkt]["A"]["pl"] - day["a_pl0"], agg[mkt]["A"]["cost"])
     b = _pct(agg[mkt]["B"]["pl"] - day["b_pl0"], agg[mkt]["B"]["cost"])
     ipct = {}
     for name, v in idx.items():
         v0 = day["idx0"].get(name)
+        if not v0:                              # 배포 중 새 지수 추가 시 그 틱을 0% 기준
+            day["idx0"][name] = v
+            v0 = v
         ipct[name] = (v / v0 - 1) * 100.0 if v0 else 0.0
     day["series"].append([now_hhmm, round(acct, 3),
                           round(next(iter(ipct.values()), 0.0), 3)])
+    point = {
+        "t": now_hhmm,
+        "account": round(acct, 4),
+        "A": round(a, 4),
+        "B": round(b, 4),
+        "indices": {name: round(value, 4) for name, value in ipct.items()},
+    }
+    if day["series_v2"] and day["series_v2"][-1].get("t") == now_hhmm:
+        day["series_v2"][-1] = point
+    else:
+        day["series_v2"].append(point)
     if len(day["series"]) > SERIES_MAX * 2:                  # 상한 초과 시 솎아냄
         day["series"] = day["series"][::2]
+    if len(day["series_v2"]) > SERIES_MAX * 4:
+        day["series_v2"] = day["series_v2"][::2]
     return {"acct": acct, "idx": ipct, "a": a, "b": b,
-            "series": day["series"]}
+            "series": day["series"], "series_v2": day["series_v2"]}
 
 
 def capture_stats(days: list[dict], mkt: str) -> str:
@@ -191,6 +225,58 @@ def publish_dash(st: dict) -> None:
         pass                                       # 발행 실패 무해(다음 틱 재시도)
 
 
+def dashboard_snapshot(st: dict | None = None) -> dict:
+    """Oracle 개인 웹용 퍼센트 전용 스냅샷.
+
+    계좌 금액·수량·종목은 내보내지 않는다. 구버전 상태도 주 지수 1개만이라도
+    읽을 수 있게 변환해 배포 직후 화면이 완전히 비지 않도록 한다.
+    """
+    st = _load() if st is None else st
+    markets = {}
+    labels = {"US": "미국", "KR": "한국"}
+    for market in ("US", "KR"):
+        day = (st.get("day") or {}).get(market) or {}
+        series = list(day.get("series_v2") or [])
+        if not series:
+            primary = IDX[market][0][1]
+            series = [
+                {"t": row[0], "account": float(row[1]), "A": None, "B": None,
+                 "indices": {primary: float(row[2])}}
+                for row in (day.get("series") or [])
+                if isinstance(row, list) and len(row) >= 3
+            ]
+        markets[market] = {
+            "label": labels[market],
+            "date": day.get("date"),
+            "indices": [name for _symbol, name in IDX[market]],
+            "series": series[-SERIES_MAX * 4:],
+        }
+    days = []
+    for row in (st.get("days") or [])[-120:]:
+        market = row.get("mkt")
+        if market not in ("US", "KR"):
+            continue
+        indices = dict(row.get("indices") or {})
+        if not indices and row.get("idx") is not None:
+            indices[IDX[market][0][1]] = float(row.get("idx") or 0)
+        days.append({
+            "date": row.get("d"),
+            "market": market,
+            "account": float(row.get("acct") or 0),
+            "A": (float(row["a"]) if row.get("a") is not None else None),
+            "B": (float(row["b"]) if row.get("b") is not None else None),
+            "indices": {str(k): float(v) for k, v in indices.items()},
+        })
+    return {
+        "version": 2,
+        "generated_at": st.get("updated_at"),
+        "sample_seconds": SAMPLE_SECONDS,
+        "markets": markets,
+        "days": days,
+        "basis": "KIS 봇 보유 평가손익 기준",
+    }
+
+
 # ── 메인 틱 ────────────────────────────────────────────────────
 def _fmt(v: float) -> str:
     return f"{v:+.2f}%"
@@ -214,7 +300,10 @@ def tick(now: datetime.datetime | None = None) -> None:
                 _save(st)
                 publish_dash(st)               # 마감 요약도 대시보드에 반영
             continue
-        rows = _broker_rows()
+        sampled = float((st.get("sampled_at") or {}).get(mkt) or 0)
+        if sampled and now.timestamp() - sampled < SAMPLE_SECONDS:
+            continue                             # 5분 간격 유지(KIS·야후 호출 폭주 방지)
+        rows = _broker_rows(mkt)
         if rows is None:
             continue                                   # 잔고 불명 — 이번 틱 건너뜀
         try:
@@ -239,6 +328,7 @@ def tick(now: datetime.datetime | None = None) -> None:
         if not idx:
             continue                                    # 지수 조회 실패 — 건너뜀
         r = session_update(st, mkt, agg, idx, now.strftime("%H:%M"), today)
+        st.setdefault("sampled_at", {})[mkt] = now.timestamp()
         first = len(r["series"]) == 1
         last_alert = st.setdefault("alert", {}).get(mkt, 0)
         if first:
@@ -276,9 +366,14 @@ def _close_alert(st: dict, mkt: str, day: dict) -> None:
         return
     last = day["series"][-1]
     acct, ipct = last[1], last[2]
+    rich = (day.get("series_v2") or [{}])[-1]
     d = acct - ipct
     days = st.setdefault("days", [])
-    days.append({"d": day["date"], "mkt": mkt, "acct": acct, "idx": ipct})
+    days.append({
+        "d": day["date"], "mkt": mkt, "acct": acct, "idx": ipct,
+        "a": rich.get("A"), "b": rich.get("B"),
+        "indices": rich.get("indices") or {IDX[mkt][0][1]: ipct},
+    })
     del days[:-120]                                      # 최근 120일만 보관
     cap = capture_stats(days, mkt)
     name = "미장·나스닥" if mkt == "US" else "국장·코스피"

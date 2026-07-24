@@ -146,11 +146,22 @@ class _KisBroker(_PaperBroker):
 
     def quote(self, code: str, ccy: str) -> float | None:
         """시세 — **KIS 현재가 우선**(서버에 FDR/toss 없어도 손절 판단 가능).
-        실패 시 부모(_PaperBroker: toss/FDR)로 폴백."""
+        실패 시 부모(_PaperBroker: toss/FDR)로 폴백.
+
+        웹은 이 값을 서버 내부 공유 캐시에서 읽는다. 웹 때문에 KIS 호출을 추가하지
+        않고도 파수꾼과 같은 속도로 현재가를 갱신하려는 배선이다."""
         from bot import kis
         market = kis.market_of_symbol(code)
         px = kis.last_price(code, market=market)
-        return px if px is not None else super().quote(code, ccy)
+        if px is None:
+            px = super().quote(code, ccy)
+        if px is not None:
+            try:
+                from bot import market_cache
+                market_cache.update_quote(code, px)
+            except Exception:
+                pass                              # 화면 캐시 실패가 손절을 막으면 안 됨
+        return px
 
     def place_sell(self, code: str, qty: int, reason: str, key: str):
         from bot import kis, kis_orders
@@ -199,19 +210,49 @@ class _KisBroker(_PaperBroker):
 
     def holdings(self):
         """KIS 실보유 {symbol.upper(): qty} — 브로커-진실 보호용. **현재 열린 시장만**
-        조회(닫힌 시장은 어차피 못 팜). 하나라도 조회 실패=None(파수꾼이 feed 폴백)."""
-        from bot import kis, settings
+        조회(닫힌 시장은 어차피 못 팜). 하나라도 조회 실패=None(파수꾼이 feed 폴백).
+
+        같은 잔고 응답의 평단·평가손익도 공유 캐시에 저장한다. 별도 API 호출은 없고
+        portfolio-web의 중복 4콜을 없애 order-plane 예약 슬롯을 보존한다."""
+        from bot import kis, kis_positions, market_cache, settings
         merged: dict = {}
         plan = []
         if settings.market_open("KRW"):
             plan.append(("KR", "NASD"))
         if settings.market_open("USD"):
             plan += [("US", "NASD"), ("US", "NYSE"), ("US", "AMEX")]
+        by_market: dict[str, dict[str, dict]] = {}
         for market, ex in plan:
-            h = kis.holdings(market, excg=ex)
-            if h is None:
+            rows = kis.positions_detail(market, excg=ex)
+            if rows is None:
                 return None
-            merged.update(h)
+            bucket = by_market.setdefault(market, {})
+            for row in rows:
+                code = str(row.get("code") or "").upper()
+                if not code:
+                    continue
+                bucket.setdefault(code, row)
+                merged[code] = int(row.get("qty") or 0)
+        try:
+            recs = kis_positions.load()
+        except Exception:
+            recs = {}
+        for market, rows in by_market.items():
+            enriched = []
+            for code, row in rows.items():
+                rec = recs.get(code, {})
+                enriched.append({
+                    **row,
+                    "entry": float(rec.get("entry") or rec.get("avg") or 0),
+                    "stop": float(rec.get("stop") or 0),
+                    "target": float(rec.get("target") or 0),
+                    "sleeve": str(rec.get("sleeve") or "A"),
+                    "opened": str(rec.get("opened") or ""),
+                })
+            try:
+                market_cache.update_market(market, enriched)
+            except Exception:
+                pass                              # 화면 캐시 실패가 손절을 막으면 안 됨
         return merged
 
 

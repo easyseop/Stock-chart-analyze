@@ -10,6 +10,7 @@ on:
       - "scanner/siteapp.py"
       - "scanner/site_app/**"
       - "tests/test_site_app.py"
+      - "tests/site_math.test.js"
       - "tests/site_preview.py"
   push:
     paths:
@@ -20,6 +21,7 @@ on:
       - "scanner/siteapp.py"
       - "scanner/site_app/**"
       - "tests/test_site_app.py"
+      - "tests/site_math.test.js"
       - "tests/site_preview.py"
 
 permissions:
@@ -50,6 +52,8 @@ jobs:
         run: |
           python -m compileall -q bot scanner tests
           python -m tests.test_site_app
+          node --test tests/site_math.test.js
+          node --check scanner/site_app/portfolio_math.js
           node --check scanner/site_app/app.js
 
       - name: Static build
@@ -57,5 +61,6 @@ jobs:
           python -m scanner.siteapp --out-dir /tmp/site-build
           test -f /tmp/site-build/app/index.html
           test -f /tmp/site-build/app/app.css
+          test -f /tmp/site-build/app/portfolio_math.js
           test -f /tmp/site-build/app/app.js
           test -f /tmp/site-build/app/og.png
