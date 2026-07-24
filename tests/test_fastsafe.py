@@ -24,6 +24,7 @@ def _fresh(tmp: str) -> None:
     for p in (ap.STATE_PATH, ap.STATE_PATH + ".bak"):
         if os.path.exists(p):
             os.remove(p)
+    ap._state_branch_snapshot = lambda: None
     ap._market_open = lambda ccy: True
     ap._earnings_d = lambda code: None
     ap._price_age_min = lambda code: None          # 기본: 신선(판단 보류)

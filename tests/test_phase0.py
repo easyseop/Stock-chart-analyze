@@ -24,6 +24,8 @@ def _fresh(tmp: str) -> None:
     for p in (ap.STATE_PATH, ap.STATE_PATH + ".bak"):
         if os.path.exists(p):
             os.remove(p)
+    ap._state_branch_snapshot = lambda: None
+    ap._trading_lock_status = lambda run_id: "off"
     ap._market_open = lambda ccy: True
     ap._earnings_d = lambda code: None
 

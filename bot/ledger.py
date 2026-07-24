@@ -27,9 +27,9 @@ import time
 LEDGER_PATH = "bot/order_ledger.jsonl"
 
 # 종료 상태(더 이상 잔여 없음) vs 진행 상태
-_TERMINAL = {"filled", "rejected"}
-# in-flight(결과 미확정) — 동일종목 동시주문 차단 판정용(리뷰 R3)
-_INFLIGHT = {"submitted", "ack", "unknown"}
+_TERMINAL = {"filled", "rejected", "cancelled", "expired"}
+# in-flight(결과 미확정) — 부분체결도 원주문 잔량이 살아 있으면 새 주문을 막아야 한다.
+_INFLIGHT = {"submitted", "ack", "partial", "cancel_pending", "unknown"}
 
 # 대사 신뢰도(리뷰 R3) — 후보가 유일하면 HIGH(자동확정), 모호하면 LOW(수동 잠금 유지)
 CONF_HIGH = "high"
@@ -74,23 +74,26 @@ def _fold() -> dict:
                     cur["state"] = ev["state"]
                 if ev.get("ev") == "reconcile":
                     cur["reconciled"] = True
-                # KIS 확장 필드 — 있으면 최신값 유지(브로커 핸들·대사 신뢰도·시각)
-                for f in ("odno", "orgno", "ord_tmd", "synthetic", "confidence"):
-                    if ev.get(f):
+                # KIS 확장 필드 — 체결·회계·취소 상태까지 append-only로 보존한다.
+                for f in ("odno", "orgno", "ord_tmd", "synthetic", "confidence",
+                          "fill_price", "fill_price_source", "open", "accounted"):
+                    if f in ev and ev.get(f) is not None:
                         cur[f] = ev[f]
                 if ev.get("ev") == "submit":
                     cur["submitted_at"] = ev.get("ts", 0.0)
                     meta = ev.get("meta") or {}
-                    if meta.get("side"):
-                        cur["side"] = str(meta["side"]).upper()  # 대사 방향 필터용
-                    if meta.get("excg"):
-                        cur["excg"] = meta["excg"]        # 부팅 대사 조회 범위용
-                    if meta.get("market"):
-                        cur["market"] = meta["market"]    # 국내/해외 대사 라우팅용
-                    if meta.get("price") is not None:
-                        cur["price"] = meta["price"]      # in-flight 원가 추정(총량게이트)
-                    if meta.get("hldg_before") is not None:
-                        cur["hldg_before"] = meta["hldg_before"]  # 국내 잔고대사 기준
+                    for f in ("side", "excg", "market", "price", "hldg_before",
+                              "pos_key", "sleeve", "fx", "ccy", "stop", "target",
+                              "name", "opened", "tactic", "pending", "parent_key",
+                              "chase", "ref_price", "reason"):
+                        if f in meta and meta.get(f) is not None:
+                            cur[f] = (str(meta[f]).upper() if f == "side" else meta[f])
+                elif ev.get("ev") == "plan":
+                    cur["created_at"] = ev.get("ts", 0.0)
+                    meta = ev.get("meta") or {}
+                    for f, value in meta.items():
+                        if value is not None:
+                            cur[f] = value
     except FileNotFoundError:
         pass
     return st
@@ -104,14 +107,23 @@ def record_submit(key: str, symbol: str, qty: int, reason: str = "",
              "reason": reason, "meta": meta or {}})
 
 
-def on_result(key: str, state: str, filled_qty: int = 0) -> None:
+def on_result(key: str, state: str, filled_qty: int = 0, *,
+              fill_price: float | None = None,
+              fill_price_source: str = "", open_order: bool | None = None) -> None:
     """전송 결과 반영. state ∈ submitted/ack/partial/filled/rejected/unknown.
     filled_qty는 '지금까지 확인된 총 체결량'(절대값)."""
-    _append({"ev": "result", "key": key, "state": state,
-             "filled": int(filled_qty)})
+    ev = {"ev": "result", "key": key, "state": state,
+          "filled": int(filled_qty)}
+    if fill_price is not None:
+        ev["fill_price"] = float(fill_price)
+        ev["fill_price_source"] = fill_price_source or "broker"
+    if open_order is not None:
+        ev["open"] = bool(open_order)
+    _append(ev)
 
 
-def reconcile(key: str, actual_filled: int) -> dict:
+def reconcile(key: str, actual_filled: int, *, fill_price: float | None = None,
+              fill_price_source: str = "", open_order: bool = False) -> dict:
     """UNKNOWN/부분 주문을 브로커 실측 체결량으로 확정하고 잠금 해제.
     반환: {state, filled, residual}. residual>0이면 잔여만 재주문 대상."""
     cur = state_of(key) or {"intended": 0}
@@ -123,9 +135,50 @@ def reconcile(key: str, actual_filled: int) -> dict:
         state = "partial"
     else:
         state = "rejected"
-    _append({"ev": "reconcile", "key": key, "state": state, "filled": actual})
+    ev = {"ev": "reconcile", "key": key, "state": state, "filled": actual,
+          "open": bool(open_order)}
+    if fill_price is not None:
+        ev["fill_price"] = float(fill_price)
+        ev["fill_price_source"] = fill_price_source or "broker"
+    _append(ev)
     return {"state": state, "filled": actual,
-            "residual": max(0, intended - actual)}
+            "residual": max(0, intended - actual),
+            "fill_price": fill_price, "open": bool(open_order)}
+
+
+def record_plan(key: str, symbol: str, qty: int, *, meta: dict) -> None:
+    """아직 브로커에 보내지 않은 눌림 주문 의도. 주문 전 모든 게이트를 다시 거친다."""
+    _append({"ev": "plan", "key": key, "symbol": symbol, "intended": int(qty),
+             "filled": 0, "state": "planned", "meta": meta})
+
+
+def finish_plan(key: str, state: str, reason: str = "") -> None:
+    """대기 주문의 만료·전략 훼손·취소 확정을 기록한다."""
+    if state not in ("cancelled", "expired", "rejected"):
+        raise ValueError(f"invalid plan terminal state: {state}")
+    cur = state_of(key) or {}
+    _append({"ev": "plan_finish", "key": key, "state": state,
+             "filled": int(cur.get("filled", 0)), "open": False,
+             "reason": reason})
+
+
+def mark_cancelled(key: str, reason: str = "") -> None:
+    """브로커에서 원주문 취소가 확정된 뒤 잔량이 더 체결될 수 없음을 기록."""
+    cur = state_of(key) or {}
+    _append({"ev": "cancel_confirmed", "key": key, "state": "cancelled",
+             "filled": int(cur.get("filled", 0)), "open": False,
+             "reason": reason})
+
+
+def mark_accounted(key: str, qty: int) -> None:
+    """원가장부에 반영한 누적 체결수량. 재대사 때 같은 체결을 중복 회계하지 않는다."""
+    _append({"ev": "accounted", "key": key, "accounted": max(0, int(qty))})
+
+
+def pending_orders() -> list[dict]:
+    """눌림 주문 계획과 브로커에 제출된 대기 주문. 종료된 계획은 제외."""
+    return [{"key": k, **v} for k, v in _fold().items()
+            if v.get("pending") and v.get("state") not in _TERMINAL]
 
 
 def state_of(key: str) -> dict | None:
@@ -182,7 +235,8 @@ def locked_symbols() -> set:
 def open_orders() -> list:
     """종료되지 않은(잔여 가능성 있는) 주문 목록 — 대사 대상."""
     return [{"key": k, **v} for k, v in _fold().items()
-            if v.get("state") not in _TERMINAL]
+            if v.get("state") not in _TERMINAL
+            and not (v.get("state") == "partial" and v.get("open") is False)]
 
 
 # ── KIS 확장: 브로커 핸들(ODNO)·합성 대사키·신뢰도·동일종목 규칙 ─────────
@@ -239,14 +293,24 @@ def reconcile_from_candidates(key: str, candidates: list,
     #   잔여를 재발주하면 원주문이 마저 체결돼 초과매도(감사 수정 #6). 완전 체결
     #   (ccnl 전용·open=False)만 자동 확정.
     if len(candidates) == 1 and candidates[0].get("open"):
+        cand = candidates[0]
+        seen = max(int(cur.get("filled", 0)),
+                   int(cand.get("filled", 0) or 0))
+        on_result(key, cur.get("state", "unknown"), seen,
+                  fill_price=cand.get("price"),
+                  fill_price_source=str(cand.get("src") or "broker"),
+                  open_order=True)
         _append({"ev": "confidence", "key": key, "confidence": CONF_LOW,
                  "reason": "order_still_open"})
-        filled = int(cur.get("filled", 0))
-        return {"state": cur.get("state", "unknown"), "filled": filled,
-                "residual": max(0, intended - filled), "confidence": CONF_LOW}
+        return {"state": cur.get("state", "unknown"), "filled": seen,
+                "residual": max(0, intended - seen), "confidence": CONF_LOW,
+                "fill_price": cand.get("price"), "open": True}
     if len(candidates) == 1:
-        filled = max(0, int(candidates[0].get("filled", 0) or 0))
-        r = reconcile(key, filled)               # 기존 대사 재사용(잠금 해제)
+        cand = candidates[0]
+        filled = max(0, int(cand.get("filled", 0) or 0))
+        r = reconcile(key, filled, fill_price=cand.get("price"),
+                      fill_price_source=str(cand.get("src") or "broker"),
+                      open_order=False)           # 기존 대사 재사용(잠금 해제)
         _append({"ev": "confidence", "key": key, "confidence": CONF_HIGH})
         r["confidence"] = CONF_HIGH
         return r
@@ -264,7 +328,8 @@ def open_order_count(symbol: str, exclude_key: str | None = None) -> int:
     exclude_key: 지금 발주 중인 자기 주문키는 세지 않는다(자기 차단 방지)."""
     return sum(1 for k, v in _fold().items()
                if k != exclude_key and v.get("symbol") == symbol
-               and v.get("state") in _INFLIGHT)
+               and v.get("state") in _INFLIGHT
+               and not (v.get("state") == "partial" and v.get("open") is False))
 
 
 def last_submit_ts(symbol: str, exclude_key: str | None = None) -> float:

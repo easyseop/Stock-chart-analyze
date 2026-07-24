@@ -148,6 +148,31 @@ def test_cancel_reject_then_filled():
     print("[PASS] 취소 거부 → 주문 유지 → 체결 재확인 done(이중매도 0)")
 
 
+def test_cancel_confirmation_and_partial_residual():
+    """운영 배선: 취소 접수만으로 재주문하지 않고 확인 후 잔여만 보낸다."""
+    env = _Env(10)
+    confirmed = [False]
+    marked = []
+    deps = env.deps()
+    deps["cancel_confirmed"] = lambda cur: confirmed[0]
+    deps["mark_cancelled"] = lambda cur: marked.append(cur["key"])
+    c = Chase("pos", "AAPL", 10, 100.0, deps, ChaseConfig())
+    c.step()
+    env.t += 25
+    c.step()                              # 취소 접수, 아직 확인 전
+    assert c.current and c.current.get("cancel_pending")
+    c.step()
+    assert len(env.places) == 1           # 확인 전 재주문 절대 없음
+    env.filled = 4                        # 취소 중 부분체결 확인
+    confirmed[0] = True
+    c.step()                              # 취소확정 → 잔여 6주만 재주문
+    assert marked == ["pos#c1"]
+    assert len(env.places) == 2 and env.places[1][1] == 6
+    env.filled = 10
+    assert c.step() == "done"
+    print("[PASS] 취소확정 대기 → 부분체결4 반영 → 잔여6만 재주문")
+
+
 def test_heartbeat_sla(tmp_path=None):
     import tempfile
     with tempfile.TemporaryDirectory() as tmp:
@@ -175,6 +200,7 @@ def main():
     test_cancel_unknown_manual_lock()
     test_exhausted_and_timeout()
     test_cancel_reject_then_filled()
+    test_cancel_confirmation_and_partial_residual()
     test_heartbeat_sla()
     print("\n모든 chase/SLA 테스트 통과 — 손절 신뢰성 보강(R4·R5).")
 

@@ -63,6 +63,7 @@ def test_portfolio_snapshot_deduplicates_exchange_queries():
         payload = portfolio_web.portfolio_snapshot()
 
     assert payload["read_only"] is True
+    assert 5 <= payload["refresh_seconds"] <= 300
     assert {row["code"] for row in payload["positions"]} == {"005930", "AAPL"}
     assert len(payload["positions"]) == 2
     encoded = json.dumps(payload)
@@ -85,12 +86,39 @@ def test_chart_is_display_only_existing_close_series():
     assert set(payload["points"][0]) == {"date", "close"}
 
 
+def test_oracle_service_is_loopback_read_only_dashboard():
+    unit = (Path(__file__).parents[1] / "infra" / "server" /
+            "portfolio-web.service").read_text(encoding="utf-8")
+    server = Path(portfolio_web.__file__).read_text(encoding="utf-8")
+
+    assert "EnvironmentFile=/etc/stock/kis.env" in unit
+    assert "KIS_TOKEN_CACHE=/opt/stock/kis_token.json" in unit
+    assert "python3 -m bot.portfolio_web --port 8765" in unit
+    assert "PORTFOLIO_REFRESH_SECONDS=15" in unit
+    assert "NoNewPrivileges=true" in unit
+    assert 'ThreadingHTTPServer(("127.0.0.1"' in server
+    for forbidden in ("bot.kis_orders", "bot.kis_buyloop", "bot.sentinel"):
+        assert forbidden not in server
+
+
+def test_portfolio_snapshot_cache_avoids_kis_poll_bursts():
+    payload = {"positions": [], "refresh_seconds": 15}
+    with mock.patch.object(portfolio_web, "_portfolio_cache", None), \
+            mock.patch.object(portfolio_web, "portfolio_snapshot",
+                              return_value=payload) as snapshot:
+        assert portfolio_web.cached_portfolio_snapshot() is payload
+        assert portfolio_web.cached_portfolio_snapshot() is payload
+    assert snapshot.call_count == 1
+
+
 if __name__ == "__main__":
     tests = [
         test_static_publish_is_additive,
         test_public_app_uses_only_allowed_read_sources,
         test_portfolio_snapshot_deduplicates_exchange_queries,
         test_chart_is_display_only_existing_close_series,
+        test_oracle_service_is_loopback_read_only_dashboard,
+        test_portfolio_snapshot_cache_avoids_kis_poll_bursts,
     ]
     for test in tests:
         test()

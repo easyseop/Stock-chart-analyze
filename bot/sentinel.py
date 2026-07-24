@@ -42,7 +42,11 @@ import urllib.request
 
 from bot import ledger
 
-POLL_SEC = 20              # 장중 폴링 주기(초) — 손절 보호용이라 짧게
+try:
+    POLL_SEC = int(os.environ.get("SENTINEL_POLL_SECONDS", "20"))
+except ValueError:
+    POLL_SEC = 20
+POLL_SEC = max(5, min(60, POLL_SEC))  # 장중 폴링: 오설정 폭주·과도한 지연 모두 제한
 FEED_URLS = (              # 포지션/손절선 소스 — state 브랜치 우선, Pages 폴백
     "https://raw.githubusercontent.com/easyseop/Stock-chart-analyze/state/feed/autopaper.public.json",
     "https://easyseop.github.io/Stock-chart-analyze/api/paper_auto.json",
@@ -54,6 +58,7 @@ FEED_STALE_ALERT_MIN = 60  # 경보는 이보다 더 오래 정체일 때만(공
 HARD_BUFFER = 0.01         # 하드 손절 = 손절가 −1% 이탈 시 즉시
 SENT_PATH = os.path.join(os.path.dirname(__file__), "sentinel_sent.json")
 LIVE = os.environ.get("SENTINEL_LIVE") == "1"      # 명시해야만 실주문
+_CHASES: dict[str, dict] = {}                       # US 손절 chase(프로세스 내 활성 상태)
 
 
 def _now_kst() -> datetime.datetime:
@@ -150,6 +155,18 @@ class _KisBroker(_PaperBroker):
     def place_sell(self, code: str, qty: int, reason: str, key: str):
         from bot import kis, kis_orders
         market = kis.market_of_symbol(code)      # 국내 6자리 숫자=KR, 그 외=US
+        try:
+            from bot import kis_positions, settings
+            rec = kis_positions.load().get(code, {})
+            legacy_key = (f"legacy:{rec.get('sleeve','A')}:{code}:"
+                          f"{rec.get('opened') or '?'}")
+            order_meta = {
+                "pos_key": rec.get("pos_key") or legacy_key,
+                "sleeve": rec.get("sleeve", "A"),
+                "fx": 1.0 if market == "KR" else settings.FX_USDKRW,
+                "ccy": rec.get("ccy") or ("KRW" if market == "KR" else "USD")}
+        except Exception:
+            order_meta = {}
         px = self.quote(code, "KRW" if market == "KR" else "USD")
         if px is None:                       # 시세 없이 손절가 산출 불가 — 보류
             return {"state": "rejected", "filled": 0}
@@ -157,14 +174,16 @@ class _KisBroker(_PaperBroker):
             # 국내 손절은 **시장가**(체결 보장 — 사용자 정책 2026-07-13). 국내는
             #   미국과 달리 연속장 시장가가 있어 미체결 방치 위험을 없앤다.
             r = kis_orders.place_sell(key, code, qty, px, reason=reason,
-                                      market=market, order_type="market")
+                                      market=market, order_type="market",
+                                      hldg_before=qty, order_meta=order_meta)
         else:
             # 미국주는 시장가 부재 → 마켓터블 지정가(급락 시 chase가 보완).
             #   거래소는 실제 상장처로 해석(감사 수정 #1: NASD 하드코딩 시 NYSE/AMEX
             #   손절 주문이 live에서 거부돼 무한 재발화·손절 실패).
             limit = kis_orders.marketable_limit_price(px, "SELL", market=market)
             r = kis_orders.place_sell(key, code, qty, limit, reason=reason,
-                                      market=market, excg=kis.us_excg_of(code))
+                                      market=market, excg=kis.us_excg_of(code),
+                                      hldg_before=qty, order_meta=order_meta)
         act = r.get("act")
         if act == "ack":                     # 접수됨(in-flight) — 체결은 대사가 확정
             return {"state": "ack", "filled": 0}
@@ -194,6 +213,111 @@ class _KisBroker(_PaperBroker):
                 return None
             merged.update(h)
         return merged
+
+
+def _new_us_chase(code: str, qty: int, ref_price: float, pos_key: str,
+                  rec: dict | None = None):
+    """KIS 미국주 손절 chase를 실제 주문·취소·nccs 확인 경로에 결속한다."""
+    from bot import kis, kis_chase, kis_orders, settings
+    rec = rec or {}
+    excg = kis.us_excg_of(code)
+    acct_pos_key = rec.get("pos_key")
+    order_meta = {"pos_key": acct_pos_key, "sleeve": rec.get("sleeve", "A"),
+                  "fx": settings.FX_USDKRW, "ccy": "USD", "chase": True,
+                  "ref_price": float(ref_price)}
+
+    def place(key, symbol, amount, price):
+        h = kis.holdings("US", excg=excg)
+        if h is None:
+            return {"ok": False, "act": "blocked", "why": "잔고 조회실패"}
+        safe_qty = min(int(amount), max(0, int(h.get(symbol, 0))))
+        if safe_qty <= 0:
+            return {"ok": False, "act": "blocked", "why": "매도가능 보유 0"}
+        r = kis_orders.place_sell(
+            key, symbol, safe_qty, price, reason="미국주 손절 chase",
+            market="US", excg=excg, hldg_before=safe_qty,
+            order_meta=order_meta)
+        r["qty"] = safe_qty
+        return r
+
+    def cancel(key, symbol, odno, amount, orgno=""):
+        return kis_orders.cancel_order(
+            key, symbol, odno, amount, excg=excg, orgno=orgno, market="US")
+
+    def cancel_confirmed(cur):
+        nccs = kis.open_orders(excg=excg)
+        ccnl = kis.fills(excg=excg)
+        if nccs is None or ccnl is None:
+            return False                         # 조회 실패 = 재주문 금지
+        from bot import kis_reconcile
+        rows = kis_reconcile.normalize_rows(nccs, ccnl)
+        kis_reconcile.resolve_acks_from_rows(rows)  # 취소 중 체결을 먼저 원장·회계에 흡수
+        return not any(str(r.get("odno") or "") == str(cur.get("odno") or "")
+                       and r.get("open") for r in rows)
+
+    deps = {
+        "place": place,
+        "cancel": cancel,
+        "cancel_confirmed": cancel_confirmed,
+        "mark_cancelled": lambda cur: ledger.mark_cancelled(
+            cur["key"], "chase 취소 확인 후 잔여 재주문"),
+        "filled_total": lambda: ledger.filled_for(pos_key),
+        "quote": lambda: kis.last_price(code, market="US", excg=excg),
+        "now": time.time,
+    }
+    cfg = kis_chase.ChaseConfig(
+        repost_after_s=60.0, max_chase=3, max_slippage_bps=300,
+        max_time_to_exit_s=300.0)
+    return kis_chase.Chase(pos_key, code, int(qty), float(ref_price), deps, cfg=cfg)
+
+
+def _advance_us_chases(held: dict, sent: dict) -> set[str]:
+    """활성 chase를 한 단계 진행. 반환 종목은 일반 손절 루프가 중복 처리하지 않는다."""
+    from bot import ownership
+    # 재시작 복구 — 원장의 chase 메타와 ODNO로 살아있는 주문을 다시 상태기계에 붙인다.
+    for key, o in ledger._fold().items():
+        code = str(o.get("symbol") or "").upper()
+        if (not o.get("chase") or code in _CHASES or code not in held
+                or o.get("state") not in ("submitted", "ack", "partial", "unknown")):
+            continue
+        pos_key = key.split("#c", 1)[0]
+        total = int((held.get(code) or {}).get("q") or 0) + ledger.filled_for(pos_key)
+        try:
+            from bot import kis_positions
+            rec = kis_positions.load().get(code, {})
+        except Exception:
+            rec = {}
+        ch = _new_us_chase(code, total, float(o.get("ref_price") or o.get("price") or 0),
+                           pos_key, rec)
+        ch.t0 = float(o.get("submitted_at") or time.time())
+        ch.attempts = max(1, sum(
+            1 for k in ledger._fold() if k.startswith(pos_key + "#c")
+            and ":cxl" not in k))
+        ch.current = {"key": key, "odno": o.get("odno", ""),
+                      "orgno": o.get("orgno", ""), "price": o.get("price"),
+                      "placed_at": float(o.get("submitted_at") or time.time()),
+                      "qty": max(0, int(o.get("intended") or 0)
+                                 - int(o.get("filled") or 0))}
+        ch.status = "manual_lock" if o.get("state") == "unknown" else "working"
+        _CHASES[code] = {"chase": ch,
+                          "sent_key": pos_key}
+    active = set()
+    for code, item in list(_CHASES.items()):
+        active.add(code)
+        ch = item["chase"]
+        # 브로커-진실 보유가 0이면 대사 지연과 무관하게 완료로 접는다.
+        if code not in held or int((held.get(code) or {}).get("q") or 0) <= 0:
+            ch.status = "done"
+        status = ch.step()
+        if status == "done":
+            sent[item["sent_key"]] = _now_kst().isoformat(timespec="seconds")
+            _save_sent(sent)
+            _CHASES.pop(code, None)
+        elif status in ("exhausted", "timeout", "manual_lock"):
+            if not ownership.is_frozen(code):
+                ownership.freeze(code, f"손절 chase {status} — 수동 확인")
+            # 포지션이 남아 있는 동안 일반 루프가 새 chase를 만들지 못하게 유지한다.
+    return active
 
 
 class _TossBroker(_PaperBroker):
@@ -322,7 +446,10 @@ def check_once(broker, state: dict) -> None:
                         critical=True)
             state["_unprot"] = unprot
     sent = _load_sent()
+    active_chases = _advance_us_chases(held, sent) if isinstance(broker, _KisBroker) else set()
     for code, p in held.items():
+        if code in active_chases:
+            continue                              # chase가 이 종목의 유일한 매도 주체
         if not _market_open(p.get("ccy", "USD")):
             continue
         # 미해소 in-flight 주문(submitted/ack/unknown) 있으면 재발주 전면 금지 —
@@ -392,6 +519,23 @@ def check_once(broker, state: dict) -> None:
                 sent[key] = _now_kst().isoformat(timespec="seconds")   # 이미 다 팔림
                 _save_sent(sent)
                 continue
+            # KIS 미국주는 시장가가 없으므로 단발 지정가 대신 chase 상태기계가
+            # 취소확정→잔여수량→가격사다리를 전담한다. 국내 시장가는 기존 경로 유지.
+            try:
+                from bot import kis as _kis
+                is_kis_us = (isinstance(broker, _KisBroker)
+                             and _kis.market_of_symbol(code) == "US")
+            except Exception:
+                is_kis_us = False
+            if is_kis_us:
+                from bot import kis_positions
+                ch = _new_us_chase(
+                    code, qty_send, px, key, kis_positions.load().get(code, {}))
+                _CHASES[code] = {"chase": ch, "sent_key": key}
+                status = ch.step()                 # 첫 마켓터블 지정가 즉시 제출
+                _notify(f"🛡️ 미국주 손절 chase 시작 — {code} {qty_send}주 "
+                        f"@ 기준 {px} · 상태 {status}", critical=True)
+                continue
             okey = f"{key}#{ledger.attempts(key) + 1}"       # 이번 주문 시도의 고유키
             # 국내 잔고대사 기준: 이 주문 직전 보유수량(=잔여 qty_send, 파수꾼이 이미
             #   아는 값이라 손절 핫패스에 API 호출 추가 없음) + 방향·시장 명시 기록.
@@ -402,7 +546,18 @@ def check_once(broker, state: dict) -> None:
                                        "hldg_before": int(qty_send)})
             res = broker.place_sell(code, qty_send, reason, okey)
             rstate, filled = _norm_result(res, qty_send)
-            ledger.on_result(okey, rstate, filled)
+            ledger.on_result(okey, rstate, filled,
+                             fill_price=px if rstate in ("filled", "partial") else None,
+                             fill_price_source="broker-immediate",
+                             open_order=False if rstate == "filled" else None)
+            if rstate in ("filled", "partial") and filled > 0:
+                try:
+                    from bot import kis_accounting
+                    kis_accounting.sync_fill(
+                        okey, filled_qty=filled, fill_price=px,
+                        fill_price_source="broker-immediate")
+                except Exception:
+                    pass
             if rstate == "filled" or (rstate == "partial"
                                       and ledger.filled_for(key) >= qty):
                 sent[key] = _now_kst().isoformat(timespec="seconds")

@@ -264,7 +264,7 @@ def _reply(text: str) -> None:
     """지정 채팅으로 전송 — notify.send 재사용(TELEGRAM_CHAT_ID로 감)."""
     try:
         from bot import notify
-        notify.send(text)
+        notify.send(text, category="query")
     except Exception as e:
         print(f"[전송 오류] {e}", flush=True)
 

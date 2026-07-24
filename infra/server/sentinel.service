@@ -12,6 +12,8 @@ WorkingDirectory=/opt/stock/Stock-chart-analyze
 # 시크릿·플래그는 이 파일에만(chmod 600, root:bot) — 유닛/깃에 값 금지
 EnvironmentFile=/etc/stock/kis.env
 Environment=SENTINEL_BROKER=kis
+# 보유 시세·손절 조건 장중 확인 주기. 코드는 5~60초로 제한한다.
+Environment=SENTINEL_POLL_SECONDS=20
 ExecStart=/usr/bin/python3 -m bot.sentinel
 Restart=always
 RestartSec=5

@@ -24,7 +24,7 @@ from __future__ import annotations
 import os
 from dataclasses import dataclass
 
-from bot import (costbook, envelope, heartbeat, kill, kis, kis_boot,
+from bot import (costbook, daily_loss, envelope, heartbeat, kill, kis, kis_boot,
                  kis_orders, ledger, ownership, rollout)
 
 
@@ -34,6 +34,7 @@ class BuyDecision:
     gate: str            # 어느 게이트에서 멈췄나("sent"면 전송됨)
     why: str
     qty: int = 0
+    planned_qty: int = 0   # 게이트·사이징이 허용한 전체 수량(half 분할 기준)
     order: dict | None = None
 
 
@@ -45,7 +46,12 @@ def execute_entry(pos_key: str, symbol: str, *, price_usd: float,
                   market: str | None = None,
                   open_cost_krw: float | None = None,
                   hldg_before: int | None = None,
-                  seed_krw: float | None = None) -> BuyDecision:
+                  seed_krw: float | None = None,
+                  sleeve: str = "A",
+                  limit_price: float | None = None,
+                  qty_cap: int | None = None,
+                  qty_fraction: float = 1.0,
+                  order_meta: dict | None = None) -> BuyDecision:
     """신규 진입 1건 시도. 반환: 어느 게이트에서 왜 멈췄는지까지 항상 보고.
 
     가격/리스크 인자는 **해당 시장의 표시통화**(US=USD, KR=KRW)로 받는다.
@@ -73,40 +79,46 @@ def execute_entry(pos_key: str, symbol: str, *, price_usd: float,
     if not kill.allows("buy_new"):
         return BuyDecision(False, "kill", f"kill-switch L{kill.level()} — 신규 금지")
 
-    # 2) 부팅 대사(O4)
+    # 2) 일일 실현손실 — 신규 매수만 차단, 손절·청산 경로와 독립.
+    ok, why = daily_loss.entry_allowed()
+    if not ok:
+        return BuyDecision(False, "daily_loss", why)
+
+    # 3) 부팅 대사(O4)
     if not kis_boot.trading_allowed():
         return BuyDecision(False, "boot", "부팅 대사 미완료(fail-closed)")
 
-    # 3) 파수꾼 생존성(R4) — 보유가 있는데 파수꾼 죽어있으면 신규 금지
-    has_pos = (open_positions or 0) > 0 or costbook.open_cost_total() > 0
+    # 4) 파수꾼 생존성(R4) — 보유가 있는데 파수꾼 죽어있으면 신규 금지
+    has_pos = (open_positions or 0) > 0 or costbook.open_cost_total(sleeve) > 0
     if not heartbeat.entry_allowed(has_pos):
         return BuyDecision(False, "sla", "파수꾼 heartbeat SLA hard_disable")
 
-    # 4) 롤아웃 가드(I7+I1)
+    # 5) 롤아웃 가드(I7+I1)
     n_open = open_positions if open_positions is not None else sum(
-        1 for l in costbook._fold()["lots"].values() if l["qty"] > 0)
+        1 for l in costbook._fold()["lots"].values()
+        if l["qty"] > 0 and l.get("sleeve", "A") == sleeve)
     ok, why = rollout.check_new_entry(symbol, open_positions=n_open,
                                       risk_pct=risk_pct, market=market)
     if not ok:
         return BuyDecision(False, "rollout", why)
 
-    # 5) 계좌 격리(IS2)
+    # 6) 계좌 격리(IS2)
     denied, why = ownership.buy_denied(symbol)
     if denied:
         return BuyDecision(False, "ownership", why)
 
-    # 6) 원장 게이트
+    # 7) 원장 게이트
     if not ledger.can_submit(symbol):
         return BuyDecision(False, "ledger", "원장 게이트(잠금/in-flight/간격)")
 
-    # 7) 사이징(IS3/IS4 — 분모 SEED·총량 게이트·feasibility 하향 클램프)
+    # 8) 사이징(IS3/IS4 — 분모 SEED·총량 게이트·feasibility 하향 클램프)
     #   seed_krw 오버라이드: 슬리브 B(매물대)는 자체 SEED로 사이징(A와 예산 분리).
     seed = float(seed_krw) if seed_krw is not None else envelope.seed_krw()
-    t = costbook.totals()
+    t = costbook.totals(sleeve)
     # 투입원가: costbook(회계)과 브로커-진실(호출부 전달) 중 **큰 쪽**(보수적).
     #   costbook 미배선(#25) 동안엔 broker 값이 유일한 실측 — 이게 없으면 총량
     #   게이트가 SEED 전액을 매 사이클 재배포 가능으로 오판한다(검토 2026-07-15).
-    open_cost = costbook.open_cost_total()
+    open_cost = costbook.open_cost_total(sleeve)
     if open_cost_krw is not None:
         #   슬리브 SEED 오버라이드(B) 시엔 호출부의 슬리브별 원가만 사용 — costbook은
         #   전역(슬리브 무구분)이라 max()로 섞으면 A의 원가가 B의 작은 SEED와 비교돼
@@ -123,24 +135,33 @@ def execute_entry(pos_key: str, symbol: str, *, price_usd: float,
     r = envelope.size_buy(price_usd * fx,
                           per_share_risk_usd * fx,
                           seed=seed,
-                          open_cost_symbol=costbook.open_cost_symbol(symbol),
+                          open_cost_symbol=costbook.open_cost_symbol(symbol, sleeve),
                           deployable_amt=dep, feasibility=feas_krw,
                           risk_pct=risk_pct)
-    if r.qty < 1:
+    planned_qty = r.qty
+    frac = min(1.0, max(0.0, float(qty_fraction)))
+    send_qty = r.qty if frac >= 1.0 else max(1, int(r.qty * frac))
+    if qty_cap is not None:
+        send_qty = min(send_qty, max(0, int(qty_cap)))
+    if send_qty < 1:
         return BuyDecision(False, "sizing",
-                           f"수량 0 (binding={r.binding}, cap={r.cap_krw:.0f}KRW)")
+                           f"수량 0 (binding={r.binding}, cap={r.cap_krw:.0f}KRW)",
+                           planned_qty=planned_qty)
 
-    # 8) 전송 — kis_orders가 모의 전용 하드블록 등 자체 게이트 재검사
+    # 9) 전송 — kis_orders가 모의 전용 하드블록 등 자체 게이트 재검사
     #   미국주는 실제 상장 거래소로 라우팅(감사 수정 #1: NASD 고정 시 NYSE/AMEX
     #   매수가 live에서 거부). KR은 excg 무관.
     if market != "KR":
         excg = kis.us_excg_of(symbol)
-    limit = kis_orders.marketable_limit_price(price_usd, "BUY", market=market)
-    res = kis_orders.place_buy(pos_key, symbol, r.qty, limit,
+    limit = (float(limit_price) if limit_price is not None
+             else kis_orders.marketable_limit_price(price_usd, "BUY", market=market))
+    meta = {"pos_key": pos_key, "sleeve": sleeve, "fx": fx,
+            "ccy": "KRW" if market == "KR" else "USD", **(order_meta or {})}
+    res = kis_orders.place_buy(pos_key, symbol, send_qty, limit,
                                excg=excg, reason=reason, market=market,
-                               hldg_before=hldg_before)
+                               hldg_before=hldg_before, order_meta=meta)
     if res.get("ok"):
         return BuyDecision(True, "sent", f"ack ODNO={res.get('odno')}",
-                           qty=r.qty, order=res)
+                           qty=send_qty, planned_qty=planned_qty, order=res)
     return BuyDecision(False, "orders", f"{res.get('act')}: {res.get('why')}",
-                       qty=r.qty, order=res)
+                       qty=send_qty, planned_qty=planned_qty, order=res)

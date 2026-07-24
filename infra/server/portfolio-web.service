@@ -1,0 +1,36 @@
+# KIS 보유자산 웹 대시보드 — 오라클 VM 내부에서만 여는 읽기 전용 서비스.
+# 127.0.0.1 바인딩은 bot.portfolio_web에서 강제하며, 외부 접속은 SSH 터널만 사용한다.
+# 설치: infra/server/README.md 참조. 시크릿은 EnvironmentFile(권한 600)로만.
+[Unit]
+Description=stock portfolio web dashboard (read-only KIS balance)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=bot
+WorkingDirectory=/opt/stock/Stock-chart-analyze
+EnvironmentFile=/etc/stock/kis.env
+# 파수꾼·매수루프와 같은 캐시를 써 KIS 토큰 재발급 경쟁을 막는다.
+Environment=KIS_TOKEN_CACHE=/opt/stock/kis_token.json
+Environment=PYTHONUNBUFFERED=1
+# 보유종목·현재가 스냅샷 갱신 주기(초). 5~300 사이로 제한된다.
+Environment=PORTFOLIO_REFRESH_SECONDS=15
+ExecStart=/usr/bin/python3 -m bot.portfolio_web --port 8765
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+
+# 조회 전용 프로세스의 권한과 파일 쓰기 범위를 제한한다.
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=true
+ReadWritePaths=/opt/stock/Stock-chart-analyze/data_cache /opt/stock
+CapabilityBoundingSet=
+RestrictRealtime=true
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+
+[Install]
+WantedBy=multi-user.target

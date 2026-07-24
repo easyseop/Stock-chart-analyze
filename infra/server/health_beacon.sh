@@ -10,7 +10,7 @@
 # 환경변수(kis.env 등에서 주입 — BEACON_ENV로 소스):
 #   NTFY_HEALTH_TOPIC   발행 토픽(필수, 미설정=무동작). 예: stock-health-<랜덤>
 #   NTFY_BASE           기본 https://ntfy.sh
-#   BEACON_UNITS        점검 유닛(기본 "sentinel buyloop telegram watchdog")
+#   BEACON_UNITS        점검 유닛(기본 "sentinel buyloop telegram portfolio-web watchdog")
 #   BEACON_ENV          env 파일(기본 /etc/stock/kis.env) — export 형식이어도 OK
 #
 # 읽기(원격): curl -s "https://ntfy.sh/<TOPIC>/json?poll=1"  (최근 캐시 메시지)
@@ -25,7 +25,7 @@ ENVF="${BEACON_ENV:-/etc/stock/kis.env}"
 TOPIC="${NTFY_HEALTH_TOPIC:-}"
 [ -z "$TOPIC" ] && exit 0                       # 토픽 미설정 = 비콘 비활성(무해)
 BASE="${NTFY_BASE:-https://ntfy.sh}"
-UNITS="${BEACON_UNITS:-sentinel buyloop telegram watchdog}"
+UNITS="${BEACON_UNITS:-sentinel buyloop telegram portfolio-web watchdog}"
 REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 cd "$REPO_DIR" 2>/dev/null || true
 

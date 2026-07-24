@@ -14,7 +14,9 @@ WorkingDirectory=/opt/stock/Stock-chart-analyze
 EnvironmentFile=/etc/stock/kis.env
 # ★ 파수꾼과 같은 토큰 캐시 공유 필수(I3: 토큰 발급 1분1회 — flock 직렬화)
 Environment=KIS_TOKEN_CACHE=/opt/stock/kis_token.json
-ExecStart=/usr/bin/python3 -m bot.kis_buyloop --loop --poll 300
+# 신호가 발행된 뒤 최대 60초 안에 확인. 10초 미만은 코드가 거부한다.
+Environment=BUYLOOP_POLL_SECONDS=60
+ExecStart=/usr/bin/python3 -m bot.kis_buyloop --loop
 Restart=always
 RestartSec=10
 StandardOutput=journal
