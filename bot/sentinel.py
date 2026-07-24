@@ -423,6 +423,17 @@ def check_once(broker, state: dict) -> None:
                 _notify(f"⚠️ 파수꾼 주문 응답 불명(UNKNOWN) — {code} 대사까지 잠금. "
                         f"수동 확인 권장.", critical=True)
 
+    # ── KIS 청산 관리(익절/래칫/타임스탑) — 정합성 점검(2026-07-24) 반영 ──
+    #   손절은 위 루프가, 이익 실현은 kis_exits가: +1R 절반익절·본전/트레일 래칫·
+    #   21일 타임스탑을 KIS 봇 보유에 직접 집행(전략 A 프로파일, R단위 근사).
+    #   KIS 브로커에서만(name 접두) — dry-run/테스트 FakeBroker엔 미작동.
+    if str(getattr(broker, "name", "")).lower().startswith("kis"):
+        try:
+            from bot import kis_exits, settings as _cfg
+            kis_exits.manage(broker, held, _cfg.today_kst())
+        except Exception as e:
+            print(f"[익절관리 오류] {type(e).__name__}: {e}", flush=True)
+
 
 def main() -> None:
     import argparse

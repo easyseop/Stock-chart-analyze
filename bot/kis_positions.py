@@ -39,6 +39,12 @@ def close(code: str) -> None:
     _append({"ev": "close", "code": str(code).upper()})
 
 
+def raise_stop(code: str, stop: float) -> None:
+    """손절선 상향 래칫(본전·트레일) — 올리기만, 내리기 이벤트는 없다.
+    KIS 청산관리자(kis_exits)가 기록 → 파수꾼 fallback 손절선에 즉시 반영."""
+    _append({"ev": "raise", "code": str(code).upper(), "stop": float(stop)})
+
+
 def load() -> dict:
     """{code: {stop, ccy, entry, qty, name, opened}} — 열린 것만. 최신 open 우선."""
     st: dict = {}
@@ -59,10 +65,18 @@ def load() -> dict:
                     st.pop(code, None)
                 elif ev.get("ev") == "open":
                     st[code] = {"code": code, "stop": ev.get("stop"),
+                                "stop0": ev.get("stop"),   # 진입 손절(R 계산 기준, 래칫 불변)
                                 "ccy": ev.get("ccy"), "entry": ev.get("entry"),
                                 "qty": ev.get("qty"), "name": ev.get("name", ""),
                                 "opened": ev.get("opened", ""),
                                 "sleeve": ev.get("sleeve", "A")}
+                elif ev.get("ev") == "raise" and code in st:
+                    try:                        # 래칫: 올리기만(내림 무시)
+                        new = float(ev.get("stop") or 0)
+                        if new > float(st[code].get("stop") or 0):
+                            st[code]["stop"] = new
+                    except (TypeError, ValueError):
+                        pass
     except FileNotFoundError:
         pass
     return st

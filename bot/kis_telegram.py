@@ -125,6 +125,7 @@ def _help_text() -> str:
             "/종목 &lt;코드&gt; — 현재가·평단가·손절예상가 상세\n"
             "  예) /종목 005930 · /종목 AAPL\n"
             "/슬리브 — 매물대(B) 슬리브 종목별 수익률\n"
+            "/성과 — 지수(나스닥·코스피) 대비 성과 + 그래프\n"
             "코드만 보내도 상세 조회됩니다.")
 
 
@@ -195,6 +196,37 @@ def _detail_text(query: str) -> str:
     return "\n".join(L)
 
 
+def _perf_text() -> str:
+    """/성과 — 지수 대비 성과 온디맨드 조회(알파 상태파일 + 그래프)."""
+    from bot import alpha, notify
+    st = alpha._load()
+    if not st.get("day") and not st.get("days"):
+        return ("📊 성과 데이터 아직 없음 — 다음 장중부터 5분마다 기록됩니다.\n"
+                "(장 시작·1시간·마감 자동 알림도 함께)")
+    L = ["📊 <b>전략 성과 vs 지수</b> (KIS 계좌 기준)", ""]
+    for mkt, label, idxn in (("US", "미장", "나스닥"), ("KR", "국장", "코스피")):
+        day = (st.get("day") or {}).get(mkt)
+        if day and day.get("series"):
+            last = day["series"][-1]
+            d = last[1] - last[2]
+            mark = "🟢" if d >= 0 else "🔴"
+            L.append(f"{label} {day['date']} {last[0]} 기준(세션 시작 대비):")
+            L.append(f"  우리 {last[1]:+.2f}% vs {idxn} {last[2]:+.2f}% "
+                     f"→ {mark} {d:+.2f}%p")
+            try:                                   # 그래프는 별도 사진으로
+                url = alpha.chart_url(day["series"], idxn,
+                                      f"{day['date']} {label} 추이")
+                notify.send_photo(url, f"{label} 세션 추이")
+            except Exception:
+                pass
+        cap = alpha.capture_stats(st.get("days") or [], mkt)
+        if cap:
+            L.append(f"  누적: {cap}")
+    L.append("")
+    L.append("자동 알림: 장 시작·1시간마다·장 마감 + 그래프")
+    return "\n".join(L)
+
+
 def handle(text: str) -> str:
     """메시지 텍스트 → 응답 문자열(라우팅). 빈 응답이면 무시."""
     raw = (text or "").strip()
@@ -213,6 +245,8 @@ def handle(text: str) -> str:
     if cmd in ("슬리브", "매물대", "sleeve", "b"):
         from bot import sleeve_stats
         return sleeve_stats.report_text()
+    if cmd in ("성과", "알파", "지수", "perf"):
+        return _perf_text()
     return _detail_text(raw)          # 접두어 없이 코드/이름만 → 상세
 
 
