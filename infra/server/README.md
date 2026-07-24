@@ -1,7 +1,7 @@
 # 상시 서버 패키지 (B-2) — Oracle Always-Free VM 등 $0 서버용
 
 > KIS 미국주는 서버측 스톱이 없어 **파수꾼 상시 가동 = 손절 신뢰성**이다.
-> 이 디렉터리는 그 서버에 올릴 전부다: systemd 유닛 2개 + watchdog.
+> 이 디렉터리는 그 서버에 올릴 파수꾼·매수 루프·조회 서비스와 watchdog을 담는다.
 > KIS 개인계좌는 **IP allowlist가 없어** VM 재시작으로 IP가 바뀌어도 무방(토스와 다름).
 
 ## 구성
@@ -10,6 +10,7 @@
 | `sentinel.service` | 파수꾼(매도) 상시 실행(`python -m bot.sentinel`, `SENTINEL_BROKER=kis`) |
 | `buyloop.service` | 매수 루프 — autopaper 'now' 신호를 KIS에 미러 매수(`python -m bot.kis_buyloop --loop`) |
 | `telegram.service` | 텔레그램 조회 봇(읽기전용) — `/보유`·`/종목 <코드>`(`python -m bot.kis_telegram`) |
+| `portfolio-web.service` | 실제 KIS 보유종목·평단·현재가·손익을 보여주는 사설 웹 화면(`127.0.0.1:8765`) |
 | `watchdog.service` | heartbeat 감시 — 60s P0 · 90s 재기동(≤3회/10분) · 120s+ kill L1 |
 | `watchdog.py` | 위 유닛이 실행하는 스크립트 |
 | `autodeploy.sh` + `.service`/`.timer` | 자동 배포 — 5분마다 새 커밋 확인, 있으면 pull+재시작(스모크 실패 시 롤백) |
@@ -44,6 +45,8 @@ KIS_TOKEN_CACHE=/opt/stock/kis_token.json
 TELEGRAM_BOT_TOKEN=여기에
 TELEGRAM_CHAT_ID=여기에
 NTFY_TOPIC=여기에
+# 실제 매매·사용자 조회·치명 안전 경보만 전송(제안·성과·일상 운영 알림 억제)
+NOTIFY_MODE=trade_only
 EOF
 sudo chmod 600 /etc/stock/kis.env
 
@@ -64,8 +67,15 @@ sudo systemctl enable --now buyloop.service   # ALLOW_BUY=1·KIS_ORDERS_ENABLED=
 sudo cp /opt/stock/Stock-chart-analyze/infra/server/telegram.service /etc/systemd/system/
 sudo systemctl enable --now telegram.service  # TELEGRAM_BOT_TOKEN·CHAT_ID 필요
 
+# 실제 KIS 보유자산 웹 화면(선택, 읽기전용):
+sudo install -o root -g root -m 644 \
+  /opt/stock/Stock-chart-analyze/infra/server/portfolio-web.service \
+  /etc/systemd/system/portfolio-web.service
+sudo systemctl daemon-reload
+sudo systemctl enable --now portfolio-web.service
+
 # 3) 확인
-systemctl status sentinel watchdog buyloop telegram --no-pager
+systemctl status sentinel watchdog buyloop telegram portfolio-web --no-pager
 sudo -u bot python3 /opt/stock/Stock-chart-analyze/scripts/kis_preflight.py
 ```
 
@@ -73,6 +83,39 @@ sudo -u bot python3 /opt/stock/Stock-chart-analyze/scripts/kis_preflight.py
 > API만) 토큰이 유출돼도 이 봇으로는 매매 불가. `getUpdates`는 이 프로세스만 쓴다
 > (봇 하나에 `getUpdates` 소비자는 하나여야 함 — 중복 기동 금지, 409 Conflict).
 > 알림 발송(notify)과는 무관: 발송은 sendMessage, 조회는 getUpdates로 분리됨.
+
+### 내 KIS 보유자산 화면 접속
+
+`portfolio-web`은 오라클 서버의 기존 `/etc/stock/kis.env`를 읽어 **해당 KIS
+환경(`mock` 또는 `live`)의 실제 보유 잔고**를 조회한다. 보유수량·평단·잔고 응답
+기준 현재가·평가금액·평가손익만 브라우저에 전달하며, 계좌번호·API 키·토큰과 주문
+기능은 전달하지 않는다.
+
+기본 갱신 주기는 15초다. `portfolio-web.service`의
+`PORTFOLIO_REFRESH_SECONDS`로 5~300초 사이에서 바꿀 수 있으며, 같은 주기 안의
+브라우저 재요청은 서버 캐시를 사용해 파수꾼·매수루프와 KIS 조회 한도를 다투지
+않는다.
+
+서비스는 코드 수준에서 `127.0.0.1:8765`에만 바인딩한다. OCI 보안 목록이나 Ubuntu
+방화벽에서 8765 포트를 열지 말고, 접속할 기기에서 SSH 터널을 연다.
+
+```bash
+ssh -N -L 8765:127.0.0.1:8765 <오라클-SSH-별칭>
+# 터널을 켠 상태로 브라우저에서 http://127.0.0.1:8765/app/
+```
+
+```bash
+# 서버 자체 점검(민감정보는 출력하지 않음)
+curl -fsS http://127.0.0.1:8765/api/portfolio.json \
+  | python3 -c 'import json,sys; d=json.load(sys.stdin); print(d["environment"], len(d["positions"]), d["partial"])'
+```
+
+자동배포에서 이 서비스도 함께 재시작하려면 `autodeploy.service`에 다음 환경값을
+추가하고 sudoers의 고정 재시작 목록에도 `portfolio-web`을 포함한다.
+
+```ini
+Environment=AUTODEPLOY_SERVICES=sentinel buyloop telegram portfolio-web
+```
 
 ## 모의 봇 켜기 — 최소 순서 (Stage 1.5)
 1. `kis.env` 채우고 `chmod 600` → `kis_arm.py`로 무장(baseline 캡처).

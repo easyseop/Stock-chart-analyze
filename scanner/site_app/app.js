@@ -34,6 +34,7 @@ const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 const content = $("#content");
 const dialog = $("#detail-dialog");
+let portfolioTimer = null;
 
 function escapeHTML(value) {
   return String(value ?? "")
@@ -129,6 +130,34 @@ async function loadData({ quiet = false } = {}) {
   refresh.classList.remove("spinning");
   updateFreshness();
   render();
+}
+
+function isPrivateDashboard() {
+  return ["127.0.0.1", "localhost", "::1"].includes(location.hostname);
+}
+
+async function refreshPortfolio() {
+  try {
+    state.portfolio = await fetchJSON(API.portfolio, 10000);
+    state.portfolioError = null;
+  } catch (error) {
+    state.portfolioError = error;
+  }
+  if (state.view === "portfolio") {
+    updateHero();
+    renderPortfolio();
+  }
+}
+
+function schedulePortfolioRefresh() {
+  if (portfolioTimer) clearTimeout(portfolioTimer);
+  if (!isPrivateDashboard()) return;
+  const seconds = Math.max(5, Math.min(300,
+    finite(state.portfolio?.refresh_seconds, 15)));
+  portfolioTimer = setTimeout(async () => {
+    await refreshPortfolio();
+    schedulePortfolioRefresh();
+  }, seconds * 1000);
 }
 
 function updateFreshness() {
@@ -407,7 +436,9 @@ function renderPortfolio() {
   const partial = state.portfolio.partial
     ? `<div class="alert">일부 시장 조회가 지연돼 목록이 완전하지 않을 수 있습니다.</div>` : "";
   content.innerHTML = `
-    <div class="private-banner"><span>●</span> ${escapeHTML(state.portfolio.environment || "KIS")} 계좌 · 주문 기능과 분리된 로컬 조회</div>
+    <div class="private-banner"><span>●</span> ${escapeHTML(state.portfolio.environment || "KIS")} 계좌
+      · ${finite(state.portfolio.refresh_seconds, 15)}초마다 KIS 잔고 갱신
+      · 주문 기능과 분리된 로컬 조회</div>
     ${partial}
     <div class="portfolio-summary">${summary}</div>
     <div class="portfolio-grid">${positions.map(portfolioCard).join("")}</div>`;
@@ -643,7 +674,7 @@ function boot() {
   initializeControls();
   const hashView = location.hash.replace("#", "");
   setView(VIEW_META[hashView] ? hashView : "now", { updateHash: false });
-  loadData();
+  loadData().finally(schedulePortfolioRefresh);
   setInterval(() => loadData({ quiet: true }), 60_000);
 }
 

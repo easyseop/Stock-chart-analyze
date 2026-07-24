@@ -30,7 +30,8 @@ class _Resp(io.BytesIO):
 
 
 def _clean_env():
-    for k in ("NTFY_TOPIC", "NTFY_SERVER", "TELEGRAM_BOT_TOKEN", "TELEGRAM_CHAT_ID"):
+    for k in ("NTFY_TOPIC", "NTFY_SERVER", "TELEGRAM_BOT_TOKEN", "TELEGRAM_CHAT_ID",
+              "NOTIFY_MODE"):
         os.environ.pop(k, None)
 
 
@@ -104,11 +105,31 @@ def test_ntfy_failure_does_not_raise():
     print("[PASS] ntfy 다운도 send()는 조용히 반환(빌드 안 죽임)")
 
 
+def test_trade_only_filters_noise_but_keeps_trade_query_and_critical():
+    _clean_env()
+    os.environ["NOTIFY_MODE"] = "trade_only"
+    os.environ["TELEGRAM_BOT_TOKEN"] = "token"
+    os.environ["TELEGRAM_CHAT_ID"] = "chat"
+    from bot import notify
+    sent = []
+    with mock.patch.object(notify, "_tg_call",
+                           lambda method, payload: sent.append(payload["text"]) or True), \
+            mock.patch.object(notify, "_ntfy"):
+        assert notify.send("오늘의 매수 제안")
+        assert notify.send("성과 추적 시작")
+        assert notify.send("🟢 KIS 매수 — AAPL", category="trade")
+        assert notify.send("/보유 응답", category="query")
+        assert notify.send("파수꾼 중단", critical=True)
+    assert sent == ["🟢 KIS 매수 — AAPL", "/보유 응답", "파수꾼 중단"]
+    print("[PASS] trade_only → 매매·조회·치명 경보만 전송")
+
+
 if __name__ == "__main__":
     test_noncritical_never_calls_ntfy()
     test_critical_unset_topic_no_network()
     test_critical_with_topic_posts_ntfy()
     test_korean_title_would_not_crash()
     test_ntfy_failure_does_not_raise()
+    test_trade_only_filters_noise_but_keeps_trade_query_and_critical()
     print("\n✅ ntfy 이중화 전부 통과 — P0만·독립·UTF-8본문·무해폴백.")
     _clean_env()

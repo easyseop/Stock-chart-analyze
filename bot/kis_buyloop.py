@@ -244,7 +244,8 @@ def run_once(signals: list[dict], *, fx: float | None = None,
                 tag = " (매물대B)" if sleeve == "B" else ""
                 notify.send(
                     f"🟢 <b>KIS 매수{tag}</b> — {s.get('name', code)}({code})\n"
-                    f"  {d.qty}주 @ {cur}{u} · 손절 {s['stop']}{u}", critical=True)
+                    f"  {d.qty}주 @ {cur}{u} · 손절 {s['stop']}{u}",
+                    critical=True, category="trade")
             except Exception:
                 pass
         results.append({"code": code, "gate": d.gate, "ok": d.ok,

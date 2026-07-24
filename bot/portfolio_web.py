@@ -17,8 +17,11 @@ import argparse
 from datetime import datetime, timezone
 import json
 import mimetypes
+import os
 from pathlib import Path
 import re
+import threading
+import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import parse_qs, unquote, urlparse
 import urllib.request
@@ -31,6 +34,10 @@ PUBLIC_FILES = frozenset(("signals.json", "paper_auto.json", "track.json"))
 STATIC_FILES = frozenset(("index.html", "app.css", "app.js", "og.png"))
 SYMBOL_RE = re.compile(r"^[A-Z0-9][A-Z0-9.\-]{0,14}$")
 US_EXCHANGES = ("NASD", "NYSE", "AMEX")
+PORTFOLIO_REFRESH_SECONDS = max(
+    5, min(300, int(os.environ.get("PORTFOLIO_REFRESH_SECONDS", "15"))))
+_portfolio_lock = threading.Lock()
+_portfolio_cache: tuple[float, dict] | None = None
 
 
 def _position_meta(code: str) -> dict:
@@ -85,11 +92,24 @@ def portfolio_snapshot() -> dict:
     return {
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "environment": kis.ENV,
+        "refresh_seconds": PORTFOLIO_REFRESH_SECONDS,
         "positions": rows,
         "partial": bool(failures),
         "failed_markets": failures,
         "read_only": True,
     }
+
+
+def cached_portfolio_snapshot() -> dict:
+    """설정 주기 안에서는 같은 잔고를 재사용해 KIS·매매 루프와 API 경합을 막는다."""
+    global _portfolio_cache
+    now = time.monotonic()
+    with _portfolio_lock:
+        if _portfolio_cache and now - _portfolio_cache[0] < PORTFOLIO_REFRESH_SECONDS:
+            return _portfolio_cache[1]
+        payload = portfolio_snapshot()
+        _portfolio_cache = (time.monotonic(), payload)
+        return payload
 
 
 def chart_snapshot(code: str, days: int = 180) -> dict:
@@ -179,7 +199,7 @@ class PortfolioHandler(BaseHTTPRequestHandler):
                 self._static(path.rsplit("/", 1)[-1])
                 return
             if path == "/api/portfolio.json":
-                self._json(200, portfolio_snapshot())
+                self._json(200, cached_portfolio_snapshot())
                 return
             if path == "/api/chart.json":
                 q = parse_qs(parsed.query)
