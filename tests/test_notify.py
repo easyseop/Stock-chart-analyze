@@ -5,6 +5,7 @@
   3) critical=True + NTFY_TOPIC 설정 → ntfy POST 발행(텔레그램과 독립)
   4) 한글·이모지 본문 안전 — HTTP 헤더(latin-1)로 안 새고 본문은 UTF-8
   5) ntfy 실패해도 send()는 예외 없이 반환(빌드 안 죽임)
+  6) 테스트에서는 서버의 kis.env 자격증명 폴백을 읽지 않음
 
 실행: python -m tests.test_notify
 """
@@ -124,6 +125,17 @@ def test_trade_only_filters_noise_but_keeps_trade_query_and_critical():
     print("[PASS] trade_only → 매매·조회·치명 경보만 전송")
 
 
+def test_test_package_disables_operating_env_fallback():
+    _clean_env()
+    from bot import notify
+    notify._ENV_LOADED = False
+    with mock.patch("builtins.open") as opened:
+        notify._ensure_env()
+    opened.assert_not_called()
+    assert notify._ENV_LOADED
+    print("[PASS] 테스트 패키지 → 운영 kis.env 자격증명 폴백 차단")
+
+
 if __name__ == "__main__":
     test_noncritical_never_calls_ntfy()
     test_critical_unset_topic_no_network()
@@ -131,5 +143,6 @@ if __name__ == "__main__":
     test_korean_title_would_not_crash()
     test_ntfy_failure_does_not_raise()
     test_trade_only_filters_noise_but_keeps_trade_query_and_critical()
+    test_test_package_disables_operating_env_fallback()
     print("\n✅ ntfy 이중화 전부 통과 — P0만·독립·UTF-8본문·무해폴백.")
     _clean_env()

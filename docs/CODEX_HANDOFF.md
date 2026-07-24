@@ -10,7 +10,9 @@
 ## 1. 현재 Git 상태
 
 - 기본 브랜치: `claude/happy-gauss-cwoq21`
-- 현재 문서 마감 브랜치: `codex/final-handoff`
+- 현재 작업 브랜치: `codex/fix-review-and-oracle-validation`
+- 검토 PR: [#75 Oracle KIS 검증과 알림 안정성 보강](https://github.com/easyseop/Stock-chart-analyze/pull/75)
+- 리뷰 수정 커밋: `7ebe0d97` — 알림 2건과 보유자산 폴링 경합 보정
 - 통합 PR: [#72 오라클 KIS 대시보드와 실매매 안정성 보강](https://github.com/easyseop/Stock-chart-analyze/pull/72)
 - PR #72 병합 커밋: `b88eee1`
 - 중복 Draft PR #70: 통합 확인 후 닫음
@@ -42,10 +44,11 @@ Oracle 자산 대시보드, 코드 push 무거래 보정이 PR #72와 #73을 통
 - `bot/portfolio_web.py`: 주문 모듈을 불러오지 않는 GET/HEAD 전용 서버.
 - `infra/server/portfolio-web.service`: Oracle Ubuntu용 systemd 서비스.
 - 서버는 코드 수준에서 `127.0.0.1:8765`에만 바인딩.
-- 기존 `/etc/stock/kis.env`를 이용해 KIS `mock` 또는 `live` 환경의 국내·미국
+- 기존 KIS 환경 파일을 이용해 KIS `mock` 또는 `live` 환경의 국내·미국
   보유종목을 조회.
 - 표시 필드: 종목, 보유수량, 평단, KIS 잔고 기준 현재가, 평가금액, 손익, 손익률.
-- 기본 15초 갱신. 같은 주기 안의 요청은 캐시해 파수꾼·매수루프와 KIS 호출 경합 방지.
+- 기본 60초 갱신. 같은 주기 안의 요청은 캐시하며, 별도 프로세스인 파수꾼·매수루프와
+  KIS 호출 경합을 줄인다.
 - 계좌번호, App Key/Secret, 토큰은 JSON과 로그에 포함하지 않음.
 
 ### 매매 운영 안정성
@@ -57,7 +60,7 @@ Oracle 자산 대시보드, 코드 push 무거래 보정이 PR #72와 #73을 통
 - 반반/눌림 지정가 주문의 대기·취소·만료 수명주기 구현.
 - 손절 주문 chase, 취소 확인, 가격 하한, 초과매도 방지 구현.
 - 체결 확인 후에만 원가장부와 보호 포지션 생성.
-- 매수 신호 확인 60초, 파수꾼 시세 확인 20초, 보유자산 화면 15초.
+- 매수 신호 확인 60초, 파수꾼 시세 확인 20초, 보유자산 화면 60초.
 - 각 주기는 환경변수로 조정 가능하며 너무 짧거나 긴 값은 코드에서 제한.
 
 ### 지표와 전략 연결
@@ -96,6 +99,33 @@ git diff --check
 
 검증 범위에는 매수 현금, 일일손실, 중복주문, 부분체결, UNKNOWN 대사, 국내/미국
 주문 라우팅, 손절 chase, 지표 매핑, 알림 필터, 공개/개인 웹 안전 경계가 포함된다.
+
+### 2026-07-24 리뷰 3건 및 Oracle 실측
+
+클로드 리뷰의 실제 결함 3건을 PR #75에서 보정했다.
+
+- 일일손실 래치 최초 전이에 critical `trade` 알림 1회 발송. 알림 실패와 무관하게
+  래치를 먼저 저장하며 같은 날 재호출에는 다시 보내지 않는다.
+- 보유자산 화면 기본 폴링을 15초에서 60초로 늘리고 5~300초 클램프를 테스트한다.
+  프로세스 간 공유 리미터는 새로 만들지 않았으며 주문 예약 슬롯도 변경하지 않았다.
+- 매수·매도 체결확정 알림에 `category="trade"`를 명시해 메시지 문구 추론 의존을
+  제거했다.
+
+로컬에서는 전체 `tests/test_*.py`, compileall, 사이트 JavaScript 문법 검사,
+`git diff --check`가 통과했다. Oracle에서는 관련 단위검사와 실제 KIS `mock`
+보유자산 조회를 검증했다.
+
+- 반환된 보유행이 비어 있지 않았고 모든 행의 수량·평단·현재가·평가금액·손익·
+  손익률이 유한한 숫자였다.
+- `partial=false`, `read_only=true`, `refresh_seconds=60`.
+- 60초 안의 두 요청은 같은 `generated_at`을 반환하고, 60초가 지난 요청은 새
+  `generated_at`을 반환했다.
+- `/app/`은 200, POST는 405, 리스너는 `127.0.0.1:8765`뿐이었다.
+
+Oracle에서 첫 `test_kis_boot` 실행 때 모의 AAPL/NASD/NVDA 알림 3건이 실제 Telegram
+자격증명 폴백을 읽어 발송됐다. 테스트의 KIS 조회·주문은 모두 모킹돼 실제 주문·체결은
+없었다. 재발 방지로 `tests/__init__.py`가 외부 알림 자격증명을 비우고
+`NOTIFY_ENV_FALLBACK=0`을 설정하며, `bot.notify`도 이 명시적 폴백 차단값을 지원한다.
 
 ## 4. CI 테스트 격리 보정
 
@@ -166,48 +196,34 @@ gh run list --limit 10
 
 다른 노트북의 Codex에 전달할 문장:
 
-> `docs/CODEX_HANDOFF.md`를 먼저 읽고, Oracle 서버 배포와 실계정 조회 검증부터
-> 이어서 진행해줘. 완료 단위마다 별도 `codex/` 브랜치에 커밋·푸시하고 이
-> 인수인계서도 갱신해줘.
+> `docs/CODEX_HANDOFF.md`를 먼저 읽고, Draft PR #75의 클로드 리뷰와 병합 후
+> Oracle 기본 브랜치 복귀부터 이어서 진행해줘. 완료 단위마다 별도 `codex/`
+> 브랜치에 커밋·푸시하고 이 인수인계서도 갱신해줘.
 
-## 7. Oracle 배포 — 다른 컴퓨터에서 진행
+## 7. Oracle 배포 — 완료
 
-사용자 요청에 따라 Oracle 서버 설치와 KIS 실계정 조회 검증은 SSH 정보가 저장된
-다른 컴퓨터에서 이어서 진행한다. 현재 컴퓨터에서는 의도적으로 배포하지 않았다.
-개인키 내용이나 비밀번호를 채팅·Git에 붙이지 말고 다음 정보만 사용한다.
+SSH 주소·개인키·KIS 인증값은 계속 Git 밖에만 둔다. 2026-07-24 실제 서버 구성이
+초기 문서의 `/opt/stock`·`bot` 사용자 예시와 달라 기존 운영 배치를 보존해 적용했다.
 
-- SSH 대상: `ubuntu@공인IP` 또는 SSH 별칭
-- 로컬 개인키 경로: 예) `/Users/.../oracle.key`
+- 저장소: `/home/ubuntu/Stock-chart-analyze`
+- KIS 환경 파일: `/home/ubuntu/kis.env`(권한 600, 값은 기록하지 않음)
+- 서비스 사용자: `ubuntu`
+- Python 의존성: 저장소의 `.venv`; 서버에 `python3.10-venv` 설치
+- 배포 브랜치: `codex/fix-review-and-oracle-validation`
+- `portfolio-web.service`: enabled/active
+- 기존 `sentinel`, `buyloop`, `telegram`: 수정 코드 적용 후 재시작, 모두 active
+- `autodeploy.timer`: active. 재시작 대상에 `portfolio-web`까지 포함
 
-PR #72 병합 후 서버에서:
+저장소의 일반 배포 유닛은 `/opt/stock` 표준 구성을 계속 유지한다. 실제 서버에는
+`/etc/systemd/system/portfolio-web.service.d/oracle-ubuntu.conf` 드롭인으로 사용자,
+경로, `.venv`, 기존 `kis.env` source 방식을 보정했다. 서비스는 외부 포트를 열지 않고
+루프백에만 바인딩한다.
 
-```bash
-cd /opt/stock/Stock-chart-analyze
-sudo -u bot git fetch origin
-sudo -u bot git pull --ff-only
-
-sudo install -o root -g root -m 644 \
-  infra/server/portfolio-web.service \
-  /etc/systemd/system/portfolio-web.service
-sudo systemctl daemon-reload
-sudo systemctl enable --now portfolio-web.service
-sudo systemctl status portfolio-web --no-pager
-```
-
-`/etc/stock/kis.env`에는 비밀값과 함께 다음 운영값을 서버에서만 설정한다.
-
-```dotenv
-NOTIFY_MODE=trade_only
-PORTFOLIO_REFRESH_SECONDS=15
-BUYLOOP_POLL_SECONDS=60
-SENTINEL_POLL_SECONDS=20
-```
-
-서버 자체 검증:
+서버 자체의 민감정보 없는 검증:
 
 ```bash
 curl -fsS http://127.0.0.1:8765/api/portfolio.json \
-  | python3 -c 'import json,sys; d=json.load(sys.stdin); print(d["environment"], len(d["positions"]), d["partial"])'
+  | python3 -c 'import json,sys; d=json.load(sys.stdin); print(d["environment"], bool(d["positions"]), d["partial"], d["refresh_seconds"])'
 ```
 
 사용자 기기에서 SSH 터널:
@@ -237,11 +253,14 @@ GitHub API 기준 Pages는 public이고 최신 배포와 GitHub 호스팅 스모
 네트워크/모바일 핫스팟으로 확인하거나, 개인 KIS 화면은 Oracle SSH 터널 경로를
 사용한다.
 
-## 9. 다른 컴퓨터에서 남은 순서
+## 9. 다음 작업 순서
 
-현재 컴퓨터에서 할 수 있는 코드 개발, 테스트, PR 병합, 공개 Pages 배포 확인은
-완료됐다. 다음 작업만 Oracle 정보가 저장된 컴퓨터에서 진행한다.
+Oracle 배포와 KIS 모의계좌 실데이터 검증은 완료됐다. 다음은 검토·병합 단계다.
 
-1. Oracle SSH 정보 확인 후 `portfolio-web.service` 설치.
-2. KIS 모의계좌 실제 보유종목 수·평단·현재가·손익 15초 갱신 검증.
-3. 작업 완료 단위마다 이 문서 갱신 → 커밋 → `codex/` 브랜치 푸시.
+1. Draft PR #75에서 클로드 리뷰를 받고 알림·경합 수정과 테스트 격리 보정을 확인한다.
+2. 승인 후에만 `claude/happy-gauss-cwoq21`에 병합한다. 직접 push하지 않는다.
+3. 병합 뒤 Oracle 저장소를 기본 브랜치로 다시 전환하고, 자동배포 무변경 스모크와
+   `sentinel`, `buyloop`, `telegram`, `portfolio-web` active 상태를 재확인한다.
+4. Ubuntu 패키지 점검에서 대기 중인 커널 업그레이드가 표시됐다. 매매 시간 밖의
+   별도 유지보수 창에서만 재부팅하고 네 서비스를 다시 확인한다. 이번 배포에서는
+   매매 공백을 만들지 않기 위해 재부팅하지 않았다.

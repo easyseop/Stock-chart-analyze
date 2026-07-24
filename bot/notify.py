@@ -30,12 +30,16 @@ def _ensure_env() -> None:
 
     systemd `EnvironmentFile`은 `export KEY=val` 형식을 못 읽어(실측: telegram·
     buyloop 프로세스에 토큰 미주입 → 매수 알림 조용히 유실) 이 폴백이 필요하다.
+    테스트는 `NOTIFY_ENV_FALLBACK=0`으로 로컬 운영 파일 읽기를 명시적으로 막는다.
     1회만 시도(_ENV_LOADED). 이미 설정된 값은 안 덮음(setdefault). 실패는 무시.
     값은 절대 로그·예외에 담지 않는다."""
     global _ENV_LOADED
     if _ENV_LOADED:
         return
     _ENV_LOADED = True
+    if os.environ.get("NOTIFY_ENV_FALLBACK", "1").strip().lower() in (
+            "0", "false", "off", "no"):
+        return
     for p in (os.environ.get("AUTODEPLOY_ENV"), os.environ.get("BEACON_ENV"),
               "/etc/stock/kis.env", os.path.expanduser("~/kis.env")):
         if not p:
