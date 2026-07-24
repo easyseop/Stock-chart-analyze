@@ -108,7 +108,11 @@ def execute_entry(pos_key: str, symbol: str, *, price_usd: float,
     #   게이트가 SEED 전액을 매 사이클 재배포 가능으로 오판한다(검토 2026-07-15).
     open_cost = costbook.open_cost_total()
     if open_cost_krw is not None:
-        open_cost = max(open_cost, float(open_cost_krw))
+        #   슬리브 SEED 오버라이드(B) 시엔 호출부의 슬리브별 원가만 사용 — costbook은
+        #   전역(슬리브 무구분)이라 max()로 섞으면 A의 원가가 B의 작은 SEED와 비교돼
+        #   불변식 위반→kill L1(전체 매수 중단) 오발동 위험(정합성 점검 2026-07-24).
+        open_cost = (float(open_cost_krw) if seed_krw is not None
+                     else max(open_cost, float(open_cost_krw)))
     if not envelope.invariant_ok(seed, open_cost):
         kill.raise_level(1, "kis_buy", f"불변식 위반 open_cost {open_cost:.0f} > SEED")
         return BuyDecision(False, "invariant", "open_cost > SEED — 회계 버그, 신규 중지")

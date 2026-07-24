@@ -195,6 +195,10 @@ def run_once(signals: list[dict], *, fx: float | None = None,
         market = kis.market_of_ccy(ccy)
         excg = excg_of.get(code, "NASD")
 
+        if sleeve == "B" and n_open >= settings.SHELF_MAX_POS:
+            results.append({"code": code, "gate": "cap",
+                            "why": f"B 슬리브 동시보유 한도({settings.SHELF_MAX_POS}) 도달"})
+            continue
         if code in held:                           # 브로커-진실: 이미 보유 = 중복 금지(A·B 공통)
             results.append({"code": code, "gate": "already",
                             "why": f"이미 KIS 보유 {held[code]}주"}); continue
