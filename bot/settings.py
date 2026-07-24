@@ -34,7 +34,8 @@ FX_USDKRW = 1380.0           # 달러 환산(달러 시그널 수량 계산용)
 
 # ── 안전 가드(사용자와 합의한 핵심) ─────────────────────────────
 ENTRY_TOLERANCE = 0.015      # 실시간가가 시그널 진입가 ±1.5% 이내일 때만 매수
-SHELF_MAX_POS = int(os.environ.get("SHELF_MAX_POS", "4"))
+import os as _os_shelf
+SHELF_MAX_POS = int(_os_shelf.environ.get("SHELF_MAX_POS", "4"))
 #   ↑ 매물대 슬리브(B) 동시 보유 상한. 정합성 점검(2026-07-24): 롤아웃 캡이
 #     슬리브별로 각각 적용돼 A(12)+B(12)=24까지 가능하던 구멍 → B 전용 소형
 #     상한으로 총노출을 A 12 + B 4 = 16으로 제한(B 예산 5M이면 4~5개가 자연 상한).
