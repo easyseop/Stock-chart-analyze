@@ -122,30 +122,37 @@ def test_accounting_retry_after_crash_is_idempotent():
 
 
 def test_unaccounted_fill_alerts_once_after_three_cycles():
-    """실체결가 미확인으로 예약이 묶이면 3회 뒤 1회 경보하고 회계 후 정리한다."""
+    """여러 예약이 묶여도 3회 뒤 요약 1개만 경보하고 회계 후 정리한다."""
     with tempfile.TemporaryDirectory() as tmp, \
          mock.patch.object(L, "LEDGER_PATH", os.path.join(tmp, "orders.jsonl")), \
          mock.patch.object(A, "WATCH_PATH", os.path.join(tmp, "watch.json")), \
          mock.patch("bot.notify.send", return_value=True) as send:
         L.record_submit("buy:watch", "AAPL", 3, meta=_meta())
         L.on_result("buy:watch", "filled", 3, open_order=False)
+        L.record_submit(
+            "buy:watch2", "MSFT", 2,
+            meta={**_meta(), "pos_key": "pos:MSFT"})
+        L.on_result("buy:watch2", "filled", 2, open_order=False)
 
         assert A.monitor_unaccounted_fills(alert_cycles=3)["alerts"] == []
         assert A.monitor_unaccounted_fills(alert_cycles=3)["alerts"] == []
         third = A.monitor_unaccounted_fills(alert_cycles=3)
-        assert third["pending"] == 1 and third["alerts"][0]["cycles"] == 3
+        assert third["pending"] == 2 and len(third["alerts"]) == 2
+        assert {row["cycles"] for row in third["alerts"]} == {3}
         assert send.call_count == 1
         message = send.call_args.args[0]
-        assert "filled=3 accounted=0" in message and "예약은 계속 유지" in message
+        assert "회계 지연 2건" in message and "AAPL(3/0)" in message
+        assert "MSFT(2/0)" in message and "예약은 계속 유지" in message
 
         fourth = A.monitor_unaccounted_fills(alert_cycles=3)
-        assert fourth["pending"] == 1 and fourth["alerts"] == []
+        assert fourth["pending"] == 2 and fourth["alerts"] == []
         assert send.call_count == 1
 
         L.mark_accounted("buy:watch", 3)
+        L.mark_accounted("buy:watch2", 2)
         done = A.monitor_unaccounted_fills(alert_cycles=3)
         assert done["pending"] == 0 and A._watch_load()["items"] == {}
-        print("[PASS] filled>accounted 3회 지속 시 1회 경보·회계 후 감시 정리")
+        print("[PASS] filled>accounted 여러 건도 3회 뒤 요약 1회·회계 후 정리")
 
 
 def main():

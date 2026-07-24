@@ -94,6 +94,7 @@ def monitor_unaccounted_fills(*, alert_cycles: int | None = None) -> dict:
     old = _watch_load().get("items") or {}
     items: dict[str, dict] = {}
     alerts: list[dict] = []
+    due: list[tuple[str, dict, dict]] = []
     for key, cur in pending.items():
         prev = old.get(key) if isinstance(old, dict) else None
         same_gap = (
@@ -105,21 +106,32 @@ def monitor_unaccounted_fills(*, alert_cycles: int | None = None) -> dict:
         alerted = bool(prev.get("alerted")) if same_gap else False
         item = {**cur, "count": count, "alerted": alerted}
         if count >= alert_cycles and not alerted:
-            text = (
-                f"🚨 KIS 체결 회계 지연 — {cur['symbol'] or key} "
-                f"filled={cur['filled']} accounted={cur['accounted']} "
-                f"{count}회 연속. 신규매수 예약은 계속 유지 중이며 "
-                "브로커 체결가·원장 상태 수동 확인 필요"
-            )
-            try:
-                from bot import notify
-                sent = bool(notify.send(text, critical=True, category="trade"))
-            except Exception:
-                sent = False
-            if sent:
-                item["alerted"] = True
-                alerts.append({"key": key, **cur, "cycles": count})
+            due.append((key, cur, item))
         items[key] = item
+
+    if due:
+        labels = [
+            f"{cur['symbol'] or key}({cur['filled']}/{cur['accounted']})"
+            for key, cur, _item in due[:8]
+        ]
+        more = f" 외 {len(due) - 8}건" if len(due) > 8 else ""
+        text = (
+            f"🚨 KIS 체결 회계 지연 {len(due)}건 — "
+            f"{', '.join(labels)}{more}. "
+            f"{min(int(item['count']) for _key, _cur, item in due)}회 이상 연속. "
+            "신규매수 예약은 계속 유지 중이며 브로커 체결가·원장 상태 수동 확인 필요"
+        )
+        try:
+            from bot import notify
+            sent = bool(notify.send(text, critical=True, category="trade"))
+        except Exception:
+            sent = False
+        if sent:
+            for key, cur, item in due:
+                item["alerted"] = True
+                alerts.append({
+                    "key": key, **cur, "cycles": int(item["count"]),
+                })
 
     _watch_save({"version": 1, "items": items})
     return {"ok": True, "pending": len(pending), "alerts": alerts}
