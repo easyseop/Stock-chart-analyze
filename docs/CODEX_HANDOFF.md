@@ -98,12 +98,14 @@ PR #72에서 발견된 자동매매 회귀 테스트의 운영 상태 격리 누
 GitHub Actions에서는 `GITHUB_ACTIONS=true`이므로 테스트가 실제 `state` 브랜치의
 `autopaper.snapshot.json`을 복구해 테스트용 빈 계좌를 오염시킬 수 있었다.
 `fastsafe`, `killswitch`, `phase0`, `pos_cap`, `trail` 테스트의 `_fresh()`
-초기화에서 다음과 같이 운영 스냅샷 복구를 끈다.
+초기화에서 운영 스냅샷 복구를 끈다. CI 분산 매매 락도 검증 대상이 아닌
+`phase0`, `pos_cap`, `trail`에서는 명시적으로 `off`로 고정한다.
 
 ```python
 def _fresh(tmp: str) -> None:
     ...
     ap._state_branch_snapshot = lambda: None
+    ap._trading_lock_status = lambda run_id: "off"
 ```
 
 이 수정은 테스트에서만 운영 스냅샷 복구를 끄며 실제 자동매매 복구 로직은 변경하지
