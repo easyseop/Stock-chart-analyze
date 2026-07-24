@@ -477,6 +477,9 @@ def build(results: list[dict], frames_map: dict[str, dict],
     with open(os.path.join(out_dir, "api", "signals.json"), "w",
               encoding="utf-8") as fp:
         fp.write(_signals_json(results))       # 자동매매용 기계 판독 시그널(JSON)
+    # 새 UI는 기존 산출물과 API 계약을 건드리지 않고 /app 아래에만 추가한다.
+    from scanner import siteapp
+    siteapp.publish(out_dir)
     return out_dir
 
 
@@ -660,7 +663,6 @@ _REPO = "easyseop/Stock-chart-analyze"
 
 def _trigger_page() -> str:
     return _tmpl("lookup.html").replace("__REPO__", _REPO)
-
 
 
 
