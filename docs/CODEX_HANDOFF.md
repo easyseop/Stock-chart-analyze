@@ -10,17 +10,21 @@
 ## 1. 현재 Git 상태
 
 - 기본 브랜치: `claude/happy-gauss-cwoq21`
-- 현재 후속 작업 브랜치: `codex/silent-push-deploy`
+- 현재 문서 마감 브랜치: `codex/final-handoff`
 - 통합 PR: [#72 오라클 KIS 대시보드와 실매매 안정성 보강](https://github.com/easyseop/Stock-chart-analyze/pull/72)
 - PR #72 병합 커밋: `b88eee1`
 - 중복 Draft PR #70: 통합 확인 후 닫음
-- 현재 브랜치 주요 커밋:
+- 배포-매매 분리 PR: [#73 코드 push 배포와 모의매매 분리](https://github.com/easyseop/Stock-chart-analyze/pull/73)
+- PR #73 병합 커밋: `bba4341`
+- 통합된 주요 커밋:
   - `be0dd7a` — Oracle 보유자산 서비스와 조용한 알림 정책
   - `f2dc1ed` — 주문·체결·대사·일일손실 안전장치 통합
   - `bfc8997` — 장중 폴링 주기와 지표 합의 게이트 보강
+  - `fff297d` — 코드 push 배포를 읽기 전용으로 분리
+  - `a8d3ac5` — Oracle 배포를 SSH 정보가 있는 컴퓨터로 인수인계
 
 기본 브랜치에는 과거 `codex/trading-safety-large-5`의 안전성 개선 커밋과
-Oracle 자산 대시보드가 PR #72를 통해 통합돼 있다.
+Oracle 자산 대시보드, 코드 push 무거래 보정이 PR #72와 #73을 통해 통합돼 있다.
 
 ## 2. 완료된 개발
 
@@ -127,6 +131,17 @@ def _fresh(tmp: str) -> None:
 - 공개 화면을 위한 읽기 전용 `paper_auto.json` 스냅샷만 생성
 - 정기·수동 데이터/매매 실행과 빌드·배포 실패 경보는 기존대로 유지
 
+PR #73은 전체 CI 통과 후 병합됐다. 병합으로 시작된
+[daily-scan 실행 #30074425686](https://github.com/easyseop/Stock-chart-analyze/actions/runs/30074425686)은
+빌드, Pages 배포, GitHub 호스팅 스모크 테스트까지 모두 성공했다. 원격 로그에서도
+아래 문구를 확인했다.
+
+```text
+[autopaper] 코드 배포 전용 — 매매·상태 저장·알림 생략(표시 스냅샷만 생성)
+```
+
+이 실행에서는 `state` 브랜치 계좌 백업 단계도 건너뛰었다.
+
 ## 6. 다른 노트북에서 이어가기
 
 GitHub CLI 인증 후 아래 순서로 시작한다.
@@ -206,16 +221,27 @@ Ubuntu 방화벽에서 8765 포트를 공개하지 않는다.
 
 ## 8. 공개 사이트 접속 참고
 
-GitHub API 기준 Pages는 public이고 최근 배포는 성공했다. 다만 2026-07-24 현재
-작업 중인 Mac 네트워크에서는 `easyseop.github.io:443` 연결이 IPv4/IPv6 모두
-타임아웃됐다. 사이트 파일 문제라기보다 해당 네트워크의 GitHub Pages 접근 문제로
-확인됐다. 다른 네트워크/모바일 핫스팟으로 확인하거나, 개인 KIS 화면은 Oracle SSH
-터널 경로를 사용한다.
+GitHub API 기준 Pages는 public이고 최신 배포와 GitHub 호스팅 스모크 테스트가
+성공했다. 배포 artifact에도 다음 파일이 포함된 것을 별도로 확인했다.
 
-## 9. 남은 순서
+- `app/index.html`
+- `app/app.js`
+- `app/app.css`
+- `api/paper_auto.json`
+- `api/signals.json`
+- `api/track.json`
 
-1. 코드 push 배포-매매 분리 후속 PR 전체 CI 통과 후 병합.
-2. GitHub Pages 새 배포와 `/app/` 스모크 확인.
-3. 다른 컴퓨터에서 Oracle SSH 정보 확인 후 `portfolio-web.service` 설치.
-4. 다른 컴퓨터에서 KIS 모의계좌 실제 보유종목 수·평단·현재가·손익 15초 갱신 검증.
-5. 작업 완료 단위마다 이 문서 갱신 → 커밋 → 현재 브랜치 푸시.
+다만 2026-07-24 현재 작업 중인 Mac 네트워크에서는
+`easyseop.github.io:443` 연결이 IPv4/IPv6 모두 타임아웃됐다. 사이트 파일
+문제라기보다 해당 네트워크의 GitHub Pages 접근 문제로 확인됐다. 다른
+네트워크/모바일 핫스팟으로 확인하거나, 개인 KIS 화면은 Oracle SSH 터널 경로를
+사용한다.
+
+## 9. 다른 컴퓨터에서 남은 순서
+
+현재 컴퓨터에서 할 수 있는 코드 개발, 테스트, PR 병합, 공개 Pages 배포 확인은
+완료됐다. 다음 작업만 Oracle 정보가 저장된 컴퓨터에서 진행한다.
+
+1. Oracle SSH 정보 확인 후 `portfolio-web.service` 설치.
+2. KIS 모의계좌 실제 보유종목 수·평단·현재가·손익 15초 갱신 검증.
+3. 작업 완료 단위마다 이 문서 갱신 → 커밋 → `codex/` 브랜치 푸시.
