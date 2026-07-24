@@ -26,10 +26,11 @@ from bot import kis, kis_reconcile, ledger
 _STATE = {"done": False, "low": 0}
 
 
-def _notify(text: str, *, critical: bool = False) -> None:
+def _notify(text: str, *, critical: bool = False,
+            category: str | None = None) -> None:
     try:
         from bot import notify
-        notify.send(text, critical=critical)
+        notify.send(text, critical=critical, category=category)
     except Exception:
         pass
 
@@ -119,7 +120,8 @@ def _resolve_acks() -> list[dict]:
                     pass
             _notify(f"✅ 체결 확정(잔고대사) — {r.get('symbol')} "
                     f"{'매수' if r.get('side') == 'BUY' else '매도'} "
-                    f"{r.get('filled')}주", critical=(r.get("side") == "SELL"))
+                    f"{r.get('filled')}주", critical=(r.get("side") == "SELL"),
+                    category="trade")
         return rs
     except Exception:
         return []                                  # 대사 실패가 부팅을 못 깨게

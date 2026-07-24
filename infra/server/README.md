@@ -15,7 +15,7 @@
 | `watchdog.py` | 위 유닛이 실행하는 스크립트 |
 | `autodeploy.sh` + `.service`/`.timer` | 자동 배포 — 5분마다 새 커밋 확인, 있으면 pull+재시작(스모크 실패 시 롤백) |
 
-기본 장중 주기는 파수꾼 시세 20초, KIS 보유자산 화면 15초, 매수 신호 확인
+기본 장중 주기는 파수꾼 시세 20초, KIS 보유자산 화면 60초, 매수 신호 확인
 60초다. 각각 `SENTINEL_POLL_SECONDS`(5~60), `PORTFOLIO_REFRESH_SECONDS`(5~300),
 `BUYLOOP_POLL_SECONDS`(10~300)로 조정한다. 너무 짧은 오설정은 코드에서 제한해
 KIS 호출 폭주가 매매 안정성을 해치지 않게 한다.
@@ -96,10 +96,10 @@ sudo -u bot python3 /opt/stock/Stock-chart-analyze/scripts/kis_preflight.py
 기준 현재가·평가금액·평가손익만 브라우저에 전달하며, 계좌번호·API 키·토큰과 주문
 기능은 전달하지 않는다.
 
-기본 갱신 주기는 15초다. `portfolio-web.service`의
+기본 갱신 주기는 60초다. `portfolio-web.service`의
 `PORTFOLIO_REFRESH_SECONDS`로 5~300초 사이에서 바꿀 수 있으며, 같은 주기 안의
-브라우저 재요청은 서버 캐시를 사용해 파수꾼·매수루프와 KIS 조회 한도를 다투지
-않는다.
+브라우저 재요청은 서버 캐시를 사용한다. 잔고 조회는 별도 프로세스의 KIS 유량을
+사용하므로 기본 주기를 길게 잡아 파수꾼·매수루프의 주문 유량과 경합을 줄인다.
 
 서비스는 코드 수준에서 `127.0.0.1:8765`에만 바인딩한다. OCI 보안 목록이나 Ubuntu
 방화벽에서 8765 포트를 열지 말고, 접속할 기기에서 SSH 터널을 연다.

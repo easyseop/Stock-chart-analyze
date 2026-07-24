@@ -14,14 +14,18 @@ from bot import kis_buy
 
 def test_threshold_latch_and_next_day_reset():
     with tempfile.TemporaryDirectory() as tmp, \
-         mock.patch.object(D, "LATCH_PATH", os.path.join(tmp, "loss.json")):
+         mock.patch.object(D, "LATCH_PATH", os.path.join(tmp, "loss.json")), \
+         mock.patch("bot.notify.send") as send:
         ok = D.status(seed_total=15_000, realized=-299, day="2026-07-24")
         assert ok["allowed"] and not ok["latched"]
         hit = D.status(seed_total=15_000, realized=-300, day="2026-07-24")
         assert not hit["allowed"] and hit["latched"] and hit["threshold"] == -300
+        send.assert_called_once()
+        assert send.call_args.kwargs == {"critical": True, "category": "trade"}
         # 손익 입력이 나중에 좋아져도 같은 날은 래치가 풀리지 않는다.
         still = D.status(seed_total=15_000, realized=500, day="2026-07-24")
         assert still["latched"] and not still["allowed"]
+        assert send.call_count == 1
         # KST 날짜가 바뀌면 전일 래치만 무효화한다.
         tomorrow = D.status(seed_total=15_000, realized=0, day="2026-07-25")
         assert tomorrow["allowed"] and not tomorrow["latched"]
@@ -34,6 +38,18 @@ def test_invalid_seed_fails_closed():
         s = D.status(seed_total=0, realized=0, day="2026-07-24")
         assert not s["allowed"] and "SEED" in s["why"]
         print("[PASS] 시드 미설정은 신규매수 fail-closed")
+
+
+def test_notification_failure_does_not_break_latch():
+    with tempfile.TemporaryDirectory() as tmp, \
+         mock.patch.object(D, "LATCH_PATH", os.path.join(tmp, "loss.json")), \
+         mock.patch("bot.notify.send", side_effect=RuntimeError("offline")) as send:
+        hit = D.status(seed_total=15_000, realized=-300, day="2026-07-24")
+        assert hit["latched"] and not hit["allowed"]
+        still = D.status(seed_total=15_000, realized=0, day="2026-07-24")
+        assert still["latched"] and not still["allowed"]
+        assert send.call_count == 1
+        print("[PASS] 알림 장애에도 손실 래치 유지·같은 날 재발송 없음")
 
 
 def test_buy_chain_uses_daily_gate():
@@ -51,6 +67,7 @@ def test_buy_chain_uses_daily_gate():
 def main():
     test_threshold_latch_and_next_day_reset()
     test_invalid_seed_fails_closed()
+    test_notification_failure_does_not_break_latch()
     test_buy_chain_uses_daily_gate()
     print("\nKIS 일일 손실 서킷브레이커 검증 통과.")
 

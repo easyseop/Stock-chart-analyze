@@ -35,7 +35,7 @@ STATIC_FILES = frozenset(("index.html", "app.css", "app.js", "og.png"))
 SYMBOL_RE = re.compile(r"^[A-Z0-9][A-Z0-9.\-]{0,14}$")
 US_EXCHANGES = ("NASD", "NYSE", "AMEX")
 PORTFOLIO_REFRESH_SECONDS = max(
-    5, min(300, int(os.environ.get("PORTFOLIO_REFRESH_SECONDS", "15"))))
+    5, min(300, int(os.environ.get("PORTFOLIO_REFRESH_SECONDS", "60"))))
 _portfolio_lock = threading.Lock()
 _portfolio_cache: tuple[float, dict] | None = None
 
