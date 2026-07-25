@@ -47,6 +47,7 @@ const state = {
   shelfMode: "entry",
   portfolioMode: "holdings",
   tradeSleeve: "all",
+  tradeSide: "all",
   tradeOutcome: "all",
   publicError: null,
   portfolioError: null,
@@ -889,15 +890,22 @@ function filteredTrades() {
   if (state.tradeSleeve !== "all") {
     rows = rows.filter((row) => row.sleeve === state.tradeSleeve);
   }
+  if (state.tradeSide !== "all") {
+    rows = rows.filter((row) =>
+      (row.side || "sell").toLowerCase() === state.tradeSide);
+  }
+  const sells = (row) => (row.side || "sell").toLowerCase() === "sell";
   if (state.tradeOutcome === "stop") {
-    rows = rows.filter((row) => row.reason_kind === "stop");
+    rows = rows.filter((row) => sells(row) && row.reason_kind === "stop");
   } else if (state.tradeOutcome === "take_profit") {
     rows = rows.filter((row) =>
-      ["take_profit", "trail"].includes(row.reason_kind));
+      sells(row) && ["take_profit", "trail"].includes(row.reason_kind));
   } else if (state.tradeOutcome === "win") {
-    rows = rows.filter((row) => optionalNumber(row.realized_pnl_krw) > 0);
+    rows = rows.filter((row) =>
+      sells(row) && optionalNumber(row.realized_pnl_krw) > 0);
   } else if (state.tradeOutcome === "loss") {
-    rows = rows.filter((row) => optionalNumber(row.realized_pnl_krw) < 0);
+    rows = rows.filter((row) =>
+      sells(row) && optionalNumber(row.realized_pnl_krw) < 0);
   }
   return rows;
 }
@@ -914,25 +922,30 @@ function tradeDateLabel(value) {
 
 function tradeReasonLabel(kind) {
   return ({
+    buy: "매수",
     stop: "손절", take_profit: "익절", time_stop: "타임스탑",
     trail: "트레일", other: "기타 매도",
   })[kind] || "매도";
 }
 
 function tradeHistorySummary(rows) {
-  const exact = rows.filter((row) =>
+  const buyRows = rows.filter((row) =>
+    (row.side || "sell").toLowerCase() === "buy");
+  const sellRows = rows.filter((row) =>
+    (row.side || "sell").toLowerCase() === "sell");
+  const exact = sellRows.filter((row) =>
     optionalNumber(row.realized_pnl_krw) !== null);
   const wins = exact.filter((row) => finite(row.realized_pnl_krw) > 0).length;
   const losses = exact.filter((row) => finite(row.realized_pnl_krw) < 0).length;
   const decided = wins + losses;
   const pnl = exact.reduce((sum, row) => sum + finite(row.realized_pnl_krw), 0);
-  const returns = rows.map((row) => optionalNumber(row.return_pct))
+  const returns = sellRows.map((row) => optionalNumber(row.return_pct))
     .filter((value) => value !== null);
   const average = returns.length
     ? returns.reduce((sum, value) => sum + value, 0) / returns.length : null;
   return `
     <div class="trade-summary">
-      <div class="summary-card"><small>매도 체결</small><strong>${rows.length}건</strong><div>부분매도 포함</div></div>
+      <div class="summary-card"><small>확정 체결</small><strong>${rows.length}건</strong><div>매수 ${buyRows.length} · 매도 ${sellRows.length}</div></div>
       <div class="summary-card"><small>승률</small><strong>${decided ? `${(wins / decided * 100).toFixed(1)}%` : "—"}</strong><div>${wins}승 · ${losses}패</div></div>
       <div class="summary-card"><small>실현손익</small><strong class="${pnl >= 0 ? "gain" : "loss"}">${exact.length ? formatPrice(pnl, "KRW", true) : "—"}</strong><div>환율·수수료 반영</div></div>
       <div class="summary-card"><small>평균 수익률</small><strong class="${finite(average) >= 0 ? "gain" : "loss"}">${average === null ? "—" : formatPercent(average)}</strong><div>표시된 체결 기준</div></div>
@@ -940,6 +953,44 @@ function tradeHistorySummary(rows) {
 }
 
 function tradeHistoryCard(row) {
+  const side = (row.side || "sell").toLowerCase();
+  if (side === "buy") {
+    const amountNative = optionalNumber(row.amount_native);
+    const amountKrw = optionalNumber(row.amount_krw);
+    const fillPrice = optionalNumber(row.fill_price ?? row.entry_price);
+    const averageAfter = optionalNumber(row.average_price_after);
+    const positionAfter = optionalNumber(row.position_qty_after);
+    const reason = tradeReasonLabel(row.reason_kind || "buy");
+    return `<article class="trade-history-card trade-buy-card">
+      <div class="trade-history-head">
+        <div>
+          <small>${escapeHTML(tradeDateLabel(row.executed_at))} · 실제 체결 확인</small>
+          <strong>${escapeHTML(row.name || row.code)} <span>${escapeHTML(row.code)}</span></strong>
+        </div>
+        <div class="badge-row">
+          <span class="badge ${row.sleeve === "B" ? "shelf" : "strategy-a"}">전략 ${row.sleeve === "B" ? "B" : "A"}</span>
+          <span class="badge trade-side buy">${escapeHTML(reason)}</span>
+        </div>
+      </div>
+      <div class="trade-price-flow">
+        <div><small>실제 매수가</small><strong>${formatOptionalPrice(fillPrice, row.ccy)}</strong></div>
+        <span aria-hidden="true">→</span>
+        <div><small>체결 후 평단가</small><strong>${formatOptionalPrice(averageAfter, row.ccy)}</strong></div>
+        <div><small>매수 수량</small><strong>${Math.round(finite(row.qty)).toLocaleString("ko-KR")}주</strong></div>
+      </div>
+      <div class="trade-result">
+        <div>
+          <small>체결 금액</small>
+          <strong>${amountNative === null ? "확인 불가" : formatPrice(amountNative, row.ccy)}</strong>
+          <span>${amountKrw === null ? "" : `${formatPrice(amountKrw, "KRW")} 환산`}</span>
+        </div>
+        <p>${escapeHTML(row.reason || reason)}
+          ${positionAfter === null ? "" : ` · 체결 후 ${Math.round(positionAfter).toLocaleString("ko-KR")}주`}
+          ${row.verified ? " · 브로커 체결 확인" : ""}
+        </p>
+      </div>
+    </article>`;
+  }
   const pnl = optionalNumber(row.realized_pnl_krw);
   const tone = pnl === null ? "" : pnl >= 0 ? "gain" : "loss";
   const reason = tradeReasonLabel(row.reason_kind);
@@ -990,6 +1041,10 @@ function tradeHistoryMarkup() {
       ${[["all", "전체 전략"], ["A", "전략 A"], ["B", "전략 B"]]
         .map(([value, label]) => `<button type="button" class="chart-chip ${state.tradeSleeve === value ? "active" : ""}" data-trade-sleeve="${value}">${label}</button>`).join("")}
     </div>
+    <div class="chart-range-row" aria-label="매수 매도 필터">
+      ${[["all", "매수·매도"], ["buy", "매수"], ["sell", "매도"]]
+        .map(([value, label]) => `<button type="button" class="chart-chip ${state.tradeSide === value ? "active" : ""}" data-trade-side="${value}">${label}</button>`).join("")}
+    </div>
     <div class="chart-range-row" aria-label="청산 결과 필터">
       ${[["all", "전체"], ["stop", "손절"], ["take_profit", "익절"], ["win", "수익"], ["loss", "손실"]]
         .map(([value, label]) => `<button type="button" class="chart-chip ${state.tradeOutcome === value ? "active" : ""}" data-trade-outcome="${value}">${label}</button>`).join("")}
@@ -1002,7 +1057,7 @@ function tradeHistoryMarkup() {
     <p class="history-note">${escapeHTML(state.trades.message || "")}</p>
     ${rows.length
       ? `<div class="trade-history-list">${rows.map(tradeHistoryCard).join("")}</div>`
-      : emptyState("조건에 맞는 거래가 없어요", "필터를 바꾸거나 새 매도 체결이 기록될 때까지 기다려 주세요.")}`;
+      : emptyState("조건에 맞는 거래가 없어요", "필터를 바꾸거나 새 확정 체결이 기록될 때까지 기다려 주세요.")}`;
 }
 
 function bindPortfolioControls(positions) {
@@ -1020,6 +1075,12 @@ function bindPortfolioControls(positions) {
   $$("[data-trade-outcome]", content).forEach((button) =>
     button.addEventListener("click", () => {
       state.tradeOutcome = button.dataset.tradeOutcome;
+      renderPortfolio();
+    }));
+  $$("[data-trade-side]", content).forEach((button) =>
+    button.addEventListener("click", () => {
+      state.tradeSide = button.dataset.tradeSide;
+      if (state.tradeSide === "buy") state.tradeOutcome = "all";
       renderPortfolio();
     }));
   $$(".portfolio-card", content).forEach((card) => {

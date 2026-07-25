@@ -551,3 +551,106 @@ P0/P1 수정 외부 승인, PR #78·#79 병합, Oracle 단계배포, KIS mock �
   JSON 발행 경계에서 검사값을 일반 `bool`로 이중 정규화하고, 실제 numpy 비교값을
   넣어 `_signals_json`까지 직렬화하는 회귀 테스트를 추가했다. 이 오류는 정적
   사이트 배포만 막았고 Oracle 매매 서비스나 주문 상태를 변경하지 않았다.
+
+## 11. 2026-07-25 매수 거래이력·Actions 독립 차선 (미병합)
+
+사용자 확인 결과 개인 웹 거래이력이 매도만 표시해 실제 매수 체결을 볼 수 없었다.
+또한 예약 cron, GitHub freshness watchdog, Cloudflare Worker가 서로 다른 발사
+주체처럼 보여도 모두 같은 GitHub Actions `daily.yml`을 실행하므로, Actions
+대기열 지연을 실행기 차원에서 이중화하지 못한다.
+
+로컬 브랜치 `codex/oracle-local-brain-trade-history`에서 다음을 구현했다.
+아직 commit/push/merge/Oracle 배포하지 않았고 운영 L1도 그대로다.
+
+- 거래이력 v2: 확정 `buy_fill`과 `sell_fill`을 함께 표시한다. ACK는 제외하고,
+  부분매수 delta·실제 체결가·체결금액·체결 후 평단·체결 후 수량을 제공한다.
+  공통 event_id 중복은 한 번만 표시하며 주문번호·원장키·pos_key·계좌정보는
+  응답하지 않는다. 과거 체결 근거가 없는 주문은 현재 잔고로 소급 추정하지 않는다.
+- 개인 웹: 매수/매도 필터, 실제 매수가, 체결 후 평단, 수량, 원화 환산금액을
+  추가했다. 기존 전략·손절/익절·수익/손실 필터와 함께 쓸 수 있다.
+- `oracle-brain`: KIS·주문·원장을 전혀 읽지 않는 소형 분석기다. 최근 후보 최대
+  40개와 회당 4개 순환 종목만 분석해 `/var/lib/stock-oracle-brain/signals.json`
+  에 원자 저장한다. 순환·고정 관찰군은 24시간 이내 유효한 후보 basis가 있을
+  때만 대상을 보완하며 단독으로 basis를 만들 수 없다.
+- `signal_feed`: GitHub가 20분 이내면 항상 GitHub, 지연됐을 때만 명시적으로
+  활성화된 12분 이내 Oracle 결과를 선택한다. GitHub 45분 초과와 Oracle
+  비활성/노후/손상이 겹치면 신호 0건으로 신규매수 fail-closed한다. 두 피드는
+  합치지 않는다.
+- 기본 `ORACLE_SIGNAL_FALLBACK_ENABLED=0`이라 병합 뒤에도 곧바로 주문 입력이
+  바뀌지 않는다. 먼저 timer만 그림자 운전해야 한다.
+- Oracle 실제 1GB VM에 맞춰 실행 완료 뒤 5분, 최대 40종목, `MemoryMax=420M`,
+  낮은 CPU 우선순위, 중복실행 flock을 설정했다. KIS env는 서비스에 주입하지 않는다.
+  캐시·상태 디렉터리는 systemd `CacheDirectory`·`StateDirectory`가 사전 생성하고,
+  실제 `/home/ubuntu` 경로와 `.venv`는 표준 유닛이 아닌 Oracle drop-in으로 분리했다.
+- 실제 Oracle에는 `watchdog.service`가 설치되지 않은 상태였는데 health beacon이
+  선택 유닛으로 처리해 정상처럼 숨겼다. sentinel/buyloop/watchdog는
+  `not_installed`도 down으로 센다. `BEACON_UNITS`를 부분집합으로 덮어도
+  `BEACON_REQUIRED_UNITS`와 합집합을 만들어 필수유닛이 빠지지 않게 했고, 현재
+  홈 디렉터리 경로용 watchdog drop-in을 준비했다.
+
+검증:
+
+- 전체 독립 Python 테스트 `44/44` 통과.
+- ACK 제외, 부분매수 4+6, event_id 중복 제거, 평단·손익·민감정보 비노출,
+  원장손상 fail-closed 통과.
+- GitHub 우선, fallback=0, 양쪽 노후, 미래시각, 중복·계약 오류, 후보 24시간
+  만료와 Oracle 주문 import 부재 통과.
+- JavaScript 문법, shell 문법, `git diff --check` 통과.
+- 첫 전체 회귀의 로그 선택필드 `KeyError` 1건을 수정한 뒤 `44/44` 전체를
+  처음부터 다시 통과했다.
+
+Claude 1차 적대 검토에서 P1 1건·P2 2건과 표시/구성 P3를 발견해 병합을 계속
+차단했다. 수정 내용:
+
+- P1: 후보 basis가 만료됐는데 discovery/configured-watch 대상이 있다는 이유로
+  `basis=now`를 넣던 경로를 제거했다. 25시간 노후 basis와 두 보완 대상을 함께
+  주입해 시세조회·출력 전에 `no-safe-candidate-basis`로 끝나는 회귀 테스트를
+  추가했다.
+- P2: 저장소의 `data_cache*` 사전존재를 요구하던 `ReadWritePaths`를 제거하고
+  systemd 관리 State/Cache 디렉터리로 옮겼다. 깨끗한 호스트에서도 서비스가
+  쓰기경로를 먼저 만든다.
+- P2: health beacon 감시 대상을 `BEACON_UNITS ∪ BEACON_REQUIRED_UNITS`로 바꿨다.
+  사용자가 watchdog를 목록에서 빼도 union 결과에 복원되는 실행 테스트를 추가했다.
+- P3: 같은 pos_key의 legacy `open`과 확정 `buy_fill`을 이중계상하지 않게 했고,
+  같은 종목 A/B lot이 둘 이상인데 key 없는 sell_fill은 임의 귀속하지 않고
+  일부 이력을 숨기는 방향으로 실패한다.
+- P3: Oracle 분석기의 실제 전이 import graph에도 KIS·원장·사이징·손절 모듈이
+  없음을 깨끗한 하위 프로세스에서 검사한다. 선택 기능인 분석기 import가 기존
+  매매 서비스의 autodeploy까지 롤백시키던 결합도 제거했다.
+
+외부 검토 요청서는
+`docs/CLAUDE_REVIEW_ORACLE_LOCAL_BRAIN_TRADE_HISTORY.md`, 상세 설계는
+`docs/ORACLE_LOCAL_BRAIN_DESIGN.md`다. 다음 순서는 Claude P0/P1 검토 → 승인 시
+커밋/PR → 누락 watchdog 복구 → fallback=0 그림자 배포 → 한/미 각 한 장 관찰 →
+GitHub 60분 장애주입이다. L1 해제와 fallback=1은 각각 별도 승인 없이는 하지 않는다.
+
+1차 검토 수정 뒤 Claude 재검토용 묶음은
+`/Users/seop/Documents/매매봇/CLAUDE_REVIEW_SECTION11_V2.zip`이다. 전체 diff와
+검토 요청서·상세 설계 3파일이 들어 있으며 압축 무결성·민감정보 패턴 검사를
+통과했다. 기존 `CLAUDE_REVIEW_SECTION11.zip`은 1차 검토본이므로 재검토에는
+사용하지 않는다.
+
+Claude V2 재검토 최종 판정은 `P0/P1 없음`, 병합과
+`ORACLE_SIGNAL_FALLBACK_ENABLED=0` 그림자 배포 승인이다. basis 만료,
+State/CacheDirectory, 필수유닛 union과 systemd 격리 지시자를 직접 재검증했다.
+보고서의 비차단 P3 목록에는 legacy 거래이력과 전이 import 검사가 남았다고
+적혔지만, 전달된 V2 체크섬과 diff를 다시 대조한 결과 해당 두 건도 이미
+`legacy-metadata`/복수 lot fail-closed 처리와 하위 프로세스 import graph
+테스트로 포함돼 있다. 따라서 승인본보다 현재 작업본이 약화된 부분은 없다.
+
+승인 뒤 다음 실행 순서는 명확히 분리한다.
+
+1. 로컬 변경을 commit/push하고 기본 브랜치 대상 PR을 만든 뒤 CI 통과 후 병합.
+2. Oracle에서 누락된 watchdog를 먼저 복구하고 heartbeat·L1을 확인.
+3. oracle-brain timer와 Oracle 경로 drop-in만 설치해 fallback=0 그림자 운전.
+4. 한/미 각 1세션의 RSS·실행시간·실패율·GitHub 대비 신호차를 관찰.
+5. GitHub 60분 장애주입도 L1 상태에서 수행해 신규주문 0을 확인.
+6. fallback=1, L1 해제, 실전 하드블록 해제는 각각 별도 승인 전까지 금지.
+
+PR #89 생성 뒤 GitHub `Site UI CI`의 `compileall`이 리뷰용 V2 diff 끝부분에서
+`tests/site_preview.py`가 `"low": roun`으로 잘린 문법 오류를 발견했다. 운영
+모듈은 아니지만 병합 차단 결함으로 판정해, 기존 `_chart` 이후 미리보기 서버
+본문을 그대로 복원하고 거래이력 v2 fixture만 유지했다. 복원 뒤 Python
+`compileall`, 전체 Python 테스트 `44/44`, Node 테스트 `8/8`, 두 JavaScript
+문법 검사, shell 문법 검사와 `git diff --check`를 다시 통과했다. 리뷰 결과만
+믿고 우회 병합하지 않았으며 PR CI가 초기에 발견한 오류는 수정 커밋으로 남긴다.

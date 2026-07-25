@@ -40,7 +40,8 @@ fi
 
 if ! python3 -c "import importlib
 for m in ('bot.kis', 'bot.kis_boot', 'bot.kis_buyloop', 'bot.sentinel',
-          'bot.kis_telegram', 'bot.kis_reconcile', 'bot.rollout'):
+          'bot.kis_telegram', 'bot.kis_reconcile', 'bot.rollout',
+          'bot.signal_feed'):
     importlib.import_module(m)" >/dev/null 2>&1; then
   git reset --hard "$LOCAL" --quiet
   notify "🚨 자동배포 실패(임포트 오류) — ${REMOTE:0:7} 롤백, 기존 코드로 계속 동작. 수동 확인 필요." 1

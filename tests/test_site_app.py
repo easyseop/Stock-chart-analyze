@@ -63,6 +63,7 @@ def test_decision_brief_uses_existing_read_only_data():
         assert f"function {feature}" in math_js
     for label in ("내 평균매수가", "현재가", "총 투입금", "현재 평가금",
                   "매수일 미확인", "가격 분석", "거래이력", "실제 매도가",
+                  "실제 매수가", "체결 후 평단가", "매수·매도",
                   "실현손익", "B 관찰", "전략 A · 전환 확인",
                   "전략 B · 매물대 반등"):
         assert label in js
@@ -190,10 +191,15 @@ def test_performance_snapshot_contains_percentages_only():
 
 def test_trade_history_endpoint_is_local_read_only_and_sanitized():
     fixture = {
-        "version": 1, "read_only": True, "available": True,
-        "partial": False, "summary": {"sell_fills": 1},
-        "trades": [{"code": "AAPL", "entry_price": 100,
-                    "exit_price": 110, "realized_pnl_krw": 10000}],
+        "version": 2, "read_only": True, "available": True,
+        "partial": False,
+        "summary": {"fills": 2, "buy_fills": 1, "sell_fills": 1},
+        "trades": [
+            {"code": "AAPL", "side": "buy", "fill_price": 100,
+             "average_price_after": 100, "position_qty_after": 2},
+            {"code": "AAPL", "side": "sell", "entry_price": 100,
+             "exit_price": 110, "realized_pnl_krw": 10000},
+        ],
     }
     with mock.patch("bot.trade_history.snapshot", return_value=fixture) as history:
         payload = portfolio_web.trade_history_snapshot(50)

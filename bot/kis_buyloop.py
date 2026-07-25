@@ -21,10 +21,8 @@
 from __future__ import annotations
 
 import datetime
-import json
 import os
 import sys
-import urllib.request
 
 from bot import envelope, kis, kis_buy, kis_pending, kis_positions, settings
 
@@ -344,34 +342,23 @@ def run_once(signals: list[dict], *, fx: float | None = None,
     return results
 
 
-SIGNAL_MAX_AGE_MIN = 45   # 신호 피드가 이보다 낡으면 매수 전면 생략(코덱스 P1 반영)
-
-
 def _fetch_signals() -> list[dict]:
-    """신호 로드 + 신선도 게이트 — generated_at이 45분 이상 낡으면 빈 목록.
+    """검증된 신호 소스를 선택한다.
 
-    빌드는 15분 주기라 45분 정체 = 파이프라인 장애. 낡은 지표로 신규 진입하는
-    것을 fail-closed로 차단(가격 ±1.5% 게이트는 있었지만 지표 신선도는 미검증이던
-    구멍). 파수꾼 손절은 이 게이트와 무관하게 계속."""
-    for url in settings.SIGNALS_SOURCES:
-        try:
-            with urllib.request.urlopen(
-                    url + "?cb=" + str(os.getpid()), timeout=15) as r:
-                d = json.load(r) or {}
-            try:
-                import datetime as _dt
-                t = _dt.datetime.fromisoformat(d.get("generated_at", ""))
-                age = (_dt.datetime.now(t.tzinfo) - t).total_seconds() / 60
-                if age > SIGNAL_MAX_AGE_MIN:
-                    print(f"[신선도] 신호 {age:.0f}분 낡음(>{SIGNAL_MAX_AGE_MIN}) "
-                          f"— 이번 사이클 매수 생략", flush=True)
-                    return []
-            except (ValueError, TypeError):
-                pass                       # 시각 파싱 불가 — 기존 동작(신호 사용)
-            return d.get("signals", [])
-        except Exception:
-            continue
-    return []
+    평상시에는 GitHub 피드가 우선이고, 명시적으로 fallback을 연 경우에만
+    지연된 GitHub 피드를 Oracle 로컬 분석 결과로 대체한다. 두 소스가 모두
+    낡거나 계약 검증에 실패하면 빈 목록을 돌려 신규매수를 fail-closed한다.
+    """
+    from bot import signal_feed
+
+    selected = signal_feed.load_selected()
+    print(
+        f"[신호소스] {selected.get('source', 'none')}"
+        f" · {selected.get('why', 'validated')}"
+        f" · age={selected.get('age_min')}",
+        flush=True,
+    )
+    return selected.get("signals") or []
 
 
 def _cycle() -> None:

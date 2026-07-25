@@ -11,6 +11,7 @@
 #   NTFY_HEALTH_TOPIC   발행 토픽(필수, 미설정=무동작). 예: stock-health-<랜덤>
 #   NTFY_BASE           기본 https://ntfy.sh
 #   BEACON_UNITS        점검 유닛(기본 "sentinel buyloop telegram portfolio-web watchdog")
+#   BEACON_REQUIRED_UNITS 미설치도 장애로 셀 필수 유닛(기본 sentinel buyloop watchdog)
 #   BEACON_ENV          env 파일(기본 /etc/stock/kis.env) — export 형식이어도 OK
 #
 # 읽기(원격): curl -s "https://ntfy.sh/<TOPIC>/json?poll=1"  (최근 캐시 메시지)
@@ -26,6 +27,23 @@ TOPIC="${NTFY_HEALTH_TOPIC:-}"
 [ -z "$TOPIC" ] && exit 0                       # 토픽 미설정 = 비콘 비활성(무해)
 BASE="${NTFY_BASE:-https://ntfy.sh}"
 UNITS="${BEACON_UNITS:-sentinel buyloop telegram portfolio-web watchdog}"
+# 파수꾼·매수루프·파수꾼 감시기는 설치 자체가 안전 계약이다. 조회용 선택
+# 서비스와 달리 이 셋이 없으면 not_installed도 down으로 센다.
+REQUIRED_UNITS="${BEACON_REQUIRED_UNITS:-sentinel buyloop watchdog}"
+# 운영자가 BEACON_UNITS를 부분집합으로 덮어도 필수유닛은 감시에서 빠질 수 없다.
+# 순서를 보존해 합집합을 만들고 중복은 한 번만 점검한다.
+ALL_UNITS=""
+for u in $UNITS $REQUIRED_UNITS; do
+  case " $ALL_UNITS " in
+    *" $u "*) ;;
+    *) ALL_UNITS="${ALL_UNITS}${ALL_UNITS:+ }${u}" ;;
+  esac
+done
+# 배포 전 회귀·운영 진단용. 외부 호출이나 상태 읽기 전에 실제 감시 집합만 출력.
+if [ "${BEACON_PRINT_UNITS_ONLY:-0}" = "1" ]; then
+  printf '%s\n' "$ALL_UNITS"
+  exit 0
+fi
 REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 cd "$REPO_DIR" 2>/dev/null || true
 
@@ -36,14 +54,17 @@ sha="$(git rev-parse --short HEAD 2>/dev/null || echo '?')"
 # 유닛 가동상태(시스템 유닛 읽기는 권한 불필요)
 #   · is-active는 inactive여도 상태를 찍고 exit!=0 → `|| echo`를 겹치면 두 줄이
 #     된다(실측 "inactive\nunknown"). head -1로 한 값만.
-#   · 미설치 유닛(unit file 없음)은 감시 대상에서 제외 — 선택 구성요소(예:
-#     watchdog)가 영구 down=1로 잡혀 진짜 장애와 구분 안 되던 것 방지.
+#   · 선택 유닛의 미설치는 제외하되 REQUIRED_UNITS의 미설치는 down으로 센다.
+#     watchdog를 선택으로 취급해 실제 서버에서 빠진 채 정상으로 보이던 구멍을 막는다.
 unit_json=""
 down=0
-for u in $UNITS; do
+for u in $ALL_UNITS; do
   if ! systemctl cat "$u" >/dev/null 2>&1; then
     unit_json="${unit_json}\"${u}\":\"not_installed\","
-    continue                          # 미설치 = down으로 세지 않음
+    case " $REQUIRED_UNITS " in
+      *" $u "*) down=$((down+1));;
+    esac
+    continue
   fi
   st="$(systemctl is-active "$u" 2>/dev/null | head -1)"
   [ -z "$st" ] && st=unknown
@@ -67,7 +88,7 @@ fi
 
 # 최근 1시간 에러 로그 수(best-effort; 권한 없으면 -1)
 #   -o cat: 매치 0건일 때 "-- No entries --" 1줄이 세어지던 오탐 방지(실측 2026-07-22).
-err1h="$(journalctl $(for u in $UNITS; do printf -- '-u %s ' "$u"; done) \
+err1h="$(journalctl $(for u in $ALL_UNITS; do printf -- '-u %s ' "$u"; done) \
           --since '1 hour ago' -p err --no-pager -o cat 2>/dev/null | wc -l | tr -d ' ')"
 [ -z "$err1h" ] && err1h=-1
 
@@ -104,7 +125,7 @@ bl_tail="$(journalctl -u buyloop --since '16 hours ago' --no-pager -o cat 2>/dev
 gate_hist="$(journalctl -u buyloop --since '16 hours ago' --no-pager -o cat 2>/dev/null \
              | grep -oE '\[[a-z_]+\]' | sort | uniq -c | sort -rn | head -8 \
              | awk '{printf "%s=%s ", $2, $1}')"
-err_last="$(journalctl $(for u in $UNITS; do printf -- '-u %s ' "$u"; done) \
+err_last="$(journalctl $(for u in $ALL_UNITS; do printf -- '-u %s ' "$u"; done) \
             --since '24 hours ago' -p err --no-pager -o cat 2>/dev/null | tail -2)"
 #   n_open=12 부풀림 판별(2026-07-22): baseline 파일 상태 + 원장 in-flight BUY 수.
 #   전부 로컬 파일 읽기(API 0회) — 심볼은 KIS 종목코드뿐(수량·금액 미발행).

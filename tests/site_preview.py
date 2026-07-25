@@ -160,16 +160,43 @@ for market, index_names in (("US", ["나스닥", "S&P500"]),
         })
 
 TRADES = {
-    "version": 1, "generated_at": datetime.now(timezone.utc).isoformat(),
+    "version": 2, "generated_at": datetime.now(timezone.utc).isoformat(),
     "read_only": True, "available": True, "partial": False,
     "source": "confirmed-local-fill-journals",
     "summary": {
-        "sell_fills": 3, "wins": 2, "losses": 1,
+        "fills": 5, "buy_fills": 2, "sell_fills": 3,
+        "wins": 2, "losses": 1,
         "win_rate": 66.67, "realized_pnl_krw": 218400,
     },
-    "message": "확정 체결 이후의 로컬 원장 기록만 표시합니다. 원장 도입 전 과거 거래는 추정하지 않습니다.",
+    "message": "확정된 매수·매도 체결을 함께 표시합니다. 원장 도입 전 과거 거래는 추정하지 않습니다.",
     "trades": [
         {
+            "side": "buy", "executed_at": "2026-07-25T10:33:00+09:00",
+            "day": "2026-07-25", "code": "SIG",
+            "name": "Signet Jewelers", "market": "US", "ccy": "USD",
+            "sleeve": "B", "reason": "B 매물대 반등 진입",
+            "reason_kind": "entry", "qty": 13, "fill_price": 93.42,
+            "entry_price": 93.42, "exit_price": None,
+            "amount_native": 1214.46, "amount_krw": 1675954.8,
+            "average_price_after": 93.42, "position_qty_after": 13,
+            "price_pnl": None, "realized_pnl_krw": None,
+            "return_pct": None, "remaining_qty": 13,
+            "partial_exit": False, "verified": True,
+        },
+        {
+            "side": "buy", "executed_at": "2026-07-25T10:20:00+09:00",
+            "day": "2026-07-25", "code": "AAPL", "name": "Apple",
+            "market": "US", "ccy": "USD", "sleeve": "A",
+            "reason": "전략 A 전환 진입", "reason_kind": "entry",
+            "qty": 6, "fill_price": 189.40, "entry_price": 189.40,
+            "exit_price": None, "amount_native": 1136.40,
+            "amount_krw": 1568232, "average_price_after": 189.40,
+            "position_qty_after": 6, "price_pnl": None,
+            "realized_pnl_krw": None, "return_pct": None,
+            "remaining_qty": 6, "partial_exit": False, "verified": True,
+        },
+        {
+            "side": "sell",
             "executed_at": "2026-07-25T10:34:00+09:00", "day": "2026-07-25",
             "code": "ALK", "name": "Alaska Air Group", "market": "US",
             "ccy": "USD", "sleeve": "A", "reason": "하드 손절(손절가 이탈)",
@@ -179,6 +206,7 @@ TRADES = {
             "remaining_qty": 0, "partial_exit": False, "verified": True,
         },
         {
+            "side": "sell",
             "executed_at": "2026-07-24T14:18:00+09:00", "day": "2026-07-24",
             "code": "005930", "name": "삼성전자", "market": "KR",
             "ccy": "KRW", "sleeve": "B", "reason": "B 목표(VAH) 도달",
@@ -188,6 +216,7 @@ TRADES = {
             "remaining_qty": 12, "partial_exit": True, "verified": True,
         },
         {
+            "side": "sell",
             "executed_at": "2026-07-23T22:11:00+09:00", "day": "2026-07-23",
             "code": "AAPL", "name": "Apple", "market": "US",
             "ccy": "USD", "sleeve": "A", "reason": "익절 +1R 절반",

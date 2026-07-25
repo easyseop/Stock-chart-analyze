@@ -1,0 +1,13 @@
+[Unit]
+Description=Run Oracle independent signal analyzer every five minutes
+
+[Timer]
+OnBootSec=2min
+OnUnitInactiveSec=5min
+AccuracySec=15s
+RandomizedDelaySec=20s
+Persistent=true
+Unit=oracle-brain.service
+
+[Install]
+WantedBy=timers.target
