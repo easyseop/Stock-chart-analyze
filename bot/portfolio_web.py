@@ -9,7 +9,7 @@
 
 실행:
   python -m bot.portfolio_web
-  python -m bot.portfolio_web --port 8765
+  python -m bot.portfolio_web --port 8888
 """
 from __future__ import annotations
 
@@ -341,7 +341,7 @@ class PortfolioHandler(BaseHTTPRequestHandler):
         print(f"[portfolio] {self.command} {urlparse(self.path).path} → {args[1]}")
 
 
-def serve(port: int = 8765) -> None:
+def serve(port: int = 8888) -> None:
     server = ThreadingHTTPServer(("127.0.0.1", int(port)), PortfolioHandler)
     print(f"읽기 전용 자산 대시보드: http://127.0.0.1:{port}/app/")
     print("종료: Ctrl+C")
@@ -355,7 +355,7 @@ def serve(port: int = 8765) -> None:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="KIS 읽기 전용 로컬 자산 대시보드")
-    parser.add_argument("--port", type=int, default=8765)
+    parser.add_argument("--port", type=int, default=8888)
     args = parser.parse_args()
     serve(args.port)
 

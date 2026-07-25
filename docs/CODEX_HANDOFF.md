@@ -55,7 +55,7 @@ Oracle 자산 대시보드, 코드 push 무거래 보정이 PR #72와 #73을 통
 
 - `bot/portfolio_web.py`: 주문 모듈을 불러오지 않는 GET/HEAD 전용 서버.
 - `infra/server/portfolio-web.service`: Oracle Ubuntu용 systemd 서비스.
-- 서버는 코드 수준에서 `127.0.0.1:8765`에만 바인딩.
+- 서버는 코드 수준에서 `127.0.0.1:8888`에만 바인딩.
 - 기존 KIS 환경 파일을 이용해 KIS `mock` 또는 `live` 환경의 국내·미국
   보유종목을 조회.
 - 표시 필드: 종목, 보유수량, 평단, KIS 잔고 기준 현재가, 평가금액, 손익, 손익률.
@@ -274,7 +274,7 @@ GitHub Actions도 자체 Node 실행 환경을 사용한다.
 - `partial=false`, `read_only=true`, `refresh_seconds=60`.
 - 60초 안의 두 요청은 같은 `generated_at`을 반환하고, 60초가 지난 요청은 새
   `generated_at`을 반환했다.
-- `/app/`은 200, POST는 405, 리스너는 `127.0.0.1:8765`뿐이었다.
+- `/app/`은 200, POST는 405, 리스너는 `127.0.0.1:8888`뿐이었다.
 
 Oracle에서 첫 `test_kis_boot` 실행 때 모의 AAPL/NASD/NVDA 알림 3건이 실제 Telegram
 자격증명 폴백을 읽어 발송됐다. 테스트의 KIS 조회·주문은 모두 모킹돼 실제 주문·체결은
@@ -387,7 +387,10 @@ SSH 주소·개인키·KIS 인증값은 계속 Git 밖에만 둔다. 2026-07-24 
   갈라지는 문제를 이 영속 경로로 보정했다.
 - 개인 API는 KIS mock 보유 17종목, `partial=false`, `read_only=true`,
   `source=sentinel_shared_cache`, 브라우저 갱신 5초를 반환했다. `/app/` GET은
-  200, POST는 405이며 리스너는 계속 `127.0.0.1:8765`뿐이다.
+  200, POST는 405이며 리스너는 계속 `127.0.0.1:8888`뿐이다.
+- 사용자 요청으로 개인 웹 포트를 `8765`에서 `8888`로 변경했다. 저장소 서비스
+  유닛과 Oracle 전용 systemd 드롭인, 헬스체크·SSH 터널 문서를 함께 맞췄으며 기존
+  8765 리스너는 닫고 8888만 루프백으로 유지한다.
 - 배포 전 환경 파일과 주문 상태는 각각
   `/home/ubuntu/kis.env.pre-pr78`,
   `/home/ubuntu/stock-backups/pre-pr78-20260725.tgz`로 권한 600 백업했다.
@@ -408,18 +411,18 @@ SSH 주소·개인키·KIS 인증값은 계속 Git 밖에만 둔다. 2026-07-24 
 서버 자체의 민감정보 없는 검증:
 
 ```bash
-curl -fsS http://127.0.0.1:8765/api/portfolio.json \
+curl -fsS http://127.0.0.1:8888/api/portfolio.json \
   | python3 -c 'import json,sys; d=json.load(sys.stdin); print(d["environment"], bool(d["positions"]), d["partial"], d["refresh_seconds"])'
 ```
 
 사용자 기기에서 SSH 터널:
 
 ```bash
-ssh -N -L 8765:127.0.0.1:8765 ubuntu@오라클주소
+ssh -N -L 8888:127.0.0.1:8888 ubuntu@오라클주소
 ```
 
-터널을 유지한 상태로 <http://127.0.0.1:8765/app/>에 접속한다. OCI 보안 목록이나
-Ubuntu 방화벽에서 8765 포트를 공개하지 않는다.
+터널을 유지한 상태로 <http://127.0.0.1:8888/app/>에 접속한다. OCI 보안 목록이나
+Ubuntu 방화벽에서 8888 포트를 공개하지 않는다.
 
 ## 8. 공개 사이트 접속 참고
 

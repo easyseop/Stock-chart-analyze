@@ -10,7 +10,7 @@
 | `sentinel.service` | 파수꾼(매도) 상시 실행(`python -m bot.sentinel`, `SENTINEL_BROKER=kis`) |
 | `buyloop.service` | 매수 루프 — autopaper 'now' 신호를 KIS에 미러 매수(`python -m bot.kis_buyloop --loop`) |
 | `telegram.service` | 텔레그램 조회 봇(읽기전용) — `/보유`·`/종목 <코드>`(`python -m bot.kis_telegram`) |
-| `portfolio-web.service` | 실제 KIS 보유종목·평단·현재가·손익을 보여주는 사설 웹 화면(`127.0.0.1:8765`) |
+| `portfolio-web.service` | 실제 KIS 보유종목·평단·현재가·손익을 보여주는 사설 웹 화면(`127.0.0.1:8888`) |
 | `watchdog.service` | heartbeat 감시 — 60s P0 · 90s 재기동(≤3회/10분) · 120s+ kill L1 |
 | `watchdog.py` | 위 유닛이 실행하는 스크립트 |
 | `autodeploy.sh` + `.service`/`.timer` | 자동 배포 — 5분마다 새 커밋 확인, 있으면 pull+재시작(스모크 실패 시 롤백) |
@@ -110,17 +110,17 @@ sudo -u bot python3 /opt/stock/Stock-chart-analyze/scripts/kis_preflight.py
 캔들·거래량·20/60/120일 이동평균을 표시한다. 성과 비교는 5분 간격으로 전략
 A/B와 나스닥·S&P500·코스피·코스닥을 같은 0% 기준에서 기록한다.
 
-서비스는 코드 수준에서 `127.0.0.1:8765`에만 바인딩한다. OCI 보안 목록이나 Ubuntu
-방화벽에서 8765 포트를 열지 말고, 접속할 기기에서 SSH 터널을 연다.
+서비스는 코드 수준에서 `127.0.0.1:8888`에만 바인딩한다. OCI 보안 목록이나 Ubuntu
+방화벽에서 8888 포트를 열지 말고, 접속할 기기에서 SSH 터널을 연다.
 
 ```bash
-ssh -N -L 8765:127.0.0.1:8765 <오라클-SSH-별칭>
-# 터널을 켠 상태로 브라우저에서 http://127.0.0.1:8765/app/
+ssh -N -L 8888:127.0.0.1:8888 <오라클-SSH-별칭>
+# 터널을 켠 상태로 브라우저에서 http://127.0.0.1:8888/app/
 ```
 
 ```bash
 # 서버 자체 점검(민감정보는 출력하지 않음)
-curl -fsS http://127.0.0.1:8765/api/portfolio.json \
+curl -fsS http://127.0.0.1:8888/api/portfolio.json \
   | python3 -c 'import json,sys; d=json.load(sys.stdin); print(d["environment"], len(d["positions"]), d["partial"])'
 ```
 

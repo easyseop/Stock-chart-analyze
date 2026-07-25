@@ -19,7 +19,7 @@ Environment=PORTFOLIO_REFRESH_SECONDS=60
 # 브라우저는 파수꾼 공유 캐시만 5초마다 읽는다(KIS 추가 호출 없음).
 Environment=PORTFOLIO_BROWSER_REFRESH_SECONDS=5
 Environment=PORTFOLIO_SHARED_CACHE_MAX_AGE_SECONDS=90
-ExecStart=/usr/bin/python3 -m bot.portfolio_web --port 8765
+ExecStart=/usr/bin/python3 -m bot.portfolio_web --port 8888
 Restart=always
 RestartSec=10
 StandardOutput=journal
