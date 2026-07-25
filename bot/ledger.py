@@ -143,6 +143,8 @@ def _fold_unlocked() -> tuple[dict, list[int]]:
                         cur[f] = ev[f]
                 if ev.get("ev") == "submit":
                     cur["submitted_at"] = ev.get("ts", 0.0)
+                    if ev.get("reason"):
+                        cur["reason"] = str(ev["reason"])
                     meta = ev.get("meta") or {}
                     for f in ("side", "excg", "market", "price", "hldg_before",
                               "pos_key", "sleeve", "fx", "ccy", "stop", "target",

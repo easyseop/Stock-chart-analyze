@@ -551,6 +551,45 @@ def _signals_json(results: list[dict]) -> str:
             "earnings_d": earnings.days_until(r["code"]),
             "tactic": "full",
         })
+    # B 관찰은 매물대 위치·저항 조건은 통과했지만 반등 확인이 덜 된 화면 전용
+    # 그룹이다. 매수루프는 group=="shelf"만 필터하므로 이 신호를 주문하지 않는다.
+    shelf_watch = []
+    for r in results:
+        cw = gates.classify_shelf_watch(r)
+        if cw["group"] is None:
+            continue
+        sh = r.get("shelf") or {}
+        checks = sh.get("checks") or {}
+        missing = sum(1 for value in checks.values() if not value)
+        shelf_watch.append((missing, float(r.get("range_pos", 0.5)),
+                            -float(r.get("norm", 0)), r))
+    shelf_watch.sort(key=lambda item: item[:3])
+    for _missing, _range, _norm, r in shelf_watch[:config.PICKS_MAX]:
+        sh = r.get("shelf") or {}
+        sigs.append({
+            "id": f'{r["code"]}-{day}-shelf-watch',
+            "code": r["code"], "name": r["name"], "ccy": r.get("ccy", "USD"),
+            "group": "shelf_watch", "entry_kind": "shelf_watch",
+            "stage": 0,
+            "price": round(float((r.get("sr") or {}).get("price") or 0), 4),
+            "entry": sh.get("entry"),
+            "stop": sh.get("stop"),
+            "target": sh.get("target"),
+            "shares_1pct": 0,
+            "range_pos": round(float(r.get("range_pos", 0.5)), 4),
+            "norm": round(float(r.get("norm", 0)), 1),
+            "bear_share": round(gates.consensus_bear(r), 3),
+            "shelf": {
+                "poc": sh.get("poc"), "val": sh.get("val"),
+                "vah": sh.get("vah"), "rr": sh.get("rr"),
+                "overhead": sh.get("overhead"), "reason": sh.get("reason"),
+                "checks": sh.get("checks") or {},
+            },
+            "fresh": False,
+            "break_gap": None,
+            "earnings_d": earnings.days_until(r["code"]),
+            "tactic": "watch",
+        })
     sigs.sort(key=lambda s: (s["group"], not s["fresh"], -s["stage"], -s["norm"]))
     # 매물대(B) 진단 — 왜 shelf 신호가 적은지 사유별 집계(0건 원인 규명용).
     from collections import Counter
@@ -562,6 +601,7 @@ def _signals_json(results: list[dict]) -> str:
         "generated_at": now.strftime("%Y-%m-%dT%H:%M:%S+09:00"),   # KST
         "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
         "shelf_debug": {"ok": shelf_ok,
+                        "watch": len(shelf_watch),
                         "reasons": dict(shelf_reasons.most_common(8))},
         "signals": sigs,
     }, ensure_ascii=False, indent=1)
@@ -663,7 +703,6 @@ _REPO = "easyseop/Stock-chart-analyze"
 
 def _trigger_page() -> str:
     return _tmpl("lookup.html").replace("__REPO__", _REPO)
-
 
 
 

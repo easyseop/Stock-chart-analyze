@@ -64,8 +64,22 @@ def test_low_volume_rejected():
     lows = [100.0, 99.7, 98.0, 99.6, 99.5]
     d = _df(lows, today_low=99.5, today_close=101.0, today_high=101.5)
     r = A._shelf_signal(d, _sup(), {"mult": 0.8}, range_pos=0.30)   # 거래량 미달
-    assert not r["ok"] and "거래량" in r["reason"], r
-    print("[PASS] 거래량 미동반 반등 → 거부")
+    assert not r["ok"] and r["watch"] and "거래량" in r["reason"], r
+    base = {"ccy": "USD", "turnover": 5e7, "shelf": r,
+            "rs": {"rel": 0.0}, "ext": {"ma120_stretch": 0.0}}
+    assert gates.classify_shelf_watch(base)["group"] == "shelf_watch"
+    assert gates.classify_shelf(base)["group"] is None
+    print("[PASS] 거래량 미동반 반등 → B 관찰만, 확정 B는 거부")
+
+
+def test_watch_still_respects_hard_risk_limits():
+    lows = [100.0, 99.0, 98.0, 97.0, 80.0]
+    d = _df(lows, today_low=80.0, today_close=101.0, today_high=103.0)
+    r = A._shelf_signal(
+        d, _sup(val=80.0, vah=110.0), {"mult": 0.8}, range_pos=0.20)
+    assert not r["ok"] and not r["watch"], r
+    assert "손절폭 과대" in r["reason"], r
+    print("[PASS] 반등 미확인이어도 손절폭 과대면 B 관찰에서 제외")
 
 
 def test_overhead_and_zone():
@@ -89,7 +103,8 @@ def test_classify_shelf():
     # shelf 미충족
     noshelf = dict(base, shelf={"ok": False, "reason": "반등 미확인"})
     assert gates.classify_shelf(noshelf)["group"] is None
-    print("[PASS] classify_shelf: 하드제외 우선·shelf ok면 group=shelf")
+    assert gates.classify_shelf_watch(noshelf)["group"] is None
+    print("[PASS] classify_shelf: 하드제외 우선·확정/관찰 그룹 분리")
 
 
 def test_partition_budget_isolation():
@@ -104,17 +119,20 @@ def test_partition_budget_isolation():
     assert (nb, cb) == (2, 360.0), (nb, cb)   # CCC 보유 + EEE in-flight
     # shelf 후보 필터·정렬(RR 높은 순)
     sigs = [{"group": "now", "code": "X", "entry": 1, "stop": 0.9},
+            {"group": "shelf_watch", "code": "W", "entry": 10, "stop": 9,
+             "shelf": {"rr": 3.0}},
             {"group": "shelf", "code": "Y", "entry": 10, "stop": 9, "shelf": {"rr": 1.6}},
             {"group": "shelf", "code": "Z", "entry": 10, "stop": 9, "shelf": {"rr": 2.4}}]
     c = BL._shelf_cands(sigs)
     assert [x["code"] for x in c] == ["Z", "Y"], c
-    print("[PASS] 슬리브 예산 분리(파티션) + shelf 후보 필터/정렬")
+    print("[PASS] B 관찰은 매수루프에서 제외 + 확정 shelf만 필터/정렬")
 
 
 def main():
     test_bounce_ok()
     test_falling_knife_rejected()
     test_low_volume_rejected()
+    test_watch_still_respects_hard_risk_limits()
     test_overhead_and_zone()
     test_classify_shelf()
     test_partition_budget_isolation()

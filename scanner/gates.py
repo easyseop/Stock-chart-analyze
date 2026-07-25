@@ -75,6 +75,36 @@ def classify_shelf(r: dict) -> dict:
     return {"group": "shelf", "reasons": []}
 
 
+def classify_shelf_watch(r: dict) -> dict:
+    """B 매물대 구조는 유효하지만 반등 확인만 덜 된 공개 관찰 후보.
+
+    자동매수는 정확히 ``group == "shelf"``만 받는다. 이 그룹은 화면 설명용이며
+    진입·수량·주문 판단에 사용하지 않는다.
+    """
+    if not getattr(config, "SHELF_ENABLED", False):
+        return {"group": None, "reasons": ["shelf 비활성"]}
+    reasons = []
+    if plan.junk(r):
+        reasons.append("동전주·심한 부실")
+    ccy = r.get("ccy", "USD")
+    turn = r.get("turnover", 0) or 0
+    liq_min = config.LIQ_MIN_KRW if ccy == "KRW" else config.LIQ_MIN_USD
+    if turn < liq_min:
+        reasons.append("저유동성(잡주)")
+    ext = r.get("ext") or {}
+    rs_rel = (r.get("rs") or {}).get("rel") or 0
+    if (rs_rel >= config.BLOWOFF_RATIO
+            or ext.get("ma120_stretch", 0) >= config.BLOWOFF_RATIO):
+        reasons.append("이미 폭등")
+    if reasons:
+        return {"group": None, "reasons": reasons}
+    shelf = r.get("shelf") or {}
+    if shelf.get("ok") or not shelf.get("watch"):
+        return {"group": None, "reasons": [shelf.get("reason", "관찰 대상 아님")]}
+    return {"group": "shelf_watch",
+            "reasons": [shelf.get("reason", "반등 확인 대기")]}
+
+
 def consensus_bear(r: dict) -> float:
     """방향성 8개 지표 중 '음(-)=팔자' 비율(0~1). 보조지표 다수결 필터용.
 
