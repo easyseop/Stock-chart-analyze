@@ -6,9 +6,12 @@
 """
 from __future__ import annotations
 
+from contextlib import contextmanager
 from datetime import datetime, timedelta, timezone
+import fcntl
 import json
 import math
+import os
 from typing import Iterable
 
 from bot import costbook, kis_positions, ledger
@@ -24,11 +27,35 @@ def _number(value) -> float | None:
     return number if math.isfinite(number) else None
 
 
-def _read_jsonl(path: str, lock) -> tuple[list[dict], int]:
+@contextmanager
+def _shared_lock(path: str):
+    """기존 writer의 ``.lock``을 읽기 전용 fd로 공유 잠금한다.
+
+    개인 웹은 systemd에서 저장소 쓰기가 차단돼 있다. 기존 모듈의 reader 잠금은
+    잠금 파일을 ``O_RDWR|O_CREAT``로 열기 때문에 그 격리 안에서는 실패한다.
+    여기서는 이미 writer가 만든 같은 파일을 ``O_RDONLY``로 열어 원장 본문과 잠금
+    파일 모두 수정하지 않는다. 데이터 파일이 있는데 잠금 파일만 없으면 안전하게
+    실패해 무잠금 스냅샷을 만들지 않는다.
+    """
+    lock_path = path + ".lock"
+    fd = os.open(lock_path, os.O_RDONLY)
+    try:
+        fcntl.flock(fd, fcntl.LOCK_SH)
+        yield
+    finally:
+        try:
+            fcntl.flock(fd, fcntl.LOCK_UN)
+        finally:
+            os.close(fd)
+
+
+def _read_jsonl(path: str) -> tuple[list[dict], int]:
     rows: list[dict] = []
     corrupt = 0
+    if not os.path.exists(path):
+        return rows, corrupt
     try:
-        with lock:
+        with _shared_lock(path):
             with open(path, encoding="utf-8") as fp:
                 for line in fp:
                     line = line.strip()
@@ -78,13 +105,21 @@ def _iso_kst(ts) -> str:
 
 
 def _position_events() -> tuple[list[dict], int]:
-    return _read_jsonl(
-        kis_positions.PATH, kis_positions._file_lock(False))
+    return _read_jsonl(kis_positions.PATH)
 
 
 def _cost_events() -> tuple[list[dict], int]:
     path = costbook._path()
-    return _read_jsonl(path, costbook._file_lock(path, False))
+    return _read_jsonl(path)
+
+
+def _order_state() -> tuple[list[dict], list[int]]:
+    """주문 원장도 기존 writer와 같은 lock을 쓰되 잠금 파일은 수정하지 않는다."""
+    if not os.path.exists(ledger.LEDGER_PATH):
+        return [], []
+    with _shared_lock(ledger.LEDGER_PATH):
+        folded, corrupt = ledger._fold_unlocked()
+    return [{"key": key, **row} for key, row in folded.items()], corrupt
 
 
 def _position_meta(orders: Iterable[dict]) -> dict[str, dict]:
@@ -247,8 +282,8 @@ def _sale_rows(position_events: list[dict], cost_events: list[dict],
 def snapshot(limit: int = 200) -> dict:
     """개인 대시보드에 필요한 최소 거래이력. 네트워크·KIS 호출은 0건."""
     limit = max(1, min(500, int(limit)))
-    health = ledger.corruption_status()
-    if not health.get("healthy"):
+    orders, order_corrupt = _order_state()
+    if order_corrupt:
         return {
             "version": 1,
             "generated_at": datetime.now(timezone.utc).isoformat(),
@@ -263,7 +298,6 @@ def snapshot(limit: int = 200) -> dict:
             "message": "주문 원장 무결성 확인 전에는 거래이력을 표시하지 않습니다.",
         }
 
-    orders = ledger.orders_for()
     position_events, position_corrupt = _position_events()
     cost_events, cost_corrupt = _cost_events()
     rows, incomplete = _sale_rows(position_events, cost_events, orders)
