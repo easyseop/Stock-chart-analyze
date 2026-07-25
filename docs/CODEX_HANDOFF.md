@@ -10,8 +10,8 @@
 ## 1. 현재 Git 상태
 
 - 기본 브랜치: `claude/happy-gauss-cwoq21`
-- 현재 개발 브랜치: `codex/portfolio-price-insights`
-- Oracle 배포 코드: `169225be` (PR #83 병합 결과, PR #84 배포 전)
+- 현재 개발 브랜치: `codex/portfolio-price-insights` (배포 결과 문서화용)
+- Oracle 배포 코드: `405aaf2` (PR #84 병합 결과)
 - 활성 로컬 복제본: `/Users/seop/Documents/매매봇/Stock-chart-analyze-deploy`
 - 기존 `Stock-chart-analyze-site`는 iCloud가 일부 `.git/refs`를 dataless로 바꿔
   HEAD가 끊겼다. 작업 파일은 보존하고 기준 커밋+검토 diff를 새 복제본에 복원했다.
@@ -25,6 +25,7 @@
 - 개인 웹 8888 포트 변경 PR: [#83 개인 웹 포트를 8888로 변경](https://github.com/easyseop/Stock-chart-analyze/pull/83)
 - 포트폴리오 핵심 가격정보 PR: [#84 보유종목 매수가·현재가 핵심정보 강화](https://github.com/easyseop/Stock-chart-analyze/pull/84)
 - PR #84 최초 구현 커밋: `548bdc5`
+- PR #84 병합 커밋: `405aaf2`
 - 병합 PR: [#75 Oracle KIS 검증과 알림 안정성 보강](https://github.com/easyseop/Stock-chart-analyze/pull/75)
 - PR #75 병합 커밋: `468ad0cf`
 - 리뷰 수정 커밋: `7ebe0d97`, 테스트 격리·인수인계 커밋: `79a67c51`
@@ -390,7 +391,7 @@ SSH 주소·개인키·KIS 인증값은 계속 Git 밖에만 둔다. 2026-07-24 
 - KIS 환경 파일: `/home/ubuntu/kis.env`(권한 600, 값은 기록하지 않음)
 - 서비스 사용자: `ubuntu`
 - Python 의존성: 저장소의 `.venv`; 서버에 `python3.10-venv` 설치
-- 배포 브랜치: `claude/happy-gauss-cwoq21` (현재 코드 `169225be`, PR #84 배포 전)
+- 배포 브랜치: `claude/happy-gauss-cwoq21` (현재 코드 `405aaf2`)
 - `portfolio-web.service`: enabled/active
 - 기존 `sentinel`, `buyloop`, `telegram`: 수정 코드 적용 후 재시작, 모두 active
 - `autodeploy.timer`: active. 재시작 대상에 `portfolio-web`까지 포함
@@ -418,6 +419,17 @@ SSH 주소·개인키·KIS 인증값은 계속 Git 밖에만 둔다. 2026-07-24 
 - 사용자 요청으로 개인 웹 포트를 `8765`에서 `8888`로 변경했다. 저장소 서비스
   유닛과 Oracle 전용 systemd 드롭인, 헬스체크·SSH 터널 문서를 함께 맞췄으며 기존
   8765 리스너는 닫고 8888만 루프백으로 유지한다.
+- PR #84는 `/home/ubuntu/stock-backups/pre-pr84-web-20260725.tgz`로 직전 웹 파일을
+  백업한 뒤 배포했다. 병합 직후 자동배포 타이머가 먼저 새 커밋을 받아
+  `sentinel`, `buyloop`, `telegram`, `portfolio-web`을 함께 재시작했고, 서버
+  대상 테스트 뒤에는 `portfolio-web`만 다시 시작했다. 전체 서비스 5개 active,
+  각 서비스 비정상 재시작 0회, 재시작 이후 오류 로그 0건, heartbeat 정상, L1,
+  원장 정상을 확인했다. 공유 캐시 17종목의 숫자 필드와 `opened` 날짜 형식도 모두
+  유효했다.
+- 실제 Oracle 화면에서 보유 카드 17개, 현재가·평균매수가, 상세 6개 핵심 숫자,
+  매수일/보유기간, 가격 분석, 기존 차트를 확인했다. 가로 넘침과 브라우저 오류는
+  없었다. GET 200/POST 405, `read_only=true`, `partial=false`,
+  `source=sentinel_shared_cache`, 8888 루프백 전용과 8765 폐쇄도 유지한다.
 - 배포 전 환경 파일과 주문 상태는 각각
   `/home/ubuntu/kis.env.pre-pr78`,
   `/home/ubuntu/stock-backups/pre-pr78-20260725.tgz`로 권한 600 백업했다.
@@ -473,8 +485,8 @@ GitHub API 기준 Pages는 public이고 최신 배포와 GitHub 호스팅 스모
 
 P0/P1 수정 외부 승인, PR #78·#79 병합, Oracle 단계배포, KIS mock 실데이터,
 전체 Python `41/41`, L1 신규매수 차단, 원장 건강성, 공유 캐시와 개인 웹 검증까지
-완료했다. PR #84 배포 전 서버 코드는 `169225be`, 작업트리는 clean이고 보호매도는
-유지된다.
+완료했다. PR #84까지 Oracle 코드 `405aaf2`로 배포했으며 작업트리는 clean이고
+보호매도는 유지된다.
 
 1. 업그레이드 전 BUY 16건을 주문별로 브로커 체결·보호 포지션과 대사한다. BAM과
    LW 불일치를 먼저 확인하고, 검증된 주문만 durable `accounted`로 이관한다.
