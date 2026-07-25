@@ -2,6 +2,8 @@
 
 const {
   optionalNumber,
+  positionInvestmentSummary,
+  holdingPeriod,
   positionDistances,
   strategyStats,
   concentrationRows,
@@ -76,6 +78,26 @@ function formatPrice(value, ccy = "USD", signed = false) {
 function formatPercent(value, digits = 1) {
   const number = finite(value);
   return `${number >= 0 ? "+" : ""}${number.toFixed(digits)}%`;
+}
+
+function formatOptionalPrice(value, ccy = "USD", signed = false) {
+  const number = optionalNumber(value);
+  return number === null ? "—" : formatPrice(number, ccy, signed);
+}
+
+function formatOptionalPercent(value, digits = 1) {
+  const number = optionalNumber(value);
+  return number === null ? "—" : formatPercent(number, digits);
+}
+
+function formatOpenedDate(value) {
+  const period = holdingPeriod(value);
+  if (!period) return null;
+  const [year, month, day] = period.opened.split("-");
+  return {
+    ...period,
+    label: `${year}.${month}.${day}`,
+  };
 }
 
 function marketLabel(ccy) {
@@ -690,17 +712,26 @@ function renderBriefing() {
 function portfolioTotals(positions) {
   const totals = {};
   positions.forEach((position) => {
+    const metrics = positionInvestmentSummary(position);
     const row = totals[position.ccy] ||= { eval: 0, buy: 0, pl: 0 };
-    row.eval += finite(position.eval_amt);
-    row.buy += finite(position.buy_amt);
-    row.pl += finite(position.pl_amt);
+    row.eval += finite(metrics.currentValue);
+    row.buy += finite(metrics.investedAmount);
+    row.pl += finite(metrics.pnlAmount);
   });
   return totals;
 }
 
 function portfolioCard(position) {
-  const tone = finite(position.pl_amt) >= 0 ? "gain" : "loss";
+  const metrics = positionInvestmentSummary(position);
+  const opened = formatOpenedDate(position.opened);
+  const tone = metrics.pnlAmount === null
+    ? "" : metrics.pnlAmount >= 0 ? "gain" : "loss";
   const sleeve = String(position.sleeve || "A").toUpperCase() === "B" ? "B" : "A";
+  const quantity = metrics.quantity === null
+    ? "수량 미확인" : `${metrics.quantity.toLocaleString("ko-KR")}주`;
+  const holding = opened
+    ? `${opened.label} 매수 · ${opened.holdingDays}일째`
+    : "매수일 미확인";
   return `
     <button class="portfolio-card" type="button" data-position="${escapeHTML(position.code)}">
       <span class="card-head">
@@ -711,12 +742,24 @@ function portfolioCard(position) {
         <span class="badge ${sleeve === "B" ? "shelf" : "strategy-a"}">전략 ${sleeve}</span>
       </span>
       <span class="portfolio-value">
-        <strong>${formatPrice(position.eval_amt, position.ccy)}</strong>
-        <span class="${tone}">${formatPercent(position.pl_rt)}</span>
+        <span class="portfolio-current">
+          <small>현재가</small>
+          <strong>${formatOptionalPrice(metrics.currentPrice, position.ccy)}</strong>
+        </span>
+        <span class="portfolio-return ${tone}">
+          <strong>${formatOptionalPercent(metrics.returnPct)}</strong>
+          <small>${formatOptionalPrice(metrics.pnlAmount, position.ccy, true)}</small>
+        </span>
       </span>
-      <span class="portfolio-meta">
-        ${Number(position.qty).toLocaleString("ko-KR")}주 · 평균 ${formatPrice(position.avg, position.ccy)}
-        · 손익 ${formatPrice(position.pl_amt, position.ccy, true)}
+      <span class="portfolio-price-grid">
+        <span><small>내 평균매수가</small><b>${formatOptionalPrice(metrics.averagePrice, position.ccy)}</b></span>
+        <span><small>1주당 손익</small><b class="${tone}">${formatOptionalPrice(metrics.perSharePnl, position.ccy, true)}</b></span>
+        <span><small>투입금</small><b>${formatOptionalPrice(metrics.investedAmount, position.ccy)}</b></span>
+        <span><small>현재 평가금</small><b>${formatOptionalPrice(metrics.currentValue, position.ccy)}</b></span>
+      </span>
+      <span class="portfolio-meta portfolio-holding">
+        <span>${escapeHTML(quantity)}</span>
+        <span class="${opened ? "" : "unknown"}">${escapeHTML(holding)}</span>
       </span>
       ${positionPlanMarkup(position)}
     </button>`;
@@ -770,22 +813,11 @@ function renderPortfolio() {
 function openPortfolioDetail(position) {
   $("#detail-market").textContent = `${marketLabel(position.ccy)} · ${position.code}`;
   $("#detail-title").textContent = position.name || position.code;
-  const tone = finite(position.pl_amt) >= 0 ? "gain" : "loss";
-  const sleeve = String(position.sleeve || "A").toUpperCase() === "B" ? "B" : "A";
   dialog.dataset.position = position.code;
   dialog.dataset.chartMode = isPrivateDashboard() ? "live" : "daily";
   dialog.dataset.chartDays = "90";
   $("#detail-content").innerHTML = `
-    <div class="detail-price-row">
-      <div class="detail-price" id="detail-live-price">${formatPrice(position.cur, position.ccy)}</div>
-      <span class="badge ${sleeve === "B" ? "shelf" : "strategy-a"}">전략 ${sleeve}</span>
-    </div>
-    <div class="detail-grid">
-      <div class="detail-box"><small>보유 수량</small><strong>${Number(position.qty).toLocaleString("ko-KR")}주</strong></div>
-      <div class="detail-box"><small>평균 단가</small><strong>${formatPrice(position.avg, position.ccy)}</strong></div>
-      <div class="detail-box"><small>평가 손익</small><strong id="detail-live-pl" class="${tone}">${formatPercent(position.pl_rt)}</strong></div>
-    </div>
-    ${positionPlanDetailMarkup(position)}
+    <div id="detail-position-summary">${portfolioDetailSummaryMarkup(position)}</div>
     <div class="chart-wrap">
       <div class="chart-head">
         <div>
@@ -829,18 +861,65 @@ function openPortfolioDetail(position) {
   loadPortfolioChart(position);
 }
 
+function portfolioDetailSummaryMarkup(position) {
+  const metrics = positionInvestmentSummary(position);
+  const opened = formatOpenedDate(position.opened);
+  const tone = metrics.pnlAmount === null
+    ? "" : metrics.pnlAmount >= 0 ? "gain" : "loss";
+  const sleeve = String(position.sleeve || "A").toUpperCase() === "B" ? "B" : "A";
+  const quantity = metrics.quantity === null
+    ? "—" : `${metrics.quantity.toLocaleString("ko-KR")}주`;
+  let priceInsight = "평균매수가와 현재가를 함께 확인할 수 없습니다.";
+  if (metrics.priceGapPct !== null && metrics.priceGapPct >= 0) {
+    priceInsight = `현재가는 평균매수가보다 ${formatPercent(metrics.priceGapPct)} 위입니다.`;
+  } else if (metrics.breakEvenMovePct > 0) {
+    priceInsight = `현재가에서 평균매수가 회복까지 +${metrics.breakEvenMovePct.toFixed(1)}%가 필요합니다.`;
+  }
+  const openedMarkup = opened
+    ? `<strong>${escapeHTML(opened.label)} 매수 · 보유 ${opened.holdingDays}일째</strong>
+       <p>봇의 확정 체결 원장에 기록된 최초 매수일 기준입니다.</p>`
+    : `<strong>매수일 미확인</strong>
+       <p>KIS 잔고에 최초 매수일이 없는 수동·기존 보유 종목은 날짜를 추정하지 않습니다.</p>`;
+  return `
+    <div class="detail-price-row">
+      <div class="detail-current">
+        <small>현재가</small>
+        <div class="detail-price">${formatOptionalPrice(metrics.currentPrice, position.ccy)}</div>
+        <span class="${tone}">${formatOptionalPercent(metrics.returnPct)}
+          · ${formatOptionalPrice(metrics.pnlAmount, position.ccy, true)}</span>
+      </div>
+      <span class="badge ${sleeve === "B" ? "shelf" : "strategy-a"}">전략 ${sleeve}</span>
+    </div>
+    <section class="purchase-section" aria-label="내 매수 정보">
+      <div class="detail-section-head">
+        <strong>내 매수 정보</strong>
+        <span>KIS 잔고 기준</span>
+      </div>
+      <div class="detail-grid">
+        <div class="detail-box emphasis"><small>내 평균매수가</small><strong>${formatOptionalPrice(metrics.averagePrice, position.ccy)}</strong></div>
+        <div class="detail-box"><small>보유 수량</small><strong>${quantity}</strong></div>
+        <div class="detail-box"><small>1주당 손익</small><strong class="${tone}">${formatOptionalPrice(metrics.perSharePnl, position.ccy, true)}</strong></div>
+        <div class="detail-box"><small>총 투입금</small><strong>${formatOptionalPrice(metrics.investedAmount, position.ccy)}</strong></div>
+        <div class="detail-box"><small>현재 평가금</small><strong>${formatOptionalPrice(metrics.currentValue, position.ccy)}</strong></div>
+        <div class="detail-box"><small>총 평가손익</small><strong class="${tone}">${formatOptionalPrice(metrics.pnlAmount, position.ccy, true)}</strong></div>
+      </div>
+      <div class="purchase-insight">
+        <div class="purchase-date ${opened ? "" : "unknown"}">${openedMarkup}</div>
+        <div class="price-insight"><small>가격 분석</small><strong>${escapeHTML(priceInsight)}</strong></div>
+      </div>
+    </section>
+    ${positionPlanDetailMarkup(position)}`;
+}
+
 function refreshOpenPortfolioDetail() {
   if (!dialog.open || !dialog.dataset.position) return;
   const position = (state.portfolio?.positions || []).find(
     (item) => item.code === dialog.dataset.position);
   if (!position) return;
-  const price = $("#detail-live-price");
-  const pl = $("#detail-live-pl");
-  if (price) price.textContent = formatPrice(position.cur, position.ccy);
-  if (pl) {
-    pl.textContent = formatPercent(position.pl_rt);
-    pl.className = finite(position.pl_amt) >= 0 ? "gain" : "loss";
-  }
+  $("#detail-market").textContent = `${marketLabel(position.ccy)} · ${position.code}`;
+  $("#detail-title").textContent = position.name || position.code;
+  const summary = $("#detail-position-summary");
+  if (summary) summary.innerHTML = portfolioDetailSummaryMarkup(position);
   if (dialog.dataset.chartMode === "live") loadPortfolioChart(position, { quiet: true });
   else {
     const canvas = $("#price-chart");
