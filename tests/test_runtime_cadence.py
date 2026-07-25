@@ -19,6 +19,9 @@ def test_service_cadence_contract():
     brain_oracle = (
         ROOT / "infra/server/oracle-brain.oracle-ubuntu.conf"
     ).read_text(encoding="utf-8")
+    watchdog_oracle = (
+        ROOT / "infra/server/watchdog.oracle-ubuntu.conf"
+    ).read_text(encoding="utf-8")
     autodeploy = (ROOT / "infra/server/autodeploy.sh").read_text(encoding="utf-8")
     assert "BUYLOOP_POLL_SECONDS=60" in buy
     assert "ORACLE_SIGNAL_FALLBACK_ENABLED=0" in buy
@@ -34,6 +37,9 @@ def test_service_cadence_contract():
     assert "ReadWritePaths=/home/" not in brain
     assert "/home/ubuntu" not in brain
     assert "WorkingDirectory=/home/ubuntu/Stock-chart-analyze" in brain_oracle
+    assert "EnvironmentFile=\n" in watchdog_oracle
+    assert "source /home/ubuntu/kis.env" in watchdog_oracle
+    assert "ExecStart=/usr/bin/python3 infra/server/watchdog.py" not in watchdog_oracle
     assert "bot.signal_feed" in autodeploy
     assert "scanner.oracle_brain" not in autodeploy
     for forbidden in ("bot.kis_buyloop", "bot.sentinel", "kis_orders"):

@@ -654,3 +654,11 @@ PR #89 생성 뒤 GitHub `Site UI CI`의 `compileall`이 리뷰용 V2 diff 끝�
 `compileall`, 전체 Python 테스트 `44/44`, Node 테스트 `8/8`, 두 JavaScript
 문법 검사, shell 문법 검사와 `git diff --check`를 다시 통과했다. 리뷰 결과만
 믿고 우회 병합하지 않았으며 PR CI가 초기에 발견한 오류는 수정 커밋으로 남긴다.
+
+병합 뒤 Oracle 배포 전 읽기 점검에서 서버는 새 HEAD `5371f4a`, clean, L1이며
+sentinel·buyloop·telegram·portfolio-web가 active인 것을 확인했다. watchdog와
+oracle-brain은 아직 미설치다. 서버 보안 env의 실제 경로는
+`/home/ubuntu/kis.env`이고 `/etc/stock/kis.env`는 없으므로, watchdog Oracle
+drop-in이 기본 `EnvironmentFile` 지시자를 비운 뒤 기존 서비스와 같은 방식으로
+해당 env를 source하도록 보완했다. 값은 읽거나 저장하지 않았고 경로·파일 권한
+600만 확인했다. 이 보완을 CI/후속 PR에 통과시킨 뒤 유닛을 설치한다.
