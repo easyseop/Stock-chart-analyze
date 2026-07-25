@@ -566,6 +566,11 @@ def _signals_json(results: list[dict]) -> str:
     shelf_watch.sort(key=lambda item: item[:3])
     for _missing, _range, _norm, r in shelf_watch[:config.PICKS_MAX]:
         sh = r.get("shelf") or {}
+        # 분석 결과가 외부/구버전 캐시에서 왔더라도 numpy.bool_가 JSON 경계를
+        # 통과하지 않게 한 번 더 정규화한다. B 관찰은 화면 전용이며 주문 판단에는
+        # 사용되지 않는다.
+        checks = {str(key): bool(value)
+                  for key, value in (sh.get("checks") or {}).items()}
         sigs.append({
             "id": f'{r["code"]}-{day}-shelf-watch',
             "code": r["code"], "name": r["name"], "ccy": r.get("ccy", "USD"),
@@ -583,7 +588,7 @@ def _signals_json(results: list[dict]) -> str:
                 "poc": sh.get("poc"), "val": sh.get("val"),
                 "vah": sh.get("vah"), "rr": sh.get("rr"),
                 "overhead": sh.get("overhead"), "reason": sh.get("reason"),
-                "checks": sh.get("checks") or {},
+                "checks": checks,
             },
             "fresh": False,
             "break_gap": None,
@@ -703,7 +708,6 @@ _REPO = "easyseop/Stock-chart-analyze"
 
 def _trigger_page() -> str:
     return _tmpl("lookup.html").replace("__REPO__", _REPO)
-
 
 
 

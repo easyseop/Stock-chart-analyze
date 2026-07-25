@@ -9,15 +9,18 @@
 """
 from __future__ import annotations
 
+import json
 import os
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+import numpy as np
 import pandas as pd
 
 from scanner import analyze as A
 from scanner import gates
+from scanner import screener
 
 
 def _df(lows, today_low, today_close, today_high, vol_bars=None):
@@ -70,6 +73,28 @@ def test_low_volume_rejected():
     assert gates.classify_shelf_watch(base)["group"] == "shelf_watch"
     assert gates.classify_shelf(base)["group"] is None
     print("[PASS] 거래량 미동반 반등 → B 관찰만, 확정 B는 거부")
+
+
+def test_watch_checks_are_plain_json_booleans():
+    """numpy 비교 결과가 B 관찰 JSON과 Pages 배포를 깨지 않아야 한다."""
+    lows = [100.0, 99.7, 98.0, 99.6, 99.5]
+    d = _df(lows, today_low=99.5, today_close=101.0, today_high=101.5)
+    shelf = A._shelf_signal(
+        d, _sup(), {"mult": np.float64(0.8)}, range_pos=0.30)
+    assert shelf["watch"] and not shelf["ok"], shelf
+    assert all(type(value) is bool for value in shelf["checks"].values())
+
+    result = {
+        "code": "JSON", "name": "JSON 경계", "ccy": "USD",
+        "turnover": 5e7, "shelf": shelf,
+        "rs": {"rel": 0.0}, "ext": {"ma120_stretch": 0.0},
+        "range_pos": 0.30, "norm": 0.0, "sr": {"price": 101.0},
+    }
+    payload = json.loads(screener._signals_json([result]))
+    watch = next(s for s in payload["signals"] if s["group"] == "shelf_watch")
+    assert all(type(value) is bool
+               for value in watch["shelf"]["checks"].values())
+    print("[PASS] numpy bool → 일반 bool 정규화, B 관찰 JSON 직렬화")
 
 
 def test_watch_still_respects_hard_risk_limits():
@@ -132,6 +157,7 @@ def main():
     test_bounce_ok()
     test_falling_knife_rejected()
     test_low_volume_rejected()
+    test_watch_checks_are_plain_json_booleans()
     test_watch_still_respects_hard_risk_limits()
     test_overhead_and_zone()
     test_classify_shelf()
