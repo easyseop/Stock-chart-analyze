@@ -19,7 +19,7 @@ def _row(code: str, market: str, cur: float, sleeve: str = "A") -> dict:
         "eval_amt": cur * qty, "buy_amt": avg * qty,
         "pl_amt": (cur - avg) * qty, "pl_rt": (cur / avg - 1) * 100,
         "entry": avg, "stop": avg - 5, "target": cur + 20,
-        "sleeve": sleeve,
+        "sleeve": sleeve, "opened": "2026-07-21",
     }
 
 
@@ -39,6 +39,7 @@ def test_complete_cache_and_quote_refresh():
             now=1005, market_open=lambda market: market == "US")
         apple = next(row for row in snap["positions"] if row["code"] == "AAPL")
         assert apple["cur"] == 205
+        assert apple["opened"] == "2026-07-21"
         assert apple["eval_amt"] == 410
         assert apple["pl_amt"] == 30
         history = market_cache.quote_history("AAPL")
@@ -74,7 +75,8 @@ def test_sentinel_reuses_its_balance_response_for_web():
     with mock.patch("bot.settings.market_open", return_value=True), \
             mock.patch("bot.kis.positions_detail", side_effect=positions) as query, \
             mock.patch("bot.kis_positions.load",
-                       return_value={"AAPL": {"sleeve": "B", "stop": 180}}), \
+                       return_value={"AAPL": {"sleeve": "B", "stop": 180,
+                                               "opened": "2026-07-21"}}), \
             mock.patch("bot.market_cache.update_market",
                        side_effect=lambda market, rows: calls.append((market, rows))), \
             mock.patch("bot.market_cache.update_quote") as update_quote, \
@@ -89,6 +91,7 @@ def test_sentinel_reuses_its_balance_response_for_web():
     apple = next(row for market, rows in calls if market == "US"
                  for row in rows if row["code"] == "AAPL")
     assert apple["sleeve"] == "B" and apple["stop"] == 180
+    assert apple["opened"] == "2026-07-21"
 
     broker._balance_quotes = {"STALE": 999.0}
     with mock.patch("bot.settings.market_open", return_value=True), \

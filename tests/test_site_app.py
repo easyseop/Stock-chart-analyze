@@ -56,9 +56,13 @@ def test_decision_brief_uses_existing_read_only_data():
     for feature in ("positionAttention", "positionPlanMarkup",
                     "performanceInsights", "renderBriefing"):
         assert f"function {feature}" in js
-    for feature in ("positionDistances", "strategyStats",
+    for feature in ("positionInvestmentSummary", "holdingPeriod",
+                    "positionDistances", "strategyStats",
                     "concentrationRows", "maximumDrawdown"):
         assert f"function {feature}" in math_js
+    for label in ("내 평균매수가", "현재가", "총 투입금", "현재 평가금",
+                  "매수일 미확인", "가격 분석"):
+        assert label in js
     assert "손절선 또는 목표선 3% 안" in js
     assert "보호선 정보 없음" in js
     assert "남은 손익비" in js
@@ -90,13 +94,16 @@ def test_portfolio_snapshot_deduplicates_exchange_queries():
                 "KIS_MARKET_CACHE_PATH": str(Path(td) / "market.json")}), \
             mock.patch("bot.kis.positions_detail", side_effect=positions), \
             mock.patch.object(portfolio_web, "_position_meta",
-                              return_value={"entry": 0.0, "stop": 0.0, "sleeve": "A"}):
+                              return_value={"entry": 0.0, "stop": 0.0,
+                                            "target": 0.0, "sleeve": "A",
+                                            "opened": "2026-07-21"}):
         payload = portfolio_web.portfolio_snapshot()
 
     assert payload["read_only"] is True
     assert 5 <= payload["refresh_seconds"] <= 300
     assert {row["code"] for row in payload["positions"]} == {"005930", "AAPL"}
     assert len(payload["positions"]) == 2
+    assert {row["opened"] for row in payload["positions"]} == {"2026-07-21"}
     encoded = json.dumps(payload)
     assert "APPSECRET" not in encoded and "CANO" not in encoded
 

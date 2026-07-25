@@ -95,11 +95,13 @@ PORTFOLIO = {
         {"code": "AAPL", "name": "Apple", "market": "US", "ccy": "USD",
          "qty": 12, "avg": 189.40, "cur": 214.42, "eval_amt": 2573.04,
          "buy_amt": 2272.80, "pl_amt": 300.24, "pl_rt": 13.21,
-         "entry": 189.40, "stop": 201.00, "target": 215.50, "sleeve": "A"},
+         "entry": 189.40, "stop": 201.00, "target": 215.50, "sleeve": "A",
+         "opened": "2026-07-18"},
         {"code": "005930", "name": "삼성전자", "market": "KR", "ccy": "KRW",
          "qty": 24, "avg": 75200, "cur": 80300, "eval_amt": 1927200,
          "buy_amt": 1804800, "pl_amt": 122400, "pl_rt": 6.78,
-         "entry": 75200, "stop": 79800, "target": 89000, "sleeve": "B"},
+         "entry": 75200, "stop": 79800, "target": 89000, "sleeve": "B",
+         "opened": "2026-07-22"},
         {"code": "NVDA", "name": "NVIDIA", "market": "US", "ccy": "USD",
          "qty": 2, "avg": 180.00, "cur": 173.00, "eval_amt": 346.00,
          "buy_amt": 360.00, "pl_amt": -14.00, "pl_rt": -3.89,
@@ -192,6 +194,23 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_GET(self) -> None:
         parsed = urlparse(self.path)
+        if parsed.path in (
+                "/qa-390.html", "/qa-320.html",
+                "/qa-390-detail.html", "/qa-320-detail.html"):
+            width = 390 if "390" in parsed.path else 320
+            detail_script = """
+<script>const frame=document.querySelector("iframe");
+frame.addEventListener("load",()=>setTimeout(()=>
+  frame.contentDocument.querySelector(".portfolio-card")?.click(),700));</script>
+""" if "detail" in parsed.path else ""
+            body = f"""<!doctype html><meta charset="utf-8">
+<title>{width}px responsive QA</title>
+<style>html,body{{margin:0;background:#dfe4ec}}iframe{{display:block;width:{width}px;
+height:844px;margin:0 auto;border:0;background:white}}</style>
+<iframe src="/portfolio/app/#portfolio" title="{width}px responsive QA"></iframe>
+{detail_script}""".encode()
+            self._send(200, body, "text/html; charset=utf-8")
+            return
         parts = [part for part in parsed.path.split("/") if part]
         if len(parts) < 2 or parts[0] not in STATES:
             self._json(404, {"error": "preview_path"})

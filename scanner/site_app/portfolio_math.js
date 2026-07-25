@@ -16,6 +16,75 @@
     return Number.isFinite(number) ? number : fallback;
   }
 
+  function positiveNumber(value) {
+    const number = optionalNumber(value);
+    return number !== null && number > 0 ? number : null;
+  }
+
+  function positionInvestmentSummary(position) {
+    const quantity = positiveNumber(position.qty);
+    const averagePrice = positiveNumber(position.avg);
+    const currentPrice = positiveNumber(position.cur);
+    const brokerInvested = positiveNumber(position.buy_amt);
+    const brokerValue = positiveNumber(position.eval_amt);
+    const brokerPnl = optionalNumber(position.pl_amt);
+    const brokerReturn = optionalNumber(position.pl_rt);
+    const investedAmount = brokerInvested
+      ?? (quantity !== null && averagePrice !== null ? quantity * averagePrice : null);
+    const currentValue = brokerValue
+      ?? (quantity !== null && currentPrice !== null ? quantity * currentPrice : null);
+    const pnlAmount = brokerPnl
+      ?? (investedAmount !== null && currentValue !== null
+        ? currentValue - investedAmount : null);
+    const returnPct = brokerReturn
+      ?? (investedAmount > 0 && pnlAmount !== null ? pnlAmount / investedAmount * 100 : null);
+    const perSharePnl = averagePrice !== null && currentPrice !== null
+      ? currentPrice - averagePrice : null;
+    const priceGapPct = averagePrice !== null && currentPrice !== null
+      ? (currentPrice / averagePrice - 1) * 100 : null;
+    const breakEvenMovePct = averagePrice !== null && currentPrice !== null
+      && currentPrice < averagePrice
+      ? (averagePrice / currentPrice - 1) * 100 : 0;
+    return {
+      quantity,
+      averagePrice,
+      currentPrice,
+      investedAmount,
+      currentValue,
+      pnlAmount,
+      returnPct,
+      perSharePnl,
+      priceGapPct,
+      breakEvenMovePct,
+    };
+  }
+
+  function holdingPeriod(opened, today = "") {
+    const openedText = String(opened || "").trim();
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(openedText)) return null;
+    const openedMs = Date.parse(`${openedText}T00:00:00Z`);
+    if (!Number.isFinite(openedMs)
+        || new Date(openedMs).toISOString().slice(0, 10) !== openedText) return null;
+    let todayText = String(today || "").trim();
+    if (!todayText) {
+      const now = new Date();
+      todayText = [
+        now.getFullYear(),
+        String(now.getMonth() + 1).padStart(2, "0"),
+        String(now.getDate()).padStart(2, "0"),
+      ].join("-");
+    }
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(todayText)) return null;
+    const todayMs = Date.parse(`${todayText}T00:00:00Z`);
+    if (!Number.isFinite(todayMs)
+        || new Date(todayMs).toISOString().slice(0, 10) !== todayText
+        || openedMs > todayMs) return null;
+    return {
+      opened: openedText,
+      holdingDays: Math.floor((todayMs - openedMs) / 86400000) + 1,
+    };
+  }
+
   function positionDistances(position) {
     const current = optionalNumber(position.cur);
     const stop = optionalNumber(position.stop);
@@ -85,6 +154,8 @@
 
   return Object.freeze({
     optionalNumber,
+    positionInvestmentSummary,
+    holdingPeriod,
     positionDistances,
     strategyStats,
     concentrationRows,

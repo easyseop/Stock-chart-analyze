@@ -4,6 +4,8 @@ const test = require("node:test");
 const assert = require("node:assert/strict");
 
 const {
+  positionInvestmentSummary,
+  holdingPeriod,
   positionDistances,
   strategyStats,
   concentrationRows,
@@ -39,6 +41,61 @@ test("positionDistances treats missing or zero plans as unavailable", () => {
     positionDistances({ cur: 0, stop: 80, target: 120 }),
     { stopPct: null, targetPct: null, progress: null },
   );
+});
+
+test("positionInvestmentSummary prefers broker totals and keeps exact prices", () => {
+  const summary = positionInvestmentSummary({
+    qty: 8, avg: 42.5, cur: 45, buy_amt: 341, eval_amt: 362,
+    pl_amt: 21, pl_rt: 6.158,
+  });
+  assert.deepEqual({ ...summary, priceGapPct: null }, {
+    quantity: 8,
+    averagePrice: 42.5,
+    currentPrice: 45,
+    investedAmount: 341,
+    currentValue: 362,
+    pnlAmount: 21,
+    returnPct: 6.158,
+    perSharePnl: 2.5,
+    priceGapPct: null,
+    breakEvenMovePct: 0,
+  });
+  assertClose(summary.priceGapPct, 45 / 42.5 * 100 - 100);
+});
+
+test("positionInvestmentSummary derives safe fallbacks and true break-even move", () => {
+  const summary = positionInvestmentSummary({
+    qty: 4, avg: 100, cur: 80,
+  });
+  assert.equal(summary.investedAmount, 400);
+  assert.equal(summary.currentValue, 320);
+  assert.equal(summary.pnlAmount, -80);
+  assert.equal(summary.returnPct, -20);
+  assert.equal(summary.perSharePnl, -20);
+  assertClose(summary.priceGapPct, -20);
+  assert.equal(summary.breakEvenMovePct, 25);
+  const missing = positionInvestmentSummary({
+    qty: 0, avg: 0, cur: "", buy_amt: 0, eval_amt: 0,
+  });
+  assert.equal(missing.averagePrice, null);
+  assert.equal(missing.currentPrice, null);
+  assert.equal(missing.investedAmount, null);
+  assert.equal(missing.currentValue, null);
+  assert.equal(missing.pnlAmount, null);
+  assert.equal(missing.returnPct, null);
+});
+
+test("holdingPeriod validates dates, rejects future dates, and counts entry day", () => {
+  assert.deepEqual(holdingPeriod("2026-07-25", "2026-07-25"), {
+    opened: "2026-07-25", holdingDays: 1,
+  });
+  assert.deepEqual(holdingPeriod("2026-07-23", "2026-07-25"), {
+    opened: "2026-07-23", holdingDays: 3,
+  });
+  assert.equal(holdingPeriod("", "2026-07-25"), null);
+  assert.equal(holdingPeriod("2026-02-30", "2026-07-25"), null);
+  assert.equal(holdingPeriod("2026-07-26", "2026-07-25"), null);
+  assert.equal(holdingPeriod("<script>", "2026-07-25"), null);
 });
 
 test("maximumDrawdown needs two samples and uses the zero-return baseline", () => {
