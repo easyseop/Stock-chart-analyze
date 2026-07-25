@@ -50,7 +50,23 @@ def test_confirmed_sales_join_exact_prices_reasons_and_pnl():
         _record_sale(
             "kis:ABC:stop#1", pos_key, code="ABC", qty=4, price=90.0,
             reason="하드 손절(손절가 이탈)", sleeve="B")
-        payload = trade_history.snapshot()
+        lock_paths = [
+            Path(ledger.LEDGER_PATH + ".lock"),
+            Path(kis_positions.PATH + ".lock"),
+            Path(os.environ["COSTBOOK_PATH"] + ".lock"),
+        ]
+        before = [(path.stat().st_mtime_ns, path.stat().st_mode) for path in lock_paths]
+        with mock.patch.object(
+                ledger, "_file_lock",
+                side_effect=AssertionError("read-only history must not open RW lock")), \
+                mock.patch.object(
+                    kis_positions, "_file_lock",
+                    side_effect=AssertionError("read-only history must not open RW lock")), \
+                mock.patch.object(
+                    costbook, "_file_lock",
+                    side_effect=AssertionError("read-only history must not open RW lock")):
+            payload = trade_history.snapshot()
+        after = [(path.stat().st_mtime_ns, path.stat().st_mode) for path in lock_paths]
 
     assert payload["available"] is True
     assert payload["read_only"] is True
@@ -69,6 +85,7 @@ def test_confirmed_sales_join_exact_prices_reasons_and_pnl():
     for forbidden in ("kis:ABC:stop#1", "sb:unit:ABC", "ODNO", "CANO",
                       "APPSECRET", td):
         assert forbidden not in encoded
+    assert before == after
 
 
 def test_corrupt_order_ledger_hides_history_fail_closed():
@@ -79,6 +96,7 @@ def test_corrupt_order_ledger_hides_history_fail_closed():
                 "COSTBOOK_PATH": os.path.join(td, "costbook.jsonl"),
             }):
         Path(ledger.LEDGER_PATH).write_text("{broken\n", encoding="utf-8")
+        Path(ledger.LEDGER_PATH + ".lock").touch()
         payload = trade_history.snapshot()
     assert payload["available"] is False
     assert payload["partial"] is True

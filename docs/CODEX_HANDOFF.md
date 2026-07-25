@@ -540,3 +540,9 @@ P0/P1 수정 외부 승인, PR #78·#79 병합, Oracle 단계배포, KIS mock �
   브라우저 오류 0건을 확인했다.
 - Oracle 배포 전 상태는 서비스 5개 모두 active, kill-switch `L1`, 주문 원장
   `healthy=True`였다. L1은 배포 뒤에도 해제하지 않는다.
+- PR #86 첫 단계배포에서 개인 웹의 systemd 읽기 전용 격리가 기존 reader의
+  `O_RDWR|O_CREAT` 잠금 파일 열기까지 차단해 `/api/trades.json`이 503을 반환했다.
+  원장이나 서비스 권한을 넓히지 않고, 거래이력 전용 reader가 writer와 동일한
+  `.lock` 파일을 `O_RDONLY + LOCK_SH`로만 여는 방식으로 보정했다. 원장 본문과
+  잠금 파일의 내용·mtime·권한을 바꾸지 않는 테스트를 추가했고 전체 `42/42`를
+  다시 통과했다.
