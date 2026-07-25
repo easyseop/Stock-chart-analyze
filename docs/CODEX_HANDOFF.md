@@ -10,8 +10,8 @@
 ## 1. 현재 Git 상태
 
 - 기본 브랜치: `claude/happy-gauss-cwoq21`
-- 현재 개발 브랜치: `codex/p0-order-protection` (배포 결과 문서화용)
-- Oracle 배포 코드: `750a087e` (PR #81 병합 결과)
+- 현재 개발 브랜치: `codex/portfolio-price-insights`
+- Oracle 배포 코드: `169225be` (PR #83 병합 결과, PR #84 배포 전)
 - 활성 로컬 복제본: `/Users/seop/Documents/매매봇/Stock-chart-analyze-deploy`
 - 기존 `Stock-chart-analyze-site`는 iCloud가 일부 `.git/refs`를 dataless로 바꿔
   HEAD가 끊겼다. 작업 파일은 보존하고 기준 커밋+검토 diff를 새 복제본에 복원했다.
@@ -22,6 +22,9 @@
 - PR #79 병합 커밋: `4c073eb2`
 - 파수꾼 중복 시세 제거 PR: [#81 파수꾼 KIS 중복 시세 조회 제거](https://github.com/easyseop/Stock-chart-analyze/pull/81)
 - PR #81 병합 커밋: `750a087e`
+- 개인 웹 8888 포트 변경 PR: [#83 개인 웹 포트를 8888로 변경](https://github.com/easyseop/Stock-chart-analyze/pull/83)
+- 포트폴리오 핵심 가격정보 PR: [#84 보유종목 매수가·현재가 핵심정보 강화](https://github.com/easyseop/Stock-chart-analyze/pull/84)
+- PR #84 최초 구현 커밋: `548bdc5`
 - 병합 PR: [#75 Oracle KIS 검증과 알림 안정성 보강](https://github.com/easyseop/Stock-chart-analyze/pull/75)
 - PR #75 병합 커밋: `468ad0cf`
 - 리뷰 수정 커밋: `7ebe0d97`, 테스트 격리·인수인계 커밋: `79a67c51`
@@ -113,6 +116,30 @@ Oracle 자산 대시보드, 코드 push 무거래 보정이 PR #72와 #73을 통
 이 웹 변경은 매매 주문 코드를 추가하거나 변경하지 않는다. PR #77 병합 뒤 Oracle
 운영 서버에도 반영했으며, 개인 화면은 파수꾼 공유 캐시를 이용해 KIS 호출을 늘리지
 않고 서비스 중이다.
+
+#### 포트폴리오 핵심 가격·매수 정보 강화
+
+2026-07-25 PR #84에서 토스증권처럼 보유종목 판단에 먼저 필요한 가격·원가 정보를
+카드와 상세 상단으로 끌어올렸다.
+
+- 카드에 현재가, KIS 평균매수가, 1주당 손익, 총 투입금, 현재 평가금, 총 손익률·
+  손익금, 보유수량을 동시에 표시한다.
+- 상세에는 위 값을 6개 숫자로 분리하고 평균매수가를 강조한다. 손실 중이면 현재가
+  기준 본전 회복에 필요한 상승률, 수익 중이면 평균매수가 대비 상승률을 계산한다.
+- 봇의 확정 체결 원장에 `opened`가 있는 종목은 매수일과 진입일 포함 달력일 기준
+  `보유 N일째`를 표시한다. 수동·기존 보유처럼 근거가 없거나 날짜가 잘못됐으면
+  추정하지 않고 `매수일 미확인`으로 표시한다.
+- 금액은 KIS 잔고의 `buy_amt`, `eval_amt`, `pl_amt`, `pl_rt`를 우선 사용하고,
+  누락된 경우에만 수량×단가로 화면 표시값을 보완한다. 통화별 합계는 계속 분리한다.
+- 파수꾼의 기존 공유 캐시 필드만 사용하며 새 KIS 호출·웹 API·주문 기능은 없다.
+  공개 GitHub Pages에서는 기존처럼 계좌·보유·매수가 정보가 전혀 나오지 않는다.
+- 상세창이 열린 동안 기존 5초 브라우저 갱신으로 현재가뿐 아니라 수량·평단·평가금·
+  손익과 보호선까지 함께 새로 그린다.
+
+추가 검증은 순수 계산 Node 테스트 `8/8`, 웹 안전 경계 `9/9`, 전체 Python 독립
+테스트 `41/41`, Python compile, JavaScript 문법, `git diff --check`를 통과했다.
+실제 브라우저 1280px·390px·320px에서 카드와 상세를 확인했고 문서 가로 넘침,
+숫자 잘림, 브라우저 warning/error가 모두 0건이었다.
 
 ### 매매 운영 안정성
 
@@ -245,7 +272,7 @@ git diff --check
 
 웹 UX 외부 검토 후에는 아래 계산 회귀검사를 추가로 통과했다.
 
-- `tests/site_math.test.js`: 5/5 통과
+- `tests/site_math.test.js`: 8/8 통과
 - `tests/test_site_app.py`: 9/9 통과
 - `portfolio_math.js`, `app.js` 문법 검사 통과
 - `git diff --check` 통과
@@ -363,7 +390,7 @@ SSH 주소·개인키·KIS 인증값은 계속 Git 밖에만 둔다. 2026-07-24 
 - KIS 환경 파일: `/home/ubuntu/kis.env`(권한 600, 값은 기록하지 않음)
 - 서비스 사용자: `ubuntu`
 - Python 의존성: 저장소의 `.venv`; 서버에 `python3.10-venv` 설치
-- 배포 브랜치: `claude/happy-gauss-cwoq21` (주문 실행 코드 `750a087e`)
+- 배포 브랜치: `claude/happy-gauss-cwoq21` (현재 코드 `169225be`, PR #84 배포 전)
 - `portfolio-web.service`: enabled/active
 - 기존 `sentinel`, `buyloop`, `telegram`: 수정 코드 적용 후 재시작, 모두 active
 - `autodeploy.timer`: active. 재시작 대상에 `portfolio-web`까지 포함
@@ -446,7 +473,7 @@ GitHub API 기준 Pages는 public이고 최신 배포와 GitHub 호스팅 스모
 
 P0/P1 수정 외부 승인, PR #78·#79 병합, Oracle 단계배포, KIS mock 실데이터,
 전체 Python `41/41`, L1 신규매수 차단, 원장 건강성, 공유 캐시와 개인 웹 검증까지
-완료했다. 서버의 주문 실행 코드는 `750a087e`, 작업트리는 clean이고 보호매도는
+완료했다. PR #84 배포 전 서버 코드는 `169225be`, 작업트리는 clean이고 보호매도는
 유지된다.
 
 1. 업그레이드 전 BUY 16건을 주문별로 브로커 체결·보호 포지션과 대사한다. BAM과
