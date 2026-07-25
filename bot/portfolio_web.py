@@ -234,6 +234,12 @@ def performance_snapshot() -> dict:
     }
 
 
+def trade_history_snapshot(limit: int = 200) -> dict:
+    """확정 체결 로컬 원장만 읽는 거래이력. KIS·주문 모듈 호출은 없다."""
+    from bot import trade_history
+    return trade_history.snapshot(limit=limit)
+
+
 def _public_json(name: str) -> bytes:
     if name not in PUBLIC_FILES:
         raise FileNotFoundError(name)
@@ -311,6 +317,11 @@ class PortfolioHandler(BaseHTTPRequestHandler):
                 return
             if path == "/api/performance.json":
                 self._json(200, performance_snapshot())
+                return
+            if path == "/api/trades.json":
+                q = parse_qs(parsed.query)
+                limit = int((q.get("limit") or ["200"])[0])
+                self._json(200, trade_history_snapshot(limit))
                 return
             if path.startswith("/api/"):
                 name = path.rsplit("/", 1)[-1]

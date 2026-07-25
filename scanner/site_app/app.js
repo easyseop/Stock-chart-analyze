@@ -18,6 +18,7 @@ const API = Object.freeze({
   chart: "../api/chart.json",
   quotes: "../api/quotes.json",
   performance: "../api/performance.json",
+  trades: "../api/trades.json",
 });
 
 const VIEW_META = Object.freeze({
@@ -39,11 +40,18 @@ const state = {
   track: null,
   portfolio: null,
   performance: null,
+  trades: null,
   performanceMarket: "US",
   performanceRange: "today",
+  performanceHidden: new Set(),
+  shelfMode: "entry",
+  portfolioMode: "holdings",
+  tradeSleeve: "all",
+  tradeOutcome: "all",
   publicError: null,
   portfolioError: null,
   performanceError: null,
+  tradesError: null,
   loading: true,
 };
 
@@ -52,6 +60,10 @@ const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 const content = $("#content");
 const dialog = $("#detail-dialog");
 let portfolioTimer = null;
+const priceChartHidden = {
+  live: new Set(),
+  daily: new Set(),
+};
 
 function escapeHTML(value) {
   return String(value ?? "")
@@ -106,6 +118,13 @@ function marketLabel(ccy) {
 
 function groupSignals(group) {
   return (state.signalsDoc?.signals || []).filter((signal) => signal.group === group);
+}
+
+function currentSignalGroup() {
+  if (state.view === "shelf") {
+    return state.shelfMode === "watch" ? "shelf_watch" : "shelf";
+  }
+  return VIEW_META[state.view]?.group;
 }
 
 function relativeMinutes(iso) {
@@ -170,6 +189,13 @@ async function loadData({ quiet = false } = {}) {
       state.performance = null;
       state.performanceError = error;
     }
+    try {
+      state.trades = await fetchJSON(`${API.trades}?limit=200`, 10000);
+      state.tradesError = null;
+    } catch (error) {
+      state.trades = null;
+      state.tradesError = error;
+    }
   }
 
   state.loading = false;
@@ -194,6 +220,12 @@ async function refreshPortfolio() {
     state.performanceError = null;
   } catch (error) {
     state.performanceError = error;
+  }
+  try {
+    state.trades = await fetchJSON(`${API.trades}?limit=200`, 10000);
+    state.tradesError = null;
+  } catch (error) {
+    state.tradesError = error;
   }
   updateFreshness();
   if (state.view === "briefing") {
@@ -307,23 +339,34 @@ function updateHero() {
         : "현재 보호선에 급하게 가까운 종목은 없습니다. 전략 A·B와 시장 대비 성과를 함께 확인하세요."
       : "공개 화면에서는 새 신호와 모의성과를 요약합니다. KIS 보유자산 브리핑은 Oracle 로컬 화면에서만 보여요.";
   } else if (VIEW_META[state.view].group) {
-    const items = groupSignals(VIEW_META[state.view].group);
+    const group = currentSignalGroup();
+    const items = groupSignals(group);
     number.textContent = items.length.toLocaleString("ko-KR");
     unit.textContent = "종목";
     kicker.textContent = state.view === "now" ? "전략 A · 전환 확인" :
-      state.view === "watch" ? "전략 A · 전환 대기" : "전략 B · 매물대 반등";
+      state.view === "watch" ? "전략 A · 전환 대기" :
+        state.shelfMode === "watch" ? "전략 B · 반등 확인 대기" :
+          "전략 B · 매물대 반등";
     description.textContent = state.view === "now"
       ? "하락에서 상승으로 전환이 확인된 전략 A의 실제 KIS 진입 후보입니다."
       : state.view === "watch"
         ? "전략 A 후보 중 아직 매수 조건을 완전히 충족하지 않은 관찰 종목입니다."
-        : "전략 B로 분류된 매물대 반등 후보를 원본 값 그대로 표시합니다.";
+        : state.shelfMode === "watch"
+          ? "매물대 구조는 유효하지만 반등·거래량 확인이 덜 된 관찰 종목입니다. 자동매수 대상이 아닙니다."
+          : "전략 B의 매물대 반등 조건을 모두 통과한 진입 후보입니다.";
   } else if (state.view === "portfolio") {
     const positions = state.portfolio?.positions || [];
-    number.textContent = positions.length.toLocaleString("ko-KR");
-    unit.textContent = "보유";
-    kicker.textContent = state.portfolio ? "KIS 계좌 · 읽기 전용" : "내 컴퓨터에서만";
+    const trades = state.trades?.trades || [];
+    const historyMode = state.portfolioMode === "history";
+    number.textContent = (historyMode ? trades.length : positions.length).toLocaleString("ko-KR");
+    unit.textContent = historyMode ? "매도 체결" : "보유";
+    kicker.textContent = state.portfolio
+      ? historyMode ? "확정 체결 거래이력" : "KIS 계좌 · 읽기 전용"
+      : "내 컴퓨터에서만";
     description.textContent = state.portfolio
-      ? "주문 기능과 분리된 조회 전용 연결입니다. 정보는 이 브라우저 밖으로 공개되지 않아요."
+      ? historyMode
+        ? "평단가·매도가와 환율·수수료를 반영한 실현손익을 로컬 원장에서 확인합니다."
+        : "주문 기능과 분리된 조회 전용 연결입니다. 정보는 이 브라우저 밖으로 공개되지 않아요."
       : "실제 보유 정보는 공개 사이트에 표시하지 않습니다. 로컬 대시보드를 실행하면 이곳에서 확인할 수 있어요.";
   } else {
     const market = state.performance?.markets?.[state.performanceMarket];
@@ -341,7 +384,7 @@ function updateHero() {
 }
 
 function filteredSignals() {
-  const group = VIEW_META[state.view].group;
+  const group = currentSignalGroup();
   let items = groupSignals(group);
   if (state.market !== "all") items = items.filter((item) => item.ccy === state.market);
   if (state.query) {
@@ -364,15 +407,51 @@ function stageBars(stage) {
   return Array.from({ length: 4 }, (_, index) => `<i class="${index < current ? "on" : ""}"></i>`).join("");
 }
 
+function strategyDefinitionMarkup({ compact = false } = {}) {
+  return `<section class="strategy-definition ${compact ? "compact" : ""}" aria-label="전략 A와 B 정의">
+    <article>
+      <span class="badge strategy-a">전략 A · 전환 확인</span>
+      <strong>하락 흐름이 상승으로 돌아서는 것을 확인하고 진입</strong>
+      <p>저점권에서 전환 단계·추세·과열·손절폭을 함께 확인합니다. <b>A 관찰</b>은 전환 또는 눌림 조건을 아직 기다리는 종목이라 매수 대상이 아닙니다.</p>
+    </article>
+    <article>
+      <span class="badge shelf">전략 B · 매물대 반등</span>
+      <strong>큰 거래량이 쌓인 지지대에서 반등을 확인하고 진입</strong>
+      <p>장기 POC·밸류영역, 머리 위 매물, 반등 캔들, 거래량과 손익비를 확인합니다. <b>B 관찰</b>은 지지대에 있지만 반등 확인이 덜 된 종목이며 자동매수에서 제외됩니다.</p>
+    </article>
+  </section>`;
+}
+
+function shelfModeMarkup() {
+  if (state.view !== "shelf") return "";
+  const entryCount = groupSignals("shelf").length;
+  const watchCount = groupSignals("shelf_watch").length;
+  return `<div class="subview-tabs" aria-label="전략 B 후보 상태">
+    <button type="button" data-shelf-mode="entry"
+      class="${state.shelfMode === "entry" ? "active" : ""}">
+      진입 후보 <span>${entryCount}</span>
+    </button>
+    <button type="button" data-shelf-mode="watch"
+      class="${state.shelfMode === "watch" ? "active" : ""}">
+      B 관찰 <span>${watchCount}</span>
+    </button>
+  </div>`;
+}
+
 function signalCard(signal) {
   const tactic = signal.tactic || {};
+  const isShelfWatch = signal.group === "shelf_watch";
   const badges = [
     signal.fresh ? `<span class="badge new">NEW</span>` : "",
     signal.group === "now" ? `<span class="badge strategy-a">전략 A</span>` : "",
     signal.group === "watch" ? `<span class="badge strategy-a">A 관찰</span>` : "",
     tactic.label ? `<span class="badge tactic">${escapeHTML(tactic.label)}</span>` : "",
     signal.group === "shelf" ? `<span class="badge shelf">전략 B</span>` : "",
+    isShelfWatch ? `<span class="badge shelf">B 관찰</span>` : "",
   ].join("");
+  const entryLabel = isShelfWatch ? "현재" : "진입";
+  const stopLabel = isShelfWatch ? "참고 손절" : "손절";
+  const targetLabel = isShelfWatch ? "참고 목표" : "목표";
   return `
     <button class="signal-card" type="button" data-signal-id="${escapeHTML(signal.id)}">
       <span class="card-head">
@@ -384,14 +463,14 @@ function signalCard(signal) {
       </span>
       <span class="price">${formatPrice(signal.price, signal.ccy)}</span>
       <span class="metric-row">
-        <span class="metric"><small>진입</small><b>${formatPrice(signal.entry, signal.ccy)}</b></span>
-        <span class="metric stop"><small>손절</small><b>${formatPrice(signal.stop, signal.ccy)}</b></span>
-        <span class="metric target"><small>목표</small><b>${formatPrice(signal.target, signal.ccy)}</b></span>
+        <span class="metric"><small>${entryLabel}</small><b>${formatOptionalPrice(signal.entry, signal.ccy)}</b></span>
+        <span class="metric stop"><small>${stopLabel}</small><b>${formatOptionalPrice(signal.stop, signal.ccy)}</b></span>
+        <span class="metric target"><small>${targetLabel}</small><b>${formatOptionalPrice(signal.target, signal.ccy)}</b></span>
       </span>
-      <span class="stage-line">
+      ${isShelfWatch ? `<span class="watch-reason">${escapeHTML(signal.shelf?.reason || "반등 확인 대기")}</span>` : `<span class="stage-line">
         <small>단계 ${Math.round(finite(signal.stage))}/4</small>
         <span class="stage-track">${stageBars(signal.stage)}</span>
-      </span>
+      </span>`}
     </button>`;
 }
 
@@ -401,15 +480,22 @@ function renderSignals() {
     return;
   }
   const items = filteredSignals();
+  const intro = `${strategyDefinitionMarkup()}${shelfModeMarkup()}`;
   if (!items.length) {
-    const hasGroup = groupSignals(VIEW_META[state.view].group).length > 0;
-    content.innerHTML = emptyState(
+    const hasGroup = groupSignals(currentSignalGroup()).length > 0;
+    content.innerHTML = intro + emptyState(
       hasGroup ? "검색 조건에 맞는 종목이 없어요" : "오늘은 해당 신호가 없어요",
       hasGroup ? "필터나 검색어를 바꾸면 다른 종목을 볼 수 있어요." :
         "신호가 0건인 날도 정상입니다. 조건을 낮추거나 임의 종목을 만들지 않습니다.");
-    return;
+  } else {
+    content.innerHTML = `${intro}<div class="signal-grid">${items.map(signalCard).join("")}</div>`;
   }
-  content.innerHTML = `<div class="signal-grid">${items.map(signalCard).join("")}</div>`;
+  $$("[data-shelf-mode]", content).forEach((button) =>
+    button.addEventListener("click", () => {
+      state.shelfMode = button.dataset.shelfMode;
+      updateHero();
+      renderSignals();
+    }));
   $$(".signal-card", content).forEach((card) => {
     card.addEventListener("click", () => {
       const signal = (state.signalsDoc.signals || []).find((item) => item.id === card.dataset.signalId);
@@ -441,16 +527,19 @@ function openSignalDetail(signal) {
   const range = Math.max(0, Math.min(100, finite(signal.range_pos, .5) * 100));
   const tactic = signal.tactic || {};
   const shelf = signal.shelf;
+  const isShelfWatch = signal.group === "shelf_watch";
   $("#detail-content").innerHTML = `
     <div class="detail-price">${formatPrice(signal.price, signal.ccy)}</div>
     <div class="detail-grid">
-      <div class="detail-box"><small>제안 진입가</small><strong>${formatPrice(signal.entry, signal.ccy)}</strong></div>
-      <div class="detail-box"><small>손절가</small><strong class="loss">${formatPrice(signal.stop, signal.ccy)}</strong></div>
-      <div class="detail-box"><small>목표가</small><strong class="gain">${formatPrice(signal.target, signal.ccy)}</strong></div>
+      <div class="detail-box"><small>${isShelfWatch ? "현재가" : "제안 진입가"}</small><strong>${formatOptionalPrice(signal.entry, signal.ccy)}</strong></div>
+      <div class="detail-box"><small>${isShelfWatch ? "참고 손절선" : "손절가"}</small><strong class="loss">${formatOptionalPrice(signal.stop, signal.ccy)}</strong></div>
+      <div class="detail-box"><small>${isShelfWatch ? "참고 목표선" : "목표가"}</small><strong class="gain">${formatOptionalPrice(signal.target, signal.ccy)}</strong></div>
     </div>
     <div class="tactic-box">
-      <strong>${escapeHTML(tactic.label || "진입 전술")}</strong>
-      <p>${escapeHTML(tactic.desc || "원본 신호에 전술 설명이 없습니다.")}</p>
+      <strong>${isShelfWatch ? "B 관찰 · 아직 주문 대상 아님" : escapeHTML(tactic.label || "진입 전술")}</strong>
+      <p>${isShelfWatch
+        ? escapeHTML(shelf?.reason || "매물대 반등 조건 확인을 기다립니다.")
+        : escapeHTML(tactic.desc || "원본 신호에 전술 설명이 없습니다.")}</p>
     </div>
     <div class="range-box">
       <div class="range-labels"><span>52주 저점</span><span>현재 위치 ${Math.round(range)}%</span><span>52주 고점</span></div>
@@ -467,6 +556,7 @@ function openSignalDetail(signal) {
 }
 
 function shelfDetail(shelf, ccy) {
+  const checks = Object.entries(shelf.checks || {});
   return `<div class="shelf-box">
     <h3>매물대 정보</h3>
     <div class="shelf-values">
@@ -475,6 +565,10 @@ function shelfDetail(shelf, ccy) {
       <div><small>VAH</small><b>${formatPrice(shelf.vah, ccy)}</b></div>
       <div><small>손익비</small><b>${finite(shelf.rr).toFixed(2)}R</b></div>
     </div>
+    ${checks.length ? `<div class="condition-list" aria-label="B 반등 조건">
+      ${checks.map(([label, passed]) =>
+        `<span class="${passed ? "passed" : "waiting"}">${passed ? "✓" : "○"} ${escapeHTML(label)}</span>`).join("")}
+    </div>` : ""}
   </div>`;
 }
 
@@ -586,7 +680,8 @@ function briefingStrategyCard(sleeve, stats) {
   const usToday = state.performance?.markets?.US?.series?.at(-1)?.[sleeve];
   const krToday = state.performance?.markets?.KR?.series?.at(-1)?.[sleeve];
   return `<button class="brief-card strategy-card" type="button"
-      data-go-view="${sleeve === "A" ? "now" : "shelf"}">
+      data-go-view="${sleeve === "A" ? "now" : "shelf"}"
+      ${sleeve === "B" ? 'data-shelf-mode-target="entry"' : ""}>
     <span class="brief-card-top">
       <span class="badge ${sleeve === "B" ? "shelf" : "strategy-a"}">전략 ${sleeve}</span>
       <span>보유 현황</span>
@@ -627,18 +722,23 @@ function briefingMarketCard(market) {
   </button>`;
 }
 
-function briefingSignalCard(view, label, description) {
+function briefingSignalCard(view, label, description, groupOverride = null) {
+  const shelfMode = groupOverride === "shelf_watch" ? "watch"
+    : groupOverride === "shelf" ? "entry" : "";
+  const modeAttribute = shelfMode ? ` data-shelf-mode-target="${shelfMode}"` : "";
   if (!state.signalsDoc) {
-    return `<button class="brief-card signal-brief-card" type="button" data-go-view="${view}">
+    return `<button class="brief-card signal-brief-card" type="button" data-go-view="${view}"${modeAttribute}>
       <span class="brief-card-top"><b>${escapeHTML(label)}</b><span class="loss">연결 확인</span></span>
       <strong>—</strong><p>신호 데이터를 불러오지 못했습니다.</p>
     </button>`;
   }
-  const group = VIEW_META[view].group;
+  const group = groupOverride || VIEW_META[view].group;
   const rows = groupSignals(group);
   const fresh = rows.filter((row) => row.fresh).length;
-  return `<button class="brief-card signal-brief-card" type="button" data-go-view="${view}">
-    <span class="brief-card-top"><b>${escapeHTML(label)}</b><span>${fresh ? `NEW ${fresh}` : "새 신호 없음"}</span></span>
+  const status = group === "shelf_watch" ? "확인 대기"
+    : fresh ? `NEW ${fresh}` : "새 신호 없음";
+  return `<button class="brief-card signal-brief-card" type="button" data-go-view="${view}"${modeAttribute}>
+    <span class="brief-card-top"><b>${escapeHTML(label)}</b><span>${status}</span></span>
     <strong>${rows.length}종목</strong>
     <p>${escapeHTML(description)}</p>
   </button>`;
@@ -672,6 +772,7 @@ function renderBriefing() {
           <p>통화가 다른 자산은 억지로 합산하지 않습니다.</p>
         </div>
       </div>
+      ${strategyDefinitionMarkup({ compact: true })}
     </section>
     <section class="brief-section">
       <div class="section-head"><div><span>3</span><h2>시장보다 잘하고 있나</h2></div><button type="button" data-go-view="performance">자세히 비교 →</button></div>
@@ -692,13 +793,17 @@ function renderBriefing() {
       <div class="brief-grid signal-brief-grid">
         ${briefingSignalCard("now", "전략 A", "전환이 확인된 진입 후보")}
         ${briefingSignalCard("watch", "A 관찰", "조건 충족을 기다리는 후보")}
-        ${briefingSignalCard("shelf", "전략 B", "매물대 반등 진입 후보")}
+        ${briefingSignalCard("shelf", "전략 B", "매물대 반등 진입 후보", "shelf")}
+        ${briefingSignalCard("shelf", "B 관찰", "반등·거래량 확인을 기다리는 후보", "shelf_watch")}
       </div>
     </section>`;
   $$("[data-go-view]", content).forEach((button) =>
     button.addEventListener("click", () => {
       if (button.dataset.performanceMarketTarget) {
         state.performanceMarket = button.dataset.performanceMarketTarget;
+      }
+      if (button.dataset.shelfModeTarget) {
+        state.shelfMode = button.dataset.shelfModeTarget;
       }
       setView(button.dataset.goView);
     }));
@@ -765,6 +870,166 @@ function portfolioCard(position) {
     </button>`;
 }
 
+function portfolioTabsMarkup(positions) {
+  const tradeCount = (state.trades?.trades || []).length;
+  return `<div class="subview-tabs portfolio-tabs" aria-label="내 자산 보기">
+    <button type="button" data-portfolio-mode="holdings"
+      class="${state.portfolioMode === "holdings" ? "active" : ""}">
+      보유종목 <span>${positions.length}</span>
+    </button>
+    <button type="button" data-portfolio-mode="history"
+      class="${state.portfolioMode === "history" ? "active" : ""}">
+      거래이력 <span>${tradeCount}</span>
+    </button>
+  </div>`;
+}
+
+function filteredTrades() {
+  let rows = [...(state.trades?.trades || [])];
+  if (state.tradeSleeve !== "all") {
+    rows = rows.filter((row) => row.sleeve === state.tradeSleeve);
+  }
+  if (state.tradeOutcome === "stop") {
+    rows = rows.filter((row) => row.reason_kind === "stop");
+  } else if (state.tradeOutcome === "take_profit") {
+    rows = rows.filter((row) =>
+      ["take_profit", "trail"].includes(row.reason_kind));
+  } else if (state.tradeOutcome === "win") {
+    rows = rows.filter((row) => optionalNumber(row.realized_pnl_krw) > 0);
+  } else if (state.tradeOutcome === "loss") {
+    rows = rows.filter((row) => optionalNumber(row.realized_pnl_krw) < 0);
+  }
+  return rows;
+}
+
+function tradeDateLabel(value) {
+  const date = new Date(value || "");
+  if (!Number.isFinite(date.getTime())) return "시각 미확인";
+  return date.toLocaleString("ko-KR", {
+    timeZone: "Asia/Seoul",
+    year: "numeric", month: "2-digit", day: "2-digit",
+    hour: "2-digit", minute: "2-digit",
+  });
+}
+
+function tradeReasonLabel(kind) {
+  return ({
+    stop: "손절", take_profit: "익절", time_stop: "타임스탑",
+    trail: "트레일", other: "기타 매도",
+  })[kind] || "매도";
+}
+
+function tradeHistorySummary(rows) {
+  const exact = rows.filter((row) =>
+    optionalNumber(row.realized_pnl_krw) !== null);
+  const wins = exact.filter((row) => finite(row.realized_pnl_krw) > 0).length;
+  const losses = exact.filter((row) => finite(row.realized_pnl_krw) < 0).length;
+  const decided = wins + losses;
+  const pnl = exact.reduce((sum, row) => sum + finite(row.realized_pnl_krw), 0);
+  const returns = rows.map((row) => optionalNumber(row.return_pct))
+    .filter((value) => value !== null);
+  const average = returns.length
+    ? returns.reduce((sum, value) => sum + value, 0) / returns.length : null;
+  return `
+    <div class="trade-summary">
+      <div class="summary-card"><small>매도 체결</small><strong>${rows.length}건</strong><div>부분매도 포함</div></div>
+      <div class="summary-card"><small>승률</small><strong>${decided ? `${(wins / decided * 100).toFixed(1)}%` : "—"}</strong><div>${wins}승 · ${losses}패</div></div>
+      <div class="summary-card"><small>실현손익</small><strong class="${pnl >= 0 ? "gain" : "loss"}">${exact.length ? formatPrice(pnl, "KRW", true) : "—"}</strong><div>환율·수수료 반영</div></div>
+      <div class="summary-card"><small>평균 수익률</small><strong class="${finite(average) >= 0 ? "gain" : "loss"}">${average === null ? "—" : formatPercent(average)}</strong><div>표시된 체결 기준</div></div>
+    </div>`;
+}
+
+function tradeHistoryCard(row) {
+  const pnl = optionalNumber(row.realized_pnl_krw);
+  const tone = pnl === null ? "" : pnl >= 0 ? "gain" : "loss";
+  const reason = tradeReasonLabel(row.reason_kind);
+  const nativeGap = optionalNumber(row.price_pnl);
+  return `<article class="trade-history-card">
+    <div class="trade-history-head">
+      <div>
+        <small>${escapeHTML(tradeDateLabel(row.executed_at))} · 체결 확인</small>
+        <strong>${escapeHTML(row.name || row.code)} <span>${escapeHTML(row.code)}</span></strong>
+      </div>
+      <div class="badge-row">
+        <span class="badge ${row.sleeve === "B" ? "shelf" : "strategy-a"}">전략 ${row.sleeve === "B" ? "B" : "A"}</span>
+        <span class="badge trade-reason ${escapeHTML(row.reason_kind)}">${escapeHTML(reason)}</span>
+      </div>
+    </div>
+    <div class="trade-price-flow">
+      <div><small>매도 직전 평단가</small><strong>${formatOptionalPrice(row.entry_price, row.ccy)}</strong></div>
+      <span aria-hidden="true">→</span>
+      <div><small>실제 매도가</small><strong>${formatOptionalPrice(row.exit_price, row.ccy)}</strong></div>
+      <div><small>매도 수량</small><strong>${Math.round(finite(row.qty)).toLocaleString("ko-KR")}주</strong></div>
+    </div>
+    <div class="trade-result">
+      <div>
+        <small>실현손익</small>
+        <strong class="${tone}">${pnl === null ? "확인 불가" : formatPrice(pnl, "KRW", true)}</strong>
+        <span class="${tone}">${formatOptionalPercent(row.return_pct, 2)}</span>
+      </div>
+      <p>${nativeGap === null ? "" : `가격차 기준 ${formatPrice(nativeGap, row.ccy, true)} · `}
+        ${escapeHTML(row.reason || reason)}
+        ${row.partial_exit ? ` · 부분매도 후 ${Math.round(finite(row.remaining_qty)).toLocaleString("ko-KR")}주 보유` : " · 전량/잔량 청산"}
+      </p>
+    </div>
+  </article>`;
+}
+
+function tradeHistoryMarkup() {
+  if (state.tradesError || !state.trades) {
+    return errorState(
+      "거래이력을 불러오지 못했어요",
+      "보유자산은 그대로 유지됩니다. 로컬 체결 원장 연결을 확인해 주세요.");
+  }
+  if (state.trades.available === false) {
+    return `<div class="alert error">${escapeHTML(state.trades.message || "원장 무결성 확인이 필요합니다.")}</div>`;
+  }
+  const rows = filteredTrades();
+  const controls = `<div class="trade-filter-bar">
+    <div class="chart-range-row" aria-label="전략 필터">
+      ${[["all", "전체 전략"], ["A", "전략 A"], ["B", "전략 B"]]
+        .map(([value, label]) => `<button type="button" class="chart-chip ${state.tradeSleeve === value ? "active" : ""}" data-trade-sleeve="${value}">${label}</button>`).join("")}
+    </div>
+    <div class="chart-range-row" aria-label="청산 결과 필터">
+      ${[["all", "전체"], ["stop", "손절"], ["take_profit", "익절"], ["win", "수익"], ["loss", "손실"]]
+        .map(([value, label]) => `<button type="button" class="chart-chip ${state.tradeOutcome === value ? "active" : ""}" data-trade-outcome="${value}">${label}</button>`).join("")}
+    </div>
+  </div>`;
+  const warning = state.trades.partial
+    ? `<div class="alert">일부 기존 거래는 확정 체결 원장 도입 전 기록이라 정확값이 없는 항목을 제외하거나 표시하지 않았습니다.</div>`
+    : "";
+  return `${controls}${warning}${tradeHistorySummary(rows)}
+    <p class="history-note">${escapeHTML(state.trades.message || "")}</p>
+    ${rows.length
+      ? `<div class="trade-history-list">${rows.map(tradeHistoryCard).join("")}</div>`
+      : emptyState("조건에 맞는 거래가 없어요", "필터를 바꾸거나 새 매도 체결이 기록될 때까지 기다려 주세요.")}`;
+}
+
+function bindPortfolioControls(positions) {
+  $$("[data-portfolio-mode]", content).forEach((button) =>
+    button.addEventListener("click", () => {
+      state.portfolioMode = button.dataset.portfolioMode;
+      updateHero();
+      renderPortfolio();
+    }));
+  $$("[data-trade-sleeve]", content).forEach((button) =>
+    button.addEventListener("click", () => {
+      state.tradeSleeve = button.dataset.tradeSleeve;
+      renderPortfolio();
+    }));
+  $$("[data-trade-outcome]", content).forEach((button) =>
+    button.addEventListener("click", () => {
+      state.tradeOutcome = button.dataset.tradeOutcome;
+      renderPortfolio();
+    }));
+  $$(".portfolio-card", content).forEach((card) => {
+    card.addEventListener("click", () => {
+      const position = positions.find((item) => item.code === card.dataset.position);
+      if (position) openPortfolioDetail(position);
+    });
+  });
+}
+
 function renderPortfolio() {
   if (!state.portfolio) {
     content.innerHTML = `<div class="local-gate">
@@ -775,10 +1040,6 @@ function renderPortfolio() {
     return;
   }
   const positions = state.portfolio.positions || [];
-  if (!positions.length) {
-    content.innerHTML = emptyState("현재 보유 종목이 없어요", "연결된 KIS 환경의 보유 잔고가 0건입니다.");
-    return;
-  }
   const totals = portfolioTotals(positions);
   const summary = Object.entries(totals).map(([ccy, row]) => {
     const rate = row.buy > 0 ? row.pl / row.buy * 100 : 0;
@@ -800,14 +1061,14 @@ function renderPortfolio() {
       · ${escapeHTML(liveText)}
       · 주문 기능과 분리된 로컬 조회</div>
     ${partial}
-    <div class="portfolio-summary">${summary}</div>
-    <div class="portfolio-grid">${positions.map(portfolioCard).join("")}</div>`;
-  $$(".portfolio-card", content).forEach((card) => {
-    card.addEventListener("click", () => {
-      const position = positions.find((item) => item.code === card.dataset.position);
-      if (position) openPortfolioDetail(position);
-    });
-  });
+    ${portfolioTabsMarkup(positions)}
+    ${state.portfolioMode === "history"
+      ? tradeHistoryMarkup()
+      : positions.length
+        ? `<div class="portfolio-summary">${summary}</div>
+           <div class="portfolio-grid">${positions.map(portfolioCard).join("")}</div>`
+        : emptyState("현재 보유 종목이 없어요", "연결된 KIS 환경의 보유 잔고가 0건입니다.")}`;
+  bindPortfolioControls(positions);
 }
 
 function openPortfolioDetail(position) {
@@ -959,9 +1220,10 @@ async function loadPortfolioChart(position, { quiet = false } = {}) {
       canvas.classList.remove("hidden");
       drawLivePriceChart(canvas, points, position);
       legend.innerHTML = chartLegend([
-        ["현재가", "blue"], ["평균매수가", "violet"],
-        ["손절", "red"], ["목표", "green"],
-      ]);
+        ["current", "현재가", "blue"], ["average", "평균매수가", "violet"],
+        ["stop", "손절", "red"], ["target", "목표", "green"],
+      ], priceChartHidden.live);
+      bindPriceChartLegend(canvas, "live");
     } else {
       const days = Number(dialog.dataset.chartDays || 90);
       const url = `${API.chart}?code=${encodeURIComponent(position.code)}&days=${days}`;
@@ -973,9 +1235,12 @@ async function loadPortfolioChart(position, { quiet = false } = {}) {
       canvas.classList.remove("hidden");
       drawCandleChart(canvas, chart.points, position);
       legend.innerHTML = chartLegend([
-        ["상승", "green"], ["하락", "red"], ["MA20", "blue"],
-        ["MA60", "amber"], ["MA120", "violet"],
-      ]);
+        ["ma20", "MA20", "blue"], ["ma60", "MA60", "amber"],
+        ["ma120", "MA120", "violet"], ["average", "평균매수가", "violet"],
+        ["stop", "손절", "red"], ["target", "목표", "green"],
+        ["current", "현재가", "blue"],
+      ], priceChartHidden.daily);
+      bindPriceChartLegend(canvas, "daily");
     }
     loading.classList.add("hidden");
     canvas.classList.remove("hidden");
@@ -988,9 +1253,27 @@ async function loadPortfolioChart(position, { quiet = false } = {}) {
   }
 }
 
-function chartLegend(items) {
-  return items.map(([label, tone]) =>
-    `<span><i class="legend-${tone}"></i>${escapeHTML(label)}</span>`).join("");
+function chartLegend(items, hidden = new Set()) {
+  return items.map(([key, label, tone]) => {
+    const active = !hidden.has(key);
+    return `<button type="button" class="${active ? "active" : ""}"
+      data-chart-series="${escapeHTML(key)}" aria-pressed="${active}">
+      <i class="legend-${tone}"></i>${escapeHTML(label)}
+    </button>`;
+  }).join("");
+}
+
+function bindPriceChartLegend(canvas, mode) {
+  $$("[data-chart-series]", $("#price-chart-legend")).forEach((button) =>
+    button.addEventListener("click", () => {
+      const key = button.dataset.chartSeries;
+      const hidden = priceChartHidden[mode];
+      if (hidden.has(key)) hidden.delete(key);
+      else hidden.add(key);
+      button.classList.toggle("active", !hidden.has(key));
+      button.setAttribute("aria-pressed", String(!hidden.has(key)));
+      redrawChart(canvas);
+    }));
 }
 
 function chartCanvas(canvas, height = 320) {
@@ -1030,14 +1313,14 @@ function chartGrid(ctx, colors, width, top, bottom, left, right) {
   }
 }
 
-function chartReferenceLines(ctx, colors, position, y, left, rightX) {
+function chartReferenceLines(ctx, colors, position, y, left, rightX, hidden) {
   const lines = [
-    ["평균", finite(position.avg), colors.violet],
-    ["손절", finite(position.stop), colors.red],
-    ["목표", finite(position.target), colors.green],
-  ].filter(([, value]) => value > 0);
+    ["average", "평균", finite(position.avg), colors.violet],
+    ["stop", "손절", finite(position.stop), colors.red],
+    ["target", "목표", finite(position.target), colors.green],
+  ].filter(([key, , value]) => value > 0 && !hidden.has(key));
   ctx.font = "10px -apple-system, sans-serif";
-  lines.forEach(([label, value, lineColor]) => {
+  lines.forEach(([, label, value, lineColor]) => {
     const lineY = y(value);
     ctx.save();
     ctx.setLineDash([5, 4]);
@@ -1054,6 +1337,7 @@ function chartReferenceLines(ctx, colors, position, y, left, rightX) {
 
 function drawLivePriceChart(canvas, points, position) {
   canvas._chartData = { kind: "live", points, position };
+  const hidden = priceChartHidden.live;
   const { ctx, colors, width, height } = chartCanvas(canvas);
   const pad = { left: 12, right: 50, top: 18, bottom: 28 };
   const values = points.map((point) => finite(point.price)).filter((value) => value > 0);
@@ -1066,34 +1350,37 @@ function drawLivePriceChart(canvas, points, position) {
   const y = (value) => pad.top + (max - value) / span *
     (height - pad.top - pad.bottom);
   chartGrid(ctx, colors, width, pad.top, height - pad.bottom, pad.left, pad.right);
-  const gradient = ctx.createLinearGradient(0, pad.top, 0, height - pad.bottom);
-  gradient.addColorStop(0, `${colors.blue}48`);
-  gradient.addColorStop(1, `${colors.blue}00`);
-  ctx.beginPath();
-  values.forEach((value, index) => index
-    ? ctx.lineTo(x(index), y(value))
-    : ctx.moveTo(x(index), y(value)));
-  ctx.lineTo(x(values.length - 1), height - pad.bottom);
-  ctx.lineTo(x(0), height - pad.bottom);
-  ctx.closePath();
-  ctx.fillStyle = gradient;
-  ctx.fill();
-  ctx.beginPath();
-  values.forEach((value, index) => index
-    ? ctx.lineTo(x(index), y(value))
-    : ctx.moveTo(x(index), y(value)));
-  ctx.strokeStyle = colors.blue;
-  ctx.lineWidth = 2.5;
-  ctx.lineJoin = "round";
-  ctx.lineCap = "round";
-  ctx.stroke();
-  const lastX = x(values.length - 1);
-  const lastY = y(values.at(-1));
-  ctx.beginPath();
-  ctx.arc(lastX, lastY, 4, 0, Math.PI * 2);
-  ctx.fillStyle = colors.blue;
-  ctx.fill();
-  chartReferenceLines(ctx, colors, position, y, pad.left, width - pad.right);
+  if (!hidden.has("current")) {
+    const gradient = ctx.createLinearGradient(0, pad.top, 0, height - pad.bottom);
+    gradient.addColorStop(0, `${colors.blue}48`);
+    gradient.addColorStop(1, `${colors.blue}00`);
+    ctx.beginPath();
+    values.forEach((value, index) => index
+      ? ctx.lineTo(x(index), y(value))
+      : ctx.moveTo(x(index), y(value)));
+    ctx.lineTo(x(values.length - 1), height - pad.bottom);
+    ctx.lineTo(x(0), height - pad.bottom);
+    ctx.closePath();
+    ctx.fillStyle = gradient;
+    ctx.fill();
+    ctx.beginPath();
+    values.forEach((value, index) => index
+      ? ctx.lineTo(x(index), y(value))
+      : ctx.moveTo(x(index), y(value)));
+    ctx.strokeStyle = colors.blue;
+    ctx.lineWidth = 2.5;
+    ctx.lineJoin = "round";
+    ctx.lineCap = "round";
+    ctx.stroke();
+    const lastX = x(values.length - 1);
+    const lastY = y(values.at(-1));
+    ctx.beginPath();
+    ctx.arc(lastX, lastY, 4, 0, Math.PI * 2);
+    ctx.fillStyle = colors.blue;
+    ctx.fill();
+  }
+  chartReferenceLines(
+    ctx, colors, position, y, pad.left, width - pad.right, hidden);
   ctx.fillStyle = colors.muted;
   ctx.font = "10px -apple-system, sans-serif";
   const timeLabel = (point) => new Date(finite(point.ts) * 1000).toLocaleTimeString(
@@ -1126,6 +1413,7 @@ function drawSeries(ctx, points, key, color, x, y) {
 
 function drawCandleChart(canvas, points, position) {
   canvas._chartData = { kind: "daily", points, position };
+  const hidden = priceChartHidden.daily;
   const { ctx, colors, width, height } = chartCanvas(canvas);
   const pad = { left: 12, right: 50, top: 16, bottom: 25 };
   const volumeHeight = 58;
@@ -1168,11 +1456,12 @@ function drawCandleChart(canvas, points, position) {
       height - pad.bottom - volumeTop);
     ctx.globalAlpha = 1;
   });
-  drawSeries(ctx, points, "ma20", colors.blue, x, y);
-  drawSeries(ctx, points, "ma60", colors.amber, x, y);
-  drawSeries(ctx, points, "ma120", colors.violet, x, y);
-  chartReferenceLines(ctx, colors, position, y, pad.left, width - pad.right);
-  if (finite(position.cur) > 0) {
+  if (!hidden.has("ma20")) drawSeries(ctx, points, "ma20", colors.blue, x, y);
+  if (!hidden.has("ma60")) drawSeries(ctx, points, "ma60", colors.amber, x, y);
+  if (!hidden.has("ma120")) drawSeries(ctx, points, "ma120", colors.violet, x, y);
+  chartReferenceLines(
+    ctx, colors, position, y, pad.left, width - pad.right, hidden);
+  if (!hidden.has("current") && finite(position.cur) > 0) {
     const liveY = y(finite(position.cur));
     ctx.fillStyle = colors.blue;
     ctx.fillRect(width - pad.right - 4, liveY - 2, 8, 4);
@@ -1365,19 +1654,29 @@ function renderKisPerformance() {
         <div class="performance-card"><small>장 시작 보유 · 동일가중</small><strong class="${finite(holdingsValue) >= 0 ? "gain" : "loss"}">${performanceValue(holdingsValue)}</strong><p>${escapeHTML(primary || "주 지수")} 대비 ${performanceValue(holdingsAlpha).replace("%", "%p")} · ${coverage}/${eligible}종목</p></div>
       </div>
       ${performanceInsights(rows, indexNames)}
+      ${strategyDefinitionMarkup({ compact: true })}
       <div class="performance-chart-card">
         <div class="chart-head">
           <div><strong>${escapeHTML(marketDoc.label || market)} 시장 비교</strong><span>${escapeHTML(basisLabel)}을 0%로 맞춰 비교</span></div>
           <span class="live-pill">${age === null ? "기록 중" : age === 0 ? "방금 갱신" : `${age}분 전`}</span>
         </div>
         <canvas id="performance-chart" role="img" aria-label="KIS 전략과 시장지수 수익률 비교 차트"></canvas>
-        <div class="chart-legend">
-          <span><i class="legend-blue"></i>KIS 전체</span>
-          <span><i class="legend-green"></i>전략 A</span>
-          <span><i class="legend-violet"></i>전략 B</span>
-          ${indexNames.map((name, index) => `<span><i class="${index ? "legend-amber" : "legend-muted"}"></i>${escapeHTML(name)}</span>`).join("")}
+        <div class="chart-legend performance-legend" aria-label="비교선 표시 선택">
+          ${[
+            ["account", "KIS 전체", "blue"],
+            ["A", "전략 A", "green"],
+            ["B", "전략 B", "violet"],
+            ...indexNames.map((name, index) =>
+              [`idx:${name}`, name, index ? "amber" : "muted"]),
+          ].map(([key, label, tone]) => {
+            const active = !state.performanceHidden.has(key);
+            return `<button type="button" class="${active ? "active" : ""}"
+              data-performance-series="${escapeHTML(key)}" aria-pressed="${active}">
+              <i class="legend-${tone}"></i>${escapeHTML(label)}
+            </button>`;
+          }).join("")}
         </div>
-        <p class="chart-note">${escapeHTML(state.performance?.basis || "KIS 봇 보유 NAV/TWR 기준")} · ${finite(state.performance?.sample_seconds, 300) / 60}분 간격. 첫 수집일 뒤부터 전일 마감 기준으로 이어집니다.</p>
+        <p class="chart-note">위 이름을 누르면 해당 선을 끄거나 다시 켤 수 있습니다. ${escapeHTML(state.performance?.basis || "KIS 봇 보유 NAV/TWR 기준")} · ${finite(state.performance?.sample_seconds, 300) / 60}분 간격.</p>
       </div>` :
       emptyState("지수 비교 데이터를 쌓는 중이에요",
         "장중 첫 수집이 완료되면 전략 A·B와 나스닥·S&P500·코스피·코스닥 차트가 자동으로 나타납니다.")}
@@ -1393,6 +1692,16 @@ function renderKisPerformance() {
       state.performanceRange = button.dataset.performanceRange;
       renderPerformance();
     }));
+  $$("[data-performance-series]", content).forEach((button) =>
+    button.addEventListener("click", () => {
+      const key = button.dataset.performanceSeries;
+      if (state.performanceHidden.has(key)) state.performanceHidden.delete(key);
+      else state.performanceHidden.add(key);
+      button.classList.toggle("active", !state.performanceHidden.has(key));
+      button.setAttribute(
+        "aria-pressed", String(!state.performanceHidden.has(key)));
+      redrawChart($("#performance-chart"));
+    }));
   const canvas = $("#performance-chart");
   if (canvas && rows.length) {
     const keys = ["account", "A", "B", ...indexNames.map((name) => `idx:${name}`)];
@@ -1406,9 +1715,10 @@ function renderKisPerformance() {
 
 function drawPerformanceChart(canvas, rows, keys, labels) {
   canvas._chartData = { kind: "performance", rows, keys, labels };
+  const visibleKeys = keys.filter((key) => !state.performanceHidden.has(key));
   const { ctx, colors, width, height } = chartCanvas(canvas, 340);
   const pad = { left: 18, right: 48, top: 20, bottom: 28 };
-  const values = rows.flatMap((row) => keys.flatMap((key) =>
+  const values = rows.flatMap((row) => visibleKeys.flatMap((key) =>
     row[key] === null || row[key] === undefined ? [] : [Number(row[key])]))
     .filter(Number.isFinite);
   const rawMin = Math.min(0, ...values);
@@ -1431,9 +1741,10 @@ function drawPerformanceChart(canvas, rows, keys, labels) {
   const palette = {
     account: colors.blue, A: colors.green, B: colors.violet,
   };
-  let indexNo = 0;
-  keys.forEach((key) => {
-    const color = palette[key] || (indexNo++ ? colors.amber : colors.muted);
+  const indexKeys = keys.filter((key) => key.startsWith("idx:"));
+  visibleKeys.forEach((key) => {
+    const color = palette[key] || (
+      indexKeys.indexOf(key) > 0 ? colors.amber : colors.muted);
     let started = false;
     ctx.beginPath();
     rows.forEach((row, index) => {

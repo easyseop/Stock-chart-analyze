@@ -68,7 +68,23 @@ def _signals(state: str) -> dict:
             "tactic": {"mode": "full", "label": "▤ 매물대 반등",
                        "desc": "밸류영역 회복을 확인한 전략 B 후보"},
             "shelf": {"poc": 435.1, "val": 421.3, "vah": 451.8,
-                      "rr": 1.81, "overhead": .21},
+                      "rr": 1.81, "overhead": .21,
+                      "checks": {"터치": True, "회복": True, "상단마감": True,
+                                 "거래량": True, "신저가아님": True}},
+        },
+        {
+            "id": "LOW-preview-shelf-watch", "code": "LOW", "name": "Lowe's",
+            "ccy": "USD", "group": "shelf_watch", "entry_kind": "shelf_watch",
+            "stage": 0, "price": 221.40, "entry": 221.40,
+            "stop": 211.20, "target": 239.10, "shares_1pct": 0,
+            "range_pos": .27, "norm": 57.4, "bear_share": .18,
+            "fresh": False, "break_gap": None, "earnings_d": 22,
+            "tactic": "watch",
+            "shelf": {"poc": 219.2, "val": 212.7, "vah": 239.1,
+                      "rr": 1.74, "overhead": .31,
+                      "reason": "반등 미확인(거래량·상단마감)",
+                      "checks": {"터치": True, "회복": True, "상단마감": False,
+                                 "거래량": False, "신저가아님": True}},
         },
     ]
     return {
@@ -143,6 +159,46 @@ for market, index_names in (("US", ["나스닥", "S&P500"]),
             },
         })
 
+TRADES = {
+    "version": 1, "generated_at": datetime.now(timezone.utc).isoformat(),
+    "read_only": True, "available": True, "partial": False,
+    "source": "confirmed-local-fill-journals",
+    "summary": {
+        "sell_fills": 3, "wins": 2, "losses": 1,
+        "win_rate": 66.67, "realized_pnl_krw": 218400,
+    },
+    "message": "확정 체결 이후의 로컬 원장 기록만 표시합니다. 원장 도입 전 과거 거래는 추정하지 않습니다.",
+    "trades": [
+        {
+            "executed_at": "2026-07-25T10:34:00+09:00", "day": "2026-07-25",
+            "code": "ALK", "name": "Alaska Air Group", "market": "US",
+            "ccy": "USD", "sleeve": "A", "reason": "하드 손절(손절가 이탈)",
+            "reason_kind": "stop", "qty": 8, "entry_price": 62.40,
+            "exit_price": 58.10, "price_pnl": -34.40,
+            "realized_pnl_krw": -47200, "return_pct": -6.91,
+            "remaining_qty": 0, "partial_exit": False, "verified": True,
+        },
+        {
+            "executed_at": "2026-07-24T14:18:00+09:00", "day": "2026-07-24",
+            "code": "005930", "name": "삼성전자", "market": "KR",
+            "ccy": "KRW", "sleeve": "B", "reason": "B 목표(VAH) 도달",
+            "reason_kind": "take_profit", "qty": 12, "entry_price": 75200,
+            "exit_price": 82100, "price_pnl": 82800,
+            "realized_pnl_krw": 81600, "return_pct": 9.04,
+            "remaining_qty": 12, "partial_exit": True, "verified": True,
+        },
+        {
+            "executed_at": "2026-07-23T22:11:00+09:00", "day": "2026-07-23",
+            "code": "AAPL", "name": "Apple", "market": "US",
+            "ccy": "USD", "sleeve": "A", "reason": "익절 +1R 절반",
+            "reason_kind": "take_profit", "qty": 6, "entry_price": 189.40,
+            "exit_price": 214.20, "price_pnl": 148.80,
+            "realized_pnl_krw": 184000, "return_pct": 13.11,
+            "remaining_qty": 6, "partial_exit": True, "verified": True,
+        },
+    ],
+}
+
 
 def _chart(code: str) -> dict:
     base = 188 if code == "AAPL" else 166 if code == "NVDA" else 72000
@@ -196,19 +252,29 @@ class Handler(BaseHTTPRequestHandler):
         parsed = urlparse(self.path)
         if parsed.path in (
                 "/qa-390.html", "/qa-320.html",
-                "/qa-390-detail.html", "/qa-320-detail.html"):
+                "/qa-390-detail.html", "/qa-320-detail.html",
+                "/qa-390-history.html", "/qa-320-history.html"):
             width = 390 if "390" in parsed.path else 320
-            detail_script = """
+            if "detail" in parsed.path:
+                action_script = """
 <script>const frame=document.querySelector("iframe");
 frame.addEventListener("load",()=>setTimeout(()=>
   frame.contentDocument.querySelector(".portfolio-card")?.click(),700));</script>
-""" if "detail" in parsed.path else ""
+"""
+            elif "history" in parsed.path:
+                action_script = """
+<script>const frame=document.querySelector("iframe");
+frame.addEventListener("load",()=>setTimeout(()=>
+  frame.contentDocument.querySelector('[data-portfolio-mode="history"]')?.click(),700));</script>
+"""
+            else:
+                action_script = ""
             body = f"""<!doctype html><meta charset="utf-8">
 <title>{width}px responsive QA</title>
 <style>html,body{{margin:0;background:#dfe4ec}}iframe{{display:block;width:{width}px;
 height:844px;margin:0 auto;border:0;background:white}}</style>
 <iframe src="/portfolio/app/#portfolio" title="{width}px responsive QA"></iframe>
-{detail_script}""".encode()
+{action_script}""".encode()
             self._send(200, body, "text/html; charset=utf-8")
             return
         parts = [part for part in parsed.path.split("/") if part]
@@ -255,6 +321,8 @@ height:844px;margin:0 auto;border:0;background:white}}</style>
             self._json(200, _quotes(code))
         elif name == "performance.json" and state == "portfolio":
             self._json(200, PERFORMANCE)
+        elif name == "trades.json" and state == "portfolio":
+            self._json(200, TRADES)
         else:
             self._json(404, {"error": "endpoint"})
 

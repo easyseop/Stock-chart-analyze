@@ -39,6 +39,7 @@ def test_public_app_uses_only_allowed_read_sources():
     assert "../api/portfolio.json" in js
     assert "../api/quotes.json" in js
     assert "../api/performance.json" in js
+    assert "../api/trades.json" in js
     for forbidden in ("KIS_LIVE_APPKEY", "APPSECRET", "/order", "place_buy",
                       "place_sell", "client_secret"):
         assert forbidden not in js
@@ -61,7 +62,9 @@ def test_decision_brief_uses_existing_read_only_data():
                     "concentrationRows", "maximumDrawdown"):
         assert f"function {feature}" in math_js
     for label in ("내 평균매수가", "현재가", "총 투입금", "현재 평가금",
-                  "매수일 미확인", "가격 분석"):
+                  "매수일 미확인", "가격 분석", "거래이력", "실제 매도가",
+                  "실현손익", "B 관찰", "전략 A · 전환 확인",
+                  "전략 B · 매물대 반등"):
         assert label in js
     assert "손절선 또는 목표선 3% 안" in js
     assert "보호선 정보 없음" in js
@@ -69,6 +72,9 @@ def test_decision_brief_uses_existing_read_only_data():
     assert "초 동안 갱신되지 않았습니다" in js
     assert "통화가 다른 자산은 억지로 합산하지 않습니다." in js
     assert ".attention-card" in css and ".insight-grid" in css
+    assert "data-performance-series" in js
+    assert "data-chart-series" in js
+    assert ".trade-history-card" in css and ".strategy-definition" in css
     assert "/api/risk" not in js
 
 
@@ -182,6 +188,22 @@ def test_performance_snapshot_contains_percentages_only():
         assert forbidden not in encoded
 
 
+def test_trade_history_endpoint_is_local_read_only_and_sanitized():
+    fixture = {
+        "version": 1, "read_only": True, "available": True,
+        "partial": False, "summary": {"sell_fills": 1},
+        "trades": [{"code": "AAPL", "entry_price": 100,
+                    "exit_price": 110, "realized_pnl_krw": 10000}],
+    }
+    with mock.patch("bot.trade_history.snapshot", return_value=fixture) as history:
+        payload = portfolio_web.trade_history_snapshot(50)
+    history.assert_called_once_with(limit=50)
+    encoded = json.dumps(payload)
+    assert payload["read_only"] is True
+    for forbidden in ("CANO", "APPSECRET", "ODNO", "order_key", "pos_key"):
+        assert forbidden not in encoded
+
+
 if __name__ == "__main__":
     tests = [
         test_static_publish_is_additive,
@@ -193,6 +215,7 @@ if __name__ == "__main__":
         test_portfolio_snapshot_cache_avoids_kis_poll_bursts,
         test_shared_cache_serves_fast_without_kis_balance_calls,
         test_performance_snapshot_contains_percentages_only,
+        test_trade_history_endpoint_is_local_read_only_and_sanitized,
     ]
     for test in tests:
         test()

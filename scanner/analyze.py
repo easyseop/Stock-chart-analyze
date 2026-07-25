@@ -156,28 +156,40 @@ def analyze(frames: dict[str, pd.DataFrame], meta: dict, bench=None) -> dict:
 
 
 def _shelf_signal(d, sup: dict, volume: dict, range_pos: float) -> dict:
-    """매물대 반등 신호(슬리브 B). 반환 {ok, entry, stop, target, reason, ...}.
+    """매물대 반등 신호(슬리브 B). 반환 {ok, watch, entry, stop, target, ...}.
 
     A(전환확정)와 달리 추세 전환을 기다리지 않는다 — 큰 매물대(장기 POC/밸류영역)
     지지 위에서 **되돌아 오른 캔들**을 확인해 매수. '터치 즉시'가 아니라 '반등'을
-    봐서 지지 붕괴(떨어지는 칼)를 거른다. 손절=밸류 하단(VAL) 아래(논리 무효점).
+    봐서 지지 붕괴(떨어지는 칼)를 거른다. 반등 확인만 덜 된 구조는 ``watch=True``로
+    공개 화면에만 전달하며 자동매수 그룹(``shelf``)에는 절대 들어가지 않는다.
+    손절=밸류 하단(VAL) 아래(논리 무효점).
     """
     if not getattr(config, "SHELF_ENABLED", False):
-        return {"ok": False, "reason": "비활성"}
+        return {"ok": False, "watch": False, "reason": "비활성"}
     lng = sup.get("long") or {}
     price = float(sup.get("price") or 0)
     val = float(lng.get("val") or 0)
     poc = float(sup.get("long_poc") or 0)
     vah = float(lng.get("vah") or 0)
     overhead = float((sup.get("pnl") or {}).get("overhead") or 1.0)
+    context = {
+        "poc": round(poc, 4) if poc > 0 else None,
+        "val": round(val, 4) if val > 0 else None,
+        "vah": round(vah, 4) if vah > 0 else None,
+        "overhead": round(overhead, 3),
+    }
     if not (price > 0 and val > 0 and vah > val):
-        return {"ok": False, "reason": "매물대 정보 없음"}
+        return {"ok": False, "watch": False,
+                "reason": "매물대 정보 없음", **context}
     if range_pos > config.SHELF_LOW_ZONE:
-        return {"ok": False, "reason": f"저점권 아님(범위 {range_pos*100:.0f}%)"}
+        return {"ok": False, "watch": False,
+                "reason": f"저점권 아님(범위 {range_pos*100:.0f}%)", **context}
     if not (val <= price <= vah):
-        return {"ok": False, "reason": "밸류영역 밖(지지대 아님)"}
+        return {"ok": False, "watch": False,
+                "reason": "밸류영역 밖(지지대 아님)", **context}
     if overhead > config.SHELF_OVERHEAD_MAX:
-        return {"ok": False, "reason": f"머리 위 물량 과다({overhead*100:.0f}%)"}
+        return {"ok": False, "watch": False,
+                "reason": f"머리 위 물량 과다({overhead*100:.0f}%)", **context}
     # 반등 확인: ①최근 3봉 저가가 매물대 본체(POC)까지 눌림 ②종가가 밸류 바닥(VAL)
     #   위 유지(붕괴 아님) ③오늘 캔들 상단 마감(양봉성) ④거래대금 동반 ⑤신저가 아님.
     #   지지 기준을 VAL(최하단)→POC(최대 거래 노드)로: 사용자 원안('거래량 터진 곳')
@@ -192,21 +204,36 @@ def _shelf_signal(d, sup: dict, volume: dict, range_pos: float) -> dict:
     checks = {"터치": touched, "회복": reclaimed, "상단마감": upper_close,
               "거래량": vol_ok, "신저가아님": not_fresh_low}
     missing = [k for k, v in checks.items() if not v]
-    if missing:
-        return {"ok": False, "reason": "반등 미확인(" + "·".join(missing) + ")"}
     stop = recent_low * (1 - config.SHELF_STOP_BUF)   # 반등한 저점 아래(지지 무효점)
-    if price <= stop:
-        return {"ok": False, "reason": "손절선 무효"}
-    if (price - stop) / price > config.SHELF_MAX_STOP:
-        return {"ok": False, "reason": f"손절폭 과대({(price-stop)/price*100:.0f}%)"}
-    target = vah if vah > price else price + 2 * (price - stop)
+    target = vah if vah > price else (
+        price + 2 * (price - stop) if price > stop else 0)
     rr = (target - price) / (price - stop) if price > stop else 0.0
+    if price <= stop:
+        return {"ok": False, "watch": False,
+                "reason": "손절선 무효", "checks": checks, **context}
+    if (price - stop) / price > config.SHELF_MAX_STOP:
+        return {"ok": False, "watch": False,
+                "reason": f"손절폭 과대({(price-stop)/price*100:.0f}%)",
+                "checks": checks, **context}
     if rr < config.SHELF_MIN_RR:
-        return {"ok": False, "reason": f"손익비 부족({rr:.1f})"}
-    return {"ok": True, "entry": round(price, 4), "stop": round(stop, 4),
+        return {"ok": False, "watch": False,
+                "reason": f"손익비 부족({rr:.1f})",
+                "checks": checks, **context}
+    if missing:
+        return {
+            "ok": False, "watch": True,
+            "entry": round(price, 4),
+            "stop": round(stop, 4),
+            "target": round(target, 4),
+            "rr": round(rr, 2),
+            "checks": checks,
+            "reason": "반등 미확인(" + "·".join(missing) + ")",
+            **context,
+        }
+    return {"ok": True, "watch": False,
+            "entry": round(price, 4), "stop": round(stop, 4),
             "target": round(target, 4), "rr": round(rr, 2),
-            "poc": round(poc, 4), "val": round(val, 4), "vah": round(vah, 4),
-            "overhead": round(overhead, 3), "reason": "매물대 지지 반등"}
+            "checks": checks, "reason": "매물대 지지 반등", **context}
 
 
 def _support_below(price, sr, levels, trend):
