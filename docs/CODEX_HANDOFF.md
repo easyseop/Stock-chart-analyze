@@ -646,3 +646,11 @@ State/CacheDirectory, 필수유닛 union과 systemd 격리 지시자를 직접 �
 4. 한/미 각 1세션의 RSS·실행시간·실패율·GitHub 대비 신호차를 관찰.
 5. GitHub 60분 장애주입도 L1 상태에서 수행해 신규주문 0을 확인.
 6. fallback=1, L1 해제, 실전 하드블록 해제는 각각 별도 승인 전까지 금지.
+
+PR #89 생성 뒤 GitHub `Site UI CI`의 `compileall`이 리뷰용 V2 diff 끝부분에서
+`tests/site_preview.py`가 `"low": roun`으로 잘린 문법 오류를 발견했다. 운영
+모듈은 아니지만 병합 차단 결함으로 판정해, 기존 `_chart` 이후 미리보기 서버
+본문을 그대로 복원하고 거래이력 v2 fixture만 유지했다. 복원 뒤 Python
+`compileall`, 전체 Python 테스트 `44/44`, Node 테스트 `8/8`, 두 JavaScript
+문법 검사, shell 문법 검사와 `git diff --check`를 다시 통과했다. 리뷰 결과만
+믿고 우회 병합하지 않았으며 PR CI가 초기에 발견한 오류는 수정 커밋으로 남긴다.
