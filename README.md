@@ -89,8 +89,8 @@ python main.py --cache --dashboard  # 캐시 기반으로 빠르게 분석/대�
 python -m scanner.siteapp --out-dir public
 
 # 실제 KIS 보유 종목·평단·손익·가격/지수 비교 차트를 로컬에서만 조회
-python -m bot.portfolio_web --port 8765
-# 브라우저: http://127.0.0.1:8765/app/
+python -m bot.portfolio_web --port 8888
+# 브라우저: http://127.0.0.1:8888/app/
 ```
 
 `portfolio_web`은 항상 `127.0.0.1`에만 열리고 GET 조회만 허용한다. 기존 KIS
