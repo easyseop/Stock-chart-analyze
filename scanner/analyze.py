@@ -201,8 +201,12 @@ def _shelf_signal(d, sup: dict, volume: dict, range_pos: float) -> dict:
     upper_close = ((cl - lo) / (hi - lo) >= 0.5) if hi > lo else False
     vol_ok = volume.get("mult", 0.0) >= config.SHELF_VOL_MULT
     not_fresh_low = lo > float(d["Low"].iloc[-20:].min())
-    checks = {"터치": touched, "회복": reclaimed, "상단마감": upper_close,
-              "거래량": vol_ok, "신저가아님": not_fresh_low}
+    # pandas/numpy 비교식은 ``numpy.bool_``를 돌려줄 수 있다. 이 값이 signals.json
+    # 경계까지 새면 표준 json 인코더가 실패해 Pages 전체 배포가 멈춘다. 화면용
+    # 진단값은 여기서 일반 bool로 고정한다.
+    checks = {"터치": bool(touched), "회복": bool(reclaimed),
+              "상단마감": bool(upper_close), "거래량": bool(vol_ok),
+              "신저가아님": bool(not_fresh_low)}
     missing = [k for k, v in checks.items() if not v]
     stop = recent_low * (1 - config.SHELF_STOP_BUF)   # 반등한 저점 아래(지지 무효점)
     target = vah if vah > price else (
