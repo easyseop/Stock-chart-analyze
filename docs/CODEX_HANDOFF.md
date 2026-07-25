@@ -662,3 +662,36 @@ oracle-brain은 아직 미설치다. 서버 보안 env의 실제 경로는
 drop-in이 기본 `EnvironmentFile` 지시자를 비운 뒤 기존 서비스와 같은 방식으로
 해당 env를 source하도록 보완했다. 값은 읽거나 저장하지 않았고 경로·파일 권한
 600만 확인했다. 이 보완을 CI/후속 PR에 통과시킨 뒤 유닛을 설치한다.
+
+### 12. 2026-07-25 섹션 11 병합·Oracle 그림자 배포 결과
+
+- PR #89 `Add Oracle shadow brain and buy trade history`는 초기 Site UI CI가 잡은
+  미리보기 파일 절단을 `bcd8c62`에서 복원한 뒤 CI 4건 전체 통과, merge commit
+  `5371f4a`로 기본 브랜치에 병합했다.
+- Oracle의 실제 env 경로를 반영한 후속 PR #90
+  `Fix Oracle watchdog environment drop-in`도 CI 2건 전체 통과, merge commit
+  `7a0ce19`로 병합했다.
+- Oracle autodeploy가 `7a0ce19`를 반영했고 서버 저장소는 clean이다.
+- `watchdog.service`와 Oracle drop-in, `oracle-brain.service`·timer와 drop-in을
+  설치했다. buyloop에는 `/var/lib/stock-oracle-brain/signals.json`과
+  `ORACLE_SIGNAL_FALLBACK_ENABLED=0`을 명시한 서버 drop-in을 설치했다.
+- `systemd-analyze verify`는 성공했다. 출력된 유일한 경고는 이 작업과 무관한
+  기존 snapd의 미지원 `RestartMode` 지시자였다.
+- watchdog와 oracle-brain timer를 enable+start했고, buyloop를 한 번 재시작해
+  drop-in을 적용했다. 실제 buyloop 프로세스 환경에서 fallback=0을 확인했다.
+- 첫 oracle-brain oneshot은 장외라
+  `{"ok": true, "status": "market-closed", "analyzed": 0}`으로 정상 종료했다.
+  CPU 시간은 1.542초였고 oracle-brain 오류 로그는 0건이다. oneshot 서비스가
+  실행 뒤 inactive인 것은 정상이고 timer는 active/enabled다.
+- 배포 뒤 sentinel·watchdog·buyloop·telegram·portfolio-web는 active,
+  실패 유닛 0, watchdog 재시작 0, heartbeat는 신선했다. buyloop 재시작 이후
+  신규 매수 주문 접수 로그는 0건이다.
+- kill-switch는 계속 L1이며 실행 확인 결과
+  `buy_new=False`, `protect_sell=True`다. L1 하향, fallback=1, 실전 하드블록
+  해제는 하지 않았다.
+
+다음 작업은 코드 배포가 아니라 관찰 게이트다. 한/미 각 한 장에서 oracle-brain
+실분석의 실행시간·RSS·오류·GitHub 대비 신호 차를 수집한 뒤, L1 상태에서만
+GitHub 60분 장애주입을 수행해 신규주문 0을 확인하고 재검토한다. fallback=1은
+그 재승인 뒤에만 검토한다. L1 해제 전에는 기존 BUY 16건 대사(BAM 잔고 0,
+LW 보호수량 불일치 포함)와 총시드 초과 해소가 여전히 별도 선결조건이다.
