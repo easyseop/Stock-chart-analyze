@@ -160,16 +160,43 @@ for market, index_names in (("US", ["나스닥", "S&P500"]),
         })
 
 TRADES = {
-    "version": 1, "generated_at": datetime.now(timezone.utc).isoformat(),
+    "version": 2, "generated_at": datetime.now(timezone.utc).isoformat(),
     "read_only": True, "available": True, "partial": False,
     "source": "confirmed-local-fill-journals",
     "summary": {
-        "sell_fills": 3, "wins": 2, "losses": 1,
+        "fills": 5, "buy_fills": 2, "sell_fills": 3,
+        "wins": 2, "losses": 1,
         "win_rate": 66.67, "realized_pnl_krw": 218400,
     },
-    "message": "확정 체결 이후의 로컬 원장 기록만 표시합니다. 원장 도입 전 과거 거래는 추정하지 않습니다.",
+    "message": "확정된 매수·매도 체결을 함께 표시합니다. 원장 도입 전 과거 거래는 추정하지 않습니다.",
     "trades": [
         {
+            "side": "buy", "executed_at": "2026-07-25T10:33:00+09:00",
+            "day": "2026-07-25", "code": "SIG",
+            "name": "Signet Jewelers", "market": "US", "ccy": "USD",
+            "sleeve": "B", "reason": "B 매물대 반등 진입",
+            "reason_kind": "entry", "qty": 13, "fill_price": 93.42,
+            "entry_price": 93.42, "exit_price": None,
+            "amount_native": 1214.46, "amount_krw": 1675954.8,
+            "average_price_after": 93.42, "position_qty_after": 13,
+            "price_pnl": None, "realized_pnl_krw": None,
+            "return_pct": None, "remaining_qty": 13,
+            "partial_exit": False, "verified": True,
+        },
+        {
+            "side": "buy", "executed_at": "2026-07-25T10:20:00+09:00",
+            "day": "2026-07-25", "code": "AAPL", "name": "Apple",
+            "market": "US", "ccy": "USD", "sleeve": "A",
+            "reason": "전략 A 전환 진입", "reason_kind": "entry",
+            "qty": 6, "fill_price": 189.40, "entry_price": 189.40,
+            "exit_price": None, "amount_native": 1136.40,
+            "amount_krw": 1568232, "average_price_after": 189.40,
+            "position_qty_after": 6, "price_pnl": None,
+            "realized_pnl_krw": None, "return_pct": None,
+            "remaining_qty": 6, "partial_exit": False, "verified": True,
+        },
+        {
+            "side": "sell",
             "executed_at": "2026-07-25T10:34:00+09:00", "day": "2026-07-25",
             "code": "ALK", "name": "Alaska Air Group", "market": "US",
             "ccy": "USD", "sleeve": "A", "reason": "하드 손절(손절가 이탈)",
@@ -179,6 +206,7 @@ TRADES = {
             "remaining_qty": 0, "partial_exit": False, "verified": True,
         },
         {
+            "side": "sell",
             "executed_at": "2026-07-24T14:18:00+09:00", "day": "2026-07-24",
             "code": "005930", "name": "삼성전자", "market": "KR",
             "ccy": "KRW", "sleeve": "B", "reason": "B 목표(VAH) 도달",
@@ -188,6 +216,7 @@ TRADES = {
             "remaining_qty": 12, "partial_exit": True, "verified": True,
         },
         {
+            "side": "sell",
             "executed_at": "2026-07-23T22:11:00+09:00", "day": "2026-07-23",
             "code": "AAPL", "name": "Apple", "market": "US",
             "ccy": "USD", "sleeve": "A", "reason": "익절 +1R 절반",
@@ -212,129 +241,4 @@ def _chart(code: str) -> dict:
         points.append({
             "date": (start + timedelta(days=i)).strftime("%Y-%m-%d"),
             "open": round(opened, 2), "high": round(max(opened, close) + step, 2),
-            "low": round(min(opened, close) - step, 2), "close": close,
-            "volume": 1_000_000 + i * 12000,
-            "ma20": close - step * .8 if i >= 19 else None,
-            "ma60": close - step * 1.7 if i >= 59 else None,
-            "ma120": close - step * 2.4 if i >= 119 else None,
-        })
-    return {"code": code, "source": "preview-fixture", "interval": "1d",
-            "read_only": True, "points": points}
-
-
-def _quotes(code: str) -> dict:
-    now = datetime.now(timezone.utc).timestamp()
-    base = 214.0 if code == "AAPL" else 173.0 if code == "NVDA" else 80300.0
-    step = .12 if code == "AAPL" else .16 if code == "NVDA" else 18.0
-    return {
-        "code": code, "source": "sentinel_shared_cache", "read_only": True,
-        "generated_at": datetime.now(timezone.utc).isoformat(),
-        "points": [{"ts": now - (59 - i) * 20,
-                    "price": round(base + ((i % 9) - 4) * step + i * step * .04, 2)}
-                   for i in range(60)],
-    }
-
-
-class Handler(BaseHTTPRequestHandler):
-    def _send(self, status: int, body: bytes, content_type: str) -> None:
-        self.send_response(status)
-        self.send_header("Content-Type", content_type)
-        self.send_header("Content-Length", str(len(body)))
-        self.send_header("Cache-Control", "no-store")
-        self.end_headers()
-        self.wfile.write(body)
-
-    def _json(self, status: int, payload: dict) -> None:
-        self._send(status, json.dumps(payload, ensure_ascii=False).encode(),
-                   "application/json; charset=utf-8")
-
-    def do_GET(self) -> None:
-        parsed = urlparse(self.path)
-        if parsed.path in (
-                "/qa-390.html", "/qa-320.html",
-                "/qa-390-detail.html", "/qa-320-detail.html",
-                "/qa-390-history.html", "/qa-320-history.html"):
-            width = 390 if "390" in parsed.path else 320
-            if "detail" in parsed.path:
-                action_script = """
-<script>const frame=document.querySelector("iframe");
-frame.addEventListener("load",()=>setTimeout(()=>
-  frame.contentDocument.querySelector(".portfolio-card")?.click(),700));</script>
-"""
-            elif "history" in parsed.path:
-                action_script = """
-<script>const frame=document.querySelector("iframe");
-frame.addEventListener("load",()=>setTimeout(()=>
-  frame.contentDocument.querySelector('[data-portfolio-mode="history"]')?.click(),700));</script>
-"""
-            else:
-                action_script = ""
-            body = f"""<!doctype html><meta charset="utf-8">
-<title>{width}px responsive QA</title>
-<style>html,body{{margin:0;background:#dfe4ec}}iframe{{display:block;width:{width}px;
-height:844px;margin:0 auto;border:0;background:white}}</style>
-<iframe src="/portfolio/app/#portfolio" title="{width}px responsive QA"></iframe>
-{action_script}""".encode()
-            self._send(200, body, "text/html; charset=utf-8")
-            return
-        parts = [part for part in parsed.path.split("/") if part]
-        if len(parts) < 2 or parts[0] not in STATES:
-            self._json(404, {"error": "preview_path"})
-            return
-        state, section = parts[0], parts[1]
-        if section == "app":
-            asset = parts[2] if len(parts) > 2 else "index.html"
-            if asset not in {
-                "index.html", "app.css", "portfolio_math.js", "app.js",
-                "og.png", "og-v2.png",
-            }:
-                self._json(404, {"error": "asset"})
-                return
-            path = APP / asset
-            kinds = {".html": "text/html", ".css": "text/css",
-                     ".js": "application/javascript", ".png": "image/png"}
-            self._send(200, path.read_bytes(), kinds[path.suffix])
-            return
-        if section != "api" or len(parts) < 3:
-            self._json(404, {"error": "endpoint"})
-            return
-        name = parts[2]
-        if name == "signals.json":
-            if state == "error":
-                self._json(503, {"error": "preview_failure"})
-            else:
-                self._json(200, _signals(state))
-        elif name == "paper_auto.json":
-            self._json(200, PAPER)
-        elif name == "track.json":
-            self._json(200, TRACK)
-        elif name == "portfolio.json":
-            if state == "portfolio":
-                self._json(200, PORTFOLIO)
-            else:
-                self._json(404, {"error": "local_only"})
-        elif name == "chart.json" and state == "portfolio":
-            code = (parse_qs(parsed.query).get("code") or ["AAPL"])[0]
-            self._json(200, _chart(code))
-        elif name == "quotes.json" and state == "portfolio":
-            code = (parse_qs(parsed.query).get("code") or ["AAPL"])[0]
-            self._json(200, _quotes(code))
-        elif name == "performance.json" and state == "portfolio":
-            self._json(200, PERFORMANCE)
-        elif name == "trades.json" and state == "portfolio":
-            self._json(200, TRADES)
-        else:
-            self._json(404, {"error": "endpoint"})
-
-    def log_message(self, _format: str, *_args) -> None:
-        pass
-
-
-def main() -> None:
-    server = ThreadingHTTPServer(("127.0.0.1", 8877), Handler)
-    print("QA preview: http://127.0.0.1:8877/fresh/app/", flush=True)
-    server.serve_forever()
-
-
-if __name__ == "__main__":
-    main()
+            "low": roun

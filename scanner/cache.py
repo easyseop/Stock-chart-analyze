@@ -14,7 +14,7 @@ import pandas as pd
 
 from . import data as datamod
 
-CACHE_DIR = "data_cache"
+CACHE_DIR = os.environ.get("SCANNER_CACHE_DIR", "data_cache")
 _OVERLAP_DAYS = 7   # 증분 시 마지막 며칠 겹쳐 받아 수정주가·정정 반영
 
 

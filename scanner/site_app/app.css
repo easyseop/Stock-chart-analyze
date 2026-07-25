@@ -1062,7 +1062,8 @@ button.brief-card:hover {
 .portfolio-tabs { margin: 0 0 16px; }
 .trade-filter-bar {
   display: flex;
-  justify-content: space-between;
+  flex-wrap: wrap;
+  justify-content: flex-start;
   gap: 12px;
   margin-bottom: 12px;
 }
@@ -1110,6 +1111,9 @@ button.brief-card:hover {
   font-size: 10px;
 }
 .trade-reason.stop { background: var(--red-soft); color: var(--red); }
+.trade-reason.buy { background: var(--blue-soft); color: var(--blue); }
+.trade-side.buy { background: var(--blue-soft); color: var(--blue); }
+.trade-buy-card { border-left: 3px solid var(--blue); }
 .trade-reason.take_profit, .trade-reason.trail {
   background: var(--green-soft);
   color: var(--green);
@@ -1132,6 +1136,8 @@ button.brief-card:hover {
   font-size: 9px;
 }
 .trade-price-flow strong { display: block; margin-top: 4px; font-size: 13px; }
+.trade-history-card.buy { border-color: color-mix(in srgb, var(--blue) 24%, var(--line)); }
+.buy-result > div > span { color: var(--muted); }
 .trade-result {
   display: flex;
   justify-content: space-between;

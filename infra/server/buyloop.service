@@ -16,6 +16,10 @@ EnvironmentFile=/etc/stock/kis.env
 Environment=KIS_TOKEN_CACHE=/opt/stock/kis_token.json
 # 신호가 발행된 뒤 최대 60초 안에 확인. 10초 미만은 코드가 거부한다.
 Environment=BUYLOOP_POLL_SECONDS=60
+# Oracle 분석기는 먼저 그림자 비교만 한다. 한 장 이상 검증 뒤 운영자가 이 값을
+# 1로 명시하기 전에는 GitHub 지연 시에도 로컬 신호로 신규매수하지 않는다.
+Environment=ORACLE_SIGNALS_PATH=/var/lib/stock-oracle-brain/signals.json
+Environment=ORACLE_SIGNAL_FALLBACK_ENABLED=0
 ExecStart=/usr/bin/python3 -m bot.kis_buyloop --loop
 Restart=always
 RestartSec=10

@@ -1,0 +1,46 @@
+[Unit]
+Description=Oracle independent stock signal analyzer (shadow by default)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=bot
+Group=bot
+WorkingDirectory=/opt/stock/Stock-chart-analyze
+Environment=PYTHONUNBUFFERED=1
+Environment=PYTHONDONTWRITEBYTECODE=1
+Environment=ORACLE_SIGNALS_PATH=/var/lib/stock-oracle-brain/signals.json
+Environment=ORACLE_CANDIDATE_POOL_PATH=/var/lib/stock-oracle-brain/candidates.json
+Environment=ORACLE_DISCOVERY_STATE_PATH=/var/lib/stock-oracle-brain/discovery.json
+Environment=ORACLE_BRAIN_LOCK_PATH=/var/lib/stock-oracle-brain/brain.lock
+Environment=SCANNER_CACHE_DIR=/var/cache/stock-oracle-brain
+Environment=ORACLE_BRAIN_MAX_SYMBOLS=40
+Environment=ORACLE_BRAIN_DISCOVERY_SYMBOLS=4
+ExecStart=/usr/bin/python3 -m scanner.oracle_brain
+StateDirectory=stock-oracle-brain
+StateDirectoryMode=0755
+CacheDirectory=stock-oracle-brain
+CacheDirectoryMode=0755
+
+# 주문 프로세스보다 낮은 우선순위. 1GB VM에서 분석기가 파수꾼을 밀어내지 않는다.
+Nice=10
+CPUWeight=10
+CPUQuota=100%
+MemoryHigh=360M
+MemoryMax=420M
+TimeoutStartSec=9min
+
+# KIS env를 주입하지 않는다. StateDirectory/CacheDirectory는 systemd가 깨끗한
+# 호스트에서도 시작 전에 만들고 User 소유로 줘 226/NAMESPACE를 막는다.
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=read-only
+CapabilityBoundingSet=
+RestrictRealtime=true
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+LockPersonality=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
