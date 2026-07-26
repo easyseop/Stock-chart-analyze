@@ -18,7 +18,7 @@
    "opened": "2026-07-06",
    "pl_krw": 338579,
    "pl_pct": 3.69,
-   "price_age_min": 6.0
+   "price_age_min": 7.7
   },
   {
    "code": "STE",
@@ -33,7 +33,7 @@
    "opened": "2026-07-07",
    "pl_krw": 9211,
    "pl_pct": 0.49,
-   "price_age_min": 6.0
+   "price_age_min": 7.7
   },
   {
    "code": "068270",
@@ -48,7 +48,7 @@
    "opened": "2026-07-07",
    "pl_krw": 121586,
    "pl_pct": 1.28,
-   "price_age_min": 6.0
+   "price_age_min": 7.7
   },
   {
    "code": "HMC",
@@ -63,7 +63,7 @@
    "opened": "2026-07-09",
    "pl_krw": 2171,
    "pl_pct": 1.79,
-   "price_age_min": 7.6
+   "price_age_min": 9.1
   },
   {
    "code": "LSPD",
@@ -78,7 +78,7 @@
    "opened": "2026-07-09",
    "pl_krw": -4503,
    "pl_pct": -1.1,
-   "price_age_min": 6.0
+   "price_age_min": 7.7
   },
   {
    "code": "SARO",
@@ -93,7 +93,7 @@
    "opened": "2026-07-10",
    "pl_krw": 188319,
    "pl_pct": 2.87,
-   "price_age_min": 6.0
+   "price_age_min": 7.7
   },
   {
    "code": "J",
@@ -108,7 +108,7 @@
    "opened": "2026-07-11",
    "pl_krw": 373128,
    "pl_pct": 6.3,
-   "price_age_min": 6.0
+   "price_age_min": 7.7
   },
   {
    "code": "MAIN",
@@ -123,7 +123,7 @@
    "opened": "2026-07-22",
    "pl_krw": -55881,
    "pl_pct": -0.91,
-   "price_age_min": 6.0
+   "price_age_min": 7.7
   },
   {
    "code": "SHOP",
@@ -138,7 +138,7 @@
    "opened": "2026-07-24",
    "pl_krw": -106113,
    "pl_pct": -1.07,
-   "price_age_min": 6.0
+   "price_age_min": 7.7
   }
  ],
  "pending": [
@@ -168,33 +168,6 @@
     "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권38% · 체크4/6 · 손절폭7.0%"
    },
    "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권38% · 체크4/6 · 손절폭7.0%"
-  },
-  {
-   "code": "VRSK",
-   "name": "Verisk Analytics, Inc.",
-   "ccy": "USD",
-   "limit": 190.174,
-   "stop": 186.8115,
-   "target": 225.2671,
-   "q": 51,
-   "created": "2026-07-21",
-   "atr": 6.4093,
-   "plan": {
-    "entry": 199.63,
-    "stop": 186.8115,
-    "target": 225.2671,
-    "pb": 190.174,
-    "tactic": "pullback"
-   },
-   "ctx": {
-    "mode": "pullback",
-    "fresh": true,
-    "stage": 3,
-    "rp": 29,
-    "rec": 4,
-    "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권29% · 체크4/6 · 손절폭6.4%"
-   },
-   "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권29% · 체크4/6 · 손절폭6.4%"
   },
   {
    "code": "FRPT",
@@ -567,6 +540,17 @@
   }
  ],
  "log": [
+  {
+   "d": "2026-07-26",
+   "type": "cancel",
+   "code": "VRSK",
+   "name": "Verisk Analytics, Inc.",
+   "q": 0,
+   "price": 201.34,
+   "ccy": "USD",
+   "amt": 0,
+   "note": "지정가 취소 — 신호 부패: 어닝 D-3 이내(신규 진입 금지 구간)"
+  },
   {
    "d": "2026-07-25",
    "type": "order",
