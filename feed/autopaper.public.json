@@ -1,9 +1,9 @@
 {
- "updated": "2026-07-26",
+ "updated": "2026-07-27",
  "start": 100000000,
  "cash": 48375453,
- "equity": 98848435,
- "ret_pct": -1.15,
+ "equity": 98773500,
+ "ret_pct": -1.23,
  "positions": [
   {
    "code": "MRSH",
@@ -16,9 +16,9 @@
    "target": 192.2575,
    "half_done": true,
    "opened": "2026-07-06",
-   "pl_krw": 338579,
+   "pl_krw": 337958,
    "pl_pct": 3.69,
-   "price_age_min": 7.7
+   "price_age_min": 7.6
   },
   {
    "code": "STE",
@@ -31,9 +31,9 @@
    "target": 234.934,
    "half_done": false,
    "opened": "2026-07-07",
-   "pl_krw": 9211,
+   "pl_krw": 9194,
    "pl_pct": 0.49,
-   "price_age_min": 7.7
+   "price_age_min": 7.6
   },
   {
    "code": "068270",
@@ -48,7 +48,7 @@
    "opened": "2026-07-07",
    "pl_krw": 121586,
    "pl_pct": 1.28,
-   "price_age_min": 7.7
+   "price_age_min": 7.6
   },
   {
    "code": "HMC",
@@ -61,9 +61,9 @@
    "target": 30.5824,
    "half_done": false,
    "opened": "2026-07-09",
-   "pl_krw": 2171,
+   "pl_krw": 2167,
    "pl_pct": 1.79,
-   "price_age_min": 9.1
+   "price_age_min": 9.8
   },
   {
    "code": "LSPD",
@@ -76,9 +76,9 @@
    "target": 11.6783,
    "half_done": false,
    "opened": "2026-07-09",
-   "pl_krw": -4503,
+   "pl_krw": -4495,
    "pl_pct": -1.1,
-   "price_age_min": 7.7
+   "price_age_min": 7.6
   },
   {
    "code": "SARO",
@@ -91,9 +91,9 @@
    "target": 31.9643,
    "half_done": false,
    "opened": "2026-07-10",
-   "pl_krw": 188319,
+   "pl_krw": 187973,
    "pl_pct": 2.87,
-   "price_age_min": 7.7
+   "price_age_min": 7.6
   },
   {
    "code": "J",
@@ -106,9 +106,9 @@
    "target": 141.2316,
    "half_done": true,
    "opened": "2026-07-11",
-   "pl_krw": 373128,
+   "pl_krw": 372444,
    "pl_pct": 6.3,
-   "price_age_min": 7.7
+   "price_age_min": 7.6
   },
   {
    "code": "MAIN",
@@ -121,9 +121,9 @@
    "target": 58.7184,
    "half_done": false,
    "opened": "2026-07-22",
-   "pl_krw": -55881,
+   "pl_krw": -55779,
    "pl_pct": -0.91,
-   "price_age_min": 7.7
+   "price_age_min": 7.6
   },
   {
    "code": "SHOP",
@@ -136,9 +136,9 @@
    "target": 138.8546,
    "half_done": false,
    "opened": "2026-07-24",
-   "pl_krw": -106113,
+   "pl_krw": -105919,
    "pl_pct": -1.07,
-   "price_age_min": 7.7
+   "price_age_min": 7.6
   }
  ],
  "pending": [
@@ -202,7 +202,7 @@
  "pos_cap_pct": 33.3,
  "cap_violations": [],
  "rule_violations": [],
- "fx": 1462.1,
+ "fx": 1459.42,
  "stats": {
   "all": {
    "n": 5,
@@ -537,6 +537,10 @@
   {
    "d": "2026-07-26",
    "v": 98848435
+  },
+  {
+   "d": "2026-07-27",
+   "v": 98773500
   }
  ],
  "log": [
