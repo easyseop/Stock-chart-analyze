@@ -2,8 +2,8 @@
  "updated": "2026-07-27",
  "start": 100000000,
  "cash": 41373953,
- "equity": 98984900,
- "ret_pct": -1.02,
+ "equity": 99813415,
+ "ret_pct": -0.19,
  "positions": [
   {
    "code": "MRSH",
@@ -11,14 +11,14 @@
    "ccy": "USD",
    "q": 36,
    "avg": 174.3075,
-   "price": 180.7400054931641,
+   "price": 181.81500244140625,
    "stop": 174.3075,
    "target": 192.2575,
    "half_done": true,
    "opened": "2026-07-06",
-   "pl_krw": 337958,
-   "pl_pct": 3.69,
-   "price_age_min": 7.0
+   "pl_krw": 394438,
+   "pl_pct": 4.31,
+   "price_age_min": 5.4
   },
   {
    "code": "STE",
@@ -26,14 +26,14 @@
    "ccy": "USD",
    "q": 6,
    "avg": 213.02,
-   "price": 214.07000732421875,
+   "price": 216.3350067138672,
    "stop": 202.063,
    "target": 234.934,
    "half_done": false,
    "opened": "2026-07-07",
-   "pl_krw": 9194,
-   "pl_pct": 0.49,
-   "price_age_min": 7.0
+   "pl_krw": 29028,
+   "pl_pct": 1.56,
+   "price_age_min": 5.4
   },
   {
    "code": "068270",
@@ -48,7 +48,7 @@
    "opened": "2026-07-07",
    "pl_krw": 180986,
    "pl_pct": 1.91,
-   "price_age_min": 7.0
+   "price_age_min": 5.4
   },
   {
    "code": "HMC",
@@ -56,14 +56,14 @@
    "ccy": "USD",
    "q": 3,
    "avg": 27.665,
-   "price": 28.15999984741211,
+   "price": 29.07999992370605,
    "stop": 26.2063,
    "target": 30.5824,
    "half_done": false,
    "opened": "2026-07-09",
-   "pl_krw": 2167,
-   "pl_pct": 1.79,
-   "price_age_min": 8.3
+   "pl_krw": 6195,
+   "pl_pct": 5.11,
+   "price_age_min": 6.8
   },
   {
    "code": "LSPD",
@@ -71,14 +71,14 @@
    "ccy": "USD",
    "q": 28,
    "avg": 10.02,
-   "price": 9.90999984741211,
+   "price": 10.1899995803833,
    "stop": 9.2434,
    "target": 11.6783,
    "half_done": false,
    "opened": "2026-07-09",
-   "pl_krw": -4495,
-   "pl_pct": -1.1,
-   "price_age_min": 7.0
+   "pl_krw": 6947,
+   "pl_pct": 1.7,
+   "price_age_min": 5.3
   },
   {
    "code": "SARO",
@@ -86,14 +86,14 @@
    "ccy": "USD",
    "q": 161,
    "avg": 27.9,
-   "price": 28.700000762939453,
+   "price": 29.600000381469727,
    "stop": 25.8678,
    "target": 31.9643,
    "half_done": false,
    "opened": "2026-07-10",
-   "pl_krw": 187973,
-   "pl_pct": 2.87,
-   "price_age_min": 7.0
+   "pl_krw": 399443,
+   "pl_pct": 6.09,
+   "price_age_min": 5.3
   },
   {
    "code": "J",
@@ -101,14 +101,14 @@
    "ccy": "USD",
    "q": 32,
    "avg": 126.585,
-   "price": 134.55999755859375,
+   "price": 133.52000427246094,
    "stop": 126.585,
    "target": 141.2316,
    "half_done": true,
    "opened": "2026-07-11",
-   "pl_krw": 372444,
-   "pl_pct": 6.3,
-   "price_age_min": 7.0
+   "pl_krw": 323875,
+   "pl_pct": 5.48,
+   "price_age_min": 5.3
   },
   {
    "code": "MAIN",
@@ -116,14 +116,14 @@
    "ccy": "USD",
    "q": 78,
    "avg": 53.96,
-   "price": 53.470001220703125,
+   "price": 53.73040008544922,
    "stop": 51.5808,
    "target": 58.7184,
    "half_done": false,
    "opened": "2026-07-22",
-   "pl_krw": -55779,
-   "pl_pct": -0.91,
-   "price_age_min": 7.0
+   "pl_krw": -26136,
+   "pl_pct": -0.43,
+   "price_age_min": 5.3
   },
   {
    "code": "SHOP",
@@ -131,14 +131,14 @@
    "ccy": "USD",
    "q": 59,
    "avg": 114.9801,
-   "price": 113.75,
+   "price": 120.06999969482422,
    "stop": 105.7277,
    "target": 138.8546,
    "half_done": false,
    "opened": "2026-07-24",
-   "pl_krw": -105919,
-   "pl_pct": -1.07,
-   "price_age_min": 7.0
+   "pl_krw": 438270,
+   "pl_pct": 4.43,
+   "price_age_min": 5.3
   },
   {
    "code": "004370",
@@ -153,37 +153,10 @@
    "opened": "2026-07-27",
    "pl_krw": 152000,
    "pl_pct": 2.17,
-   "price_age_min": 9.1
+   "price_age_min": 7.6
   }
  ],
  "pending": [
-  {
-   "code": "BKNG",
-   "name": "Booking Holdings Inc.",
-   "ccy": "USD",
-   "limit": 169.3393,
-   "stop": 169.0734,
-   "target": 207.1181,
-   "q": 51,
-   "created": "2026-07-06",
-   "atr": 6.3408,
-   "plan": {
-    "entry": 181.755,
-    "stop": 169.0734,
-    "target": 207.1181,
-    "pb": 169.3393,
-    "tactic": "pullback"
-   },
-   "ctx": {
-    "mode": "pullback",
-    "fresh": true,
-    "stage": 3,
-    "rp": 38,
-    "rec": 4,
-    "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권38% · 체크4/6 · 손절폭7.0%"
-   },
-   "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권38% · 체크4/6 · 손절폭7.0%"
-  },
   {
    "code": "FRPT",
    "name": "Freshpet, Inc.",
@@ -582,10 +555,21 @@
   },
   {
    "d": "2026-07-27",
-   "v": 98984900
+   "v": 99813415
   }
  ],
  "log": [
+  {
+   "d": "2026-07-27",
+   "type": "cancel",
+   "code": "BKNG",
+   "name": "Booking Holdings Inc.",
+   "q": 0,
+   "price": 182.65,
+   "ccy": "USD",
+   "amt": 0,
+   "note": "지정가 만료 — 눌림 안 옴(놓침≠손실)"
+  },
   {
    "d": "2026-07-27",
    "type": "buy",
