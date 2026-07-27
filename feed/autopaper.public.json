@@ -2,8 +2,8 @@
  "updated": "2026-07-27",
  "start": 100000000,
  "cash": 41373953,
- "equity": 99057900,
- "ret_pct": -0.94,
+ "equity": 99099800,
+ "ret_pct": -0.9,
  "positions": [
   {
    "code": "MRSH",
@@ -18,7 +18,7 @@
    "opened": "2026-07-06",
    "pl_krw": 337958,
    "pl_pct": 3.69,
-   "price_age_min": 6.9
+   "price_age_min": 7.3
   },
   {
    "code": "STE",
@@ -33,7 +33,7 @@
    "opened": "2026-07-07",
    "pl_krw": 9194,
    "pl_pct": 0.49,
-   "price_age_min": 6.9
+   "price_age_min": 7.3
   },
   {
    "code": "068270",
@@ -41,14 +41,14 @@
    "ccy": "KRW",
    "q": 54,
    "avg": 175348.4128,
-   "price": 179700.0,
+   "price": 180300.0,
    "stop": 157651.1713,
    "target": 212997.6574,
    "half_done": false,
    "opened": "2026-07-07",
-   "pl_krw": 234986,
-   "pl_pct": 2.48,
-   "price_age_min": 6.9
+   "pl_krw": 267386,
+   "pl_pct": 2.82,
+   "price_age_min": 7.3
   },
   {
    "code": "HMC",
@@ -63,7 +63,7 @@
    "opened": "2026-07-09",
    "pl_krw": 2167,
    "pl_pct": 1.79,
-   "price_age_min": 8.4
+   "price_age_min": 8.6
   },
   {
    "code": "LSPD",
@@ -78,7 +78,7 @@
    "opened": "2026-07-09",
    "pl_krw": -4495,
    "pl_pct": -1.1,
-   "price_age_min": 6.9
+   "price_age_min": 7.3
   },
   {
    "code": "SARO",
@@ -93,7 +93,7 @@
    "opened": "2026-07-10",
    "pl_krw": 187973,
    "pl_pct": 2.87,
-   "price_age_min": 6.9
+   "price_age_min": 7.3
   },
   {
    "code": "J",
@@ -108,7 +108,7 @@
    "opened": "2026-07-11",
    "pl_krw": 372444,
    "pl_pct": 6.3,
-   "price_age_min": 6.9
+   "price_age_min": 7.3
   },
   {
    "code": "MAIN",
@@ -123,7 +123,7 @@
    "opened": "2026-07-22",
    "pl_krw": -55779,
    "pl_pct": -0.91,
-   "price_age_min": 6.9
+   "price_age_min": 7.2
   },
   {
    "code": "SHOP",
@@ -138,7 +138,7 @@
    "opened": "2026-07-24",
    "pl_krw": -105919,
    "pl_pct": -1.07,
-   "price_age_min": 6.8
+   "price_age_min": 7.2
   },
   {
    "code": "004370",
@@ -146,13 +146,13 @@
    "ccy": "KRW",
    "q": 19,
    "avg": 368500.0,
-   "price": 377500.0,
+   "price": 378000.0,
    "stop": 342744.4071,
    "target": 420011.1858,
    "half_done": false,
    "opened": "2026-07-27",
-   "pl_krw": 171000,
-   "pl_pct": 2.44,
+   "pl_krw": 180500,
+   "pl_pct": 2.58,
    "price_age_min": 9.4
   }
  ],
@@ -582,7 +582,7 @@
   },
   {
    "d": "2026-07-27",
-   "v": 99057900
+   "v": 99099800
   }
  ],
  "log": [
