@@ -2,8 +2,8 @@
  "updated": "2026-07-27",
  "start": 100000000,
  "cash": 41373953,
- "equity": 99099800,
- "ret_pct": -0.9,
+ "equity": 98984900,
+ "ret_pct": -1.02,
  "positions": [
   {
    "code": "MRSH",
@@ -41,13 +41,13 @@
    "ccy": "KRW",
    "q": 54,
    "avg": 175348.4128,
-   "price": 180300.0,
+   "price": 178700.0,
    "stop": 157651.1713,
    "target": 212997.6574,
    "half_done": false,
    "opened": "2026-07-07",
-   "pl_krw": 267386,
-   "pl_pct": 2.82,
+   "pl_krw": 180986,
+   "pl_pct": 1.91,
    "price_age_min": 7.3
   },
   {
@@ -63,7 +63,7 @@
    "opened": "2026-07-09",
    "pl_krw": 2167,
    "pl_pct": 1.79,
-   "price_age_min": 8.6
+   "price_age_min": 8.7
   },
   {
    "code": "LSPD",
@@ -123,7 +123,7 @@
    "opened": "2026-07-22",
    "pl_krw": -55779,
    "pl_pct": -0.91,
-   "price_age_min": 7.2
+   "price_age_min": 7.3
   },
   {
    "code": "SHOP",
@@ -146,14 +146,14 @@
    "ccy": "KRW",
    "q": 19,
    "avg": 368500.0,
-   "price": 378000.0,
+   "price": 376500.0,
    "stop": 342744.4071,
    "target": 420011.1858,
    "half_done": false,
    "opened": "2026-07-27",
-   "pl_krw": 180500,
-   "pl_pct": 2.58,
-   "price_age_min": 9.4
+   "pl_krw": 152000,
+   "pl_pct": 2.17,
+   "price_age_min": 9.5
   }
  ],
  "pending": [
@@ -582,7 +582,7 @@
   },
   {
    "d": "2026-07-27",
-   "v": 99099800
+   "v": 98984900
   }
  ],
  "log": [
