@@ -160,6 +160,10 @@ def test_migrated_baseline_sell_resolves_but_uses_sell_order_price():
                 "ts": time.time() - 200,
             })
             L.on_result("sell:cag", "ack", 0)
+            # 구버전의 잘못된 hldg_before 대사로 이미 close-only 동결됐더라도,
+            # durable 이관 3중 증명을 만족하는 이 SELL만 좁게 해소해야 한다.
+            O.freeze("CAG", "legacy hldg_before mismatch")
+            assert O.is_frozen("CAG")
             rs = R.resolve_acks_by_balance(
                 {"US": {"CAG": 5}},
                 fill_prices={"US": {"CAG": 100.0}},
@@ -196,7 +200,14 @@ def test_migrated_baseline_sell_resolves_but_uses_sell_order_price():
             assert R.resolve_acks_by_balance(
                 {"US": {"MSFT": 5}}, complete_snapshot=True) == []
             assert L.state_of("sell:msft")["state"] == "ack"
-    print("[PASS] migrated baseline SELL만 해소·SELL은 평단 아닌 제출가 사용")
+
+            # 이관 3중 증명이 없는 일반 동결 주문은 정확한 잔고 delta여도 보류한다.
+            _ack(L, "sell:nvda", "NVDA", "SELL", 5, before=10)
+            O.freeze("NVDA", "operator freeze")
+            assert R.resolve_acks_by_balance(
+                {"US": {"NVDA": 5}}, only_keys={"sell:nvda"}) == []
+            assert L.state_of("sell:nvda")["state"] == "ack"
+    print("[PASS] 동결된 migrated baseline SELL만 해소·일반 동결/baseline은 보류")
 
 
 def test_partial_balance_map_requires_exact_keys_or_complete_contract():

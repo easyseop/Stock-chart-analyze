@@ -441,12 +441,13 @@ def resolve_acks_by_balance(hmaps: dict[str, dict | None],
             continue                               # 아직 어림 — 다음 사이클
         if open_count.get(S, 0) != 1:
             continue                               # net 귀속 불가(동시 주문) — 보류
-        if base is None or ownership.is_frozen(S):
-            continue                               # 미armed/동결 — 보류
+        if base is None:
+            continue                               # 미armed — 보류
         # 구버전 절반익절은 hldg_before에 전체 보유가 아니라 주문수량을 잘못
         # 저장했다. 이관 도구가 durable pos_key+원가 lot+원래 수량을 모두 증명한
         # 주문만 legacy_hldg_before로 교정한다. 일반 주문은 기존 before 그대로다.
         legacy_before = o.get("legacy_hldg_before")
+        verified_migrated = False
         if legacy_before is not None:
             try:
                 legacy_before = int(legacy_before)
@@ -454,8 +455,14 @@ def resolve_acks_by_balance(hmaps: dict[str, dict | None],
                 continue
             if _verified_migrated_baseline_sell(o, S, legacy_before):
                 before = legacy_before
-        if S in base and not _verified_migrated_baseline_sell(
-                o, S, int(before)):
+                verified_migrated = True
+        if not verified_migrated:
+            verified_migrated = _verified_migrated_baseline_sell(
+                o, S, int(before))
+        # 과거 잘못된 hldg_before 때문에 이미 동결된 legacy ACK도 이관의
+        # 3중 증명(pos_key·보호수량·원가 lot)을 통과한 경우에만 해소한다.
+        # 일반 동결/사용자 baseline 주문은 계속 fail-closed로 보류한다.
+        if (ownership.is_frozen(S) or S in base) and not verified_migrated:
             continue                               # 사용자 기보유는 검증된 이관 SELL만 예외
         market = o.get("market") or kis.market_of_symbol(S)
         hmap = hmaps.get(market)
