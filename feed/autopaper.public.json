@@ -2,8 +2,8 @@
  "updated": "2026-07-29",
  "start": 100000000,
  "cash": 36329881,
- "equity": 101407424,
- "ret_pct": 1.41,
+ "equity": 101444125,
+ "ret_pct": 1.44,
  "positions": [
   {
    "code": "MRSH",
@@ -11,14 +11,14 @@
    "ccy": "USD",
    "q": 36,
    "avg": 174.3075,
-   "price": 190.6699981689453,
+   "price": 190.47999572753903,
    "stop": 177.2074981689453,
    "target": 192.2575,
    "half_done": true,
    "opened": "2026-07-06",
-   "pl_krw": 856526,
-   "pl_pct": 9.39,
-   "price_age_min": 6.8
+   "pl_krw": 846580,
+   "pl_pct": 9.28,
+   "price_age_min": 7.0
   },
   {
    "code": "HMC",
@@ -26,14 +26,14 @@
    "ccy": "USD",
    "q": 2,
    "avg": 27.665,
-   "price": 30.1299991607666,
+   "price": 30.18000030517578,
    "stop": 28.177099771118165,
    "target": 30.5824,
    "half_done": true,
    "opened": "2026-07-09",
-   "pl_krw": 7169,
-   "pl_pct": 8.91,
-   "price_age_min": 8.8
+   "pl_krw": 7314,
+   "pl_pct": 9.09,
+   "price_age_min": 9.3
   },
   {
    "code": "LSPD",
@@ -41,14 +41,14 @@
    "ccy": "USD",
    "q": 28,
    "avg": 10.02,
-   "price": 10.699999809265137,
+   "price": 10.649999618530272,
    "stop": 9.2434,
    "target": 11.6783,
    "half_done": false,
    "opened": "2026-07-09",
-   "pl_krw": 27686,
-   "pl_pct": 6.79,
-   "price_age_min": 8.3
+   "pl_krw": 25650,
+   "pl_pct": 6.29,
+   "price_age_min": 8.9
   },
   {
    "code": "SARO",
@@ -56,14 +56,14 @@
    "ccy": "USD",
    "q": 81,
    "avg": 27.9,
-   "price": 29.975000381469727,
+   "price": 30.01499938964844,
    "stop": 27.9,
    "target": 31.9643,
    "half_done": true,
    "opened": "2026-07-10",
-   "pl_krw": 244395,
-   "pl_pct": 7.44,
-   "price_age_min": 8.3
+   "pl_krw": 249106,
+   "pl_pct": 7.58,
+   "price_age_min": 8.9
   },
   {
    "code": "J",
@@ -71,14 +71,14 @@
    "ccy": "USD",
    "q": 32,
    "avg": 126.585,
-   "price": 139.72500610351562,
-   "stop": 128.73990610351564,
+   "price": 140.2550048828125,
+   "stop": 129.2699048828125,
    "target": 141.2316,
    "half_done": true,
    "opened": "2026-07-11",
-   "pl_krw": 611412,
-   "pl_pct": 10.38,
-   "price_age_min": 6.8
+   "pl_krw": 636073,
+   "pl_pct": 10.8,
+   "price_age_min": 7.0
   },
   {
    "code": "MAIN",
@@ -86,14 +86,14 @@
    "ccy": "USD",
    "q": 78,
    "avg": 53.96,
-   "price": 54.810001373291016,
+   "price": 54.88999938964844,
    "stop": 51.5808,
    "target": 58.7184,
    "half_done": false,
    "opened": "2026-07-22",
-   "pl_krw": 96406,
-   "pl_pct": 1.58,
-   "price_age_min": 8.4
+   "pl_krw": 105479,
+   "pl_pct": 1.72,
+   "price_age_min": 7.0
   },
   {
    "code": "SHOP",
@@ -101,14 +101,14 @@
    "ccy": "USD",
    "q": 30,
    "avg": 114.9801,
-   "price": 132.47999572753906,
+   "price": 131.4199981689453,
    "stop": 117.28670610351563,
    "target": 138.8546,
    "half_done": true,
    "opened": "2026-07-24",
-   "pl_krw": 763387,
-   "pl_pct": 15.22,
-   "price_age_min": 8.7
+   "pl_krw": 717148,
+   "pl_pct": 14.3,
+   "price_age_min": 9.3
   },
   {
    "code": "004370",
@@ -123,7 +123,7 @@
    "opened": "2026-07-27",
    "pl_krw": 161500,
    "pl_pct": 2.31,
-   "price_age_min": 9.0
+   "price_age_min": 9.6
   },
   {
    "code": "CRC",
@@ -131,14 +131,14 @@
    "ccy": "USD",
    "q": 101,
    "avg": 51.16,
-   "price": 49.56999969482422,
+   "price": 49.68999862670898,
    "stop": 47.7785,
    "target": 57.923,
    "half_done": false,
    "opened": "2026-07-28",
-   "pl_krw": -233511,
-   "pl_pct": -3.11,
-   "price_age_min": 8.3
+   "pl_krw": -215887,
+   "pl_pct": -2.87,
+   "price_age_min": 8.9
   },
   {
    "code": "EQT",
@@ -146,14 +146,14 @@
    "ccy": "USD",
    "q": 242,
    "avg": 51.375,
-   "price": 51.44499969482422,
+   "price": 51.55500030517578,
    "stop": 48.5008,
    "target": 57.1234,
    "half_done": false,
    "opened": "2026-07-29",
-   "pl_krw": 24632,
-   "pl_pct": 0.14,
-   "price_age_min": 9.5
+   "pl_krw": 63340,
+   "pl_pct": 0.35,
+   "price_age_min": 10.3
   }
  ],
  "pending": [
@@ -641,7 +641,7 @@
   },
   {
    "d": "2026-07-29",
-   "v": 101407424
+   "v": 101444125
   }
  ],
  "log": [
