@@ -1,9 +1,9 @@
 {
  "updated": "2026-07-29",
  "start": 100000000,
- "cash": 32835436,
- "equity": 101254113,
- "ret_pct": 1.25,
+ "cash": 36329881,
+ "equity": 101287878,
+ "ret_pct": 1.29,
  "positions": [
   {
    "code": "MRSH",
@@ -11,13 +11,13 @@
    "ccy": "USD",
    "q": 36,
    "avg": 174.3075,
-   "price": 189.1199951171875,
+   "price": 189.7899932861328,
    "stop": 177.022607421875,
    "target": 192.2575,
    "half_done": true,
    "opened": "2026-07-06",
-   "pl_krw": 775388,
-   "pl_pct": 8.5,
+   "pl_krw": 810460,
+   "pl_pct": 8.88,
    "price_age_min": 7.4
   },
   {
@@ -26,14 +26,14 @@
    "ccy": "USD",
    "q": 2,
    "avg": 27.665,
-   "price": 30.354999542236328,
+   "price": 30.229999542236328,
    "stop": 28.177099771118165,
    "target": 30.5824,
    "half_done": true,
    "opened": "2026-07-09",
-   "pl_krw": 7823,
-   "pl_pct": 9.72,
-   "price_age_min": 9.7
+   "pl_krw": 7459,
+   "pl_pct": 9.27,
+   "price_age_min": 10.0
   },
   {
    "code": "LSPD",
@@ -41,29 +41,29 @@
    "ccy": "USD",
    "q": 28,
    "avg": 10.02,
-   "price": 10.630000114440918,
+   "price": 10.675000190734863,
    "stop": 9.2434,
    "target": 11.6783,
    "half_done": false,
    "opened": "2026-07-09",
-   "pl_krw": 24836,
-   "pl_pct": 6.09,
-   "price_age_min": 9.1
+   "pl_krw": 26668,
+   "pl_pct": 6.54,
+   "price_age_min": 9.4
   },
   {
    "code": "SARO",
    "name": "StandardAero, Inc.",
    "ccy": "USD",
-   "q": 161,
+   "q": 81,
    "avg": 27.9,
-   "price": 29.934999465942383,
-   "stop": 25.8678,
+   "price": 30.040000915527344,
+   "stop": 27.9,
    "target": 31.9643,
-   "half_done": false,
+   "half_done": true,
    "opened": "2026-07-10",
-   "pl_krw": 476407,
-   "pl_pct": 7.29,
-   "price_age_min": 7.4
+   "pl_krw": 252050,
+   "pl_pct": 7.67,
+   "price_age_min": 9.5
   },
   {
    "code": "J",
@@ -71,13 +71,13 @@
    "ccy": "USD",
    "q": 32,
    "avg": 126.585,
-   "price": 138.91000366210938,
-   "stop": 127.93990305175781,
+   "price": 139.17999267578125,
+   "stop": 128.19489267578126,
    "target": 141.2316,
    "half_done": true,
    "opened": "2026-07-11",
-   "pl_krw": 573489,
-   "pl_pct": 9.74,
+   "pl_krw": 586052,
+   "pl_pct": 9.95,
    "price_age_min": 7.4
   },
   {
@@ -86,14 +86,14 @@
    "ccy": "USD",
    "q": 78,
    "avg": 53.96,
-   "price": 54.95000076293945,
+   "price": 54.775001525878906,
    "stop": 51.5808,
    "target": 58.7184,
    "half_done": false,
    "opened": "2026-07-22",
-   "pl_krw": 112284,
-   "pl_pct": 1.83,
-   "price_age_min": 9.3
+   "pl_krw": 92436,
+   "pl_pct": 1.51,
+   "price_age_min": 9.6
   },
   {
    "code": "SHOP",
@@ -101,14 +101,14 @@
    "ccy": "USD",
    "q": 30,
    "avg": 114.9801,
-   "price": 131.5594940185547,
-   "stop": 115.72669328613281,
+   "price": 132.5092010498047,
+   "stop": 115.94590104980469,
    "target": 138.8546,
    "half_done": true,
    "opened": "2026-07-24",
-   "pl_krw": 723233,
-   "pl_pct": 14.42,
-   "price_age_min": 9.6
+   "pl_krw": 764661,
+   "pl_pct": 15.25,
+   "price_age_min": 9.9
   },
   {
    "code": "004370",
@@ -123,7 +123,7 @@
    "opened": "2026-07-27",
    "pl_krw": 161500,
    "pl_pct": 2.31,
-   "price_age_min": 9.9
+   "price_age_min": 10.2
   },
   {
    "code": "CRC",
@@ -131,14 +131,14 @@
    "ccy": "USD",
    "q": 101,
    "avg": 51.16,
-   "price": 49.79999923706055,
+   "price": 49.525001525878906,
    "stop": 47.7785,
    "target": 57.923,
    "half_done": false,
    "opened": "2026-07-28",
-   "pl_krw": -199733,
-   "pl_pct": -2.66,
-   "price_age_min": 9.2
+   "pl_krw": -240119,
+   "pl_pct": -3.2,
+   "price_age_min": 9.5
   },
   {
    "code": "EQT",
@@ -146,14 +146,14 @@
    "ccy": "USD",
    "q": 242,
    "avg": 51.375,
-   "price": 51.375,
+   "price": 51.31499862670898,
    "stop": 48.5008,
    "target": 57.1234,
    "half_done": false,
    "opened": "2026-07-29",
-   "pl_krw": 0,
-   "pl_pct": 0.0,
-   "price_age_min": 10.6
+   "pl_krw": -21114,
+   "pl_pct": -0.12,
+   "price_age_min": 10.9
   }
  ],
  "pending": [
@@ -641,10 +641,23 @@
   },
   {
    "d": "2026-07-29",
-   "v": 101254113
+   "v": 101287878
   }
  ],
  "log": [
+  {
+   "d": "2026-07-29",
+   "type": "sell",
+   "code": "SARO",
+   "name": "StandardAero, Inc.",
+   "q": 80,
+   "price": 30.04,
+   "ccy": "USD",
+   "amt": 3494445,
+   "note": "+1R 절반 익절",
+   "pl": 248939,
+   "pl_pct": 7.7
+  },
   {
    "d": "2026-07-29",
    "type": "buy",
