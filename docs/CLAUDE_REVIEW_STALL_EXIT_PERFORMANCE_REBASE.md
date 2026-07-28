@@ -7,7 +7,7 @@
 Oracle 장부 apply, L1 해제, `STALL_EXIT_MODE=live`는 각각 별도 게이트입니다.
 
 기준은 최신 기본 브랜치의 PR #92 병합 커밋 `ba30f9c7`이며, 검토 브랜치는
-`codex/stall-exit-performance-rebase`입니다.
+`codex/stall-exit-performance-rebase`, Draft PR은 #93입니다.
 
 ## 변경 1 — 전략 A 절반익절 뒤 정체청산
 
