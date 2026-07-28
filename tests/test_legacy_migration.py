@@ -28,6 +28,8 @@ def _paths(stack: ExitStack, tmp: str) -> None:
     stack.enter_context(mock.patch.object(P, "PATH", os.path.join(tmp, "positions.jsonl")))
     stack.enter_context(mock.patch.object(K, "LOG_PATH", os.path.join(tmp, "kill-log.jsonl")))
     stack.enter_context(mock.patch.object(KIS, "ENV", "mock"))
+    stack.enter_context(mock.patch.object(
+        M.alpha, "STATE_PATH", os.path.join(tmp, "alpha_state.json")))
     stack.enter_context(mock.patch.dict(os.environ, {
         "COSTBOOK_PATH": os.path.join(tmp, "costbook.jsonl"),
         "USER_BASELINE_PATH": os.path.join(tmp, "baseline.json"),
@@ -119,6 +121,11 @@ def test_plan_is_read_only_and_apply_reconstructs_all_three_shapes():
     with tempfile.TemporaryDirectory() as tmp, ExitStack() as stack:
         _paths(stack, tmp)
         snapshot = _fixture()
+        M.alpha._save({
+            "day": {"US": {"series": [["23:30", -16.4, -.2]]}},
+            "days": [{"d": "2026-07-28", "mkt": "US",
+                      "acct": -16.4, "idx": -.2}],
+        })
         # 이관 대상이 아닌 같은 시장 ACK. 후보 전용 hmap에서 누락된 종목을
         # now=0으로 간주해 실수로 filled 처리하면 안 된다.
         L.record_submit(
@@ -170,6 +177,10 @@ def test_plan_is_read_only_and_apply_reconstructs_all_three_shapes():
                 backup_dir=os.path.join(tmp, "backup-1"),
             )
         assert result["ok"] and result["orders_sent"] == 0 and result["count"] == 3
+        assert result["performance_rebase"]["rebased"] is True
+        rebased = M.alpha._load()
+        assert rebased["day"] == {} and rebased["days"] == []
+        assert rebased["performance_epoch"]["id"] == plan["plan_sha256"]
         assert C.open_qty("AAPL") == 10
         assert C.open_qty("CAG") == 5
         assert C.open_qty("BAM") == 0
@@ -192,8 +203,10 @@ def test_plan_is_read_only_and_apply_reconstructs_all_three_shapes():
             backup_manifest = json.load(fp)
         assert set(backup_manifest["files"]) == {
             "order_ledger.jsonl", "kis_positions.jsonl", "costbook.jsonl",
+            "alpha_state.json",
         }
         assert backup_manifest["files"]["costbook.jsonl"]["exists"] is False
+        assert backup_manifest["files"]["alpha_state.json"]["exists"] is True
         for label, source in {
             "order_ledger.jsonl": L.LEDGER_PATH,
             "kis_positions.jsonl": P.PATH,
@@ -245,6 +258,7 @@ def test_plan_is_read_only_and_apply_reconstructs_all_three_shapes():
             os.path.getsize(P.PATH),
             os.path.getsize(os.environ["COSTBOOK_PATH"]),
         )
+        assert again["performance_rebase"]["already_applied"] is True
     print("[PASS] plan 무변경·3형태 복구·SELL 제출가 손익·재실행 byte 멱등")
 
 

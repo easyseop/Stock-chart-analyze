@@ -152,6 +152,18 @@
     return samples >= 2 ? worst : null;
   }
 
+  function completeHoldingsValue(holdings) {
+    const value = optionalNumber(holdings?.account);
+    const covered = Math.max(0, Math.trunc(finiteNumber(holdings?.covered)));
+    const eligible = Math.max(0, Math.trunc(finiteNumber(holdings?.eligible)));
+    return {
+      value: value !== null && eligible > 0 && covered === eligible ? value : null,
+      covered,
+      eligible,
+      complete: value !== null && eligible > 0 && covered === eligible,
+    };
+  }
+
   return Object.freeze({
     optionalNumber,
     positionInvestmentSummary,
@@ -160,5 +172,6 @@
     strategyStats,
     concentrationRows,
     maximumDrawdown,
+    completeHoldingsValue,
   });
 });

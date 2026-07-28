@@ -148,6 +148,58 @@ def test_state_roundtrip():
     print("[PASS] 상태 저장/복원")
 
 
+def test_accounting_migration_rebase_is_atomic_and_idempotent():
+    with tempfile.TemporaryDirectory() as tmp:
+        alpha.STATE_PATH = os.path.join(tmp, "alpha_state.json")
+        alpha._save({
+            "day": {"US": {"date": "2026-07-28", "series": [
+                ["23:30", -16.4, -.2]], "series_v2": [{
+                    "t": "23:30", "account": -16.4,
+                    "indices": {"나스닥": -.2},
+                }]}},
+            "days": [{"d": "2026-07-28", "mkt": "US",
+                      "acct": -16.4, "idx": -.2}],
+            "carry": {"US": {"nav_last": {"account": {
+                "value": 100, "flow": 200}}}},
+        })
+        result = alpha.rebase_after_accounting_migration(
+            "plan-sha", started_at=1785250800, archived=True)
+        assert result["rebased"] is True
+        state = alpha._load()
+        assert state["day"] == {} and state["days"] == [] and state["carry"] == {}
+        assert state["performance_epoch"]["id"] == "plan-sha"
+        assert state["performance_epoch"]["archived_previous_state"] is True
+
+        # 같은 이관 plan 재실행은 새로 쌓인 성과를 다시 지우지 않는다.
+        state["days"].append({"d": "new-valid-day"})
+        alpha._save(state)
+        again = alpha.rebase_after_accounting_migration(
+            "plan-sha", started_at=1785250900, archived=True)
+        assert again["already_applied"] is True
+        assert alpha._load()["days"] == [{"d": "new-valid-day"}]
+
+        # 첫 새 표본은 계좌와 지수를 같은 시각의 0%로 시작한다.
+        fresh = alpha._load()
+        agg = {
+            "US": {"A": {"cost": 100.0, "pl": 0.0},
+                   "B": {"cost": 0.0, "pl": 0.0}},
+            "KR": {"A": {"cost": 0.0, "pl": 0.0},
+                   "B": {"cost": 0.0, "pl": 0.0}},
+        }
+        out = alpha.session_update(
+            fresh, "US", agg, {"나스닥": 20000.0},
+            "22:30", "2026-07-29",
+            nav={
+                "account": {"value": 100.0, "flow": 100.0},
+                "A": {"value": 100.0, "flow": 100.0},
+                "B": {"value": 0.0, "flow": 0.0},
+            },
+            idx_previous_close={"나스닥": 19900.0})
+        assert out["acct"] == 0.0 and out["idx"]["나스닥"] == 0.0
+        assert fresh["day"]["US"]["basis"] == "first_sample"
+    print("[PASS] 레거시 이관 후 계좌·지수 동시 0% 리베이스 + 재실행 멱등")
+
+
 def test_dashboard_snapshot_is_percentage_only():
     st = {
         "updated_at": "2026-07-24T00:00:00+00:00",
@@ -168,6 +220,7 @@ def test_dashboard_snapshot_is_percentage_only():
     assert payload["markets"]["US"]["indices"] == ["나스닥", "S&P500"]
     assert payload["markets"]["KR"]["indices"] == ["코스피", "코스닥"]
     assert payload["days"][0]["indices"]["코스닥"] == .3
+    assert payload["version"] == alpha.SNAPSHOT_VERSION
     assert "positions" not in payload and "amount" not in payload
     print("[PASS] 개인 웹 성과 스냅샷 — A/B·4대 지수·퍼센트 전용")
 
@@ -179,6 +232,7 @@ def main():
     test_holdings_equal_weight_uses_starting_positions_only()
     test_capture_stats()
     test_state_roundtrip()
+    test_accounting_migration_rebase_is_atomic_and_idempotent()
     test_dashboard_snapshot_is_percentage_only()
     print("\n알파 추적 검증 통과 — 집계·세션기준·캡처통계.")
 

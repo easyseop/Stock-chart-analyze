@@ -1,6 +1,7 @@
 """스캐너 전역 설정 — 종목 리스트 / 점수 임계값 / 국면 가중치 / 리스크 파라미터."""
 
 import datetime as _dt
+import os as _os
 
 # 한국시간(KST) — 화면 표시·날짜 스탬프 전부 이 기준. GitHub 러너가 UTC라도
 #   '오늘'·'마지막 갱신'을 한국 사용자 시계에 맞춘다.
@@ -158,6 +159,35 @@ MAX_STOP_WATCH = 0.15      # '곧 올 자리'(관찰) 최대 손절폭
 TACTIC_STOP_FULL = 0.06    # 손절폭 ≤6%: 즉시 분할 진입 OK
 TACTIC_STOP_HALF = 0.08    # 6~8%: 절반 즉시 + 절반 눌림 지정가 / 8%↑: 눌림 지정가만
 TIME_STOP_DAYS = 15        # 진입 후 15거래일 내 +1R 미도달 → 정리(전환 실패는 시간으로도)
+STALL_EXIT_MODE = _os.environ.get("STALL_EXIT_MODE", "off").strip().lower()
+if STALL_EXIT_MODE not in ("off", "shadow", "live"):
+    STALL_EXIT_MODE = "off"
+
+
+def _stall_int(name: str, default: int, low: int, high: int) -> int:
+    try:
+        value = int(_os.environ.get(name, str(default)))
+    except ValueError:
+        value = default
+    return max(low, min(high, value))
+
+
+def _stall_float(name: str, default: float, low: float, high: float) -> float:
+    try:
+        value = float(_os.environ.get(name, str(default)))
+    except ValueError:
+        value = default
+    return max(low, min(high, value))
+
+
+STALL_TIGHTEN_DAYS = _stall_int("STALL_TIGHTEN_DAYS", 15, 5, 60)
+STALL_EXIT_DAYS = _stall_int(
+    "STALL_EXIT_DAYS", 30, STALL_TIGHTEN_DAYS + 1, 120)
+STALL_NEW_HIGH_R = _stall_float("STALL_NEW_HIGH_R", 0.25, 0.05, 1.0)
+STALL_BASE_TRAIL_R = _stall_float("STALL_BASE_TRAIL_R", 1.5, 0.5, 3.0)
+STALL_TIGHT_TRAIL_R = min(
+    STALL_BASE_TRAIL_R,
+    _stall_float("STALL_TIGHT_TRAIL_R", 1.0, 0.25, 2.5))
 MAX_PULLBACK_GAP = 0.25    # 눌림 목표가 현재가보다 이 비율↑ 아래면 '곧 올 자리' 아님(대폭락 대기)
 PICKS_MAX = 16             # 추천 그룹당 최대 표시 종목 수
 UPDATE_INTERVAL_MIN = 15   # 장중 갱신 주기(분) — 홈 안내문에 표시.

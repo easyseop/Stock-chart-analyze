@@ -10,6 +10,7 @@ const {
   strategyStats,
   concentrationRows,
   maximumDrawdown,
+  completeHoldingsValue,
 } = require("../scanner/site_app/portfolio_math.js");
 
 function assertClose(actual, expected, epsilon = 1e-10) {
@@ -105,6 +106,22 @@ test("maximumDrawdown needs two samples and uses the zero-return baseline", () =
     -100 / 22);
   assertClose(maximumDrawdown([{ account: 5 }, { account: -5 }]),
     -200 / 21);
+});
+
+test("holdings benchmark is shown only with full same-day coverage", () => {
+  assert.deepEqual(completeHoldingsValue({
+    account: 1.2, covered: 1, eligible: 16,
+  }), {
+    value: null, covered: 1, eligible: 16, complete: false,
+  });
+  assert.deepEqual(completeHoldingsValue({
+    account: -0.4, covered: 16, eligible: 16,
+  }), {
+    value: -0.4, covered: 16, eligible: 16, complete: true,
+  });
+  assert.equal(completeHoldingsValue({
+    account: 3, covered: 0, eligible: 0,
+  }).value, null);
 });
 
 test("strategyStats never combines KRW and USD totals", () => {

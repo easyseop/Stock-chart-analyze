@@ -26,6 +26,7 @@ from __future__ import annotations
 import datetime
 import json
 import os
+import tempfile
 import time
 import urllib.parse
 import urllib.request
@@ -39,6 +40,7 @@ ALERT_MIN = int(os.environ.get("ALPHA_ALERT_MIN", "60"))   # 중간 알림 간�
 SAMPLE_SECONDS = max(
     60, min(900, int(os.environ.get("ALPHA_SAMPLE_SECONDS", "300"))))
 SERIES_MAX = 48                                            # 그래프 포인트 상한
+SNAPSHOT_VERSION = 4
 IDX = {"US": [("^IXIC", "나스닥"), ("^GSPC", "S&P500")],
        "KR": [("^KS11", "코스피"), ("^KQ11", "코스닥")]}
 _US_EXCGS = ("NASD", "NYSE", "AMEX")
@@ -122,10 +124,81 @@ def _load() -> dict:
 
 def _save(st: dict) -> None:
     st["updated_at"] = datetime.datetime.now(datetime.timezone.utc).isoformat()
-    tmp = STATE_PATH + ".tmp"
-    with open(tmp, "w", encoding="utf-8") as f:
-        json.dump(st, f, ensure_ascii=False)
-    os.replace(tmp, STATE_PATH)
+    parent = os.path.dirname(os.path.abspath(STATE_PATH)) or "."
+    os.makedirs(parent, exist_ok=True)
+    fd, tmp = tempfile.mkstemp(prefix=".alpha-state-", dir=parent)
+    try:
+        os.fchmod(fd, 0o600)
+        with os.fdopen(fd, "w", encoding="utf-8", closefd=True) as f:
+            fd = -1
+            json.dump(st, f, ensure_ascii=False, allow_nan=False)
+            f.write("\n")
+            f.flush()
+            os.fsync(f.fileno())
+        os.replace(tmp, STATE_PATH)
+        os.chmod(STATE_PATH, 0o600)
+        dfd = os.open(parent, os.O_RDONLY)
+        try:
+            os.fsync(dfd)
+        finally:
+            os.close(dfd)
+    finally:
+        if fd >= 0:
+            os.close(fd)
+        try:
+            os.unlink(tmp)
+        except FileNotFoundError:
+            pass
+
+
+def rebase_after_accounting_migration(
+    epoch_id: str,
+    *,
+    started_at: float | datetime.datetime | None = None,
+    archived: bool = False,
+) -> dict:
+    """레거시 회계 이관 완료 뒤 성과와 지수를 같은 새 0% 기준으로 시작한다.
+
+    같은 plan SHA 재실행은 이미 쌓인 새 성과를 다시 지우지 않는다. 손상된 과거
+    일별·장중 수치는 운영 화면에서 제외하고 이관 도구의 forensic 백업에만 남긴다.
+    """
+    identity = str(epoch_id or "").strip()
+    if not identity:
+        raise ValueError("performance epoch_id 필요")
+    current = _load()
+    epoch = current.get("performance_epoch") or {}
+    if epoch.get("id") == identity:
+        return {
+            "ok": True, "rebased": False, "already_applied": True,
+            "epoch_id": identity,
+        }
+    if isinstance(started_at, datetime.datetime):
+        stamp = started_at
+    elif started_at is None:
+        stamp = datetime.datetime.now(datetime.timezone.utc)
+    else:
+        stamp = datetime.datetime.fromtimestamp(
+            float(started_at), tz=datetime.timezone.utc)
+    payload = {
+        "schema_version": SNAPSHOT_VERSION,
+        "performance_epoch": {
+            "id": identity,
+            "started_at": stamp.isoformat(),
+            "label": "장부 이관 후 새 기준",
+            "basis": "account_and_indices_same_first_sample",
+            "archived_previous_state": bool(archived),
+        },
+        "day": {},
+        "days": [],
+        "carry": {},
+        "sampled_at": {},
+        "alert": {},
+    }
+    _save(payload)
+    return {
+        "ok": True, "rebased": True, "already_applied": False,
+        "epoch_id": identity,
+    }
 
 
 # ── 계산 ──────────────────────────────────────────────────────
@@ -408,13 +481,19 @@ def dashboard_snapshot(st: dict | None = None) -> dict:
             "holdings": dict(row.get("holdings") or {}),
             "daily_indices": dict(row.get("daily_indices") or {}),
         })
+    epoch = st.get("performance_epoch") or {}
     return {
-        "version": 3,
+        "version": SNAPSHOT_VERSION,
         "generated_at": st.get("updated_at"),
         "sample_seconds": SAMPLE_SECONDS,
         "markets": markets,
         "days": days,
-        "basis": "KIS 봇 보유 NAV/TWR · 매매 현금흐름 제거 · 미국은 환율 포함",
+        "epoch": {
+            "started_at": epoch.get("started_at"),
+            "label": epoch.get("label"),
+            "basis": epoch.get("basis"),
+        } if epoch else None,
+        "basis": "KIS 봇 운용자산 NAV/TWR · 매매 현금흐름 제거 · 미국은 환율 포함",
     }
 
 

@@ -126,9 +126,14 @@ PORTFOLIO = {
 }
 
 PERFORMANCE = {
-    "version": 3, "generated_at": datetime.now(timezone.utc).isoformat(),
+    "version": 4, "generated_at": datetime.now(timezone.utc).isoformat(),
     "sample_seconds": 300,
-    "basis": "KIS 봇 보유 NAV/TWR · 매매 현금흐름 제거 · 미국은 환율 포함",
+    "basis": "KIS 봇 운용자산 NAV/TWR · 매매 현금흐름 제거 · 미국은 환율 포함",
+    "epoch": {
+        "started_at": "2026-07-29T00:00:00+00:00",
+        "label": "장부 이관 후 새 기준",
+        "basis": "account_and_indices_same_first_sample",
+    },
     "markets": {
         "US": {"label": "미국", "date": "2026-07-24",
                "basis": "previous_close",

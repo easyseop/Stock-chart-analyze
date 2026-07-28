@@ -22,6 +22,7 @@ import tempfile
 import time
 
 from bot import (
+    alpha,
     costbook,
     heartbeat,
     kill,
@@ -580,11 +581,13 @@ def _backup_sources(backup_dir: str) -> dict:
         "order_ledger.jsonl": os.path.abspath(ledger.LEDGER_PATH),
         "kis_positions.jsonl": os.path.abspath(kis_positions.PATH),
         "costbook.jsonl": os.path.abspath(costbook._path()),
+        "alpha_state.json": os.path.abspath(alpha.STATE_PATH),
     }
     for label, source in sources.items():
         if os.path.islink(source):
             raise MigrationRefused(f"backup source 부재/심볼릭링크: {label}")
-        if not os.path.isfile(source) and label != "costbook.jsonl":
+        if not os.path.isfile(source) and label not in (
+                "costbook.jsonl", "alpha_state.json"):
             raise MigrationRefused(f"backup source 부재/심볼릭링크: {label}")
     if os.path.lexists(target):
         raise MigrationRefused("backup dir가 이미 존재함")
@@ -742,11 +745,16 @@ def apply_plan(plan: dict, *, ack: str, services_stopped: bool,
                 != int(entry["original_qty"]):
             raise MigrationRefused(f"{entry['symbol']} BUY accounted 기록 실패")
         completed.append(entry["symbol"])
+    performance = alpha.rebase_after_accounting_migration(
+        plan["plan_sha256"], started_at=(time.time() if now is None else now),
+        archived=bool(
+            backup["files"].get("alpha_state.json", {}).get("exists")))
     return {
         "ok": True, "migrated": completed, "count": len(completed),
         "orders_sent": 0, "plan_sha256": plan["plan_sha256"],
         "backup_dir": os.path.abspath(backup_dir),
         "backup_manifest_sha256": backup["manifest_sha256"],
+        "performance_rebase": performance,
     }
 
 
