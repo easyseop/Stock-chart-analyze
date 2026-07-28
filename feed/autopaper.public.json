@@ -1,9 +1,9 @@
 {
  "updated": "2026-07-29",
  "start": 100000000,
- "cash": 50913648,
- "equity": 101387739,
- "ret_pct": 1.39,
+ "cash": 32835436,
+ "equity": 101254113,
+ "ret_pct": 1.25,
  "positions": [
   {
    "code": "MRSH",
@@ -11,14 +11,14 @@
    "ccy": "USD",
    "q": 36,
    "avg": 174.3075,
-   "price": 190.485107421875,
+   "price": 189.1199951171875,
    "stop": 177.022607421875,
    "target": 192.2575,
    "half_done": true,
    "opened": "2026-07-06",
-   "pl_krw": 846847,
-   "pl_pct": 9.28,
-   "price_age_min": 7.5
+   "pl_krw": 775388,
+   "pl_pct": 8.5,
+   "price_age_min": 7.4
   },
   {
    "code": "HMC",
@@ -26,14 +26,14 @@
    "ccy": "USD",
    "q": 2,
    "avg": 27.665,
-   "price": 30.364999771118164,
+   "price": 30.354999542236328,
    "stop": 28.177099771118165,
    "target": 30.5824,
    "half_done": true,
    "opened": "2026-07-09",
-   "pl_krw": 7852,
-   "pl_pct": 9.76,
-   "price_age_min": 9.4
+   "pl_krw": 7823,
+   "pl_pct": 9.72,
+   "price_age_min": 9.7
   },
   {
    "code": "LSPD",
@@ -41,14 +41,14 @@
    "ccy": "USD",
    "q": 28,
    "avg": 10.02,
-   "price": 10.6899995803833,
+   "price": 10.630000114440918,
    "stop": 9.2434,
    "target": 11.6783,
    "half_done": false,
    "opened": "2026-07-09",
-   "pl_krw": 27279,
-   "pl_pct": 6.69,
-   "price_age_min": 7.5
+   "pl_krw": 24836,
+   "pl_pct": 6.09,
+   "price_age_min": 9.1
   },
   {
    "code": "SARO",
@@ -56,14 +56,14 @@
    "ccy": "USD",
    "q": 161,
    "avg": 27.9,
-   "price": 29.795499801635746,
+   "price": 29.934999465942383,
    "stop": 25.8678,
    "target": 31.9643,
    "half_done": false,
    "opened": "2026-07-10",
-   "pl_krw": 443750,
-   "pl_pct": 6.79,
-   "price_age_min": 7.5
+   "pl_krw": 476407,
+   "pl_pct": 7.29,
+   "price_age_min": 7.4
   },
   {
    "code": "J",
@@ -71,14 +71,14 @@
    "ccy": "USD",
    "q": 32,
    "avg": 126.585,
-   "price": 138.9250030517578,
+   "price": 138.91000366210938,
    "stop": 127.93990305175781,
    "target": 141.2316,
    "half_done": true,
    "opened": "2026-07-11",
-   "pl_krw": 574187,
-   "pl_pct": 9.75,
-   "price_age_min": 7.5
+   "pl_krw": 573489,
+   "pl_pct": 9.74,
+   "price_age_min": 7.4
   },
   {
    "code": "MAIN",
@@ -86,14 +86,14 @@
    "ccy": "USD",
    "q": 78,
    "avg": 53.96,
-   "price": 54.98509979248047,
+   "price": 54.95000076293945,
    "stop": 51.5808,
    "target": 58.7184,
    "half_done": false,
    "opened": "2026-07-22",
-   "pl_krw": 116265,
-   "pl_pct": 1.9,
-   "price_age_min": 7.5
+   "pl_krw": 112284,
+   "pl_pct": 1.83,
+   "price_age_min": 9.3
   },
   {
    "code": "SHOP",
@@ -101,14 +101,14 @@
    "ccy": "USD",
    "q": 30,
    "avg": 114.9801,
-   "price": 132.2899932861328,
+   "price": 131.5594940185547,
    "stop": 115.72669328613281,
    "target": 138.8546,
    "half_done": true,
    "opened": "2026-07-24",
-   "pl_krw": 755099,
-   "pl_pct": 15.05,
-   "price_age_min": 9.4
+   "pl_krw": 723233,
+   "pl_pct": 14.42,
+   "price_age_min": 9.6
   },
   {
    "code": "004370",
@@ -123,7 +123,7 @@
    "opened": "2026-07-27",
    "pl_krw": 161500,
    "pl_pct": 2.31,
-   "price_age_min": 9.6
+   "price_age_min": 9.9
   },
   {
    "code": "CRC",
@@ -131,14 +131,29 @@
    "ccy": "USD",
    "q": 101,
    "avg": 51.16,
-   "price": 50.18000030517578,
+   "price": 49.79999923706055,
    "stop": 47.7785,
    "target": 57.923,
    "half_done": false,
    "opened": "2026-07-28",
-   "pl_krw": -143925,
-   "pl_pct": -1.92,
-   "price_age_min": 9.9
+   "pl_krw": -199733,
+   "pl_pct": -2.66,
+   "price_age_min": 9.2
+  },
+  {
+   "code": "EQT",
+   "name": "EQT Corporation",
+   "ccy": "USD",
+   "q": 242,
+   "avg": 51.375,
+   "price": 51.375,
+   "stop": 48.5008,
+   "target": 57.1234,
+   "half_done": false,
+   "opened": "2026-07-29",
+   "pl_krw": 0,
+   "pl_pct": 0.0,
+   "price_age_min": 10.6
   }
  ],
  "pending": [
@@ -195,33 +210,6 @@
     "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권19% · 체크3/6 · 손절폭7.0%"
    },
    "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권19% · 체크3/6 · 손절폭7.0%"
-  },
-  {
-   "code": "CRC",
-   "name": "California Resources Corporation",
-   "ccy": "USD",
-   "limit": 49.8145,
-   "stop": 47.7785,
-   "target": 57.923,
-   "q": 97,
-   "created": "2026-07-28",
-   "atr": 1.6907,
-   "plan": {
-    "entry": 51.16,
-    "stop": 47.7785,
-    "target": 57.923,
-    "pb": 49.8145,
-    "tactic": "half"
-   },
-   "ctx": {
-    "mode": "half",
-    "fresh": true,
-    "stage": 3,
-    "rp": 28,
-    "rec": 3,
-    "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권28% · 체크3/6 · 손절폭6.6%"
-   },
-   "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권28% · 체크3/6 · 손절폭6.6%"
   }
  ],
  "trades": 7,
@@ -653,10 +641,34 @@
   },
   {
    "d": "2026-07-29",
-   "v": 101387739
+   "v": 101254113
   }
  ],
  "log": [
+  {
+   "d": "2026-07-29",
+   "type": "buy",
+   "code": "EQT",
+   "name": "EQT Corporation",
+   "q": 242,
+   "price": 51.375,
+   "ccy": "USD",
+   "amt": 18078213,
+   "note": "즉시 분할 — 🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권17% · 체크3/6 · 손절폭5.6%",
+   "stop": 48.5008,
+   "target": 57.1234
+  },
+  {
+   "d": "2026-07-29",
+   "type": "cancel",
+   "code": "CRC",
+   "name": "California Resources Corporation",
+   "q": 0,
+   "price": 49.8,
+   "ccy": "USD",
+   "amt": 0,
+   "note": "지정가 취소 — 신호 부패: 제외 게이트 — 하락추세/방어선 이탈"
+  },
   {
    "d": "2026-07-28",
    "type": "sell",
