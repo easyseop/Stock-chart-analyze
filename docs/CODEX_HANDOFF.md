@@ -926,3 +926,97 @@ V2 재검토 요청서는
 V2 묶음은
 `/Users/seop/Documents/매매봇/CLAUDE_REVIEW_STALL_EXIT_PERFORMANCE_REBASE_PR93_V2_FINAL.zip`
 이며 4개 구현 patch, V1/V2 검토서, 백테스트, 이 인수인계서를 포함한다.
+
+### 17. 2026-07-29 Oracle legacy 16건 apply·PR #94·커널 재부팅 완료
+
+Claude가 PR #93 V2를 `P0/P1/P2 없음`으로 승인한 뒤 정확한 승인 head
+`cb7401cf`를 merge했고, 기본 브랜치 merge commit은 `a7831ba8`이다.
+Oracle은 이 커밋을 반영한 상태에서 장외 유지보수를 시작했다. 시작 전 모의계좌,
+kill-switch L1, `buy_new=False`, `protect_sell=True`, 원장 정상, 보유 16종목,
+열린 주문 0을 확인했다.
+
+실제 KIS 보유는 아래와 같았다. 사용자가 적은 `GPT 123`은 실제 종목코드
+`GPK 123`으로 확인했다.
+
+- ALK 8, AQN 129, BIPC 17, CAG 13, CHYM 94, GPK 123
+- KKR 7, LW 13, MAIN 92, PUK 24, SNN 25, STE 3
+- TAP 80, VRSK 3, WAL 13, WDAY 2
+
+legacy 이관 대상은 ALK를 제외한 기존 BUY 16건이다. 이 중 15종목은 현재
+보유이고 BAM 28주는 전량청산되어 broker current 0이다. 모든 이관 대상의
+original/current/sold 불변식을 새 5분 plan으로 확인했다.
+
+첫 apply는 주문을 한 건도 보내지 않고 fail-closed로 중단됐다. 과거 잘못된
+`hldg_before` 때문에 AQN/CAG/GPK/LW/SNN/VRSK가 이미 close-only 동결돼
+있었고, 이관이 durable pos_key·보호수량·원가 lot의 3중 증명을 만든 뒤에도
+generic freeze 게이트가 먼저 실행되어 ACK 대사를 건너뛰는 운영 반례였다.
+첫 apply 직전 원본 4원장은
+`/home/ubuntu/legacy-backups/legacy-20260729T2334Z`에 보존됐고 manifest
+SHA-256은
+`a7367ff88db6770c26fbbfd6d4ef89877398ed9f88201a4741e638703c0c6488`이다.
+
+일반 동결은 그대로 막고, durable 3중 증명을 통과한 legacy SELL에만 frozen
+예외를 허용하도록 `bot/kis_reconcile.py`를 좁게 수정했다. 검증된 frozen
+legacy ACK는 해소되고 같은 잔고 delta라도 증명 없는 일반 frozen SELL은
+계속 보류되는 회귀 테스트를 추가했다. `tests.test_kis_ack_resolve`,
+`tests.test_legacy_migration`, `git diff --check`가 통과했고 PR #94의 CI
+2건도 모두 성공했다.
+
+- 수정 커밋: `8c4ed9cf`
+- PR: `#94 Fix verified frozen legacy ACK reconciliation`
+- 기본 브랜치 merge commit: `1eb1a94a`
+
+Oracle을 `1eb1a94a`로 fast-forward한 뒤 서버 자체 회귀 테스트를 다시
+통과했다. 새 plan SHA
+`dfa6c0e79046bc02dfa54e671eeb4e6aae3ff056159902ecf37906dd8fc719a2`로
+멱등 apply를 재실행해 16/16 이관을 완료했다. `orders_sent=0`이며 두 번째
+apply 직전 백업은
+`/home/ubuntu/legacy-backups/legacy-20260729T2338Z`, manifest SHA-256은
+`8ef125d9c003ec152cb91d41fbdc4a6dcc4c517e2c79e79b3f4886f8f70162d8`다.
+성과 epoch도 같은 plan SHA로 리베이스됐다.
+
+apply 직후 대조:
+
+- 16개 plan entry 모두 broker current = `kis_positions` qty = costbook lot qty
+- 모든 legacy BUY `accounted == original_qty`
+- 10개 과거 SELL은 `filled`이고 `accounted == sold_qty`
+- 주문 원장·costbook healthy, 열린 주문 0, `kis_positions` 16종목
+- 거래이력 29행 생성, 성과/지수는 오염된 `-17%`를 잇지 않고 새 epoch에서
+  일별 복리 누적 시작
+- A 시드 30,000,000원 + B 시드 5,000,000원 = 총시드 35,000,000원
+- 5% 완충 후 운영한도 33,250,000원, 현재 장부 운용원가 26,214,776.70원
+- 웹 `/app/`과 `/api/portfolio.json` 200, 쓰기 요청 POST 405
+
+서비스 unit이 `/etc/systemd/system`에 직접 배치돼 있어 runtime mask 링크가
+우선순위상 가려지는 서버 특이점이 있었다. 원본 unit을 별도 사본과 SHA-256으로
+보존하고 유지보수 동안만 `/dev/null` mask로 교체했다. apply 후 원본 해시 일치
+확인, unit 복원, enable/start까지 완료했다.
+
+정체청산은 `/etc/systemd/system/sentinel.service.d/stall-shadow.conf`로
+`STALL_EXIT_MODE=shadow`만 켰다. 실제 프로세스 환경에서 mock,
+`SENTINEL_LIVE=1`(모의 보호매도), fallback 0, L1을 확인했다. `shadow`는
+15/30일 제안만 기록하며 정체청산 주문은 보내지 않는다. `live` 전환은 하지
+않았다.
+
+설치돼 있던 Oracle 커널 `6.8.0-1058-oracle` 적용을 위해 열린 주문 0과 L1을
+재확인한 뒤 서버를 재부팅했다. 재부팅 후:
+
+- 실행 커널 `6.8.0-1058-oracle`, `/var/run/reboot-required` 없음
+- sentinel, buyloop, watchdog, portfolio-web, telegram,
+  autodeploy.timer, oracle-brain.timer 모두 active/enabled
+- 실패 unit 0, heartbeat 약 23초, 서비스 경고 0, 신규 주문/체결 로그 0
+- 원장·costbook healthy, 열린 주문 0, 보유 원장 16종목
+- L1 `buy_new=False`, `protect_sell=True`, shadow와 fallback 0 유지
+
+과거 오대사로 생긴 AQN/CAG/GPK/LW/SNN/VRSK의 close-only freeze 표식은
+보존했다. 이 표식은 보호매도를 막지 않지만 향후 해당 종목 재매수는 막는다.
+운영 반례 해소만으로 안전장치를 조용히 내리지 않기 위해 자동 unfreeze하지
+않았다. L1 하향과 이 6개 unfreeze는 별도 operator 승인 항목이다.
+
+다음 순서는 mutation이 아니라 관찰이다.
+
+1. 정체청산 shadow를 1–2주 관찰하며 미국 세션 수, 15/30일 후보와 제안값을
+   종목별 검토한다. 누적 30일 종목을 확인하기 전 `live`로 바꾸지 않는다.
+2. oracle-brain을 한/미 각 한 세션 관찰하고, L1 상태에서 GitHub 60분
+   장애주입으로 fallback 주문 0을 확인한 뒤에만 fallback 1을 재검토한다.
+3. L1 하향은 위 관찰과 frozen 6종목 처리 결정을 마친 뒤 별도 승인으로 한다.
