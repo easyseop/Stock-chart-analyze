@@ -22,6 +22,7 @@ import os
 import time
 
 import config
+from bot import stall_exit
 
 STATE_PATH = os.path.join("data_cache", "autopaper.json")
 VERSION = 4                # 규칙 바뀌면 +1 → 재시작 (v4: 장중에만 매매 — 주말 진입 무효화)
@@ -49,6 +50,17 @@ LOCK_MIN = 20              # 매매 분산 락 유효(분) — fast/bulk 두 차
 STALE_ENTRY_MIN = 30       # 시세 캐시 나이(분) 초과 종목은 신규 진입·지정가 체결 금지 —
                            #   "낡은 가격으로 주문 내지 않는다"(F5·2차 SRE 검토 A3).
 STALE_HELD_MIN = 30        # 보유 종목 시세가 장중 이만큼 낡으면 텔레그램 경보(하루 1회).
+STALL_MODE = config.STALL_EXIT_MODE
+STALL_TIGHTEN_DAYS = config.STALL_TIGHTEN_DAYS
+STALL_EXIT_DAYS = config.STALL_EXIT_DAYS
+STALL_NEW_HIGH_R = config.STALL_NEW_HIGH_R
+STALL_BASE_TRAIL_R = config.STALL_BASE_TRAIL_R
+STALL_TIGHT_TRAIL_R = config.STALL_TIGHT_TRAIL_R
+
+_STALL_KEYS = (
+    "high", "stall_anchor_high", "high_day", "stall_days", "counted_days",
+    "stall_tight_notified", "stall_exit_notified",
+)
 
 
 def _today() -> str:
@@ -89,6 +101,50 @@ def _age(day: str) -> int:
         return (config.today_kst() - datetime.date.fromisoformat(day)).days
     except Exception:
         return 0
+
+
+def _initial_stop(p: dict) -> float | None:
+    """래칫 전 초기 손절만 반환한다. 현재 stop으로 R을 역산하지 않는다."""
+    entry = float(p.get("entry") or 0)
+    for value in (p.get("stop0"), (p.get("plan") or {}).get("stop")):
+        try:
+            stop = float(value or 0)
+        except (TypeError, ValueError):
+            continue
+        if 0 < stop < entry:
+            return stop
+    return None
+
+
+def _advance_stall_position(
+        p: dict, price: float, initial_stop: float | None) -> tuple[str, ...]:
+    """KIS와 같은 정체 거래일 상태를 모의 포지션에 반영한다."""
+    state = {key: p[key] for key in _STALL_KEYS if key in p}
+    state["high"] = max(float(state.get("high") or 0.0),
+                        float(p.get("hw") or 0.0))
+    next_state, events = stall_exit.advance(
+        state, half_confirmed=bool(p.get("half_done")), price=price,
+        entry=float(p.get("entry") or 0),
+        stop0=float(initial_stop or 0),
+        day=_today(), valid_trading_day=True,
+        enabled=stall_exit.mode(STALL_MODE) != "off",
+        new_high_r=STALL_NEW_HIGH_R,
+        tighten_days=STALL_TIGHTEN_DAYS,
+        exit_days=STALL_EXIT_DAYS)
+    for key in _STALL_KEYS:
+        if key in next_state:
+            p[key] = next_state[key]
+    p["hw"] = max(float(p.get("hw") or 0.0),
+                  float(next_state.get("high") or 0.0))
+    return events
+
+
+def _stall_notice(text: str) -> None:
+    try:
+        from bot import notify
+        notify.send(text, category="trade")
+    except Exception:
+        pass
 
 
 def _prev_tday() -> str:
@@ -679,9 +735,10 @@ def update(results: list[dict], picks: dict, out_dir: str = "public") -> dict:
             continue
         price = cur[1]
         p["hw"] = max(p.get("hw", price), price)       # MFE 추적(어닝 관리·트레일)
-        stop0 = p.get("stop0") or (p.get("plan") or {}).get("stop") or p["stop"]
-        risk_ps = p["entry"] - stop0                   # 1주당 초기 리스크(R 기준선)
-        one_r = p["entry"] + risk_ps
+        initial_stop = _initial_stop(p)
+        risk_ps = (
+            float(p["entry"]) - initial_stop if initial_stop is not None else 0.0)
+        one_r = float(p["entry"]) + risk_ps if risk_ps > 0 else None
         # 하드선: 손절가 − 0.5×ATR₀(급락은 확인 없이 즉시). ATR 미기록(구)은 터치 즉시.
         hard = p["stop"] - STOP_HARD_ATR * p["atr0"] if p.get("atr0") else p["stop"]
 
@@ -700,7 +757,7 @@ def update(results: list[dict], picks: dict, out_dir: str = "public") -> dict:
                 p["stop_hit"] = True
         else:
             p["stop_hit"] = False
-            if not p["half_done"]:
+            if not p["half_done"] and one_r is not None:
                 if price >= one_r:
                     if p.get("r1_hit"):                # +1R도 2연속 확인(스파이크 방지)
                         _sell(st, code, max(1, p["q"] // 2), price, "+1R 절반 익절")
@@ -713,13 +770,46 @@ def update(results: list[dict], picks: dict, out_dir: str = "public") -> dict:
                     p["r1_hit"] = False
             if code not in st["pos"]:
                 continue                               # 전량 청산됨(q=1 절반익절 등)
+            transitions = _advance_stall_position(p, price, initial_stop)
+            if "tighten" in transitions and not p.get("stall_tight_notified"):
+                p["stall_tight_notified"] = True
+                proposal = max(
+                    p["stop"],
+                    p["hw"] - STALL_TIGHT_TRAIL_R * risk_ps)
+                _stall_notice(
+                    f"🔒 <b>모의 정체 {STALL_TIGHTEN_DAYS}거래일</b> — {code} "
+                    f"추적폭 {STALL_BASE_TRAIL_R:.1f}R→"
+                    f"{STALL_TIGHT_TRAIL_R:.1f}R "
+                    f"{'그림자 제안' if STALL_MODE == 'shadow' else '적용'} "
+                    f"(손절선 {proposal:.2f}, 내림 없음)")
+            if (STALL_MODE == "shadow" and "exit" in transitions
+                    and not p.get("stall_exit_notified")):
+                p["stall_exit_notified"] = True
+                _stall_notice(
+                    f"🌓 <b>모의 정체 {STALL_EXIT_DAYS}거래일 청산 제안</b> — "
+                    f"{code} 잔량 {p['q']}주 · 실제 상태 변경 0건")
             if p["half_done"] and p.get("atr0"):
                 # 잔량 = ATR 트레일 래칫(2R 캡 없음). 스탑 판정은 위에서 '이전
                 # 트레일'로 먼저 했으므로 여기서 갱신(선반영 방지 — 백테스트 동일).
-                p["stop"] = max(p["stop"], p["hw"] - TRAIL_ATR * p["atr0"])
+                if (stall_exit.mode(STALL_MODE) == "live"
+                        and risk_ps > 0
+                        and int(p.get("stall_days") or 0) >= STALL_TIGHTEN_DAYS):
+                    # 15일 전에는 기존 3×ATR을 그대로 유지한다. 정체 시점부터만
+                    # 검토된 1.0R 폭으로 '좁히며', R 근거가 없으면 전환하지 않는다.
+                    p["stop"] = max(
+                        p["stop"], p["hw"] - STALL_TIGHT_TRAIL_R * risk_ps)
+                else:
+                    p["stop"] = max(
+                        p["stop"], p["hw"] - TRAIL_ATR * p["atr0"])
             elif p["half_done"] and price >= p["target"]:
                 # 구(舊) 포지션(진입 ATR 미기록) — 기존 2R 목표 규칙 유지
                 _sell(st, code, p["q"], price, "목표(2R) 도달")
+                continue
+            if stall_exit.exit_due(
+                    p, run_mode=STALL_MODE, exit_days=STALL_EXIT_DAYS):
+                _sell(
+                    st, code, p["q"], price,
+                    f"정체 청산({STALL_EXIT_DAYS}거래일)")
                 continue
             # 어닝 D-1 — 갭은 손절선을 무시하므로 쿠션 없는 포지션은 정리.
             #   MFE<0.5R 전량 / 0.5~1R 절반 / +1R 달성(본전 잠김)은 통과 허용.

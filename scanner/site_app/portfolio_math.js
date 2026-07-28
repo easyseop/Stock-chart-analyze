@@ -152,6 +152,28 @@
     return samples >= 2 ? worst : null;
   }
 
+  function completeHoldingsValue(holdings) {
+    const value = optionalNumber(holdings?.account);
+    const covered = Math.max(0, Math.trunc(finiteNumber(holdings?.covered)));
+    const eligible = Math.max(0, Math.trunc(finiteNumber(holdings?.eligible)));
+    return {
+      value: value !== null && eligible > 0 && covered === eligible ? value : null,
+      covered,
+      eligible,
+      complete: value !== null && eligible > 0 && covered === eligible,
+    };
+  }
+
+  function completeHoldingsSeries(rows) {
+    const samples = (Array.isArray(rows) ? rows : []).map(completeHoldingsValue);
+    const incompleteDays = samples.filter((sample) => !sample.complete).length;
+    return {
+      complete: samples.length > 0 && incompleteDays === 0,
+      samples: samples.length,
+      incompleteDays,
+    };
+  }
+
   return Object.freeze({
     optionalNumber,
     positionInvestmentSummary,
@@ -160,5 +182,7 @@
     strategyStats,
     concentrationRows,
     maximumDrawdown,
+    completeHoldingsValue,
+    completeHoldingsSeries,
   });
 });

@@ -26,5 +26,7 @@ bot/kill_switch.json
 bot/user_baseline.json
 bot/alpha_state.json
 bot/kis_exits_state.json
+bot/kis_exits_state.json.corrupt-*
+bot/kis_exits_state.json.corrupt-alert
 bot/daily_loss.json
 bot/*.lock

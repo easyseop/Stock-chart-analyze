@@ -4,6 +4,7 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -28,6 +29,9 @@ def _paths(stack: ExitStack, tmp: str) -> None:
     stack.enter_context(mock.patch.object(P, "PATH", os.path.join(tmp, "positions.jsonl")))
     stack.enter_context(mock.patch.object(K, "LOG_PATH", os.path.join(tmp, "kill-log.jsonl")))
     stack.enter_context(mock.patch.object(KIS, "ENV", "mock"))
+    stack.enter_context(mock.patch.object(
+        M.alpha, "STATE_PATH", os.path.join(tmp, "alpha_state.json")))
+    stack.enter_context(mock.patch.object(M.alpha, "publish_dash"))
     stack.enter_context(mock.patch.dict(os.environ, {
         "COSTBOOK_PATH": os.path.join(tmp, "costbook.jsonl"),
         "USER_BASELINE_PATH": os.path.join(tmp, "baseline.json"),
@@ -119,6 +123,11 @@ def test_plan_is_read_only_and_apply_reconstructs_all_three_shapes():
     with tempfile.TemporaryDirectory() as tmp, ExitStack() as stack:
         _paths(stack, tmp)
         snapshot = _fixture()
+        M.alpha._save({
+            "day": {"US": {"series": [["23:30", -16.4, -.2]]}},
+            "days": [{"d": "2026-07-28", "mkt": "US",
+                      "acct": -16.4, "idx": -.2}],
+        })
         # 이관 대상이 아닌 같은 시장 ACK. 후보 전용 hmap에서 누락된 종목을
         # now=0으로 간주해 실수로 filled 처리하면 안 된다.
         L.record_submit(
@@ -170,6 +179,10 @@ def test_plan_is_read_only_and_apply_reconstructs_all_three_shapes():
                 backup_dir=os.path.join(tmp, "backup-1"),
             )
         assert result["ok"] and result["orders_sent"] == 0 and result["count"] == 3
+        assert result["performance_rebase"]["rebased"] is True
+        rebased = M.alpha._load()
+        assert rebased["day"] == {} and rebased["days"] == []
+        assert rebased["performance_epoch"]["id"] == plan["plan_sha256"]
         assert C.open_qty("AAPL") == 10
         assert C.open_qty("CAG") == 5
         assert C.open_qty("BAM") == 0
@@ -192,8 +205,10 @@ def test_plan_is_read_only_and_apply_reconstructs_all_three_shapes():
             backup_manifest = json.load(fp)
         assert set(backup_manifest["files"]) == {
             "order_ledger.jsonl", "kis_positions.jsonl", "costbook.jsonl",
+            "alpha_state.json",
         }
         assert backup_manifest["files"]["costbook.jsonl"]["exists"] is False
+        assert backup_manifest["files"]["alpha_state.json"]["exists"] is True
         for label, source in {
             "order_ledger.jsonl": L.LEDGER_PATH,
             "kis_positions.jsonl": P.PATH,
@@ -245,6 +260,7 @@ def test_plan_is_read_only_and_apply_reconstructs_all_three_shapes():
             os.path.getsize(P.PATH),
             os.path.getsize(os.environ["COSTBOOK_PATH"]),
         )
+        assert again["performance_rebase"]["already_applied"] is True
     print("[PASS] plan 무변경·3형태 복구·SELL 제출가 손익·재실행 byte 멱등")
 
 
@@ -391,6 +407,93 @@ def test_crash_after_sell_costbook_close_does_not_reseed_phantom_lot():
         assert int(L.state_of("sell:bam").get("accounted") or 0) == 10
         assert "BAM" not in P.load()
     print("[PASS] SELL close→position 사이 crash 재실행에도 팬텀 lot·손익 중복 0")
+
+
+def test_expired_plan_can_recover_only_completed_performance_rebase():
+    with tempfile.TemporaryDirectory() as tmp, ExitStack() as stack:
+        _paths(stack, tmp)
+        _open("AAPL", 10)
+        _buy("buy:aapl", "AAPL", 10)
+        O.capture_baseline([{"ovrs_pdno": "AAPL"}])
+        M.alpha._save({
+            "day": {"US": {"series": [["23:30", -17.0, 0.0]]}},
+            "days": [{"d": "2026-07-28", "mkt": "US",
+                      "acct": -17.0, "idx": 0.0}],
+        })
+        snapshot = {"AAPL": {"qty": 10, "avg": 100.0, "market": "US"}}
+        stamp = time.time()
+        with mock.patch.object(M, "_broker_snapshot", return_value=snapshot):
+            plan = M.build_plan(now=stamp)
+        apply_ack = f"APPLY {plan['plan_sha256']}"
+        backup_dir = os.path.join(tmp, "backup-rebase-crash")
+        with mock.patch.object(M, "_broker_snapshot", return_value=snapshot), \
+             mock.patch.object(M, "_services_quiesced",
+                               return_value=(True, "ok")), \
+             mock.patch.object(
+                 M.alpha, "rebase_after_accounting_migration",
+                 side_effect=OSError("fault after all accounting")):
+            try:
+                M.apply_plan(
+                    plan, ack=apply_ack, services_stopped=True,
+                    now=stamp + 1, backup_dir=backup_dir,
+                )
+                raise AssertionError("성과 리베이스 fault가 발생하지 않음")
+            except OSError:
+                pass
+        assert L.state_of("buy:aapl")["accounted"] == 10
+        assert C.open_qty("AAPL") == 10 and P.load()["AAPL"]["qty"] == 10
+        assert not (M.alpha._load().get("performance_epoch") or {}).get("id")
+
+        # 기존 백업을 바꾼 경로로는 alpha만이라도 절대 변경하지 않는다.
+        tampered_backup = os.path.join(tmp, "backup-tampered-copy")
+        shutil.copytree(backup_dir, tampered_backup)
+        with open(
+                os.path.join(tampered_backup, "order_ledger.jsonl"),
+                "ab") as fp:
+            fp.write(b"tamper")
+        recover_ack = f"RECOVER {plan['plan_sha256']}"
+        with mock.patch.object(M, "_broker_snapshot", return_value=snapshot), \
+             mock.patch.object(M, "_services_quiesced",
+                               return_value=(True, "ok")):
+            try:
+                M.recover_performance_rebase(
+                    plan, ack=recover_ack, services_stopped=True,
+                    backup_dir=tampered_backup,
+                    now=stamp + M.PLAN_MAX_AGE_S + 10,
+                )
+                raise AssertionError("손상 backup 복구가 거부되지 않음")
+            except M.MigrationRefused as exc:
+                assert "backup 무결성 불일치" in str(exc)
+        assert not (M.alpha._load().get("performance_epoch") or {}).get("id")
+
+        journal_sizes = (
+            os.path.getsize(L.LEDGER_PATH),
+            os.path.getsize(P.PATH),
+            os.path.getsize(os.environ["COSTBOOK_PATH"]),
+        )
+        with mock.patch.object(M, "_broker_snapshot", return_value=snapshot), \
+             mock.patch.object(M, "_services_quiesced",
+                               return_value=(True, "ok")):
+            recovered = M.recover_performance_rebase(
+                plan, ack=recover_ack, services_stopped=True,
+                backup_dir=backup_dir,
+                now=stamp + M.PLAN_MAX_AGE_S + 10,
+            )
+            again = M.recover_performance_rebase(
+                plan, ack=recover_ack, services_stopped=True,
+                backup_dir=backup_dir,
+                now=stamp + M.PLAN_MAX_AGE_S + 20,
+            )
+        assert recovered["ok"] and recovered["orders_sent"] == 0
+        assert recovered["performance_rebase"]["rebased"] is True
+        assert again["performance_rebase"]["already_applied"] is True
+        assert M.alpha._load()["performance_epoch"]["id"] == plan["plan_sha256"]
+        assert journal_sizes == (
+            os.path.getsize(L.LEDGER_PATH),
+            os.path.getsize(P.PATH),
+            os.path.getsize(os.environ["COSTBOOK_PATH"]),
+        )
+    print("[PASS] 회계완료→리베이스 crash를 만료 plan+원본 backup으로만 멱등 복구")
 
 
 def test_apply_rechecks_paths_positions_and_post_backup_quiescence():
@@ -631,6 +734,7 @@ def main():
     test_crash_before_buy_accounted_is_resumable_and_reservation_stays()
     test_crash_after_ack_reconcile_resumes_sell_accounting()
     test_crash_after_sell_costbook_close_does_not_reseed_phantom_lot()
+    test_expired_plan_can_recover_only_completed_performance_rebase()
     test_apply_rechecks_paths_positions_and_post_backup_quiescence()
     test_fail_closed_on_qty_overflow_snapshot_change_and_running_services()
     test_migration_import_graph_has_no_order_plane()

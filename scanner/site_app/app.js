@@ -8,6 +8,8 @@ const {
   strategyStats,
   concentrationRows,
   maximumDrawdown,
+  completeHoldingsValue,
+  completeHoldingsSeries,
 } = globalThis.PortfolioMath;
 
 const API = Object.freeze({
@@ -376,7 +378,7 @@ function updateHero() {
     number.textContent = formatPercent(returnValue);
     unit.textContent = "";
     kicker.textContent = latest
-      ? `${market.label} KIS NAV/TWR · 지수와 같은 기준점`
+      ? `${market.label} 봇 운용자산 TWR · 지수와 같은 기준점`
       : "모의투자 누적 수익률";
     description.textContent = latest
       ? "매수·매도 금액 변화는 제거하고 전략 A·B와 시장지수의 실제 성과를 비교합니다."
@@ -1559,59 +1561,75 @@ function performanceRows(market, range) {
   const marketDoc = state.performance?.markets?.[market] || {};
   const indexNames = marketDoc.indices || [];
   if (range === "today") {
-    return (marketDoc.series || []).map((point) => ({
-      label: point.t,
-      account: point.account,
-      A: point.A,
-      B: point.B,
-      holdings: point.holdings?.account,
-      holdingsCovered: point.holdings?.covered,
-      holdingsEligible: point.holdings?.eligible,
-      ...Object.fromEntries(indexNames.map((name) =>
-        [`idx:${name}`, point.indices?.[name]])),
-      ...Object.fromEntries(indexNames.map((name) =>
-        [`dailyidx:${name}`, point.daily_indices?.[name]])),
-    }));
+    return (marketDoc.series || []).map((point) => {
+      const coverage = completeHoldingsValue(point.holdings);
+      return {
+        label: point.t,
+        account: point.account,
+        A: point.A,
+        B: point.B,
+        holdings: coverage.value,
+        holdingsCovered: coverage.covered,
+        holdingsEligible: coverage.eligible,
+        ...Object.fromEntries(indexNames.map((name) =>
+          [`idx:${name}`, point.indices?.[name]])),
+        ...Object.fromEntries(indexNames.map((name) =>
+          [`dailyidx:${name}`, point.daily_indices?.[name]])),
+      };
+    });
   }
   const limit = range === "1m" ? 30 : range === "3m" ? 90 : 10000;
   const daily = (state.performance?.days || [])
     .filter((row) => row.market === market)
     .slice(-limit)
-    .map((row) => ({
-      label: row.date?.slice(5) || "—",
-      account: row.account,
-      A: row.A,
-      B: row.B,
-      holdings: row.holdings?.account,
-      holdingsCovered: row.holdings?.covered,
-      holdingsEligible: row.holdings?.eligible,
-      ...Object.fromEntries(indexNames.map((name) =>
-        [`idx:${name}`, row.daily_indices?.[name] ?? row.indices?.[name]])),
-      ...Object.fromEntries(indexNames.map((name) =>
-        [`dailyidx:${name}`, row.daily_indices?.[name] ?? row.indices?.[name]])),
-    }));
+    .map((row) => {
+      const coverage = completeHoldingsValue(row.holdings);
+      return {
+        label: row.date?.slice(5) || "—",
+        account: row.account,
+        A: row.A,
+        B: row.B,
+        holdings: coverage.value,
+        holdingsCovered: coverage.covered,
+        holdingsEligible: coverage.eligible,
+        ...Object.fromEntries(indexNames.map((name) =>
+          [`idx:${name}`, row.daily_indices?.[name] ?? row.indices?.[name]])),
+        ...Object.fromEntries(indexNames.map((name) =>
+          [`dailyidx:${name}`, row.daily_indices?.[name] ?? row.indices?.[name]])),
+      };
+    });
   const current = marketDoc.series?.at(-1);
   if (current && marketDoc.date && !daily.some((row) => row.label === marketDoc.date.slice(5))) {
+    const coverage = completeHoldingsValue(current.holdings);
     daily.push({
       label: marketDoc.date.slice(5),
       account: current.account,
       A: current.A,
       B: current.B,
-      holdings: current.holdings?.account,
-      holdingsCovered: current.holdings?.covered,
-      holdingsEligible: current.holdings?.eligible,
+      holdings: coverage.value,
+      holdingsCovered: coverage.covered,
+      holdingsEligible: coverage.eligible,
       ...Object.fromEntries(indexNames.map((name) =>
         [`idx:${name}`, current.indices?.[name]])),
       ...Object.fromEntries(indexNames.map((name) =>
         [`dailyidx:${name}`, current.daily_indices?.[name]])),
     });
   }
+  const holdingsSeries = completeHoldingsSeries(daily.map((row) => ({
+    account: row.holdings,
+    covered: row.holdingsCovered,
+    eligible: row.holdingsEligible,
+  })));
   const keys = ["account", "A", "B", "holdings",
     ...indexNames.map((name) => `idx:${name}`)];
   const cumulative = Object.fromEntries(keys.map((key) => [key, 0]));
   return daily.map((row) => {
     const out = { label: row.label };
     keys.forEach((key) => {
+      if (key === "holdings" && !holdingsSeries.complete) {
+        out[key] = null;
+        return;
+      }
       if (row[key] === null || row[key] === undefined) {
         out[key] = null;
         return;
@@ -1626,6 +1644,8 @@ function performanceRows(market, range) {
     });
     out.holdingsCovered = row.holdingsCovered;
     out.holdingsEligible = row.holdingsEligible;
+    out.holdingsRangeComplete = holdingsSeries.complete;
+    out.holdingsIncompleteDays = holdingsSeries.incompleteDays;
     return out;
   });
 }
@@ -1682,6 +1702,7 @@ function renderKisPerformance() {
   const primary = indexNames[0];
   const basisLabel = marketDoc.basis === "previous_close"
     ? "전일 마감" : "오늘 첫 수집";
+  const epochLabel = String(state.performance?.epoch?.label || "");
   const holdingsValue = optionalNumber(latest.holdings);
   const dailyIndexValue = optionalNumber(latest[`dailyidx:${primary}`])
     ?? optionalNumber(latest[`idx:${primary}`]);
@@ -1689,6 +1710,14 @@ function renderKisPerformance() {
     ? holdingsValue - dailyIndexValue : null;
   const coverage = Number(latest.holdingsCovered || 0);
   const eligible = Number(latest.holdingsEligible || 0);
+  const coverageComplete = holdingsValue !== null && eligible > 0
+    && coverage === eligible
+    && (range === "today" || latest.holdingsRangeComplete === true);
+  const coverageDetail = coverageComplete
+    ? `${escapeHTML(primary || "주 지수")} 대비 ${performanceValue(holdingsAlpha).replace("%", "%p")} · 전체 ${coverage}/${eligible}종목`
+    : range === "today"
+      ? `자료 부족 ${coverage}/${eligible}종목 · 전체 종목이 모일 때만 비교`
+      : `선택 기간 중 부분수집 ${Number(latest.holdingsIncompleteDays || 0)}일 · 지수 비교 제외`;
   const alphaValue = latest.account !== null && latest.account !== undefined &&
     latest[`idx:${primary}`] !== null && latest[`idx:${primary}`] !== undefined &&
     Number.isFinite(Number(latest.account)) && Number.isFinite(Number(latest[`idx:${primary}`]))
@@ -1709,23 +1738,23 @@ function renderKisPerformance() {
     </div>
     ${rows.length ? `
       <div class="performance-grid performance-kis-grid">
-        <div class="performance-card"><small>KIS NAV/TWR</small><strong class="${finite(latest.account) >= 0 ? "gain" : "loss"}">${performanceValue(latest.account)}</strong><p>${range === "today" ? basisLabel : "선택 기간"} 대비</p></div>
+        <div class="performance-card"><small>봇 운용자산 TWR</small><strong class="${finite(latest.account) >= 0 ? "gain" : "loss"}">${performanceValue(latest.account)}</strong><p>${range === "today" ? basisLabel : "선택 기간"} 대비</p></div>
         <div class="performance-card"><small>전략 A · 전환</small><strong>${performanceValue(latest.A)}</strong><p>A 보유 종목 기준</p></div>
         <div class="performance-card"><small>전략 B · 매물대</small><strong>${performanceValue(latest.B)}</strong><p>B 보유 종목 기준</p></div>
         <div class="performance-card"><small>${escapeHTML(primary || "주 지수")} 대비</small><strong class="${finite(alphaValue) >= 0 ? "gain" : "loss"}">${performanceValue(alphaValue)}</strong><p>초과수익률(%p)</p></div>
-        <div class="performance-card"><small>장 시작 보유 · 동일가중</small><strong class="${finite(holdingsValue) >= 0 ? "gain" : "loss"}">${performanceValue(holdingsValue)}</strong><p>${escapeHTML(primary || "주 지수")} 대비 ${performanceValue(holdingsAlpha).replace("%", "%p")} · ${coverage}/${eligible}종목</p></div>
+        <div class="performance-card"><small>장 시작 보유 · 동일가중</small><strong class="${coverageComplete && finite(holdingsValue) >= 0 ? "gain" : coverageComplete ? "loss" : ""}">${performanceValue(holdingsValue)}</strong><p>${coverageDetail}</p></div>
       </div>
       ${performanceInsights(rows, indexNames)}
       ${strategyDefinitionMarkup({ compact: true })}
       <div class="performance-chart-card">
         <div class="chart-head">
-          <div><strong>${escapeHTML(marketDoc.label || market)} 시장 비교</strong><span>${escapeHTML(basisLabel)}을 0%로 맞춰 비교</span></div>
+          <div><strong>${escapeHTML(marketDoc.label || market)} 시장 비교</strong><span>${escapeHTML(epochLabel ? `${epochLabel} · ${basisLabel}` : basisLabel)}에 계좌·지수를 함께 0%로 맞춰 비교</span></div>
           <span class="live-pill">${age === null ? "기록 중" : age === 0 ? "방금 갱신" : `${age}분 전`}</span>
         </div>
         <canvas id="performance-chart" role="img" aria-label="KIS 전략과 시장지수 수익률 비교 차트"></canvas>
         <div class="chart-legend performance-legend" aria-label="비교선 표시 선택">
           ${[
-            ["account", "KIS 전체", "blue"],
+            ["account", "봇 운용자산", "blue"],
             ["A", "전략 A", "green"],
             ["B", "전략 B", "violet"],
             ...indexNames.map((name, index) =>
@@ -1738,7 +1767,7 @@ function renderKisPerformance() {
             </button>`;
           }).join("")}
         </div>
-        <p class="chart-note">위 이름을 누르면 해당 선을 끄거나 다시 켤 수 있습니다. ${escapeHTML(state.performance?.basis || "KIS 봇 보유 NAV/TWR 기준")} · ${finite(state.performance?.sample_seconds, 300) / 60}분 간격.</p>
+        <p class="chart-note">위 이름을 누르면 해당 선을 끄거나 다시 켤 수 있습니다. ${escapeHTML(epochLabel || "현재 성과 기준")}부터 장기 누적하며, 이전 손상 구간은 비교에 섞지 않습니다. ${escapeHTML(state.performance?.basis || "KIS 봇 운용자산 NAV/TWR 기준")} · ${finite(state.performance?.sample_seconds, 300) / 60}분 간격.</p>
       </div>` :
       emptyState("지수 비교 데이터를 쌓는 중이에요",
         "장중 첫 수집이 완료되면 전략 A·B와 나스닥·S&P500·코스피·코스닥 차트가 자동으로 나타납니다.")}
@@ -1768,7 +1797,7 @@ function renderKisPerformance() {
   if (canvas && rows.length) {
     const keys = ["account", "A", "B", ...indexNames.map((name) => `idx:${name}`)];
     const labels = {
-      account: "KIS 전체", A: "전략 A", B: "전략 B",
+      account: "봇 운용자산", A: "전략 A", B: "전략 B",
       ...Object.fromEntries(indexNames.map((name) => [`idx:${name}`, name])),
     };
     requestAnimationFrame(() => drawPerformanceChart(canvas, rows, keys, labels));

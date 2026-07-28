@@ -37,6 +37,35 @@ ENTRY_TOLERANCE = 0.015      # 실시간가가 시그널 진입가 ±1.5% 이내
 import os as _os_shelf
 SHELF_MAX_POS = int(_os_shelf.environ.get("SHELF_MAX_POS", "4"))
 
+
+def _env_int(name: str, default: int, low: int, high: int) -> int:
+    try:
+        value = int(_os_shelf.environ.get(name, str(default)))
+    except ValueError:
+        value = default
+    return max(low, min(high, value))
+
+
+def _env_float(name: str, default: float, low: float, high: float) -> float:
+    try:
+        value = float(_os_shelf.environ.get(name, str(default)))
+    except ValueError:
+        value = default
+    return max(low, min(high, value))
+
+
+STALL_EXIT_MODE = _os_shelf.environ.get("STALL_EXIT_MODE", "off").strip().lower()
+if STALL_EXIT_MODE not in ("off", "shadow", "live"):
+    STALL_EXIT_MODE = "off"
+STALL_TIGHTEN_DAYS = _env_int("STALL_TIGHTEN_DAYS", 15, 5, 60)
+STALL_EXIT_DAYS = _env_int(
+    "STALL_EXIT_DAYS", 30, STALL_TIGHTEN_DAYS + 1, 120)
+STALL_NEW_HIGH_R = _env_float("STALL_NEW_HIGH_R", 0.25, 0.05, 1.0)
+STALL_BASE_TRAIL_R = _env_float("STALL_BASE_TRAIL_R", 1.5, 0.5, 3.0)
+STALL_TIGHT_TRAIL_R = min(
+    STALL_BASE_TRAIL_R,
+    _env_float("STALL_TIGHT_TRAIL_R", 1.0, 0.25, 2.5))
+
 # 성과 대시보드 발행 토픽(ntfy) — 서버(alpha)가 5분마다 발행, 웹 perf.html이 조회.
 #   퍼센트만 담아 공개 무해(금액·계좌정보 없음). 헬스 토픽과 독립(그쪽 노출 방지).
 ALPHA_DASH_TOPIC = _os_shelf.environ.get("NTFY_ALPHA_TOPIC", "stock-alpha-c81f4e2b9d")

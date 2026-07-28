@@ -807,3 +807,122 @@ Claude 재검토서는
 `docs/CLAUDE_REVIEW_LEGACY_MIGRATION_ACK_FIX_V2.md`다. 재승인 전에는 기본
 브랜치 merge·Oracle 코드 배포·장부 apply·L1 해제를 모두 금지한다. 승인 뒤에도
 Oracle apply와 L1 해제는 서로 다른 게이트다.
+
+### 15. 2026-07-29 전략 A 정체청산·성과/지수 동시 리베이스 (재검토 전)
+
+Claude가 legacy 이관 v2를 `P0/P1/P2 없음`으로 승인했고 PR #92가 merge commit
+`ba30f9c7`로 기본 브랜치에 병합된 상태에서, 별도 깨끗한 worktree와
+`codex/stall-exit-performance-rebase` 브랜치를 만들었다. 예전
+`Stock-chart-analyze-site` worktree의 대량 미커밋 변경은 건드리거나 덮지 않았다.
+이 섹션 작업은 아직 Oracle에 배포하지 않았고 장부 apply·L1 해제도 하지 않았다.
+
+전략 A의 `+1R 절반익절` 체결 확정 뒤 잔량 관리에 정체 규칙을 추가했다.
+유효 시세가 들어온 열린 시장의 고유 거래일만 세며, 15거래일 동안 직전 정체
+기준보다 `+0.25R` 이상 높은 신고가가 없으면 추적폭을 1.5R에서 1.0R로 좁힌다.
+30거래일이면 기존 KIS 매도·원장·대사 경로로 잔량을 정리한다. 의미 있는
+신고가가 나오면 정체일을 0으로 되돌리고 1.5R 폭으로 복원하지만 이미 올라간
+손절선은 절대 내리지 않는다. 전략 B에는 적용하지 않는다.
+
+KIS와 autopaper가 `bot/stall_exit.py`의 같은 순수 상태 전이를 사용한다.
+절반익절 ACK/부분체결, 같은 날짜 반복, 휴장·장마감, 시세 0/NaN은 정체일을
+늘리지 않는다. 상태 손상은 즉시 매도하지 않고 기존 보호를 유지한 채 0일부터
+다시 세며 같은 손상 바이트의 치명 경보는 한 번만 보낸다.
+`STALL_EXIT_MODE=off|shadow|live`이고 기본값과 알 수 없는 값은 `off`다.
+`shadow`에서는 15/30일 제안만 알리고 신규 래칫·매도 주문은 0건이다.
+
+Git에 이미 공개된 15종목의 일봉과 현행 `now` 게이트로 공통 진입 22건을
+워크포워드 비교했다. 개인 KIS 보유목록은 외부 시세 서비스로 보내지 않았다.
+
+- 10/20: 총 `+1.082R`, 평균 14.27거래일, 최대 이론 시드점유 48.2%
+- 15/30: 총 `+0.832R`, 평균 14.32거래일, 최대 이론 시드점유 48.2%
+- 20/40: 총 `+0.582R`, 평균 14.32거래일, 최대 이론 시드점유 48.2%
+
+표본이 작고 차이가 AAPL 2건에 집중돼 10/20으로 과최적화하지 않았다.
+중간안 15/30을 구현하되 기본 `off`, 병합 후에도 1–2주 `shadow`와 재검토를
+거친 뒤 별도 승인 때만 `live`로 바꾼다. 상세는
+`docs/STALL_EXIT_BACKTEST_2026-07-29.md`다.
+
+기존 지수 대비 약 `-17%`는 보유종목의 하루 폭락이 아니라 legacy BUY 회계
+공백과 부분수집 비교가 섞여 만들어진 신뢰할 수 없는 누적 기준으로 판정했다.
+legacy migration apply가 16건 모두를 검증·accounted 처리한 뒤에만
+계좌 TWR·전략 A/B·지수의 성과 epoch를 같은 첫 표본 0%로 새로 시작한다.
+과거 지수 가격 데이터 자체를 삭제하지 않지만, 오염된 계좌 구간과 공정하게
+이어 붙일 수 없어 이전 성과 구간은 운영 차트에서 제외하고 apply 직전
+`alpha_state.json` forensic 백업으로 보존한다. 같은 plan SHA 재실행은 새
+성과를 다시 초기화하지 않는다.
+
+화면은 1개월·3개월·전체를 새 epoch부터 일별 복리로 장기 누적한다.
+장 시작 보유 동일가중 값은 전체 대상의 시세가 모두 모인 경우에만 표시하고
+1/16 같은 부분수집은 `자료 부족 1/16`으로 숨긴다. `KIS 전체`라는 오해 소지가
+있는 명칭도 `봇 운용자산 TWR`로 바꿨다.
+
+검증은 전체 Python 테스트 모듈 `46/46`, Node 계산 `9/9`, Python compileall,
+두 JavaScript 문법 검사와 `git diff --check`를 통과했다. 재검토서는
+`docs/CLAUDE_REVIEW_STALL_EXIT_PERFORMANCE_REBASE.md`다. 구현 커밋
+`7bee849a`를 원격 브랜치에 push했고 Draft PR #93을 기본 브랜치 대상으로
+열었다. 구현·인수인계 HEAD `dc4fd908`에서 GitHub `CI`와 `Site UI CI`가 모두
+성공했다. 다음 순서는 Claude P0/P1 적대 재검토다. 승인 전에는
+병합·Oracle 배포·장부 apply·L1 해제·정체청산 live 전환을 모두 금지한다.
+
+### 16. 2026-07-29 PR #93 Claude 1차 차단 수정 (V2 재검토 대기)
+
+Claude 1차 적대검토는 정체청산/성과 리베이스 반례 20개 중 17개가 HOLDS였으나
+`P0 1건`, `P1 2건`, `P2 3건`을 확인해 PR #93 병합을 차단했다. 모든 항목을
+같은 깨끗한 `codex/stall-exit-performance-rebase` worktree에서 수정했으며,
+예전 `Stock-chart-analyze-site` 미커밋 변경은 건드리지 않았다. Oracle 배포,
+legacy apply, L1 해제, 정체청산 live 전환은 하지 않았다.
+
+차단 결함 수정:
+
+- 닫힌 시장 종목을 현재 `held`에서 찾을 수 없다는 이유로 정체 상태를 지우지
+  않는다. 시장과 무관한 `kis_positions` 원장에 실제 포지션이 남아 있는 동안
+  상태를 보존하고 원장 `close` 뒤에만 제거한다.
+- autopaper의 stop0 없는 legacy half 포지션은 현재 래칫 stop으로 R을 역산하지
+  않는다. 초기 stop이 증명되지 않으면 기존 3×ATR만 유지하며, 유효 R이 있어도
+  15일 전에는 기존 3×ATR, 15일부터만 1.0R 폭을 적용한다.
+- 리베이스 첫날의 `daily_indices`를 계좌와 같은 첫 표본 기준으로 바꿨다.
+  이후 날짜만 전일종가를 쓰므로 첫날 오버나이트 갭이 장기 창에 영구 복리되지
+  않는다.
+
+P2와 복구성 보강:
+
+- `kis_positions.jsonl`에 멱등 `half_done` 이벤트를 추가했다. 상태 JSON 손상 시
+  닫힌 시장을 포함한 모든 원장 포지션을 먼저 격리하고, durable half 증명이
+  없는 종목은 +1R 재매도와 21일 타임스탑을 모두 보류한다. sentinel 하드 손절은
+  계속 동작한다.
+- 모든 이관 회계와 BUY accounted가 끝난 뒤 alpha rebase에서 장애가 난 경우를
+  위한 주문 없는 `recover-performance` 명령을 추가했다. 만료 plan 허용은 이
+  경로에만 한정하며 별도 `RECOVER <sha>` ack, 동일 broker snapshot, 완료된
+  3원장, 원본 4파일 backup manifest의 SHA/크기를 모두 확인한 뒤 epoch만
+  멱등 전환한다.
+- 1개월·3개월·전체의 장 시작 보유 동일가중은 선택 기간 모든 날짜가
+  `covered == eligible > 0`일 때만 복리한다. 하루라도 부분수집이면 해당 비교를
+  숨기고 `부분수집 N일 · 지수 비교 제외`로 표시한다.
+
+비차단 항목도 함께 보강했다. 리베이스 직후 빈 epoch를 ntfy 캐시에 즉시 발행해
+옛 `-17%` 잔존을 없앴고, off/shadow KIS 기본 보호폭을 환경값과 무관하게 1.5R로
+고정했으며, 30일 청산 재시도 때 보호선 상향을 매도보다 먼저 기록한다.
+
+날짜 의미는 기존 요청 사양인 고유 KST 날짜를 유지했다. 미국 한 세션이 KST
+자정을 넘으므로 이름상의 30거래일보다 일찍 도달할 수 있다. 이를 조용히 다른
+정의로 바꾸지 않고 shadow 1~2주에서 실제 세션 수를 함께 확인한다.
+shadow→live 전환 전에는 누적 정체 상태를 종목별로 사람이 검토해 일괄 청산
+가능성을 별도 승인해야 한다.
+
+검증:
+
+- 전체 Python 독립 테스트 모듈 `46/46`
+- Node 계산 테스트 `10/10`
+- Python compileall, 두 JavaScript 문법 검사, `git diff --check`
+- 브라우저에서 오늘/전체 전환, 기간 부분수집 비교 차단, 비교선 토글 확인
+
+V2 재검토 요청서는
+`docs/CLAUDE_REVIEW_STALL_EXIT_PERFORMANCE_REBASE_V2.md`다. 다음 순서는 이
+수정본을 PR #93에 push한 뒤 CI와 Claude 재검토를 받는 것이다. 승인 전에는
+병합·Oracle 배포·legacy apply·L1 해제·live 전환을 계속 금지한다.
+
+수정 구현 커밋 `d0f001d1`을 기존 Draft PR #93 브랜치에 push했고 GitHub
+`CI` run #94와 `Site UI CI` run #50이 모두 성공했다. 클로드 전달용 전체
+V2 묶음은
+`/Users/seop/Documents/매매봇/CLAUDE_REVIEW_STALL_EXIT_PERFORMANCE_REBASE_PR93_V2_FINAL.zip`
+이며 4개 구현 patch, V1/V2 검토서, 백테스트, 이 인수인계서를 포함한다.

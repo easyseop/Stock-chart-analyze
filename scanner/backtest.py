@@ -141,6 +141,216 @@ def _ladder_exit(d, ei: int, fill: float, stop: float, variant: str,
     return r, j, "만기청산"
 
 
+STALL_VARIANTS = ((10, 20), (15, 30), (20, 40))
+
+
+def _stall_ladder(
+    d,
+    ei: int,
+    fill: float,
+    stop: float,
+    *,
+    tighten_days: int,
+    exit_days: int,
+    reset_r: float = .25,
+    base_trail_r: float = 1.5,
+    tight_trail_r: float = 1.0,
+    max_hold: int = 120,
+) -> tuple[float, int, str, int]:
+    """전략 A 정체청산 일봉 근사 → (총R, 청산인덱스, 사유, 보유거래일).
+
+    당일 저가에는 전일까지 확정된 손절선을 먼저 적용하고, 당일 신고가·정체 전이는
+    다음 판단에 반영한다. +1R 절반익절일은 정체 0일로 시작한다.
+    """
+    risk = fill - stop
+    if risk <= 0:
+        return 0.0, ei, "무효", 0
+    n = len(d)
+    one_r = fill + risk
+    half = False
+    high = fill
+    anchor = fill
+    trail = stop
+    stall_days = 0
+    j = ei
+    end = min(ei + max_hold, n)
+    for j in range(ei, end):
+        lo = float(d["Low"].iloc[j])
+        hi = float(d["High"].iloc[j])
+        close = float(d["Close"].iloc[j])
+        if not half:
+            if lo <= stop:
+                return -1.0, j, "손절", j - ei + 1
+            if hi >= one_r:
+                half = True
+                high = max(high, hi)
+                anchor = high
+                trail = max(fill, high - base_trail_r * risk)
+                stall_days = 0
+                continue
+            if j - ei + 1 >= config.TIME_STOP_DAYS:
+                return ((close - fill) / risk, j,
+                        "타임스탑", j - ei + 1)
+            continue
+
+        if lo <= trail:
+            total_r = .5 + .5 * (trail - fill) / risk
+            return total_r, j, "트레일", j - ei + 1
+        high = max(high, hi)
+        if hi + 1e-12 >= anchor + reset_r * risk:
+            anchor = hi
+            stall_days = 0
+            width = base_trail_r
+        else:
+            stall_days += 1
+            width = tight_trail_r if stall_days >= tighten_days else base_trail_r
+        trail = max(trail, high - width * risk)
+        if stall_days >= exit_days:
+            total_r = .5 + .5 * (close - fill) / risk
+            return total_r, j, "정체청산", j - ei + 1
+    close = float(d["Close"].iloc[j])
+    total_r = (.5 + .5 * (close - fill) / risk
+               if half else (close - fill) / risk)
+    return total_r, j, "만기청산", j - ei + 1
+
+
+def _max_seed_occupancy(events: list[dict], key: str) -> float:
+    """공통 신호 이벤트의 보유구간을 겹쳐 본 최대 이론 시드 점유율."""
+    changes: list[tuple[object, int, float]] = []
+    for event in events:
+        arm = event[key]
+        fraction = float(event.get("seed_fraction") or 0)
+        changes.append((event["entry_date"], 1, fraction))
+        changes.append((arm["exit_date"], -1, fraction))
+    current = peak = 0.0
+    # 같은 날 진입·청산은 장중 겹쳤을 수 있으므로 이론 최대치에서는 진입을 먼저 센다.
+    for _day, kind, fraction in sorted(changes, key=lambda row: (row[0], -row[1])):
+        current += kind * fraction
+        peak = max(peak, current)
+    return peak * 100.0
+
+
+def summarize_stall_variants(events: list[dict]) -> dict:
+    out = {"events": len(events), "variants": {}}
+    for tighten, exit_after in STALL_VARIANTS:
+        key = f"{tighten}_{exit_after}"
+        arms = [event[key] for event in events]
+        out["variants"][key] = {
+            "tighten_days": tighten,
+            "exit_days": exit_after,
+            "total_r": round(sum(float(arm["r"]) for arm in arms), 3),
+            "average_hold_sessions": round(
+                sum(int(arm["hold_sessions"]) for arm in arms) / len(arms), 2
+            ) if arms else 0.0,
+            "max_seed_occupancy_pct": round(
+                _max_seed_occupancy(events, key), 1) if arms else 0.0,
+        }
+    return out
+
+
+def simulate_stall_variants(
+    code: str,
+    frames: dict,
+    meta: dict,
+    bench=None,
+    *,
+    warmup: int = 520,
+    stride: int = 5,
+    lookback: int = 1040,
+    max_hold: int = 120,
+) -> list[dict]:
+    """현행 now 진입 이벤트에 정체 파라미터 3조합을 동일하게 적용한다."""
+    d = frames["D"]
+    n = len(d)
+    i = max(warmup, n - lookback)
+    out = []
+    while i < n - 3:
+        sub = d.iloc[:i + 1]
+        bsub = bench.loc[:sub.index[-1]] if bench is not None else None
+        try:
+            res = analyze(data.frames_from_daily(sub), meta, bench=bsub)
+        except Exception:
+            i += stride
+            continue
+        if _gates.classify(res)["group"] != "now":
+            i += stride
+            continue
+        ei = i + 1
+        fill = float(d["Open"].iloc[ei])
+        stop = float(res["risk"]["stop"])
+        if not (fill > stop > 0):
+            i += stride
+            continue
+        event = {
+            "code": code,
+            "entry_date": str(d.index[ei].date()),
+            "seed_fraction": min(
+                1.0 / 3.0, .01 / ((fill - stop) / fill)),
+        }
+        farthest = ei
+        for tighten, exit_after in STALL_VARIANTS:
+            r, xj, reason, sessions = _stall_ladder(
+                d, ei, fill, stop, tighten_days=tighten,
+                exit_days=exit_after, max_hold=max_hold)
+            event[f"{tighten}_{exit_after}"] = {
+                "r": round(r, 4), "reason": reason,
+                "hold_sessions": sessions,
+                "exit_date": str(d.index[xj].date()),
+            }
+            farthest = max(farthest, xj)
+        out.append(event)
+        # 가장 느슨한 팔이 끝날 때까지 같은 종목의 중복 진입을 만들지 않는다.
+        i = max(i + stride, farthest + 1)
+    return out
+
+
+def cli_stall_exit_variants() -> None:
+    """캐시된 일봉으로 10/20·15/30·20/40을 비교해 JSON/표를 만든다."""
+    import argparse
+    import json as _json
+    import sys
+    from scanner import cache as _cache
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--stride", type=int, default=5)
+    parser.add_argument("--lookback", type=int, default=1040)
+    parser.add_argument("--sample", type=int, default=0)
+    parser.add_argument("--out", default="")
+    args = parser.parse_args([arg for arg in sys.argv[1:] if arg != "--"])
+    codes = sorted(_cache.cached_codes())
+    if args.sample and len(codes) > args.sample:
+        step = len(codes) / args.sample
+        codes = [codes[int(i * step)] for i in range(args.sample)]
+    events = []
+    for code in codes:
+        try:
+            frames = _cache.frames(code, refresh=False)
+        except Exception:
+            continue
+        if len(frames.get("D", [])) < 540:
+            continue
+        events.extend(simulate_stall_variants(
+            code, frames, {
+                "code": code, "name": code,
+                "ccy": "KRW" if code.isdigit() else "USD",
+            }, stride=args.stride, lookback=args.lookback))
+    result = summarize_stall_variants(events)
+    print("=" * 72)
+    print(f"◆ 정체청산 파라미터 비교 — 공통 now 이벤트 {len(events)}건")
+    for key, row in result["variants"].items():
+        print(
+            f"  {key.replace('_', '/'):>5} · 총 {row['total_r']:+.3f}R · "
+            f"평균 {row['average_hold_sessions']:.1f}거래일 · "
+            f"최대 이론 시드점유 {row['max_seed_occupancy_pct']:.1f}%")
+    print("=" * 72)
+    if args.out:
+        os.makedirs(os.path.dirname(args.out) or ".", exist_ok=True)
+        with open(args.out, "w", encoding="utf-8") as fp:
+            _json.dump(
+                {**result, "raw": events}, fp,
+                ensure_ascii=False, indent=2)
+        print("저장:", args.out)
+
+
 def simulate_exit_variants(code: str, frames: dict, meta: dict, bench=None,
                            warmup: int = 520, stride: int = 3,
                            lookback: int = 780, max_hold: int = 60) -> list[dict]:
