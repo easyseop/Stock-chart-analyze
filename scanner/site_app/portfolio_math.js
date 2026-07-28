@@ -164,6 +164,16 @@
     };
   }
 
+  function completeHoldingsSeries(rows) {
+    const samples = (Array.isArray(rows) ? rows : []).map(completeHoldingsValue);
+    const incompleteDays = samples.filter((sample) => !sample.complete).length;
+    return {
+      complete: samples.length > 0 && incompleteDays === 0,
+      samples: samples.length,
+      incompleteDays,
+    };
+  }
+
   return Object.freeze({
     optionalNumber,
     positionInvestmentSummary,
@@ -173,5 +183,6 @@
     concentrationRows,
     maximumDrawdown,
     completeHoldingsValue,
+    completeHoldingsSeries,
   });
 });

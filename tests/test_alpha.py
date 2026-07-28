@@ -162,8 +162,10 @@ def test_accounting_migration_rebase_is_atomic_and_idempotent():
             "carry": {"US": {"nav_last": {"account": {
                 "value": 100, "flow": 200}}}},
         })
-        result = alpha.rebase_after_accounting_migration(
-            "plan-sha", started_at=1785250800, archived=True)
+        with mock.patch.object(alpha, "publish_dash") as publish:
+            result = alpha.rebase_after_accounting_migration(
+                "plan-sha", started_at=1785250800, archived=True)
+        publish.assert_called_once()
         assert result["rebased"] is True
         state = alpha._load()
         assert state["day"] == {} and state["days"] == [] and state["carry"] == {}
@@ -173,8 +175,10 @@ def test_accounting_migration_rebase_is_atomic_and_idempotent():
         # 같은 이관 plan 재실행은 새로 쌓인 성과를 다시 지우지 않는다.
         state["days"].append({"d": "new-valid-day"})
         alpha._save(state)
-        again = alpha.rebase_after_accounting_migration(
-            "plan-sha", started_at=1785250900, archived=True)
+        with mock.patch.object(alpha, "publish_dash") as republish:
+            again = alpha.rebase_after_accounting_migration(
+                "plan-sha", started_at=1785250900, archived=True)
+        republish.assert_not_called()
         assert again["already_applied"] is True
         assert alpha._load()["days"] == [{"d": "new-valid-day"}]
 
@@ -197,6 +201,8 @@ def test_accounting_migration_rebase_is_atomic_and_idempotent():
             idx_previous_close={"나스닥": 19900.0})
         assert out["acct"] == 0.0 and out["idx"]["나스닥"] == 0.0
         assert fresh["day"]["US"]["basis"] == "first_sample"
+        first_point = fresh["day"]["US"]["series_v2"][0]
+        assert first_point["daily_indices"]["나스닥"] == 0.0
     print("[PASS] 레거시 이관 후 계좌·지수 동시 0% 리베이스 + 재실행 멱등")
 
 

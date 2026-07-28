@@ -134,6 +134,16 @@ def raise_stop(code: str, stop: float) -> None:
     _append({"ev": "raise", "code": str(code).upper(), "stop": float(stop)})
 
 
+def mark_half_done(code: str, *, event_id: str) -> None:
+    """1주 half_done까지 포함해 +1R 절반익절 완료 사실을 원장에 영속한다."""
+    if not str(event_id or "").strip():
+        raise ValueError("half_done event_id 필요")
+    _append({
+        "ev": "half_done", "code": str(code).upper(),
+        "event_id": str(event_id),
+    })
+
+
 def load() -> dict:
     """{code: {stop, ccy, entry, qty, name, opened}} — 열린 것만. 최신 open 우선."""
     st: dict = {}
@@ -218,6 +228,8 @@ def load() -> dict:
                                 st[code]["stop"] = new
                         except (TypeError, ValueError):
                             pass
+                    elif ev.get("ev") == "half_done" and code in st:
+                        st[code]["half_done"] = True
                     if event_id:
                         seen_events.add(event_id)
     except FileNotFoundError:

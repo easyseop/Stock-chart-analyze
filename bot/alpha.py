@@ -195,6 +195,9 @@ def rebase_after_accounting_migration(
         "alert": {},
     }
     _save(payload)
+    # 공개 perf 캐시에도 빈 epoch를 즉시 발행해 이전 -17%가 다음 5분 틱까지
+    # 남지 않게 한다. publish_dash는 네트워크 실패를 자체적으로 흡수한다.
+    publish_dash(payload)
     return {
         "ok": True, "rebased": True, "already_applied": False,
         "epoch_id": identity,
@@ -350,6 +353,16 @@ def session_update(st: dict, mkt: str, agg: dict, idx: dict,
         ipct[name] = (v / v0 - 1) * 100.0 if v0 else 0.0
     day["series"].append([now_hhmm, round(acct, 3),
                           round(next(iter(ipct.values()), 0.0), 3)])
+    if day.get("basis") == "first_sample":
+        # 리베이스 첫날 계좌 TWR과 동일한 첫 관측값을 지수의 일간 기준으로 쓴다.
+        # 전일종가 갭을 지수에만 넣으면 1m/3m/전체에 영구 복리되는 비교 오차가 난다.
+        daily_indices = dict(ipct)
+    else:
+        daily_indices = {
+            name: (value / (idx_previous_close or {}).get(name) - 1) * 100
+            for name, value in idx.items()
+            if (idx_previous_close or {}).get(name)
+        }
     point = {
         "t": now_hhmm,
         "account": round(acct, 4),
@@ -361,9 +374,7 @@ def session_update(st: dict, mkt: str, agg: dict, idx: dict,
             for key, value in (holdings_daily or {}).items()
         },
         "daily_indices": {
-            name: round((value / (idx_previous_close or {}).get(name) - 1) * 100, 4)
-            for name, value in idx.items()
-            if (idx_previous_close or {}).get(name)
+            name: round(value, 4) for name, value in daily_indices.items()
         },
     }
     if day["series_v2"] and day["series_v2"][-1].get("t") == now_hhmm:
@@ -474,6 +485,7 @@ def dashboard_snapshot(st: dict | None = None) -> dict:
         days.append({
             "date": row.get("d"),
             "market": market,
+            "basis": row.get("basis") or "previous_close",
             "account": float(row.get("acct") or 0),
             "A": (float(row["a"]) if row.get("a") is not None else None),
             "B": (float(row["b"]) if row.get("b") is not None else None),
@@ -620,6 +632,7 @@ def _close_alert(st: dict, mkt: str, day: dict) -> None:
     days = st.setdefault("days", [])
     days.append({
         "d": day["date"], "mkt": mkt, "acct": acct, "idx": ipct,
+        "basis": day.get("basis") or "first_sample",
         "a": rich.get("A"), "b": rich.get("B"),
         "indices": rich.get("indices") or {IDX[mkt][0][1]: ipct},
         "holdings": rich.get("holdings") or {},

@@ -863,3 +863,60 @@ legacy migration apply가 16건 모두를 검증·accounted 처리한 뒤에만
 열었다. 구현·인수인계 HEAD `dc4fd908`에서 GitHub `CI`와 `Site UI CI`가 모두
 성공했다. 다음 순서는 Claude P0/P1 적대 재검토다. 승인 전에는
 병합·Oracle 배포·장부 apply·L1 해제·정체청산 live 전환을 모두 금지한다.
+
+### 16. 2026-07-29 PR #93 Claude 1차 차단 수정 (V2 재검토 대기)
+
+Claude 1차 적대검토는 정체청산/성과 리베이스 반례 20개 중 17개가 HOLDS였으나
+`P0 1건`, `P1 2건`, `P2 3건`을 확인해 PR #93 병합을 차단했다. 모든 항목을
+같은 깨끗한 `codex/stall-exit-performance-rebase` worktree에서 수정했으며,
+예전 `Stock-chart-analyze-site` 미커밋 변경은 건드리지 않았다. Oracle 배포,
+legacy apply, L1 해제, 정체청산 live 전환은 하지 않았다.
+
+차단 결함 수정:
+
+- 닫힌 시장 종목을 현재 `held`에서 찾을 수 없다는 이유로 정체 상태를 지우지
+  않는다. 시장과 무관한 `kis_positions` 원장에 실제 포지션이 남아 있는 동안
+  상태를 보존하고 원장 `close` 뒤에만 제거한다.
+- autopaper의 stop0 없는 legacy half 포지션은 현재 래칫 stop으로 R을 역산하지
+  않는다. 초기 stop이 증명되지 않으면 기존 3×ATR만 유지하며, 유효 R이 있어도
+  15일 전에는 기존 3×ATR, 15일부터만 1.0R 폭을 적용한다.
+- 리베이스 첫날의 `daily_indices`를 계좌와 같은 첫 표본 기준으로 바꿨다.
+  이후 날짜만 전일종가를 쓰므로 첫날 오버나이트 갭이 장기 창에 영구 복리되지
+  않는다.
+
+P2와 복구성 보강:
+
+- `kis_positions.jsonl`에 멱등 `half_done` 이벤트를 추가했다. 상태 JSON 손상 시
+  닫힌 시장을 포함한 모든 원장 포지션을 먼저 격리하고, durable half 증명이
+  없는 종목은 +1R 재매도와 21일 타임스탑을 모두 보류한다. sentinel 하드 손절은
+  계속 동작한다.
+- 모든 이관 회계와 BUY accounted가 끝난 뒤 alpha rebase에서 장애가 난 경우를
+  위한 주문 없는 `recover-performance` 명령을 추가했다. 만료 plan 허용은 이
+  경로에만 한정하며 별도 `RECOVER <sha>` ack, 동일 broker snapshot, 완료된
+  3원장, 원본 4파일 backup manifest의 SHA/크기를 모두 확인한 뒤 epoch만
+  멱등 전환한다.
+- 1개월·3개월·전체의 장 시작 보유 동일가중은 선택 기간 모든 날짜가
+  `covered == eligible > 0`일 때만 복리한다. 하루라도 부분수집이면 해당 비교를
+  숨기고 `부분수집 N일 · 지수 비교 제외`로 표시한다.
+
+비차단 항목도 함께 보강했다. 리베이스 직후 빈 epoch를 ntfy 캐시에 즉시 발행해
+옛 `-17%` 잔존을 없앴고, off/shadow KIS 기본 보호폭을 환경값과 무관하게 1.5R로
+고정했으며, 30일 청산 재시도 때 보호선 상향을 매도보다 먼저 기록한다.
+
+날짜 의미는 기존 요청 사양인 고유 KST 날짜를 유지했다. 미국 한 세션이 KST
+자정을 넘으므로 이름상의 30거래일보다 일찍 도달할 수 있다. 이를 조용히 다른
+정의로 바꾸지 않고 shadow 1~2주에서 실제 세션 수를 함께 확인한다.
+shadow→live 전환 전에는 누적 정체 상태를 종목별로 사람이 검토해 일괄 청산
+가능성을 별도 승인해야 한다.
+
+검증:
+
+- 전체 Python 독립 테스트 모듈 `46/46`
+- Node 계산 테스트 `10/10`
+- Python compileall, 두 JavaScript 문법 검사, `git diff --check`
+- 브라우저에서 오늘/전체 전환, 기간 부분수집 비교 차단, 비교선 토글 확인
+
+V2 재검토 요청서는
+`docs/CLAUDE_REVIEW_STALL_EXIT_PERFORMANCE_REBASE_V2.md`다. 다음 순서는 이
+수정본을 PR #93에 push한 뒤 CI와 Claude 재검토를 받는 것이다. 승인 전에는
+병합·Oracle 배포·legacy apply·L1 해제·live 전환을 계속 금지한다.

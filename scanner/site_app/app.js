@@ -9,6 +9,7 @@ const {
   concentrationRows,
   maximumDrawdown,
   completeHoldingsValue,
+  completeHoldingsSeries,
 } = globalThis.PortfolioMath;
 
 const API = Object.freeze({
@@ -1614,12 +1615,21 @@ function performanceRows(market, range) {
         [`dailyidx:${name}`, current.daily_indices?.[name]])),
     });
   }
+  const holdingsSeries = completeHoldingsSeries(daily.map((row) => ({
+    account: row.holdings,
+    covered: row.holdingsCovered,
+    eligible: row.holdingsEligible,
+  })));
   const keys = ["account", "A", "B", "holdings",
     ...indexNames.map((name) => `idx:${name}`)];
   const cumulative = Object.fromEntries(keys.map((key) => [key, 0]));
   return daily.map((row) => {
     const out = { label: row.label };
     keys.forEach((key) => {
+      if (key === "holdings" && !holdingsSeries.complete) {
+        out[key] = null;
+        return;
+      }
       if (row[key] === null || row[key] === undefined) {
         out[key] = null;
         return;
@@ -1634,6 +1644,8 @@ function performanceRows(market, range) {
     });
     out.holdingsCovered = row.holdingsCovered;
     out.holdingsEligible = row.holdingsEligible;
+    out.holdingsRangeComplete = holdingsSeries.complete;
+    out.holdingsIncompleteDays = holdingsSeries.incompleteDays;
     return out;
   });
 }
@@ -1698,7 +1710,14 @@ function renderKisPerformance() {
     ? holdingsValue - dailyIndexValue : null;
   const coverage = Number(latest.holdingsCovered || 0);
   const eligible = Number(latest.holdingsEligible || 0);
-  const coverageComplete = holdingsValue !== null && eligible > 0 && coverage === eligible;
+  const coverageComplete = holdingsValue !== null && eligible > 0
+    && coverage === eligible
+    && (range === "today" || latest.holdingsRangeComplete === true);
+  const coverageDetail = coverageComplete
+    ? `${escapeHTML(primary || "주 지수")} 대비 ${performanceValue(holdingsAlpha).replace("%", "%p")} · 전체 ${coverage}/${eligible}종목`
+    : range === "today"
+      ? `자료 부족 ${coverage}/${eligible}종목 · 전체 종목이 모일 때만 비교`
+      : `선택 기간 중 부분수집 ${Number(latest.holdingsIncompleteDays || 0)}일 · 지수 비교 제외`;
   const alphaValue = latest.account !== null && latest.account !== undefined &&
     latest[`idx:${primary}`] !== null && latest[`idx:${primary}`] !== undefined &&
     Number.isFinite(Number(latest.account)) && Number.isFinite(Number(latest[`idx:${primary}`]))
@@ -1723,7 +1742,7 @@ function renderKisPerformance() {
         <div class="performance-card"><small>전략 A · 전환</small><strong>${performanceValue(latest.A)}</strong><p>A 보유 종목 기준</p></div>
         <div class="performance-card"><small>전략 B · 매물대</small><strong>${performanceValue(latest.B)}</strong><p>B 보유 종목 기준</p></div>
         <div class="performance-card"><small>${escapeHTML(primary || "주 지수")} 대비</small><strong class="${finite(alphaValue) >= 0 ? "gain" : "loss"}">${performanceValue(alphaValue)}</strong><p>초과수익률(%p)</p></div>
-        <div class="performance-card"><small>장 시작 보유 · 동일가중</small><strong class="${coverageComplete && finite(holdingsValue) >= 0 ? "gain" : coverageComplete ? "loss" : ""}">${performanceValue(holdingsValue)}</strong><p>${coverageComplete ? `${escapeHTML(primary || "주 지수")} 대비 ${performanceValue(holdingsAlpha).replace("%", "%p")} · 전체 ${coverage}/${eligible}종목` : `자료 부족 ${coverage}/${eligible}종목 · 전체 종목이 모일 때만 비교`}</p></div>
+        <div class="performance-card"><small>장 시작 보유 · 동일가중</small><strong class="${coverageComplete && finite(holdingsValue) >= 0 ? "gain" : coverageComplete ? "loss" : ""}">${performanceValue(holdingsValue)}</strong><p>${coverageDetail}</p></div>
       </div>
       ${performanceInsights(rows, indexNames)}
       ${strategyDefinitionMarkup({ compact: true })}

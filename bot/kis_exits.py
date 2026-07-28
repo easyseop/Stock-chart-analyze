@@ -25,7 +25,7 @@ from bot import kis_positions, ledger, notify, settings, stall_exit
 
 STATE_PATH = os.environ.get(
     "KIS_EXITS_STATE", os.path.join(os.path.dirname(__file__), "kis_exits_state.json"))
-TRAIL_R = settings.STALL_BASE_TRAIL_R
+TRAIL_R = 1.5           # off/shadow에서도 기존 전략값은 환경변수로 바꾸지 않는다.
 TIME_STOP_DAYS = 21      # autopaper.TIME_STOP_DAYS와 동일
 STALL_MODE = settings.STALL_EXIT_MODE
 STALL_TIGHTEN_DAYS = settings.STALL_TIGHTEN_DAYS
@@ -130,16 +130,14 @@ def decide(entry: float, stop0: float, cur_stop: float, price: float,
     high = max(float(xs.get("high") or 0.0), price)
 
     # ① +1R 절반 익절 제안 — half 확정은 주문 성공 후 호출부가
-    if not xs.get("half") and price >= entry + R:
+    state_trusted = not xs.get("state_recovery_quarantine")
+    if state_trusted and not xs.get("half") and price >= entry + R:
         if qty >= 2:
             acts.append(("half_sell", qty // 2))
         else:
             acts.append(("half_done",))
     # ② 트레일(절반익절 확정 후) — 최고가 − 1.5R, 올리기만
     if xs.get("half"):
-        if stall_exit.exit_due(
-                xs, run_mode=stall_mode, exit_days=STALL_EXIT_DAYS):
-            return [("sell", qty, f"정체 청산({STALL_EXIT_DAYS}거래일)")]
         width = stall_exit.trail_r(
             xs, run_mode=stall_mode, base_r=TRAIL_R,
             tight_r=STALL_TIGHT_TRAIL_R,
@@ -147,11 +145,15 @@ def decide(entry: float, stop0: float, cur_stop: float, price: float,
         trail = high - width * R
         if trail > cur_stop:
             acts.append(("raise", trail))
+        if stall_exit.exit_due(
+                xs, run_mode=stall_mode, exit_days=STALL_EXIT_DAYS):
+            acts.append(("sell", qty, f"정체 청산({STALL_EXIT_DAYS}거래일)"))
     # ③ 타임스탑 — 21일 지나도 +1R 미도달이면 전량 정리
     try:
         d0 = datetime.date.fromisoformat(str(opened))
         dn = datetime.date.fromisoformat(str(today))
-        if not xs.get("half") and (dn - d0).days >= TIME_STOP_DAYS \
+        if state_trusted and not xs.get("half") \
+                and (dn - d0).days >= TIME_STOP_DAYS \
                 and price < entry + R:
             acts.append(("sell", qty, f"타임스탑 {TIME_STOP_DAYS}일"))
     except (ValueError, TypeError):
@@ -182,6 +184,13 @@ def decide_b(target: float, price: float, qty: int,
 
 def _half_base(code: str, rec: dict) -> str:
     return f"xe:{code}:half:{rec.get('opened', '')}"
+
+
+def _half_marker_id(code: str, rec: dict) -> str:
+    identity = str(rec.get("pos_key") or "").strip()
+    if not identity:
+        identity = f"{code}:{rec.get('opened', '')}"
+    return f"half:{identity}"
 
 
 def _half_progress(code: str, rec: dict, xs: dict) -> dict:
@@ -240,10 +249,24 @@ def _capture_order_result(key: str, code: str, qty: int, reason: str,
 def _confirm_half_if_complete(code: str, rec: dict, xs: dict,
                               entry: float, cur_stop: float) -> bool:
     """목표 수량의 체결이 원장에서 확인된 뒤에만 half·본전 손절을 확정."""
+    durable_marker = rec.get("half_done") is True
+    legacy_one_share_proof = (
+        int(rec.get("qty") or 0) == 1 and entry > 0 and cur_stop >= entry)
+    if durable_marker or legacy_one_share_proof:
+        xs["half"] = True
+        xs["half_stop_raised"] = True
+        xs.pop("state_recovery_quarantine", None)
+        if legacy_one_share_proof and not durable_marker:
+            kis_positions.mark_half_done(
+                code, event_id=_half_marker_id(code, rec))
+        return True
     progress = _half_progress(code, rec, xs)
     if progress["target"] <= 0 or progress["filled"] < progress["target"]:
         return False
     xs["half"] = True
+    xs.pop("state_recovery_quarantine", None)
+    kis_positions.mark_half_done(
+        code, event_id=_half_marker_id(code, rec))
     if not xs.get("half_stop_raised"):
         if entry > cur_stop:
             kis_positions.raise_stop(code, entry)
@@ -262,6 +285,12 @@ def manage(broker, held: dict, today: str) -> None:
     changed = corrupt_state
     if corrupt_state:
         _alert_corrupt_state_once()
+        # 손상 감지 시 현재 열린 시장 종목만 표시하면, 닫혀 있던 다른 시장 종목은
+        # 다음 개장 때 정상 신규상태로 오인돼 즉시 재익절/타임스탑될 수 있다.
+        # 시장과 무관한 포지션 원장 전체를 먼저 격리하고 증명된 half만 개별 해제한다.
+        for code in kpos:
+            st.setdefault(code, {"half": False, "high": 0.0})[
+                "state_recovery_quarantine"] = True
     for code, p in list(held.items()):
         rec = kpos.get(code)
         if not rec or not rec.get("entry"):
@@ -325,6 +354,15 @@ def manage(broker, held: dict, today: str) -> None:
                     category="trade")
             acts = decide(entry, stop0, cur_stop, price, qty, xs,
                           rec.get("opened", ""), today, STALL_MODE)
+        # 보호선 상향은 신규 BUY 취소 대기와 무관하게 먼저 적용한다. 정체청산
+        # 매도가 일시 실패/보류돼도 잔량 보호가 이전 선에 멈추지 않는다.
+        for act in [row for row in acts if row[0] == "raise"]:
+            changed = True
+            kis_positions.raise_stop(code, float(act[1]))
+            cur_stop = max(cur_stop, float(act[1]))
+            notify.send(f"🔒 <b>손절선 상향</b> — {code} → {act[1]:.2f} "
+                        f"(이익 보호 래칫)")
+        acts = [row for row in acts if row[0] != "raise"]
         has_open_buy = ledger.open_order_count(code, side="BUY") >= 1
         wants_sell = any(act[0] in ("half_sell", "sell") for act in acts)
         if has_open_buy and wants_sell:
@@ -343,13 +381,12 @@ def manage(broker, held: dict, today: str) -> None:
                 continue
         for act in acts:
             changed = True
-            if act[0] == "raise":
-                kis_positions.raise_stop(code, float(act[1]))
-                notify.send(f"🔒 <b>손절선 상향</b> — {code} → {act[1]:.2f} "
-                            f"(이익 보호 래칫)")
-            elif act[0] == "half_done":            # 1주 — 매도 없이 본전 래칫만
+            if act[0] == "half_done":              # 1주 — 매도 없이 본전 래칫만
                 xs["half"] = True
                 xs["half_stop_raised"] = True
+                xs.pop("state_recovery_quarantine", None)
+                kis_positions.mark_half_done(
+                    code, event_id=_half_marker_id(code, rec))
                 if entry > cur_stop:
                     kis_positions.raise_stop(code, entry)
                     notify.send(f"🔒 <b>손절선 본전</b> — {code} (+1R 도달, 1주라 홀드)")
@@ -392,9 +429,10 @@ def manage(broker, held: dict, today: str) -> None:
                             f"{'접수' if ok else '실패 — 다음 사이클 재시도'}",
                             critical=True, category="trade")
         st[code] = xs
-    #  소멸 포지션 상태 정리
+    # 시장별 holdings()는 열린 시장만 반환한다. KR 장중에 US 상태를 지우지 않도록
+    # 소멸 판정은 시장과 무관한 봇 포지션 원장을 단일 기준으로 쓴다.
     for code in list(st):
-        if code not in held:
+        if code not in kpos:
             st.pop(code, None)
             changed = True
     if changed or st:

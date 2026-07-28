@@ -121,6 +121,19 @@ def test_kis_shadow_and_live_use_existing_sell_path():
     print("[PASS] KIS shadow 주문/추가래칫 0 · live 기존 멱등 매도경로")
 
 
+def test_closed_market_does_not_prune_other_market_stall_state():
+    with tempfile.TemporaryDirectory() as tmp, \
+            mock.patch.object(X.notify, "send"):
+        _paths(tmp)
+        X._save({"AAA": _state(12)})
+        X.manage(_Broker(), {}, "2026-07-02")
+        assert X._load()["AAA"]["stall_days"] == 12
+        P.close("AAA")
+        X.manage(_Broker(), {}, "2026-07-02")
+        assert "AAA" not in X._load()
+    print("[PASS] 닫힌 시장 holdings 누락은 정체상태 유지·원장 close만 prune")
+
+
 def test_corrupt_state_recovers_half_and_alerts_once_without_selling():
     with tempfile.TemporaryDirectory() as tmp, \
             mock.patch.object(X.settings, "market_open", return_value=True), \
@@ -141,8 +154,57 @@ def test_corrupt_state_recovers_half_and_alerts_once_without_selling():
         messages = [str(call.args[0]) for call in alert.call_args_list]
         assert sum("정체청산 상태 손상" in text for text in messages) == 1
         assert X._load()["AAA"]["stall_days"] == 0
+        assert P.load()["AAA"]["half_done"] is True
         assert stat.S_IMODE(os.stat(X.STATE_PATH).st_mode) == 0o600
     print("[PASS] 상태 손상 시 매도 0·기존 보호 유지·동일손상 경보 1회")
+
+
+def test_corrupt_state_without_durable_half_proof_stays_quarantined():
+    with tempfile.TemporaryDirectory() as tmp, \
+            mock.patch.object(X.settings, "market_open", return_value=True), \
+            mock.patch.object(X.notify, "send"):
+        held = _paths(tmp)
+        with open(X.STATE_PATH, "w", encoding="utf-8") as fp:
+            fp.write("{broken")
+        broker = _Broker(price=120)
+        with mock.patch.object(X, "STALL_MODE", "live"):
+            # 손상을 다른 시장 세션에서 먼저 감지해도 AAA 격리가 보존돼야 한다.
+            X.manage(broker, {}, "2026-07-30")
+            X.manage(broker, held, "2026-07-30")
+            X.manage(broker, held, "2026-07-30")
+        state = X._load()["AAA"]
+        assert state["state_recovery_quarantine"] is True
+        assert not state.get("half") and broker.calls == []
+        assert not P.load()["AAA"].get("half_done")
+    print("[PASS] 손상+절반 증명 없음은 재익절·타임스탑 모두 fail-closed")
+
+
+def test_one_share_half_done_is_durable_across_state_corruption():
+    with tempfile.TemporaryDirectory() as tmp, \
+            mock.patch.object(X.settings, "market_open", return_value=True), \
+            mock.patch.object(X.notify, "send"):
+        _paths(tmp)
+        P.close("AAA")
+        P.record(
+            "AAA", stop=100, ccy="USD", entry=100, qty=1,
+            opened="2026-06-01", sleeve="A", pos_key="pos:aaa:one")
+        held = {"AAA": {
+            "code": "AAA", "q": 1, "ccy": "USD", "stop": 100,
+        }}
+        with open(X.STATE_PATH, "w", encoding="utf-8") as fp:
+            fp.write("{broken")
+        broker = _Broker(price=120)
+        with mock.patch.object(X, "STALL_MODE", "live"):
+            X.manage(broker, held, "2026-07-02")
+        assert broker.calls == []
+        assert X._load()["AAA"]["half"] is True
+        assert P.load()["AAA"]["half_done"] is True
+        events = [
+            json.loads(line) for line in open(P.PATH, encoding="utf-8")
+            if line.strip()
+        ]
+        assert sum(row.get("ev") == "half_done" for row in events) == 1
+    print("[PASS] 1주 half_done은 원장 영속·손상 복구 후 즉시청산 없음")
 
 
 def test_b_sleeve_is_unchanged():
@@ -154,6 +216,7 @@ def test_b_sleeve_is_unchanged():
 
 def test_autopaper_live_matches_30_day_exit():
     with tempfile.TemporaryDirectory() as tmp, \
+            mock.patch.object(AP, "_update_fx"), \
             mock.patch.object(AP, "_state_branch_snapshot", return_value=None), \
             mock.patch.object(AP, "_trading_lock_status", return_value="off"), \
             mock.patch.object(AP, "_market_open", return_value=True), \
@@ -182,6 +245,38 @@ def test_autopaper_live_matches_30_day_exit():
         assert out["positions"] == []
         assert "정체 청산" in out["closed"][0]["exits"][-1]["note"]
     print("[PASS] autopaper도 같은 30거래일 잔량청산 적용")
+
+
+def test_autopaper_legacy_half_without_initial_stop_keeps_three_atr_trail():
+    with tempfile.TemporaryDirectory() as tmp, \
+            mock.patch.object(AP, "_update_fx"), \
+            mock.patch.object(AP, "_state_branch_snapshot", return_value=None), \
+            mock.patch.object(AP, "_trading_lock_status", return_value="off"), \
+            mock.patch.object(AP, "_market_open", return_value=True), \
+            mock.patch.object(AP, "_earnings_d", return_value=None), \
+            mock.patch.object(AP, "_price_age_min", return_value=None), \
+            mock.patch.object(AP, "_today", return_value="2026-07-02"), \
+            mock.patch.object(AP, "STALL_MODE", "live"):
+        AP.STATE_PATH = os.path.join(tmp, "autopaper.json")
+        state = {
+            "v": AP.VERSION, "cash": AP.START - 500, "start": AP.START,
+            "pending": {}, "log": [], "closed": [],
+            "pos": {"AAA": {
+                "name": "AAA", "ccy": "USD", "q": 5, "q0": 10,
+                "avg": 100, "entry": 100, "stop": 115,
+                "target": 140, "half_done": True, "opened": "2026-06-01",
+                "plan": {}, "ctx": {}, "atr0": 2, "hw": 130,
+                "risk0": 1000, "realized": 0, "exits": [],
+            }},
+        }
+        AP._save(state)
+        AP.update(
+            [{"code": "AAA", "name": "AAA", "ccy": "USD",
+              "sr": {"price": 130}}],
+            {"now": []}, out_dir=tmp)
+        pos = AP._load()["pos"]["AAA"]
+        assert pos["stop"] == 124.0 and pos["stop"] <= pos["hw"]
+    print("[PASS] stop0 없는 legacy half는 고가 위 점프 없이 기존 3ATR 유지")
 
 
 def test_backtest_three_parameter_arms_report_required_metrics():
@@ -223,9 +318,13 @@ def main():
     test_meaningful_high_exact_boundary_resets_without_lowering_stop()
     test_closed_market_missing_quote_and_ack_do_not_count()
     test_kis_shadow_and_live_use_existing_sell_path()
+    test_closed_market_does_not_prune_other_market_stall_state()
     test_corrupt_state_recovers_half_and_alerts_once_without_selling()
+    test_corrupt_state_without_durable_half_proof_stays_quarantined()
+    test_one_share_half_done_is_durable_across_state_corruption()
     test_b_sleeve_is_unchanged()
     test_autopaper_live_matches_30_day_exit()
+    test_autopaper_legacy_half_without_initial_stop_keeps_three_atr_trail()
     test_backtest_three_parameter_arms_report_required_metrics()
     print("\n정체청산 공용 규칙 검증 통과.")
 

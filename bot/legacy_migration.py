@@ -395,14 +395,15 @@ def build_plan(*, now: float | None = None) -> dict:
 
 
 def _assert_plan(plan: dict, *, ack: str, services_stopped: bool,
-                 now: float | None = None) -> None:
+                 now: float | None = None, allow_expired: bool = False,
+                 ack_verb: str = "APPLY") -> None:
     stamp = time.time() if now is None else float(now)
     if int(plan.get("version") or 0) != PLAN_VERSION:
         raise MigrationRefused("지원하지 않는 plan version")
     expected = plan_hash(plan)
     if str(plan.get("plan_sha256") or "") != expected:
         raise MigrationRefused("plan SHA-256 불일치")
-    if ack.strip() != f"APPLY {expected}":
+    if ack.strip() != f"{ack_verb} {expected}":
         raise MigrationRefused("operator ack 불일치")
     if not services_stopped:
         raise MigrationRefused("sentinel/buyloop 서비스 정지 확인 필요")
@@ -416,7 +417,7 @@ def _assert_plan(plan: dict, *, ack: str, services_stopped: bool,
     expires = float(plan.get("expires_at") or 0)
     if not all(math.isfinite(value) for value in (stamp, generated, expires)) \
             or abs((expires - generated) - PLAN_MAX_AGE_S) > 1e-6 \
-            or stamp > expires or stamp < generated:
+            or (not allow_expired and stamp > expires) or stamp < generated:
         raise MigrationRefused("plan snapshot 만료/시각 이상 — plan 재생성 필요")
     entries = plan.get("entries")
     if not isinstance(entries, list) or not entries:
@@ -645,6 +646,77 @@ def _backup_sources(backup_dir: str) -> dict:
     return manifest
 
 
+def _verify_backup_manifest(backup_dir: str) -> dict:
+    """apply 전에 만든 forensic 백업이 그대로인지 byte 단위로 확인한다."""
+    target = os.path.abspath(str(backup_dir or ""))
+    if not backup_dir or target in ("/", os.path.expanduser("~")) \
+            or os.path.islink(target) or not os.path.isdir(target):
+        raise MigrationRefused("복구용 backup dir 부재/심볼릭링크")
+    expected_labels = {
+        "order_ledger.jsonl", "kis_positions.jsonl", "costbook.jsonl",
+        "alpha_state.json",
+    }
+    manifest_path = os.path.join(target, "manifest.json")
+    if os.path.islink(manifest_path) or not os.path.isfile(manifest_path):
+        raise MigrationRefused("복구용 backup manifest 부재/심볼릭링크")
+    try:
+        with open(manifest_path, "rb") as fp:
+            raw_manifest = fp.read()
+        manifest = json.loads(raw_manifest)
+    except (OSError, UnicodeError, json.JSONDecodeError) as exc:
+        raise MigrationRefused("복구용 backup manifest 손상") from exc
+    if not isinstance(manifest, dict):
+        raise MigrationRefused("복구용 backup manifest 계약 불일치")
+    files = manifest.get("files")
+    try:
+        version = int(manifest.get("version") or 0)
+    except (TypeError, ValueError) as exc:
+        raise MigrationRefused("복구용 backup manifest 계약 불일치") from exc
+    if version != 1 or not isinstance(files, dict) \
+            or set(files) != expected_labels:
+        raise MigrationRefused("복구용 backup manifest 계약 불일치")
+    for label in sorted(expected_labels):
+        meta = files.get(label)
+        if not isinstance(meta, dict) or not isinstance(meta.get("exists"), bool):
+            raise MigrationRefused(f"복구용 backup manifest 항목 오류: {label}")
+        path = os.path.join(target, label)
+        if not meta["exists"]:
+            if os.path.lexists(path):
+                raise MigrationRefused(f"없어야 할 backup 파일 존재: {label}")
+            if int(meta.get("size") or 0) != 0 \
+                    or str(meta.get("sha256") or "") != hashlib.sha256(b"").hexdigest():
+                raise MigrationRefused(f"빈 backup digest 불일치: {label}")
+            continue
+        if os.path.islink(path) or not os.path.isfile(path):
+            raise MigrationRefused(f"복구용 backup 파일 부재/심볼릭링크: {label}")
+        try:
+            expected_size = int(meta["size"])
+        except (KeyError, TypeError, ValueError) as exc:
+            raise MigrationRefused(
+                f"복구용 backup manifest 항목 오류: {label}") from exc
+        if expected_size < 0:
+            raise MigrationRefused(f"복구용 backup manifest 항목 오류: {label}")
+        digest = hashlib.sha256()
+        size = 0
+        try:
+            with open(path, "rb") as fp:
+                while True:
+                    chunk = fp.read(1024 * 1024)
+                    if not chunk:
+                        break
+                    digest.update(chunk)
+                    size += len(chunk)
+        except OSError as exc:
+            raise MigrationRefused(f"복구용 backup 읽기 실패: {label}") from exc
+        if size != expected_size \
+                or digest.hexdigest() != str(meta.get("sha256") or ""):
+            raise MigrationRefused(f"복구용 backup 무결성 불일치: {label}")
+    return {
+        "manifest": manifest,
+        "manifest_sha256": hashlib.sha256(raw_manifest).hexdigest(),
+    }
+
+
 def apply_plan(plan: dict, *, ack: str, services_stopped: bool,
                backup_dir: str, now: float | None = None) -> dict:
     """주문을 내지 않고 장부만 재구성한다. 실패 시 BUY 예약은 끝까지 유지된다."""
@@ -758,6 +830,50 @@ def apply_plan(plan: dict, *, ack: str, services_stopped: bool,
     }
 
 
+def recover_performance_rebase(
+    plan: dict,
+    *,
+    ack: str,
+    services_stopped: bool,
+    backup_dir: str,
+    now: float | None = None,
+) -> dict:
+    """회계 완료 뒤 alpha 리베이스만 실패한 경우의 주문 없는 복구 경로.
+
+    만료된 plan도 허용하지만, 동일 broker snapshot·완료된 3원장·원본 forensic
+    백업을 모두 다시 증명한 뒤 성과 epoch만 멱등 전환한다.
+    """
+    _assert_plan(
+        plan, ack=ack, services_stopped=services_stopped, now=now,
+        allow_expired=True, ack_verb="RECOVER",
+    )
+    quiesced, why = _services_quiesced()
+    if not quiesced:
+        raise MigrationRefused(f"주문 서비스 미정지: {why}")
+    _snapshot_matches(plan)
+    _assert_apply_journals_healthy(plan["entries"])
+    for entry in plan["entries"]:
+        _verify_entry(entry)
+        accounted = int(
+            (ledger.state_of(entry["buy_key"]) or {}).get("accounted") or 0)
+        if accounted != int(entry["original_qty"]):
+            raise MigrationRefused(
+                f"{entry['symbol']} BUY accounted 미완료 — 성과 복구 거부")
+    backup = _verify_backup_manifest(backup_dir)
+    performance = alpha.rebase_after_accounting_migration(
+        plan["plan_sha256"], started_at=(time.time() if now is None else now),
+        archived=bool(
+            backup["manifest"]["files"].get(
+                "alpha_state.json", {}).get("exists")))
+    return {
+        "ok": True, "recovered": True, "orders_sent": 0,
+        "plan_sha256": plan["plan_sha256"],
+        "backup_dir": os.path.abspath(backup_dir),
+        "backup_manifest_sha256": backup["manifest_sha256"],
+        "performance_rebase": performance,
+    }
+
+
 def _write_plan(path: str, plan: dict) -> None:
     parent = os.path.dirname(os.path.abspath(path)) or "."
     os.makedirs(parent, exist_ok=True)
@@ -799,6 +915,14 @@ def main(argv: list[str] | None = None) -> int:
     pa.add_argument("--ack", required=True)
     pa.add_argument("--services-stopped", action="store_true")
     pa.add_argument("--backup-dir", required=True)
+    pr = sub.add_parser(
+        "recover-performance",
+        help="회계 완료 후 실패한 성과 리베이스만 복구(주문 없음)",
+    )
+    pr.add_argument("--plan", required=True)
+    pr.add_argument("--ack", required=True)
+    pr.add_argument("--services-stopped", action="store_true")
+    pr.add_argument("--backup-dir", required=True)
     args = ap.parse_args(argv)
     try:
         if args.command == "plan":
@@ -810,10 +934,17 @@ def main(argv: list[str] | None = None) -> int:
                 "plan_sha256": plan["plan_sha256"],
                 "apply_ack": f"APPLY {plan['plan_sha256']}",
             }, ensure_ascii=False, indent=2))
-        else:
+        elif args.command == "apply":
             with open(args.plan, encoding="utf-8") as f:
                 plan = json.load(f)
             print(json.dumps(apply_plan(
+                plan, ack=args.ack, services_stopped=args.services_stopped,
+                backup_dir=args.backup_dir,
+            ), ensure_ascii=False, indent=2))
+        else:
+            with open(args.plan, encoding="utf-8") as f:
+                plan = json.load(f)
+            print(json.dumps(recover_performance_rebase(
                 plan, ack=args.ack, services_stopped=args.services_stopped,
                 backup_dir=args.backup_dir,
             ), ensure_ascii=False, indent=2))
