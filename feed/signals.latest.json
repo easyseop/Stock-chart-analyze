@@ -1,19 +1,19 @@
 {
  "version": 1,
- "generated_at": "2026-07-28T17:57:01+09:00",
+ "generated_at": "2026-07-28T18:18:43+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "shelf_debug": {
   "ok": 7,
-  "watch": 189,
+  "watch": 191,
   "reasons": {
    "밸류영역 밖(지지대 아님)": 1277,
    "매물대 정보 없음": 167,
-   "반등 미확인(터치·상단마감·거래량)": 99,
+   "반등 미확인(터치·상단마감·거래량)": 98,
    "저점권 아님(범위 81%)": 76,
-   "반등 미확인(상단마감·거래량)": 68,
+   "반등 미확인(상단마감·거래량)": 67,
    "저점권 아님(범위 84%)": 67,
    "저점권 아님(범위 93%)": 56,
-   "저점권 아님(범위 67%)": 55
+   "저점권 아님(범위 87%)": 55
   }
  },
  "signals": [
@@ -870,42 +870,6 @@
    "tactic": "watch"
   },
   {
-   "id": "REXR-2026-07-28-shelf-watch",
-   "code": "REXR",
-   "name": "Rexford Industrial Realty, Inc.",
-   "ccy": "USD",
-   "group": "shelf_watch",
-   "entry_kind": "shelf_watch",
-   "stage": 0,
-   "price": 37.105,
-   "entry": 37.105,
-   "stop": 35.084,
-   "target": 43.105,
-   "shares_1pct": 0,
-   "range_pos": 0.4056,
-   "norm": -12.3,
-   "bear_share": 0.25,
-   "shelf": {
-    "poc": 41.065,
-    "val": 35.455,
-    "vah": 43.105,
-    "rr": 2.97,
-    "overhead": 0.543,
-    "reason": "반등 미확인(거래량)",
-    "checks": {
-     "터치": true,
-     "회복": true,
-     "상단마감": true,
-     "거래량": false,
-     "신저가아님": true
-    }
-   },
-   "fresh": false,
-   "break_gap": null,
-   "earnings_d": null,
-   "tactic": "watch"
-  },
-  {
    "id": "GSHD-2026-07-28-shelf-watch",
    "code": "GSHD",
    "name": "Goosehead Insurance, Inc.",
@@ -1011,6 +975,78 @@
    "fresh": false,
    "break_gap": null,
    "earnings_d": 16,
+   "tactic": "watch"
+  },
+  {
+   "id": "068270-2026-07-28-shelf-watch",
+   "code": "068270",
+   "name": "셀트리온",
+   "ccy": "KRW",
+   "group": "shelf_watch",
+   "entry_kind": "shelf_watch",
+   "stage": 0,
+   "price": 177400.0,
+   "entry": 177400.0,
+   "stop": 167384.0,
+   "target": 193739.5859,
+   "shares_1pct": 0,
+   "range_pos": 0.2346,
+   "norm": -28.3,
+   "bear_share": 0.375,
+   "shelf": {
+    "poc": 173602.6797,
+    "val": 163534.2266,
+    "vah": 193739.5859,
+    "rr": 1.63,
+    "overhead": 0.533,
+    "reason": "반등 미확인(상단마감)",
+    "checks": {
+     "터치": true,
+     "회복": true,
+     "상단마감": false,
+     "거래량": true,
+     "신저가아님": true
+    }
+   },
+   "fresh": false,
+   "break_gap": null,
+   "earnings_d": null,
+   "tactic": "watch"
+  },
+  {
+   "id": "030200-2026-07-28-shelf-watch",
+   "code": "030200",
+   "name": "KT",
+   "ccy": "KRW",
+   "group": "shelf_watch",
+   "entry_kind": "shelf_watch",
+   "stage": 0,
+   "price": 53900.0,
+   "entry": 53900.0,
+   "stop": 51842.0,
+   "target": 58306.25,
+   "shares_1pct": 0,
+   "range_pos": 0.2723,
+   "norm": -28.3,
+   "bear_share": 0.375,
+   "shelf": {
+    "poc": 52981.25,
+    "val": 49431.25,
+    "vah": 58306.25,
+    "rr": 2.14,
+    "overhead": 0.539,
+    "reason": "반등 미확인(거래량)",
+    "checks": {
+     "터치": true,
+     "회복": true,
+     "상단마감": true,
+     "거래량": false,
+     "신저가아님": true
+    }
+   },
+   "fresh": false,
+   "break_gap": null,
+   "earnings_d": null,
    "tactic": "watch"
   },
   {
@@ -1227,42 +1263,6 @@
    "fresh": false,
    "break_gap": null,
    "earnings_d": 13,
-   "tactic": "watch"
-  },
-  {
-   "id": "NXE-2026-07-28-shelf-watch",
-   "code": "NXE",
-   "name": "Nexgen Energy Ltd.",
-   "ccy": "USD",
-   "group": "shelf_watch",
-   "entry_kind": "shelf_watch",
-   "stage": 0,
-   "price": 9.37,
-   "entry": 9.37,
-   "stop": 8.6191,
-   "target": 11.5538,
-   "shares_1pct": 0,
-   "range_pos": 0.4039,
-   "norm": -54.7,
-   "bear_share": 0.5,
-   "shelf": {
-    "poc": 8.9871,
-    "val": 6.7413,
-    "vah": 11.5538,
-    "rr": 2.91,
-    "overhead": 0.525,
-    "reason": "반등 미확인(거래량)",
-    "checks": {
-     "터치": true,
-     "회복": true,
-     "상단마감": true,
-     "거래량": false,
-     "신저가아님": true
-    }
-   },
-   "fresh": false,
-   "break_gap": null,
-   "earnings_d": 8,
    "tactic": "watch"
   },
   {
