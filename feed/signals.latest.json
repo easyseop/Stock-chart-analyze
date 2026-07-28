@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated_at": "2026-07-29T05:31:07+09:00",
+ "generated_at": "2026-07-29T05:48:52+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "shelf_debug": {
   "ok": 7,
@@ -277,24 +277,24 @@
    "group": "now",
    "entry_kind": "now",
    "stage": 3,
-   "price": 9.14,
-   "entry": 9.14,
-   "stop": 8.1675,
-   "target": 11.0849,
+   "price": 9.15,
+   "entry": 9.15,
+   "stop": 8.1775,
+   "target": 11.0949,
    "shares_1pct": 102,
-   "range_pos": 0.2417,
+   "range_pos": 0.2425,
    "norm": -52.8,
    "bear_share": 0.5,
    "fresh": false,
-   "break_gap": 0.0727,
+   "break_gap": 0.0738,
    "earnings_d": 8,
    "tactic": {
     "stop_pct": 10.6,
     "pb_price": 8.485,
-    "pb_stop_pct": 3.7,
+    "pb_stop_pct": 3.6,
     "mode": "pullback",
     "label": "⏳ 눌림 지정가만",
-    "desc": "지금 추격 금지(손절폭 10.6% · 돌파후 진행) — <b>$8.48 눌림 지정가만</b>. 눌리면 손절폭 3.7%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
+    "desc": "지금 추격 금지(손절폭 10.6% · 돌파후 진행) — <b>$8.48 눌림 지정가만</b>. 눌리면 손절폭 3.6%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
    }
   },
   {
@@ -1235,6 +1235,34 @@
     "mode": "half",
     "label": "⚖ 반반 진입",
     "desc": "손절폭 6.2% — 절반만 현재가, 나머지는 눌림 확인 후 추가"
+   }
+  },
+  {
+   "id": "PG-2026-07-29-watch",
+   "code": "PG",
+   "name": "Procter & Gamble Company",
+   "ccy": "USD",
+   "group": "watch",
+   "entry_kind": "now",
+   "stage": 1,
+   "price": 148.88,
+   "entry": 148.88,
+   "stop": 142.2803,
+   "target": 162.0794,
+   "shares_1pct": 15,
+   "range_pos": 0.38,
+   "norm": -13.2,
+   "bear_share": 0.125,
+   "fresh": true,
+   "break_gap": -0.016,
+   "earnings_d": 1,
+   "tactic": {
+    "stop_pct": 4.4,
+    "pb_price": 143.127,
+    "pb_stop_pct": 0.6,
+    "mode": "full",
+    "label": "⚡ 즉시 분할",
+    "desc": "손절폭 4.4%로 타이트 — 현재가에서 1~2회 분할 매수. 기다리는 이득보다 놓치는 비용이 큼"
    }
   },
   {
