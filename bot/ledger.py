@@ -31,7 +31,10 @@ import os
 import threading
 import time
 
-LEDGER_PATH = "bot/order_ledger.jsonl"
+LEDGER_PATH = os.environ.get(
+    "ORDER_LEDGER_PATH",
+    os.path.join(os.path.dirname(__file__), "order_ledger.jsonl"),
+)
 
 # 종료 상태(더 이상 잔여 없음) vs 진행 상태
 _TERMINAL = {"filled", "rejected", "cancelled", "expired", "dry_run"}
@@ -150,12 +153,13 @@ def _fold_unlocked() -> tuple[dict, list[int]]:
                               "pos_key", "sleeve", "fx", "ccy", "stop", "target",
                               "name", "opened", "tactic", "pending", "parent_key",
                               "chase", "ref_price", "reason",
+                              "legacy_migrated_order", "legacy_hldg_before",
                               "reservation_cost_krw",
                               "budget_total_held_krw", "budget_total_limit_krw",
                               "budget_sleeve_held_krw", "budget_sleeve_limit_krw"):
                         if f in meta and meta.get(f) is not None:
                             cur[f] = (str(meta[f]).upper() if f == "side" else meta[f])
-                elif ev.get("ev") == "plan":
+                elif ev.get("ev") in ("plan", "migration_meta"):
                     cur["created_at"] = ev.get("ts", 0.0)
                     meta = ev.get("meta") or {}
                     for f, value in meta.items():
@@ -459,6 +463,24 @@ def mark_cancelled(key: str, reason: str = "") -> None:
 def mark_accounted(key: str, qty: int) -> None:
     """원가장부에 반영한 누적 체결수량. 재대사 때 같은 체결을 중복 회계하지 않는다."""
     _append({"ev": "accounted", "key": key, "accounted": max(0, int(qty))})
+
+
+def attach_migration_meta(key: str, *, meta: dict) -> None:
+    """구버전 주문에 누락된 회계 메타를 append-only로 보완한다.
+
+    원 주문·체결 상태는 바꾸지 않으며 legacy 이관 도구만 사용한다.
+    """
+    if not state_of(key):
+        raise KeyError(f"ledger order not found: {key}")
+    allowed = {
+        "pos_key", "sleeve", "fx", "ccy", "stop", "target",
+        "name", "opened", "legacy_migrated_order", "legacy_hldg_before",
+        "fill_price_source",
+    }
+    clean = {k: v for k, v in meta.items() if k in allowed and v is not None}
+    if not clean.get("pos_key") or float(clean.get("fx") or 0) <= 0:
+        raise ValueError("migration meta requires pos_key and positive fx")
+    _append({"ev": "migration_meta", "key": key, "meta": clean})
 
 
 def pending_orders() -> list[dict]:

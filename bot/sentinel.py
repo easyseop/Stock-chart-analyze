@@ -194,8 +194,8 @@ class _KisBroker(_PaperBroker):
         if fresh is None:
             return {"state": "rejected", "filled": 0, "qty": 0,
                     "why": "주문 직전 KIS 잔고 조회 실패"}
-        safe_qty = min(max(0, int(qty)),
-                       max(0, int(fresh.get(str(code).upper(), 0))))
+        fresh_qty = max(0, int(fresh.get(str(code).upper(), 0)))
+        safe_qty = min(max(0, int(qty)), fresh_qty)
         if safe_qty <= 0:
             return {"state": "rejected", "filled": 0, "qty": 0,
                     "why": "주문 직전 KIS 매도가능 보유 0"}
@@ -219,7 +219,7 @@ class _KisBroker(_PaperBroker):
             #   미국과 달리 연속장 시장가가 있어 미체결 방치 위험을 없앤다.
             r = kis_orders.place_sell(key, code, safe_qty, px, reason=reason,
                                       market=market, order_type="market",
-                                      hldg_before=safe_qty, order_meta=order_meta,
+                                      hldg_before=fresh_qty, order_meta=order_meta,
                                       min_interval_s=0)
         else:
             # 미국주는 시장가 부재 → 마켓터블 지정가(급락 시 chase가 보완).
@@ -228,7 +228,7 @@ class _KisBroker(_PaperBroker):
             limit = kis_orders.marketable_limit_price(px, "SELL", market=market)
             r = kis_orders.place_sell(key, code, safe_qty, limit, reason=reason,
                                       market=market, excg=excg,
-                                      hldg_before=safe_qty, order_meta=order_meta,
+                                      hldg_before=fresh_qty, order_meta=order_meta,
                                       min_interval_s=0)
         act = r.get("act")
         if act == "ack":                     # 접수됨(in-flight) — 체결은 대사가 확정

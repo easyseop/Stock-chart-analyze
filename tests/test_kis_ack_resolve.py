@@ -20,6 +20,7 @@ import os
 import sys
 import tempfile
 import time
+from unittest import mock
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -61,7 +62,8 @@ def test_buy_full_fill_resolves_and_unblocks():
         L, R = M["ledger"], M["kis_reconcile"]
         _ack(L, "kb:a#1", "AAPL", "BUY", 3, before=0)
         assert L.open_order_count("AAPL") == 1     # 해소 전: 파수꾼이 손절 스킵하는 상태
-        rs = R.resolve_acks_by_balance({"US": {"AAPL": 3}})
+        rs = R.resolve_acks_by_balance(
+            {"US": {"AAPL": 3}}, complete_snapshot=True)
         assert len(rs) == 1 and rs[0]["state"] == "filled" and rs[0]["side"] == "BUY"
         assert L.state_of("kb:a#1")["state"] == "filled"
         assert L.open_order_count("AAPL") == 0     # ★ 손절 재발주 가능해짐
@@ -74,7 +76,8 @@ def test_sell_full_fill_resolves():
         M = _setup(tmp)
         L, R = M["ledger"], M["kis_reconcile"]
         _ack(L, "s#1", "005930", "SELL", 3, before=3)
-        rs = R.resolve_acks_by_balance({"KR": {}})   # 팔려서 잔고에서 사라짐
+        rs = R.resolve_acks_by_balance(               # 팔려서 잔고에서 사라짐
+            {"KR": {}}, complete_snapshot=True)
         assert len(rs) == 1 and rs[0]["state"] == "filled" and rs[0]["side"] == "SELL"
         assert rs[0]["residual"] == 0
     print("[PASS] SELL ack full-fill(잔고 소멸) → filled 확정")
@@ -85,7 +88,8 @@ def test_age_gate_holds_fresh_orders():
         M = _setup(tmp)
         L, R = M["ledger"], M["kis_reconcile"]
         _ack(L, "kb:b#1", "AAPL", "BUY", 3, before=0, age_s=5)   # 5초 전 — 어림
-        rs = R.resolve_acks_by_balance({"US": {"AAPL": 3}})
+        rs = R.resolve_acks_by_balance(
+            {"US": {"AAPL": 3}}, complete_snapshot=True)
         assert rs == [] and L.state_of("kb:b#1")["state"] == "ack"
     print("[PASS] 갓 제출(age<90s)은 보류 — 체결 진행 중 오독 방지")
 
@@ -95,9 +99,11 @@ def test_partial_holds_and_anomaly_freezes():
         M = _setup(tmp)
         L, R, O = M["ledger"], M["kis_reconcile"], M["ownership"]
         _ack(L, "kb:c#1", "AAPL", "BUY", 3, before=0)
-        rs = R.resolve_acks_by_balance({"US": {"AAPL": 2}})      # 부분(2<3)
+        rs = R.resolve_acks_by_balance(
+            {"US": {"AAPL": 2}}, complete_snapshot=True)         # 부분(2<3)
         assert rs == [] and L.state_of("kb:c#1")["state"] == "ack"
-        rs = R.resolve_acks_by_balance({"US": {"AAPL": 5}})      # 이상(5>3)
+        rs = R.resolve_acks_by_balance(
+            {"US": {"AAPL": 5}}, complete_snapshot=True)         # 이상(5>3)
         assert rs == [] and O.is_frozen("AAPL")                  # 외부 개입 의심 동결
     print("[PASS] 부분은 보류(자동 결론 금지) · 초과 delta는 동결")
 
@@ -108,13 +114,103 @@ def test_concurrent_and_baseline_and_fail_hold():
         L, R, O = M["ledger"], M["kis_reconcile"], M["ownership"]
         _ack(L, "kb:d#1", "TSLA", "BUY", 2, before=0)
         _ack(L, "kb:d#2", "TSLA", "BUY", 2, before=0)            # 동시 2건 — 귀속 불가
-        assert R.resolve_acks_by_balance({"US": {"TSLA": 2}}) == []
+        assert R.resolve_acks_by_balance(
+            {"US": {"TSLA": 2}}, complete_snapshot=True) == []
         O.capture_baseline([{"ovrs_pdno": "MSFT"}])              # 사용자 기보유
         _ack(L, "kb:e#1", "MSFT", "BUY", 1, before=0)
-        assert R.resolve_acks_by_balance({"US": {"MSFT": 1}}) == []
+        assert R.resolve_acks_by_balance(
+            {"US": {"MSFT": 1}}, complete_snapshot=True) == []
         _ack(L, "kb:f#1", "NVDA", "BUY", 1, before=0)
-        assert R.resolve_acks_by_balance({"US": None}) == []     # 잔고 실패 → 보류
+        assert R.resolve_acks_by_balance(
+            {"US": None}, complete_snapshot=True) == []          # 잔고 실패 → 보류
     print("[PASS] 동시주문·baseline 심볼·잔고실패 → 전부 보류(fail-closed)")
+
+
+def test_migrated_baseline_sell_resolves_but_uses_sell_order_price():
+    """baseline 예외는 이관 pos_key+원가+before 3중 일치 SELL만 통과한다."""
+    with tempfile.TemporaryDirectory() as tmp:
+        M = _setup(tmp)
+        L, R, O = M["ledger"], M["kis_reconcile"], M["ownership"]
+        from bot import costbook as C, kis_positions as P
+        O.capture_baseline([{"ovrs_pdno": "CAG"}])
+        pos_key = "legacy:A:CAG:2026-07-20"
+        with mock.patch.object(P, "PATH", os.path.join(tmp, "positions.jsonl")), \
+             mock.patch.dict(os.environ, {
+                 "COSTBOOK_PATH": os.path.join(tmp, "costbook.jsonl"),
+             }):
+            C.add_lot(
+                pos_key, "CAG", 10, 100.0, fx=1380.0, sleeve="A",
+                event_id="legacy-seed",
+            )
+            P.migrate_legacy(
+                "CAG", qty=10, entry=100.0, stop=90.0, stop0=90.0,
+                ccy="USD", pos_key=pos_key, opened="2026-07-20",
+                sleeve="A", event_id="legacy-position",
+            )
+            L._append({
+                "ev": "submit", "key": "sell:cag", "symbol": "CAG",
+                "intended": 5, "filled": 0, "state": "submitted",
+                "meta": {
+                    "side": "SELL", "hldg_before": 5,
+                    "legacy_hldg_before": 10,
+                    "legacy_migrated_order": True, "market": "US",
+                    "price": 110.0, "pos_key": pos_key, "sleeve": "A",
+                    "fx": 1380.0, "ccy": "USD",
+                },
+                "ts": time.time() - 200,
+            })
+            L.on_result("sell:cag", "ack", 0)
+            rs = R.resolve_acks_by_balance(
+                {"US": {"CAG": 5}},
+                fill_prices={"US": {"CAG": 100.0}},
+                complete_snapshot=True,
+            )
+            assert len(rs) == 1 and rs[0]["state"] == "filled"
+            assert L.state_of("sell:cag")["fill_price"] == 110.0
+            assert L.state_of("sell:cag")["fill_price_source"] \
+                == "submitted-fallback"
+            assert C.open_qty("CAG") == 5 and P.load()["CAG"]["qty"] == 5
+
+            # pos_key가 다르면 같은 baseline·같은 delta라도 자동 귀속하지 않는다.
+            P.migrate_legacy(
+                "MSFT", qty=10, entry=100.0, stop=90.0, stop0=90.0,
+                ccy="USD", pos_key="legacy:A:MSFT:2026-07-20",
+                opened="2026-07-20", sleeve="A", event_id="msft-position",
+            )
+            C.add_lot(
+                "legacy:A:MSFT:2026-07-20", "MSFT", 10, 100.0,
+                fx=1380.0, sleeve="A", event_id="msft-seed",
+            )
+            O.capture_baseline([{"ovrs_pdno": "MSFT"}])
+            L._append({
+                "ev": "submit", "key": "sell:msft", "symbol": "MSFT",
+                "intended": 5, "filled": 0, "state": "submitted",
+                "meta": {
+                    "side": "SELL", "hldg_before": 10, "market": "US",
+                    "price": 110.0, "pos_key": "wrong", "sleeve": "A",
+                    "fx": 1380.0, "ccy": "USD",
+                },
+                "ts": time.time() - 200,
+            })
+            L.on_result("sell:msft", "ack", 0)
+            assert R.resolve_acks_by_balance(
+                {"US": {"MSFT": 5}}, complete_snapshot=True) == []
+            assert L.state_of("sell:msft")["state"] == "ack"
+    print("[PASS] migrated baseline SELL만 해소·SELL은 평단 아닌 제출가 사용")
+
+
+def test_partial_balance_map_requires_exact_keys_or_complete_contract():
+    with tempfile.TemporaryDirectory() as tmp:
+        M = _setup(tmp)
+        L, R = M["ledger"], M["kis_reconcile"]
+        _ack(L, "sell:tsla", "TSLA", "SELL", 5, before=5)
+        # TSLA가 빠진 부분 map을 전체 잔고로 오인하면 now=0으로 fake-resolve된다.
+        assert R.resolve_acks_by_balance({"US": {"AAPL": 1}}) == []
+        assert L.state_of("sell:tsla")["state"] == "ack"
+        assert R.resolve_acks_by_balance(
+            {"US": {"AAPL": 1}}, only_keys={"unrelated"}) == []
+        assert L.state_of("sell:tsla")["state"] == "ack"
+    print("[PASS] 부분 잔고 map은 complete/exact-key 계약 없이는 ACK 확정 0건")
 
 
 def test_boot_wires_ack_resolution():
@@ -142,6 +238,8 @@ def main():
     test_age_gate_holds_fresh_orders()
     test_partial_holds_and_anomaly_freezes()
     test_concurrent_and_baseline_and_fail_hold()
+    test_migrated_baseline_sell_resolves_but_uses_sell_order_price()
+    test_partial_balance_map_requires_exact_keys_or_complete_contract()
     test_boot_wires_ack_resolution()
     print("\nack 잔고대사 검증 통과 — 접수 주문이 파수꾼/캡/재진입을 영구 차단하는 구멍 해소.")
 

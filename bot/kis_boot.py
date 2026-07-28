@@ -109,15 +109,12 @@ def _resolve_acks() -> list[dict]:
             hmaps["US"] = merged
             if avgs is not None:
                 fill_prices["US"] = avgs
-        rs += kis_reconcile.resolve_acks_by_balance(hmaps, fill_prices=fill_prices)
+        rs += kis_reconcile.resolve_acks_by_balance(
+            hmaps, fill_prices=fill_prices, complete_snapshot=True)
         for r in rs:
-            # 매도 full-fill 확정 → 진입 손절선 기록 정리(보호 대상 아님을 명시)
-            if r.get("side") == "SELL" and int(r.get("residual") or 0) == 0:
-                try:
-                    from bot import kis_positions
-                    kis_positions.close(str(r.get("symbol")))
-                except Exception:
-                    pass
+            # 포지션 차감/소멸은 kis_accounting.apply_sell_fill이 실제 체결수량으로
+            # 이미 처리한다. 주문 1건이 full-fill이어도 절반익절일 수 있으므로
+            # residual==0만 보고 포지션 전체를 close하면 남은 보유가 무보호가 된다.
             _notify(f"✅ 체결 확정(잔고대사) — {r.get('symbol')} "
                     f"{'매수' if r.get('side') == 'BUY' else '매도'} "
                     f"{r.get('filled')}주", critical=(r.get("side") == "SELL"),

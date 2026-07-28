@@ -954,6 +954,7 @@ function tradeHistorySummary(rows) {
 
 function tradeHistoryCard(row) {
   const side = (row.side || "sell").toLowerCase();
+  const estimatedPrice = row.price_estimated === true;
   if (side === "buy") {
     const amountNative = optionalNumber(row.amount_native);
     const amountKrw = optionalNumber(row.amount_krw);
@@ -964,7 +965,7 @@ function tradeHistoryCard(row) {
     return `<article class="trade-history-card trade-buy-card">
       <div class="trade-history-head">
         <div>
-          <small>${escapeHTML(tradeDateLabel(row.executed_at))} · 실제 체결 확인</small>
+          <small>${escapeHTML(tradeDateLabel(row.executed_at))} · ${estimatedPrice ? "장부 복원 가격" : "실제 체결 확인"}</small>
           <strong>${escapeHTML(row.name || row.code)} <span>${escapeHTML(row.code)}</span></strong>
         </div>
         <div class="badge-row">
@@ -973,7 +974,7 @@ function tradeHistoryCard(row) {
         </div>
       </div>
       <div class="trade-price-flow">
-        <div><small>실제 매수가</small><strong>${formatOptionalPrice(fillPrice, row.ccy)}</strong></div>
+        <div><small>${estimatedPrice ? "복원 매수가" : "실제 매수가"}</small><strong>${formatOptionalPrice(fillPrice, row.ccy)}</strong></div>
         <span aria-hidden="true">→</span>
         <div><small>체결 후 평단가</small><strong>${formatOptionalPrice(averageAfter, row.ccy)}</strong></div>
         <div><small>매수 수량</small><strong>${Math.round(finite(row.qty)).toLocaleString("ko-KR")}주</strong></div>
@@ -986,7 +987,7 @@ function tradeHistoryCard(row) {
         </div>
         <p>${escapeHTML(row.reason || reason)}
           ${positionAfter === null ? "" : ` · 체결 후 ${Math.round(positionAfter).toLocaleString("ko-KR")}주`}
-          ${row.verified ? " · 브로커 체결 확인" : ""}
+          ${estimatedPrice ? " · 구버전 장부/KIS 평단 기준" : row.verified ? " · 브로커 체결 확인" : ""}
         </p>
       </div>
     </article>`;
@@ -998,7 +999,7 @@ function tradeHistoryCard(row) {
   return `<article class="trade-history-card">
     <div class="trade-history-head">
       <div>
-        <small>${escapeHTML(tradeDateLabel(row.executed_at))} · 체결 확인</small>
+        <small>${escapeHTML(tradeDateLabel(row.executed_at))} · ${estimatedPrice ? "잔고 체결·가격 추정" : "체결 확인"}</small>
         <strong>${escapeHTML(row.name || row.code)} <span>${escapeHTML(row.code)}</span></strong>
       </div>
       <div class="badge-row">
@@ -1009,7 +1010,7 @@ function tradeHistoryCard(row) {
     <div class="trade-price-flow">
       <div><small>매도 직전 평단가</small><strong>${formatOptionalPrice(row.entry_price, row.ccy)}</strong></div>
       <span aria-hidden="true">→</span>
-      <div><small>실제 매도가</small><strong>${formatOptionalPrice(row.exit_price, row.ccy)}</strong></div>
+      <div><small>${estimatedPrice ? "주문가 기준 매도가" : "실제 매도가"}</small><strong>${formatOptionalPrice(row.exit_price, row.ccy)}</strong></div>
       <div><small>매도 수량</small><strong>${Math.round(finite(row.qty)).toLocaleString("ko-KR")}주</strong></div>
     </div>
     <div class="trade-result">

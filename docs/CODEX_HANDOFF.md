@@ -695,3 +695,115 @@ drop-in이 기본 `EnvironmentFile` 지시자를 비운 뒤 기존 서비스와 
 GitHub 60분 장애주입을 수행해 신규주문 0을 확인하고 재검토한다. fallback=1은
 그 재승인 뒤에만 검토한다. L1 해제 전에는 기존 BUY 16건 대사(BAM 잔고 0,
 LW 보호수량 불일치 포함)와 총시드 초과 해소가 여전히 별도 선결조건이다.
+
+### 13. 2026-07-28 legacy BUY 16건 이관·SELL ACK 수정 (검토 전)
+
+로컬 브랜치 `codex/legacy-ledger-migration`을 최신 기본 브랜치 `9259bdb`에서
+만들었다. Claude가 전체 diff를 검토할 수 있도록 이 브랜치에만 commit/push하며,
+기본 브랜치 merge·Oracle 운영 배포·장부 apply는 하지 않았고 kill-switch L1도
+그대로다.
+
+확인한 실제 결함:
+
+- 업그레이드 전 BUY 16건은 full-filled지만 `accounted=0`, `fx/pos_key`가 없어
+  총시드 예약이 fail-closed로 계속 유지된다.
+- CAG·KKR·LW 절반익절은 KIS 잔고가 각각 13·7·12주 감소했지만 ACK에 남았다.
+  baseline 차단뿐 아니라 당시 `hldg_before`가 전체 보유가 아닌 주문수량으로
+  기록된 것이 직접 원인이다.
+- SELL 주문 한 건의 residual 0을 종목 전체청산으로 보고 `kis_positions.close`
+  하던 코드가 있었다. 절반익절 ACK가 풀리면 남은 절반 보호기록을 삭제할 수 있어
+  해당 강제 close를 제거했다.
+- 잔고대사 SELL의 가격 fallback으로 KIS 보유 평단을 사용해 실현손익을 왜곡하던
+  경로를 주문 제출가 fallback으로 분리했다.
+
+구현:
+
+- `bot/legacy_migration.py`: mock/L1/서비스 정지/5분 snapshot/plan SHA operator
+  ack를 모두 요구하는 1회 이관 도구. plan은 읽기 전용이며 apply도 주문 API를
+  호출하지 않는다. apply는 운영자 플래그뿐 아니라 sentinel/buyloop가 실제
+  inactive이고 runtime mask 상태인지 확인하며, mutation 전 새 전용 디렉터리에
+  주문·포지션·원가장부를 byte-for-byte 백업하고 SHA-256 manifest를 fsync한다.
+- original BUY lot·보호 포지션을 event_id로 멱등 복원하고, 검증된 SELL을 먼저
+  회계한 뒤 최종 costbook·position qty가 broker와 같을 때만 BUY accounted를
+  남긴다. 중간 fault에서는 예약이 계속 유지된다.
+- baseline 예외는 `legacy_migrated` 포지션·동일 pos_key·동일 original 수량의
+  costbook lot이 모두 맞는 SELL에만 허용한다. 순수 사용자 보유에는 열리지 않는다.
+- 이후 새 SELL은 주문수량이 아니라 주문 직전 전체 매도가능수량을
+  `hldg_before`로 기록한다.
+- 이관 ACK 대사는 CAG/KKR/LW의 exact 주문키만 허용한다. 후보에 없는 같은 시장
+  ACK를 누락 잔고 0으로 오귀속할 수 있던 자체 적대검토 반례를 차단했다.
+- 이관된 과거 BUY 가격과 잔고로 증명한 SELL 제출가는 거래이력에서 각각
+  `장부 복원 가격`, `주문가 기준 매도가`로 표시해 실제 체결가로 과장하지 않는다.
+
+실제 Oracle에는 변경본을 배포하지 않고 `/tmp/legacy-migration-review` overlay를
+사용해 운영 장부와 KIS 모의잔고를 읽기만 했다. plan 16/16 생성에 성공했고 분류는
+현재보유 12, ACK 잔고대사 3(CAG/KKR/LW), 완전청산 1(BAM)이다. original 합계
+980주, broker current 합계 920주, 주문 전송·운영 JSONL 변경·서비스 재시작·L1
+변경은 모두 0이다. 생성 plan은 5분 만료형이라 apply에 재사용하지 않는다.
+
+검증:
+
+- 집중 migration/ACK/boot/accounting 테스트 통과.
+- BUY accounted 직전 fault injection 뒤 예약 유지와 동일 plan 멱등 복구 통과.
+- 잘못된 ack, 서비스 미정지, snapshot 변경, broker qty 초과, pos_key 불일치
+  fail-closed 통과.
+- 실제 서비스 active/unmasked/상태조회 오류, 대상 밖 ACK, NaN/Infinity,
+  ACK reconcile 직후 crash와 BUY accounted 직전 crash를 모두 차단·복구했다.
+- apply 전 백업 권한·크기·SHA-256 manifest 및 거래이력 추정가 표기를 검증했다.
+- Python compileall 및 독립 Python 테스트 모듈 `45/45` 통과.
+- Node 계산 테스트 `8/8`, JavaScript·shell 문법, `git diff --check` 통과.
+
+Claude 검토 요청서는
+`docs/CLAUDE_REVIEW_LEGACY_MIGRATION_ACK_FIX.md`다. 다음 순서는 Claude P0/P1
+적대 검토다. 사용자 지시로 검토용 브랜치 commit/push까지만 허용됐으며, 승인
+전에는 기본 브랜치 merge·Oracle apply를 하지 않는다.
+승인 뒤에도 L1 해제는 총시드·열린 주문·보호수량 재검증을 거치는 별도 게이트다.
+실제 apply 런북에서는 sentinel/buyloop를 stop한 뒤 runtime mask하고, 검증 완료
+후 반드시 `systemctl unmask --runtime`한 다음 재시작한다.
+
+### 14. 2026-07-28 legacy 이관 Claude 1차 차단 수정 (재검토 대기)
+
+Claude 1차 적대검토는 16개 반증질문 중 14개가 HOLDS였으나 P1 2건과 apply 전
+P2 4건을 확인해 merge·Oracle apply·L1 해제를 차단했다. 이 브랜치에서 6건을
+모두 수정했으며 Oracle 운영 코드·장부·서비스·L1에는 손대지 않았다.
+
+P1 수정:
+
+- SELL costbook close가 fsync된 뒤 `kis_positions.apply_sell_fill` 전에
+  프로세스가 죽어도, 같은 `fill_event`가 costbook `event_results`에 있으면
+  legacy lot를 다시 시딩하지 않는다. BAM 완전청산 장애주입에서 재실행 후에도
+  `buy_cost`, `sell_proceeds`, 실현손익, 열린 수량이 각각 정확히 한 번만
+  남는 것을 확인했다.
+- 구버전 `balance-average`는 실제 SELL 체결가가 아니라 보유 평단 오염값으로
+  취급한다. 이관 plan은 해당 값을 버리고 원 주문 제출가를
+  `submitted-fallback` 추정값으로 사용하며, 거래이력도
+  `price_estimated=true`, `verified=false`로 표시한다.
+- 이관 실현손익은 apply 실행일이 아니라 원 SELL `submitted_at`의 KST 거래일에
+  귀속해 현재 일일손실 서킷브레이커를 오염시키지 않는다.
+
+P2 수정:
+
+- `PLAN_VERSION=2`에 주문·포지션·원가장부 절대경로를 넣고 apply 시 현재 경로와
+  완전일치하지 않으면 거부한다. `ORDER_LEDGER_PATH` 기본값도 cwd 상대가 아닌
+  `ledger.py` 기준 절대경로로 바꿨다.
+- apply 직전과 백업 직후 두 번 주문 원장·`kis_positions`·costbook 무손상,
+  broker snapshot, 서비스 정지를 다시 확인한다. positions 손상은 백업·mutation
+  전에 차단한다.
+- systemd inactive+runtime mask뿐 아니라 `pgrep`으로 수동
+  `bot.sentinel`/`bot.kis_buyloop` 프로세스가 0개인지 확인한다. heartbeat가
+  120초 이내로 신선해도 거부한다. 따라서 실제 apply는 서비스 정지·mask 뒤
+  heartbeat가 120초를 넘은 후 새 5분 plan을 생성해야 한다.
+- 잔고 ACK 대사는 `complete_snapshot=True` 명시 또는 exact `only_keys`가
+  없으면 0건을 반환한다. 부분 hmap으로 관계없는 SELL을 잔고 0으로 오인하는
+  미래 호출자 반례를 계약 자체로 차단했다.
+
+추가 방어로 비숫자 `legacy_hldg_before`는 해당 주문만 보류해 대사 배치 전체를
+깨지 않게 했다. 집중 migration/ACK/accounting/boot/trade-history 테스트,
+SELL close→position 중간 크래시, 원장 경로 불일치, positions 손상, 백업 후
+수동 프로세스 재등장 장애주입을 통과했다. 전체 Python `45/45`, Node `8/8`,
+`compileall`, JavaScript 문법과 `git diff --check`도 통과했다.
+
+Claude 재검토서는
+`docs/CLAUDE_REVIEW_LEGACY_MIGRATION_ACK_FIX_V2.md`다. 재승인 전에는 기본
+브랜치 merge·Oracle 코드 배포·장부 apply·L1 해제를 모두 금지한다. 승인 뒤에도
+Oracle apply와 L1 해제는 서로 다른 게이트다.
