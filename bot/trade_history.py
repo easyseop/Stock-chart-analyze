@@ -169,7 +169,8 @@ def _trade_rows(position_events: list[dict], cost_events: list[dict],
     confirmed_pos_keys = {
         str(event.get("pos_key") or "")
         for event in position_events
-        if event.get("ev") == "buy_fill" and event.get("pos_key")
+        if event.get("ev") in ("buy_fill", "legacy_migrate")
+        and event.get("pos_key")
     }
 
     for event in position_events:
@@ -186,12 +187,22 @@ def _trade_rows(position_events: list[dict], cost_events: list[dict],
         pos_key = str(explicit_pos_key or active_by_code.get(code) or
                       f"legacy:{code}:{event.get('opened') or '?'}")
 
-        if ev in ("open", "buy_fill"):
+        if ev in ("open", "buy_fill", "legacy_migrate"):
             qty = max(0, int(_number(event.get("qty")) or 0))
-            price = _number(event.get("price") if ev == "buy_fill"
-                            else event.get("entry"))
+            price = _number(
+                event.get("price") if ev == "buy_fill" else event.get("entry"))
             if qty <= 0 or price is None or price <= 0:
                 continue
+            if ev == "legacy_migrate":
+                # 구버전 open은 ACK 시점 메타라 새 exact migration과 함께 두면
+                # 원가·수량이 이중계상된다. 동일 종목의 기존 임시 lot을 먼저 버리고
+                # durable 이관 수량을 절대값 기준으로 다시 세운다.
+                for key in [
+                        key for key, prior in lots.items()
+                        if prior.get("symbol") == code]:
+                    lots.pop(key, None)
+                if active_by_code.get(code):
+                    active_by_code.pop(code, None)
             lot = lots.get(pos_key)
             # 구버전은 주문 ACK 시점에 open을 먼저 남겼다. 같은 pos_key의
             # 확정 buy_fill이 뒤에 존재하면 open 수량은 체결 근거가 아니므로
@@ -209,7 +220,7 @@ def _trade_rows(position_events: list[dict], cost_events: list[dict],
                         lot[field] = value
                 active_by_code[code] = pos_key
                 continue
-            if ev == "open" or lot is None:
+            if ev in ("open", "legacy_migrate") or lot is None:
                 lot = {
                     "symbol": code, "qty": 0, "native_cost": 0.0,
                     "source": "legacy" if ev == "open" else "confirmed",
@@ -219,22 +230,26 @@ def _trade_rows(position_events: list[dict], cost_events: list[dict],
             lot["native_cost"] = float(lot.get("native_cost") or 0) + price * qty
             lot["qty"] = old_qty + qty
             lot["source"] = (
-                "confirmed" if ev == "buy_fill" and old_qty == 0
+                "confirmed" if ev in ("buy_fill", "legacy_migrate")
+                and old_qty == 0
                 else lot.get("source", "legacy"))
             for field in ("name", "opened", "sleeve", "ccy"):
                 value = event.get(field)
                 if value not in (None, ""):
                     lot[field] = value
             active_by_code[code] = pos_key
-            if ev == "buy_fill":
+            if ev in ("buy_fill", "legacy_migrate"):
                 cost_event = add_by_event.get(event_id) or {}
                 order = order_map.get(_order_key(event_id, "BUY"), {})
                 fallback_meta = meta_by_pos.get(pos_key, {})
                 ccy = str(lot.get("ccy") or fallback_meta.get("ccy") or
                           ("KRW" if code.isdigit() and len(code) == 6
                            else "USD")).upper()
-                timestamp = (cost_event.get("ts") or event.get("ts")
-                             or order.get("submitted_at"))
+                timestamp = (
+                    order.get("submitted_at")
+                    if ev == "legacy_migrate"
+                    else cost_event.get("ts") or event.get("ts")
+                    or order.get("submitted_at"))
                 cost_krw = _number(cost_event.get("cost_krw"))
                 average_after = (
                     float(lot.get("native_cost") or 0) / int(lot["qty"])
@@ -243,8 +258,14 @@ def _trade_rows(position_events: list[dict], cost_events: list[dict],
                 sleeve = str(lot.get("sleeve") or
                              fallback_meta.get("sleeve") or "A").upper()
                 reason = str(order.get("reason") or "매수 체결")
-                verified = bool(event_id and cost_event and
-                                str(order.get("side") or "").upper() == "BUY")
+                price_source = (
+                    "legacy-broker-average" if ev == "legacy_migrate"
+                    else str(order.get("fill_price_source") or "broker"))
+                price_estimated = ev == "legacy_migrate"
+                verified = bool(
+                    event_id and cost_event
+                    and str(order.get("side") or "").upper() == "BUY"
+                    and not price_estimated)
                 if not verified:
                     incomplete += 1
                 trades.append({
@@ -275,6 +296,8 @@ def _trade_rows(position_events: list[dict], cost_events: list[dict],
                     "return_pct": None,
                     "remaining_qty": int(lot["qty"]),
                     "partial_exit": False,
+                    "fill_price_source": price_source,
+                    "price_estimated": price_estimated,
                     "verified": verified,
                 })
             continue
@@ -330,6 +353,10 @@ def _trade_rows(position_events: list[dict], cost_events: list[dict],
         remaining = max(0, before_qty - qty)
         name = str(lot.get("name") or fallback_meta.get("name") or code)
         sleeve = str(lot.get("sleeve") or fallback_meta.get("sleeve") or "A").upper()
+        price_source = str(order.get("fill_price_source") or "broker")
+        price_estimated = price_source in {
+            "submitted-fallback", "legacy-ledger-price",
+        }
         trades.append({
             "side": "sell",
             "executed_at": _iso_kst(timestamp),
@@ -360,9 +387,12 @@ def _trade_rows(position_events: list[dict], cost_events: list[dict],
             "return_pct": round(return_pct, 4) if return_pct is not None else None,
             "remaining_qty": remaining,
             "partial_exit": remaining > 0,
+            "fill_price_source": price_source,
+            "price_estimated": price_estimated,
             "verified": bool(
                 lot.get("source") == "confirmed"
-                and cost_closed is not None and pnl_krw is not None),
+                and cost_closed is not None and pnl_krw is not None
+                and not price_estimated),
         })
         ratio = qty / before_qty
         lot["native_cost"] = max(

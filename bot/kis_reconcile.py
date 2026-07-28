@@ -348,9 +348,39 @@ def reconcile_unknowns_kr(balance: dict | None) -> list[dict]:
 ACK_AGE_MIN_S = 90     # ack 해소 최소 나이(초) — 체결 진행 중 잔고 스냅샷 오독 방지
 
 
+def _verified_migrated_baseline_sell(order: dict, symbol: str,
+                                     before: int) -> bool:
+    """baseline 예외는 durable하게 이관된 봇 lot의 SELL에만 허용한다.
+
+    baseline 전체를 풀면 사용자 보유의 잔고 감소를 봇 주문 체결로 오귀속할 수 있다.
+    포지션 정체성·수량과 원가 lot이 모두 정확히 일치할 때만 좁게 통과시킨다.
+    """
+    if str(order.get("side") or "").upper() != "SELL":
+        return False
+    pos_key = str(order.get("pos_key") or "")
+    if not pos_key or before <= 0:
+        return False
+    try:
+        from bot import costbook, kis_positions
+        rec = kis_positions.load().get(symbol) or {}
+        book = costbook._fold()
+        lot = (book.get("lots") or {}).get(pos_key) or {}
+        return bool(
+            book.get("healthy")
+            and rec.get("legacy_migrated") is True
+            and str(rec.get("pos_key") or "") == pos_key
+            and int(rec.get("qty") or 0) == before
+            and str(lot.get("symbol") or "").upper() == symbol
+            and int(lot.get("qty") or 0) == before
+        )
+    except Exception:
+        return False
+
+
 def resolve_acks_by_balance(hmaps: dict[str, dict | None],
                             now_ts: float | None = None,
-                            fill_prices: dict[str, dict[str, float]] | None = None
+                            fill_prices: dict[str, dict[str, float]] | None = None,
+                            only_keys: set[str] | None = None,
                             ) -> list[dict]:
     """접수(submitted/ack) 주문의 잔고-delta 확정 — KR unknown 대사와 동일한 안전 정리.
 
@@ -387,6 +417,8 @@ def resolve_acks_by_balance(hmaps: dict[str, dict | None],
     results: list[dict] = []
     base = ownership.baseline()
     for o in fold_open:
+        if only_keys is not None and str(o.get("key") or "") not in only_keys:
+            continue
         if o.get("state") not in ("submitted", "ack") or o.get("reconciled"):
             continue
         side = (o.get("side") or "").upper()
@@ -401,8 +433,18 @@ def resolve_acks_by_balance(hmaps: dict[str, dict | None],
             continue                               # 아직 어림 — 다음 사이클
         if open_count.get(S, 0) != 1:
             continue                               # net 귀속 불가(동시 주문) — 보류
-        if base is None or S in base or ownership.is_frozen(S):
-            continue                               # 미armed/사용자 기보유/동결 — 보류
+        if base is None or ownership.is_frozen(S):
+            continue                               # 미armed/동결 — 보류
+        # 구버전 절반익절은 hldg_before에 전체 보유가 아니라 주문수량을 잘못
+        # 저장했다. 이관 도구가 durable pos_key+원가 lot+원래 수량을 모두 증명한
+        # 주문만 legacy_hldg_before로 교정한다. 일반 주문은 기존 before 그대로다.
+        legacy_before = o.get("legacy_hldg_before")
+        if legacy_before is not None and _verified_migrated_baseline_sell(
+                o, S, int(legacy_before)):
+            before = int(legacy_before)
+        if S in base and not _verified_migrated_baseline_sell(
+                o, S, int(before)):
+            continue                               # 사용자 기보유는 검증된 이관 SELL만 예외
         market = o.get("market") or kis.market_of_symbol(S)
         hmap = hmaps.get(market)
         if hmap is None:
@@ -411,7 +453,10 @@ def resolve_acks_by_balance(hmaps: dict[str, dict | None],
         before = int(before)
         delta = (now_qty - before) if side == "BUY" else (before - now_qty)
         if delta == Q:                             # 정확 full-fill만 자동확정
-            price = ((fill_prices or {}).get(market) or {}).get(S)
+            # 보유 평단은 BUY 체결가의 근사 근거일 뿐 SELL 체결가가 아니다.
+            # SELL에서 평단을 쓰면 실현손익이 0 근처로 조작되므로 제출가만 폴백한다.
+            balance_price = ((fill_prices or {}).get(market) or {}).get(S)
+            price = balance_price if side == "BUY" else None
             source = "balance-average" if price else "submitted-fallback"
             price = float(price or o.get("price") or 0) or None
             r = ledger.reconcile(o["key"], Q, fill_price=price,

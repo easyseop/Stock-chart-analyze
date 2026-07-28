@@ -20,6 +20,7 @@ import os
 import sys
 import tempfile
 import time
+from unittest import mock
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -117,6 +118,77 @@ def test_concurrent_and_baseline_and_fail_hold():
     print("[PASS] 동시주문·baseline 심볼·잔고실패 → 전부 보류(fail-closed)")
 
 
+def test_migrated_baseline_sell_resolves_but_uses_sell_order_price():
+    """baseline 예외는 이관 pos_key+원가+before 3중 일치 SELL만 통과한다."""
+    with tempfile.TemporaryDirectory() as tmp:
+        M = _setup(tmp)
+        L, R, O = M["ledger"], M["kis_reconcile"], M["ownership"]
+        from bot import costbook as C, kis_positions as P
+        O.capture_baseline([{"ovrs_pdno": "CAG"}])
+        pos_key = "legacy:A:CAG:2026-07-20"
+        with mock.patch.object(P, "PATH", os.path.join(tmp, "positions.jsonl")), \
+             mock.patch.dict(os.environ, {
+                 "COSTBOOK_PATH": os.path.join(tmp, "costbook.jsonl"),
+             }):
+            C.add_lot(
+                pos_key, "CAG", 10, 100.0, fx=1380.0, sleeve="A",
+                event_id="legacy-seed",
+            )
+            P.migrate_legacy(
+                "CAG", qty=10, entry=100.0, stop=90.0, stop0=90.0,
+                ccy="USD", pos_key=pos_key, opened="2026-07-20",
+                sleeve="A", event_id="legacy-position",
+            )
+            L._append({
+                "ev": "submit", "key": "sell:cag", "symbol": "CAG",
+                "intended": 5, "filled": 0, "state": "submitted",
+                "meta": {
+                    "side": "SELL", "hldg_before": 5,
+                    "legacy_hldg_before": 10,
+                    "legacy_migrated_order": True, "market": "US",
+                    "price": 110.0, "pos_key": pos_key, "sleeve": "A",
+                    "fx": 1380.0, "ccy": "USD",
+                },
+                "ts": time.time() - 200,
+            })
+            L.on_result("sell:cag", "ack", 0)
+            rs = R.resolve_acks_by_balance(
+                {"US": {"CAG": 5}},
+                fill_prices={"US": {"CAG": 100.0}},
+            )
+            assert len(rs) == 1 and rs[0]["state"] == "filled"
+            assert L.state_of("sell:cag")["fill_price"] == 110.0
+            assert L.state_of("sell:cag")["fill_price_source"] \
+                == "submitted-fallback"
+            assert C.open_qty("CAG") == 5 and P.load()["CAG"]["qty"] == 5
+
+            # pos_key가 다르면 같은 baseline·같은 delta라도 자동 귀속하지 않는다.
+            P.migrate_legacy(
+                "MSFT", qty=10, entry=100.0, stop=90.0, stop0=90.0,
+                ccy="USD", pos_key="legacy:A:MSFT:2026-07-20",
+                opened="2026-07-20", sleeve="A", event_id="msft-position",
+            )
+            C.add_lot(
+                "legacy:A:MSFT:2026-07-20", "MSFT", 10, 100.0,
+                fx=1380.0, sleeve="A", event_id="msft-seed",
+            )
+            O.capture_baseline([{"ovrs_pdno": "MSFT"}])
+            L._append({
+                "ev": "submit", "key": "sell:msft", "symbol": "MSFT",
+                "intended": 5, "filled": 0, "state": "submitted",
+                "meta": {
+                    "side": "SELL", "hldg_before": 10, "market": "US",
+                    "price": 110.0, "pos_key": "wrong", "sleeve": "A",
+                    "fx": 1380.0, "ccy": "USD",
+                },
+                "ts": time.time() - 200,
+            })
+            L.on_result("sell:msft", "ack", 0)
+            assert R.resolve_acks_by_balance({"US": {"MSFT": 5}}) == []
+            assert L.state_of("sell:msft")["state"] == "ack"
+    print("[PASS] migrated baseline SELL만 해소·SELL은 평단 아닌 제출가 사용")
+
+
 def test_boot_wires_ack_resolution():
     """kis_boot.boot_reconcile이 ack 대사를 함께 수행하는지(잔고 모킹)."""
     from unittest import mock
@@ -142,6 +214,7 @@ def main():
     test_age_gate_holds_fresh_orders()
     test_partial_holds_and_anomaly_freezes()
     test_concurrent_and_baseline_and_fail_hold()
+    test_migrated_baseline_sell_resolves_but_uses_sell_order_price()
     test_boot_wires_ack_resolution()
     print("\nack 잔고대사 검증 통과 — 접수 주문이 파수꾼/캡/재진입을 영구 차단하는 구멍 해소.")
 

@@ -99,6 +99,30 @@ def apply_sell_fill(code: str, *, qty: int, price: float,
              "event_id": str(event_id or "")})
 
 
+def migrate_legacy(code: str, *, qty: int, entry: float, stop: float,
+                   stop0: float, ccy: str, pos_key: str, name: str = "",
+                   opened: str = "", sleeve: str = "A",
+                   target: float | None = None, event_id: str = "") -> None:
+    """구버전 포지션을 정확한 수량·정체성으로 1회 교체한다.
+
+    일반 매수 체결의 증가(delta) 이벤트와 달리 ``qty``를 절대값으로 설정한다.
+    legacy 이관 전용이며 event_id 멱등성을 반드시 사용한다.
+    """
+    if not event_id:
+        raise ValueError("legacy migration requires event_id")
+    if int(qty) <= 0 or float(entry) <= 0 or float(stop) <= 0 \
+            or float(stop0) <= 0 or not str(pos_key).strip():
+        raise ValueError("invalid legacy migration position")
+    _append({
+        "ev": "legacy_migrate", "code": str(code).upper(),
+        "qty": int(qty), "entry": float(entry), "stop": float(stop),
+        "stop0": float(stop0), "ccy": str(ccy), "pos_key": str(pos_key),
+        "name": str(name), "opened": str(opened),
+        "sleeve": str(sleeve).upper(), "target": target,
+        "legacy_migrated": True, "event_id": str(event_id),
+    })
+
+
 def close(code: str) -> None:
     """전량 청산 확정 시 기록(더는 보호 불필요 — 폴드에서 제거)."""
     _append({"ev": "close", "code": str(code).upper()})
@@ -164,6 +188,23 @@ def load() -> dict:
                                 (old_px * old_q + px * q) / (old_q + q)
                                 if old_q + q > 0 else px)
                             cur["qty"] = old_q + q
+                    elif ev.get("ev") == "legacy_migrate":
+                        q = max(0, int(ev.get("qty") or 0))
+                        entry = float(ev.get("entry") or 0)
+                        stop = float(ev.get("stop") or 0)
+                        stop0 = float(ev.get("stop0") or stop)
+                        if q <= 0 or entry <= 0 or stop <= 0 or stop0 <= 0:
+                            continue
+                        st[code] = {
+                            "code": code, "stop": stop, "stop0": stop0,
+                            "ccy": ev.get("ccy"), "entry": entry, "qty": q,
+                            "name": ev.get("name", ""),
+                            "opened": ev.get("opened", ""),
+                            "sleeve": ev.get("sleeve", "A"),
+                            "target": ev.get("target"),
+                            "pos_key": ev.get("pos_key", ""),
+                            "legacy_migrated": True,
+                        }
                     elif ev.get("ev") == "sell_fill" and code in st:
                         st[code]["qty"] = max(
                             0, int(st[code].get("qty") or 0)

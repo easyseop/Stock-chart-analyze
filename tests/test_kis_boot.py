@@ -137,6 +137,33 @@ def test_fill_notifications_use_explicit_trade_category():
     print("[PASS] 매수·매도 체결확정 → 문구와 무관한 명시적 trade 분류")
 
 
+def test_full_sell_order_does_not_close_remaining_position():
+    """절반익절 주문 자체 full-fill을 종목 전량청산으로 오해하지 않는다."""
+    with tempfile.TemporaryDirectory() as tmp:
+        _, _, B = _setup(tmp)
+        now = time.time()
+        aged = [{
+            "state": "ack", "side": "SELL", "submitted_at": now - 200,
+            "market": "US", "symbol": "CAG", "excg": "NASD",
+        }]
+        resolved = [{
+            "symbol": "CAG", "side": "SELL", "filled": 5, "residual": 0,
+        }]
+        with mock.patch.object(B.ledger, "open_orders", side_effect=[aged, []]), \
+             mock.patch.object(B.kis, "open_orders",
+                               return_value={"rt_cd": "0", "output": []}), \
+             mock.patch.object(B.kis, "fills",
+                               return_value={"rt_cd": "0", "output": []}), \
+             mock.patch.object(B.kis_reconcile, "resolve_acks_from_rows",
+                               return_value=resolved), \
+             mock.patch.object(B.kis_reconcile, "resolve_acks_by_balance",
+                               return_value=[]), \
+             mock.patch("bot.kis_positions.close") as close:
+            assert B._resolve_acks() == resolved
+        assert not close.called
+    print("[PASS] 절반익절 주문 full-fill ≠ 포지션 전체 close")
+
+
 def test_sentinel_kis_place_sell_mapping():
     with tempfile.TemporaryDirectory() as tmp:
         _setup(tmp)
@@ -167,6 +194,14 @@ def test_sentinel_kis_place_sell_mapping():
         assert r["state"] == "dry_run" and not balance.called and not place.called
         # 매수 경로 부재(매도 전용 원칙)
         assert not hasattr(br, "place_buy") and not hasattr(br, "buy")
+        with mock.patch.object(sn, "LIVE", True), \
+             mock.patch.object(br, "quote", return_value=100.0), \
+             mock.patch("bot.kis.sellable_holdings", return_value={"AAPL": 5}), \
+             mock.patch("bot.kis_orders.place_sell",
+                        return_value={"ok": True, "act": "ack",
+                                      "key": "half", "odno": "1"}) as place:
+            br.place_sell("AAPL", 2, "익절 +1R 절반", "half")
+        assert place.call_args.kwargs["hldg_before"] == 5
     print("[PASS] X4: place_sell 정규화(ack/unknown/rejected)·매수 경로 없음")
 
 
@@ -176,6 +211,7 @@ def main():
     test_query_failure_fail_closed()
     test_low_keeps_lock()
     test_fill_notifications_use_explicit_trade_category()
+    test_full_sell_order_does_not_close_remaining_position()
     test_sentinel_kis_place_sell_mapping()
     print("\n모든 O4/X4 테스트 통과 — 부팅 대사 게이트·파수꾼 KIS 배선.")
 
