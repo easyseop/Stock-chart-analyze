@@ -31,7 +31,10 @@ import os
 import threading
 import time
 
-LEDGER_PATH = os.environ.get("ORDER_LEDGER_PATH", "bot/order_ledger.jsonl")
+LEDGER_PATH = os.environ.get(
+    "ORDER_LEDGER_PATH",
+    os.path.join(os.path.dirname(__file__), "order_ledger.jsonl"),
+)
 
 # 종료 상태(더 이상 잔여 없음) vs 진행 상태
 _TERMINAL = {"filled", "rejected", "cancelled", "expired", "dry_run"}

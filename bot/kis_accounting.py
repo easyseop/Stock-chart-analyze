@@ -140,19 +140,22 @@ def monitor_unaccounted_fills(*, alert_cycles: int | None = None) -> dict:
 def sync_fill(key: str, *, filled_qty: int | None = None,
               fill_price: float | None = None,
               commission_krw: float = 0.0,
-              fill_price_source: str = "broker") -> dict:
+              fill_price_source: str = "broker",
+              realized_day_kst: str | None = None) -> dict:
     """동일 체결을 여러 프로세스가 동시에 회계하지 못하게 원장 flock으로 직렬화."""
     with ledger._file_lock(True):
         return _sync_fill_locked(
             key, filled_qty=filled_qty, fill_price=fill_price,
             commission_krw=commission_krw,
-            fill_price_source=fill_price_source)
+            fill_price_source=fill_price_source,
+            realized_day_kst=realized_day_kst)
 
 
 def _sync_fill_locked(key: str, *, filled_qty: int | None = None,
                       fill_price: float | None = None,
                       commission_krw: float = 0.0,
-                      fill_price_source: str = "broker") -> dict:
+                      fill_price_source: str = "broker",
+                      realized_day_kst: str | None = None) -> dict:
     """확인된 누적 체결을 회계에 동기화. 반환 {ok, delta, why?, pnl?}.
 
     체결가가 없으면 추측해 장부를 오염시키지 않고 보류한다. 호출부는 다음 ccnl/잔고
@@ -211,8 +214,11 @@ def _sync_fill_locked(key: str, *, filled_qty: int | None = None,
     else:
         # 업그레이드 전에 ack 시점으로만 기록된 기존 포지션은 costbook lot이 없다.
         # 저장된 진입가로 보수적 1회 시딩해 실현손익을 0원가 이익으로 오계상하지 않는다.
+        book = costbook._fold()
+        close_already_durable = fill_event in (
+            book.get("event_results") or {})
         book_qty = costbook.open_qty(symbol, sleeve)
-        if book_qty < delta:
+        if not close_already_durable and book_qty < delta:
             rec = kis_positions.load().get(symbol) or {}
             try:
                 legacy_qty = int(rec.get("qty") or 0)
@@ -226,7 +232,8 @@ def _sync_fill_locked(key: str, *, filled_qty: int | None = None,
                                  event_id=fill_event + ":legacy")
         proceeds = px * delta * fx - fee
         pnl = costbook.close_lot(
-            pos_key, delta, proceeds, sleeve=sleeve, event_id=fill_event)
+            pos_key, delta, proceeds, sleeve=sleeve,
+            day_kst=realized_day_kst, event_id=fill_event)
         kis_positions.apply_sell_fill(
             symbol, qty=delta, price=px, pos_key=pos_key,
             event_id=fill_event)

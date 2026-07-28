@@ -355,7 +355,7 @@ def _trade_rows(position_events: list[dict], cost_events: list[dict],
         sleeve = str(lot.get("sleeve") or fallback_meta.get("sleeve") or "A").upper()
         price_source = str(order.get("fill_price_source") or "broker")
         price_estimated = price_source in {
-            "submitted-fallback", "legacy-ledger-price",
+            "submitted-fallback", "legacy-ledger-price", "balance-average",
         }
         trades.append({
             "side": "sell",

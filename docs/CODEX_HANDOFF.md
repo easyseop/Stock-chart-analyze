@@ -760,3 +760,50 @@ Claude 검토 요청서는
 승인 뒤에도 L1 해제는 총시드·열린 주문·보호수량 재검증을 거치는 별도 게이트다.
 실제 apply 런북에서는 sentinel/buyloop를 stop한 뒤 runtime mask하고, 검증 완료
 후 반드시 `systemctl unmask --runtime`한 다음 재시작한다.
+
+### 14. 2026-07-28 legacy 이관 Claude 1차 차단 수정 (재검토 대기)
+
+Claude 1차 적대검토는 16개 반증질문 중 14개가 HOLDS였으나 P1 2건과 apply 전
+P2 4건을 확인해 merge·Oracle apply·L1 해제를 차단했다. 이 브랜치에서 6건을
+모두 수정했으며 Oracle 운영 코드·장부·서비스·L1에는 손대지 않았다.
+
+P1 수정:
+
+- SELL costbook close가 fsync된 뒤 `kis_positions.apply_sell_fill` 전에
+  프로세스가 죽어도, 같은 `fill_event`가 costbook `event_results`에 있으면
+  legacy lot를 다시 시딩하지 않는다. BAM 완전청산 장애주입에서 재실행 후에도
+  `buy_cost`, `sell_proceeds`, 실현손익, 열린 수량이 각각 정확히 한 번만
+  남는 것을 확인했다.
+- 구버전 `balance-average`는 실제 SELL 체결가가 아니라 보유 평단 오염값으로
+  취급한다. 이관 plan은 해당 값을 버리고 원 주문 제출가를
+  `submitted-fallback` 추정값으로 사용하며, 거래이력도
+  `price_estimated=true`, `verified=false`로 표시한다.
+- 이관 실현손익은 apply 실행일이 아니라 원 SELL `submitted_at`의 KST 거래일에
+  귀속해 현재 일일손실 서킷브레이커를 오염시키지 않는다.
+
+P2 수정:
+
+- `PLAN_VERSION=2`에 주문·포지션·원가장부 절대경로를 넣고 apply 시 현재 경로와
+  완전일치하지 않으면 거부한다. `ORDER_LEDGER_PATH` 기본값도 cwd 상대가 아닌
+  `ledger.py` 기준 절대경로로 바꿨다.
+- apply 직전과 백업 직후 두 번 주문 원장·`kis_positions`·costbook 무손상,
+  broker snapshot, 서비스 정지를 다시 확인한다. positions 손상은 백업·mutation
+  전에 차단한다.
+- systemd inactive+runtime mask뿐 아니라 `pgrep`으로 수동
+  `bot.sentinel`/`bot.kis_buyloop` 프로세스가 0개인지 확인한다. heartbeat가
+  120초 이내로 신선해도 거부한다. 따라서 실제 apply는 서비스 정지·mask 뒤
+  heartbeat가 120초를 넘은 후 새 5분 plan을 생성해야 한다.
+- 잔고 ACK 대사는 `complete_snapshot=True` 명시 또는 exact `only_keys`가
+  없으면 0건을 반환한다. 부분 hmap으로 관계없는 SELL을 잔고 0으로 오인하는
+  미래 호출자 반례를 계약 자체로 차단했다.
+
+추가 방어로 비숫자 `legacy_hldg_before`는 해당 주문만 보류해 대사 배치 전체를
+깨지 않게 했다. 집중 migration/ACK/accounting/boot/trade-history 테스트,
+SELL close→position 중간 크래시, 원장 경로 불일치, positions 손상, 백업 후
+수동 프로세스 재등장 장애주입을 통과했다. 전체 Python `45/45`, Node `8/8`,
+`compileall`, JavaScript 문법과 `git diff --check`도 통과했다.
+
+Claude 재검토서는
+`docs/CLAUDE_REVIEW_LEGACY_MIGRATION_ACK_FIX_V2.md`다. 재승인 전에는 기본
+브랜치 merge·Oracle 코드 배포·장부 apply·L1 해제를 모두 금지한다. 승인 뒤에도
+Oracle apply와 L1 해제는 서로 다른 게이트다.

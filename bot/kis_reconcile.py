@@ -381,6 +381,9 @@ def resolve_acks_by_balance(hmaps: dict[str, dict | None],
                             now_ts: float | None = None,
                             fill_prices: dict[str, dict[str, float]] | None = None,
                             only_keys: set[str] | None = None,
+                            *,
+                            complete_snapshot: bool = False,
+                            realized_days: dict[str, str] | None = None,
                             ) -> list[dict]:
     """접수(submitted/ack) 주문의 잔고-delta 확정 — KR unknown 대사와 동일한 안전 정리.
 
@@ -407,6 +410,11 @@ def resolve_acks_by_balance(hmaps: dict[str, dict | None],
     """
     import time as _t
     from bot import kis, kis_accounting, ownership
+    # 잔고 map 일부만 주고 대상키도 제한하지 않으면, 누락 종목을 0주로 오인해
+    # 관계없는 SELL을 체결로 확정할 수 있다. 전체 snapshot임을 호출자가 명시하거나
+    # exact 주문키 집합을 함께 주는 두 계약만 허용한다.
+    if only_keys is None and not complete_snapshot:
+        return []
     now_ts = _t.time() if now_ts is None else float(now_ts)
     fold_open = ledger.open_orders()
     open_count: dict[str, int] = {}
@@ -439,9 +447,13 @@ def resolve_acks_by_balance(hmaps: dict[str, dict | None],
         # 저장했다. 이관 도구가 durable pos_key+원가 lot+원래 수량을 모두 증명한
         # 주문만 legacy_hldg_before로 교정한다. 일반 주문은 기존 before 그대로다.
         legacy_before = o.get("legacy_hldg_before")
-        if legacy_before is not None and _verified_migrated_baseline_sell(
-                o, S, int(legacy_before)):
-            before = int(legacy_before)
+        if legacy_before is not None:
+            try:
+                legacy_before = int(legacy_before)
+            except (TypeError, ValueError):
+                continue
+            if _verified_migrated_baseline_sell(o, S, legacy_before):
+                before = legacy_before
         if S in base and not _verified_migrated_baseline_sell(
                 o, S, int(before)):
             continue                               # 사용자 기보유는 검증된 이관 SELL만 예외
@@ -463,7 +475,8 @@ def resolve_acks_by_balance(hmaps: dict[str, dict | None],
                                  fill_price_source=source)
             acct = kis_accounting.sync_fill(
                 o["key"], filled_qty=Q, fill_price=price,
-                fill_price_source=source)
+                fill_price_source=source,
+                realized_day_kst=(realized_days or {}).get(o["key"]))
             results.append({"key": o["key"], "symbol": S, "side": side,
                             "market": market, "via": "ack-balance",
                             "accounting": acct, **r})

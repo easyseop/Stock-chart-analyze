@@ -58,7 +58,10 @@ def _buy(key: str, code: str, qty: int) -> None:
 
 
 def _sell(key: str, code: str, qty: int, *, ack: bool,
-          opened: str = "2026-07-20", price: float = 110.0) -> None:
+          opened: str = "2026-07-20", price: float = 110.0,
+          fill_price: float | None = None,
+          fill_price_source: str = "legacy",
+          submitted_at: float | None = None) -> None:
     meta = {
         "side": "SELL", "market": "US", "excg": "NASD",
         # 실제 구버전 버그: 절반매도에서 전체 보유(10)가 아니라 주문수량을 저장.
@@ -69,13 +72,19 @@ def _sell(key: str, code: str, qty: int, *, ack: bool,
             "pos_key": f"legacy:A:{code}:{opened}",
             "sleeve": "A", "fx": 1380.0, "ccy": "USD",
         })
-    L.record_submit(key, code, qty, "legacy sell", meta=meta)
+    L._append({
+        "ev": "submit", "key": key, "symbol": code,
+        "intended": qty, "filled": 0, "state": "submitted",
+        "reason": "legacy sell", "meta": meta,
+        "ts": time.time() if submitted_at is None else float(submitted_at),
+    })
     if ack:
         L.on_result(key, "ack", 0)
     else:
         L.on_result(
-            key, "filled", qty, fill_price=price,
-            fill_price_source="legacy", open_order=False,
+            key, "filled", qty,
+            fill_price=price if fill_price is None else fill_price,
+            fill_price_source=fill_price_source, open_order=False,
         )
 
 
@@ -89,7 +98,11 @@ def _fixture() -> dict[str, dict]:
 
     _open("BAM", 10)
     _buy("buy:bam", "BAM", 10)
-    _sell("sell:bam", "BAM", 10, ack=False, price=80.0)
+    _sell(
+        "sell:bam", "BAM", 10, ack=False, price=80.0,
+        fill_price=100.0, fill_price_source="balance-average",
+        submitted_at=1704153600.0,
+    )
     P.close("BAM")
 
     O.capture_baseline([
@@ -126,7 +139,13 @@ def test_plan_is_read_only_and_apply_reconstructs_all_three_shapes():
         with mock.patch.object(M, "_broker_snapshot", return_value=snapshot):
             plan = M.build_plan(now=stamp)
         assert len(plan["entries"]) == 3
+        bam_plan = next(row for row in plan["entries"]
+                        if row["symbol"] == "BAM")
+        assert bam_plan["sell_price"] == 80.0
+        assert bam_plan["sell_price_source"] == "submitted-fallback"
+        assert bam_plan["sell_day_kst"] == "2024-01-02"
         assert plan["safety"]["orders_sent"] is False
+        assert plan["journal_paths"] == M._journal_paths()
         assert os.path.getsize(L.LEDGER_PATH) == before_sizes["ledger"]
         assert os.path.getsize(P.PATH) == before_sizes["positions"]
         assert C.open_qty("AAPL") == 0
@@ -164,6 +183,9 @@ def test_plan_is_read_only_and_apply_reconstructs_all_three_shapes():
         assert L.state_of("sell:unrelated")["state"] == "ack"
         cag_event = C._fold()["event_results"]["fill:sell:cag:SELL:5"]
         assert cag_event["pnl"] == 5 * (110.0 - 100.0) * 1380.0
+        bam_event = C._fold()["event_results"]["fill:sell:bam:SELL:10"]
+        assert bam_event["pnl"] == 10 * (80.0 - 100.0) * 1380.0
+        assert C._fold()["daily_realized"]["2024-01-02"] == bam_event["pnl"]
         with open(
                 os.path.join(tmp, "backup-1", "manifest.json"),
                 encoding="utf-8") as fp:
@@ -199,6 +221,12 @@ def test_plan_is_read_only_and_apply_reconstructs_all_three_shapes():
                         if row["side"] == "sell" and row["code"] == "CAG")
         assert cag_sale["price_estimated"] is True
         assert cag_sale["fill_price_source"] == "submitted-fallback"
+        bam_sale = next(row for row in history["trades"]
+                        if row["side"] == "sell" and row["code"] == "BAM")
+        assert bam_sale["exit_price"] == 80.0
+        assert bam_sale["price_estimated"] is True
+        assert bam_sale["verified"] is False
+        assert bam_sale["fill_price_source"] == "submitted-fallback"
 
         sizes = (
             os.path.getsize(L.LEDGER_PATH),
@@ -309,6 +337,130 @@ def test_crash_after_ack_reconcile_resumes_sell_accounting():
     print("[PASS] ACK reconcile 직후 crash → 동일 plan SELL 회계 복구")
 
 
+def test_crash_after_sell_costbook_close_does_not_reseed_phantom_lot():
+    with tempfile.TemporaryDirectory() as tmp, ExitStack() as stack:
+        _paths(stack, tmp)
+        _open("BAM", 10)
+        _buy("buy:bam", "BAM", 10)
+        _sell(
+            "sell:bam", "BAM", 10, ack=False, price=80.0,
+            fill_price=100.0, fill_price_source="balance-average",
+            submitted_at=1704153600.0,
+        )
+        P.close("BAM")
+        O.capture_baseline([{"ovrs_pdno": "BAM"}])
+        snapshot = {"BAM": {"qty": 0, "avg": 0.0, "market": "US"}}
+        stamp = time.time()
+        with mock.patch.object(M, "_broker_snapshot", return_value=snapshot):
+            plan = M.build_plan(now=stamp)
+        ack = f"APPLY {plan['plan_sha256']}"
+
+        with mock.patch.object(M, "_broker_snapshot", return_value=snapshot), \
+             mock.patch.object(M, "_services_quiesced",
+                               return_value=(True, "ok")), \
+             mock.patch.object(
+                 P, "apply_sell_fill",
+                 side_effect=OSError("fault after durable close")):
+            try:
+                M.apply_plan(
+                    plan, ack=ack, services_stopped=True, now=stamp + 1,
+                    backup_dir=os.path.join(tmp, "backup-sell-crash-1"),
+                )
+                raise AssertionError("SELL close 이후 fault가 발생하지 않음")
+            except OSError:
+                pass
+
+        folded = C._fold()
+        original_cost = 10 * 100.0 * 1380.0
+        assert folded["totals"]["buy_cost"] == original_cost
+        assert C.open_qty("BAM") == 0
+        assert "fill:sell:bam:SELL:10" in folded["event_results"]
+        assert int(L.state_of("sell:bam").get("accounted") or 0) == 0
+
+        with mock.patch.object(M, "_broker_snapshot", return_value=snapshot), \
+             mock.patch.object(M, "_services_quiesced",
+                               return_value=(True, "ok")):
+            out = M.apply_plan(
+                plan, ack=ack, services_stopped=True, now=stamp + 2,
+                backup_dir=os.path.join(tmp, "backup-sell-crash-2"),
+            )
+        folded = C._fold()
+        assert out["ok"] and C.open_qty("BAM") == 0
+        assert folded["totals"]["buy_cost"] == original_cost
+        assert folded["totals"]["sell_proceeds"] == 10 * 80.0 * 1380.0
+        assert int(L.state_of("sell:bam").get("accounted") or 0) == 10
+        assert "BAM" not in P.load()
+    print("[PASS] SELL close→position 사이 crash 재실행에도 팬텀 lot·손익 중복 0")
+
+
+def test_apply_rechecks_paths_positions_and_post_backup_quiescence():
+    with tempfile.TemporaryDirectory() as tmp, ExitStack() as stack:
+        _paths(stack, tmp)
+        _open("AAPL", 10)
+        _buy("buy:aapl", "AAPL", 10)
+        O.capture_baseline([{"ovrs_pdno": "AAPL"}])
+        snapshot = {"AAPL": {"qty": 10, "avg": 100.0, "market": "US"}}
+        stamp = time.time()
+        with mock.patch.object(M, "_broker_snapshot", return_value=snapshot):
+            plan = M.build_plan(now=stamp)
+        ack = f"APPLY {plan['plan_sha256']}"
+
+        with mock.patch.object(
+                L, "LEDGER_PATH", os.path.join(tmp, "wrong-cwd-ledger.jsonl")):
+            try:
+                M.apply_plan(
+                    plan, ack=ack, services_stopped=True, now=stamp + 1,
+                    backup_dir=os.path.join(tmp, "backup-path-mismatch"),
+                )
+                raise AssertionError("원장 절대경로 불일치가 거부되지 않음")
+            except M.MigrationRefused as exc:
+                assert "절대경로 불일치" in str(exc)
+
+        with open(P.PATH, "a", encoding="utf-8") as fp:
+            fp.write("{broken-position-json\n")
+        corrupt_backup = os.path.join(tmp, "backup-position-corrupt")
+        with mock.patch.object(M, "_broker_snapshot", return_value=snapshot), \
+             mock.patch.object(M, "_services_quiesced",
+                               return_value=(True, "ok")):
+            try:
+                M.apply_plan(
+                    plan, ack=ack, services_stopped=True, now=stamp + 1,
+                    backup_dir=corrupt_backup,
+                )
+                raise AssertionError("apply 직전 positions 손상이 거부되지 않음")
+            except M.MigrationRefused as exc:
+                assert "kis_positions 손상" in str(exc)
+        assert not os.path.exists(corrupt_backup)
+
+    with tempfile.TemporaryDirectory() as tmp, ExitStack() as stack:
+        _paths(stack, tmp)
+        _open("AAPL", 10)
+        _buy("buy:aapl", "AAPL", 10)
+        O.capture_baseline([{"ovrs_pdno": "AAPL"}])
+        snapshot = {"AAPL": {"qty": 10, "avg": 100.0, "market": "US"}}
+        stamp = time.time()
+        with mock.patch.object(M, "_broker_snapshot", return_value=snapshot):
+            plan = M.build_plan(now=stamp)
+        ack = f"APPLY {plan['plan_sha256']}"
+        backup_dir = os.path.join(tmp, "backup-process-reappeared")
+        with mock.patch.object(M, "_broker_snapshot", return_value=snapshot), \
+             mock.patch.object(
+                 M, "_services_quiesced",
+                 side_effect=[(True, "ok"), (False, "manual process")]):
+            try:
+                M.apply_plan(
+                    plan, ack=ack, services_stopped=True, now=stamp + 1,
+                    backup_dir=backup_dir,
+                )
+                raise AssertionError("백업 후 서비스 재등장이 거부되지 않음")
+            except M.MigrationRefused as exc:
+                assert "백업 후 주문 서비스 재등장" in str(exc)
+        assert os.path.isdir(backup_dir)            # forensic 백업은 보존
+        assert C.open_qty("AAPL") == 0
+        assert int(L.state_of("buy:aapl").get("accounted") or 0) == 0
+    print("[PASS] 원장경로·positions 손상·백업 후 프로세스 TOCTOU 전부 mutation 전 차단")
+
+
 def test_fail_closed_on_qty_overflow_snapshot_change_and_running_services():
     with tempfile.TemporaryDirectory() as tmp, ExitStack() as stack:
         _paths(stack, tmp)
@@ -411,18 +563,21 @@ def test_migration_import_graph_has_no_order_plane():
 
 
 def test_services_quiesced_requires_every_unit_inactive():
-    def _proc(state: str):
-        return mock.Mock(stdout=state + "\n", returncode=0)
+    def _proc(state: str, returncode: int = 0):
+        return mock.Mock(stdout=state + "\n", returncode=returncode)
 
-    with mock.patch.object(
-            M.subprocess, "run",
-            side_effect=[
-                _proc("inactive"), _proc("masked-runtime"),
-                _proc("inactive"), _proc("masked"),
-            ]) as run:
+    with mock.patch.object(M.heartbeat, "age_s",
+                           return_value=M.heartbeat.AGE_HARD_S + 1), \
+         mock.patch.object(
+             M.subprocess, "run",
+             side_effect=[
+                 _proc("inactive"), _proc("masked-runtime"),
+                 _proc("inactive"), _proc("masked"),
+                 _proc("", returncode=1),
+             ]) as run:
         assert M._services_quiesced() == (True, "ok")
         assert [call.args[0][1] for call in run.call_args_list] == [
-            "is-active", "is-enabled", "is-active", "is-enabled",
+            "is-active", "is-enabled", "is-active", "is-enabled", "-f",
         ]
 
     with mock.patch.object(
@@ -445,13 +600,38 @@ def test_services_quiesced_requires_every_unit_inactive():
             side_effect=subprocess.TimeoutExpired("systemctl", 3)):
         ok, why = M._services_quiesced()
     assert ok is False and "상태 조회 실패" in why
-    print("[PASS] sentinel/buyloop inactive+runtime mask만 허용·조회오류 차단")
+
+    with mock.patch.object(M.heartbeat, "age_s",
+                           return_value=M.heartbeat.AGE_HARD_S + 1), \
+         mock.patch.object(
+             M.subprocess, "run",
+             side_effect=[
+                 _proc("inactive"), _proc("masked"),
+                 _proc("inactive"), _proc("masked"),
+                 _proc("1234"),
+             ]):
+        ok, why = M._services_quiesced()
+    assert ok is False and "systemd 밖" in why
+
+    with mock.patch.object(M.heartbeat, "age_s", return_value=10.0), \
+         mock.patch.object(
+             M.subprocess, "run",
+             side_effect=[
+                 _proc("inactive"), _proc("masked"),
+                 _proc("inactive"), _proc("masked"),
+                 _proc("", returncode=1),
+             ]):
+        ok, why = M._services_quiesced()
+    assert ok is False and "heartbeat가 아직 신선함" in why
+    print("[PASS] inactive+mask·수동프로세스0·heartbeat stale만 apply 허용")
 
 
 def main():
     test_plan_is_read_only_and_apply_reconstructs_all_three_shapes()
     test_crash_before_buy_accounted_is_resumable_and_reservation_stays()
     test_crash_after_ack_reconcile_resumes_sell_accounting()
+    test_crash_after_sell_costbook_close_does_not_reseed_phantom_lot()
+    test_apply_rechecks_paths_positions_and_post_backup_quiescence()
     test_fail_closed_on_qty_overflow_snapshot_change_and_running_services()
     test_migration_import_graph_has_no_order_plane()
     test_services_quiesced_requires_every_unit_inactive()

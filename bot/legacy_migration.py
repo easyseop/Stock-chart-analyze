@@ -12,6 +12,7 @@
 from __future__ import annotations
 
 import argparse
+import datetime
 import hashlib
 import json
 import math
@@ -22,6 +23,7 @@ import time
 
 from bot import (
     costbook,
+    heartbeat,
     kill,
     kis,
     kis_accounting,
@@ -32,7 +34,7 @@ from bot import (
     settings,
 )
 
-PLAN_VERSION = 1
+PLAN_VERSION = 2
 PLAN_MAX_AGE_S = 300
 REQUIRED_STOPPED_UNITS = ("sentinel.service", "buyloop.service")
 
@@ -50,6 +52,15 @@ def _canonical(payload: dict) -> bytes:
 
 def plan_hash(payload: dict) -> str:
     return hashlib.sha256(_canonical(payload)).hexdigest()
+
+
+def _journal_paths() -> dict[str, str]:
+    """plan/apply가 같은 세 운영 원장을 가리키는지 확인할 절대경로 계약."""
+    return {
+        "order_ledger": os.path.abspath(ledger.LEDGER_PATH),
+        "kis_positions": os.path.abspath(kis_positions.PATH),
+        "costbook": os.path.abspath(costbook._path()),
+    }
 
 
 def _positive_number(value, label: str) -> float:
@@ -280,16 +291,34 @@ def _validate_sale(entry: dict, fold: dict[str, dict]) -> dict:
     sale_pos_key = str(sale.get("pos_key") or "")
     if sale_pos_key and sale_pos_key != entry["pos_key"]:
         raise MigrationRefused(f"{symbol} SELL pos_key 불일치")
+    recorded_source = str(sale.get("fill_price_source") or "")
+    if mode == "filled" and recorded_source == "balance-average":
+        # 구버전 잔고대사는 SELL 체결가에 보유 평단을 잘못 넣었다. 그 오염값을
+        # 실제 체결가로 확정하지 않고 원 주문 제출가로 보수적으로 되돌린다.
+        raw_price = sale.get("price")
+        price_source = "submitted-fallback"
+    else:
+        raw_price = sale.get("fill_price") or sale.get("price")
+        price_source = (
+            recorded_source
+            or ("legacy-ledger-price" if mode == "filled"
+                else "submitted-fallback"))
     sell_price = _positive_number(
-        sale.get("fill_price") or sale.get("price"),
-        f"{symbol} SELL price")
+        raw_price, f"{symbol} SELL price")
+    submitted_at = _positive_number(
+        sale.get("submitted_at"), f"{symbol} SELL submitted_at")
+    kst = datetime.timezone(datetime.timedelta(hours=9))
+    try:
+        sell_day_kst = datetime.datetime.fromtimestamp(
+            submitted_at, kst).date().isoformat()
+    except (OSError, OverflowError, ValueError) as exc:
+        raise MigrationRefused(
+            f"{symbol} SELL submitted_at 범위 오류") from exc
     return {
         "sell_key": key, "sell_mode": mode, "sold_qty": sold,
         "sell_price": round(sell_price, 8),
-        "sell_price_source": str(
-            sale.get("fill_price_source")
-            or ("legacy-ledger-price" if mode == "filled"
-                else "submitted-fallback")),
+        "sell_price_source": price_source,
+        "sell_day_kst": sell_day_kst,
     }
 
 
@@ -351,6 +380,7 @@ def build_plan(*, now: float | None = None) -> dict:
         "generated_at": stamp,
         "expires_at": stamp + PLAN_MAX_AGE_S,
         "broker_snapshot": broker,
+        "journal_paths": _journal_paths(),
         "entries": entries,
         "safety": {
             "orders_sent": False,
@@ -377,6 +407,8 @@ def _assert_plan(plan: dict, *, ack: str, services_stopped: bool,
         raise MigrationRefused("sentinel/buyloop 서비스 정지 확인 필요")
     if kis.ENV != "mock" or plan.get("environment") != "mock":
         raise MigrationRefused("KIS mock plan만 apply 가능")
+    if plan.get("journal_paths") != _journal_paths():
+        raise MigrationRefused("plan/apply 운영 원장 절대경로 불일치")
     if kill.level() < 1 or kill.allows("buy_new"):
         raise MigrationRefused("L1 이상 신규매수 차단이 확인되지 않음")
     generated = float(plan.get("generated_at") or 0)
@@ -407,6 +439,11 @@ def _assert_plan(plan: dict, *, ack: str, services_stopped: bool,
         if sold > 0:
             _positive_number(
                 entry.get("sell_price"), f"{symbol} plan sell_price")
+            try:
+                datetime.date.fromisoformat(str(entry.get("sell_day_kst") or ""))
+            except ValueError as exc:
+                raise MigrationRefused(
+                    f"{symbol} plan sell_day_kst 형식 오류") from exc
         if not entry.get("buy_key") or not entry.get("pos_key"):
             raise MigrationRefused(f"{symbol} plan 정체성 누락")
 
@@ -483,7 +520,7 @@ def _verify_entry(entry: dict) -> None:
 
 
 def _services_quiesced() -> tuple[bool, str]:
-    """주문 서비스가 inactive이며 재기동 불가(runtime mask)인지 확인한다."""
+    """systemd와 수동 주문 프로세스가 모두 멈췄는지 확인한다."""
     for unit in REQUIRED_STOPPED_UNITS:
         try:
             proc = subprocess.run(
@@ -507,7 +544,31 @@ def _services_quiesced() -> tuple[bool, str]:
             return False, (
                 f"{unit}={mask_state or 'unknown'} "
                 "(systemctl mask --runtime 필요)")
+    try:
+        manual = subprocess.run(
+            ["pgrep", "-f", r"bot\.(sentinel|kis_buyloop)"],
+            check=False, capture_output=True, text=True, timeout=3,
+        )
+    except (OSError, subprocess.SubprocessError) as exc:
+        return False, f"수동 주문 프로세스 조회 실패({type(exc).__name__})"
+    if manual.returncode == 0 and str(manual.stdout or "").strip():
+        return False, "systemd 밖 sentinel/kis_buyloop 프로세스 실행 중"
+    if manual.returncode not in (0, 1):
+        return False, f"수동 주문 프로세스 조회 실패(rc={manual.returncode})"
+    age = heartbeat.age_s()
+    if age is not None and age <= heartbeat.AGE_HARD_S:
+        return False, f"sentinel heartbeat가 아직 신선함({age:.1f}s)"
     return True, "ok"
+
+
+def _assert_apply_journals_healthy(entries: list[dict]) -> None:
+    """mutation 직전 세 append-only 원장이 모두 무손상인지 재확인한다."""
+    if not ledger.ledger_healthy():
+        raise MigrationRefused("apply 직전 주문 원장 손상")
+    _history, corrupt = _position_history()
+    if corrupt:
+        raise MigrationRefused(f"apply 직전 kis_positions 손상: {corrupt}")
+    _verify_costbook_prestate(entries)
 
 
 def _backup_sources(backup_dir: str) -> dict:
@@ -591,10 +652,15 @@ def apply_plan(plan: dict, *, ack: str, services_stopped: bool,
     if not quiesced:
         raise MigrationRefused(f"주문 서비스 미정지: {why}")
     _snapshot_matches(plan)
-    if not ledger.ledger_healthy():
-        raise MigrationRefused("apply 직전 주문 원장 손상")
-    _verify_costbook_prestate(plan["entries"])
+    _assert_apply_journals_healthy(plan["entries"])
     backup = _backup_sources(backup_dir)
+    # 백업 I/O 동안 수동 프로세스가 다시 뜨거나 원장이 변한 TOCTOU도 mutation 전에
+    # 한 번 더 막는다. 실패 시 백업은 forensic 근거로 남고 운영 원장은 그대로다.
+    quiesced, why = _services_quiesced()
+    if not quiesced:
+        raise MigrationRefused(f"백업 후 주문 서비스 재등장: {why}")
+    _snapshot_matches(plan)
+    _assert_apply_journals_healthy(plan["entries"])
 
     # 모든 legacy position을 먼저 원래 BUY 수량으로 복원해야 baseline SELL 예외의
     # pos_key·before·costbook 3중 증명이 성립한다.
@@ -610,7 +676,8 @@ def apply_plan(plan: dict, *, ack: str, services_stopped: bool,
         result = kis_accounting.sync_fill(
             entry["sell_key"], filled_qty=entry["sold_qty"],
             fill_price=entry["sell_price"],
-            fill_price_source="legacy-ledger-price",
+            fill_price_source=entry["sell_price_source"],
+            realized_day_kst=entry["sell_day_kst"],
         )
         if not result.get("ok") or int(result.get("delta") or 0) < 0:
             raise MigrationRefused(
@@ -628,6 +695,11 @@ def apply_plan(plan: dict, *, ack: str, services_stopped: bool,
         hmaps,
         now_ts=float(plan["generated_at"]) + kis_reconcile.ACK_AGE_MIN_S + 1,
         only_keys=wanted_ack,
+        realized_days={
+            entry["sell_key"]: entry["sell_day_kst"]
+            for entry in plan["entries"]
+            if entry["sell_mode"] == "ack-balance"
+        },
     )
     # reconcile 이벤트 append 뒤 accounting 전에 프로세스가 죽으면 주문은 이미
     # filled라 resolver 대상에서 빠진다. 같은 plan 재실행이 그 창을 복구하도록
@@ -642,6 +714,7 @@ def apply_plan(plan: dict, *, ack: str, services_stopped: bool,
                 entry["sell_key"], filled_qty=entry["sold_qty"],
                 fill_price=entry["sell_price"],
                 fill_price_source=entry["sell_price_source"],
+                realized_day_kst=entry["sell_day_kst"],
             )
             if not result.get("ok"):
                 raise MigrationRefused(
