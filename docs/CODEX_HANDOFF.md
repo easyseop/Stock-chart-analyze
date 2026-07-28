@@ -920,3 +920,9 @@ V2 재검토 요청서는
 `docs/CLAUDE_REVIEW_STALL_EXIT_PERFORMANCE_REBASE_V2.md`다. 다음 순서는 이
 수정본을 PR #93에 push한 뒤 CI와 Claude 재검토를 받는 것이다. 승인 전에는
 병합·Oracle 배포·legacy apply·L1 해제·live 전환을 계속 금지한다.
+
+수정 구현 커밋 `d0f001d1`을 기존 Draft PR #93 브랜치에 push했고 GitHub
+`CI` run #94와 `Site UI CI` run #50이 모두 성공했다. 클로드 전달용 전체
+V2 묶음은
+`/Users/seop/Documents/매매봇/CLAUDE_REVIEW_STALL_EXIT_PERFORMANCE_REBASE_PR93_V2_FINAL.zip`
+이며 4개 구현 patch, V1/V2 검토서, 백테스트, 이 인수인계서를 포함한다.

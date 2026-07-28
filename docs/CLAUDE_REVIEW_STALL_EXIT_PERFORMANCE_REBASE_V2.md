@@ -181,6 +181,7 @@ Node 입력→출력 테스트와 로컬 브라우저의 `전체` 탭에서
 - `node --check scanner/site_app/portfolio_math.js`
 - `git diff --check`
 - 로컬 브라우저: 오늘/전체 전환, 부분수집 기간 차단 문구, 차트 선 토글 확인
+- 구현 커밋 `d0f001d1`에서 GitHub `CI` run #94와 `Site UI CI` run #50 성공
 
 ## 운영 금지선
 
