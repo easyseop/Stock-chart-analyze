@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated_at": "2026-07-29T05:48:52+09:00",
+ "generated_at": "2026-07-29T06:30:32+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "shelf_debug": {
   "ok": 7,
@@ -502,6 +502,42 @@
    "tactic": "watch"
   },
   {
+   "id": "PSN-2026-07-29-shelf-watch",
+   "code": "PSN",
+   "name": "Parsons Corporation",
+   "ccy": "USD",
+   "group": "shelf_watch",
+   "entry_kind": "shelf_watch",
+   "stage": 0,
+   "price": 62.03,
+   "entry": 62.03,
+   "stop": 57.4574,
+   "target": 74.4054,
+   "shares_1pct": 0,
+   "range_pos": 0.3555,
+   "norm": -5.7,
+   "bear_share": 0.5,
+   "shelf": {
+    "poc": 51.3196,
+    "val": 49.5438,
+    "vah": 74.4054,
+    "rr": 2.71,
+    "overhead": 0.53,
+    "reason": "반등 미확인(터치)",
+    "checks": {
+     "터치": false,
+     "회복": true,
+     "상단마감": true,
+     "거래량": true,
+     "신저가아님": true
+    }
+   },
+   "fresh": false,
+   "break_gap": null,
+   "earnings_d": 1,
+   "tactic": "watch"
+  },
+  {
    "id": "FDS-2026-07-29-shelf-watch",
    "code": "FDS",
    "name": "FactSet Research Systems Inc.",
@@ -751,42 +787,6 @@
    "fresh": false,
    "break_gap": null,
    "earnings_d": null,
-   "tactic": "watch"
-  },
-  {
-   "id": "LECO-2026-07-29-shelf-watch",
-   "code": "LECO",
-   "name": "Lincoln Electric Holdings, Inc.",
-   "ccy": "USD",
-   "group": "shelf_watch",
-   "entry_kind": "shelf_watch",
-   "stage": 0,
-   "price": 250.38,
-   "entry": 250.38,
-   "stop": 238.8554,
-   "target": 268.9713,
-   "shares_1pct": 0,
-   "range_pos": 0.3643,
-   "norm": -32.1,
-   "bear_share": 0.375,
-   "shelf": {
-    "poc": 241.6188,
-    "val": 233.8038,
-    "vah": 268.9713,
-    "rr": 1.61,
-    "overhead": 0.499,
-    "reason": "반등 미확인(거래량)",
-    "checks": {
-     "터치": true,
-     "회복": true,
-     "상단마감": true,
-     "거래량": false,
-     "신저가아님": true
-    }
-   },
-   "fresh": false,
-   "break_gap": null,
-   "earnings_d": 2,
    "tactic": "watch"
   },
   {
@@ -1247,22 +1247,22 @@
    "stage": 1,
    "price": 148.88,
    "entry": 148.88,
-   "stop": 142.2803,
-   "target": 162.0794,
+   "stop": 142.4073,
+   "target": 161.8254,
    "shares_1pct": 15,
    "range_pos": 0.38,
    "norm": -13.2,
    "bear_share": 0.125,
    "fresh": true,
-   "break_gap": -0.016,
+   "break_gap": -0.015,
    "earnings_d": 1,
    "tactic": {
-    "stop_pct": 4.4,
+    "stop_pct": 4.3,
     "pb_price": 143.127,
-    "pb_stop_pct": 0.6,
+    "pb_stop_pct": 0.5,
     "mode": "full",
     "label": "⚡ 즉시 분할",
-    "desc": "손절폭 4.4%로 타이트 — 현재가에서 1~2회 분할 매수. 기다리는 이득보다 놓치는 비용이 큼"
+    "desc": "손절폭 4.3%로 타이트 — 현재가에서 1~2회 분할 매수. 기다리는 이득보다 놓치는 비용이 큼"
    }
   },
   {
