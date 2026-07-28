@@ -1,8 +1,8 @@
 {
  "updated": "2026-07-28",
  "start": 100000000,
- "cash": 41036046,
- "equity": 100927148,
+ "cash": 50869446,
+ "equity": 100929948,
  "ret_pct": 0.93,
  "positions": [
   {
@@ -18,22 +18,7 @@
    "opened": "2026-07-06",
    "pl_krw": 475696,
    "pl_pct": 5.16,
-   "price_age_min": 7.4
-  },
-  {
-   "code": "068270",
-   "name": "셀트리온",
-   "ccy": "KRW",
-   "q": 54,
-   "avg": 175348.4128,
-   "price": 182400.0,
-   "stop": 157651.1713,
-   "target": 212997.6574,
-   "half_done": false,
-   "opened": "2026-07-07",
-   "pl_krw": 380786,
-   "pl_pct": 4.02,
-   "price_age_min": 7.4
+   "price_age_min": 7.2
   },
   {
    "code": "HMC",
@@ -63,7 +48,7 @@
    "opened": "2026-07-09",
    "pl_krw": 11918,
    "pl_pct": 2.89,
-   "price_age_min": 7.4
+   "price_age_min": 7.2
   },
   {
    "code": "SARO",
@@ -78,7 +63,7 @@
    "opened": "2026-07-10",
    "pl_krw": 385192,
    "pl_pct": 5.84,
-   "price_age_min": 7.4
+   "price_age_min": 7.2
   },
   {
    "code": "J",
@@ -93,7 +78,7 @@
    "opened": "2026-07-11",
    "pl_krw": 406049,
    "pl_pct": 6.83,
-   "price_age_min": 7.4
+   "price_age_min": 7.2
   },
   {
    "code": "MAIN",
@@ -108,7 +93,7 @@
    "opened": "2026-07-22",
    "pl_krw": -18318,
    "pl_pct": -0.3,
-   "price_age_min": 7.4
+   "price_age_min": 7.2
   },
   {
    "code": "SHOP",
@@ -123,7 +108,7 @@
    "opened": "2026-07-24",
    "pl_krw": 523997,
    "pl_pct": 10.35,
-   "price_age_min": 8.7
+   "price_age_min": 8.8
   },
   {
    "code": "004370",
@@ -131,14 +116,14 @@
    "ccy": "KRW",
    "q": 19,
    "avg": 368500.0,
-   "price": 378500.0,
+   "price": 379500.0,
    "stop": 342744.4071,
    "target": 420011.1858,
    "half_done": false,
    "opened": "2026-07-27",
-   "pl_krw": 190000,
-   "pl_pct": 2.71,
-   "price_age_min": 9.6
+   "pl_krw": 209000,
+   "pl_pct": 2.99,
+   "price_age_min": 9.7
   },
   {
    "code": "CRC",
@@ -153,7 +138,7 @@
    "opened": "2026-07-28",
    "pl_krw": -48921,
    "pl_pct": -0.65,
-   "price_age_min": 9.8
+   "price_age_min": 10.0
   }
  ],
  "pending": [
@@ -239,18 +224,18 @@
    "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권28% · 체크3/6 · 손절폭6.6%"
   }
  ],
- "trades": 6,
- "win_trades": 4,
+ "trades": 7,
+ "win_trades": 5,
  "pos_cap_pct": 33.3,
  "cap_violations": [],
  "rule_violations": [],
  "fx": 1467.79,
  "stats": {
   "all": {
-   "n": 6,
-   "win": 4,
-   "win_rate": 67,
-   "avg_r": 0.11
+   "n": 7,
+   "win": 5,
+   "win_rate": 71,
+   "avg_r": 0.15
   },
   "by_mode": {
    "full": {
@@ -266,10 +251,10 @@
     "avg_r": 1.02
    },
    "pullback": {
-    "n": 1,
-    "win": 1,
+    "n": 2,
+    "win": 2,
     "win_rate": 100,
-    "avg_r": 0.45
+    "avg_r": 0.42
    }
   },
   "fresh": {
@@ -279,20 +264,26 @@
    "avg_r": 0.11
   },
   "stale": {
-   "n": 0,
-   "win": 0,
-   "win_rate": 0,
-   "avg_r": 0
+   "n": 1,
+   "win": 1,
+   "win_rate": 100,
+   "avg_r": 0.38
   },
   "by_stage": {
    "3": {
-    "n": 6,
-    "win": 4,
-    "win_rate": 67,
-    "avg_r": 0.11
+    "n": 7,
+    "win": 5,
+    "win_rate": 71,
+    "avg_r": 0.15
    }
   },
   "by_ccy": {
+   "KRW": {
+    "n": 1,
+    "win": 1,
+    "win_rate": 100,
+    "avg_r": 0.38
+   },
    "USD": {
     "n": 6,
     "win": 4,
@@ -300,10 +291,46 @@
     "avg_r": 0.11
    }
   },
-  "slip_entry_pct": -0.51,
+  "slip_entry_pct": -0.5,
   "slip_stop_pct": -1.14
  },
  "closed": [
+  {
+   "code": "068270",
+   "name": "셀트리온",
+   "ccy": "KRW",
+   "ctx": {
+    "mode": "pullback",
+    "fresh": false,
+    "stage": 3,
+    "rp": 28,
+    "rec": 4,
+    "basis": "↗ 돌파후 진행(승률↓) · ③ 돌파후 횡보(대기) · 저점권28% · 체크4/6 · 손절폭10.5%"
+   },
+   "plan": {
+    "entry": 176100.0,
+    "stop": 157651.1713,
+    "target": 212997.6574,
+    "pb": 175348.4128,
+    "tactic": "pullback"
+   },
+   "fill": {
+    "avg": 175348.4128,
+    "q": 54
+   },
+   "exits": [
+    {
+     "d": "2026-07-28",
+     "q": 54,
+     "price": 182100.0,
+     "note": "타임 스탑(+1R 미도달)"
+    }
+   ],
+   "opened": "2026-07-07",
+   "closed": "2026-07-28",
+   "pl": 364586,
+   "r": 0.38
+  },
   {
    "code": "STE",
    "name": "STERIS plc",
@@ -622,10 +649,24 @@
   },
   {
    "d": "2026-07-28",
-   "v": 100689348
+   "v": 100929948
   }
  ],
  "log": [
+  {
+   "d": "2026-07-28",
+   "type": "sell",
+   "code": "068270",
+   "name": "셀트리온",
+   "q": 54,
+   "price": 182100.0,
+   "ccy": "KRW",
+   "amt": 9833400,
+   "note": "타임 스탑(+1R 미도달)",
+   "pl": 364586,
+   "pl_pct": 3.9,
+   "r": 0.38
+  },
   {
    "d": "2026-07-28",
    "type": "sell",
@@ -1093,6 +1134,5 @@
   }
  ],
  "lane": "bulk",
- "data_stale": [],
- "lock_skipped": true
+ "data_stale": []
 }
