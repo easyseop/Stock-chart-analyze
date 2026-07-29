@@ -167,7 +167,22 @@ denylist)·원장(UNKNOWN 잠금·동일종목 in-flight·60s 간격)·사이징
 대조해 **운영자(operator)가 L1 하향을 검토할 수 있는지**만 판정한다. `GO`는
 검토 가능, `NO-GO`는 L1 유지라는 뜻이다.
 
-먼저 예시 파일을 서버 상태 디렉터리로 복사하고 실제 관찰값을 기록한다.
+점검 범위는 두 가지다.
+
+- `--scope l0`: KIS mock의 제한적 신규매수 재개용이다. 7일 shadow,
+  Oracle 한·미 세션, GitHub 장애주입, 9종목 래칫, 동결 해제 결정은
+  `INFO`로 표시한다. 대신 mock·L1·원장·미체결·수량·예산·heartbeat·
+  fallback 0·stall shadow·동결 6종목 유지·mirror allowlist를 차단
+  조건으로 사용한다.
+- `--scope strict`(기본): 위 관찰 증거까지 모두 차단 조건으로 사용한다.
+
+따라서 **2026-08-05까지 기다리는 조건은 제한적 L0에는 적용하지 않는다.**
+정체청산 `live`, fallback 1, 동결 해제, 실전 전환에는 기존 조건이 계속
+적용된다. Oracle 실행 순서와 rollback은
+`docs/ORACLE_LIMITED_L0_RUNBOOK.md`를 따른다.
+
+`strict`를 사용할 때는 먼저 예시 파일을 서버 상태 디렉터리로 복사하고 실제
+관찰값을 기록한다.
 예시의 빈 시각과 `pending`은 의도적인 차단값이다. 관찰하거나 결정하지 않은 값을
 미리 통과값으로 바꾸지 않으며, API 키·계좌번호·토큰은 이 파일에 넣지 않는다.
 
@@ -178,7 +193,7 @@ sudo install -o ubuntu -g ubuntu -m 600 \
   /var/lib/stock-l1-readiness/evidence.json
 ```
 
-필수 증거:
+`strict`의 필수 증거:
 
 - 정체청산 `shadow` 시작시각과 최소 7일 관찰
 - 과거 절반익절 9종목의 `half_done=true` 및 `stop >= entry`
@@ -190,18 +205,25 @@ sudo install -o ubuntu -g ubuntu -m 600 \
 - 위 관찰을 최근 72시간 안에 다시 확인한 `observed_at`
 
 Oracle 저장소 루트에서 기존 KIS 환경을 source한 뒤 실행한다. `--broker`는
-잔고와 미체결 **조회 API만** 호출하며 주문 모듈을 불러오지 않는다.
+잔고와 미체결 **조회 API만** 호출하며 주문 모듈을 불러오지 않는다. 제한적
+L0 점검은 evidence 파일이 없어도 실행할 수 있으며 별도 관찰은 `INFO`로 남는다.
 
 ```bash
+# 표준 설치는 /etc/stock/kis.env. 현재 Oracle 운영 배치는
+# docs/ORACLE_LIMITED_L0_RUNBOOK.md의 /home/ubuntu/kis.env를 사용한다.
 set -a
-. /home/ubuntu/kis.env
+. /etc/stock/kis.env
 set +a
 python3 scripts/kis_l1_readiness.py \
+  --scope strict \
   --broker \
   --evidence /var/lib/stock-l1-readiness/evidence.json
+
+# 제한적 mock 신규매수 점검
+python3 scripts/kis_l1_readiness.py --scope l0 --broker --json
 ```
 
-종료코드 `0`은 모든 기술 게이트가 통과해 운영자 승인 검토가 가능하다는
+종료코드 `0`은 선택한 scope의 차단 게이트가 통과해 운영자 승인 검토가 가능하다는
 뜻일 뿐이다. 실제 L1 하향은 사용자 별도 승인과 사유가 포함된
 `python -m bot.kill 0 --lower ...` 절차가 여전히 필요하다. 하나라도 불명확하면
 종료코드 `2`, `NO-GO — L1 유지`로 실패한다.

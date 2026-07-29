@@ -1128,3 +1128,32 @@ python scripts/kis_l1_readiness.py --scope l0 --broker --json
 `47/47`, Node 계산 테스트 `10/10`, Python compileall, 두 JavaScript 문법
 검사와 `git diff --check`를 통과했다. 이는 코드 검증이며 Oracle 운영 증거를
 대체하지 않는다.
+
+### 20. 2026-07-29 Oracle 제한적 L0 실행 인수인계
+
+사용자가 “이 컴퓨터에서 가능한 작업은 모두 처리하고 원격 push하라”고 요청했다.
+2026-08-05 대기는 제한적 mock L0의 조건에서 해제됐으며, 기다림 없이 진행할
+수 있는 정확한 Oracle 절차를 `docs/ORACLE_LIMITED_L0_RUNBOOK.md`에 추가했다.
+
+런북은 처음 보는 운영자도 다음 순서로 실행할 수 있게 구성했다.
+
+1. PR #97 병합 여부와 Oracle clean fast-forward 배포 확인
+2. mock·mirror·비어 있지 않은 allowlist·fallback 0·stall shadow·동결 유지
+3. 실행 중 sentinel/buyloop 프로세스에서 비밀값을 제외한 안전 설정 확인
+4. L1 상태의 `--scope l0 --broker --json`과 `blockers=[]` 확인
+5. A/B 실제 개수와 allowlist를 사용자에게 제시하고 별도 승인
+6. operator ack가 포함된 L1→L0 한 번 실행
+7. 첫 주문 회계·보호선 확인과 이상 시 즉시 L1 rollback
+
+런북 명령은 실제 Oracle 배치인 `/home/ubuntu/Stock-chart-analyze`,
+`/home/ubuntu/kis.env`, 서비스 사용자 `ubuntu`, 저장소 `.venv`를 기준으로
+작성했다. `/opt/stock`·`/etc/stock/kis.env`는 새 표준 설치 예시일 뿐 현재
+Oracle에 사용하면 안 된다.
+
+기존 `infra/server/README.md`의 점검 설명도 `l0`와 `strict`로 분리했다.
+`l0`에서 7일 shadow·Oracle 세션·장애주입 등이 `INFO`라는 사실과, 이 조건이
+stall live·fallback 1·동결 해제·실전 전환에는 계속 필요하다는 경계를 명시했다.
+
+현재 이 컴퓨터에서 Oracle 접속은 불가능하다. 따라서 PR 병합, Oracle 배포,
+환경변수 변경, 브로커 조회, L1 하향, 주문은 수행하지 않았다. 다음 컴퓨터는
+PR #97과 위 런북만 확인하면 환경 작업을 이어갈 수 있다.

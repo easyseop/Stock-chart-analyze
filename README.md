@@ -137,6 +137,8 @@ python scripts/kis_l1_readiness.py --scope l0 --broker --json
 JSON의 `context.position_counts_by_sleeve`에는 현재 보호원장의 A/B 종목 수가
 포함된다. `GO`는 사용자 승인 검토가 가능하다는 뜻일 뿐이며 L1을 자동으로
 내리지 않는다. 실제 하향에는 별도 사용자 승인과 operator ack가 필요하다.
+Oracle에서 병합 이후 실행할 전체 절차는
+[제한적 L0 전환 런북](docs/ORACLE_LIMITED_L0_RUNBOOK.md)을 따른다.
 
 ## 출력 예시
 ```
