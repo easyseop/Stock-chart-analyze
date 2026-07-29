@@ -6,6 +6,7 @@
   /empty/app/      신호 0건
   /error/app/      신호 API 오류
   /portfolio/app/  로컬 보유자산 + 차트
+  /qa-390-post-exit.html  익절 사후추적 모바일
 """
 from __future__ import annotations
 
@@ -233,6 +234,64 @@ TRADES = {
     ],
 }
 
+POST_EXIT = {
+    "version": 1, "generated_at": datetime.now(timezone.utc).isoformat(),
+    "read_only": True, "available": True, "partial": True,
+    "source": "confirmed-local-fill-journals+public-daily-cache",
+    "horizons": [1, 3, 5, 10, 20],
+    "summary": {
+        "profitable_exits": 2, "verified_exits": 1, "estimated_exits": 1,
+        "tracked_exits": 2, "complete_5d_verified": 1,
+    },
+    "traits": {"5": [], "20": []},
+    "message": "구버전 주문가 기반 매도는 참고표시만 하며 공통점 통계에서 제외합니다.",
+    "events": [
+        {
+            "id": "preview-aapl", "executed_at": "2026-07-23T22:11:00+09:00",
+            "session_day": "2026-07-23", "code": "AAPL", "name": "Apple",
+            "market": "US", "ccy": "USD", "sleeve": "A",
+            "reason": "익절 +1R 절반", "reason_kind": "take_profit",
+            "qty": 6, "entry_price": 189.40, "exit_price": 214.20,
+            "exit_return_pct": 13.11, "partial_exit": True,
+            "quality": "verified", "price_source": "broker",
+            "observations": {
+                "1": {"horizon": 1, "observed_sessions": 1, "complete": True,
+                      "through_date": "2026-07-24", "close_price": 216.1,
+                      "peak_price": 218.5, "close_vs_entry_pct": 14.1,
+                      "peak_vs_entry_pct": 15.36,
+                      "additional_entry_points_after_exit": 2.27,
+                      "missed_upside_vs_exit_pct": 2.01,
+                      "close_vs_exit_pct": .89, "max_drawdown_vs_exit_pct": -.7},
+                "5": {"horizon": 5, "observed_sessions": 5, "complete": True,
+                      "through_date": "2026-07-30", "close_price": 221.4,
+                      "peak_price": 226.8, "close_vs_entry_pct": 16.9,
+                      "peak_vs_entry_pct": 19.75,
+                      "additional_entry_points_after_exit": 6.65,
+                      "missed_upside_vs_exit_pct": 5.88,
+                      "close_vs_exit_pct": 3.36, "max_drawdown_vs_exit_pct": -1.2},
+            },
+        },
+        {
+            "id": "preview-sig", "executed_at": "2026-07-27T23:14:21+09:00",
+            "session_day": "2026-07-27", "code": "SIG", "name": "Signet Jewelers",
+            "market": "US", "ccy": "USD", "sleeve": "B",
+            "reason": "B 목표(VAH) 도달", "reason_kind": "take_profit",
+            "qty": 13, "entry_price": 89.285, "exit_price": 94.67,
+            "exit_return_pct": 6.03, "partial_exit": False,
+            "quality": "estimated", "price_source": "submitted-fallback",
+            "observations": {
+                "1": {"horizon": 1, "observed_sessions": 1, "complete": True,
+                      "through_date": "2026-07-28", "close_price": 95.2,
+                      "peak_price": 96.4, "close_vs_entry_pct": 6.62,
+                      "peak_vs_entry_pct": 7.97,
+                      "additional_entry_points_after_exit": 1.94,
+                      "missed_upside_vs_exit_pct": 1.83,
+                      "close_vs_exit_pct": .56, "max_drawdown_vs_exit_pct": -.9},
+            },
+        },
+    ],
+}
+
 
 def _chart(code: str) -> dict:
     base = 188 if code == "AAPL" else 166 if code == "NVDA" else 72000
@@ -287,7 +346,8 @@ class Handler(BaseHTTPRequestHandler):
         if parsed.path in (
                 "/qa-390.html", "/qa-320.html",
                 "/qa-390-detail.html", "/qa-320-detail.html",
-                "/qa-390-history.html", "/qa-320-history.html"):
+                "/qa-390-history.html", "/qa-320-history.html",
+                "/qa-390-post-exit.html", "/qa-320-post-exit.html"):
             width = 390 if "390" in parsed.path else 320
             if "detail" in parsed.path:
                 action_script = """
@@ -300,6 +360,12 @@ frame.addEventListener("load",()=>setTimeout(()=>
 <script>const frame=document.querySelector("iframe");
 frame.addEventListener("load",()=>setTimeout(()=>
   frame.contentDocument.querySelector('[data-portfolio-mode="history"]')?.click(),700));</script>
+"""
+            elif "post-exit" in parsed.path:
+                action_script = """
+<script>const frame=document.querySelector("iframe");
+frame.addEventListener("load",()=>setTimeout(()=>
+  frame.contentDocument.querySelector('[data-portfolio-mode="post-exit"]')?.click(),700));</script>
 """
             else:
                 action_script = ""
@@ -357,6 +423,8 @@ height:844px;margin:0 auto;border:0;background:white}}</style>
             self._json(200, PERFORMANCE)
         elif name == "trades.json" and state == "portfolio":
             self._json(200, TRADES)
+        elif name == "post-exit.json" and state == "portfolio":
+            self._json(200, POST_EXIT)
         else:
             self._json(404, {"error": "endpoint"})
 

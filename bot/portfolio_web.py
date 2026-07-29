@@ -240,6 +240,12 @@ def trade_history_snapshot(limit: int = 200) -> dict:
     return trade_history.snapshot(limit=limit)
 
 
+def post_exit_snapshot() -> dict:
+    """별도 timer가 발행한 수익 매도 사후추적. HTTP 요청은 네트워크 호출 0건."""
+    from bot import post_exit
+    return post_exit.read_published()
+
+
 def _public_json(name: str) -> bytes:
     if name not in PUBLIC_FILES:
         raise FileNotFoundError(name)
@@ -322,6 +328,9 @@ class PortfolioHandler(BaseHTTPRequestHandler):
                 q = parse_qs(parsed.query)
                 limit = int((q.get("limit") or ["200"])[0])
                 self._json(200, trade_history_snapshot(limit))
+                return
+            if path == "/api/post-exit.json":
+                self._json(200, post_exit_snapshot())
                 return
             if path.startswith("/api/"):
                 name = path.rsplit("/", 1)[-1]

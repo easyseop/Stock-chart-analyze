@@ -1,0 +1,38 @@
+[Unit]
+Description=Refresh read-only post-exit price analysis
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=bot
+Group=bot
+WorkingDirectory=/opt/stock/Stock-chart-analyze
+Environment=PYTHONUNBUFFERED=1
+Environment=PYTHONDONTWRITEBYTECODE=1
+Environment=SCANNER_CACHE_DIR=/var/cache/stock-post-exit
+Environment=POST_EXIT_SNAPSHOT_PATH=/var/lib/stock-post-exit/snapshot.json
+ExecStart=/usr/bin/python3 scripts/post_exit_refresh.py --json
+StateDirectory=stock-post-exit
+StateDirectoryMode=0750
+CacheDirectory=stock-post-exit
+CacheDirectoryMode=0750
+
+# 주문·파수꾼보다 낮은 우선순위. KIS 환경 파일을 주입하지 않는다.
+Nice=10
+CPUWeight=10
+CPUQuota=80%
+MemoryHigh=300M
+MemoryMax=380M
+TimeoutStartSec=8min
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=read-only
+CapabilityBoundingSet=
+RestrictRealtime=true
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+LockPersonality=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true

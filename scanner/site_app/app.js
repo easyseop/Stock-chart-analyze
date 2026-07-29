@@ -21,6 +21,7 @@ const API = Object.freeze({
   quotes: "../api/quotes.json",
   performance: "../api/performance.json",
   trades: "../api/trades.json",
+  postExit: "../api/post-exit.json",
 });
 
 const VIEW_META = Object.freeze({
@@ -43,6 +44,7 @@ const state = {
   portfolio: null,
   performance: null,
   trades: null,
+  postExit: null,
   performanceMarket: "US",
   performanceRange: "today",
   performanceHidden: new Set(),
@@ -51,10 +53,13 @@ const state = {
   tradeSleeve: "all",
   tradeSide: "all",
   tradeOutcome: "all",
+  postExitHorizon: "5",
+  postExitQuality: "all",
   publicError: null,
   portfolioError: null,
   performanceError: null,
   tradesError: null,
+  postExitError: null,
   loading: true,
 };
 
@@ -199,6 +204,13 @@ async function loadData({ quiet = false } = {}) {
       state.trades = null;
       state.tradesError = error;
     }
+    try {
+      state.postExit = await fetchJSON(API.postExit, 10000);
+      state.postExitError = null;
+    } catch (error) {
+      state.postExit = null;
+      state.postExitError = error;
+    }
   }
 
   state.loading = false;
@@ -229,6 +241,12 @@ async function refreshPortfolio() {
     state.tradesError = null;
   } catch (error) {
     state.tradesError = error;
+  }
+  try {
+    state.postExit = await fetchJSON(API.postExit, 10000);
+    state.postExitError = null;
+  } catch (error) {
+    state.postExitError = error;
   }
   updateFreshness();
   if (state.view === "briefing") {
@@ -360,16 +378,23 @@ function updateHero() {
   } else if (state.view === "portfolio") {
     const positions = state.portfolio?.positions || [];
     const trades = state.trades?.trades || [];
+    const postExit = state.postExit?.events || [];
     const historyMode = state.portfolioMode === "history";
-    number.textContent = (historyMode ? trades.length : positions.length).toLocaleString("ko-KR");
-    unit.textContent = historyMode ? "매도 체결" : "보유";
+    const postExitMode = state.portfolioMode === "post-exit";
+    number.textContent = (historyMode ? trades.length
+      : postExitMode ? postExit.length : positions.length).toLocaleString("ko-KR");
+    unit.textContent = historyMode ? "체결" : postExitMode ? "수익 매도" : "보유";
     kicker.textContent = state.portfolio
-      ? historyMode ? "확정 체결 거래이력" : "KIS 계좌 · 읽기 전용"
+      ? historyMode ? "확정 체결 거래이력"
+        : postExitMode ? "익절 뒤 추가 상승 사후추적"
+          : "KIS 계좌 · 읽기 전용"
       : "내 컴퓨터에서만";
     description.textContent = state.portfolio
       ? historyMode
         ? "평단가·매도가와 환율·수수료를 반영한 실현손익을 로컬 원장에서 확인합니다."
-        : "주문 기능과 분리된 조회 전용 연결입니다. 정보는 이 브라우저 밖으로 공개되지 않아요."
+        : postExitMode
+          ? "평단 대비 총 상승과 매도가 뒤 놓친 상승을 거래일별로 추적해 청산 규칙의 공통점을 찾습니다."
+          : "주문 기능과 분리된 조회 전용 연결입니다. 정보는 이 브라우저 밖으로 공개되지 않아요."
       : "실제 보유 정보는 공개 사이트에 표시하지 않습니다. 로컬 대시보드를 실행하면 이곳에서 확인할 수 있어요.";
   } else {
     const market = state.performance?.markets?.[state.performanceMarket];
@@ -875,6 +900,7 @@ function portfolioCard(position) {
 
 function portfolioTabsMarkup(positions) {
   const tradeCount = (state.trades?.trades || []).length;
+  const postExitCount = (state.postExit?.events || []).length;
   return `<div class="subview-tabs portfolio-tabs" aria-label="내 자산 보기">
     <button type="button" data-portfolio-mode="holdings"
       class="${state.portfolioMode === "holdings" ? "active" : ""}">
@@ -883,6 +909,10 @@ function portfolioTabsMarkup(positions) {
     <button type="button" data-portfolio-mode="history"
       class="${state.portfolioMode === "history" ? "active" : ""}">
       거래이력 <span>${tradeCount}</span>
+    </button>
+    <button type="button" data-portfolio-mode="post-exit"
+      class="${state.portfolioMode === "post-exit" ? "active" : ""}">
+      익절 사후추적 <span>${postExitCount}</span>
     </button>
   </div>`;
 }
@@ -1063,6 +1093,140 @@ function tradeHistoryMarkup() {
       : emptyState("조건에 맞는 거래가 없어요", "필터를 바꾸거나 새 확정 체결이 기록될 때까지 기다려 주세요.")}`;
 }
 
+function postExitMetric(event, horizon = state.postExitHorizon) {
+  return event?.observations?.[String(horizon)] || null;
+}
+
+function filteredPostExitEvents() {
+  const rows = [...(state.postExit?.events || [])];
+  return state.postExitQuality === "all"
+    ? rows : rows.filter((row) => row.quality === state.postExitQuality);
+}
+
+function postExitSummaryMarkup(events) {
+  const horizon = String(state.postExitHorizon);
+  const completedVerified = events.filter((event) =>
+    event.quality === "verified" && postExitMetric(event, horizon)?.complete);
+  const observations = completedVerified
+    .map((event) => postExitMetric(event, horizon))
+    .filter(Boolean);
+  const average = (key) => observations.length
+    ? observations.reduce((sum, row) => sum + finite(row[key]), 0) / observations.length
+    : null;
+  const continued = observations.length
+    ? observations.filter((row) => finite(row.close_vs_exit_pct) > 0).length /
+      observations.length * 100 : null;
+  return `<div class="trade-summary post-exit-summary">
+    <div class="summary-card"><small>수익 매도</small><strong>${events.length}</strong><span>선택 필터</span></div>
+    <div class="summary-card"><small>${horizon}일 완료 · 확정가</small><strong>${observations.length}</strong><span>추정가는 통계 제외</span></div>
+    <div class="summary-card"><small>평단 기준 추가 수익</small><strong>${average("additional_entry_points_after_exit") === null ? "—" : formatPercent(average("additional_entry_points_after_exit"), 2).replace("%", "%p")}</strong><span>익절 뒤 최고가 평균</span></div>
+    <div class="summary-card"><small>매도가보다 높은 종가</small><strong>${continued === null ? "—" : `${continued.toFixed(0)}%`}</strong><span>${horizon}거래일 뒤</span></div>
+  </div>`;
+}
+
+function postExitTraitMarkup() {
+  const horizon = String(state.postExitHorizon);
+  if (state.postExitQuality === "estimated") return "";
+  if (!["5", "20"].includes(horizon)) return "";
+  const traits = (state.postExit?.traits?.[horizon] || [])
+    .filter((row) => row.conclusion_ready);
+  if (!traits.length) {
+    return `<section class="post-exit-traits pending">
+      <div><small>공통점 분석</small><strong>확정 체결 표본을 더 모으는 중</strong></div>
+      <p>같은 전략·청산사유·부분/전량 표본이 최소 3건 쌓여야 우연을 공통점으로 오해하지 않습니다.</p>
+    </section>`;
+  }
+  return `<section class="post-exit-traits">
+    <div class="post-exit-section-head">
+      <div><small>공통점 분석 · ${horizon}거래일</small><strong>추가 상승이 컸던 묶음</strong></div>
+      <span class="badge strategy-a">확정 체결만</span>
+    </div>
+    <div class="post-exit-trait-grid">${traits.slice(0, 6).map((row) => `
+      <article>
+        <small>${escapeHTML(row.label)} · ${row.sample}건</small>
+        <strong>${formatOptionalPercent(row.avg_missed_upside_vs_exit_pct, 2)}</strong>
+        <p>매도가 뒤 최고가 평균 · 종가 상승 ${finite(row.continued_higher_close_rate).toFixed(0)}%</p>
+      </article>`).join("")}</div>
+  </section>`;
+}
+
+function postExitCard(event) {
+  const horizon = String(state.postExitHorizon);
+  const row = postExitMetric(event, horizon);
+  const quality = event.quality === "verified" ? "브로커 체결가" : "구버전 주문가 추정";
+  const status = !row ? "다음 거래일 대기"
+    : row.complete ? `${horizon}거래일 관측 완료`
+      : `${row.observed_sessions}/${horizon}거래일 관측 중`;
+  const peak = row ? formatOptionalPrice(row.peak_price, event.ccy) : "—";
+  const total = row ? formatOptionalPercent(row.peak_vs_entry_pct, 2) : "—";
+  const added = row
+    ? formatOptionalPercent(row.additional_entry_points_after_exit, 2).replace("%", "%p")
+    : "—";
+  const missed = row ? formatOptionalPercent(row.missed_upside_vs_exit_pct, 2) : "—";
+  return `<article class="trade-history-card post-exit-card ${event.quality}">
+    <div class="trade-history-head">
+      <div>
+        <small>${escapeHTML(tradeDateLabel(event.executed_at))} · ${escapeHTML(status)}</small>
+        <strong>${escapeHTML(event.name || event.code)} <span>${escapeHTML(event.code)}</span></strong>
+      </div>
+      <div class="badge-row">
+        <span class="badge ${event.sleeve === "B" ? "shelf" : "strategy-a"}">전략 ${event.sleeve}</span>
+        <span class="badge ${event.quality === "verified" ? "verified" : "estimated"}">${escapeHTML(quality)}</span>
+      </div>
+    </div>
+    <div class="trade-price-flow post-exit-flow">
+      <div><small>익절 당시 평단가</small><strong>${formatOptionalPrice(event.entry_price, event.ccy)}</strong></div>
+      <span aria-hidden="true">→</span>
+      <div><small>익절가</small><strong>${formatOptionalPrice(event.exit_price, event.ccy)}</strong></div>
+      <span aria-hidden="true">→</span>
+      <div><small>이후 ${horizon}일 최고가</small><strong>${peak}</strong></div>
+    </div>
+    <div class="post-exit-metrics">
+      <div><small>평단 대비 총 상승</small><strong>${total}</strong></div>
+      <div><small>익절 뒤 평단 기준 추가</small><strong class="${row && finite(row.additional_entry_points_after_exit) > 0 ? "gain" : "loss"}">${added}</strong></div>
+      <div><small>매도가 대비 놓친 상승</small><strong class="${row && finite(row.missed_upside_vs_exit_pct) > 0 ? "gain" : "loss"}">${missed}</strong></div>
+      <div><small>${horizon}일 뒤 종가</small><strong>${row ? formatOptionalPercent(row.close_vs_exit_pct, 2) : "—"}</strong></div>
+    </div>
+    <p class="post-exit-reason">${escapeHTML(event.reason || "수익 매도")}
+      ${event.partial_exit ? " · 부분익절" : " · 전량익절"}
+      ${row?.through_date ? ` · ${escapeHTML(row.through_date)}까지` : ""}</p>
+  </article>`;
+}
+
+function postExitMarkup() {
+  if (state.postExitError || !state.postExit) {
+    return errorState(
+      "익절 사후추적을 불러오지 못했어요",
+      "주문·보유 관리는 그대로입니다. 별도 일봉 분석기 상태만 확인해 주세요.");
+  }
+  if (state.postExit.available === false) {
+    return `<div class="alert">${escapeHTML(state.postExit.message || "첫 일봉 갱신을 기다리는 중입니다.")}</div>`;
+  }
+  const events = filteredPostExitEvents();
+  const controls = `<div class="trade-filter-bar post-exit-controls">
+    <div class="chart-range-row" aria-label="사후추적 거래일">
+      ${(state.postExit.horizons || [1, 3, 5, 10, 20]).map((value) =>
+        `<button type="button" class="chart-chip ${String(value) === String(state.postExitHorizon) ? "active" : ""}" data-post-exit-horizon="${value}">${value}일</button>`).join("")}
+    </div>
+    <div class="chart-range-row" aria-label="매도가 품질">
+      ${[["all", "전체"], ["verified", "확정 체결가"], ["estimated", "추정가 참고"]]
+        .map(([value, label]) => `<button type="button" class="chart-chip ${state.postExitQuality === value ? "active" : ""}" data-post-exit-quality="${value}">${label}</button>`).join("")}
+    </div>
+  </div>`;
+  return `${controls}${postExitSummaryMarkup(events)}
+    <div class="post-exit-explainer">
+      <strong>세 숫자를 함께 보세요</strong>
+      <p><b>평단 대비 총 상승</b>은 원래 매수가에서 이후 최고가까지,
+      <b>익절 뒤 추가(%p)</b>는 익절 뒤 평단 기준으로 더 붙은 수익,
+      <b>매도가 대비 놓친 상승</b>은 팔지 않았다면 더 얻을 수 있었던 비율입니다.</p>
+    </div>
+    ${postExitTraitMarkup()}
+    <p class="history-note">${escapeHTML(state.postExit.message || "")}</p>
+    ${events.length
+      ? `<div class="trade-history-list">${events.map(postExitCard).join("")}</div>`
+      : emptyState("추적할 수익 매도가 없어요", "새 수익 매도가 확정되면 다음 거래일부터 자동으로 기록합니다.")}`;
+}
+
 function bindPortfolioControls(positions) {
   $$("[data-portfolio-mode]", content).forEach((button) =>
     button.addEventListener("click", () => {
@@ -1084,6 +1248,16 @@ function bindPortfolioControls(positions) {
     button.addEventListener("click", () => {
       state.tradeSide = button.dataset.tradeSide;
       if (state.tradeSide === "buy") state.tradeOutcome = "all";
+      renderPortfolio();
+    }));
+  $$("[data-post-exit-horizon]", content).forEach((button) =>
+    button.addEventListener("click", () => {
+      state.postExitHorizon = button.dataset.postExitHorizon;
+      renderPortfolio();
+    }));
+  $$("[data-post-exit-quality]", content).forEach((button) =>
+    button.addEventListener("click", () => {
+      state.postExitQuality = button.dataset.postExitQuality;
       renderPortfolio();
     }));
   $$(".portfolio-card", content).forEach((card) => {
@@ -1128,6 +1302,8 @@ function renderPortfolio() {
     ${portfolioTabsMarkup(positions)}
     ${state.portfolioMode === "history"
       ? tradeHistoryMarkup()
+      : state.portfolioMode === "post-exit"
+        ? postExitMarkup()
       : positions.length
         ? `<div class="portfolio-summary">${summary}</div>
            <div class="portfolio-grid">${positions.map(portfolioCard).join("")}</div>`

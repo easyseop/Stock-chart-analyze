@@ -1059,7 +1059,11 @@ button.brief-card:hover {
 }
 .chart-note { margin: 12px 3px 0; color: var(--muted); font-size: 10px; line-height: 1.55; }
 
-.portfolio-tabs { margin: 0 0 16px; }
+.portfolio-tabs {
+  margin: 0 0 16px;
+  overflow-x: auto;
+}
+.portfolio-tabs button { flex: 0 0 auto; }
 .trade-filter-bar {
   display: flex;
   flex-wrap: wrap;
@@ -1155,6 +1159,85 @@ button.brief-card:hover {
   font-size: 10px;
   line-height: 1.5;
   text-align: right;
+}
+.post-exit-controls { justify-content: space-between; }
+.post-exit-summary { margin-bottom: 14px; }
+.post-exit-explainer, .post-exit-traits {
+  margin-bottom: 14px;
+  padding: 16px 18px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--surface);
+  box-shadow: var(--shadow-soft);
+}
+.post-exit-explainer strong, .post-exit-traits strong { font-size: 14px; }
+.post-exit-explainer p, .post-exit-traits p, .post-exit-reason {
+  margin: 7px 0 0;
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 1.6;
+}
+.post-exit-section-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: flex-start;
+}
+.post-exit-section-head small {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--muted);
+  font-size: 9px;
+}
+.post-exit-traits.pending { border-style: dashed; }
+.post-exit-trait-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 9px;
+  margin-top: 13px;
+}
+.post-exit-trait-grid article {
+  padding: 12px;
+  border-radius: 12px;
+  background: var(--surface-2);
+}
+.post-exit-trait-grid small {
+  display: block;
+  color: var(--muted);
+  font-size: 9px;
+}
+.post-exit-trait-grid strong {
+  display: block;
+  margin-top: 5px;
+  font-size: 17px;
+}
+.post-exit-trait-grid p { margin-top: 4px; }
+.badge.verified { background: var(--green-soft); color: var(--green); }
+.badge.estimated { background: var(--amber-soft); color: var(--amber); }
+.post-exit-card.estimated { border-style: dashed; }
+.post-exit-flow {
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) auto minmax(0, 1fr);
+}
+.post-exit-metrics {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 12px;
+}
+.post-exit-metrics > div {
+  padding: 11px 12px;
+  border-radius: 12px;
+  background: var(--surface-2);
+}
+.post-exit-metrics small {
+  display: block;
+  color: var(--muted);
+  font-size: 9px;
+}
+.post-exit-metrics strong {
+  display: block;
+  margin-top: 4px;
+  font-size: 14px;
 }
 
 .loading-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
@@ -1286,6 +1369,9 @@ button.brief-card:hover {
   .trade-summary { grid-template-columns: 1fr; }
   .trade-history-card { padding: 15px; }
   .trade-history-head, .trade-result { display: grid; }
+  .post-exit-trait-grid, .post-exit-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .post-exit-flow { grid-template-columns: 1fr; }
+  .post-exit-flow > span { display: none; }
   .trade-result p { text-align: left; }
   .trade-price-flow { gap: 8px; padding: 11px; }
   .trade-price-flow strong { font-size: 11px; }

@@ -40,6 +40,7 @@ def test_public_app_uses_only_allowed_read_sources():
     assert "../api/quotes.json" in js
     assert "../api/performance.json" in js
     assert "../api/trades.json" in js
+    assert "../api/post-exit.json" in js
     for forbidden in ("KIS_LIVE_APPKEY", "APPSECRET", "/order", "place_buy",
                       "place_sell", "client_secret"):
         assert forbidden not in js
@@ -65,7 +66,8 @@ def test_decision_brief_uses_existing_read_only_data():
                   "매수일 미확인", "가격 분석", "거래이력", "실제 매도가",
                   "실제 매수가", "체결 후 평단가", "매수·매도",
                   "실현손익", "B 관찰", "전략 A · 전환 확인",
-                  "전략 B · 매물대 반등"):
+                  "전략 B · 매물대 반등", "익절 사후추적",
+                  "평단 대비 총 상승", "매도가 대비 놓친 상승"):
         assert label in js
     assert "손절선 또는 목표선 3% 안" in js
     assert "보호선 정보 없음" in js
@@ -210,6 +212,25 @@ def test_trade_history_endpoint_is_local_read_only_and_sanitized():
         assert forbidden not in encoded
 
 
+def test_post_exit_endpoint_reads_published_safe_snapshot_only():
+    fixture = {
+        "version": 1, "read_only": True, "available": True,
+        "source": "confirmed-local-fill-journals+public-daily-cache",
+        "summary": {"profitable_exits": 1},
+        "events": [{
+            "code": "AAPL", "entry_price": 100, "exit_price": 110,
+            "observations": {"5": {"peak_vs_entry_pct": 20}},
+        }],
+    }
+    with mock.patch("bot.post_exit.read_published", return_value=fixture) as published:
+        payload = portfolio_web.post_exit_snapshot()
+    published.assert_called_once_with()
+    assert payload["read_only"] is True
+    encoded = json.dumps(payload)
+    for forbidden in ("CANO", "APPSECRET", "ODNO", "order_key", "pos_key"):
+        assert forbidden not in encoded
+
+
 if __name__ == "__main__":
     tests = [
         test_static_publish_is_additive,
@@ -222,6 +243,7 @@ if __name__ == "__main__":
         test_shared_cache_serves_fast_without_kis_balance_calls,
         test_performance_snapshot_contains_percentages_only,
         test_trade_history_endpoint_is_local_read_only_and_sanitized,
+        test_post_exit_endpoint_reads_published_safe_snapshot_only,
     ]
     for test in tests:
         test()
