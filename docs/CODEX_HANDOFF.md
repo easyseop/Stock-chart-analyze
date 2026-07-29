@@ -1084,3 +1084,47 @@ CLI에서 `--broker`를 사용하면 KIS 잔고·미체결 조회 API만 호출�
 Stage 1.5의 risk cap 0.1%와 매수루프 기본 risk 1% 불일치, heartbeat 60/120초
 경계를 반례로 확인하도록 요구한다. Claude 판정 전에는 L1과 운영 설정을
 변경하지 않는다.
+
+### 19. 2026-07-29 Claude 판정 반영 — 제한적 L0 scope
+
+Claude는 §8 반례 13개를 mock으로 실행했고 KIS 호출·주문은 0건이었다고
+보고했다. 최종 판정은 선결조건 충족 후 대안 B인 **제한적 L0 허용**이다.
+이 판정은 위 17·18절의 “모든 관찰 완료 후 L0 검토” 결론 중 제한적 L0 부분을
+대체한다. 관찰 항목 자체는 stall live·fallback 1·동결 해제의 게이트로 계속
+유효하다.
+7일 shadow, Oracle 한·미 세션, GitHub 60분 장애주입, 9종목 래칫, 동결 해제
+결정은 일반 GitHub 신호의 mock 신규매수와 독립된 기능 조건이며, 기존
+`l1_readiness.evaluate()`가 이를 하나의 `ready`로 묶은 것은 과결합이라고
+판정했다. 전체 회신 요약은
+`docs/CLAUDE_L1_RELEASE_OPTIONS_RESULT.md`에 보존했다.
+
+PR #97에서 점검기에 두 승인 범위를 추가했다.
+
+- `--scope strict`(기본): 기존 관찰 증거를 모두 차단 조건으로 유지한다.
+- `--scope l0`: 독립 기능 관찰은 `INFO`로 표시하되, mock·L1 유지·원장·
+  열린 주문·회계·예산·3원장 수량·heartbeat 60초·fallback 0을 계속 차단
+  조건으로 둔다.
+- `l0`에는 기존 게이트를 단순히 완화하지 않고 `STALL_EXIT_MODE=shadow`,
+  동결 6종목의 실제 유지, `TRADE_STAGE=mirror`, 비어 있지 않은
+  `ALLOWED_SYMBOLS`, `ALLOW_BUY=1`, `KIS_ORDERS_ENABLED=1`을 별도
+  차단 게이트로 추가했다.
+- JSON `context.position_counts_by_sleeve`에 보호원장의 A/B 보유 종목 수를
+  출력해 Oracle에서 실제로 어느 슬리브가 열리는지 확인할 수 있게 했다.
+
+이 변경도 읽기 전용이다. 아직 PR 병합, Oracle 배포, 환경변수 변경, L1 하향,
+동결 해제, 주문 전송을 수행하지 않았다. 다음 단계는 PR #97 CI 확인 후 병합·
+Oracle 배포를 별도로 승인받고, L1을 유지한 채 아래 명령의 JSON 증거를
+확보하는 것이다.
+
+```bash
+python scripts/kis_l1_readiness.py --scope l0 --broker --json
+```
+
+`ready_for_operator_review=true`여도 자동 하향은 없다. 실제 L0 전환은
+`docs/CLAUDE_L1_RELEASE_OPTIONS_RESULT.md`의 승인 문구와 Oracle 최신 결과를
+사용자가 확인·승인한 뒤에만 진행한다.
+
+로컬 검증은 L1 readiness 집중 테스트 `13/13`, 전체 Python 테스트 모듈
+`47/47`, Node 계산 테스트 `10/10`, Python compileall, 두 JavaScript 문법
+검사와 `git diff --check`를 통과했다. 이는 코드 검증이며 Oracle 운영 증거를
+대체하지 않는다.

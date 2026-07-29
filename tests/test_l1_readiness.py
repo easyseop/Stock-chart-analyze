@@ -38,6 +38,11 @@ def _snapshot() -> dict:
         "stall_exit_mode": "shadow",
         "half_ratchet_verified": list(HALF),
         "frozen_symbols": list(FROZEN),
+        "trade_stage": "mirror",
+        "allowed_symbols": ["AAPL", "MSFT"],
+        "allow_buy_enabled": True,
+        "orders_enabled": True,
+        "position_counts_by_sleeve": {"A": 16, "B": 0},
     }
 
 
@@ -57,8 +62,13 @@ def _blockers(report: dict) -> set[str]:
     return {gate["name"] for gate in report["blockers"]}
 
 
+def _pending(report: dict) -> set[str]:
+    return {gate["name"] for gate in report["informational_findings"]}
+
+
 def test_complete_evidence_only_allows_operator_review():
     report = R.evaluate(_snapshot(), _evidence(), now=NOW)
+    assert report["scope"] == "strict"
     assert report["ready_for_operator_review"] is True
     assert report["operator_approval_still_required"] is True
     assert not report["blockers"]
@@ -109,7 +119,7 @@ def test_runtime_safety_invariants_block_independently():
         "positions_match_broker",
         "heartbeat_fresh",
         "fallback_still_shadow",
-        "stall_shadow_observed",
+        "stall_mode_shadow",
         "half_ratchets_durable",
         "frozen_symbols_reviewed",
     } <= _blockers(report)
@@ -149,13 +159,98 @@ def test_required_symbol_lists_cannot_be_shortened_or_silently_unfrozen():
     print("[PASS] 고정 검토목록 축소·결정 없는 동결해제·결정-상태 불일치 차단")
 
 
+def test_l0_scope_separates_independent_observation_gates():
+    report = R.evaluate(_snapshot(), {}, scope="l0", now=NOW)
+    assert report["ready_for_operator_review"] is True
+    assert not report["blockers"]
+    assert {
+        "stall_shadow_observed",
+        "half_ratchets_durable",
+        "frozen_symbols_reviewed",
+        "oracle_brain_both_markets",
+        "github_outage_injection",
+        "observation_evidence_fresh",
+    } == _pending(report)
+    assert "[INFO] stall_shadow_observed" in R.render_text(report)
+    print("[PASS] L0 scope는 별도 기능 관찰을 INFO로 분리")
+
+
+def test_l0_scope_keeps_limited_mode_fences_blocking():
+    snapshot = _snapshot()
+    snapshot.update({
+        "fallback_enabled": True,
+        "stall_exit_mode": "live",
+        "frozen_symbols": FROZEN[:-1],
+        "allowed_symbols": [],
+        "positions_match_broker": False,
+    })
+    report = R.evaluate(snapshot, {}, scope="l0", now=NOW)
+    assert {
+        "fallback_still_shadow",
+        "stall_mode_shadow",
+        "frozen_symbols_preserved",
+        "limited_l0_fence",
+        "positions_match_broker",
+    } <= _blockers(report)
+    assert "stall_shadow_observed" in _pending(report)
+    print("[PASS] L0 scope도 fallback·shadow·동결6·allowlist·수량대조를 차단")
+
+
+def test_l0_fence_requires_declared_order_configuration():
+    for field, value in (
+            ("trade_stage", "1.5"),
+            ("trade_stage", "MIRROR"),
+            ("allowed_symbols", []),
+            ("allow_buy_enabled", False),
+            ("orders_enabled", False)):
+        snapshot = _snapshot()
+        snapshot[field] = value
+        for scope in ("l0", "strict"):
+            report = R.evaluate(snapshot, {}, scope=scope, now=NOW)
+            assert "limited_l0_fence" in _blockers(report), (scope, field)
+    print("[PASS] 제한적 L0는 mirror·allowlist·명시적 매수/주문 설정 필요")
+
+
+def test_unknown_scope_is_rejected():
+    try:
+        R.evaluate(_snapshot(), _evidence(), scope="live", now=NOW)
+    except ValueError as exc:
+        assert "unknown readiness scope" in str(exc)
+    else:
+        raise AssertionError("unknown scope must fail closed")
+    print("[PASS] 알 수 없는 readiness scope 거부")
+
+
+def test_cli_forwards_l0_scope_without_mutation():
+    cli = importlib.import_module("scripts.kis_l1_readiness")
+    report = {
+        "scope": "l0",
+        "ready_for_operator_review": True,
+        "operator_approval_still_required": True,
+        "gates": [],
+        "blockers": [],
+        "informational_findings": [],
+    }
+    with mock.patch.object(cli.l1_readiness, "load_evidence",
+                           return_value={}), \
+            mock.patch.object(cli.l1_readiness, "collect_runtime",
+                              return_value=_snapshot()), \
+            mock.patch.object(cli.l1_readiness, "evaluate",
+                              return_value=report) as evaluate, \
+            mock.patch("builtins.print"):
+        result = cli.main(["--scope", "l0", "--broker", "--json"])
+    assert result == 0
+    evaluate.assert_called_once_with(_snapshot(), {}, scope="l0")
+    print("[PASS] CLI --scope l0가 평가기에 전달되고 자동 mutation 없음")
+
+
 def test_collect_runtime_is_read_only_without_broker():
     with tempfile.TemporaryDirectory() as tmp:
         for key in list(os.environ):
             if key.startswith((
                     "KIS_", "KILL_", "BOT_", "COSTBOOK", "ORDER_LEDGER",
                     "SYMBOL_FREEZE", "SENTINEL_HEARTBEAT", "STALL_EXIT",
-                    "ORACLE_SIGNAL")):
+                    "ORACLE_SIGNAL", "ALLOW", "TRADE_STAGE")):
                 os.environ.pop(key, None)
         os.environ.update({
             "KIS_ENV": "mock",
@@ -174,6 +269,10 @@ def test_collect_runtime_is_read_only_without_broker():
             "BOT_OPERATING_BUFFER_PCT": "0.05",
             "ORACLE_SIGNAL_FALLBACK_ENABLED": "0",
             "STALL_EXIT_MODE": "shadow",
+            "KIS_ORDERS_ENABLED": "1",
+            "ALLOW_BUY": "1",
+            "TRADE_STAGE": "mirror",
+            "ALLOWED_SYMBOLS": "AAPL, msft",
         })
         modules = {}
         for name in (
@@ -200,6 +299,11 @@ def test_collect_runtime_is_read_only_without_broker():
             snapshot = R.collect_runtime(fetch_broker=False, evidence={})
         assert snapshot["broker_open_orders"] is None
         assert snapshot["positions_match_broker"] is None
+        assert snapshot["trade_stage"] == "mirror"
+        assert snapshot["allowed_symbols"] == ["AAPL", "MSFT"]
+        assert snapshot["allow_buy_enabled"] is True
+        assert snapshot["orders_enabled"] is True
+        assert snapshot["position_counts_by_sleeve"] == {"A": 0, "B": 0}
         assert not holdings.called and not open_orders.called and not domestic.called
         for path, original in before.items():
             assert open(path, "rb").read() == original
@@ -230,7 +334,7 @@ def test_broker_read_only_snapshot_matches_three_ledgers():
             if key.startswith((
                     "KIS_", "KILL_", "BOT_", "COSTBOOK", "ORDER_LEDGER",
                     "SYMBOL_FREEZE", "SENTINEL_HEARTBEAT", "STALL_EXIT",
-                    "ORACLE_SIGNAL")):
+                    "ORACLE_SIGNAL", "ALLOW", "TRADE_STAGE")):
                 os.environ.pop(key, None)
         os.environ.update({
             "KIS_ENV": "mock",
@@ -249,6 +353,10 @@ def test_broker_read_only_snapshot_matches_three_ledgers():
             "BOT_OPERATING_BUFFER_PCT": "0.05",
             "ORACLE_SIGNAL_FALLBACK_ENABLED": "0",
             "STALL_EXIT_MODE": "shadow",
+            "KIS_ORDERS_ENABLED": "1",
+            "ALLOW_BUY": "1",
+            "TRADE_STAGE": "mirror",
+            "ALLOWED_SYMBOLS": "AAPL",
         })
         modules = {}
         for name in (
@@ -274,6 +382,7 @@ def test_broker_read_only_snapshot_matches_three_ledgers():
             snapshot = R.collect_runtime(fetch_broker=True, evidence={})
         assert snapshot["positions_match_broker"] is True
         assert snapshot["broker_open_orders"] == 0
+        assert snapshot["position_counts_by_sleeve"] == {"A": 1, "B": 0}
         assert domestic.call_count == 1 and overseas.call_count == 3
     print("[PASS] 브로커 조회는 읽기 API만 사용해 3원장 수량·미체결 대조")
 
@@ -284,6 +393,11 @@ def main():
     test_runtime_safety_invariants_block_independently()
     test_missing_evidence_fails_closed()
     test_required_symbol_lists_cannot_be_shortened_or_silently_unfrozen()
+    test_l0_scope_separates_independent_observation_gates()
+    test_l0_scope_keeps_limited_mode_fences_blocking()
+    test_l0_fence_requires_declared_order_configuration()
+    test_unknown_scope_is_rejected()
+    test_cli_forwards_l0_scope_without_mutation()
     test_collect_runtime_is_read_only_without_broker()
     test_broker_order_parser_fails_closed()
     test_broker_read_only_snapshot_matches_three_ledgers()

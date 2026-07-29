@@ -26,6 +26,18 @@ REQUIRED_FROZEN_REVIEW_SYMBOLS = frozenset({
     "AQN", "CAG", "GPK", "LW", "SNN", "VRSK",
 })
 _FROZEN_DECISIONS = frozenset({"keep_close_only", "unfreeze_approved"})
+SCOPES = frozenset({"strict", "l0"})
+_L0_INFORMATIONAL_GATES = frozenset({
+    "stall_shadow_observed",
+    "half_ratchets_durable",
+    "frozen_symbols_reviewed",
+    "oracle_brain_both_markets",
+    "github_outage_injection",
+    "observation_evidence_fresh",
+})
+_STRICT_INFORMATIONAL_GATES = frozenset({
+    "frozen_symbols_preserved",
+})
 
 
 def _finite(value: object) -> float | None:
@@ -46,8 +58,13 @@ def _parse_time(value: object) -> datetime | None:
     return stamp.astimezone(timezone.utc)
 
 
-def _gate(name: str, ok: bool, detail: str) -> dict:
-    return {"name": name, "ok": bool(ok), "detail": str(detail)}
+def _gate(name: str, ok: bool, detail: str, *, blocking: bool) -> dict:
+    return {
+        "name": name,
+        "ok": bool(ok),
+        "blocking": bool(blocking),
+        "detail": str(detail),
+    }
 
 
 def _shadow_days(evidence: dict, *, now: datetime) -> float | None:
@@ -57,47 +74,62 @@ def _shadow_days(evidence: dict, *, now: datetime) -> float | None:
     return max(0.0, (now - started).total_seconds() / 86400.0)
 
 
-def evaluate(snapshot: dict, evidence: dict,
-             *, now: datetime | None = None) -> dict:
-    """수집된 상태를 L1 하향 전 fail-closed 게이트로 판정한다."""
+def evaluate(snapshot: dict, evidence: dict, *, scope: str = "strict",
+             now: datetime | None = None) -> dict:
+    """수집된 상태를 L1 하향 전 fail-closed 게이트로 판정한다.
+
+    ``strict``는 기존 기능 관찰을 모두 차단 조건으로 유지한다. ``l0``는 일반
+    GitHub 신호의 제한적 mock 신규매수에 직접 필요한 조건만 차단하고,
+    stall-live·fallback 1·동결 해제용 관찰 증거는 정보로만 표시한다.
+    """
+    if scope not in SCOPES:
+        raise ValueError(f"unknown readiness scope: {scope}")
     current = (now or datetime.now(timezone.utc)).astimezone(timezone.utc)
     gates: list[dict] = []
 
+    def add(name: str, ok: bool, detail: str) -> None:
+        informational = (
+            name in _L0_INFORMATIONAL_GATES if scope == "l0"
+            else name in _STRICT_INFORMATIONAL_GATES
+        )
+        gates.append(_gate(
+            name, ok, detail, blocking=not informational))
+
     env = str(snapshot.get("kis_env") or "").lower()
-    gates.append(_gate(
+    add(
         "mock_environment", env == "mock",
-        f"KIS_ENV={env or 'unknown'} (mock만 허용)"))
+        f"KIS_ENV={env or 'unknown'} (mock만 허용)")
 
     level = snapshot.get("kill_level")
-    gates.append(_gate(
+    add(
         "l1_latched", level == 1,
-        f"현재 L{level if level is not None else '?'} (점검 중 L1 유지 필요)"))
+        f"현재 L{level if level is not None else '?'} (점검 중 L1 유지 필요)")
     permissions_ok = (
         snapshot.get("buy_new_allowed") is False
         and snapshot.get("protect_sell_allowed") is True
     )
-    gates.append(_gate(
+    add(
         "l1_permissions", permissions_ok,
-        "buy_new=False·protect_sell=True 필요"))
+        "buy_new=False·protect_sell=True 필요")
 
     ledger_ok = snapshot.get("ledger_healthy") is True
-    gates.append(_gate(
+    add(
         "ledger_healthy", ledger_ok,
-        f"주문 원장 healthy={snapshot.get('ledger_healthy')}"))
+        f"주문 원장 healthy={snapshot.get('ledger_healthy')}")
 
     local_open = snapshot.get("local_open_orders")
     broker_open = snapshot.get("broker_open_orders")
-    gates.append(_gate(
+    add(
         "no_open_orders",
         local_open == 0 and broker_open == 0,
-        f"원장 열린주문={local_open!r}, 브로커 열린주문={broker_open!r}"))
+        f"원장 열린주문={local_open!r}, 브로커 열린주문={broker_open!r}")
 
     unknowns = snapshot.get("unresolved_unknowns")
     unaccounted = snapshot.get("unaccounted_buy_fills")
-    gates.append(_gate(
+    add(
         "orders_fully_reconciled",
         unknowns == 0 and unaccounted == 0,
-        f"UNKNOWN={unknowns!r}, 미회계 BUY={unaccounted!r}"))
+        f"UNKNOWN={unknowns!r}, 미회계 BUY={unaccounted!r}")
 
     held_cost = _finite(snapshot.get("open_cost_krw"))
     limit = _finite(snapshot.get("operating_limit_krw"))
@@ -106,36 +138,39 @@ def evaluate(snapshot: dict, evidence: dict,
         and held_cost is not None and limit is not None and limit > 0
         and held_cost <= limit + 1e-6
     )
-    gates.append(_gate(
+    add(
         "operating_budget",
         budget_ok,
-        f"운용원가={held_cost!r}, 5% 완충 후 한도={limit!r}"))
+        f"운용원가={held_cost!r}, 5% 완충 후 한도={limit!r}")
 
     positions_match = snapshot.get("positions_match_broker")
-    gates.append(_gate(
+    add(
         "positions_match_broker", positions_match is True,
-        f"브로커·보호원장·costbook 수량 일치={positions_match!r}"))
+        f"브로커·보호원장·costbook 수량 일치={positions_match!r}")
 
     age = _finite(snapshot.get("heartbeat_age_s"))
-    gates.append(_gate(
+    add(
         "heartbeat_fresh",
         age is not None and age <= 60.0,
-        f"sentinel heartbeat age={age!r}초 (60초 이하 필요)"))
+        f"sentinel heartbeat age={age!r}초 (60초 이하 필요)")
 
     fallback = snapshot.get("fallback_enabled")
-    gates.append(_gate(
+    add(
         "fallback_still_shadow",
         fallback is False,
-        f"ORACLE_SIGNAL_FALLBACK_ENABLED={1 if fallback is True else 0 if fallback is False else '?'}"))
+        f"ORACLE_SIGNAL_FALLBACK_ENABLED={1 if fallback is True else 0 if fallback is False else '?'}")
 
     stall_mode = str(snapshot.get("stall_exit_mode") or "").lower()
+    add(
+        "stall_mode_shadow", stall_mode == "shadow",
+        f"STALL_EXIT_MODE={stall_mode or 'unknown'} (shadow 유지 필요)")
+
     days = _shadow_days(evidence, now=current)
-    gates.append(_gate(
+    add(
         "stall_shadow_observed",
-        stall_mode == "shadow" and days is not None
-        and days >= MIN_STALL_SHADOW_DAYS,
-        f"mode={stall_mode or 'unknown'}, 관찰={None if days is None else round(days, 2)}일 "
-        f"(최소 {MIN_STALL_SHADOW_DAYS:.0f}일)"))
+        days is not None and days >= MIN_STALL_SHADOW_DAYS,
+        f"관찰={None if days is None else round(days, 2)}일 "
+        f"(stall live 전 최소 {MIN_STALL_SHADOW_DAYS:.0f}일)")
 
     evidence_half = {
         str(code).upper() for code in (
@@ -149,12 +184,12 @@ def evaluate(snapshot: dict, evidence: dict,
         if str(code).strip()
     }
     missing_half = sorted(required_half - verified_half)
-    gates.append(_gate(
+    add(
         "half_ratchets_durable",
         evidence_half == required_half and not missing_half,
         f"증거목록 일치={evidence_half == required_half}, "
         f"검증 {len(verified_half & required_half)}/{len(required_half)}, "
-        f"미확인={missing_half}"))
+        f"미확인={missing_half}")
 
     frozen = {
         str(code).upper() for code in (
@@ -181,50 +216,85 @@ def evaluate(snapshot: dict, evidence: dict,
             decisions.get(code) == "unfreeze_approved" and code in frozen
         ))
     unexpected_frozen = sorted(frozen - REQUIRED_FROZEN_REVIEW_SYMBOLS)
-    gates.append(_gate(
+    add(
         "frozen_symbols_reviewed",
         review_symbols == REQUIRED_FROZEN_REVIEW_SYMBOLS
         and not undecided and not state_mismatch and not unexpected_frozen,
         f"증거목록 일치={review_symbols == REQUIRED_FROZEN_REVIEW_SYMBOLS}, "
         f"현재동결={sorted(frozen)}, 미결정={undecided}, "
-        f"결정-상태불일치={state_mismatch}, 추가동결={unexpected_frozen}"))
+        f"결정-상태불일치={state_mismatch}, 추가동결={unexpected_frozen}")
+
+    missing_frozen = sorted(REQUIRED_FROZEN_REVIEW_SYMBOLS - frozen)
+    add(
+        "frozen_symbols_preserved", not missing_frozen,
+        f"제한적 L0에서 close-only 유지 필요, 누락={missing_frozen}")
 
     sessions = evidence.get("oracle_brain_sessions") or {}
     kr_sessions = int(_finite(sessions.get("KR")) or 0)
     us_sessions = int(_finite(sessions.get("US")) or 0)
-    gates.append(_gate(
+    add(
         "oracle_brain_both_markets",
         kr_sessions >= 1 and us_sessions >= 1,
-        f"관찰 세션 KR={kr_sessions}, US={us_sessions}"))
+        f"관찰 세션 KR={kr_sessions}, US={us_sessions}")
 
     outage = evidence.get("github_outage") or {}
     outage_minutes = _finite(outage.get("minutes"))
     outage_orders = _finite(outage.get("new_orders"))
-    gates.append(_gate(
+    add(
         "github_outage_injection",
         outage_minutes is not None and outage_minutes >= 60.0
         and outage_orders == 0,
-        f"장애주입={outage_minutes!r}분, 신규주문={outage_orders!r}"))
+        f"장애주입={outage_minutes!r}분, 신규주문={outage_orders!r}")
 
     observed_at = _parse_time(evidence.get("observed_at"))
     evidence_age_h = (
         None if observed_at is None or observed_at > current
         else (current - observed_at).total_seconds() / 3600.0
     )
-    gates.append(_gate(
+    add(
         "observation_evidence_fresh",
         evidence_age_h is not None
         and evidence_age_h <= FRESH_EVIDENCE_HOURS,
         f"관찰 증거 나이={None if evidence_age_h is None else round(evidence_age_h, 2)}시간 "
-        f"(최대 {FRESH_EVIDENCE_HOURS:.0f}시간)"))
+        f"(최대 {FRESH_EVIDENCE_HOURS:.0f}시간)")
 
-    blockers = [g for g in gates if not g["ok"]]
+    trade_stage = str(snapshot.get("trade_stage") or "").strip()
+    allowed_symbols = {
+        str(code).upper() for code in (
+            snapshot.get("allowed_symbols") or [])
+        if str(code).strip()
+    }
+    allow_buy = snapshot.get("allow_buy_enabled")
+    orders_enabled = snapshot.get("orders_enabled")
+    limited_l0_ok = (
+        trade_stage == "mirror"
+        and bool(allowed_symbols)
+        and allow_buy is True
+        and orders_enabled is True
+    )
+    add(
+        "limited_l0_fence", limited_l0_ok,
+        f"TRADE_STAGE={trade_stage or 'unknown'}, "
+        f"ALLOWED_SYMBOLS={sorted(allowed_symbols)}, "
+        f"ALLOW_BUY={1 if allow_buy is True else 0 if allow_buy is False else '?'}, "
+        f"KIS_ORDERS_ENABLED={1 if orders_enabled is True else 0 if orders_enabled is False else '?'}")
+
+    blockers = [g for g in gates if g["blocking"] and not g["ok"]]
+    informational = [g for g in gates if not g["blocking"] and not g["ok"]]
     return {
+        "scope": scope,
         "ready_for_operator_review": not blockers,
         "operator_approval_still_required": True,
         "checked_at": current.isoformat(),
+        "context": {
+            "trade_stage": trade_stage or None,
+            "allowed_symbols": sorted(allowed_symbols),
+            "position_counts_by_sleeve": snapshot.get(
+                "position_counts_by_sleeve"),
+        },
         "gates": gates,
         "blockers": blockers,
+        "informational_findings": informational,
     }
 
 
@@ -281,6 +351,21 @@ def collect_runtime(*, fetch_broker: bool = False,
     local_positions = kis_positions.load()
     budget = costbook.budget_snapshot()
     frozen_state = ownership.frozen_state()
+    allowed_symbols = {
+        code.strip().upper()
+        for code in os.environ.get("ALLOWED_SYMBOLS", "").split(",")
+        if code.strip()
+    }
+    position_counts = {"A": 0, "B": 0}
+    for row in local_positions.values():
+        try:
+            qty = int(row.get("qty") or 0)
+        except (TypeError, ValueError):
+            qty = 0
+        if qty <= 0:
+            continue
+        sleeve = "B" if str(row.get("sleeve") or "A").upper() == "B" else "A"
+        position_counts[sleeve] += 1
 
     snapshot: dict[str, Any] = {
         "kis_env": kis.ENV,
@@ -307,6 +392,11 @@ def collect_runtime(*, fetch_broker: bool = False,
         "stall_exit_mode": settings.STALL_EXIT_MODE,
         "half_ratchet_verified": [],
         "frozen_symbols": sorted(frozen_state),
+        "trade_stage": os.environ.get("TRADE_STAGE", "1.5").strip(),
+        "allowed_symbols": sorted(allowed_symbols),
+        "allow_buy_enabled": os.environ.get("ALLOW_BUY") == "1",
+        "orders_enabled": os.environ.get("KIS_ORDERS_ENABLED") == "1",
+        "position_counts_by_sleeve": position_counts,
     }
 
     required = REQUIRED_HALF_RATCHET_SYMBOLS
@@ -370,10 +460,15 @@ def collect_runtime(*, fetch_broker: bool = False,
 
 
 def render_text(report: dict) -> str:
-    lines = []
+    lines = [f"scope={report.get('scope', 'strict')}"]
     for gate in report.get("gates") or []:
+        status = (
+            "PASS" if gate.get("ok")
+            else "BLOCK" if gate.get("blocking", True)
+            else "INFO"
+        )
         lines.append(
-            f"[{'PASS' if gate.get('ok') else 'BLOCK'}] "
+            f"[{status}] "
             f"{gate.get('name')}: {gate.get('detail')}")
     verdict = "GO — operator 승인 검토 가능" if report.get(
         "ready_for_operator_review") else "NO-GO — L1 유지"

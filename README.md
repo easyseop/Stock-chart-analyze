@@ -109,6 +109,35 @@ python -m bot.portfolio_web --port 8888
 보호선 정보가 없는 수동 보유종목과 90초 이상 낡은 시세는 별도로 경고한다.
 이 요약은 이미 내려받은 읽기 전용 데이터만 계산하므로 KIS 호출을 추가하지 않는다.
 
+## L1 해제 전 읽기 전용 점검
+
+점검기는 주문을 보내거나 kill-switch를 바꾸지 않는다. 제한적 mock 신규매수
+재개를 검토할 때는 반드시 브로커 조회를 포함한 `l0` 범위를 사용한다.
+
+```bash
+python scripts/kis_l1_readiness.py --scope l0 --broker
+python scripts/kis_l1_readiness.py --scope l0 --broker --json
+```
+
+`l0`에서 다음 항목은 하나라도 실패하면 `BLOCK`이다.
+
+- KIS mock, 현재 L1과 `buy_new=False`·`protect_sell=True`
+- 주문 원장 정상, 열린 주문 0, `UNKNOWN`·미회계 BUY 0
+- 운용원가 한도, 브로커·보호원장·costbook 수량 일치
+- heartbeat 60초 이하, Oracle fallback 0, 정체청산 `shadow`
+- AQN·CAG·GPK·LW·SNN·VRSK close-only 동결 유지
+- `TRADE_STAGE=mirror`, 비어 있지 않은 `ALLOWED_SYMBOLS`,
+  `ALLOW_BUY=1`, `KIS_ORDERS_ENABLED=1`
+
+7일 shadow, 9종목 본전 래칫, Oracle 한·미 세션, GitHub 60분 장애주입,
+동결 해제 결정은 `l0` 결과에 `INFO`로 남는다. 이 항목들은 각각 stall
+`live`, fallback 1, 동결 해제 승인 전에는 별도로 완료해야 한다. 모든 기능의
+증거를 한꺼번에 차단 조건으로 확인하려면 기본값인 `--scope strict`를 사용한다.
+
+JSON의 `context.position_counts_by_sleeve`에는 현재 보호원장의 A/B 종목 수가
+포함된다. `GO`는 사용자 승인 검토가 가능하다는 뜻일 뿐이며 L1을 자동으로
+내리지 않는다. 실제 하향에는 별도 사용자 승인과 operator ack가 필요하다.
+
 ## 출력 예시
 ```
 [종목명 CODE]                       심리: 🟢 강세 (정규화 +58점)
