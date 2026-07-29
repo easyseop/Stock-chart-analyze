@@ -1277,7 +1277,25 @@ Oracle의 운영 서비스와 분리한 `/tmp` worktree에서 전체 Python 회�
 `failed_symbols=[]`를 확인했다. systemd 달력의 07:30·17:30 KST도 정상
 파싱된다.
 
-GitHub 원격 브랜치 push는 완료됐다. GitHub App은 PR 생성 권한 403,
-로컬 `gh` 토큰은 만료되어 브라우저 재인증을 시작한 상태다. 인증 완료 후
-PR 생성·CI·exact-head 병합·Oracle timer 설치·웹 API 확인이 남는다.
-사후추적 결과를 자동 청산 규칙에 연결하지 않는다.
+GitHub CLI 재인증 후 PR #99를 생성했고 CI와 Site UI CI 3/3 성공 뒤
+exact head `0a4deab4`를 병합했다. 기본 브랜치 merge commit은
+`ef017877`이다.
+
+2026-07-29 23:22 KST(뉴욕 10:22)는 미국 정규장 중이었다. Oracle은 아직
+`6ed8e78c`, clean, L1이며 sentinel/watchdog/buyloop/telegram/portfolio-web와
+autodeploy timer가 active다. autodeploy가 새 commit을 감지하면
+sentinel·buyloop까지 재시작하므로 장중 배포는 실행 전 안전심사에서 차단했고
+서버 변경은 0건이다.
+
+다음 미국 정규·연장장 종료 뒤 할 일:
+
+1. autodeploy timer를 잠시 멈추고 실행 중 oneshot이 없는지 확인
+2. Oracle을 exact merge `ef017877`로 clean fast-forward
+3. `post-exit-refresh.service/.timer`와 Oracle drop-in 설치
+4. timer 최초 실행으로 운영 캐시에 10종목 백필
+5. portfolio-web만 재시작하고 `/api/post-exit.json` 200·POST 405,
+   수익매도 10·tracked 10·failed 0·시크릿/주문키 0을 확인
+6. autodeploy timer 복구, 매매 서비스 active·heartbeat fresh·L1 유지 확인
+
+사후추적 결과를 자동 청산 규칙에 연결하지 않는다. 제한적 L0는 이 배포와
+분리하며, 정확한 미국 allowlist 승인 전에는 해제하지 않는다.
