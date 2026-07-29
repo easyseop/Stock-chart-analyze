@@ -1,0 +1,39 @@
+{
+  "observed_at": "",
+  "stall_shadow_started_at": "",
+  "half_ratchet_symbols": [
+    "AQN",
+    "CAG",
+    "GPK",
+    "KKR",
+    "LW",
+    "SNN",
+    "STE",
+    "VRSK",
+    "WDAY"
+  ],
+  "frozen_review_symbols": [
+    "AQN",
+    "CAG",
+    "GPK",
+    "LW",
+    "SNN",
+    "VRSK"
+  ],
+  "frozen_decisions": {
+    "AQN": "pending",
+    "CAG": "pending",
+    "GPK": "pending",
+    "LW": "pending",
+    "SNN": "pending",
+    "VRSK": "pending"
+  },
+  "oracle_brain_sessions": {
+    "KR": 0,
+    "US": 0
+  },
+  "github_outage": {
+    "minutes": 0,
+    "new_orders": null
+  }
+}

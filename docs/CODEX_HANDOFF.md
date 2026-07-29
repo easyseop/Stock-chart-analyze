@@ -1,6 +1,6 @@
 # Codex 개발 인수인계
 
-마지막 갱신: 2026-07-25
+마지막 갱신: 2026-07-29
 저장소: `easyseop/Stock-chart-analyze`
 
 이 문서는 다른 노트북이나 새 Codex 작업에서 개발을 바로 이어가기 위한 현재 상태,
@@ -10,8 +10,8 @@
 ## 1. 현재 Git 상태
 
 - 기본 브랜치: `claude/happy-gauss-cwoq21`
-- 현재 개발 브랜치: `codex/portfolio-price-insights` (배포 결과 문서화용)
-- Oracle 배포 코드: `405aaf2` (PR #84 병합 결과)
+- 현재 개발 브랜치: `codex/l1-readiness-audit` (아직 미병합·미배포)
+- 현재 개발 기준 커밋: `76aae46` (PR #96 병합 결과)
 - 활성 로컬 복제본: `/Users/seop/Documents/매매봇/Stock-chart-analyze-deploy`
 - 기존 `Stock-chart-analyze-site`는 iCloud가 일부 `.git/refs`를 dataless로 바꿔
   HEAD가 끊겼다. 작업 파일은 보존하고 기준 커밋+검토 diff를 새 복제본에 복원했다.
@@ -482,6 +482,9 @@ GitHub API 기준 Pages는 public이고 최신 배포와 GitHub 호스팅 스모
 사용한다.
 
 ## 9. 다음 작업 순서
+
+> 이 절은 2026-07-25 당시의 역사 기록이다. legacy 이관과 커널 재부팅은 이후
+> 완료됐으며, 현재 미완료 항목과 다음 순서는 문서 끝의 §18을 기준으로 한다.
 
 P0/P1 수정 외부 승인, PR #78·#79 병합, Oracle 단계배포, KIS mock 실데이터,
 전체 Python `41/41`, L1 신규매수 차단, 원장 건강성, 공유 캐시와 개인 웹 검증까지
@@ -1031,3 +1034,39 @@ L1을 낮추거나 수동으로 래칫 상태를 조작하지 않는다.
 2. oracle-brain을 한/미 각 한 세션 관찰하고, L1 상태에서 GitHub 60분
    장애주입으로 fallback 주문 0을 확인한 뒤에만 fallback 1을 재검토한다.
 3. L1 하향은 위 관찰과 frozen 6종목 처리 결정을 마친 뒤 별도 승인으로 한다.
+
+### 18. 2026-07-29 L1 하향 준비상태 읽기 전용 점검기
+
+최신 인수인계 기록을 다시 대조한 결과, legacy 16건 이관·총시드 한도·열린 주문
+0·3원장 수량 일치·커널 재부팅은 완료됐다. 그러나 다음 항목은 PR #96 시점에도
+완료 증거가 없다.
+
+- 다음 미국 정규장 관리 사이클에서 과거 절반익절 9종목의 durable
+  `half_done=true`, `stop >= entry` 확인
+- 정체청산 `shadow` 최소 1주 관찰
+- oracle-brain 한국·미국 각 1세션 관찰
+- L1 상태의 GitHub 60분 장애주입과 신규주문 0 확인
+- close-only 동결 6종목을 유지하거나 해제할지 별도 운영자 결정
+
+이 조건을 말로만 확인하고 L1을 내리는 실수를 막기 위해
+`codex/l1-readiness-audit` 브랜치에서 읽기 전용 점검기를 구현했다. 이 변경은
+아직 기본 브랜치 병합·Oracle 배포 전이다.
+
+- `bot/l1_readiness.py`: 런타임 상태와 관찰 증거를 fail-closed 게이트로 판정.
+- `scripts/kis_l1_readiness.py`: 사람이 실행하는 GO/NO-GO CLI. 주문 모듈을
+  불러오지 않고 kill-switch를 변경하지 않는다.
+- `infra/server/l1-readiness-evidence.example.json`: 비밀값 없는 관찰 증거 형식.
+- `tests/test_l1_readiness.py`: 증거 누락·노후, 열린 주문, 미회계 BUY, 총시드 초과,
+  3원장 수량 불일치, heartbeat 노후, fallback 활성, shadow 부족, 고정된 9종목
+  래칫 목록 축소, 6종목 동결 결정 누락을 각각 NO-GO로 검증한다.
+
+CLI에서 `--broker`를 사용하면 KIS 잔고·미체결 조회 API만 호출해 브로커,
+`kis_positions`, costbook 수량을 대조한다. 조회 실패나 응답 필드 결손도 열린
+주문 0으로 추측하지 않고 NO-GO다. 모든 기술 게이트가 통과해도 결과는
+`ready_for_operator_review`이며 L1 자동 하향은 없다. 실제 하향은 별도 사용자
+승인과 운영자(operator) ack가 계속 필요하다.
+
+로컬 검증은 격리된 `.venv`에서 전체 Python 테스트 모듈 `47/47`, L1 준비도
+집중 테스트 `8/8`, Node 계산 테스트 `10/10`, Python compileall, 두 JavaScript
+문법 검사와 `git diff --check`를 통과했다. 이 결과는 소스 회귀검사이며 Oracle의
+미완료 운영 관찰을 완료한 것으로 대체하지 않는다.

@@ -160,6 +160,52 @@ denylist)·원장(UNKNOWN 잠금·동일종목 in-flight·60s 간격)·사이징
 원장 flock은 비재귀이므로 락 보유 코드는 `_fold_unlocked`/`_append_unlocked`만
 호출하고 잠금 순서는 `ledger > {costbook, kis_positions}`를 지킨다.
 
+## L1 하향 전 읽기 전용 GO/NO-GO
+
+`scripts/kis_l1_readiness.py`는 L1을 내리거나 주문을 보내지 않는다. 현재 서버의
+원장·보호 포지션·원가장부·브로커 잔고·미체결·heartbeat와 별도 관찰 증거를
+대조해 **운영자(operator)가 L1 하향을 검토할 수 있는지**만 판정한다. `GO`는
+검토 가능, `NO-GO`는 L1 유지라는 뜻이다.
+
+먼저 예시 파일을 서버 상태 디렉터리로 복사하고 실제 관찰값을 기록한다.
+예시의 빈 시각과 `pending`은 의도적인 차단값이다. 관찰하거나 결정하지 않은 값을
+미리 통과값으로 바꾸지 않으며, API 키·계좌번호·토큰은 이 파일에 넣지 않는다.
+
+```bash
+sudo install -d -o ubuntu -g ubuntu -m 700 /var/lib/stock-l1-readiness
+sudo install -o ubuntu -g ubuntu -m 600 \
+  infra/server/l1-readiness-evidence.example.json \
+  /var/lib/stock-l1-readiness/evidence.json
+```
+
+필수 증거:
+
+- 정체청산 `shadow` 시작시각과 최소 7일 관찰
+- 과거 절반익절 9종목의 `half_done=true` 및 `stop >= entry`
+- close-only 동결 6종목별 `keep_close_only` 또는 `unfreeze_approved` 결정.
+  `keep_close_only`이면 실제 동결 상태여야 하고, `unfreeze_approved`이면 별도
+  승인 절차로 동결을 해제한 상태여야 한다.
+- oracle-brain 한국·미국 각 1세션 이상 관찰
+- GitHub 60분 장애주입과 그동안 신규주문 0건
+- 위 관찰을 최근 72시간 안에 다시 확인한 `observed_at`
+
+Oracle 저장소 루트에서 기존 KIS 환경을 source한 뒤 실행한다. `--broker`는
+잔고와 미체결 **조회 API만** 호출하며 주문 모듈을 불러오지 않는다.
+
+```bash
+set -a
+. /home/ubuntu/kis.env
+set +a
+python3 scripts/kis_l1_readiness.py \
+  --broker \
+  --evidence /var/lib/stock-l1-readiness/evidence.json
+```
+
+종료코드 `0`은 모든 기술 게이트가 통과해 운영자 승인 검토가 가능하다는
+뜻일 뿐이다. 실제 L1 하향은 사용자 별도 승인과 사유가 포함된
+`python -m bot.kill 0 --lower ...` 절차가 여전히 필요하다. 하나라도 불명확하면
+종료코드 `2`, `NO-GO — L1 유지`로 실패한다.
+
 ## 자동 배포 (autodeploy — 수동 pull/restart 대체)
 5분마다 원격 브랜치를 확인해 **새 커밋이 있을 때만** `git pull`(fast-forward만)
 → 임포트 스모크 → 봇 재시작. 스모크 실패면 롤백하고 기존 코드로 계속(+P0 알림).
