@@ -11,6 +11,7 @@
 | `buyloop.service` | 매수 루프 — autopaper 'now' 신호를 KIS에 미러 매수(`python -m bot.kis_buyloop --loop`) |
 | `telegram.service` | 텔레그램 조회 봇(읽기전용) — `/보유`·`/종목 <코드>`(`python -m bot.kis_telegram`) |
 | `portfolio-web.service` | 실제 KIS 보유종목·평단·현재가·손익을 보여주는 사설 웹 화면(`127.0.0.1:8888`) |
+| `post-exit-refresh.timer` | 수익 매도 뒤 공개 일봉을 하루 2회 갱신하는 읽기전용 사후추적 |
 | `watchdog.service` | heartbeat 감시 — 60s P0 · 90s 재기동(≤3회/10분) · 120s+ kill L1 |
 | `watchdog.py` | 위 유닛이 실행하는 스크립트 |
 | `autodeploy.sh` + `.service`/`.timer` | 자동 배포 — 5분마다 새 커밋 확인, 있으면 pull+재시작(스모크 실패 시 롤백) |
@@ -87,6 +88,23 @@ sudo systemctl enable --now portfolio-web.service
 systemctl status sentinel watchdog buyloop telegram portfolio-web --no-pager
 sudo -u bot python3 /opt/stock/Stock-chart-analyze/scripts/kis_preflight.py
 ```
+
+익절 사후추적은 KIS 환경 파일을 받지 않는 별도 oneshot/timer다.
+
+```bash
+sudo cp infra/server/post-exit-refresh.service /etc/systemd/system/
+sudo cp infra/server/post-exit-refresh.timer /etc/systemd/system/
+sudo mkdir -p /etc/systemd/system/post-exit-refresh.service.d
+sudo cp infra/server/post-exit-refresh.oracle-ubuntu.conf \
+  /etc/systemd/system/post-exit-refresh.service.d/oracle-ubuntu.conf
+sudo systemctl daemon-reload
+sudo systemctl enable --now post-exit-refresh.timer
+sudo systemctl start post-exit-refresh.service
+systemctl status post-exit-refresh.timer post-exit-refresh.service --no-pager
+```
+
+개인 웹의 `/api/post-exit.json`은 timer가 원자 발행한 JSON만 읽으며 브라우저
+요청으로 일봉이나 KIS를 새로 조회하지 않는다.
 
 > **텔레그램 조회 봇(`telegram.service`)** — 읽기전용. 매매 경로가 전혀 없어(조회
 > API만) 토큰이 유출돼도 이 봇으로는 매매 불가. `getUpdates`는 이 프로세스만 쓴다

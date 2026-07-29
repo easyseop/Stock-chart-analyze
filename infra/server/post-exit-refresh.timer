@@ -1,0 +1,13 @@
+[Unit]
+Description=Refresh post-exit analysis after KR and US sessions
+
+[Timer]
+OnCalendar=*-*-* 07:30:00 Asia/Seoul
+OnCalendar=*-*-* 17:30:00 Asia/Seoul
+AccuracySec=5min
+RandomizedDelaySec=5min
+Persistent=true
+Unit=post-exit-refresh.service
+
+[Install]
+WantedBy=timers.target
