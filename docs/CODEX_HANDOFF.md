@@ -1263,6 +1263,21 @@ Oracle 라이브 `/api/performance.json`을 확인했다. epoch는
 거래소 날짜, 세 분모, 미완료 기간, 추정/확정 격리, 손실·무효행 제외,
 원자발행·손상 fail-closed, 주문 plane 분리를 검증한다.
 
-이 작업은 아직 커밋·PR·Oracle 배포 전이다. 전체 회귀와 브라우저 렌더를
-확인하고 P0/P1 검토를 통과한 뒤 timer를 설치한다. 사후추적 결과를 자동
-청산 규칙에 연결하지 않는다.
+브랜치 `codex/post-exit-analysis`에 구현 commit `9f0c83a2`와 Oracle
+원장경로 보정 commit `ee361547`을 푸시했다. 처음 systemd 드롭인이 원장을
+저장소 루트의 존재하지 않는 파일로 덮어써 0건을 표시할 결함을 Oracle
+실원장 대입 검증에서 발견했다. 경로 재정의를 전부 제거하고 각 장부 모듈의
+`bot/*.jsonl` 고정 기본경로를 사용하게 했으며, 회귀 테스트가 systemd의
+원장경로 override 재도입을 차단한다.
+
+Oracle의 운영 서비스와 분리한 `/tmp` worktree에서 전체 Python 회귀
+`48/48`을 통과했다. 실제 운영 원장을 읽기 전용으로 대입한 결과 거래이력
+29건(매수 18·매도 11), 수익 매도 10건(확정가 0·추정가 10)이었고, 격리된
+임시 공개 일봉 캐시 백필은 10종목 모두 성공해 `tracked_exits=10`,
+`failed_symbols=[]`를 확인했다. systemd 달력의 07:30·17:30 KST도 정상
+파싱된다.
+
+GitHub 원격 브랜치 push는 완료됐다. GitHub App은 PR 생성 권한 403,
+로컬 `gh` 토큰은 만료되어 브라우저 재인증을 시작한 상태다. 인증 완료 후
+PR 생성·CI·exact-head 병합·Oracle timer 설치·웹 API 확인이 남는다.
+사후추적 결과를 자동 청산 규칙에 연결하지 않는다.
