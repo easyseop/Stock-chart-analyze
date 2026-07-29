@@ -6,10 +6,11 @@
 재개할 때 사용한다. L0는 신규매수를 허용하는 kill-switch 레벨이다.
 
 - 저장소: `easyseop/Stock-chart-analyze`
-- 작업 브랜치: `codex/l1-readiness-audit`
+- 후속 작업 브랜치: `codex/l0-mock-open-orders-fix`
 - 대상 기본 브랜치: `claude/happy-gauss-cwoq21`
-- Draft PR: #97 `Add read-only L1 readiness audit`
-- 현재 상태: PR 미병합, Oracle 미배포, L1 유지
+- 준비도 점검기 PR: #97 `Add read-only L1 readiness audit` (병합·Oracle 배포 완료)
+- 현재 상태: Oracle `5321fc7f`·L1 유지. 최초 `l0 --broker` 감사에서
+  비어 있는 allowlist와 KIS mock 국내 미체결 API 미지원이 차단 사유로 확인됨
 
 **2026-08-05까지 기다릴 필요는 없다.** 단, 이것은 아래 제한적 L0 범위에만
 해당한다. 정체청산 `live`, Oracle fallback 1, 동결 6종목 해제, 실전계좌
@@ -109,6 +110,11 @@ sentinel은 `KIS_ENV=mock`, `STALL_EXIT_MODE=shadow`여야 한다. buyloop는
 
 아래 명령은 브로커 잔고와 미체결을 조회하지만 주문을 보내거나 L1을 바꾸지
 않는다. service 설정 확인과 동일한 안전값으로 평가기를 실행한다.
+
+미국 보유·열린 주문·allowlist만 있는 경우에는 KIS mock이 지원하지 않는 국내
+미체결 API를 호출하지 않는다. 국내 종목이 하나라도 범위에 있으면 국내 조회
+실패를 계속 NO-GO로 처리하며, 범위를 판정할 수 없을 때도 양 시장을 모두
+조회해 fail-closed를 유지한다.
 
 ```bash
 sudo -u ubuntu bash -lc '
