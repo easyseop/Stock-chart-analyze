@@ -10,9 +10,6 @@ Group=bot
 WorkingDirectory=/opt/stock/Stock-chart-analyze
 Environment=PYTHONUNBUFFERED=1
 Environment=PYTHONDONTWRITEBYTECODE=1
-Environment=ORDER_LEDGER_PATH=/opt/stock/Stock-chart-analyze/kis_order_ledger.jsonl
-Environment=COSTBOOK_PATH=/opt/stock/Stock-chart-analyze/kis_costbook.jsonl
-Environment=KIS_POSITIONS_PATH=/opt/stock/Stock-chart-analyze/kis_positions.jsonl
 Environment=SCANNER_CACHE_DIR=/var/cache/stock-post-exit
 Environment=POST_EXIT_SNAPSHOT_PATH=/var/lib/stock-post-exit/snapshot.json
 ExecStart=/usr/bin/python3 scripts/post_exit_refresh.py --json

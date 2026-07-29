@@ -142,17 +142,25 @@ def test_snapshot_loader_is_cache_only_and_published_file_fails_closed():
 
 def test_order_plane_and_secrets_are_absent():
     source = Path(post_exit.__file__).read_text(encoding="utf-8")
-    unit = (Path(__file__).parents[1] / "infra" / "server" /
-            "post-exit-refresh.service").read_text(encoding="utf-8")
+    infra_dir = Path(__file__).parents[1] / "infra" / "server"
+    unit = (infra_dir / "post-exit-refresh.service").read_text(encoding="utf-8")
+    dropin = (infra_dir / "post-exit-refresh.oracle-ubuntu.conf").read_text(
+        encoding="utf-8")
     for forbidden in (
         "bot.kis_orders", "bot.kis_buy", "bot.kill", "place_buy",
         "place_sell", "EnvironmentFile", "APPKEY", "APPSECRET", "CANO",
     ):
         assert forbidden not in source
         assert forbidden not in unit
+        assert forbidden not in dropin
+    for journal_override in (
+        "ORDER_LEDGER_PATH", "COSTBOOK_PATH", "KIS_POSITIONS_PATH",
+    ):
+        assert journal_override not in unit
+        assert journal_override not in dropin
     assert "Nice=10" in unit and "MemoryMax=380M" in unit
     assert "SCANNER_CACHE_DIR=/var/cache/stock-post-exit" in unit
-    print("[PASS] KIS·주문·kill·시크릿 경계 분리 + 저우선순위 자원격리")
+    print("[PASS] KIS·주문·kill·시크릿·원장경로 경계 분리 + 저우선순위 자원격리")
 
 
 def main():
