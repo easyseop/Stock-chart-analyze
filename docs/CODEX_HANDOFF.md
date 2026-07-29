@@ -1281,16 +1281,31 @@ GitHub CLI 재인증 후 PR #99를 생성했고 CI와 Site UI CI 3/3 성공 뒤
 exact head `0a4deab4`를 병합했다. 기본 브랜치 merge commit은
 `ef017877`이다.
 
-2026-07-29 23:22 KST(뉴욕 10:22)는 미국 정규장 중이었다. Oracle은 아직
-`6ed8e78c`, clean, L1이며 sentinel/watchdog/buyloop/telegram/portfolio-web와
-autodeploy timer가 active다. autodeploy가 새 commit을 감지하면
-sentinel·buyloop까지 재시작하므로 장중 배포는 실행 전 안전심사에서 차단했고
-서버 변경은 0건이다.
+2026-07-29 23:22 KST(뉴욕 10:22)는 미국 정규장 중이었다. 수동 장중 배포는
+실행 전 안전심사에서 차단됐지만, 기존 5분 autodeploy가 14:24 UTC에 PR #99를
+감지해 Oracle을 `ef017877`로 fast-forward하고 sentinel/buyloop/telegram/
+portfolio-web를 한 차례 재시작했다. 추가 장중 재시작을 막기 위해
+`autodeploy.timer`만 정지했으며 현재 inactive다.
+
+자동배포 직후 재감사 결과는 L1, KIS mock, 원장·브로커 열린 주문 0,
+UNKNOWN 0, 미회계 BUY 0, 운용원가 26,214,776.7원 ≤ 33,250,000원,
+브로커·보호원장·costbook 수량 일치, heartbeat 9.2초였다.
+sentinel/watchdog/buyloop/telegram/portfolio-web는 모두 active이고
+systemd 재시작 누적 오류는 0이다. 장중 자동배포로 인한 주문·원장 이상은
+발견되지 않았다.
+
+제한적 L0 재감사의 blocking gate는 두 가지다.
+
+- `STALL_EXIT_MODE=off`: 정체청산은 먼저 `shadow`로 관찰해야 한다.
+- `ALLOWED_SYMBOLS=[]`: 사용자가 정확한 미국 종목 목록을 승인해야 한다.
+
+기존 동결 6종목은 그대로이며 fallback은 0이다. 정확한 allowlist 승인 전
+L1을 해제하지 않는다.
 
 다음 미국 정규·연장장 종료 뒤 할 일:
 
 1. autodeploy timer를 잠시 멈추고 실행 중 oneshot이 없는지 확인
-2. Oracle을 exact merge `ef017877`로 clean fast-forward
+2. Oracle을 기본 브랜치 최신 exact merge로 clean fast-forward
 3. `post-exit-refresh.service/.timer`와 Oracle drop-in 설치
 4. timer 최초 실행으로 운영 캐시에 10종목 백필
 5. portfolio-web만 재시작하고 `/api/post-exit.json` 200·POST 405,
@@ -1299,3 +1314,7 @@ sentinel·buyloop까지 재시작하므로 장중 배포는 실행 전 안전심
 
 사후추적 결과를 자동 청산 규칙에 연결하지 않는다. 제한적 L0는 이 배포와
 분리하며, 정확한 미국 allowlist 승인 전에는 해제하지 않는다.
+
+기존 heartbeat automation `kis`는 2026-07-30 09:10 KST 한 번 실행되도록
+갱신했다. 뉴욕 20:10 이후임을 재확인한 뒤 위 런북을 수행하며, 장중이거나
+불일치가 있으면 아무것도 변경하지 않고 fail-closed 보고한다.
