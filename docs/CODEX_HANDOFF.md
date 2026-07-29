@@ -1075,3 +1075,12 @@ CLI에서 `--broker`를 사용하면 KIS 잔고·미체결 조회 API만 호출�
 기본 브랜치 대상 Draft PR #97
 `Add read-only L1 readiness audit`을 열었다. PR 병합·Oracle 배포·L1 하향은
 아직 수행하지 않았다.
+
+사용자 요청으로 7일 shadow·Oracle 관찰·동결 결정이 일반 mock 신규매수의 L0
+조건과 과도하게 결합됐는지 다시 검토하는
+`docs/CLAUDE_REVIEW_L1_RELEASE_OPTIONS.md`를 작성했다. 이 요청서는 기존 계획
+유지, 기능별 조건 분리, 한 종목·한 주문 카나리, L1 예외 주문, L0+`ALLOW_BUY=0`
+대안을 비교한다. 특히 현재 보호원장 16종목의 A/B 귀속, Stage 상한,
+Stage 1.5의 risk cap 0.1%와 매수루프 기본 risk 1% 불일치, heartbeat 60/120초
+경계를 반례로 확인하도록 요구한다. Claude 판정 전에는 L1과 운영 설정을
+변경하지 않는다.
