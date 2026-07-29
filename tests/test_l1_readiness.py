@@ -383,8 +383,24 @@ def test_broker_read_only_snapshot_matches_three_ledgers():
         assert snapshot["positions_match_broker"] is True
         assert snapshot["broker_open_orders"] == 0
         assert snapshot["position_counts_by_sleeve"] == {"A": 1, "B": 0}
+        assert domestic.call_count == 0 and overseas.call_count == 3
+
+        # KR 종목이 allowlist에 들어오면 mock 미지원 국내 API도 다시 필수다.
+        # 이때 실패를 0건으로 추측하지 않고 L0 점검을 계속 차단한다.
+        os.environ["ALLOWED_SYMBOLS"] = "AAPL,005930"
+        with mock.patch.object(
+                modules["kis"], "holdings",
+                side_effect=[{}, {"AAPL": 2}, {"AAPL": 2}, {"AAPL": 2}]), \
+             mock.patch.object(
+                 modules["kis"], "domestic_open_orders",
+                 return_value=None) as domestic, \
+             mock.patch.object(
+                 modules["kis"], "open_orders",
+                 return_value=empty_orders) as overseas:
+            snapshot = R.collect_runtime(fetch_broker=True, evidence={})
+        assert snapshot["broker_open_orders"] is None
         assert domestic.call_count == 1 and overseas.call_count == 3
-    print("[PASS] 브로커 조회는 읽기 API만 사용해 3원장 수량·미체결 대조")
+    print("[PASS] 미국-only는 KR mock 미지원 격리·KR 범위는 계속 fail-closed")
 
 
 def main():

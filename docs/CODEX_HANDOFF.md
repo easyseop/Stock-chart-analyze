@@ -1157,3 +1157,59 @@ stall live·fallback 1·동결 해제·실전 전환에는 계속 필요하다�
 현재 이 컴퓨터에서 Oracle 접속은 불가능하다. 따라서 PR 병합, Oracle 배포,
 환경변수 변경, 브로커 조회, L1 하향, 주문은 수행하지 않았다. 다음 컴퓨터는
 PR #97과 위 런북만 확인하면 환경 작업을 이어갈 수 있다.
+
+### 21. 2026-07-29 PR #97 병합·Oracle 배포와 L0 감사기 후속
+
+사용자가 제한적 KIS mock L0 신규매수를 명시적으로 승인했다. 승인 범위는
+`STALL_EXIT_MODE=shadow`, Oracle fallback 0, close-only 동결 6종목,
+실전계좌 하드블록을 유지하는 제한적 L0다. 정확한 `ALLOWED_SYMBOLS`는 아직
+사람이 정하지 않았으므로 L1 하향은 하지 않았다.
+
+PR #97의 4개 CI가 통과했고 exact head `e213aff4`를 기본 브랜치에 병합했다.
+merge commit은 `5321fc7f`다. Oracle도 clean fast-forward로 같은 commit에
+배포했으며 sentinel/watchdog/buyloop/telegram/portfolio-web, 관련 timer,
+heartbeat와 원장 무결성이 정상이다.
+
+L1을 유지한 첫 읽기 전용 감사
+`scripts/kis_l1_readiness.py --scope l0 --broker --json`은 두 사유로
+NO-GO였다.
+
+1. `ALLOWED_SYMBOLS`가 비어 있음. 이는 자동으로 종목을 고르지 않고 사용자
+   선택을 기다리는 의도된 차단이다.
+2. 미국주만 16종목 보유 중인데 KIS mock의 국내 미체결 API가 미지원 응답을
+   반환해 `broker_open_orders=None`으로 판정됨. NASD/NYSE/AMEX 미체결은
+   각각 정상 응답 0건이고 로컬 열린 주문도 0이었다.
+
+두 번째 항목은 미국-only 제한적 L0를 실제 주문 위험과 무관한 미지원 API가
+막는 운영 결함이다. `codex/l0-mock-open-orders-fix`에서 보유 포지션·로컬
+열린 주문·allowlist로 관련 시장을 계산해 그 시장만 미체결 조회하도록 좁혔다.
+미국-only이면 국내 API를 건너뛰고, KR 종목이 하나라도 관련되면 국내 조회
+실패를 계속 fail-closed로 차단한다. 시장 범위를 증명할 수 없을 때는 양쪽을
+모두 조회한다.
+
+집중 준비도 테스트와 ACK/주문·회계 회귀는 통과했다. 로컬 전체 테스트에서
+`pandas`/`numpy`가 필요한 8개 모듈만 작업공간 시스템 Python의 의존성
+미설치로 실행되지 않았으며, 코드 실패로 판정하지 않는다. 원격 CI와 Oracle
+`.venv`에서 전체 의존성 환경 재검증 후 병합·배포한다.
+
+다음 순서:
+
+1. 위 후속 패치 PR의 CI와 Oracle `.venv` 회귀를 통과시킨다.
+2. L1에서 `--scope l0 --broker`를 다시 실행해 차단 사유가 allowlist 하나만
+   남는지 확인한다.
+3. 현재 신선한 후보와 동결·기보유 여부를 사용자에게 제시하고 정확한
+   `ALLOWED_SYMBOLS`를 승인받는다. Codex가 임의로 종목을 선택하지 않는다.
+4. 승인 목록만 `/home/ubuntu/kis.env`에 원자적으로 반영하고 서비스를 재시작한
+   뒤 감사를 다시 통과시킨다.
+5. 사용자 승인 문구를 operator ack로 남겨 L1→L0 한 번만 실행하고, 첫
+   매수루프에서 allowlist·회계·보호선·수량을 검증한다. 이상 시 즉시 L1로
+   되돌린다.
+
+같은 후속 개발에서 성과/지수 비교가 legacy 이관 epoch 이후 공통 0% 기준의
+일별 복리 누적으로 표시되고 예전 `-16%~-17%` 오염 구간이 라이브 응답에
+재등장하지 않는지 검증한다. 또한 주문과 분리된 읽기전용 익절 사후추적을
+추가한다. 확정된 수익 매도마다 1·3·5·10·20거래일의 종가·최고가를 추적해
+평단 대비 추가 상승과 매도가 대비 놓친 상승을 함께 표시하고, 슬리브·청산
+사유·부분/전량·당시 R값별 공통점을 표본 수와 함께 집계한다. 이 기능은 기존
+시세 캐시/공개 일봉만 사용하고 KIS 호출·주문·kill-switch에 영향을 주지
+않아야 한다.

@@ -341,6 +341,50 @@ def _broker_open_count(response: dict | None) -> int | None:
     return count
 
 
+def _relevant_open_order_markets(
+        local_positions: dict[str, dict],
+        local_open_orders: list[dict],
+        allowed_symbols: set[str],
+        *,
+        market_of_symbol) -> set[str]:
+    """자동매수/보유 범위에 해당하는 시장만 미체결 조회 대상으로 고른다.
+
+    KIS mock은 국내 미체결 API를 제공하지 않는다. 미국 종목만 보유·허용하고
+    로컬 KR 주문도 없는데 이 미지원 응답 때문에 미국 제한적 L0까지 막지 않도록
+    범위를 좁힌다. 반대로 KR 포지션·열린 주문·allowlist 중 하나라도 있으면 국내
+    응답 실패를 계속 fail-closed로 처리한다.
+    """
+    markets: set[str] = set()
+
+    def add(symbol: object, row: dict | None = None) -> None:
+        item = row or {}
+        market = str(item.get("market") or "").upper()
+        ccy = str(item.get("ccy") or "").upper()
+        if market == "KR" or ccy == "KRW":
+            markets.add("KR")
+            return
+        if market == "US" or ccy == "USD":
+            markets.add("US")
+            return
+        code = str(symbol or "").strip().upper()
+        if code:
+            markets.add(str(market_of_symbol(code) or "").upper())
+
+    for code, row in local_positions.items():
+        try:
+            qty = int(row.get("qty") or 0)
+        except (TypeError, ValueError):
+            qty = 0
+        if qty > 0:
+            add(code, row)
+    for order in local_open_orders:
+        add(order.get("symbol"), order)
+    for code in allowed_symbols:
+        add(code)
+    markets.discard("")
+    return markets or {"KR", "US"}   # 범위조차 증명 못 하면 양쪽 모두 조회
+
+
 def collect_runtime(*, fetch_broker: bool = False,
                     evidence: dict | None = None) -> dict:
     """현재 서버 상태를 읽는다. ``fetch_broker``도 조회 API만 사용한다."""
@@ -367,13 +411,14 @@ def collect_runtime(*, fetch_broker: bool = False,
         sleeve = "B" if str(row.get("sleeve") or "A").upper() == "B" else "A"
         position_counts[sleeve] += 1
 
+    open_orders = ledger.open_orders()
     snapshot: dict[str, Any] = {
         "kis_env": kis.ENV,
         "kill_level": kill.level(),
         "buy_new_allowed": kill.allows("buy_new"),
         "protect_sell_allowed": kill.allows("protect_sell"),
         "ledger_healthy": ledger.ledger_healthy(),
-        "local_open_orders": len(ledger.open_orders()),
+        "local_open_orders": len(open_orders),
         "broker_open_orders": None,
         "unresolved_unknowns": sum(
             1 for order in folded_orders
@@ -443,19 +488,25 @@ def collect_runtime(*, fetch_broker: bool = False,
         }
     )
 
+    relevant_markets = _relevant_open_order_markets(
+        local_positions, open_orders, allowed_symbols,
+        market_of_symbol=kis.market_of_symbol)
+    responses: list[dict | None] = []
+    if "KR" in relevant_markets:
+        responses.append(kis.domestic_open_orders())
+    if "US" in relevant_markets:
+        responses.extend(
+            kis.open_orders(excg=exchange)
+            for exchange in ("NASD", "NYSE", "AMEX"))
     open_counts: list[int] = []
-    for response in (
-        kis.domestic_open_orders(),
-        *(kis.open_orders(excg=exchange)
-          for exchange in ("NASD", "NYSE", "AMEX")),
-    ):
+    for response in responses:
         count = _broker_open_count(response)
         if count is None:
             open_counts = []
             break
         open_counts.append(count)
     snapshot["broker_open_orders"] = (
-        sum(open_counts) if len(open_counts) == 4 else None)
+        sum(open_counts) if len(open_counts) == len(responses) else None)
     return snapshot
 
 
