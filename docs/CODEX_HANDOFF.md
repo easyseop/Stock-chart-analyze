@@ -1318,3 +1318,23 @@ L1을 해제하지 않는다.
 기존 heartbeat automation `kis`는 2026-07-30 09:10 KST 한 번 실행되도록
 갱신했다. 뉴욕 20:10 이후임을 재확인한 뒤 위 런북을 수행하며, 장중이거나
 불일치가 있으면 아무것도 변경하지 않고 fail-closed 보고한다.
+
+### 23. 2026-07-29 limited mock L0 정확 목록 승인
+
+사용자가 limited mock L0의 정확한 미국 allowlist를 다음 6종목으로
+명시 승인했다.
+
+`EQT, CEG, EXE, MARA, TBBK, CLBK`
+
+장후 heartbeat 런북에 이 목록을 반영했다. 먼저 `STALL_EXIT_MODE=shadow`와
+위 `ALLOWED_SYMBOLS`만 `/home/ubuntu/kis.env`에 원자 적용하고,
+`TRADE_STAGE=mirror`, `KIS_ENV=mock`, `ALLOW_BUY=1`,
+`KIS_ORDERS_ENABLED=1`, fallback 0, 동결 6종목을 유지한다. 환경 로드 후
+`scripts/kis_l1_readiness.py --scope l0 --broker --json`의
+`blockers=[]`를 확인해야만 명시적 operator ack로 L1→L0를 하향한다.
+
+현재 A 12·B 4로 두 슬리브가 모두 상한이므로 정상이라면 L0 직후 신규주문은
+0건이다. 첫 buyloop 사이클에서 주문 0·heartbeat·보호매도·서비스 상태를
+확인한다. blocker, 목록 불일치, 새 주문, 수량/원장 이상이 있으면 env 백업을
+복원하고 즉시 L1을 유지 또는 복귀한다. 이 승인은 KIS mock limited L0만
+대상이며 KIS live, fallback 1, stall live, 동결해제 승인이 아니다.
