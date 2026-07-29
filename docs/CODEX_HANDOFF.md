@@ -1013,6 +1013,17 @@ apply 직후 대조:
 운영 반례 해소만으로 안전장치를 조용히 내리지 않기 위해 자동 unfreeze하지
 않았다. L1 하향과 이 6개 unfreeze는 별도 operator 승인 항목이다.
 
+00:01 UTC 자동 후속에서 미국 정규장과 연장장 종료(ET 20:01), Oracle
+`37d9d4a8`·clean·mock·L1, 5개 핵심 서비스 active/enabled, 실패 unit 0,
+heartbeat 정상, 열린 주문 0을 다시 확인했다. 이관과 재부팅이 장 마감 뒤여서
+9개 과거 절반익절 종목의 `half_done`·본전 래칫은 아직 첫 정규장 관리
+사이클을 거치지 않았다. 원장상 목표/확정 체결은 각각
+AQN 128/128, CAG 13/13, GPK 123/123, KKR 7/7, LW 12/12,
+SNN 24/24, STE 3/3, VRSK 2/2, WDAY 2/2이고 잔여·pending은 모두 0이다.
+따라서 다음 미국 정규장 첫 `kis_exits.manage()` 사이클 뒤 이 9개가 durable
+`half_done=true`, 보호선 `stop >= entry`가 되는지 재확인한다. 그 전에는
+L1을 낮추거나 수동으로 래칫 상태를 조작하지 않는다.
+
 다음 순서는 mutation이 아니라 관찰이다.
 
 1. 정체청산 shadow를 1–2주 관찰하며 미국 세션 수, 15/30일 후보와 제안값을
