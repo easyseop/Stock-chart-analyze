@@ -1070,3 +1070,8 @@ CLI에서 `--broker`를 사용하면 KIS 잔고·미체결 조회 API만 호출�
 집중 테스트 `8/8`, Node 계산 테스트 `10/10`, Python compileall, 두 JavaScript
 문법 검사와 `git diff --check`를 통과했다. 이 결과는 소스 회귀검사이며 Oracle의
 미완료 운영 관찰을 완료한 것으로 대체하지 않는다.
+
+구현 커밋 `f3fb5c6`을 원격 `codex/l1-readiness-audit` 브랜치에 push했고,
+기본 브랜치 대상 Draft PR #97
+`Add read-only L1 readiness audit`을 열었다. PR 병합·Oracle 배포·L1 하향은
+아직 수행하지 않았다.
