@@ -1,6 +1,6 @@
 # Codex 개발 인수인계
 
-마지막 갱신: 2026-07-25
+마지막 갱신: 2026-07-29
 저장소: `easyseop/Stock-chart-analyze`
 
 이 문서는 다른 노트북이나 새 Codex 작업에서 개발을 바로 이어가기 위한 현재 상태,
@@ -10,8 +10,8 @@
 ## 1. 현재 Git 상태
 
 - 기본 브랜치: `claude/happy-gauss-cwoq21`
-- 현재 개발 브랜치: `codex/portfolio-price-insights` (배포 결과 문서화용)
-- Oracle 배포 코드: `405aaf2` (PR #84 병합 결과)
+- 현재 개발 브랜치: `codex/l1-readiness-audit` (아직 미병합·미배포)
+- 현재 개발 기준 커밋: `76aae46` (PR #96 병합 결과)
 - 활성 로컬 복제본: `/Users/seop/Documents/매매봇/Stock-chart-analyze-deploy`
 - 기존 `Stock-chart-analyze-site`는 iCloud가 일부 `.git/refs`를 dataless로 바꿔
   HEAD가 끊겼다. 작업 파일은 보존하고 기준 커밋+검토 diff를 새 복제본에 복원했다.
@@ -482,6 +482,9 @@ GitHub API 기준 Pages는 public이고 최신 배포와 GitHub 호스팅 스모
 사용한다.
 
 ## 9. 다음 작업 순서
+
+> 이 절은 2026-07-25 당시의 역사 기록이다. legacy 이관과 커널 재부팅은 이후
+> 완료됐으며, 현재 미완료 항목과 다음 순서는 문서 끝의 §18을 기준으로 한다.
 
 P0/P1 수정 외부 승인, PR #78·#79 병합, Oracle 단계배포, KIS mock 실데이터,
 전체 Python `41/41`, L1 신규매수 차단, 원장 건강성, 공유 캐시와 개인 웹 검증까지
@@ -1031,3 +1034,126 @@ L1을 낮추거나 수동으로 래칫 상태를 조작하지 않는다.
 2. oracle-brain을 한/미 각 한 세션 관찰하고, L1 상태에서 GitHub 60분
    장애주입으로 fallback 주문 0을 확인한 뒤에만 fallback 1을 재검토한다.
 3. L1 하향은 위 관찰과 frozen 6종목 처리 결정을 마친 뒤 별도 승인으로 한다.
+
+### 18. 2026-07-29 L1 하향 준비상태 읽기 전용 점검기
+
+최신 인수인계 기록을 다시 대조한 결과, legacy 16건 이관·총시드 한도·열린 주문
+0·3원장 수량 일치·커널 재부팅은 완료됐다. 그러나 다음 항목은 PR #96 시점에도
+완료 증거가 없다.
+
+- 다음 미국 정규장 관리 사이클에서 과거 절반익절 9종목의 durable
+  `half_done=true`, `stop >= entry` 확인
+- 정체청산 `shadow` 최소 1주 관찰
+- oracle-brain 한국·미국 각 1세션 관찰
+- L1 상태의 GitHub 60분 장애주입과 신규주문 0 확인
+- close-only 동결 6종목을 유지하거나 해제할지 별도 운영자 결정
+
+이 조건을 말로만 확인하고 L1을 내리는 실수를 막기 위해
+`codex/l1-readiness-audit` 브랜치에서 읽기 전용 점검기를 구현했다. 이 변경은
+아직 기본 브랜치 병합·Oracle 배포 전이다.
+
+- `bot/l1_readiness.py`: 런타임 상태와 관찰 증거를 fail-closed 게이트로 판정.
+- `scripts/kis_l1_readiness.py`: 사람이 실행하는 GO/NO-GO CLI. 주문 모듈을
+  불러오지 않고 kill-switch를 변경하지 않는다.
+- `infra/server/l1-readiness-evidence.example.json`: 비밀값 없는 관찰 증거 형식.
+- `tests/test_l1_readiness.py`: 증거 누락·노후, 열린 주문, 미회계 BUY, 총시드 초과,
+  3원장 수량 불일치, heartbeat 노후, fallback 활성, shadow 부족, 고정된 9종목
+  래칫 목록 축소, 6종목 동결 결정 누락을 각각 NO-GO로 검증한다.
+
+CLI에서 `--broker`를 사용하면 KIS 잔고·미체결 조회 API만 호출해 브로커,
+`kis_positions`, costbook 수량을 대조한다. 조회 실패나 응답 필드 결손도 열린
+주문 0으로 추측하지 않고 NO-GO다. 모든 기술 게이트가 통과해도 결과는
+`ready_for_operator_review`이며 L1 자동 하향은 없다. 실제 하향은 별도 사용자
+승인과 운영자(operator) ack가 계속 필요하다.
+
+로컬 검증은 격리된 `.venv`에서 전체 Python 테스트 모듈 `47/47`, L1 준비도
+집중 테스트 `8/8`, Node 계산 테스트 `10/10`, Python compileall, 두 JavaScript
+문법 검사와 `git diff --check`를 통과했다. 이 결과는 소스 회귀검사이며 Oracle의
+미완료 운영 관찰을 완료한 것으로 대체하지 않는다.
+
+구현 커밋 `f3fb5c6`을 원격 `codex/l1-readiness-audit` 브랜치에 push했고,
+기본 브랜치 대상 Draft PR #97
+`Add read-only L1 readiness audit`을 열었다. PR 병합·Oracle 배포·L1 하향은
+아직 수행하지 않았다.
+
+사용자 요청으로 7일 shadow·Oracle 관찰·동결 결정이 일반 mock 신규매수의 L0
+조건과 과도하게 결합됐는지 다시 검토하는
+`docs/CLAUDE_REVIEW_L1_RELEASE_OPTIONS.md`를 작성했다. 이 요청서는 기존 계획
+유지, 기능별 조건 분리, 한 종목·한 주문 카나리, L1 예외 주문, L0+`ALLOW_BUY=0`
+대안을 비교한다. 특히 현재 보호원장 16종목의 A/B 귀속, Stage 상한,
+Stage 1.5의 risk cap 0.1%와 매수루프 기본 risk 1% 불일치, heartbeat 60/120초
+경계를 반례로 확인하도록 요구한다. Claude 판정 전에는 L1과 운영 설정을
+변경하지 않는다.
+
+### 19. 2026-07-29 Claude 판정 반영 — 제한적 L0 scope
+
+Claude는 §8 반례 13개를 mock으로 실행했고 KIS 호출·주문은 0건이었다고
+보고했다. 최종 판정은 선결조건 충족 후 대안 B인 **제한적 L0 허용**이다.
+이 판정은 위 17·18절의 “모든 관찰 완료 후 L0 검토” 결론 중 제한적 L0 부분을
+대체한다. 관찰 항목 자체는 stall live·fallback 1·동결 해제의 게이트로 계속
+유효하다.
+7일 shadow, Oracle 한·미 세션, GitHub 60분 장애주입, 9종목 래칫, 동결 해제
+결정은 일반 GitHub 신호의 mock 신규매수와 독립된 기능 조건이며, 기존
+`l1_readiness.evaluate()`가 이를 하나의 `ready`로 묶은 것은 과결합이라고
+판정했다. 전체 회신 요약은
+`docs/CLAUDE_L1_RELEASE_OPTIONS_RESULT.md`에 보존했다.
+
+PR #97에서 점검기에 두 승인 범위를 추가했다.
+
+- `--scope strict`(기본): 기존 관찰 증거를 모두 차단 조건으로 유지한다.
+- `--scope l0`: 독립 기능 관찰은 `INFO`로 표시하되, mock·L1 유지·원장·
+  열린 주문·회계·예산·3원장 수량·heartbeat 60초·fallback 0을 계속 차단
+  조건으로 둔다.
+- `l0`에는 기존 게이트를 단순히 완화하지 않고 `STALL_EXIT_MODE=shadow`,
+  동결 6종목의 실제 유지, `TRADE_STAGE=mirror`, 비어 있지 않은
+  `ALLOWED_SYMBOLS`, `ALLOW_BUY=1`, `KIS_ORDERS_ENABLED=1`을 별도
+  차단 게이트로 추가했다.
+- JSON `context.position_counts_by_sleeve`에 보호원장의 A/B 보유 종목 수를
+  출력해 Oracle에서 실제로 어느 슬리브가 열리는지 확인할 수 있게 했다.
+
+이 변경도 읽기 전용이다. 아직 PR 병합, Oracle 배포, 환경변수 변경, L1 하향,
+동결 해제, 주문 전송을 수행하지 않았다. 다음 단계는 PR #97 CI 확인 후 병합·
+Oracle 배포를 별도로 승인받고, L1을 유지한 채 아래 명령의 JSON 증거를
+확보하는 것이다.
+
+```bash
+python scripts/kis_l1_readiness.py --scope l0 --broker --json
+```
+
+`ready_for_operator_review=true`여도 자동 하향은 없다. 실제 L0 전환은
+`docs/CLAUDE_L1_RELEASE_OPTIONS_RESULT.md`의 승인 문구와 Oracle 최신 결과를
+사용자가 확인·승인한 뒤에만 진행한다.
+
+로컬 검증은 L1 readiness 집중 테스트 `13/13`, 전체 Python 테스트 모듈
+`47/47`, Node 계산 테스트 `10/10`, Python compileall, 두 JavaScript 문법
+검사와 `git diff --check`를 통과했다. 이는 코드 검증이며 Oracle 운영 증거를
+대체하지 않는다.
+
+### 20. 2026-07-29 Oracle 제한적 L0 실행 인수인계
+
+사용자가 “이 컴퓨터에서 가능한 작업은 모두 처리하고 원격 push하라”고 요청했다.
+2026-08-05 대기는 제한적 mock L0의 조건에서 해제됐으며, 기다림 없이 진행할
+수 있는 정확한 Oracle 절차를 `docs/ORACLE_LIMITED_L0_RUNBOOK.md`에 추가했다.
+
+런북은 처음 보는 운영자도 다음 순서로 실행할 수 있게 구성했다.
+
+1. PR #97 병합 여부와 Oracle clean fast-forward 배포 확인
+2. mock·mirror·비어 있지 않은 allowlist·fallback 0·stall shadow·동결 유지
+3. 실행 중 sentinel/buyloop 프로세스에서 비밀값을 제외한 안전 설정 확인
+4. L1 상태의 `--scope l0 --broker --json`과 `blockers=[]` 확인
+5. A/B 실제 개수와 allowlist를 사용자에게 제시하고 별도 승인
+6. operator ack가 포함된 L1→L0 한 번 실행
+7. 첫 주문 회계·보호선 확인과 이상 시 즉시 L1 rollback
+
+런북 명령은 실제 Oracle 배치인 `/home/ubuntu/Stock-chart-analyze`,
+`/home/ubuntu/kis.env`, 서비스 사용자 `ubuntu`, 저장소 `.venv`를 기준으로
+작성했다. `/opt/stock`·`/etc/stock/kis.env`는 새 표준 설치 예시일 뿐 현재
+Oracle에 사용하면 안 된다.
+
+기존 `infra/server/README.md`의 점검 설명도 `l0`와 `strict`로 분리했다.
+`l0`에서 7일 shadow·Oracle 세션·장애주입 등이 `INFO`라는 사실과, 이 조건이
+stall live·fallback 1·동결 해제·실전 전환에는 계속 필요하다는 경계를 명시했다.
+
+현재 이 컴퓨터에서 Oracle 접속은 불가능하다. 따라서 PR 병합, Oracle 배포,
+환경변수 변경, 브로커 조회, L1 하향, 주문은 수행하지 않았다. 다음 컴퓨터는
+PR #97과 위 런북만 확인하면 환경 작업을 이어갈 수 있다.

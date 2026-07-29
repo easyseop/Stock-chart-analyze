@@ -124,6 +124,18 @@ def is_frozen(symbol: str) -> bool:
     return symbol.upper() in d
 
 
+def frozen_state() -> dict:
+    """현재 close-only 동결의 안전한 사본을 반환한다(읽기 전용 운영 진단용)."""
+    value = _load(_fpath())
+    if not isinstance(value, dict):
+        return {}
+    return {
+        str(symbol).upper(): dict(detail)
+        for symbol, detail in value.items()
+        if str(symbol).strip() and isinstance(detail, dict)
+    }
+
+
 def reconcile_claims(claims: dict[str, int],
                      holdings_rows: list[dict] | None) -> list[dict]:
     """비대칭 대사: 봇 claim ≤ 브로커 보유 수량만 강제(상향 절대 금지).
