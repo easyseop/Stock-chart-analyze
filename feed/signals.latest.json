@@ -1,12 +1,12 @@
 {
  "version": 1,
- "generated_at": "2026-07-30T17:45:36+09:00",
+ "generated_at": "2026-07-30T17:54:08+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "shelf_debug": {
   "ok": 13,
-  "watch": 205,
+  "watch": 204,
   "reasons": {
-   "밸류영역 밖(지지대 아님)": 1385,
+   "밸류영역 밖(지지대 아님)": 1387,
    "매물대 정보 없음": 149,
    "반등 미확인(터치·상단마감·거래량)": 75,
    "저점권 아님(범위 93%)": 69,
@@ -1150,6 +1150,42 @@
    "tactic": "watch"
   },
   {
+   "id": "028260-2026-07-30-shelf-watch",
+   "code": "028260",
+   "name": "삼성물산",
+   "ccy": "KRW",
+   "group": "shelf_watch",
+   "entry_kind": "shelf_watch",
+   "stage": 0,
+   "price": 294000.0,
+   "entry": 294000.0,
+   "stop": 256760.0,
+   "target": 368685.4167,
+   "shares_1pct": 0,
+   "range_pos": 0.3385,
+   "norm": -4.9,
+   "bear_share": 0.25,
+   "shelf": {
+    "poc": 300402.0833,
+    "val": 163835.4167,
+    "vah": 368685.4167,
+    "rr": 2.01,
+    "overhead": 0.54,
+    "reason": "반등 미확인(상단마감)",
+    "checks": {
+     "터치": true,
+     "회복": true,
+     "상단마감": false,
+     "거래량": true,
+     "신저가아님": true
+    }
+   },
+   "fresh": false,
+   "break_gap": null,
+   "earnings_d": null,
+   "tactic": "watch"
+  },
+  {
    "id": "CVLT-2026-07-30-shelf-watch",
    "code": "CVLT",
    "name": "Commvault Systems, Inc.",
@@ -1429,42 +1465,6 @@
      "회복": true,
      "상단마감": true,
      "거래량": false,
-     "신저가아님": true
-    }
-   },
-   "fresh": false,
-   "break_gap": null,
-   "earnings_d": null,
-   "tactic": "watch"
-  },
-  {
-   "id": "CSW-2026-07-30-shelf-watch",
-   "code": "CSW",
-   "name": "CSW Industrials, Inc.",
-   "ccy": "USD",
-   "group": "shelf_watch",
-   "entry_kind": "shelf_watch",
-   "stage": 0,
-   "price": 272.61,
-   "entry": 272.61,
-   "stop": 264.1296,
-   "target": 285.9568,
-   "shares_1pct": 0,
-   "range_pos": 0.3956,
-   "norm": -28.3,
-   "bear_share": 0.375,
-   "shelf": {
-    "poc": 268.1946,
-    "val": 241.5514,
-    "vah": 285.9568,
-    "rr": 1.57,
-    "overhead": 0.519,
-    "reason": "반등 미확인(상단마감)",
-    "checks": {
-     "터치": true,
-     "회복": true,
-     "상단마감": false,
-     "거래량": true,
      "신저가아님": true
     }
    },
