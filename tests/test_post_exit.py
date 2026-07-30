@@ -160,6 +160,10 @@ def test_order_plane_and_secrets_are_absent():
         assert journal_override not in dropin
     assert "Nice=10" in unit and "MemoryMax=380M" in unit
     assert "SCANNER_CACHE_DIR=/var/cache/stock-post-exit" in unit
+    assert "-m scripts.post_exit_refresh --json" in unit
+    assert "-m scripts.post_exit_refresh --json" in dropin
+    assert "python scripts/post_exit_refresh.py" not in unit
+    assert "python scripts/post_exit_refresh.py" not in dropin
     print("[PASS] KIS·주문·kill·시크릿·원장경로 경계 분리 + 저우선순위 자원격리")
 
 
