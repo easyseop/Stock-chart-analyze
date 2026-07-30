@@ -15,7 +15,9 @@
 - 기본 브랜치: `claude/happy-gauss-cwoq21`
 - 현재 개발 브랜치: `codex/remove-position-count-caps` (구현·로컬 검증 완료,
   미병합·Oracle 미배포)
-- 현재 개발 기준 커밋: `97ee678` (PR #104 병합 결과)
+- 기본 브랜치 기준 커밋: `97ee678` (PR #104 병합 결과)
+- 핵심 구현 커밋: `7e9eb0f`
+- Draft PR: [#105 KIS 미러 동시 보유 종목 수 제한 제거](https://github.com/easyseop/Stock-chart-analyze/pull/105)
 - 최신 검증 Oracle 상태: 2026-07-30 limited mock L0. 현재 개발 브랜치의
   종목 수 제한 제거는 아직 적용되지 않았으며, 이 컴퓨터에서는 Oracle을 실시간
   재조회하지 않았다.
@@ -1422,6 +1424,10 @@ A 12는 공개 웹 모의투자 `scanner/autopaper.py`의 기존 상한을 KIS m
 로컬 검증은 Python compileall, 전략 불변식 점검, 독립 Python 테스트 모듈
 48/48과 `git diff --check`를 통과했다. 테스트는 주문 HTTP를 모킹했고 실제 KIS
 주문은 0건이다.
+
+핵심 구현과 §25 인수인계 초안은 commit `7e9eb0f`로 원격 브랜치에 push했고
+Draft PR #105를 기본 브랜치 대상으로 열었다. Draft 상태에서는 병합·Oracle
+자동배포가 일어나지 않는다.
 
 이 변경은 아직 Oracle에 배포하지 않는다. Oracle은 현재 기존 코드의 limited
 mock L0이므로 PR을 병합하면 autodeploy가 종목 수 제한 제거를 즉시 반영할 수
