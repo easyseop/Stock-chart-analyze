@@ -2,7 +2,8 @@
 
 브로커-진실: 이미 KIS 보유(3거래소 병합)·잔고 불명·가격 괴리·장외·어닝 D-3·
 당일 매도 쿨다운은 execute_entry 호출 전 skip. 게이트 통과분만 execute_entry로,
-브로커-진실 캡 입력(open_positions·open_cost_krw)이 사이클 내에서 누적된다.
+브로커-진실 입력(open_positions·open_cost_krw)이 사이클 내에서 누적된다.
+mirror의 동시 보유 수는 제한하지 않고 open_cost 기반 예산 게이트를 사용한다.
 
 실행: python -m tests.test_kis_buyloop
 """
@@ -144,13 +145,35 @@ def test_cooldown_after_same_day_sell():
     print("[PASS] 당일 매도 종목 재진입 금지(쿨다운 — autopaper 패리티)")
 
 
-def test_inflight_buy_counts_toward_cap():
+def test_inflight_buy_counts_toward_position_accounting():
     import time as _t
     fold = {"kb:y#1": {"symbol": "TSLA", "side": "BUY", "state": "ack",
                        "submitted_at": _t.time(), "intended": 2, "filled": 0}}
     res, ex, rec, _ = _run([_sig()], holdings={}, fold=fold)
     assert ex.call_args.kwargs.get("open_positions") == 1   # in-flight BUY 가산
-    print("[PASS] in-flight BUY(접수 후 잔고 미반영)도 포지션 수에 가산")
+    print("[PASS] in-flight BUY도 포지션 현황에 가산(하위 Stage·진단용)")
+
+
+def test_b_sleeve_has_no_fixed_position_count_gate():
+    """B 예약이 25종목이어도 buyloop가 고정 개수로 막지 않고 예산 게이트에 위임."""
+    import time as _t
+    fold = {
+        f"sb:planned:{i}": {
+            "symbol": f"{i:06d}", "side": "BUY", "state": "planned",
+            "created_at": _t.time() + i, "intended": 1, "filled": 0,
+            "price": 10.0, "market": "KR", "sleeve": "B",
+            "pos_key": f"sb:planned:{i}",
+        }
+        for i in range(25)
+    }
+    sig = _sig(code="999999", group="shelf", entry=100.0, stop=95.0)
+    res, ex, _, _ = _run(
+        [sig], holdings={}, fold=fold,
+        run_kwargs={"sleeve": "B", "group": "shelf", "seed_krw": 5_000_000})
+    assert ex.called and _g(res, "999999")["ok"]
+    assert ex.call_args.kwargs["open_positions"] == 25
+    assert ex.call_args.kwargs["open_cost_krw"] == 250.0
+    print("[PASS] B 25종목 예약 상태도 고정 개수 차단 없이 예산 게이트로 전달")
 
 
 def test_intra_cycle_accumulation():
@@ -280,7 +303,8 @@ def main():
     test_market_closed_skips()
     test_earnings_window_skips()
     test_cooldown_after_same_day_sell()
-    test_inflight_buy_counts_toward_cap()
+    test_inflight_buy_counts_toward_position_accounting()
+    test_b_sleeve_has_no_fixed_position_count_gate()
     test_intra_cycle_accumulation()
     test_non_now_filtered()
     test_us_signal_routes_and_fx()
@@ -289,7 +313,7 @@ def main():
     test_b_sleeve_survives_balance_before_position_reconcile()
     test_unfilled_b_plan_does_not_retag_existing_a_holding()
     test_partial_and_multiple_same_symbol_reservations_are_summed()
-    print("\n매수 루프 검증 통과 — 브로커-진실 미러(중복·괴리·장외·어닝·쿨다운·캡 누적).")
+    print("\n매수 루프 검증 통과 — 브로커-진실 미러(고정 종목수 무제한·예산 누적).")
 
 
 if __name__ == "__main__":

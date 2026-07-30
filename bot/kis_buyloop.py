@@ -8,9 +8,10 @@
   · 가격 괴리 가드: 현재가가 신호 진입가 ±ENTRY_TOLERANCE 밖이면 skip(늦은 미러 방지).
   · autopaper 패리티 게이트(완전 미러, 2026-07-15): 어닝 D-3 이내 skip ·
     당일 매도(손절) 종목 재진입 금지(쿨다운) — 페이퍼 시뮬과 같은 규칙.
-  · 롤아웃 캡 입력도 브로커-진실: 포지션 수(n_open)·투입원가(open_cost)를 잔고에서
-    계산해 넘긴다(costbook 확정체결 배선 #25 전까지의 실측 소스). 사이클 안에서도
-    매수마다 즉시 누적 — 같은 스냅샷으로 연속 매수해 SEED를 초과하는 구멍 차단.
+  · 롤아웃·예산 입력도 브로커-진실: 포지션 수(n_open)·투입원가(open_cost)를
+    잔고에서 계산해 넘긴다. mirror는 n_open으로 동시 보유 수를 제한하지 않지만
+    하위 Stage는 계속 사용한다. open_cost는 사이클 안에서도 매수마다 즉시 누적해
+    같은 스냅샷의 연속 매수가 SEED를 초과하는 구멍을 차단한다.
   · 실제 전송은 kis_buy.execute_entry의 게이트 체인(ALLOW_BUY·kill·boot·SLA·
     rollout·ownership·ledger·sizing·place)을 전부 통과해야만. 이 모듈은 '무엇을
     시도할지'만.
@@ -244,10 +245,6 @@ def run_once(signals: list[dict], *, fx: float | None = None,
         market = kis.market_of_ccy(ccy)
         excg = excg_of.get(code, "NASD")
 
-        if sleeve == "B" and n_open >= settings.SHELF_MAX_POS:
-            results.append({"code": code, "gate": "cap",
-                            "why": f"B 슬리브 동시보유 한도({settings.SHELF_MAX_POS}) 도달"})
-            continue
         if code in held:                           # 브로커-진실: 이미 보유 = 중복 금지(A·B 공통)
             results.append({"code": code, "gate": "already",
                             "why": f"이미 KIS 보유 {held[code]}주"}); continue
