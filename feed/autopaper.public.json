@@ -1,9 +1,9 @@
 {
  "updated": "2026-07-30",
  "start": 100000000,
- "cash": 40209301,
- "equity": 101975921,
- "ret_pct": 1.98,
+ "cash": 28677550,
+ "equity": 101332325,
+ "ret_pct": 1.33,
  "positions": [
   {
    "code": "MRSH",
@@ -11,14 +11,14 @@
    "ccy": "USD",
    "q": 36,
    "avg": 174.3075,
-   "price": 197.58999633789065,
+   "price": 192.72000122070312,
    "stop": 184.80249938964843,
    "target": 192.2575,
    "half_done": true,
    "opened": "2026-07-06",
-   "pl_krw": 1217090,
-   "pl_pct": 13.36,
-   "price_age_min": 7.8
+   "pl_krw": 962511,
+   "pl_pct": 10.56,
+   "price_age_min": 7.3
   },
   {
    "code": "HMC",
@@ -26,29 +26,14 @@
    "ccy": "USD",
    "q": 2,
    "avg": 27.665,
-   "price": 30.68000030517578,
+   "price": 30.450000762939453,
    "stop": 28.84219986877441,
    "target": 30.5824,
    "half_done": true,
    "opened": "2026-07-09",
-   "pl_krw": 8756,
-   "pl_pct": 10.9,
-   "price_age_min": 11.0
-  },
-  {
-   "code": "LSPD",
-   "name": "Lightspeed Commerce Inc. Subordinate Votin",
-   "ccy": "USD",
-   "q": 7,
-   "avg": 10.02,
-   "price": 11.010000228881836,
-   "stop": 10.02,
-   "target": 11.6783,
-   "half_done": true,
-   "opened": "2026-07-09",
-   "pl_krw": 10063,
-   "pl_pct": 9.88,
-   "price_age_min": 9.0
+   "pl_krw": 8088,
+   "pl_pct": 10.07,
+   "price_age_min": 10.3
   },
   {
    "code": "SARO",
@@ -56,14 +41,14 @@
    "ccy": "USD",
    "q": 81,
    "avg": 27.9,
-   "price": 28.729999542236328,
+   "price": 28.479999542236328,
    "stop": 27.9,
    "target": 31.9643,
    "half_done": true,
    "opened": "2026-07-10",
-   "pl_krw": 97623,
-   "pl_pct": 2.97,
-   "price_age_min": 7.8
+   "pl_krw": 68219,
+   "pl_pct": 2.08,
+   "price_age_min": 7.3
   },
   {
    "code": "J",
@@ -71,14 +56,14 @@
    "ccy": "USD",
    "q": 32,
    "avg": 126.585,
-   "price": 135.91000366210938,
+   "price": 133.57000732421875,
    "stop": 129.62490061035157,
    "target": 141.2316,
    "half_done": true,
    "opened": "2026-07-11",
-   "pl_krw": 433301,
-   "pl_pct": 7.37,
-   "price_age_min": 7.7
+   "pl_krw": 324569,
+   "pl_pct": 5.52,
+   "price_age_min": 7.3
   },
   {
    "code": "MAIN",
@@ -86,14 +71,14 @@
    "ccy": "USD",
    "q": 78,
    "avg": 53.96,
-   "price": 54.31999969482422,
+   "price": 53.87009811401367,
    "stop": 51.5808,
    "target": 58.7184,
    "half_done": false,
    "opened": "2026-07-22",
-   "pl_krw": 40774,
-   "pl_pct": 0.67,
-   "price_age_min": 7.7
+   "pl_krw": -10182,
+   "pl_pct": -0.17,
+   "price_age_min": 7.3
   },
   {
    "code": "SHOP",
@@ -101,14 +86,14 @@
    "ccy": "USD",
    "q": 30,
    "avg": 114.9801,
-   "price": 129.1699981689453,
+   "price": 125.29000091552734,
    "stop": 117.28670610351563,
    "target": 138.8546,
    "half_done": true,
    "opened": "2026-07-24",
-   "pl_krw": 618146,
-   "pl_pct": 12.34,
-   "price_age_min": 10.1
+   "pl_krw": 449124,
+   "pl_pct": 8.97,
+   "price_age_min": 9.4
   },
   {
    "code": "004370",
@@ -123,7 +108,7 @@
    "opened": "2026-07-27",
    "pl_krw": 185000,
    "pl_pct": 5.02,
-   "price_age_min": 10.0
+   "price_age_min": 9.4
   },
   {
    "code": "CRC",
@@ -131,14 +116,14 @@
    "ccy": "USD",
    "q": 101,
    "avg": 51.16,
-   "price": 50.59000015258789,
+   "price": 50.36000061035156,
    "stop": 47.7785,
    "target": 57.923,
    "half_done": false,
    "opened": "2026-07-28",
-   "pl_krw": -83596,
-   "pl_pct": -1.11,
-   "price_age_min": 8.7
+   "pl_krw": -117328,
+   "pl_pct": -1.56,
+   "price_age_min": 8.1
   },
   {
    "code": "EQT",
@@ -146,14 +131,29 @@
    "ccy": "USD",
    "q": 242,
    "avg": 51.375,
-   "price": 52.56999969482422,
+   "price": 52.61899948120117,
    "stop": 48.5008,
    "target": 57.1234,
    "half_done": false,
    "opened": "2026-07-29",
-   "pl_krw": 419927,
-   "pl_pct": 2.33,
-   "price_age_min": 10.5
+   "pl_krw": 437146,
+   "pl_pct": 2.42,
+   "price_age_min": 9.8
+  },
+  {
+   "code": "MDT",
+   "name": "Medtronic plc.",
+   "ccy": "USD",
+   "q": 93,
+   "avg": 86.12,
+   "price": 86.12000274658203,
+   "stop": 81.6215,
+   "target": 95.117,
+   "half_done": false,
+   "opened": "2026-07-30",
+   "pl_krw": 0,
+   "pl_pct": 0.0,
+   "price_age_min": 9.2
   }
  ],
  "pending": [
@@ -212,18 +212,18 @@
    "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권19% · 체크3/6 · 손절폭7.0%"
   }
  ],
- "trades": 7,
- "win_trades": 5,
+ "trades": 8,
+ "win_trades": 6,
  "pos_cap_pct": 33.3,
  "cap_violations": [],
  "rule_violations": [],
  "fx": 1452.08,
  "stats": {
   "all": {
-   "n": 7,
-   "win": 5,
-   "win_rate": 71,
-   "avg_r": 0.15
+   "n": 8,
+   "win": 6,
+   "win_rate": 75,
+   "avg_r": 0.2
   },
   "by_mode": {
    "full": {
@@ -239,17 +239,17 @@
     "avg_r": 1.02
    },
    "pullback": {
-    "n": 2,
-    "win": 2,
+    "n": 3,
+    "win": 3,
     "win_rate": 100,
-    "avg_r": 0.42
+    "avg_r": 0.47
    }
   },
   "fresh": {
-   "n": 6,
-   "win": 4,
-   "win_rate": 67,
-   "avg_r": 0.11
+   "n": 7,
+   "win": 5,
+   "win_rate": 71,
+   "avg_r": 0.18
   },
   "stale": {
    "n": 1,
@@ -259,10 +259,10 @@
   },
   "by_stage": {
    "3": {
-    "n": 7,
-    "win": 5,
-    "win_rate": 71,
-    "avg_r": 0.15
+    "n": 8,
+    "win": 6,
+    "win_rate": 75,
+    "avg_r": 0.2
    }
   },
   "by_ccy": {
@@ -273,16 +273,64 @@
     "avg_r": 0.38
    },
    "USD": {
-    "n": 6,
-    "win": 4,
-    "win_rate": 67,
-    "avg_r": 0.11
+    "n": 7,
+    "win": 5,
+    "win_rate": 71,
+    "avg_r": 0.18
    }
   },
-  "slip_entry_pct": -0.5,
+  "slip_entry_pct": -0.48,
   "slip_stop_pct": -1.14
  },
  "closed": [
+  {
+   "code": "LSPD",
+   "name": "Lightspeed Commerce Inc. Subordinate Votin",
+   "ccy": "USD",
+   "ctx": {
+    "mode": "pullback",
+    "fresh": true,
+    "stage": 3,
+    "rp": 34,
+    "rec": 6,
+    "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권34% · 체크6/6 · 손절폭8.1%"
+   },
+   "plan": {
+    "entry": 10.055,
+    "stop": 9.2434,
+    "target": 11.6783,
+    "pb": 10.02,
+    "tactic": "pullback"
+   },
+   "fill": {
+    "avg": 10.02,
+    "q": 28
+   },
+   "exits": [
+    {
+     "d": "2026-07-29",
+     "q": 14,
+     "price": 10.72,
+     "note": "어닝 축소 — 절반(MFE<1R)"
+    },
+    {
+     "d": "2026-07-29",
+     "q": 7,
+     "price": 10.875,
+     "note": "+1R 절반 익절"
+    },
+    {
+     "d": "2026-07-30",
+     "q": 7,
+     "price": 9.66,
+     "note": "본전 스탑(급락 즉시)"
+    }
+   ],
+   "opened": "2026-07-09",
+   "closed": "2026-07-30",
+   "pl": 19293,
+   "r": 0.59
+  },
   {
    "code": "068270",
    "name": "셀트리온",
@@ -645,10 +693,37 @@
   },
   {
    "d": "2026-07-30",
-   "v": 101975921
+   "v": 101332325
   }
  ],
  "log": [
+  {
+   "d": "2026-07-30",
+   "type": "buy",
+   "code": "MDT",
+   "name": "Medtronic plc.",
+   "q": 93,
+   "price": 86.12,
+   "ccy": "USD",
+   "amt": 11629941,
+   "note": "즉시 분할 — 🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권39% · 체크4/6 · 손절폭5.2%",
+   "stop": 81.6215,
+   "target": 95.117
+  },
+  {
+   "d": "2026-07-30",
+   "type": "sell",
+   "code": "LSPD",
+   "name": "Lightspeed Commerce Inc. Subordinate Votin",
+   "q": 7,
+   "price": 9.66,
+   "ccy": "USD",
+   "amt": 98190,
+   "note": "본전 스탑(급락 즉시)",
+   "pl": -3659,
+   "pl_pct": -3.6,
+   "r": 0.59
+  },
   {
    "d": "2026-07-29",
    "type": "sell",
