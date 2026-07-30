@@ -1338,3 +1338,44 @@ L1을 해제하지 않는다.
 확인한다. blocker, 목록 불일치, 새 주문, 수량/원장 이상이 있으면 env 백업을
 복원하고 즉시 L1을 유지 또는 복귀한다. 이 승인은 KIS mock limited L0만
 대상이며 KIS live, fallback 1, stall live, 동결해제 승인이 아니다.
+
+### 24. 2026-07-30 사후추적 운영 배포·limited mock L0 완료
+
+09:10 KST(뉴욕 20:10 EDT)에 정규·연장장 종료를 확인했다. 변경 전 Oracle은
+clean `ef017877`, L1, mock, 열린 주문 0, UNKNOWN·미회계 BUY 0,
+원장·브로커 수량 일치, heartbeat 8.7초, 모든 핵심 서비스 active였다.
+
+Oracle을 기본 브랜치로 fast-forward하고 사후추적 unit을 설치하는 첫 시도는
+`python scripts/post_exit_refresh.py`가 저장소 루트를 import path로 잡지
+못해 `ModuleNotFoundError: bot`으로 실패했다. 매매 서비스와 L1에는 영향이
+없었고 timer를 즉시 disable/reset했다. `python -m scripts.post_exit_refresh`
+로 수정하고 회귀 assertion을 추가한 commit `43e7c243`, PR #103을 CI 2/2
+후 exact-head 병합했다. merge commit은 `7bb141db`다.
+
+수정본을 Oracle에 배포한 뒤:
+
+- `post-exit-refresh.service` Result=success, timer active
+- `/api/post-exit.json` GET 200·POST 405·`read_only=true`
+- 수익매도 10건·tracked 10·갱신종목 10·실패 0
+- API에서 APPKEY/APPSECRET/CANO/ODNO/order_key/pos_key/kis.env 노출 0
+- sentinel/watchdog/buyloop/telegram/portfolio-web 전부 active
+
+`/home/ubuntu/kis.env.before-l0-20260730-0016`에 mode 0600 백업을 만들고,
+본 파일도 0600을 유지하며 다음 두 값만 원자 적용했다.
+
+- `STALL_EXIT_MODE=shadow`
+- `ALLOWED_SYMBOLS=EQT,CEG,EXE,MARA,TBBK,CLBK`
+
+TRADE_STAGE=mirror, KIS_ENV=mock, ALLOW_BUY=1, KIS_ORDERS_ENABLED=1,
+fallback 0, 동결 6종목을 재검증했다. sentinel·buyloop 장외 재시작 후 L0
+readiness는 `blockers=[]`였다. 사용자 승인 operator ack로 limited mock
+L0를 하향했다.
+
+L0 이후 00:17·00:18 UTC buyloop 두 사이클은 신호 0·신규주문 0이었다.
+로컬·브로커 열린 주문 0, UNKNOWN 0, 미회계 BUY 0, 원장 healthy,
+운용원가 26,214,776.7원 ≤ 33,250,000원, 수량 일치, heartbeat 12.8초다.
+현재 kill-switch는 L0이며 stall은 shadow, allowlist 6종목만 신규매수
+가능하다. A 12·B 4 상한 때문에 자리가 생기기 전에는 주문하지 않는다.
+
+금지선은 그대로다: KIS live, fallback 1, stall live, 동결 6종목 해제는
+수행하지 않았다.
