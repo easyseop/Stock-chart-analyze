@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated_at": "2026-07-31T05:37:03+09:00",
+ "generated_at": "2026-07-31T06:15:55+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "shelf_debug": {
   "ok": 11,
@@ -783,8 +783,8 @@
    "stage": 3,
    "price": 23.21,
    "entry": 23.21,
-   "stop": 21.6662,
-   "target": 26.2977,
+   "stop": 21.6669,
+   "target": 26.2963,
    "shares_1pct": 64,
    "range_pos": 0.3354,
    "norm": -24.6,
@@ -793,12 +793,12 @@
    "break_gap": 0.1446,
    "earnings_d": null,
    "tactic": {
-    "stop_pct": 6.7,
+    "stop_pct": 6.6,
     "pb_price": null,
     "pb_stop_pct": null,
     "mode": "pullback",
     "label": "⏳ 눌림 지정가만",
-    "desc": "지금 추격 금지(손절폭 6.7% · 돌파후 진행) — 받칠 지지에 눌릴 때까지 대기"
+    "desc": "지금 추격 금지(손절폭 6.6% · 돌파후 진행) — 받칠 지지에 눌릴 때까지 대기"
    }
   },
   {
@@ -1174,6 +1174,42 @@
    "tactic": "watch"
   },
   {
+   "id": "VIA-2026-07-31-shelf-watch",
+   "code": "VIA",
+   "name": "Via Transportation, Inc.",
+   "ccy": "USD",
+   "group": "shelf_watch",
+   "entry_kind": "shelf_watch",
+   "stage": 0,
+   "price": 20.09,
+   "entry": 20.09,
+   "stop": 18.7866,
+   "target": 22.8867,
+   "shares_1pct": 0,
+   "range_pos": 0.1647,
+   "norm": 12.3,
+   "bear_share": 0.375,
+   "shelf": {
+    "poc": 15.66,
+    "val": 13.8533,
+    "vah": 22.8867,
+    "rr": 2.15,
+    "overhead": 0.333,
+    "reason": "반등 미확인(터치)",
+    "checks": {
+     "터치": false,
+     "회복": true,
+     "상단마감": true,
+     "거래량": true,
+     "신저가아님": true
+    }
+   },
+   "fresh": false,
+   "break_gap": null,
+   "earnings_d": null,
+   "tactic": "watch"
+  },
+  {
    "id": "WK-2026-07-31-shelf-watch",
    "code": "WK",
    "name": "Workiva Inc.",
@@ -1308,42 +1344,6 @@
      "터치": false,
      "회복": true,
      "상단마감": true,
-     "거래량": true,
-     "신저가아님": true
-    }
-   },
-   "fresh": false,
-   "break_gap": null,
-   "earnings_d": null,
-   "tactic": "watch"
-  },
-  {
-   "id": "CVLT-2026-07-31-shelf-watch",
-   "code": "CVLT",
-   "name": "Commvault Systems, Inc.",
-   "ccy": "USD",
-   "group": "shelf_watch",
-   "entry_kind": "shelf_watch",
-   "stage": 0,
-   "price": 120.31,
-   "entry": 120.31,
-   "stop": 115.64,
-   "target": 155.0173,
-   "shares_1pct": 0,
-   "range_pos": 0.3766,
-   "norm": 3.3,
-   "bear_share": 0.25,
-   "shelf": {
-    "poc": 122.7848,
-    "val": 79.8081,
-    "vah": 155.0173,
-    "rr": 7.43,
-    "overhead": 0.525,
-    "reason": "반등 미확인(상단마감)",
-    "checks": {
-     "터치": true,
-     "회복": true,
-     "상단마감": false,
      "거래량": true,
      "신저가아님": true
     }
@@ -2360,8 +2360,8 @@
    "stage": 1,
    "price": 10.96,
    "entry": 10.96,
-   "stop": 10.0299,
-   "target": 12.8203,
+   "stop": 10.0306,
+   "target": 12.8187,
    "shares_1pct": 107,
    "range_pos": 0.1478,
    "norm": -7.5,
