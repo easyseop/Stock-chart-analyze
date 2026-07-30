@@ -8,7 +8,7 @@
 개인키 등 비밀값은 이 문서와 Git에 절대 기록하지 않는다.
 
 > **현재 판단 기준:** 문서 앞부분은 완료 이력을 시간순으로 보존한다. 현재 개발
-> 상태와 다음 운영 절차는 문서 끝의 §25를 우선한다.
+> 상태와 다음 운영 절차는 문서 끝의 §26을 우선한다.
 
 ## 1. 현재 Git 상태
 
@@ -1444,3 +1444,38 @@ mock L0이므로 PR을 병합하면 autodeploy가 종목 수 제한 제거를 �
 
 이상 징후가 있으면 즉시 L1을 유지하거나 복귀한다. 서버 코드를 `git reset`으로
 되돌리지 말고 원격에 revert PR을 만들어 배포 이력을 보존한다.
+
+### 26. 2026-07-31 Oracle 적용 요청·장중 배포 보류
+
+사용자가 동시 보유 종목 수 제한 제거 변경을 Oracle 서버까지 적용해 달라고
+요청했다. 01:49 KST(뉴욕 12:49 EDT)에 운영 적용 사전점검을 수행했으나, 다음
+두 조건 때문에 병합과 배포를 시작하지 않았다.
+
+- 미국 정규장 진행 중이고 현재 Oracle은 limited mock L0다. 이 상태에서 PR을
+  병합하면 약 5분 주기의 autodeploy가 변경을 받아 다음 buyloop부터 신규매수
+  범위를 바꿀 수 있다.
+- 현재 Mac에는 `/Users/seop/.ssh` 디렉터리, SSH agent identity, Oracle 호스트
+  별칭과 개인키가 없다. 저장소에도 실제 접속 주소나 키를 저장하지 않는다.
+
+따라서 Draft PR #105는 병합하지 않았고 Oracle 코드·환경·서비스·kill-switch는
+변경하지 않았다. 실제 주문도 실행하지 않았다. Oracle은 계속 기존 코드의 A
+12·B 4 제한과 limited mock L0를 사용한다.
+
+재개는 Oracle 접속 정보가 있는 컴퓨터에서 미국 연장장 종료 뒤인 09:10 KST
+이후에 한다. 개인키 내용을 문서나 대화에 붙이지 말고, 접속 가능한 로컬 SSH
+별칭만 사용한다. 재개 순서는 다음과 같다.
+
+1. Oracle 현재 commit·clean worktree·서비스·열린 주문을 읽기 전용 확인한다.
+2. autodeploy timer를 정지하고 실행 중인 배포 작업이 없음을 확인한다.
+3. 코드 pull보다 먼저 kill-switch를 L1로 올려 신규매수를 중지한다.
+4. PR #105의 정확한 head와 CI를 다시 확인하고 기본 브랜치에 병합한다.
+5. Oracle 기본 브랜치를 exact merge commit으로 clean fast-forward한다.
+6. 서버 회귀 테스트와 `--scope l0 --broker --json` 점검을 통과시킨다.
+7. 변경 의미, allowlist, 수량·원장·heartbeat를 다시 확인한 뒤에만 operator
+   ack로 limited mock L0를 복구하고 첫 주문을 관찰한다.
+8. Oracle이 exact merge commit이고 모든 서비스가 정상인 것을 확인한 뒤
+   autodeploy timer를 다시 활성화한다.
+
+SSH 접속 전에는 PR #105를 Draft에서 해제하거나 병합하지 않는다. GitHub
+병합만 먼저 하는 방식은 Oracle autodeploy 때문에 안전한 코드 보관과 운영
+적용을 분리하지 못하므로 금지한다.
