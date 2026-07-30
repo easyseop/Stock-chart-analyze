@@ -1,17 +1,26 @@
 # Codex 개발 인수인계
 
-마지막 갱신: 2026-07-29
+마지막 갱신: 2026-07-31
 저장소: `easyseop/Stock-chart-analyze`
 
 이 문서는 다른 노트북이나 새 Codex 작업에서 개발을 바로 이어가기 위한 현재 상태,
 검증 결과, 미완료 작업과 운영 주의사항을 기록한다. API 키·계좌번호·토큰·SSH
 개인키 등 비밀값은 이 문서와 Git에 절대 기록하지 않는다.
 
+> **현재 판단 기준:** 문서 앞부분은 완료 이력을 시간순으로 보존한다. 현재 개발
+> 상태와 다음 운영 절차는 문서 끝의 §26을 우선한다.
+
 ## 1. 현재 Git 상태
 
 - 기본 브랜치: `claude/happy-gauss-cwoq21`
-- 현재 개발 브랜치: `codex/l1-readiness-audit` (아직 미병합·미배포)
-- 현재 개발 기준 커밋: `76aae46` (PR #96 병합 결과)
+- 현재 개발 브랜치: `codex/remove-position-count-caps` (구현·로컬 검증 완료,
+  미병합·Oracle 미배포)
+- 기본 브랜치 기준 커밋: `97ee678` (PR #104 병합 결과)
+- 핵심 구현 커밋: `7e9eb0f`
+- Draft PR: [#105 KIS 미러 동시 보유 종목 수 제한 제거](https://github.com/easyseop/Stock-chart-analyze/pull/105)
+- 최신 검증 Oracle 상태: 2026-07-30 limited mock L0. 현재 개발 브랜치의
+  종목 수 제한 제거는 아직 적용되지 않았으며, 이 컴퓨터에서는 Oracle을 실시간
+  재조회하지 않았다.
 - 활성 로컬 복제본: `/Users/seop/Documents/매매봇/Stock-chart-analyze-deploy`
 - 기존 `Stock-chart-analyze-site`는 iCloud가 일부 `.git/refs`를 dataless로 바꿔
   HEAD가 끊겼다. 작업 파일은 보존하고 기준 커밋+검토 diff를 새 복제본에 복원했다.
@@ -1379,3 +1388,94 @@ L0 이후 00:17·00:18 UTC buyloop 두 사이클은 신호 0·신규주문 0이�
 
 금지선은 그대로다: KIS live, fallback 1, stall live, 동결 6종목 해제는
 수행하지 않았다.
+
+### 25. 2026-07-31 KIS mirror 동시 보유 종목 수 제한 보정
+
+사용자는 신규매수의 동시 보유 종목 수를 고정 숫자로 제한한 적이 없으며,
+유효 신호가 있어도 실제 매수 가능 현금과 봇 운용예산이 부족하면 주문하지 않는
+정책임을 다시 확인했다. 코드 감사 결과 KIS mirror에 이 정책과 다른 두 제한이
+있었다.
+
+- `bot/rollout.py`의 mirror 프로파일이 A 슬리브를 12종목에서 차단했다.
+- `bot/kis_buyloop.py`가 B 슬리브를 기본 4종목에서 별도로 차단했다.
+
+A 12는 공개 웹 모의투자 `scanner/autopaper.py`의 기존 상한을 KIS mirror에
+복사하면서 들어왔고, B 4는 A/B가 각각 12종목까지 열리는 것을 막으려는 후속
+검토에서 추가됐다. 두 값은 현금이나 총시드 계산 결과가 아닌 고정 개수였으므로
+사용자 정책과 불일치했다.
+
+브랜치 `codex/remove-position-count-caps`는 기본 브랜치 `97ee6786`에서
+시작했다. 이 브랜치에서 mirror의 `max_positions`를 비활성화하고 B의 별도
+`SHELF_MAX_POS` 게이트를 제거했다. 다음 안전장치는 그대로 유지한다.
+
+- A/B 슬리브 예산과 A+B 통합 운용한도 33,250,000원
+- KIS 실제 매수여력 조회와 계산 수량 0주 차단
+- 종목당 슬리브 시드 1/3, 거래당 risk 1%
+- 하루 신규 BUY submit 10건
+- `ALLOWED_SYMBOLS=EQT,CEG,EXE,MARA,TBBK,CLBK`
+- mock 하드블록, 정규장, 일일손실, heartbeat, ownership, 원장·예산 원자 게이트
+
+집중 회귀는 mirror가 `open_positions=10,000`에서도 종목 수만으로 차단하지
+않고, B 예약 25종목도 buyloop의 고정 개수 게이트 없이 예산 실행기로 전달함을
+검증한다. 동시에 하위 Stage 1.5의 기존 1종목 제한과 mirror의 하루 10건 제한은
+계속 작동해야 한다. 공개 웹 모의투자 `scanner/autopaper.py`의 `MAX_POS=12`는
+별도 시뮬레이션 정책이므로 이 변경에 포함하지 않았다.
+
+로컬 검증은 Python compileall, 전략 불변식 점검, 독립 Python 테스트 모듈
+48/48과 `git diff --check`를 통과했다. 테스트는 주문 HTTP를 모킹했고 실제 KIS
+주문은 0건이다.
+
+핵심 구현과 §25 인수인계 초안은 commit `7e9eb0f`로 원격 브랜치에 push했고
+Draft PR #105를 기본 브랜치 대상으로 열었다. Draft 상태에서는 병합·Oracle
+자동배포가 일어나지 않는다.
+
+이 변경은 아직 Oracle에 배포하지 않는다. Oracle은 현재 기존 코드의 limited
+mock L0이므로 PR을 병합하면 autodeploy가 종목 수 제한 제거를 즉시 반영할 수
+있다. 운영 적용은 다음 순서를 지킨다.
+
+1. 장외에 kill-switch를 L1로 올려 신규매수를 먼저 중지한다.
+2. 정확한 merge commit을 Oracle 기본 브랜치로 clean fast-forward한다.
+3. 서버 회귀 테스트 후 buyloop를 재시작한다.
+4. `scripts/kis_l1_readiness.py --scope l0 --broker --json`에서
+   `blockers=[]`, mock, allowlist 6종목, 수량·원장·heartbeat 정상을 확인한다.
+5. A 12·B 4여도 예산과 매수여력이 있으면 승인 종목 신규매수가 가능해진다는
+   변경 범위를 사용자에게 다시 보여준다.
+6. 사용자 승인 뒤에만 operator ack로 L0를 복구하고 첫 주문을 관찰한다.
+
+이상 징후가 있으면 즉시 L1을 유지하거나 복귀한다. 서버 코드를 `git reset`으로
+되돌리지 말고 원격에 revert PR을 만들어 배포 이력을 보존한다.
+
+### 26. 2026-07-31 Oracle 적용 요청·장중 배포 보류
+
+사용자가 동시 보유 종목 수 제한 제거 변경을 Oracle 서버까지 적용해 달라고
+요청했다. 01:49 KST(뉴욕 12:49 EDT)에 운영 적용 사전점검을 수행했으나, 다음
+두 조건 때문에 병합과 배포를 시작하지 않았다.
+
+- 미국 정규장 진행 중이고 현재 Oracle은 limited mock L0다. 이 상태에서 PR을
+  병합하면 약 5분 주기의 autodeploy가 변경을 받아 다음 buyloop부터 신규매수
+  범위를 바꿀 수 있다.
+- 현재 Mac에는 `/Users/seop/.ssh` 디렉터리, SSH agent identity, Oracle 호스트
+  별칭과 개인키가 없다. 저장소에도 실제 접속 주소나 키를 저장하지 않는다.
+
+따라서 Draft PR #105는 병합하지 않았고 Oracle 코드·환경·서비스·kill-switch는
+변경하지 않았다. 실제 주문도 실행하지 않았다. Oracle은 계속 기존 코드의 A
+12·B 4 제한과 limited mock L0를 사용한다.
+
+재개는 Oracle 접속 정보가 있는 컴퓨터에서 미국 연장장 종료 뒤인 09:10 KST
+이후에 한다. 개인키 내용을 문서나 대화에 붙이지 말고, 접속 가능한 로컬 SSH
+별칭만 사용한다. 재개 순서는 다음과 같다.
+
+1. Oracle 현재 commit·clean worktree·서비스·열린 주문을 읽기 전용 확인한다.
+2. autodeploy timer를 정지하고 실행 중인 배포 작업이 없음을 확인한다.
+3. 코드 pull보다 먼저 kill-switch를 L1로 올려 신규매수를 중지한다.
+4. PR #105의 정확한 head와 CI를 다시 확인하고 기본 브랜치에 병합한다.
+5. Oracle 기본 브랜치를 exact merge commit으로 clean fast-forward한다.
+6. 서버 회귀 테스트와 `--scope l0 --broker --json` 점검을 통과시킨다.
+7. 변경 의미, allowlist, 수량·원장·heartbeat를 다시 확인한 뒤에만 operator
+   ack로 limited mock L0를 복구하고 첫 주문을 관찰한다.
+8. Oracle이 exact merge commit이고 모든 서비스가 정상인 것을 확인한 뒤
+   autodeploy timer를 다시 활성화한다.
+
+SSH 접속 전에는 PR #105를 Draft에서 해제하거나 병합하지 않는다. GitHub
+병합만 먼저 하는 방식은 Oracle autodeploy 때문에 안전한 코드 보관과 운영
+적용을 분리하지 못하므로 금지한다.

@@ -35,7 +35,6 @@ FX_USDKRW = 1380.0           # 달러 환산(달러 시그널 수량 계산용)
 # ── 안전 가드(사용자와 합의한 핵심) ─────────────────────────────
 ENTRY_TOLERANCE = 0.015      # 실시간가가 시그널 진입가 ±1.5% 이내일 때만 매수
 import os as _os_shelf
-SHELF_MAX_POS = int(_os_shelf.environ.get("SHELF_MAX_POS", "4"))
 
 
 def _env_int(name: str, default: int, low: int, high: int) -> int:
@@ -69,13 +68,11 @@ STALL_TIGHT_TRAIL_R = min(
 # 성과 대시보드 발행 토픽(ntfy) — 서버(alpha)가 5분마다 발행, 웹 perf.html이 조회.
 #   퍼센트만 담아 공개 무해(금액·계좌정보 없음). 헬스 토픽과 독립(그쪽 노출 방지).
 ALPHA_DASH_TOPIC = _os_shelf.environ.get("NTFY_ALPHA_TOPIC", "stock-alpha-c81f4e2b9d")
-#   ↑ 매물대 슬리브(B) 동시 보유 상한. 정합성 점검(2026-07-24): 롤아웃 캡이
-#     슬리브별로 각각 적용돼 A(12)+B(12)=24까지 가능하던 구멍 → B 전용 소형
-#     상한으로 총노출을 A 12 + B 4 = 16으로 제한(B 예산 5M이면 4~5개가 자연 상한).
-                             #   (신호 계산 시점과 주문 시점의 가격 괴리 차단)
+# KIS 미러의 동시 보유 종목 수는 제한하지 않는다. A/B 총노출은 종목 수가 아니라
+# 각 슬리브 예산과 A+B 통합 운용한도, 실제 매수여력으로 제한한다.
 CONFIRMED_ONLY = True        # 확정봉 모드: 전 거래일 시그널에도 있던 종목만 매수
                              #   (미확정 일봉의 가짜 돌파가 종가에 뒤집히는 것 방지)
-MAX_POSITIONS = 5            # 동시 보유 최대 종목 수
+MAX_POSITIONS = 5            # legacy bot/trader.py 전용. KIS buyloop에는 적용하지 않음.
 DAILY_LOSS_LIMIT = 0.02      # 하루 실현손실이 계좌의 2% 넘으면 당일 신규 매수 중지
 TRADE_GROUPS = ("now",)      # 매매 대상 그룹 — 'now'(지금 진입)만. watch는 관찰용.
 

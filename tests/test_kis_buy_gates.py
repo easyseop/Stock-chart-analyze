@@ -198,7 +198,7 @@ def test_x1_gate_chain_then_sent():
 
 
 def test_mirror_stage():
-    """완전 미러 프로파일 — autopaper와 동일 캡(12종목·하루3건·risk1%·allowlist 불필요)."""
+    """KIS 미러 — 동시보유 수 무제한·하루10건·risk1%·allowlist 선택."""
     with tempfile.TemporaryDirectory() as tmp:
         M = _setup(tmp)
         R = M["rollout"]
@@ -207,10 +207,11 @@ def test_mirror_stage():
         ok, why = R.check_new_entry("ANYTHING", open_positions=0, risk_pct=0.01,
                                     session_open=True)
         assert ok, why                                     # allowlist 없이 통과
-        assert R.check_new_entry("X", open_positions=11, risk_pct=0.01,
-                                 session_open=True)[0]     # 11/12 → 허용
-        assert not R.check_new_entry("X", open_positions=12, risk_pct=0.01,
-                                     session_open=True)[0]  # 12/12 → 차단
+        assert R.profile()["max_positions"] is None
+        assert R.check_new_entry("X", open_positions=12, risk_pct=0.01,
+                                 session_open=True)[0]
+        assert R.check_new_entry("X", open_positions=10_000, risk_pct=0.01,
+                                 session_open=True)[0]     # 종목 수만으로 차단하지 않음
         assert not R.check_new_entry("X", open_positions=0, risk_pct=0.02,
                                      session_open=True)[0]  # risk 1% 캡
         # 하루 10건(사용자 지정 2026-07-15): 9건까지 허용, 10건째 기록 후 거부
@@ -227,7 +228,7 @@ def test_mirror_stage():
         assert not R.check_new_entry("TSLA", open_positions=0, risk_pct=0.01,
                                      session_open=True)[0]
         os.environ["TRADE_STAGE"] = "1.5"
-    print("[PASS] mirror: 12종목·하루10건·risk1%·allowlist불필요(+선택 펜스 유지)")
+    print("[PASS] mirror: 동시보유 수 무제한·하루10건·risk1%·선택 allowlist")
 
 
 def test_broker_truth_open_cost_gate():
@@ -246,7 +247,9 @@ def test_broker_truth_open_cost_gate():
         with mock.patch.object(M["rollout"], "us_regular_open", return_value=True), \
              mock.patch("bot.kis_orders.place_buy", return_value=fake):
             # SEED 1천만 중 브로커 실투입 985만 → 남은 15만 < 1주(14만)×2 → 1주만
-            d = X.execute_entry("q#1", "AAPL", open_cost_krw=9_850_000, **kw)
+            d = X.execute_entry(
+                "q#1", "AAPL", open_positions=10_000,
+                open_cost_krw=9_850_000, **kw)
             assert d.ok and d.qty == 1, (d.gate, d.qty, d.why)
             # 실투입 999만 → 남은 1만 < 1주 가격 → sizing 차단(deployable 바인딩)
             d2 = X.execute_entry(

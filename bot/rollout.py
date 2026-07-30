@@ -8,11 +8,11 @@ Stage 프로파일(환경변수 TRADE_STAGE, 기본 "1.5"):
   2      실전 첫 주: 1종목 · 하루 1건 · risk ≤0.1% · allowlist 필수 · US 정규장만
   2.5    확장:      3종목 · 하루 2건 · risk ≤0.25%
   3      정상:      5종목 · 하루 3건 · risk ≤1.0%
-  mirror 완전 미러: 12종목 · 하루 10건 · risk ≤1.0% · allowlist 불필요 —
-         종목스크리너 페이퍼 시뮬(autopaper)을 그대로 따라간다(사용자 지정
-         2026-07-15). 동시 12종목·risk 1%는 autopaper와 동일, 하루 한도만
-         10건으로 넓힘(사용자 지정 — autopaper는 3). 모의 전용으로 안전
-         (live는 kis_orders가 Stage 2 게이트 전 하드블록).
+  mirror KIS 미러: 동시 보유 종목 수 제한 없음 · 하루 10건 · risk ≤1.0% ·
+         allowlist 불필요. 신호·전술은 종목스크리너 페이퍼 시뮬(autopaper)을
+         따라가되, 신규 진입 가능 여부는 고정 종목 수가 아니라 슬리브 예산,
+         A+B 통합 운용한도, KIS 매수여력과 계산 수량으로 결정한다. 모의 전용으로
+         안전하다(live는 kis_orders가 Stage 2 게이트 전 하드블록).
 
 공통 강제(전 Stage):
   · **US 정규장만**(I1·Codex B7) — dayMarket/pre/after 신규 진입 hard-off.
@@ -38,11 +38,11 @@ _PROFILES = {
             "allowlist_required": True},
     "3":   {"max_positions": 5, "max_new_per_day": 3, "risk_cap": 0.01,
             "allowlist_required": False},
-    # 완전 미러 — scanner/autopaper.py와 캡 일치(MAX_POS=12 · RISK_PCT=0.01).
-    #   하루 신규만 사용자 지정 10건(2026-07-15 — autopaper DAY_ENTRY_MAX=3보다
-    #   넓게: 스크리너 픽이 몰린 날도 놓치지 않게. 동시 12종목 캡이 총량을 묶는다).
-    #   ALLOWED_SYMBOLS를 설정하면 여전히 그 목록만 산다(선택적 추가 펜스).
-    "mirror": {"max_positions": 12, "max_new_per_day": 10, "risk_cap": 0.01,
+    # KIS 미러 — 동시 보유 수는 제한하지 않는다. 실제 신규 투입은 envelope의
+    #   슬리브 예산·A+B 통합 운용한도·브로커 매수여력·종목별 1/3·risk 1% 중
+    #   가장 작은 값으로 제한한다. 하루 신규는 운영 폭주 방지를 위해 사용자 지정
+    #   10건을 유지한다. ALLOWED_SYMBOLS를 설정하면 여전히 그 목록만 산다.
+    "mirror": {"max_positions": None, "max_new_per_day": 10, "risk_cap": 0.01,
                "allowlist_required": False},
 }
 
@@ -124,8 +124,9 @@ def check_new_entry(symbol: str, *, open_positions: int,
         return False, "ALLOWED_SYMBOLS 미설정(allowlist 필수 Stage)"
     if al is not None and symbol.upper() not in al:
         return False, f"{symbol} allowlist 밖"
-    if open_positions >= p["max_positions"]:
-        return False, f"동시 보유 한도({p['max_positions']}) 도달"
+    max_positions = p.get("max_positions")
+    if max_positions is not None and open_positions >= max_positions:
+        return False, f"동시 보유 한도({max_positions}) 도달"
     if new_entries_today() >= p["max_new_per_day"]:
         return False, f"하루 신규 한도({p['max_new_per_day']}) 도달"
     if risk_pct > p["risk_cap"] + 1e-12:
