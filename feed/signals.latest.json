@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated_at": "2026-07-30T16:02:16+09:00",
+ "generated_at": "2026-07-30T16:17:54+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "shelf_debug": {
   "ok": 13,
@@ -407,34 +407,6 @@
     "mode": "half",
     "label": "⚖ 반반 진입",
     "desc": "손절폭 7.5% — 절반은 현재가, 절반은 눌림 $77.15 지정가(거기선 손절폭 3.9%)"
-   }
-  },
-  {
-   "id": "207940-2026-07-30-now",
-   "code": "207940",
-   "name": "삼성바이오로직스",
-   "ccy": "KRW",
-   "group": "now",
-   "entry_kind": "now",
-   "stage": 3,
-   "price": 1510000.0,
-   "entry": 1510000.0,
-   "stop": 1349875.9872,
-   "target": 1830248.0256,
-   "shares_1pct": 0,
-   "range_pos": 0.3715,
-   "norm": 10.4,
-   "bear_share": 0.125,
-   "fresh": false,
-   "break_gap": 0.0861,
-   "earnings_d": null,
-   "tactic": {
-    "stop_pct": 10.6,
-    "pb_price": 1494289.5938,
-    "pb_stop_pct": 9.7,
-    "mode": "pullback",
-    "label": "⏳ 눌림 지정가만",
-    "desc": "지금 추격 금지(손절폭 10.6% · 돌파후 진행) — <b>1,494,290원 눌림 지정가만</b>. 눌리면 손절폭 9.7%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
    }
   },
   {
@@ -3835,6 +3807,27 @@
    "tactic": null
   },
   {
+   "id": "207940-2026-07-30-watch",
+   "code": "207940",
+   "name": "삼성바이오로직스",
+   "ccy": "KRW",
+   "group": "watch",
+   "entry_kind": "pullback",
+   "stage": 4,
+   "price": 1527000.0,
+   "entry": 1502172.3958,
+   "stop": 1342048.3831,
+   "target": 1822420.4214,
+   "shares_1pct": 0,
+   "range_pos": 0.3939,
+   "norm": 8.5,
+   "bear_share": 0.25,
+   "fresh": false,
+   "break_gap": 0.0983,
+   "earnings_d": null,
+   "tactic": null
+  },
+  {
    "id": "SPOT-2026-07-30-watch",
    "code": "SPOT",
    "name": "Spotify Technology S.A.",
@@ -3961,6 +3954,27 @@
    "tactic": null
   },
   {
+   "id": "259960-2026-07-30-watch",
+   "code": "259960",
+   "name": "크래프톤",
+   "ccy": "KRW",
+   "group": "watch",
+   "entry_kind": "pullback",
+   "stage": 3,
+   "price": 259000.0,
+   "entry": 250416.6667,
+   "stop": 221566.1101,
+   "target": 308117.7798,
+   "shares_1pct": 3,
+   "range_pos": 0.3727,
+   "norm": -3.8,
+   "bear_share": 0.375,
+   "fresh": false,
+   "break_gap": 0.1079,
+   "earnings_d": null,
+   "tactic": null
+  },
+  {
    "id": "QTWO-2026-07-30-watch",
    "code": "QTWO",
    "name": "Q2 Holdings, Inc.",
@@ -4062,27 +4076,6 @@
    "bear_share": 0.375,
    "fresh": false,
    "break_gap": 0.0681,
-   "earnings_d": null,
-   "tactic": null
-  },
-  {
-   "id": "259960-2026-07-30-watch",
-   "code": "259960",
-   "name": "크래프톤",
-   "ccy": "KRW",
-   "group": "watch",
-   "entry_kind": "pullback",
-   "stage": 3,
-   "price": 255500.0,
-   "entry": 250416.6667,
-   "stop": 221566.1101,
-   "target": 308117.7798,
-   "shares_1pct": 3,
-   "range_pos": 0.3508,
-   "norm": -9.4,
-   "bear_share": 0.25,
-   "fresh": false,
-   "break_gap": 0.0929,
    "earnings_d": null,
    "tactic": null
   },
