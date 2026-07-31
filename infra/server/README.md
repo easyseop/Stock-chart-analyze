@@ -298,3 +298,6 @@ curl -s "https://ntfy.sh/<TOPIC>/json?poll=1" | tail   # 최근 캐시 메시지
 - **훈련(Stage 2 전 필수)**: `sudo reboot`(장중 재부팅 drill) 후 파수꾼이
   부팅 대사→감시 재개까지 자동 복구되는지, 네트워크 단절 drill에서 P0가 오는지.
 - CF Worker dead-man은 바깥 계층(분 단위) — 초 단위 SLA는 이 watchdog이 담당.
+
+## 서버 설치 이력
+- 2026-07-31: autodeploy sudoers drop-in 설치 완료(재시작 NOPASSWD 누락 보완) — 이 커밋이 자동배포 알림 파이프라인의 end-to-end 검증 커밋.
