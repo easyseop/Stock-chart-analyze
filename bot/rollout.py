@@ -56,12 +56,38 @@ def profile() -> dict:
     return dict(_PROFILES[stage()])
 
 
-def allowed_symbols() -> set[str] | None:
-    """ALLOWED_SYMBOLS(콤마 구분). 미설정=None(allowlist_required면 전 거부)."""
-    raw = os.environ.get("ALLOWED_SYMBOLS", "").strip()
-    if not raw:
+# git 추적 allowlist 파일 — 시크릿이 아니므로(심볼은 공개 피드에 이미 있음) 저장소로
+#   관리해 자동배포로 갱신한다. env ALLOWED_SYMBOLS가 있으면 그것이 항상 이긴다
+#   (운영자 즉시 override — 서버에서 git 없이 조일 수 있게).
+_ALLOWLIST_FILE_DEFAULT = os.path.normpath(os.path.join(
+    os.path.dirname(__file__), "..", "allowed_symbols.txt"))
+
+
+def _allowlist_from_file() -> set[str] | None:
+    """파일 allowlist(줄/콤마 구분, '#' 주석). 파일 없음=None(미설정).
+    파일이 **있는데 심볼 0개**면 빈 set = 전 종목 거부 — 편집 실수를 fail-closed로.
+    울타리를 의도적으로 없애려면 파일 자체를 지운다(git 이력에 남는 결정)."""
+    path = os.environ.get("ALLOWED_SYMBOLS_FILE", _ALLOWLIST_FILE_DEFAULT)
+    try:
+        with open(path, encoding="utf-8") as f:
+            text = f.read()
+    except OSError:
         return None
-    return {s.strip().upper() for s in raw.split(",") if s.strip()}
+    syms: set[str] = set()
+    for line in text.splitlines():
+        line = line.split("#", 1)[0]
+        for token in line.replace(",", " ").split():
+            syms.add(token.upper())
+    return syms
+
+
+def allowed_symbols() -> set[str] | None:
+    """env ALLOWED_SYMBOLS(콤마 구분) 우선, 없으면 git 추적 allowlist 파일.
+    둘 다 없으면 None(allowlist_required Stage면 전 거부)."""
+    raw = os.environ.get("ALLOWED_SYMBOLS", "").strip()
+    if raw:
+        return {s.strip().upper() for s in raw.split(",") if s.strip()}
+    return _allowlist_from_file()
 
 
 def _today_kst() -> datetime.date:

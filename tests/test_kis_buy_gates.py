@@ -39,6 +39,8 @@ def _setup(tmp):
         "BOT_OPERATING_BUFFER_PCT": "0",
         "TRADE_STAGE": "1.5",
         "ALLOWED_SYMBOLS": "AAPL", "ALLOW_BUY": "1",
+        # 저장소의 실제 allowlist 파일이 테스트에 섞이지 않게 없는 경로로 고정
+        "ALLOWED_SYMBOLS_FILE": os.path.join(tmp, "allowlist-absent.txt"),
         "KIS_MOCK_BUYING_POWER": "50000",      # USD (모의 psamount 미지원 대체)
     })
     mods = {}
@@ -397,9 +399,37 @@ def test_mock_feasibility_fallbacks():
     print("[PASS] 모의 매수여력 — US=psamount(cash-only)·KR현금·실패=폴백·env우선")
 
 
+def test_allowlist_file_fallback_and_env_precedence():
+    with tempfile.TemporaryDirectory() as tmp:
+        M = _setup(tmp)
+        R = M["rollout"]
+        path = os.path.join(tmp, "allowlist.txt")
+        os.environ["ALLOWED_SYMBOLS_FILE"] = path
+        os.environ.pop("ALLOWED_SYMBOLS")
+        assert R.allowed_symbols() is None          # 파일도 env도 없음 = 미설정
+        with open(path, "w", encoding="utf-8") as f:
+            f.write("# 주석\nFRPT\nestc, DASH  # 인라인 주석\n\n")
+        assert R.allowed_symbols() == {"FRPT", "ESTC", "DASH"}
+        ok, why = R.check_new_entry("FRPT", open_positions=0, risk_pct=0.001,
+                                    session_open=True)
+        assert ok, why
+        assert not R.check_new_entry("AAPL", open_positions=0, risk_pct=0.001,
+                                     session_open=True)[0]   # 파일 목록 밖
+        os.environ["ALLOWED_SYMBOLS"] = "AAPL"
+        assert R.allowed_symbols() == {"AAPL"}      # env가 파일을 이김
+        os.environ.pop("ALLOWED_SYMBOLS")
+        with open(path, "w", encoding="utf-8") as f:
+            f.write("# 심볼 없음 — 편집 실수 시나리오\n")
+        assert R.allowed_symbols() == set()
+        assert not R.check_new_entry("FRPT", open_positions=0, risk_pct=0.001,
+                                     session_open=True)[0]   # 빈 파일=전 거부
+    print("[PASS] allowlist 파일 폴백·env 우선·빈 파일 전 거부(fail-closed)")
+
+
 def main():
     test_kill_latch()
     test_rollout_gates()
+    test_allowlist_file_fallback_and_env_precedence()
     test_ownership()
     test_costbook()
     test_x1_gate_chain_then_sent()

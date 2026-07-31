@@ -407,7 +407,7 @@ def collect_runtime(*, fetch_broker: bool = False,
                     evidence: dict | None = None) -> dict:
     """현재 서버 상태를 읽는다. ``fetch_broker``도 조회 API만 사용한다."""
     from bot import (costbook, envelope, heartbeat, kill, kis, kis_positions,
-                     ledger, ownership, settings)
+                     ledger, ownership, rollout, settings)
 
     folded_orders = ledger.orders_for()
     local_positions = kis_positions.load()
@@ -417,11 +417,7 @@ def collect_runtime(*, fetch_broker: bool = False,
     tmp_root = os.path.realpath(tempfile.gettempdir())
     baseline_volatile = os.path.realpath(
         ownership.baseline_path()).startswith(tmp_root + os.sep)
-    allowed_symbols = {
-        code.strip().upper()
-        for code in os.environ.get("ALLOWED_SYMBOLS", "").split(",")
-        if code.strip()
-    }
+    allowed_symbols = rollout.allowed_symbols() or set()   # env 우선, 파일 폴백
     position_counts = {"A": 0, "B": 0}
     for row in local_positions.values():
         try:
