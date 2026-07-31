@@ -1,9 +1,9 @@
 {
  "updated": "2026-08-01",
  "start": 100000000,
- "cash": 28677550,
- "equity": 99984090,
- "ret_pct": -0.02,
+ "cash": 33677855,
+ "equity": 100067503,
+ "ret_pct": 0.07,
  "positions": [
   {
    "code": "MRSH",
@@ -11,14 +11,14 @@
    "ccy": "USD",
    "q": 36,
    "avg": 174.3075,
-   "price": 188.55499267578125,
+   "price": 189.21029663085935,
    "stop": 184.80249938964843,
    "target": 192.2575,
    "half_done": true,
    "opened": "2026-07-06",
-   "pl_krw": 736667,
-   "pl_pct": 8.17,
-   "price_age_min": 6.6
+   "pl_krw": 770549,
+   "pl_pct": 8.55,
+   "price_age_min": 7.4
   },
   {
    "code": "HMC",
@@ -26,14 +26,14 @@
    "ccy": "USD",
    "q": 2,
    "avg": 27.665,
-   "price": 30.045000076293945,
+   "price": 30.040000915527344,
    "stop": 28.84219986877441,
    "target": 30.5824,
    "half_done": true,
    "opened": "2026-07-09",
-   "pl_krw": 6837,
-   "pl_pct": 8.6,
-   "price_age_min": 10.3
+   "pl_krw": 6822,
+   "pl_pct": 8.58,
+   "price_age_min": 10.1
   },
   {
    "code": "SARO",
@@ -41,14 +41,14 @@
    "ccy": "USD",
    "q": 81,
    "avg": 27.9,
-   "price": 28.90999984741211,
+   "price": 28.8700008392334,
    "stop": 27.9,
    "target": 31.9643,
    "half_done": true,
    "opened": "2026-07-10",
-   "pl_krw": 117500,
-   "pl_pct": 3.62,
-   "price_age_min": 6.6
+   "pl_krw": 112846,
+   "pl_pct": 3.48,
+   "price_age_min": 7.4
   },
   {
    "code": "J",
@@ -56,14 +56,14 @@
    "ccy": "USD",
    "q": 32,
    "avg": 126.585,
-   "price": 132.55999755859375,
+   "price": 132.60000610351562,
    "stop": 129.62490061035157,
    "target": 141.2316,
    "half_done": true,
    "opened": "2026-07-11",
-   "pl_krw": 274611,
-   "pl_pct": 4.72,
-   "price_age_min": 6.6
+   "pl_krw": 276450,
+   "pl_pct": 4.75,
+   "price_age_min": 7.4
   },
   {
    "code": "MAIN",
@@ -78,22 +78,7 @@
    "opened": "2026-07-22",
    "pl_krw": 41450,
    "pl_pct": 0.69,
-   "price_age_min": 6.6
-  },
-  {
-   "code": "SHOP",
-   "name": "Shopify Inc.",
-   "ccy": "USD",
-   "q": 30,
-   "avg": 114.9801,
-   "price": 116.83999633789062,
-   "stop": 117.28670610351563,
-   "target": 138.8546,
-   "half_done": true,
-   "opened": "2026-07-24",
-   "pl_krw": 80138,
-   "pl_pct": 1.62,
-   "price_age_min": 6.6
+   "price_age_min": 7.4
   },
   {
    "code": "004370",
@@ -108,7 +93,7 @@
    "opened": "2026-07-27",
    "pl_krw": 145000,
    "pl_pct": 3.93,
-   "price_age_min": 9.4
+   "price_age_min": 9.5
   },
   {
    "code": "CRC",
@@ -116,14 +101,14 @@
    "ccy": "USD",
    "q": 101,
    "avg": 51.16,
-   "price": 51.66999816894531,
+   "price": 51.7599983215332,
    "stop": 47.7785,
    "target": 57.923,
    "half_done": false,
    "opened": "2026-07-28",
-   "pl_krw": 73981,
-   "pl_pct": 1.0,
-   "price_age_min": 6.6
+   "pl_krw": 87037,
+   "pl_pct": 1.17,
+   "price_age_min": 7.3
   },
   {
    "code": "EQT",
@@ -131,14 +116,14 @@
    "ccy": "USD",
    "q": 242,
    "avg": 51.375,
-   "price": 52.82500076293945,
+   "price": 52.8650016784668,
    "stop": 48.5008,
    "target": 57.1234,
    "half_done": false,
    "opened": "2026-07-29",
-   "pl_krw": 503980,
-   "pl_pct": 2.82,
-   "price_age_min": 6.6
+   "pl_krw": 517884,
+   "pl_pct": 2.9,
+   "price_age_min": 7.3
   },
   {
    "code": "MDT",
@@ -146,14 +131,14 @@
    "ccy": "USD",
    "q": 93,
    "avg": 86.12,
-   "price": 83.91500091552734,
+   "price": 84.36000061035156,
    "stop": 81.6215,
    "target": 95.117,
    "half_done": false,
    "opened": "2026-07-30",
-   "pl_krw": -294524,
-   "pl_pct": -2.56,
-   "price_age_min": 9.9
+   "pl_krw": -235085,
+   "pl_pct": -2.04,
+   "price_age_min": 9.8
   }
  ],
  "pending": [
@@ -210,20 +195,47 @@
     "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권19% · 체크3/6 · 손절폭7.0%"
    },
    "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권19% · 체크3/6 · 손절폭7.0%"
+  },
+  {
+   "code": "VEEV",
+   "name": "Veeva Systems Inc.",
+   "ccy": "USD",
+   "limit": 186.3691,
+   "stop": 184.7932,
+   "target": 233.4435,
+   "q": 19,
+   "created": "2026-08-01",
+   "atr": 8.1084,
+   "plan": {
+    "entry": 201.01,
+    "stop": 184.7932,
+    "target": 233.4435,
+    "pb": 186.3691,
+    "tactic": "pullback"
+   },
+   "ctx": {
+    "mode": "pullback",
+    "fresh": true,
+    "stage": 3,
+    "rp": 33,
+    "rec": 4,
+    "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권33% · 체크4/6 · 손절폭8.1%"
+   },
+   "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권33% · 체크4/6 · 손절폭8.1%"
   }
  ],
- "trades": 8,
- "win_trades": 6,
+ "trades": 9,
+ "win_trades": 7,
  "pos_cap_pct": 33.3,
  "cap_violations": [],
  "rule_violations": [],
  "fx": 1436.25,
  "stats": {
   "all": {
-   "n": 8,
-   "win": 6,
-   "win_rate": 75,
-   "avg_r": 0.2
+   "n": 9,
+   "win": 7,
+   "win_rate": 78,
+   "avg_r": 0.24
   },
   "by_mode": {
    "full": {
@@ -239,17 +251,17 @@
     "avg_r": 1.02
    },
    "pullback": {
-    "n": 3,
-    "win": 3,
+    "n": 4,
+    "win": 4,
     "win_rate": 100,
-    "avg_r": 0.47
+    "avg_r": 0.5
    }
   },
   "fresh": {
-   "n": 7,
-   "win": 5,
-   "win_rate": 71,
-   "avg_r": 0.18
+   "n": 8,
+   "win": 6,
+   "win_rate": 75,
+   "avg_r": 0.23
   },
   "stale": {
    "n": 1,
@@ -259,10 +271,10 @@
   },
   "by_stage": {
    "3": {
-    "n": 8,
-    "win": 6,
-    "win_rate": 75,
-    "avg_r": 0.2
+    "n": 9,
+    "win": 7,
+    "win_rate": 78,
+    "avg_r": 0.24
    }
   },
   "by_ccy": {
@@ -273,16 +285,58 @@
     "avg_r": 0.38
    },
    "USD": {
-    "n": 7,
-    "win": 5,
-    "win_rate": 71,
-    "avg_r": 0.18
+    "n": 8,
+    "win": 6,
+    "win_rate": 75,
+    "avg_r": 0.23
    }
   },
-  "slip_entry_pct": -0.48,
+  "slip_entry_pct": -0.6,
   "slip_stop_pct": -1.14
  },
  "closed": [
+  {
+   "code": "SHOP",
+   "name": "Shopify Inc.",
+   "ccy": "USD",
+   "ctx": {
+    "mode": "pullback",
+    "fresh": true,
+    "stage": 3,
+    "rp": 26,
+    "rec": 4,
+    "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권26% · 체크4/6 · 손절폭9.5%"
+   },
+   "plan": {
+    "entry": 116.77,
+    "stop": 105.7277,
+    "target": 138.8546,
+    "pb": 114.9801,
+    "tactic": "pullback"
+   },
+   "fill": {
+    "avg": 114.9801,
+    "q": 59
+   },
+   "exits": [
+    {
+     "d": "2026-07-28",
+     "q": 29,
+     "price": 124.805,
+     "note": "+1R 절반 익절"
+    },
+    {
+     "d": "2026-08-01",
+     "q": 30,
+     "price": 116.05,
+     "note": "트레일 스탑"
+    }
+   ],
+   "opened": "2026-07-24",
+   "closed": "2026-08-01",
+   "pl": 464305,
+   "r": 0.58
+  },
   {
    "code": "LSPD",
    "name": "Lightspeed Commerce Inc. Subordinate Votin",
@@ -701,10 +755,35 @@
   },
   {
    "d": "2026-08-01",
-   "v": 99984090
+   "v": 100067503
   }
  ],
  "log": [
+  {
+   "d": "2026-08-01",
+   "type": "order",
+   "code": "VEEV",
+   "name": "Veeva Systems Inc.",
+   "q": 19,
+   "price": 186.3691,
+   "ccy": "USD",
+   "amt": 5085780,
+   "note": "눌림 지정가 주문(추격 금지) — 🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권33% · 체크4/6 · 손절폭8.1%"
+  },
+  {
+   "d": "2026-08-01",
+   "type": "sell",
+   "code": "SHOP",
+   "name": "Shopify Inc.",
+   "q": 30,
+   "price": 116.05,
+   "ccy": "USD",
+   "amt": 5000305,
+   "note": "트레일 스탑",
+   "pl": 46099,
+   "pl_pct": 0.9,
+   "r": 0.58
+  },
   {
    "d": "2026-07-30",
    "type": "buy",
