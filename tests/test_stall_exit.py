@@ -279,6 +279,102 @@ def test_autopaper_legacy_half_without_initial_stop_keeps_three_atr_trail():
     print("[PASS] stop0 없는 legacy half는 고가 위 점프 없이 기존 3ATR 유지")
 
 
+def test_autopaper_legacy_without_initial_stop_does_not_count_stall_days():
+    # P3 이월: stop0 미증명 legacy는 래칫만 막고 정체일은 가짜 R(risk=entry)로
+    # 계속 쌓였다 — shadow 통계 오염. 카운트 자체가 진행되면 안 된다.
+    with tempfile.TemporaryDirectory() as tmp, \
+            mock.patch.object(AP, "_update_fx"), \
+            mock.patch.object(AP, "_state_branch_snapshot", return_value=None), \
+            mock.patch.object(AP, "_trading_lock_status", return_value="off"), \
+            mock.patch.object(AP, "_market_open", return_value=True), \
+            mock.patch.object(AP, "_earnings_d", return_value=None), \
+            mock.patch.object(AP, "_price_age_min", return_value=None), \
+            mock.patch.object(AP, "STALL_MODE", "shadow"):
+        AP.STATE_PATH = os.path.join(tmp, "autopaper.json")
+        state = {
+            "v": AP.VERSION, "cash": AP.START - 500, "start": AP.START,
+            "pending": {}, "log": [], "closed": [],
+            "pos": {"AAA": {
+                "name": "AAA", "ccy": "USD", "q": 5, "q0": 10,
+                "avg": 100, "entry": 100, "stop": 115,
+                "target": 140, "half_done": True, "opened": "2026-06-01",
+                "plan": {}, "ctx": {}, "atr0": 2, "hw": 130,
+                "risk0": 1000, "realized": 0, "exits": [],
+            }},
+        }
+        AP._save(state)
+        rows = [{"code": "AAA", "name": "AAA", "ccy": "USD",
+                 "sr": {"price": 130}}]
+        for day in ("2026-07-02", "2026-07-03"):
+            with mock.patch.object(AP, "_today", return_value=day):
+                AP.update(rows, {"now": []}, out_dir=tmp)
+        pos = AP._load()["pos"]["AAA"]
+        assert "stall_anchor_high" not in pos
+        assert not pos.get("stall_days")
+        assert pos["hw"] >= 130               # 기존 고가 추적은 계속 유지
+    print("[PASS] stop0 없는 legacy는 정체일 카운트 자체를 시작하지 않음")
+
+
+def test_durable_half_done_reapplies_lost_breakeven_ratchet_once():
+    # P3 이월: mark_half_done 영속 직후·raise_stop 전 크래시 → 재시작 시
+    # half_stop_raised=True로만 복구돼 본전 래칫이 영구 유실되던 창.
+    with tempfile.TemporaryDirectory() as tmp, \
+            mock.patch.object(X.settings, "market_open", return_value=True), \
+            mock.patch.object(X.notify, "send") as alert:
+        P.PATH = os.path.join(tmp, "positions.jsonl")
+        L.LEDGER_PATH = os.path.join(tmp, "orders.jsonl")
+        X.STATE_PATH = os.path.join(tmp, "exits.json")
+        P.record(
+            "AAA", stop=90, ccy="USD", entry=100, qty=5,
+            opened="2026-06-01", sleeve="A", pos_key="pos:aaa")
+        P.mark_half_done("AAA", event_id="half:pos:aaa")   # 크래시 직전까지 영속됨
+        assert P.load()["AAA"]["stop"] == 90               # 래칫은 유실된 상태
+        held = {"AAA": {"code": "AAA", "q": 5, "ccy": "USD", "stop": 90}}
+        broker = _Broker(price=101)
+        with mock.patch.object(X, "STALL_MODE", "shadow"):
+            X.manage(broker, held, "2026-07-02")
+            X.manage(broker, held, "2026-07-02")
+        assert P.load()["AAA"]["stop"] == 100              # 본전 복구
+        raises = [
+            json.loads(line) for line in open(P.PATH, encoding="utf-8")
+            if line.strip() and json.loads(line).get("ev") == "raise"
+        ]
+        assert len(raises) == 1 and raises[0]["stop"] == 100   # 멱등(중복 0)
+        assert broker.calls == []
+        assert any("본전 복구" in str(call.args[0])
+                   for call in alert.call_args_list)
+    print("[PASS] durable half의 유실된 본전 래칫을 1회만 멱등 재적용")
+
+
+def test_valid_json_wrong_schema_state_is_quarantined_like_corruption():
+    # P3 이월: {"AAA": "…"}처럼 유효한 JSON dict지만 스키마가 틀린 손상이
+    # _load_with_status를 그대로 통과해 격리·경보 경로를 우회했다.
+    for broken in (
+            {"AAA": "garbage"},
+            {"AAA": {"half": "yes", "stall_days": "banana"}},
+            {"AAA": {"high": True}},
+            {"AAA": {"half_keys": [1, 2]}},
+    ):
+        with tempfile.TemporaryDirectory() as tmp, \
+                mock.patch.object(X.settings, "market_open",
+                                  return_value=True), \
+                mock.patch.object(X.notify, "send") as alert:
+            held = _paths(tmp)
+            with open(X.STATE_PATH, "w", encoding="utf-8") as fp:
+                json.dump(broken, fp)
+            broker = _Broker(price=120)
+            with mock.patch.object(X, "STALL_MODE", "live"):
+                X.manage(broker, held, "2026-07-30")
+                X.manage(broker, held, "2026-07-30")
+            state = X._load()["AAA"]
+            assert state["state_recovery_quarantine"] is True, broken
+            assert broker.calls == [], broken
+            messages = [str(call.args[0]) for call in alert.call_args_list]
+            assert sum("정체청산 상태 손상" in text
+                       for text in messages) == 1, broken
+    print("[PASS] 스키마 손상 dict도 격리+경보 1회+매도 0(우회 봉합)")
+
+
 def test_backtest_three_parameter_arms_report_required_metrics():
     import pandas as pd
     index = pd.date_range("2026-01-01", periods=50, freq="B")
@@ -325,6 +421,9 @@ def main():
     test_b_sleeve_is_unchanged()
     test_autopaper_live_matches_30_day_exit()
     test_autopaper_legacy_half_without_initial_stop_keeps_three_atr_trail()
+    test_autopaper_legacy_without_initial_stop_does_not_count_stall_days()
+    test_durable_half_done_reapplies_lost_breakeven_ratchet_once()
+    test_valid_json_wrong_schema_state_is_quarantined_like_corruption()
     test_backtest_three_parameter_arms_report_required_metrics()
     print("\n정체청산 공용 규칙 검증 통과.")
 

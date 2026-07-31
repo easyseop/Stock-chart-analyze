@@ -34,15 +34,51 @@ STALL_NEW_HIGH_R = settings.STALL_NEW_HIGH_R
 STALL_TIGHT_TRAIL_R = settings.STALL_TIGHT_TRAIL_R
 
 
+# 정체 상태에서 숫자/불리언으로 소비되는 필드 — 타입이 틀리면 "유효한 JSON이지만
+#   손상된 상태"다. 알 수 없는 키는 미래 확장을 위해 검사하지 않는다.
+_STATE_BOOL_FIELDS = (
+    "half", "stall_tight_notified", "stall_exit_notified",
+    "half_stop_raised", "state_recovery_quarantine",
+)
+_STATE_NUM_FIELDS = ("high", "stall_anchor_high", "stall_days",
+                     "half_target", "half_filled")
+_STATE_STR_FIELDS = ("high_day", "counted_days")
+
+
+def _valid_state_shape(payload: dict) -> bool:
+    for code, xs in payload.items():
+        if not isinstance(code, str) or not isinstance(xs, dict):
+            return False
+        for key in _STATE_BOOL_FIELDS:
+            if key in xs and not isinstance(xs[key], bool):
+                return False
+        for key in _STATE_NUM_FIELDS:
+            if key in xs and (isinstance(xs[key], bool)
+                              or not isinstance(xs[key], (int, float))):
+                return False
+        for key in _STATE_STR_FIELDS:
+            if key in xs and not isinstance(xs[key], str):
+                return False
+        if "half_keys" in xs and not (
+                isinstance(xs["half_keys"], list)
+                and all(isinstance(k, str) for k in xs["half_keys"])):
+            return False
+    return True
+
+
 def _load_with_status() -> tuple[dict, bool]:
     try:
         with open(STATE_PATH, encoding="utf-8") as f:
             payload = json.load(f)
-        return (payload, False) if isinstance(payload, dict) else ({}, True)
     except FileNotFoundError:
         return {}, False
     except Exception:
         return {}, True
+    # dict이기만 하면 통과시키던 구멍: {"AAPL": "…"} 같은 스키마 손상이 격리를
+    #   우회해 manage에서 예외/오판을 냈다. 형태가 틀리면 기존 손상 경로로 보낸다.
+    if not isinstance(payload, dict) or not _valid_state_shape(payload):
+        return {}, True
+    return payload, False
 
 
 def _load() -> dict:
@@ -254,11 +290,18 @@ def _confirm_half_if_complete(code: str, rec: dict, xs: dict,
         int(rec.get("qty") or 0) == 1 and entry > 0 and cur_stop >= entry)
     if durable_marker or legacy_one_share_proof:
         xs["half"] = True
-        xs["half_stop_raised"] = True
         xs.pop("state_recovery_quarantine", None)
         if legacy_one_share_proof and not durable_marker:
             kis_positions.mark_half_done(
                 code, event_id=_half_marker_id(code, rec))
+        # mark_half_done과 raise_stop 사이 크래시로 본전 래칫이 유실된 창을
+        # 멱등 복구한다. 원장 stop 기준으로만 재적용해 중복 이벤트를 막는다.
+        if entry > 0 and float(rec.get("stop") or 0) < entry:
+            kis_positions.raise_stop(code, entry)
+            notify.send(
+                f"🔒 <b>손절선 본전 복구</b> — {code} half 확정 상태인데 "
+                f"본전 래칫이 원장에 없어 재적용", critical=True)
+        xs["half_stop_raised"] = True
         return True
     progress = _half_progress(code, rec, xs)
     if progress["target"] <= 0 or progress["filled"] < progress["target"]:

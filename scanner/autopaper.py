@@ -122,12 +122,15 @@ def _advance_stall_position(
     state = {key: p[key] for key in _STALL_KEYS if key in p}
     state["high"] = max(float(state.get("high") or 0.0),
                         float(p.get("hw") or 0.0))
+    # 초기 R이 증명되지 않은 legacy 포지션은 정체일 카운트 자체를 멈춘다.
+    # stop0=0으로 진행하면 risk=entry(가짜 R)로 신고가 기준·정체 통계가 오염된다.
     next_state, events = stall_exit.advance(
         state, half_confirmed=bool(p.get("half_done")), price=price,
         entry=float(p.get("entry") or 0),
         stop0=float(initial_stop or 0),
         day=_today(), valid_trading_day=True,
-        enabled=stall_exit.mode(STALL_MODE) != "off",
+        enabled=(stall_exit.mode(STALL_MODE) != "off"
+                 and initial_stop is not None),
         new_high_r=STALL_NEW_HIGH_R,
         tighten_days=STALL_TIGHTEN_DAYS,
         exit_days=STALL_EXIT_DAYS)

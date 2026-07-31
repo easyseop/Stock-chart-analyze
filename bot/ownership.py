@@ -19,12 +19,13 @@ from __future__ import annotations
 
 import json
 import os
-import tempfile
 import time
 
-_BASE_DEFAULT = os.path.join(tempfile.gettempdir(), "user_baseline.json")
-# 동결 상태는 **영속 경로**(모듈 옆)로 — /tmp 기본이면 재부팅/청소 시 파일이 사라져
-#   close-only 동결이 조용히 풀린다(감사 수정 #10, fail-open). SYMBOL_FREEZE_PATH로 override.
+# baseline·동결 모두 **영속 경로**(모듈 옆) 기본 — /tmp 기본이면 재부팅/청소 시 파일이
+#   사라진다. 동결은 fail-open(감사 수정 #10), baseline은 fail-closed라 2026-07-31
+#   커널 재부팅 때 /tmp 소실 → 전 종목 매수 거부가 조용히 발동했다(실사고).
+#   USER_BASELINE_PATH / SYMBOL_FREEZE_PATH로 override.
+_BASE_DEFAULT = os.path.join(os.path.dirname(__file__), "user_baseline.json")
 _FREEZE_DEFAULT = os.path.join(os.path.dirname(__file__), "symbol_freeze.json")
 
 
@@ -76,6 +77,11 @@ def capture_baseline(holdings_rows: list[dict] | None) -> bool:
     prev = _load(_bpath()) or {"symbols": [], "ts": 0}
     merged = sorted(set(prev.get("symbols", [])) | new_syms)   # 늘기만
     return _atomic_write(_bpath(), {"symbols": merged, "ts": time.time()})
+
+
+def baseline_path() -> str:
+    """실효 baseline 경로(env override 반영) — 운영 진단·readiness 체커용."""
+    return _bpath()
 
 
 def baseline() -> set[str] | None:

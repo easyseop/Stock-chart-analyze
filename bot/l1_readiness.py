@@ -11,6 +11,7 @@ from datetime import datetime, timezone
 import json
 import math
 import os
+import tempfile
 from typing import Any
 
 
@@ -34,9 +35,11 @@ _L0_INFORMATIONAL_GATES = frozenset({
     "oracle_brain_both_markets",
     "github_outage_injection",
     "observation_evidence_fresh",
+    "baseline_path_persistent",
 })
 _STRICT_INFORMATIONAL_GATES = frozenset({
     "frozen_symbols_preserved",
+    "baseline_path_persistent",
 })
 
 
@@ -147,6 +150,21 @@ def evaluate(snapshot: dict, evidence: dict, *, scope: str = "strict",
     add(
         "positions_match_broker", positions_match is True,
         f"브로커·보호원장·costbook 수량 일치={positions_match!r}")
+
+    # 2026-07-31 실사고: baseline이 /tmp에서 재부팅으로 소실 → fail-closed로
+    #   전 종목 매수 거부인데 이 체커는 blockers=[]를 보고했다. 사각지대 봉합.
+    armed = snapshot.get("ownership_armed")
+    base_n = snapshot.get("baseline_symbol_count")
+    add(
+        "ownership_armed", armed is True,
+        (f"IS2 baseline 캡처됨({base_n}종목)" if armed is True
+         else "IS2 baseline 미캡처 — 전 종목 매수 거부 상태"
+              "(scripts/kis_arm.py로 arming 필요)"))
+    volatile = snapshot.get("baseline_path_volatile")
+    add(
+        "baseline_path_persistent", volatile is False,
+        f"baseline 경로 휘발성={volatile!r} — 휘발성(tempdir)이면 재부팅 시 "
+        "소실→전 매수 거부(USER_BASELINE_PATH를 영속 경로로)")
 
     age = _finite(snapshot.get("heartbeat_age_s"))
     add(
@@ -395,6 +413,10 @@ def collect_runtime(*, fetch_broker: bool = False,
     local_positions = kis_positions.load()
     budget = costbook.budget_snapshot()
     frozen_state = ownership.frozen_state()
+    baseline_syms = ownership.baseline()
+    tmp_root = os.path.realpath(tempfile.gettempdir())
+    baseline_volatile = os.path.realpath(
+        ownership.baseline_path()).startswith(tmp_root + os.sep)
     allowed_symbols = {
         code.strip().upper()
         for code in os.environ.get("ALLOWED_SYMBOLS", "").split(",")
@@ -431,6 +453,10 @@ def collect_runtime(*, fetch_broker: bool = False,
         "open_cost_krw": None if budget is None else budget.get("total"),
         "operating_limit_krw": envelope.operating_limit_krw(),
         "positions_match_broker": None,
+        "ownership_armed": baseline_syms is not None,
+        "baseline_symbol_count": (
+            None if baseline_syms is None else len(baseline_syms)),
+        "baseline_path_volatile": baseline_volatile,
         "heartbeat_age_s": heartbeat.age_s(),
         "fallback_enabled": (
             os.environ.get("ORACLE_SIGNAL_FALLBACK_ENABLED", "0") == "1"),

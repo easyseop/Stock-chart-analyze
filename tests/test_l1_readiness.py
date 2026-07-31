@@ -33,6 +33,9 @@ def _snapshot() -> dict:
         "open_cost_krw": 26_214_776.70,
         "operating_limit_krw": 33_250_000,
         "positions_match_broker": True,
+        "ownership_armed": True,
+        "baseline_symbol_count": 0,
+        "baseline_path_volatile": False,
         "heartbeat_age_s": 23.0,
         "fallback_enabled": False,
         "stall_exit_mode": "shadow",
@@ -209,6 +212,30 @@ def test_l0_fence_requires_declared_order_configuration():
             report = R.evaluate(snapshot, {}, scope=scope, now=NOW)
             assert "limited_l0_fence" in _blockers(report), (scope, field)
     print("[PASS] 제한적 L0는 mirror·allowlist·명시적 매수/주문 설정 필요")
+
+
+def test_unarmed_ownership_blocks_and_volatile_path_warns():
+    # 2026-07-31 실사고 재현: baseline 소실(전 매수 거부)인데 체커가 GO를 냈다.
+    snapshot = _snapshot()
+    snapshot.update({
+        "ownership_armed": False,
+        "baseline_symbol_count": None,
+        "baseline_path_volatile": True,
+    })
+    for scope in ("strict", "l0"):
+        report = R.evaluate(snapshot, _evidence(), scope=scope, now=NOW)
+        assert "ownership_armed" in _blockers(report), scope
+        assert "baseline_path_persistent" in _pending(report), scope
+        assert "baseline_path_persistent" not in _blockers(report), scope
+
+    # 수집기가 필드를 아예 안 준(구버전 snapshot) 경우도 fail-closed.
+    snapshot = _snapshot()
+    del snapshot["ownership_armed"]
+    del snapshot["baseline_path_volatile"]
+    report = R.evaluate(snapshot, _evidence(), now=NOW)
+    assert "ownership_armed" in _blockers(report)
+    assert "baseline_path_persistent" in _pending(report)
+    print("[PASS] baseline 미캡처=차단, 휘발성 경로=경고, 필드 결손=fail-closed")
 
 
 def test_unknown_scope_is_rejected():
@@ -412,6 +439,7 @@ def main():
     test_l0_scope_separates_independent_observation_gates()
     test_l0_scope_keeps_limited_mode_fences_blocking()
     test_l0_fence_requires_declared_order_configuration()
+    test_unarmed_ownership_blocks_and_volatile_path_warns()
     test_unknown_scope_is_rejected()
     test_cli_forwards_l0_scope_without_mutation()
     test_collect_runtime_is_read_only_without_broker()
