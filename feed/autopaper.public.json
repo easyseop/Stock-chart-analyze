@@ -2,8 +2,8 @@
  "updated": "2026-08-01",
  "start": 100000000,
  "cash": 33677855,
- "equity": 100679343,
- "ret_pct": 0.68,
+ "equity": 100669792,
+ "ret_pct": 0.67,
  "positions": [
   {
    "code": "MRSH",
@@ -11,14 +11,14 @@
    "ccy": "USD",
    "q": 36,
    "avg": 174.3075,
-   "price": 189.7700042724609,
+   "price": 189.69000244140625,
    "stop": 184.80249938964843,
    "target": 192.2575,
    "half_done": true,
    "opened": "2026-07-06",
-   "pl_krw": 799489,
-   "pl_pct": 8.87,
-   "price_age_min": 7.2
+   "pl_krw": 795352,
+   "pl_pct": 8.82,
+   "price_age_min": 7.4
   },
   {
    "code": "HMC",
@@ -48,7 +48,7 @@
    "opened": "2026-07-10",
    "pl_krw": 164034,
    "pl_pct": 5.05,
-   "price_age_min": 7.2
+   "price_age_min": 7.4
   },
   {
    "code": "J",
@@ -63,7 +63,7 @@
    "opened": "2026-07-11",
    "pl_krw": 383536,
    "pl_pct": 6.59,
-   "price_age_min": 7.2
+   "price_age_min": 7.4
   },
   {
    "code": "MAIN",
@@ -71,14 +71,14 @@
    "ccy": "USD",
    "q": 78,
    "avg": 53.96,
-   "price": 54.45000076293945,
+   "price": 54.40999984741211,
    "stop": 51.5808,
    "target": 58.7184,
    "half_done": false,
    "opened": "2026-07-22",
-   "pl_krw": 54894,
-   "pl_pct": 0.91,
-   "price_age_min": 7.2
+   "pl_krw": 50412,
+   "pl_pct": 0.83,
+   "price_age_min": 7.4
   },
   {
    "code": "004370",
@@ -108,7 +108,7 @@
    "opened": "2026-07-28",
    "pl_krw": 211789,
    "pl_pct": 2.85,
-   "price_age_min": 7.2
+   "price_age_min": 7.4
   },
   {
    "code": "EQT",
@@ -116,14 +116,14 @@
    "ccy": "USD",
    "q": 242,
    "avg": 51.375,
-   "price": 53.28499984741211,
+   "price": 53.290000915527344,
    "stop": 48.5008,
    "target": 57.1234,
    "half_done": false,
    "opened": "2026-07-29",
-   "pl_krw": 663863,
-   "pl_pct": 3.72,
-   "price_age_min": 7.2
+   "pl_krw": 665602,
+   "pl_pct": 3.73,
+   "price_age_min": 7.4
   },
   {
    "code": "MDT",
@@ -131,14 +131,14 @@
    "ccy": "USD",
    "q": 93,
    "avg": 86.12,
-   "price": 85.41000366210938,
+   "price": 85.38999938964844,
    "stop": 81.6215,
    "target": 95.117,
    "half_done": false,
    "opened": "2026-07-30",
-   "pl_krw": -94835,
-   "pl_pct": -0.82,
-   "price_age_min": 9.7
+   "pl_krw": -97507,
+   "pl_pct": -0.85,
+   "price_age_min": 9.8
   }
  ],
  "pending": [
@@ -755,7 +755,7 @@
   },
   {
    "d": "2026-08-01",
-   "v": 100679343
+   "v": 100669792
   }
  ],
  "log": [
