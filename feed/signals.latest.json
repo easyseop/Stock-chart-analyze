@@ -1,19 +1,19 @@
 {
  "version": 1,
- "generated_at": "2026-07-31T15:47:31+09:00",
+ "generated_at": "2026-07-31T15:58:02+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "shelf_debug": {
   "ok": 14,
-  "watch": 176,
+  "watch": 163,
   "reasons": {
-   "밸류영역 밖(지지대 아님)": 1289,
+   "밸류영역 밖(지지대 아님)": 1285,
    "매물대 정보 없음": 149,
-   "반등 미확인(터치·거래량)": 73,
-   "저점권 아님(범위 67%)": 62,
+   "반등 미확인(터치·거래량)": 75,
    "저점권 아님(범위 93%)": 61,
+   "저점권 아님(범위 67%)": 60,
+   "반등 미확인(거래량)": 59,
    "저점권 아님(범위 86%)": 59,
-   "반등 미확인(거래량)": 57,
-   "저점권 아님(범위 77%)": 56
+   "저점권 아님(범위 92%)": 56
   }
  },
  "signals": [
@@ -557,24 +557,24 @@
    "group": "now",
    "entry_kind": "now",
    "stage": 3,
-   "price": 1478000.0,
-   "entry": 1478000.0,
-   "stop": 1317599.131,
-   "target": 1798801.738,
+   "price": 1481000.0,
+   "entry": 1481000.0,
+   "stop": 1320599.131,
+   "target": 1801801.738,
    "shares_1pct": 0,
-   "range_pos": 0.3294,
+   "range_pos": 0.3333,
    "norm": -0.0,
    "bear_share": 0.25,
    "fresh": false,
-   "break_gap": 0.0665,
+   "break_gap": 0.0687,
    "earnings_d": null,
    "tactic": {
-    "stop_pct": 10.9,
+    "stop_pct": 10.8,
     "pb_price": 1353565.2174,
-    "pb_stop_pct": 2.7,
+    "pb_stop_pct": 2.4,
     "mode": "pullback",
     "label": "⏳ 눌림 지정가만",
-    "desc": "지금 추격 금지(손절폭 10.9% · 돌파후 진행) — <b>1,353,565원 눌림 지정가만</b>. 눌리면 손절폭 2.7%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
+    "desc": "지금 추격 금지(손절폭 10.8% · 돌파후 진행) — <b>1,353,565원 눌림 지정가만</b>. 눌리면 손절폭 2.4%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
    }
   },
   {
@@ -1502,42 +1502,6 @@
    "tactic": "watch"
   },
   {
-   "id": "028260-2026-07-31-shelf-watch",
-   "code": "028260",
-   "name": "삼성물산",
-   "ccy": "KRW",
-   "group": "shelf_watch",
-   "entry_kind": "shelf_watch",
-   "stage": 0,
-   "price": 294000.0,
-   "entry": 294000.0,
-   "stop": 256760.0,
-   "target": 368685.4167,
-   "shares_1pct": 0,
-   "range_pos": 0.3385,
-   "norm": -4.9,
-   "bear_share": 0.25,
-   "shelf": {
-    "poc": 300402.0833,
-    "val": 163835.4167,
-    "vah": 368685.4167,
-    "rr": 2.01,
-    "overhead": 0.54,
-    "reason": "반등 미확인(상단마감)",
-    "checks": {
-     "터치": true,
-     "회복": true,
-     "상단마감": false,
-     "거래량": true,
-     "신저가아님": true
-    }
-   },
-   "fresh": false,
-   "break_gap": null,
-   "earnings_d": null,
-   "tactic": "watch"
-  },
-  {
    "id": "COLL-2026-07-31-shelf-watch",
    "code": "COLL",
    "name": "Collegium Pharmaceutical, Inc.",
@@ -1679,6 +1643,42 @@
    "fresh": false,
    "break_gap": null,
    "earnings_d": 12,
+   "tactic": "watch"
+  },
+  {
+   "id": "FSM-2026-07-31-shelf-watch",
+   "code": "FSM",
+   "name": "Fortuna Mining Corp.",
+   "ccy": "USD",
+   "group": "shelf_watch",
+   "entry_kind": "shelf_watch",
+   "stage": 0,
+   "price": 8.77,
+   "entry": 8.77,
+   "stop": 7.9674,
+   "target": 10.17,
+   "shares_1pct": 0,
+   "range_pos": 0.3385,
+   "norm": -22.6,
+   "bear_share": 0.375,
+   "shelf": {
+    "poc": 8.25,
+    "val": 7.61,
+    "vah": 10.17,
+    "rr": 1.74,
+    "overhead": 0.524,
+    "reason": "반등 미확인(거래량)",
+    "checks": {
+     "터치": true,
+     "회복": true,
+     "상단마감": true,
+     "거래량": false,
+     "신저가아님": true
+    }
+   },
+   "fresh": false,
+   "break_gap": null,
+   "earnings_d": null,
    "tactic": "watch"
   },
   {
@@ -3667,6 +3667,34 @@
    }
   },
   {
+   "id": "015760-2026-07-31-watch",
+   "code": "015760",
+   "name": "한국전력",
+   "ccy": "KRW",
+   "group": "watch",
+   "entry_kind": "now",
+   "stage": 1,
+   "price": 35000.0,
+   "entry": 35000.0,
+   "stop": 31040.3573,
+   "target": 42919.2853,
+   "shares_1pct": 25,
+   "range_pos": 0.08,
+   "norm": -50.0,
+   "bear_share": 0.5,
+   "fresh": true,
+   "break_gap": -0.0021,
+   "earnings_d": null,
+   "tactic": {
+    "stop_pct": 11.3,
+    "pb_price": 32000.0,
+    "pb_stop_pct": 3.0,
+    "mode": "pullback",
+    "label": "⏳ 눌림 지정가만",
+    "desc": "지금 추격 금지(손절폭 11.3%) — <b>32,000원 눌림 지정가만</b>. 눌리면 손절폭 3.0%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
+   }
+  },
+  {
    "id": "AVY-2026-07-31-watch",
    "code": "AVY",
    "name": "Avery Dennison Corporation",
@@ -3968,16 +3996,16 @@
    "group": "watch",
    "entry_kind": "pullback",
    "stage": 3,
-   "price": 382500.0,
+   "price": 382000.0,
    "entry": 379536.25,
    "stop": 348608.1009,
    "target": 441392.5481,
    "shares_1pct": 3,
-   "range_pos": 0.2442,
+   "range_pos": 0.2423,
    "norm": -3.8,
    "bear_share": 0.375,
    "fresh": false,
-   "break_gap": 0.0834,
+   "break_gap": 0.082,
    "earnings_d": null,
    "tactic": null
   },
