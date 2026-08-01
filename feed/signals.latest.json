@@ -1,10 +1,10 @@
 {
  "version": 1,
- "generated_at": "2026-08-01T10:17:38+09:00",
+ "generated_at": "2026-08-01T11:00:16+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "shelf_debug": {
   "ok": 14,
-  "watch": 153,
+  "watch": 154,
   "reasons": {
    "밸류영역 밖(지지대 아님)": 1260,
    "매물대 정보 없음": 150,
@@ -1618,27 +1618,27 @@
    "tactic": "watch"
   },
   {
-   "id": "DOLE-2026-08-01-shelf-watch",
-   "code": "DOLE",
-   "name": "Dole plc",
-   "ccy": "USD",
+   "id": "012330-2026-08-01-shelf-watch",
+   "code": "012330",
+   "name": "현대모비스",
+   "ccy": "KRW",
    "group": "shelf_watch",
    "entry_kind": "shelf_watch",
    "stage": 0,
-   "price": 14.14,
-   "entry": 14.14,
-   "stop": 13.671,
-   "target": 14.9669,
+   "price": 476000.0,
+   "entry": 476000.0,
+   "stop": 417480.0,
+   "target": 652312.5,
    "shares_1pct": 0,
-   "range_pos": 0.4,
-   "norm": 1.9,
+   "range_pos": 0.3628,
+   "norm": -0.0,
    "bear_share": 0.25,
    "shelf": {
-    "poc": 14.1231,
-    "val": 13.2794,
-    "vah": 14.9669,
-    "rr": 1.76,
-    "overhead": 0.492,
+    "poc": 448687.5,
+    "val": 358187.5,
+    "vah": 652312.5,
+    "rr": 3.01,
+    "overhead": 0.397,
     "reason": "반등 미확인(거래량)",
     "checks": {
      "터치": true,
@@ -1650,7 +1650,7 @@
    },
    "fresh": false,
    "break_gap": null,
-   "earnings_d": 9,
+   "earnings_d": null,
    "tactic": "watch"
   },
   {
@@ -3471,34 +3471,6 @@
    }
   },
   {
-   "id": "015760-2026-08-01-watch",
-   "code": "015760",
-   "name": "한국전력",
-   "ccy": "KRW",
-   "group": "watch",
-   "entry_kind": "now",
-   "stage": 1,
-   "price": 34800.0,
-   "entry": 34800.0,
-   "stop": 30840.3573,
-   "target": 42719.2853,
-   "shares_1pct": 25,
-   "range_pos": 0.0747,
-   "norm": -27.4,
-   "bear_share": 0.375,
-   "fresh": true,
-   "break_gap": -0.0078,
-   "earnings_d": null,
-   "tactic": {
-    "stop_pct": 11.4,
-    "pb_price": 32000.0,
-    "pb_stop_pct": 3.6,
-    "mode": "pullback",
-    "label": "⏳ 눌림 지정가만",
-    "desc": "지금 추격 금지(손절폭 11.4%) — <b>32,000원 눌림 지정가만</b>. 눌리면 손절폭 3.6%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
-   }
-  },
-  {
    "id": "MP-2026-08-01-watch",
    "code": "MP",
    "name": "MP Materials Corp.",
@@ -3524,6 +3496,34 @@
     "mode": "pullback",
     "label": "⏳ 눌림 지정가만",
     "desc": "지금 추격 금지(손절폭 14.5%) — <b>$37.81 눌림 지정가만</b>. 눌리면 손절폭 6.5%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
+   }
+  },
+  {
+   "id": "015760-2026-08-01-watch",
+   "code": "015760",
+   "name": "한국전력",
+   "ccy": "KRW",
+   "group": "watch",
+   "entry_kind": "now",
+   "stage": 1,
+   "price": 34800.0,
+   "entry": 34800.0,
+   "stop": 30840.3573,
+   "target": 42719.2853,
+   "shares_1pct": 25,
+   "range_pos": 0.0747,
+   "norm": -50.0,
+   "bear_share": 0.5,
+   "fresh": true,
+   "break_gap": -0.0078,
+   "earnings_d": null,
+   "tactic": {
+    "stop_pct": 11.4,
+    "pb_price": 32000.0,
+    "pb_stop_pct": 3.6,
+    "mode": "pullback",
+    "label": "⏳ 눌림 지정가만",
+    "desc": "지금 추격 금지(손절폭 11.4%) — <b>32,000원 눌림 지정가만</b>. 눌리면 손절폭 3.6%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
    }
   },
   {
