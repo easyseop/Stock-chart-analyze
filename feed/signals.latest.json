@@ -1,19 +1,19 @@
 {
  "version": 1,
- "generated_at": "2026-08-03T16:02:32+09:00",
+ "generated_at": "2026-08-03T16:13:00+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "shelf_debug": {
   "ok": 15,
-  "watch": 154,
+  "watch": 159,
   "reasons": {
-   "밸류영역 밖(지지대 아님)": 1259,
+   "밸류영역 밖(지지대 아님)": 1261,
    "매물대 정보 없음": 150,
-   "반등 미확인(터치·거래량)": 71,
-   "반등 미확인(터치·상단마감·거래량)": 68,
+   "반등 미확인(터치·거래량)": 73,
+   "반등 미확인(터치·상단마감·거래량)": 69,
    "저점권 아님(범위 91%)": 60,
    "저점권 아님(범위 93%)": 58,
-   "저점권 아님(범위 71%)": 55,
-   "저점권 아님(범위 90%)": 55
+   "저점권 아님(범위 90%)": 55,
+   "저점권 아님(범위 86%)": 54
   }
  },
  "signals": [
@@ -1646,42 +1646,6 @@
    "tactic": "watch"
   },
   {
-   "id": "012330-2026-08-03-shelf-watch",
-   "code": "012330",
-   "name": "현대모비스",
-   "ccy": "KRW",
-   "group": "shelf_watch",
-   "entry_kind": "shelf_watch",
-   "stage": 0,
-   "price": 476000.0,
-   "entry": 476000.0,
-   "stop": 417480.0,
-   "target": 652312.5,
-   "shares_1pct": 0,
-   "range_pos": 0.3628,
-   "norm": -0.0,
-   "bear_share": 0.25,
-   "shelf": {
-    "poc": 448687.5,
-    "val": 358187.5,
-    "vah": 652312.5,
-    "rr": 3.01,
-    "overhead": 0.397,
-    "reason": "반등 미확인(거래량)",
-    "checks": {
-     "터치": true,
-     "회복": true,
-     "상단마감": true,
-     "거래량": false,
-     "신저가아님": true
-    }
-   },
-   "fresh": false,
-   "break_gap": null,
-   "earnings_d": null,
-   "tactic": "watch"
-  },
-  {
    "id": "DOMO-2026-08-03-shelf-watch",
    "code": "DOMO",
    "name": "Domo, Inc.",
@@ -1823,6 +1787,42 @@
    "fresh": false,
    "break_gap": null,
    "earnings_d": 7,
+   "tactic": "watch"
+  },
+  {
+   "id": "006400-2026-08-03-shelf-watch",
+   "code": "006400",
+   "name": "삼성SDI",
+   "ccy": "KRW",
+   "group": "shelf_watch",
+   "entry_kind": "shelf_watch",
+   "stage": 0,
+   "price": 389500.0,
+   "entry": 389500.0,
+   "stop": 343000.0,
+   "target": 485481.25,
+   "shares_1pct": 0,
+   "range_pos": 0.3857,
+   "norm": -45.3,
+   "bear_share": 0.375,
+   "shelf": {
+    "poc": 394997.9167,
+    "val": 214031.25,
+    "vah": 485481.25,
+    "rr": 2.06,
+    "overhead": 0.48,
+    "reason": "반등 미확인(거래량)",
+    "checks": {
+     "터치": true,
+     "회복": true,
+     "상단마감": true,
+     "거래량": false,
+     "신저가아님": true
+    }
+   },
+   "fresh": false,
+   "break_gap": null,
+   "earnings_d": null,
    "tactic": "watch"
   },
   {
@@ -2523,6 +2523,34 @@
     "mode": "half",
     "label": "⚖ 반반 진입",
     "desc": "손절폭 6.0% — 절반만 현재가, 나머지는 눌림 확인 후 추가"
+   }
+  },
+  {
+   "id": "001040-2026-08-03-watch",
+   "code": "001040",
+   "name": "CJ",
+   "ccy": "KRW",
+   "group": "watch",
+   "entry_kind": "now",
+   "stage": 2,
+   "price": 131100.0,
+   "entry": 131100.0,
+   "stop": 113243.8109,
+   "target": 166812.3781,
+   "shares_1pct": 5,
+   "range_pos": 0.1202,
+   "norm": -60.7,
+   "bear_share": 0.5,
+   "fresh": true,
+   "break_gap": 0.0177,
+   "earnings_d": null,
+   "tactic": {
+    "stop_pct": 13.6,
+    "pb_price": 116900.0,
+    "pb_stop_pct": 3.1,
+    "mode": "pullback",
+    "label": "⏳ 눌림 지정가만",
+    "desc": "지금 추격 금지(손절폭 13.6% · 단기 이격) — <b>116,900원 눌림 지정가만</b>. 눌리면 손절폭 3.1%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
    }
   },
   {
@@ -3387,6 +3415,34 @@
    }
   },
   {
+   "id": "012750-2026-08-03-watch",
+   "code": "012750",
+   "name": "에스원",
+   "ccy": "KRW",
+   "group": "watch",
+   "entry_kind": "now",
+   "stage": 1,
+   "price": 71900.0,
+   "entry": 71900.0,
+   "stop": 64708.5125,
+   "target": 86282.975,
+   "shares_1pct": 13,
+   "range_pos": 0.1409,
+   "norm": -9.8,
+   "bear_share": 0.375,
+   "fresh": true,
+   "break_gap": -0.0144,
+   "earnings_d": null,
+   "tactic": {
+    "stop_pct": 10.0,
+    "pb_price": 70000.0,
+    "pb_stop_pct": 7.6,
+    "mode": "pullback",
+    "label": "⏳ 눌림 지정가만",
+    "desc": "지금 추격 금지(손절폭 10.0%) — <b>70,000원 눌림 지정가만</b>. 눌리면 손절폭 7.6%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
+   }
+  },
+  {
    "id": "SBAC-2026-08-03-watch",
    "code": "SBAC",
    "name": "SBA Communications Corporation",
@@ -3524,6 +3580,34 @@
     "mode": "pullback",
     "label": "⏳ 눌림 지정가만",
     "desc": "지금 추격 금지(손절폭 14.5%) — <b>$37.81 눌림 지정가만</b>. 눌리면 손절폭 6.5%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
+   }
+  },
+  {
+   "id": "015760-2026-08-03-watch",
+   "code": "015760",
+   "name": "한국전력",
+   "ccy": "KRW",
+   "group": "watch",
+   "entry_kind": "now",
+   "stage": 1,
+   "price": 34500.0,
+   "entry": 34500.0,
+   "stop": 30637.4747,
+   "target": 42225.0507,
+   "shares_1pct": 25,
+   "range_pos": 0.0667,
+   "norm": -46.2,
+   "bear_share": 0.5,
+   "fresh": true,
+   "break_gap": -0.0083,
+   "earnings_d": null,
+   "tactic": {
+    "stop_pct": 11.2,
+    "pb_price": 32000.0,
+    "pb_stop_pct": 4.3,
+    "mode": "pullback",
+    "label": "⏳ 눌림 지정가만",
+    "desc": "지금 추격 금지(손절폭 11.2%) — <b>32,000원 눌림 지정가만</b>. 눌리면 손절폭 4.3%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
    }
   },
   {
