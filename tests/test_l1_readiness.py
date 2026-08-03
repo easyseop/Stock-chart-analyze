@@ -184,7 +184,7 @@ def test_l0_scope_keeps_limited_mode_fences_blocking():
         "fallback_enabled": True,
         "stall_exit_mode": "live",
         "frozen_symbols": FROZEN[:-1],
-        "allowed_symbols": [],
+        "allow_buy_enabled": False,
         "positions_match_broker": False,
     })
     report = R.evaluate(snapshot, {}, scope="l0", now=NOW)
@@ -200,10 +200,15 @@ def test_l0_scope_keeps_limited_mode_fences_blocking():
 
 
 def test_l0_fence_requires_declared_order_configuration():
+    # 완전 L0(2026-08-03): allowlist 유무는 더 이상 차단 조건이 아니다.
+    snapshot = _snapshot()
+    snapshot["allowed_symbols"] = []
+    for scope in ("l0", "strict"):
+        report = R.evaluate(snapshot, {}, scope=scope, now=NOW)
+        assert "limited_l0_fence" not in _blockers(report), scope
     for field, value in (
             ("trade_stage", "1.5"),
             ("trade_stage", "MIRROR"),
-            ("allowed_symbols", []),
             ("allow_buy_enabled", False),
             ("orders_enabled", False)):
         snapshot = _snapshot()

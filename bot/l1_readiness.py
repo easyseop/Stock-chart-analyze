@@ -284,16 +284,17 @@ def evaluate(snapshot: dict, evidence: dict, *, scope: str = "strict",
     }
     allow_buy = snapshot.get("allow_buy_enabled")
     orders_enabled = snapshot.get("orders_enabled")
+    # 2026-08-03 완전 L0 승인: allowlist는 더 이상 필수가 아니다(미러는 어차피
+    #   autopaper 진입 종목만 산다). 설정돼 있으면 정보로만 표시.
     limited_l0_ok = (
         trade_stage == "mirror"
-        and bool(allowed_symbols)
         and allow_buy is True
         and orders_enabled is True
     )
     add(
         "limited_l0_fence", limited_l0_ok,
         f"TRADE_STAGE={trade_stage or 'unknown'}, "
-        f"ALLOWED_SYMBOLS={sorted(allowed_symbols)}, "
+        f"ALLOWED_SYMBOLS={sorted(allowed_symbols) or '(없음=미러 전 종목)'}, "
         f"ALLOW_BUY={1 if allow_buy is True else 0 if allow_buy is False else '?'}, "
         f"KIS_ORDERS_ENABLED={1 if orders_enabled is True else 0 if orders_enabled is False else '?'}")
 
