@@ -2,8 +2,8 @@
  "updated": "2026-08-03",
  "start": 100000000,
  "cash": 33677855,
- "equity": 100685183,
- "ret_pct": 0.69,
+ "equity": 100625183,
+ "ret_pct": 0.63,
  "positions": [
   {
    "code": "MRSH",
@@ -33,7 +33,7 @@
    "opened": "2026-07-09",
    "pl_krw": 7025,
    "pl_pct": 8.84,
-   "price_age_min": 8.6
+   "price_age_min": 8.3
   },
   {
    "code": "SARO",
@@ -86,14 +86,14 @@
    "ccy": "KRW",
    "q": 10,
    "avg": 368500.0,
-   "price": 383000.0,
+   "price": 377000.0,
    "stop": 368500.0,
    "target": 420011.1858,
    "half_done": true,
    "opened": "2026-07-27",
-   "pl_krw": 145000,
-   "pl_pct": 3.93,
-   "price_age_min": 7.8
+   "pl_krw": 85000,
+   "pl_pct": 2.31,
+   "price_age_min": 7.5
   },
   {
    "code": "CRC",
@@ -138,7 +138,7 @@
    "opened": "2026-07-30",
    "pl_krw": -97531,
    "pl_pct": -0.85,
-   "price_age_min": 8.3
+   "price_age_min": 8.0
   }
  ],
  "pending": [
@@ -736,7 +736,7 @@
   },
   {
    "d": "2026-08-03",
-   "v": 100685183
+   "v": 100625183
   }
  ],
  "log": [
