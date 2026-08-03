@@ -1,7 +1,7 @@
 {
  "updated": "2026-08-03",
  "start": 100000000,
- "cash": 33677855,
+ "cash": 26850499,
  "equity": 100605183,
  "ret_pct": 0.61,
  "positions": [
@@ -18,7 +18,7 @@
    "opened": "2026-07-06",
    "pl_krw": 795546,
    "pl_pct": 8.82,
-   "price_age_min": 7.4
+   "price_age_min": 7.8
   },
   {
    "code": "HMC",
@@ -33,7 +33,7 @@
    "opened": "2026-07-09",
    "pl_krw": 7025,
    "pl_pct": 8.84,
-   "price_age_min": 11.2
+   "price_age_min": 11.7
   },
   {
    "code": "SARO",
@@ -48,7 +48,7 @@
    "opened": "2026-07-10",
    "pl_krw": 164074,
    "pl_pct": 5.05,
-   "price_age_min": 7.4
+   "price_age_min": 7.8
   },
   {
    "code": "J",
@@ -63,7 +63,7 @@
    "opened": "2026-07-11",
    "pl_krw": 383629,
    "pl_pct": 6.59,
-   "price_age_min": 7.4
+   "price_age_min": 7.8
   },
   {
    "code": "MAIN",
@@ -78,7 +78,7 @@
    "opened": "2026-07-22",
    "pl_krw": 50425,
    "pl_pct": 0.83,
-   "price_age_min": 7.4
+   "price_age_min": 7.8
   },
   {
    "code": "004370",
@@ -93,7 +93,7 @@
    "opened": "2026-07-27",
    "pl_krw": 65000,
    "pl_pct": 1.76,
-   "price_age_min": 10.4
+   "price_age_min": 10.8
   },
   {
    "code": "CRC",
@@ -108,7 +108,7 @@
    "opened": "2026-07-28",
    "pl_krw": 211841,
    "pl_pct": 2.85,
-   "price_age_min": 7.3
+   "price_age_min": 7.8
   },
   {
    "code": "EQT",
@@ -123,7 +123,7 @@
    "opened": "2026-07-29",
    "pl_krw": 665764,
    "pl_pct": 3.73,
-   "price_age_min": 7.3
+   "price_age_min": 7.8
   },
   {
    "code": "MDT",
@@ -138,7 +138,22 @@
    "opened": "2026-07-30",
    "pl_krw": -97531,
    "pl_pct": -0.85,
-   "price_age_min": 10.8
+   "price_age_min": 11.2
+  },
+  {
+   "code": "AVY",
+   "name": "Avery Dennison Corporation",
+   "ccy": "USD",
+   "q": 28,
+   "avg": 169.73,
+   "price": 169.72999572753906,
+   "stop": 158.3847,
+   "target": 192.4206,
+   "half_done": false,
+   "opened": "2026-08-03",
+   "pl_krw": 0,
+   "pl_pct": -0.0,
+   "price_age_min": 12.2
   }
  ],
  "pending": [
@@ -740,6 +755,19 @@
   }
  ],
  "log": [
+  {
+   "d": "2026-08-03",
+   "type": "buy",
+   "code": "AVY",
+   "name": "Avery Dennison Corporation",
+   "q": 28,
+   "price": 169.73,
+   "ccy": "USD",
+   "amt": 6827355,
+   "note": "반반 1차 — 🔥 갓 전환(추세선 부근) · ④ 전환 확정 ⭐ · 저점권37% · 체크5/6 · 손절폭6.7%",
+   "stop": 158.3847,
+   "target": 192.4206
+  },
   {
    "d": "2026-08-02",
    "type": "cancel",
@@ -1359,17 +1387,6 @@
    "ccy": "USD",
    "amt": 13232631,
    "note": "눌림 지정가 주문(추격 금지) — 🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권38% · 체크4/6 · 손절폭7.0%"
-  },
-  {
-   "d": "2026-07-06",
-   "type": "order",
-   "code": "068270",
-   "name": "셀트리온",
-   "q": 54,
-   "price": 175348.4128,
-   "ccy": "KRW",
-   "amt": 9468814,
-   "note": "눌림 지정가 주문(추격 금지) — ↗ 돌파후 진행(승률↓) · ③ 돌파후 횡보(대기) · 저점권28% · 체크4/6 · 손절폭10.5%"
   }
  ],
  "lane": "bulk",
