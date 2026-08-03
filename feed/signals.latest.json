@@ -1,18 +1,18 @@
 {
  "version": 1,
- "generated_at": "2026-08-04T06:00:19+09:00",
+ "generated_at": "2026-08-04T06:12:36+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "shelf_debug": {
-  "ok": 15,
-  "watch": 153,
+  "ok": 16,
+  "watch": 152,
   "reasons": {
    "밸류영역 밖(지지대 아님)": 1253,
    "매물대 정보 없음": 149,
-   "반등 미확인(터치·상단마감·거래량)": 72,
+   "반등 미확인(터치·상단마감·거래량)": 71,
    "반등 미확인(터치·거래량)": 64,
    "저점권 아님(범위 91%)": 63,
    "저점권 아님(범위 93%)": 60,
-   "저점권 아님(범위 95%)": 56,
+   "저점권 아님(범위 95%)": 55,
    "반등 미확인(상단마감·거래량)": 54
   }
  },
@@ -715,6 +715,34 @@
    "fresh": true,
    "break_gap": null,
    "earnings_d": 100,
+   "tactic": "full"
+  },
+  {
+   "id": "AEO-2026-08-04-shelf",
+   "code": "AEO",
+   "name": "American Eagle Outfitters, Inc.",
+   "ccy": "USD",
+   "group": "shelf",
+   "entry_kind": "shelf",
+   "stage": 0,
+   "price": 17.87,
+   "entry": 17.87,
+   "stop": 16.6012,
+   "target": 20.5106,
+   "shares_1pct": 0,
+   "range_pos": 0.4172,
+   "norm": 20.8,
+   "bear_share": 0.125,
+   "shelf": {
+    "poc": 17.4823,
+    "val": 12.1827,
+    "vah": 20.5106,
+    "rr": 2.08,
+    "overhead": 0.476
+   },
+   "fresh": true,
+   "break_gap": null,
+   "earnings_d": 30,
    "tactic": "full"
   },
   {
