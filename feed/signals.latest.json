@@ -1,19 +1,19 @@
 {
  "version": 1,
- "generated_at": "2026-08-04T14:44:46+09:00",
+ "generated_at": "2026-08-04T15:21:29+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "shelf_debug": {
-  "ok": 19,
-  "watch": 134,
+  "ok": 20,
+  "watch": 131,
   "reasons": {
    "밸류영역 밖(지지대 아님)": 1116,
    "매물대 정보 없음": 149,
+   "반등 미확인(터치·거래량)": 69,
    "저점권 아님(범위 94%)": 64,
-   "반등 미확인(터치·거래량)": 63,
-   "저점권 아님(범위 56%)": 62,
    "저점권 아님(범위 90%)": 62,
-   "반등 미확인(터치·상단마감·거래량)": 60,
-   "저점권 아님(범위 68%)": 56
+   "저점권 아님(범위 56%)": 60,
+   "저점권 아님(범위 68%)": 56,
+   "저점권 아님(범위 92%)": 56
   }
  },
  "signals": [
@@ -223,8 +223,8 @@
    "stage": 3,
    "price": 237500.0,
    "entry": 237500.0,
-   "stop": 209410.8335,
-   "target": 293678.333,
+   "stop": 209339.405,
+   "target": 293821.1901,
    "shares_1pct": 3,
    "range_pos": 0.2453,
    "norm": -9.4,
@@ -233,12 +233,12 @@
    "break_gap": 0.0316,
    "earnings_d": null,
    "tactic": {
-    "stop_pct": 11.8,
+    "stop_pct": 11.9,
     "pb_price": 227777.5,
     "pb_stop_pct": 8.1,
     "mode": "pullback",
     "label": "⏳ 눌림 지정가만",
-    "desc": "지금 추격 금지(손절폭 11.8%) — <b>227,778원 눌림 지정가만</b>. 눌리면 손절폭 8.1%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
+    "desc": "지금 추격 금지(손절폭 11.9%) — <b>227,778원 눌림 지정가만</b>. 눌리면 손절폭 8.1%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
    }
   },
   {
@@ -473,24 +473,24 @@
    "group": "now",
    "entry_kind": "now",
    "stage": 3,
-   "price": 378500.0,
-   "entry": 378500.0,
-   "stop": 348913.9939,
-   "target": 437672.0121,
+   "price": 376500.0,
+   "entry": 376500.0,
+   "stop": 346913.9939,
+   "target": 435672.0121,
    "shares_1pct": 3,
-   "range_pos": 0.2288,
+   "range_pos": 0.2212,
    "norm": -0.0,
    "bear_share": 0.25,
    "fresh": false,
-   "break_gap": 0.0781,
+   "break_gap": 0.0724,
    "earnings_d": null,
    "tactic": {
-    "stop_pct": 7.8,
+    "stop_pct": 7.9,
     "pb_price": 350306.25,
-    "pb_stop_pct": 0.4,
+    "pb_stop_pct": 1.0,
     "mode": "pullback",
     "label": "⏳ 눌림 지정가만",
-    "desc": "지금 추격 금지(손절폭 7.8% · 돌파후 진행) — <b>350,306원 눌림 지정가만</b>. 눌리면 손절폭 0.4%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
+    "desc": "지금 추격 금지(손절폭 7.9% · 돌파후 진행) — <b>350,306원 눌림 지정가만</b>. 눌리면 손절폭 1.0%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
    }
   },
   {
@@ -774,6 +774,34 @@
    "tactic": "full"
   },
   {
+   "id": "008930-2026-08-04-shelf",
+   "code": "008930",
+   "name": "한미사이언스",
+   "ccy": "KRW",
+   "group": "shelf",
+   "entry_kind": "shelf",
+   "stage": 0,
+   "price": 39100.0,
+   "entry": 39100.0,
+   "stop": 33516.0,
+   "target": 48647.9167,
+   "shares_1pct": 0,
+   "range_pos": 0.4515,
+   "norm": 9.4,
+   "bear_share": 0.375,
+   "shelf": {
+    "poc": 38681.25,
+    "val": 36189.5833,
+    "vah": 48647.9167,
+    "rr": 1.71,
+    "overhead": 0.529
+   },
+   "fresh": true,
+   "break_gap": null,
+   "earnings_d": null,
+   "tactic": "full"
+  },
+  {
    "id": "GOLD-2026-08-04-shelf",
    "code": "GOLD",
    "name": "Gold.com, Inc.",
@@ -1030,42 +1058,6 @@
    "tactic": "watch"
   },
   {
-   "id": "NU-2026-08-04-shelf-watch",
-   "code": "NU",
-   "name": "Nu Holdings Ltd.",
-   "ccy": "USD",
-   "group": "shelf_watch",
-   "entry_kind": "shelf_watch",
-   "stage": 0,
-   "price": 14.44,
-   "entry": 14.44,
-   "stop": 13.7396,
-   "target": 16.5487,
-   "shares_1pct": 0,
-   "range_pos": 0.4165,
-   "norm": 19.7,
-   "bear_share": 0.0,
-   "shelf": {
-    "poc": 14.2796,
-    "val": 12.9829,
-    "vah": 16.5487,
-    "rr": 3.01,
-    "overhead": 0.521,
-    "reason": "반등 미확인(거래량)",
-    "checks": {
-     "터치": true,
-     "회복": true,
-     "상단마감": true,
-     "거래량": false,
-     "신저가아님": true
-    }
-   },
-   "fresh": false,
-   "break_gap": null,
-   "earnings_d": 9,
-   "tactic": "watch"
-  },
-  {
    "id": "MQ-2026-08-04-shelf-watch",
    "code": "MQ",
    "name": "Marqeta, Inc.",
@@ -1174,42 +1166,6 @@
    "tactic": "watch"
   },
   {
-   "id": "068270-2026-08-04-shelf-watch",
-   "code": "068270",
-   "name": "셀트리온",
-   "ccy": "KRW",
-   "group": "shelf_watch",
-   "entry_kind": "shelf_watch",
-   "stage": 0,
-   "price": 183400.0,
-   "entry": 183400.0,
-   "stop": 176694.0,
-   "target": 193739.5859,
-   "shares_1pct": 0,
-   "range_pos": 0.3091,
-   "norm": 10.4,
-   "bear_share": 0.125,
-   "shelf": {
-    "poc": 176958.8307,
-    "val": 163534.2266,
-    "vah": 193739.5859,
-    "rr": 1.54,
-    "overhead": 0.474,
-    "reason": "반등 미확인(거래량)",
-    "checks": {
-     "터치": true,
-     "회복": true,
-     "상단마감": true,
-     "거래량": false,
-     "신저가아님": true
-    }
-   },
-   "fresh": false,
-   "break_gap": null,
-   "earnings_d": null,
-   "tactic": "watch"
-  },
-  {
    "id": "HROW-2026-08-04-shelf-watch",
    "code": "HROW",
    "name": "Harrow, Inc.",
@@ -1315,6 +1271,42 @@
    "fresh": false,
    "break_gap": null,
    "earnings_d": 22,
+   "tactic": "watch"
+  },
+  {
+   "id": "012330-2026-08-04-shelf-watch",
+   "code": "012330",
+   "name": "현대모비스",
+   "ccy": "KRW",
+   "group": "shelf_watch",
+   "entry_kind": "shelf_watch",
+   "stage": 0,
+   "price": 478250.0,
+   "entry": 478250.0,
+   "stop": 441980.0,
+   "target": 652312.5,
+   "shares_1pct": 0,
+   "range_pos": 0.3669,
+   "norm": -1.9,
+   "bear_share": 0.25,
+   "shelf": {
+    "poc": 448687.5,
+    "val": 358187.5,
+    "vah": 652312.5,
+    "rr": 4.8,
+    "overhead": 0.399,
+    "reason": "반등 미확인(거래량)",
+    "checks": {
+     "터치": true,
+     "회복": true,
+     "상단마감": true,
+     "거래량": false,
+     "신저가아님": true
+    }
+   },
+   "fresh": false,
+   "break_gap": null,
+   "earnings_d": null,
    "tactic": "watch"
   },
   {
@@ -1459,6 +1451,42 @@
    "fresh": false,
    "break_gap": null,
    "earnings_d": 7,
+   "tactic": "watch"
+  },
+  {
+   "id": "267250-2026-08-04-shelf-watch",
+   "code": "267250",
+   "name": "HD현대",
+   "ccy": "KRW",
+   "group": "shelf_watch",
+   "entry_kind": "shelf_watch",
+   "stage": 0,
+   "price": 209500.0,
+   "entry": 209500.0,
+   "stop": 187082.0,
+   "target": 293662.5,
+   "shares_1pct": 0,
+   "range_pos": 0.4113,
+   "norm": -52.8,
+   "bear_share": 0.625,
+   "shelf": {
+    "poc": 206245.8333,
+    "val": 188762.5,
+    "vah": 293662.5,
+    "rr": 3.75,
+    "overhead": 0.534,
+    "reason": "반등 미확인(거래량)",
+    "checks": {
+     "터치": true,
+     "회복": true,
+     "상단마감": true,
+     "거래량": false,
+     "신저가아님": true
+    }
+   },
+   "fresh": false,
+   "break_gap": null,
+   "earnings_d": null,
    "tactic": "watch"
   },
   {
@@ -2652,24 +2680,24 @@
    "group": "watch",
    "entry_kind": "now",
    "stage": 2,
-   "price": 35000.0,
-   "entry": 35000.0,
-   "stop": 31213.3693,
-   "target": 42573.2613,
+   "price": 35050.0,
+   "entry": 35050.0,
+   "stop": 31263.3693,
+   "target": 42623.2613,
    "shares_1pct": 26,
-   "range_pos": 0.08,
+   "range_pos": 0.0813,
    "norm": -43.4,
    "bear_share": 0.5,
    "fresh": true,
-   "break_gap": 0.0144,
+   "break_gap": 0.0158,
    "earnings_d": null,
    "tactic": {
     "stop_pct": 10.8,
     "pb_price": 32000.0,
-    "pb_stop_pct": 2.5,
+    "pb_stop_pct": 2.3,
     "mode": "pullback",
     "label": "⏳ 눌림 지정가만",
-    "desc": "지금 추격 금지(손절폭 10.8%) — <b>32,000원 눌림 지정가만</b>. 눌리면 손절폭 2.5%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
+    "desc": "지금 추격 금지(손절폭 10.8%) — <b>32,000원 눌림 지정가만</b>. 눌리면 손절폭 2.3%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
    }
   },
   {
@@ -2680,24 +2708,24 @@
    "group": "watch",
    "entry_kind": "now",
    "stage": 2,
-   "price": 130200.0,
-   "entry": 130200.0,
-   "stop": 112947.8244,
-   "target": 164704.3511,
+   "price": 130800.0,
+   "entry": 130800.0,
+   "stop": 113547.8244,
+   "target": 165304.3511,
    "shares_1pct": 5,
-   "range_pos": 0.1126,
+   "range_pos": 0.1177,
    "norm": -60.7,
    "bear_share": 0.5,
    "fresh": true,
-   "break_gap": 0.0263,
+   "break_gap": 0.031,
    "earnings_d": null,
    "tactic": {
-    "stop_pct": 13.3,
+    "stop_pct": 13.2,
     "pb_price": 116900.0,
-    "pb_stop_pct": 3.4,
+    "pb_stop_pct": 2.9,
     "mode": "pullback",
     "label": "⏳ 눌림 지정가만",
-    "desc": "지금 추격 금지(손절폭 13.3% · 단기 이격) — <b>116,900원 눌림 지정가만</b>. 눌리면 손절폭 3.4%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
+    "desc": "지금 추격 금지(손절폭 13.2% · 단기 이격) — <b>116,900원 눌림 지정가만</b>. 눌리면 손절폭 2.9%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
    }
   },
   {
@@ -3359,27 +3387,6 @@
    }
   },
   {
-   "id": "192820-2026-08-04-watch",
-   "code": "192820",
-   "name": "코스맥스",
-   "ccy": "KRW",
-   "group": "watch",
-   "entry_kind": "pullback",
-   "stage": 1,
-   "price": 193300.0,
-   "entry": 189521.8333,
-   "stop": 166513.2934,
-   "target": 235538.9132,
-   "shares_1pct": 4,
-   "range_pos": 0.4054,
-   "norm": 6.6,
-   "bear_share": 0.375,
-   "fresh": true,
-   "break_gap": -0.006,
-   "earnings_d": null,
-   "tactic": null
-  },
-  {
    "id": "DCH-2026-08-04-watch",
    "code": "DCH",
    "name": "Dauch Corporation",
@@ -3457,24 +3464,24 @@
    "group": "watch",
    "entry_kind": "now",
    "stage": 1,
-   "price": 122400.0,
-   "entry": 122400.0,
-   "stop": 109536.4621,
-   "target": 148127.0758,
+   "price": 123800.0,
+   "entry": 123800.0,
+   "stop": 110693.6049,
+   "target": 150012.7901,
    "shares_1pct": 7,
-   "range_pos": 0.4549,
+   "range_pos": 0.485,
    "norm": -3.8,
    "bear_share": 0.125,
    "fresh": true,
-   "break_gap": -0.0194,
+   "break_gap": -0.0082,
    "earnings_d": null,
    "tactic": {
-    "stop_pct": 10.5,
+    "stop_pct": 10.6,
     "pb_price": 120357.0667,
-    "pb_stop_pct": 9.0,
+    "pb_stop_pct": 8.0,
     "mode": "pullback",
     "label": "⏳ 눌림 지정가만",
-    "desc": "지금 추격 금지(손절폭 10.5%) — <b>120,357원 눌림 지정가만</b>. 눌리면 손절폭 9.0%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
+    "desc": "지금 추격 금지(손절폭 10.6%) — <b>120,357원 눌림 지정가만</b>. 눌리면 손절폭 8.0%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
    }
   },
   {
@@ -4203,6 +4210,27 @@
    "fresh": false,
    "break_gap": 0.2629,
    "earnings_d": 86,
+   "tactic": null
+  },
+  {
+   "id": "192820-2026-08-04-watch",
+   "code": "192820",
+   "name": "코스맥스",
+   "ccy": "KRW",
+   "group": "watch",
+   "entry_kind": "breakout",
+   "stage": 3,
+   "price": 195600.0,
+   "entry": 197500.0,
+   "stop": 174248.6029,
+   "target": 244002.7941,
+   "shares_1pct": 4,
+   "range_pos": 0.4233,
+   "norm": 2.5,
+   "bear_share": 0.5,
+   "fresh": false,
+   "break_gap": 0.1097,
+   "earnings_d": null,
    "tactic": null
   },
   {
