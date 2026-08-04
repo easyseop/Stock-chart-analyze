@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated_at": "2026-08-05T05:52:53+09:00",
+ "generated_at": "2026-08-05T06:28:34+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "shelf_debug": {
   "ok": 23,
@@ -762,7 +762,7 @@
     "val": 13.0348,
     "vah": 25.1498,
     "rr": 2.94,
-    "overhead": 0.462,
+    "overhead": 0.461,
     "reason": "반등 미확인(터치)",
     "checks": {
      "터치": false,
@@ -2715,6 +2715,27 @@
    "tactic": null
   },
   {
+   "id": "FISV-2026-08-05-watch",
+   "code": "FISV",
+   "name": "Fiserv, Inc.",
+   "ccy": "USD",
+   "group": "watch",
+   "entry_kind": "breakout",
+   "stage": 4,
+   "price": 55.78,
+   "entry": 56.0,
+   "stop": 52.0978,
+   "target": 63.8043,
+   "shares_1pct": 25,
+   "range_pos": 0.0936,
+   "norm": -15.1,
+   "bear_share": 0.5,
+   "fresh": false,
+   "break_gap": 0.0823,
+   "earnings_d": 2,
+   "tactic": null
+  },
+  {
    "id": "IDCC-2026-08-05-watch",
    "code": "IDCC",
    "name": "InterDigital, Inc.",
@@ -2967,6 +2988,27 @@
    "tactic": null
   },
   {
+   "id": "LDOS-2026-08-05-watch",
+   "code": "LDOS",
+   "name": "Leidos Holdings, Inc.",
+   "ccy": "USD",
+   "group": "watch",
+   "entry_kind": "pullback",
+   "stage": 3,
+   "price": 130.6,
+   "entry": 103.9,
+   "stop": 94.7024,
+   "target": 122.2952,
+   "shares_1pct": 10,
+   "range_pos": 0.2969,
+   "norm": 26.2,
+   "bear_share": 0.375,
+   "fresh": false,
+   "break_gap": 0.2081,
+   "earnings_d": 0,
+   "tactic": null
+  },
+  {
    "id": "BAM-2026-08-05-watch",
    "code": "BAM",
    "name": "Brookfield Asset Management Inc",
@@ -3195,27 +3237,6 @@
    "fresh": false,
    "break_gap": 0.261,
    "earnings_d": 86,
-   "tactic": null
-  },
-  {
-   "id": "LDOS-2026-08-05-watch",
-   "code": "LDOS",
-   "name": "Leidos Holdings, Inc.",
-   "ccy": "USD",
-   "group": "watch",
-   "entry_kind": "pullback",
-   "stage": 3,
-   "price": 130.6,
-   "entry": 103.9,
-   "stop": 94.7024,
-   "target": 122.2952,
-   "shares_1pct": 10,
-   "range_pos": 0.2969,
-   "norm": 9.8,
-   "bear_share": 0.375,
-   "fresh": false,
-   "break_gap": 0.2081,
-   "earnings_d": 0,
    "tactic": null
   },
   {
@@ -3552,27 +3573,6 @@
    "fresh": false,
    "break_gap": 0.3038,
    "earnings_d": 78,
-   "tactic": null
-  },
-  {
-   "id": "FISV-2026-08-05-watch",
-   "code": "FISV",
-   "name": "Fiserv, Inc.",
-   "ccy": "USD",
-   "group": "watch",
-   "entry_kind": "breakout",
-   "stage": 3,
-   "price": 55.78,
-   "entry": 56.0,
-   "stop": 52.0978,
-   "target": 63.8043,
-   "shares_1pct": 25,
-   "range_pos": 0.0936,
-   "norm": -17.0,
-   "bear_share": 0.5,
-   "fresh": false,
-   "break_gap": 0.0823,
-   "earnings_d": 2,
    "tactic": null
   },
   {
