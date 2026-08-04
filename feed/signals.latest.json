@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated_at": "2026-08-04T12:01:03+09:00",
+ "generated_at": "2026-08-04T12:16:01+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "shelf_debug": {
   "ok": 19,
@@ -267,34 +267,6 @@
     "mode": "pullback",
     "label": "⏳ 눌림 지정가만",
     "desc": "지금 추격 금지(손절폭 8.0%) — <b>$76.42 눌림 지정가만</b>. 눌리면 손절폭 4.0%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
-   }
-  },
-  {
-   "id": "259960-2026-08-04-now",
-   "code": "259960",
-   "name": "크래프톤",
-   "ccy": "KRW",
-   "group": "now",
-   "entry_kind": "now",
-   "stage": 3,
-   "price": 234500.0,
-   "entry": 234500.0,
-   "stop": 206410.8335,
-   "target": 290678.333,
-   "shares_1pct": 3,
-   "range_pos": 0.2261,
-   "norm": -18.9,
-   "bear_share": 0.375,
-   "fresh": true,
-   "break_gap": 0.0186,
-   "earnings_d": null,
-   "tactic": {
-    "stop_pct": 12.0,
-    "pb_price": 227777.5,
-    "pb_stop_pct": 9.4,
-    "mode": "pullback",
-    "label": "⏳ 눌림 지정가만",
-    "desc": "지금 추격 금지(손절폭 12.0%) — <b>227,778원 눌림 지정가만</b>. 눌리면 손절폭 9.4%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
    }
   },
   {
@@ -2652,24 +2624,24 @@
    "group": "watch",
    "entry_kind": "now",
    "stage": 2,
-   "price": 131400.0,
-   "entry": 131400.0,
-   "stop": 114147.8244,
-   "target": 165904.3511,
+   "price": 130300.0,
+   "entry": 130300.0,
+   "stop": 113047.8244,
+   "target": 164804.3511,
    "shares_1pct": 5,
-   "range_pos": 0.1228,
+   "range_pos": 0.1135,
    "norm": -60.7,
    "bear_share": 0.5,
    "fresh": true,
-   "break_gap": 0.0358,
+   "break_gap": 0.0271,
    "earnings_d": null,
    "tactic": {
-    "stop_pct": 13.1,
+    "stop_pct": 13.2,
     "pb_price": 116900.0,
-    "pb_stop_pct": 2.4,
+    "pb_stop_pct": 3.3,
     "mode": "pullback",
     "label": "⏳ 눌림 지정가만",
-    "desc": "지금 추격 금지(손절폭 13.1% · 단기 이격) — <b>116,900원 눌림 지정가만</b>. 눌리면 손절폭 2.4%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
+    "desc": "지금 추격 금지(손절폭 13.2% · 단기 이격) — <b>116,900원 눌림 지정가만</b>. 눌리면 손절폭 3.3%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
    }
   },
   {
