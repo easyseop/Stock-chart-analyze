@@ -43,16 +43,17 @@ def _rows_of(holdings, market, excg):
 
 
 def _run(signals, holdings=None, last=100.0, exec_ret=None, mkt_open=True,
-         fold=None, pd=None, run_kwargs=None, mirrored="all"):
+         fold=None, pd=None, run_kwargs=None):
     """holdings: {code: qty}|None(None=잔고 조회실패). pd: positions_detail 대체.
 
-    mirrored: autopaper 실제 진입 집합. "all"=신호 전체(기존 테스트 의미 유지),
-    None=피드 조회 실패, set=그 종목만 미러 대상.
+    autopaper mock이 없다 — KIS 매수 경로는 scanner 신호와 KIS 상태만 본다
+    (2026-08-05 정정). 네트워크 호출이 생기면 _no_network가 즉시 실패시킨다.
     """
     if exec_ret is None:
         exec_ret = kis_buy.BuyDecision(True, "sent", "ack ODNO=1", qty=3)
-    if mirrored == "all":
-        mirrored = {str(s.get("code", "")).upper() for s in signals}
+
+    def _no_network(*a, **k):
+        raise AssertionError("buyloop이 외부 HTTP를 호출함 — autopaper 의존 금지")
 
     def fake_pd(market="US", excg="NASD"):
         if holdings is None:
@@ -61,7 +62,7 @@ def _run(signals, holdings=None, last=100.0, exec_ret=None, mkt_open=True,
 
     tf = tempfile.NamedTemporaryFile(suffix=".jsonl", delete=False); tf.close()
     lf = tempfile.NamedTemporaryFile(suffix=".jsonl", delete=False); lf.close()
-    with mock.patch.object(BL, "autopaper_entries", return_value=mirrored), \
+    with mock.patch("urllib.request.urlopen", side_effect=_no_network), \
          mock.patch.object(BL.kis, "positions_detail", side_effect=pd or fake_pd), \
          mock.patch.object(BL.kis, "last_price", return_value=last), \
          mock.patch.object(BL.settings, "market_open", return_value=mkt_open), \
@@ -184,126 +185,77 @@ def test_b_sleeve_has_no_fixed_position_count_gate():
     print("[PASS] B 25종목 예약 상태도 고정 개수 차단 없이 예산 게이트로 전달")
 
 
-def test_mirror_only_buys_what_autopaper_actually_entered():
-    """모듈 선언대로 '미러'가 되는지 — 신호에 있어도 autopaper 미진입이면 안 산다.
+def test_a_fresh_signal_executes_without_autopaper():
+    """지시 §10-1: paper 피드가 죽어 있어도(모든 HTTP 차단) A 신호는 진행된다."""
+    res, ex, _, _ = _run([_sig()], holdings={})
+    assert _g(res, "005930")["gate"] == "sent" and ex.call_count == 1
+    print("[PASS] autopaper 없이 신선한 A 신호가 KIS 게이트까지 전달")
 
-    Codex 적대검토 P1: 종전에는 신호 피드의 fresh now 후보를 그대로 매수
-    경로에 넘겨, autopaper가 한도(동시 12·하루 3건)로 사지 않은 종목도 KIS가
-    샀다. 두 장부의 성과 비교가 성립하지 않는 정책 결함.
+
+def test_no_autopaper_network_call_in_buyloop():
+    """지시 §10-2: run_once가 외부 HTTP를 한 번이라도 부르면 즉시 실패.
+
+    _run 하네스가 urllib.request.urlopen을 AssertionError로 덮으므로, A·B 두
+    경로 모두 네트워크 없이 완주해야 한다.
     """
-    entered, skipped = _sig(code="005930"), _sig(code="000660")
-    res, ex, _, _ = _run([entered, skipped], holdings={},
-                         mirrored={"005930"})
+    sig_b = _sig(code="000660", group="shelf", entry=100.0, stop=95.0)
+    sig_b["shelf"] = {"rr": 2.0}
+    res, ex, _, _ = _run([_sig(), sig_b], holdings={})
     assert _g(res, "005930")["gate"] == "sent"
-    blocked = _g(res, "000660")
-    assert blocked["gate"] == "mirror" and "미진입" in blocked["why"]
-    assert ex.call_count == 1                      # 미진입 종목은 주문 0건
-    print("[PASS] 미러는 autopaper 실제 진입 종목만 매수")
+    res_b, ex_b, _, _ = _run([sig_b], holdings={},
+                             run_kwargs={"sleeve": "B", "group": "shelf",
+                                         "seed_krw": 5_000_000})
+    assert _g(res_b, "000660")["ok"]
+    print("[PASS] 매수 경로에 외부 HTTP 0회(autopaper 의존 없음) — A·B 모두")
 
 
-def test_autopaper_feed_failure_holds_mirror_closed():
-    res, ex, _, _ = _run([_sig()], holdings={}, mirrored=None)
-    r = _g(res, "005930")
-    assert r["gate"] == "mirror" and "무효" in r["why"]
-    assert not ex.called                           # 미러 대상 불명 → 매수 0건
-    print("[PASS] autopaper 피드 실패는 fail-closed(미러 보류)")
+def test_a_outside_tolerance_then_inside_executes_once():
+    """지시 §10-4·5: tolerance 밖이면 그 사이클 skip, 들어오면 정확히 1회 주문."""
+    res1, ex1, _, _ = _run([_sig(entry=100.0)], holdings={}, last=102.0)
+    assert _g(res1, "005930")["gate"] == "tolerance" and not ex1.called
+    res2, ex2, _, _ = _run([_sig(entry=100.0)], holdings={}, last=100.4)
+    assert _g(res2, "005930")["gate"] == "sent" and ex2.call_count == 1
+    print("[PASS] 진입가 관찰 — 괴리 skip 후 조건 도달 시 1회 주문")
 
 
-def _feed(positions, generated_at=None, **extra):
-    now = datetime.datetime.now(BL._KST)
-    return {"generated_at": (generated_at
-                             if generated_at is not None else now.isoformat()),
-            "positions": positions, **extra}
-
-
-def test_old_holdings_are_not_backfilled_in_one_day():
-    """Codex 미러 P1-1 재현: L1·장애로 쉬는 동안 쌓인 보유를 재개 첫날 몰아 사기.
-
-    autopaper 보유 12종목 중 오늘 진입은 3건뿐인데, 현재 보유 코드 교집합만
-    보면 12건이 한꺼번에 나간다. 진입시점·평단·손절계획이 모두 달라진다.
-    """
-    now = datetime.datetime(2026, 8, 4, 23, 0, tzinfo=BL._KST)
-    today, old = "2026-08-04", "2026-07-20"
-    rows = ([{"code": f"NEW{i}", "opened": today} for i in range(3)]
-            + [{"code": f"OLD{i}", "opened": old} for i in range(9)])
-    with mock.patch.object(BL, "_parse_paper_feed",
-                           return_value={"age_min": 1.0, "positions": {
-                               r["code"]: {"opened": r["opened"]} for r in rows}}), \
-         mock.patch.object(BL.urllib.request, "urlopen"), \
-         mock.patch.object(BL.json, "load", return_value={}):
-        entries = BL.autopaper_entries(now)
-    assert entries == {"NEW0", "NEW1", "NEW2"}, entries
-    signals = [_sig(code=r["code"]) for r in rows]
-    res, ex, _, _ = _run(signals, holdings={}, mirrored=entries)
-    bought = {r["code"] for r in res if r.get("gate") == "sent"}
-    assert bought == {"NEW0", "NEW1", "NEW2"}, bought
-    assert ex.call_count == 3                      # autopaper 하루 3건과 일치
-    print("[PASS] 옛 보유 일괄 백필 차단 — 오늘 진입만 미러(하루 상한 일치)")
-
-
-def test_us_session_across_kst_midnight_keeps_same_session_entries():
-    """미 정규장 한 세션은 KST 자정을 넘는다 — 그 세션 진입이 끊기면 안 된다."""
-    with mock.patch.object(BL.settings, "market_open", return_value=True):
-        past_midnight = datetime.datetime(2026, 8, 5, 3, 0, tzinfo=BL._KST)
-        assert BL._mirror_window(past_midnight) == {"2026-08-05", "2026-08-04"}
-    with mock.patch.object(BL.settings, "market_open", return_value=False):
-        daytime = datetime.datetime(2026, 8, 5, 15, 0, tzinfo=BL._KST)
-        assert BL._mirror_window(daytime) == {"2026-08-05"}
-    print("[PASS] 자정 넘는 미장 세션은 전날 진입 인정 · 장 밖에서는 오늘만")
-
-
-def test_stale_or_malformed_feed_is_rejected_not_trusted():
-    """Codex 미러 P1-2·P2-2: 성공했지만 낡은/계약 위반 피드가 fail-open이었다."""
-    now = datetime.datetime(2026, 8, 4, 23, 0, tzinfo=BL._KST)
-    ok_rows = [{"code": "AAPL", "opened": "2026-08-04"}]
-    bad_payloads = [
-        _feed(ok_rows, generated_at="2025-01-01T00:00:00+09:00"),   # 낡음
-        _feed(ok_rows, generated_at="2026-08-04"),                  # tz 없음
-        _feed(ok_rows, generated_at=None),                          # 시각 없음
-        {"positions": ok_rows},                                     # 시각 필드 부재
-        _feed(["AAPL"]),                                            # scalar 행
-        _feed([{"opened": "2026-08-04"}]),                          # code 없음
-        _feed("AAPL"),                                              # positions 비list
-        ["not", "a", "dict"],                                       # 루트 비dict
-        _feed(ok_rows, generated_at="2026-08-05T23:00:00+09:00"),   # 미래 시각
+def test_malformed_signal_is_fail_closed():
+    """지시 §9-5: 계약 위반 후보는 후보 선정 단계에서 제외(주문 0)."""
+    bad = [
+        {"group": "now", "code": "AAA", "fresh": True},           # entry/stop 없음
+        {"group": "now", "code": "BBB", "fresh": False,
+         "entry": 100.0, "stop": 95.0},                           # 신선하지 않음
+        {"group": "watch", "code": "CCC", "fresh": True,
+         "entry": 100.0, "stop": 95.0},                           # now 아님
+        {"group": "now", "code": "DDD", "fresh": True,
+         "entry": 0, "stop": 95.0},                               # entry=0
     ]
-    for payload in bad_payloads:
-        assert BL._parse_paper_feed(payload, now=now) is None, payload
-    good = BL._parse_paper_feed(_feed(ok_rows), now=datetime.datetime.now(BL._KST))
-    assert good and set(good["positions"]) == {"AAPL"}
-    print("[PASS] 낡음·tz없음·scalar행·루트오류·미래시각 전부 소스 거부")
+    res, ex, _, _ = _run(bad, holdings={})
+    assert not ex.called and all(r.get("gate") != "sent" for r in res)
+    print("[PASS] 손상·비신선·비now·entry=0 후보는 전부 주문 0")
 
 
-def test_mirror_feed_outage_alerts_instead_of_silent_block():
-    """새 게이트가 '조용히 5일 막힘' 사고를 재생산하지 않는지."""
-    BL._mirror_feed_fail_streak = 0
-    BL._mirror_feed_alerted = False
-    sent = []
-    with mock.patch.object(BL, "_notify_safe",
-                           side_effect=lambda t: sent.append(t)):
-        for _ in range(BL._MIRROR_FEED_ALERT_AFTER):
-            BL._note_mirror_feed(ok=False)
-        assert any("연속 무효" in t for t in sent), sent
-        before = len(sent)
-        BL._note_mirror_feed(ok=False)
-        assert len(sent) == before                 # 폭주하지 않음
-        BL._note_mirror_feed(ok=True)
-        assert any("복구" in t for t in sent), sent
-    BL._mirror_feed_fail_streak = 0
-    BL._mirror_feed_alerted = False
-    print("[PASS] 미러 피드 연속 무효 경보 1회 + 복구 경보")
+def test_no_order_on_nan_zero_negative_or_inverted_stop():
+    """지시 §9-16: stop>=entry·NaN·음수 손절폭은 주문 0."""
+    for sig in (_sig(entry=100.0, stop=100.0),      # 역전(손절폭 0)
+                _sig(entry=100.0, stop=120.0),      # 역전(음수 폭)
+                _sig(entry=100.0, stop=float("nan"))):
+        res, ex, _, _ = _run([sig], holdings={})
+        assert not ex.called, sig
+        assert all(r.get("gate") != "sent" for r in res), sig
+    print("[PASS] 역전·NaN 손절은 주문 0(fail-closed)")
 
 
-def test_shelf_sleeve_is_not_gated_by_autopaper():
-    """B(매물대)는 autopaper가 다루지 않는 별도 예산 전략 — 이 게이트 미적용."""
-    sig = _sig(code="005930")
-    sig["group"] = "shelf"
-    sig["shelf"] = {"rr": 2.0}
-    res, ex, _, _ = _run([sig], holdings={}, mirrored=set(),
-                         run_kwargs={"sleeve": "B", "group": "shelf"})
-    assert _g(res, "005930")["gate"] != "mirror"
-    assert ex.called                               # autopaper 미보유여도 B는 진행
-    print("[PASS] 전략 B는 autopaper 미러 게이트에 막히지 않음")
+def test_a_has_no_fixed_position_count_cap():
+    """지시 §9-11: A 보유가 12개+여도 개수만으로 후보 검토를 멈추지 않는다.
+
+    실제 투입 한도는 execute_entry의 예산·매수여력 게이트가 결정한다(모킹).
+    """
+    held = {f"H{i:03d}": 1 for i in range(14)}
+    sig = _sig(code="NEWCO", ccy="USD", entry=100.0, stop=95.0)
+    res, ex, _, _ = _run([sig], holdings=held, last=100.0)
+    assert _g(res, "NEWCO")["gate"] == "sent"
+    assert ex.call_args.kwargs["open_positions"] == 14   # 개수는 전달만, 차단 없음
+    print("[PASS] A 고정 종목 수 상한 없음 — 예산 게이트에 위임")
 
 
 def test_intra_cycle_accumulation():
@@ -435,13 +387,12 @@ def main():
     test_cooldown_after_same_day_sell()
     test_inflight_buy_counts_toward_position_accounting()
     test_b_sleeve_has_no_fixed_position_count_gate()
-    test_mirror_only_buys_what_autopaper_actually_entered()
-    test_autopaper_feed_failure_holds_mirror_closed()
-    test_old_holdings_are_not_backfilled_in_one_day()
-    test_us_session_across_kst_midnight_keeps_same_session_entries()
-    test_stale_or_malformed_feed_is_rejected_not_trusted()
-    test_mirror_feed_outage_alerts_instead_of_silent_block()
-    test_shelf_sleeve_is_not_gated_by_autopaper()
+    test_a_fresh_signal_executes_without_autopaper()
+    test_no_autopaper_network_call_in_buyloop()
+    test_a_outside_tolerance_then_inside_executes_once()
+    test_malformed_signal_is_fail_closed()
+    test_no_order_on_nan_zero_negative_or_inverted_stop()
+    test_a_has_no_fixed_position_count_cap()
     test_intra_cycle_accumulation()
     test_non_now_filtered()
     test_us_signal_routes_and_fx()

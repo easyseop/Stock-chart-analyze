@@ -200,7 +200,8 @@ def test_x1_gate_chain_then_sent():
 
 
 def test_mirror_stage():
-    """KIS 미러 — 동시보유 수 무제한·하루10건·risk1%·allowlist 선택."""
+    """mirror(legacy명=scanner-direct) — 동시보유 무제한·하루10건·risk1%·
+    **allowlist 필수**(2026-08-05 정정: autopaper가 후보를 좁혀준다는 전제 폐기)."""
     with tempfile.TemporaryDirectory() as tmp:
         M = _setup(tmp)
         R = M["rollout"]
@@ -208,7 +209,12 @@ def test_mirror_stage():
         os.environ.pop("ALLOWED_SYMBOLS", None)
         ok, why = R.check_new_entry("ANYTHING", open_positions=0, risk_pct=0.01,
                                     session_open=True)
-        assert ok, why                                     # allowlist 없이 통과
+        assert not ok and "allowlist" in why               # allowlist 없으면 전 거부
+        os.environ["ALLOWED_SYMBOLS"] = "ANYTHING,X," + ",".join(
+            f"S{i}" for i in range(10))
+        ok, why = R.check_new_entry("ANYTHING", open_positions=0, risk_pct=0.01,
+                                    session_open=True)
+        assert ok, why
         assert R.profile()["max_positions"] is None
         assert R.check_new_entry("X", open_positions=12, risk_pct=0.01,
                                  session_open=True)[0]
@@ -225,12 +231,12 @@ def test_mirror_stage():
         M["ledger"].record_submit("m#9", "S9", 1, "x", meta={"side": "BUY"})
         assert not R.check_new_entry("X", open_positions=0, risk_pct=0.01,
                                      session_open=True)[0]  # 10/10 → 차단
-        # ALLOWED_SYMBOLS를 설정하면 여전히 그 목록만(선택적 추가 펜스)
+        # 목록 밖 종목은 거부
         os.environ["ALLOWED_SYMBOLS"] = "AAPL"
         assert not R.check_new_entry("TSLA", open_positions=0, risk_pct=0.01,
                                      session_open=True)[0]
         os.environ["TRADE_STAGE"] = "1.5"
-    print("[PASS] mirror: 동시보유 수 무제한·하루10건·risk1%·선택 allowlist")
+    print("[PASS] mirror: 동시보유 수 무제한·하루10건·risk1%·allowlist 필수")
 
 
 def test_broker_truth_open_cost_gate():
@@ -240,7 +246,7 @@ def test_broker_truth_open_cost_gate():
         M = _setup(tmp)
         X = M["kis_buy"]
         os.environ["TRADE_STAGE"] = "mirror"
-        os.environ.pop("ALLOWED_SYMBOLS", None)
+        os.environ["ALLOWED_SYMBOLS"] = "AAPL,MSFT,TSLA,NVDA,GAP1,X"
         _ready_all_gates(M, tmp)
         kw = dict(price_usd=100.0, per_share_risk_usd=5.0, krw_per_usd=1400.0,
                   risk_pct=0.01, held_cost_krw=9_850_000,
@@ -299,7 +305,7 @@ def test_combined_a_b_total_gate():
             "BOT_SEED_SB_KRW": "5000000",
             "TRADE_STAGE": "mirror",
         })
-        os.environ.pop("ALLOWED_SYMBOLS", None)
+        os.environ["ALLOWED_SYMBOLS"] = "AAPL,MSFT,TSLA,NVDA,GAP1,X"
         _ready_all_gates(M, tmp)
         kw = dict(price_usd=100.0, per_share_risk_usd=5.0,
                   krw_per_usd=1400.0, risk_pct=0.01,
@@ -320,7 +326,7 @@ def test_gap_price_reserves_marketable_limit_not_stale_quote():
         M = _setup(tmp)
         X = M["kis_buy"]
         os.environ["TRADE_STAGE"] = "mirror"
-        os.environ.pop("ALLOWED_SYMBOLS", None)
+        os.environ["ALLOWED_SYMBOLS"] = "AAPL,MSFT,TSLA,NVDA,GAP1,X"
         _ready_all_gates(M, tmp)
         fake = {"ok": True, "act": "ack", "key": "gap", "odno": "1"}
         with mock.patch.object(M["rollout"], "us_regular_open", return_value=True), \
@@ -345,7 +351,7 @@ def test_missing_broker_budget_snapshot_blocks_send():
         M = _setup(tmp)
         X = M["kis_buy"]
         os.environ["TRADE_STAGE"] = "mirror"
-        os.environ.pop("ALLOWED_SYMBOLS", None)
+        os.environ["ALLOWED_SYMBOLS"] = "AAPL,MSFT,TSLA,NVDA,GAP1,X"
         _ready_all_gates(M, tmp)
         with mock.patch.object(M["rollout"], "us_regular_open", return_value=True), \
              mock.patch("bot.kis_orders.place_buy") as place:

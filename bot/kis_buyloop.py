@@ -29,6 +29,7 @@
 from __future__ import annotations
 
 import datetime
+import math
 import os
 import sys
 import time
@@ -263,7 +264,12 @@ def run_once(signals: list[dict], *, fx: float | None = None,
         cur = kis.last_price(code, market=market, excg=excg)
         if not cur or cur <= 0:
             results.append({"code": code, "gate": "quote", "why": "현재가 조회 실패"}); continue
-        entry = float(s["entry"])
+        try:
+            entry = float(s["entry"])
+            stop = float(s["stop"])
+        except (TypeError, ValueError):
+            results.append({"code": code, "gate": "input",
+                            "why": "진입/손절가 형식 오류"}); continue
         tactic = s.get("tactic") or {}
         mode = (str(tactic.get("mode") or "full") if isinstance(tactic, dict)
                 else str(tactic or "full"))
@@ -271,9 +277,12 @@ def run_once(signals: list[dict], *, fx: float | None = None,
             pb = float(tactic.get("pb_price") or 0) if isinstance(tactic, dict) else 0.0
         except (TypeError, ValueError):
             pb = 0.0
-        stop = float(s["stop"])
-        if entry <= 0:
-            results.append({"code": code, "gate": "input", "why": "진입가 무효"}); continue
+        if not (math.isfinite(entry) and math.isfinite(stop)
+                and math.isfinite(pb)) or entry <= 0:
+            # NaN·inf 손절/진입은 아래 부등식 게이트를 전부 미끄러져 통과한다
+            #   (nan<=0 == False) — 여기서 명시적으로 닫는다(fail-closed).
+            results.append({"code": code, "gate": "input",
+                            "why": "진입/손절가 무효(NaN·inf·0)"}); continue
         if mode in ("full", "half") and abs(cur - entry) / entry > settings.ENTRY_TOLERANCE:
             results.append({"code": code, "gate": "tolerance",
                             "why": f"가격 괴리 {cur} vs 진입 {entry}"}); continue
