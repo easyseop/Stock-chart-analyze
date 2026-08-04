@@ -30,8 +30,12 @@
 5분마다 발행(퍼센트만) — 페이지를 열 때마다 최신값을 읽습니다.
 </div>
 </div>
+<script src="app/portfolio_math.js"></script>
 <script>
 const TOPIC = "stock-alpha-c81f4e2b9d";                 // 서버 발행 토픽(퍼센트만)
+// 공용 순수 계산(app/portfolio_math.js) — null 산술·복리 수학은 여기서만.
+//   Node 테스트(tests/site_math.test.js)가 같은 함수를 검증한다(Codex V4 P2-3).
+const PM = window.PortfolioMath;
 const $ = (h) => { const d = document.createElement("div"); d.innerHTML = h; return d.firstElementChild; };
 // 미확정(null)을 숫자로 낮추지 않는다 — 숫자로 보이는 순간 확정이 된다.
 const num = (v) => (v === null || v === undefined || !isFinite(v)) ? null : Number(v);
@@ -95,7 +99,9 @@ function render(d) {
     const day = (d.day || {})[mkt];
     if (day && day.series && day.series.length) {
       const last = day.series[day.series.length - 1];
-      const diff = num(last[1]) === null ? null : last[1] - last[2];
+      // 계좌·지수 **둘 다** 유효할 때만 차이 계산 — 지수 null을 0처럼 빼면
+      //   미확정 날에도 초과수익이 확정 숫자로 보인다(Codex V4 P1-1).
+      const diff = PM.todayIndexDiff(last[1], last[2]);
       const card = $(`<div class="card"><h2>오늘 ${label} 세션 (${day.date}, 시작 대비)</h2>
         <div class="kpi"><div>우리 전략 <b class="${cls(last[1])}">${f(last[1])}</b></div>
         <div>${idxn} <b class="${cls(last[2])}">${f(last[2])}</b></div>
@@ -112,14 +118,7 @@ function render(d) {
       // 누적 초과수익 = 계좌·지수를 **각각 복리**한 뒤의 차이. 일별 차이의 단순
       //   합은 +10%→-10%를 본전으로 표시하는 수학 오류다(Codex V3 P1-2).
       //   계좌 또는 지수가 미확정/결측인 날 이후로는 잇지 않는다(복리 금지).
-      let aw = 1, iw = 1, broken = false;
-      const cumAlpha = rows.map(r => {
-        if (broken || num(r.acct) === null || num(r.idx) === null) {
-          broken = true; return null;
-        }
-        aw *= 1 + r.acct / 100; iw *= 1 + r.idx / 100;
-        return +((aw - iw) * 100).toFixed(2);
-      });
+      const cumAlpha = PM.cumulativeAlphaSeries(rows);
       const card = $(`<div class="card"><h2>${label} 일별 추이 (최근 ${rows.length}일)</h2>
         <canvas></canvas>
         <div class="leg"><i style="background:#16a34a"></i>우리(일별)<i style="background:#64748b"></i>지수(일별)<i style="background:#2563eb"></i>누적 초과수익(알파)</div>

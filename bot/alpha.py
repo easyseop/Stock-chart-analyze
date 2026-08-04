@@ -155,6 +155,15 @@ QUALITY_PATH = os.environ.get(
     "ALPHA_QUALITY_PATH",
     os.path.join(os.path.dirname(__file__), "alpha_quality.jsonl"))
 
+# 일별 마감 행의 append-only 장기 원장. state의 days[]는 시장별 400행 창이라
+#   약 1.6년 뒤 앞부분이 잘리지만(Codex V4 P2-2), 사용자의 요구는 하루하루
+#   장기 누적이다 — 마감마다 여기에 먼저 영속시켜 창 밖으로 밀려나도 원본이
+#   남는다. 소비자는 아직 state 창을 읽으므로 UI는 보관 한도를 명시한다.
+DAYS_LEDGER_PATH = os.environ.get(
+    "ALPHA_DAYS_LEDGER_PATH",
+    os.path.join(os.path.dirname(__file__), "alpha_days.jsonl"))
+DAYS_RETENTION = 400                     # state 창(시장별) — UI 라벨과 정합 유지
+
 
 _quality_fail_alerted = False
 
@@ -182,6 +191,31 @@ def _quality_append(ev: dict) -> None:
             try:
                 notify.send(f"⚠️ 성과 품질 원장 기록 실패({type(exc).__name__})"
                             " — 진단 근거가 소실될 수 있음. 디스크·권한 확인 필요.",
+                            category="trade")
+            except Exception:
+                pass
+
+
+_days_ledger_fail_alerted = False
+
+
+def _days_ledger_append(row: dict) -> None:
+    """일별 마감 행을 append-only 장기 원장에 영속(P2-2). 실패는 1회 경보."""
+    global _days_ledger_fail_alerted
+    try:
+        with open(DAYS_LEDGER_PATH, "a", encoding="utf-8") as f:
+            f.write(json.dumps({"ts": time.time(), **row},
+                               ensure_ascii=False) + "\n")
+            f.flush()
+            os.fsync(f.fileno())
+        os.chmod(DAYS_LEDGER_PATH, 0o600)
+        _days_ledger_fail_alerted = False
+    except Exception as exc:
+        if not _days_ledger_fail_alerted:
+            _days_ledger_fail_alerted = True
+            try:
+                notify.send(f"⚠️ 일별 성과 장기 원장 기록 실패({type(exc).__name__})"
+                            " — 400일 창 밖 이력이 소실될 수 있음. 디스크 확인 필요.",
                             category="trade")
             except Exception:
                 pass
@@ -410,7 +444,11 @@ def _twr_step(day: dict, nav: dict, *, settled: bool = True,
         day["hold_ticks"] = holds
 
     def shown() -> dict[str, float | None]:
-        return {k: (None if k in unknown
+        # hold(검증 중) 키도 숫자로 보여주지 않는다 — A를 의심하는 동안 A가
+        #   포함된 account를 확정 숫자·색상으로 내보내면 사용자가 최대 15분간
+        #   유령 변동을 본다(Codex V4 P2-1). 해소되면 숫자로 복구된다.
+        veiled = unknown | set(day.get("pending_keys") or [])
+        return {k: (None if k in veiled
                     else (float(wealth.get(k, 1.0)) - 1.0) * 100.0)
                 for k in _KEYS}
 
@@ -474,6 +512,12 @@ def _twr_step(day: dict, nav: dict, *, settled: bool = True,
     if unknown & {"A", "B"}:
         unknown.add("account")
     day["unresolved"] = sorted(unknown)
+    # hold 중인 슬리브가 있으면 account도 '검증 중'으로 전파한다(P2-1). account
+    #   자체 구간이 한계 안이어도, 의심 슬리브의 변화를 가중 포함한 값이다.
+    pending_keys = {row["key"] for row in pending}
+    if pending_keys & {"A", "B"}:
+        pending_keys.add("account")
+    day["pending_keys"] = sorted(pending_keys)
     if pending:
         day["anomaly_pending"] = pending
     else:
@@ -544,9 +588,12 @@ def session_update(st: dict, mkt: str, agg: dict, idx: dict,
         use_carry = bool(carry and nav_mode and "account" not in carry_unres)
         day = {"date": today, "pl0": tot_pl,
                "a_pl0": agg[mkt]["A"]["pl"], "b_pl0": agg[mkt]["B"]["pl"],
+               # carry(전일종가 기준) 세션에서 전일종가가 없는 지수는 기준을
+               #   **현재값으로 대체하지 않는다**(Codex V4 P1-2 — 그렇게 하면
+               #   계좌는 전일 기준, 지수는 0%가 되어 모르는 값이 quality=ok로
+               #   장기 복리된다). None 기준 = 그 지수는 미확정으로 표시한다.
                "idx0": {
-                   k: ((idx_previous_close or {}).get(k) if use_carry
-                       and (idx_previous_close or {}).get(k) else v)
+                   k: ((idx_previous_close or {}).get(k) if use_carry else v)
                    for k, v in idx.items()},
                "series": [],
                "series_v2": [],
@@ -586,13 +633,24 @@ def session_update(st: dict, mkt: str, agg: dict, idx: dict,
         acct = _pct(tot_pl - day["pl0"], tot_cost)
         a = _pct(agg[mkt]["A"]["pl"] - day["a_pl0"], agg[mkt]["A"]["cost"])
         b = _pct(agg[mkt]["B"]["pl"] - day["b_pl0"], agg[mkt]["B"]["cost"])
-    ipct = {}
+    ipct: dict[str, float | None] = {}
+    carry_basis = day.get("basis") == "previous_close"
     for name, v in idx.items():
         v0 = day["idx0"].get(name)
-        if not v0:                              # 배포 중 새 지수 추가 시 그 틱을 0% 기준
-            day["idx0"][name] = v
-            v0 = v
-        ipct[name] = (v / v0 - 1) * 100.0 if v0 else 0.0
+        if not v0:
+            if carry_basis:
+                # 전일종가 기준 세션 — 기준 없는 지수를 현재값 0%로 확정하지
+                #   않는다. 늦게라도 전일종가가 오면 그때 정당한 기준으로 고정.
+                late = (idx_previous_close or {}).get(name)
+                if late:
+                    day["idx0"][name] = v0 = late
+                else:
+                    day["idx0"][name] = None
+                    ipct[name] = None
+                    continue
+            else:                               # 첫표본 기준 — 그 틱이 0% 기준
+                day["idx0"][name] = v0 = v
+        ipct[name] = (v / v0 - 1) * 100.0
     # 미확정(None)은 0으로 낮춰 표시하지 않는다 — 숫자로 보이는 순간 확정된다.
     # 지수 자리는 **주 지수 전용**: 주 지수가 결측이면 None을 기록한다. 다른
     #   지수를 대신 넣으면 화면·마감·일별 행이 그 값을 주 지수 이름으로 부른다
@@ -607,10 +665,12 @@ def session_update(st: dict, mkt: str, agg: dict, idx: dict,
         # 전일종가 갭을 지수에만 넣으면 1m/3m/전체에 영구 복리되는 비교 오차가 난다.
         daily_indices = dict(ipct)
     else:
+        # 전일종가가 없는 지수는 **명시적 None** — 키를 빼면 소비자가 세션
+        #   기준값으로 폴백해 기준이 다른 값을 일간 수익률로 쓴다(Codex V4 P1-2).
         daily_indices = {
-            name: (value / (idx_previous_close or {}).get(name) - 1) * 100
+            name: ((value / (idx_previous_close or {}).get(name) - 1) * 100
+                   if (idx_previous_close or {}).get(name) else None)
             for name, value in idx.items()
-            if (idx_previous_close or {}).get(name)
         }
     rnd = lambda v: None if v is None else round(v, 4)
     point = {
@@ -619,13 +679,14 @@ def session_update(st: dict, mkt: str, agg: dict, idx: dict,
         "A": rnd(a),
         "B": rnd(b),
         "unresolved": list(day.get("unresolved") or []),
-        "indices": {name: round(value, 4) for name, value in ipct.items()},
+        "pending": list(day.get("pending_keys") or []),
+        "indices": {name: rnd(value) for name, value in ipct.items()},
         "holdings": {
             key: (round(value, 4) if value is not None else None)
             for key, value in (holdings_daily or {}).items()
         },
         "daily_indices": {
-            name: round(value, 4) for name, value in daily_indices.items()
+            name: rnd(value) for name, value in daily_indices.items()
         },
     }
     if day["series_v2"] and day["series_v2"][-1].get("t") == now_hhmm:
@@ -751,7 +812,7 @@ def dashboard_snapshot(st: dict | None = None) -> dict:
         indices = dict(row.get("indices") or {})
         if not indices and row.get("idx") is not None:
             indices[IDX[market][0][1]] = float(row.get("idx") or 0)
-        days.append({
+        out_row = {
             "date": row.get("d"),
             "market": market,
             "basis": row.get("basis") or "previous_close",
@@ -762,10 +823,20 @@ def dashboard_snapshot(st: dict | None = None) -> dict:
             "unresolved_keys": list(row.get("unresolved_keys") or []),
             "A": (float(row["a"]) if row.get("a") is not None else None),
             "B": (float(row["b"]) if row.get("b") is not None else None),
-            "indices": {str(k): float(v) for k, v in indices.items()},
+            # 지수별 None(전일종가 결측 등 미확정)을 보존 — float(None) 금지.
+            "indices": {str(k): (float(v) if v is not None else None)
+                        for k, v in indices.items()},
             "holdings": dict(row.get("holdings") or {}),
-            "daily_indices": dict(row.get("daily_indices") or {}),
-        })
+        }
+        # daily_indices 키는 **원본 행에 있을 때만** 내보낸다. 항상 {}를 실으면
+        #   소비자가 구버전 행과 '명시적 결측' 행을 구분하지 못해 세션 기준값
+        #   폴백이 되살아난다(Codex V4 P1-2 — `?? indices` 세탁 경로).
+        row_daily = row.get("daily_indices")
+        if isinstance(row_daily, dict):
+            out_row["daily_indices"] = {
+                str(k): (float(v) if v is not None else None)
+                for k, v in row_daily.items()}
+        days.append(out_row)
     epoch = st.get("performance_epoch") or {}
     return {
         "version": SNAPSHOT_VERSION,
@@ -936,7 +1007,10 @@ def _vs_line(acct: float | None, ipct: dict) -> str:
     if acct is None:
         # 미확정이면 초과수익·색상 판정을 하지 않는다(P1-1).
         return f"내 계좌 미확정 vs {idx_txt}\n→ 지수 대비 판정 보류(수동 확인 필요)"
-    main = next(iter(ipct.values()), 0.0)
+    main = next(iter(ipct.values()), None)
+    if main is None:
+        # 주 지수 미확정(전일종가 결측 등) — null을 0처럼 빼지 않는다(V4 P1).
+        return f"내 계좌 {_fmt(acct)} vs {idx_txt}\n→ 지수 대비 판정 보류(지수 미확정)"
     d = acct - main
     mark = "🟢" if d >= 0 else "🔴"
     return f"내 계좌 {_fmt(acct)} vs {idx_txt}\n→ 지수 대비 {mark} {d:+.2f}%p"
@@ -986,6 +1060,7 @@ def _close_alert(st: dict, mkt: str, day: dict) -> None:
         "holdings": rich.get("holdings") or {},
         "daily_indices": rich.get("daily_indices") or {},
     })
+    _days_ledger_append(days[-1])           # 400일 창 밖으로 밀려도 원본 보존(P2-2)
     if day.get("nav_last"):
         # 미확정 **키**의 기준선만 다음 세션이 버리게 키 집합으로 싣는다(P1-2 —
         #   A만 이상인데 계좌·B의 carry까지 포기하면 정상 키 성과가 또 끊긴다).
@@ -1001,7 +1076,7 @@ def _close_alert(st: dict, mkt: str, day: dict) -> None:
     keep: set[int] = set()
     for market in ("US", "KR"):
         market_rows = [i for i, r in enumerate(days) if r.get("mkt") == market]
-        keep.update(market_rows[-400:])
+        keep.update(market_rows[-DAYS_RETENTION:])
     keep.update(i for i, r in enumerate(days) if r.get("mkt") not in ("US", "KR"))
     st["days"] = days = [r for i, r in enumerate(days) if i in keep]
     if quality != "ok":
@@ -1061,16 +1136,36 @@ def _close_alert(st: dict, mkt: str, day: dict) -> None:
 
 
 def _deliver_close_alert(st: dict, mkt: str, day: dict) -> None:
-    """마감 알림 전달 — 성공 시에만 pending 해제(다음 틱이 재시도)."""
+    """마감 알림 전달 — 성공 시에만 pending 해제(다음 틱이 재시도).
+
+    재시도·포기는 **횟수가 아니라 실제 경과 시간** 기준이다(Codex V4 P3-1 —
+    장외 분기는 5분 sample gate 앞이라 buyloop 1분 주기면 12회가 12분이었다).
+    5분 간격으로 재시도하고, 최초 실패 후 1시간이 지나면 포기하되 운영 경보와
+    품질 원장에 남긴다. `close_alert_body`는 forensic 목적으로 보존한다.
+    """
     body = day.get("close_alert_body")
     if not body or not day.get("close_alert_pending"):
         return
-    tries = int(day.get("close_alert_tries") or 0)
-    if tries >= 12:                       # 폭주 방지 — 12회(≈1시간) 후 포기
-        day["close_alert_pending"] = False
+    now_ts = time.time()
+    next_at = float(day.get("close_alert_next_at") or 0)
+    if now_ts < next_at:
+        return                              # 재시도 간격(5분) 미도달 — 대기
+    first_fail = float(day.get("close_alert_first_fail_at") or 0)
+    if first_fail and now_ts - first_fail >= 3600:
+        day["close_alert_pending"] = False  # body는 사후 진단용으로 남긴다
+        _quality_append({"ev": "close_alert_giveup", "mkt": mkt,
+                         "date": day.get("date"),
+                         "first_fail_at": first_fail,
+                         "tries": int(day.get("close_alert_tries") or 0)})
+        try:
+            notify.send(f"⚠️ 마감 성과 알림 1시간 재시도 실패 — 포기"
+                        f"({mkt} {day.get('date')}). 상태 파일에 본문 보존됨.",
+                        category="trade")
+        except Exception:
+            pass
         _save(st)
         return
-    day["close_alert_tries"] = tries + 1
+    day["close_alert_tries"] = int(day.get("close_alert_tries") or 0) + 1
     ok = False
     try:
         idx_name = "나스닥" if mkt == "US" else "코스피"
@@ -1081,4 +1176,9 @@ def _deliver_close_alert(st: dict, mkt: str, day: dict) -> None:
     if ok:
         day["close_alert_pending"] = False
         day.pop("close_alert_body", None)
+        day.pop("close_alert_first_fail_at", None)
+        day.pop("close_alert_next_at", None)
+    else:
+        day.setdefault("close_alert_first_fail_at", now_ts)
+        day["close_alert_next_at"] = now_ts + 300
     _save(st)

@@ -171,3 +171,61 @@ test("concentrationRows calculates the largest holding inside each currency", ()
     { ccy: "KRW", name: "222222", weight: 70, tone: "warning" },
   ]);
 });
+
+// ── 성과 vs 지수 null 산술·복리 (Codex TWR-V4 P1-1·P1-2·P2-3 반례) ──────
+
+const {
+  todayIndexDiff,
+  cumulativeAlphaSeries,
+  dailyIndexValue,
+  incompleteCount,
+} = require("../scanner/site_app/portfolio_math.js");
+
+test("todayIndexDiff never treats a null index as zero", () => {
+  assert.equal(todayIndexDiff(1.25, null), null);       // V4 P1-1 재현 입력
+  assert.equal(todayIndexDiff(null, 1.0), null);
+  assert.equal(todayIndexDiff(1.25, 0.5), 0.75);
+  assert.equal(todayIndexDiff(0, 0), 0);
+  assert.equal(todayIndexDiff(undefined, 2), null);
+  assert.equal(todayIndexDiff("1.25", "0.25"), 1);      // 문자열 숫자는 허용
+});
+
+test("cumulativeAlphaSeries compounds account and index separately", () => {
+  const alpha = (acct, idx) => cumulativeAlphaSeries(
+    acct.map((a, i) => ({ acct: a, idx: idx[i] })));
+  assert.deepEqual(alpha([10, 10], [0, 0]), [10, 21]);        // +21.00%p
+  assert.deepEqual(alpha([10, -10], [0, 0]), [10, -1]);       // -1.00%p (본전 아님)
+  assert.deepEqual(alpha([10, 10], [10, -10]), [0, 22]);      // +22.00%p
+});
+
+test("cumulativeAlphaSeries breaks the segment at any missing day", () => {
+  // 지수 +2, null, +3 — 결측을 건너뛰어 +5.06%로 잇는 것 금지.
+  const out = cumulativeAlphaSeries([
+    { acct: 1, idx: 2 }, { acct: 1, idx: null }, { acct: 1, idx: 3 },
+  ]);
+  assert.equal(out[0] !== null, true);
+  assert.deepEqual(out.slice(1), [null, null]);          // 결측 이후 전부 미확정
+  const accountMissing = cumulativeAlphaSeries([
+    { acct: null, idx: 1 }, { acct: 2, idx: 1 },
+  ]);
+  assert.deepEqual(accountMissing, [null, null]);
+});
+
+test("dailyIndexValue keeps explicit nulls instead of session fallback", () => {
+  const newRow = { daily_indices: { 나스닥: null }, indices: { 나스닥: 1.0 } };
+  assert.equal(dailyIndexValue(newRow, "나스닥"), null);  // V4 P1-2: 세탁 금지
+  const present = { daily_indices: { 나스닥: -0.4 }, indices: { 나스닥: 9 } };
+  assert.equal(dailyIndexValue(present, "나스닥"), -0.4);
+  // 새 스키마 행에서 키가 빠진 지수도 세션 값으로 폴백하지 않는다.
+  const missingName = { daily_indices: { "S&P500": 0.2 }, indices: { 나스닥: 2 } };
+  assert.equal(dailyIndexValue(missingName, "나스닥"), null);
+  // daily_indices 키 자체가 없는 구버전 행만 세션 값 폴백 허용.
+  const legacy = { indices: { 나스닥: 0.7 } };
+  assert.equal(dailyIndexValue(legacy, "나스닥"), 0.7);
+  assert.equal(dailyIndexValue({}, "나스닥"), null);
+});
+
+test("incompleteCount counts null/undefined/non-finite as missing", () => {
+  const rows = [{ v: 1 }, { v: null }, {}, { v: "x" }, { v: 0 }];
+  assert.equal(incompleteCount(rows, "v"), 3);
+});

@@ -206,8 +206,10 @@ def test_observed_cliffs_are_rejected_regardless_of_cause():
             hit = alpha.session_update(
                 st, "US", agg, idx, "22:36", "2026-08-04",
                 nav=_nav(100.0 * (1 - drop), 0.0), accounting_settled=True)
-        assert abs(hit["acct"]) < 1e-9, f"{label} 절벽이 통과됨: {hit['acct']}"
+        # 절벽은 누적되지 않고, hold 동안은 확정 숫자 대신 검증 중(None)이다.
+        assert hit["acct"] is None, f"{label} 절벽이 통과됨: {hit['acct']}"
         assert st["day"]["US"]["anomaly_pending"], label
+        assert st["day"]["US"]["wealth"]["account"] == 1.0, label  # 누적 없음
     print("[PASS] 실측 절벽 3종(-17%·-6.2%·-4.9%) 원인 불문 차단")
 
 
@@ -246,7 +248,10 @@ def test_persistent_anomaly_is_quarantined_not_confirmed_as_zero():
             out = alpha.session_update(
                 st, "US", agg, idx, f"22:{36 + i}", "2026-08-04",
                 nav=_nav(90.0, 0.0))
-            assert abs(out["acct"]) < 1e-9, i          # 보류 중엔 직전값 유지
+            # 보류(hold) 중엔 확정 숫자를 내보내지 않는다 — '검증 중' 표시
+            #   (Codex V4 P2-1: 의심 입력이 포함된 값이 15분간 확정처럼 보임).
+            assert out["acct"] is None, (i, out["acct"])
+            assert "account" in st["day"]["US"]["pending_keys"]
         final = alpha.session_update(
             st, "US", agg, idx, "22:50", "2026-08-04", nav=_nav(90.0, 0.0))
     assert final["acct"] is None, final["acct"]        # 0%로 확정하지 않는다
@@ -277,12 +282,15 @@ def test_one_sleeve_anomaly_does_not_erase_other_keys():
                              nav=nav0)
         out = alpha.session_update(st, "US", agg, idx, "22:36", "2026-08-04",
                                    nav=nav1)
-    assert abs(out["acct"] - (-0.6)) < 1e-9, out["acct"]
+    # A hold 동안 A와 (A를 가중 포함한) account는 '검증 중' — 숫자 금지(V4 P2-1).
+    #   독립 증명이 있는 B만 숫자다. 내부 wealth·기준선은 정상 유지된다.
+    assert out["acct"] is None, out["acct"]
+    assert out["a"] is None, out["a"]
     assert abs(out["b"] - 1.0) < 1e-6, out["b"]
-    assert abs(out["a"]) < 1e-9, out["a"]              # A만 보류
+    assert st["day"]["US"]["pending_keys"] == ["A", "account"]
     assert st["day"]["US"]["nav_prev"]["A"]["value"] == 20.0    # A 기준선 유지
     assert abs(st["day"]["US"]["nav_prev"]["B"]["value"] - 181.8) < 1e-9
-    print("[PASS] 이상 판정은 계좌/A/B 독립 — 정상 키의 수익을 지우지 않음")
+    print("[PASS] 이상 판정은 계좌/A/B 독립 — 정상 키만 숫자·hold는 검증 중")
 
 
 def test_close_keeps_per_key_values_and_quality_row():
@@ -496,7 +504,9 @@ def test_zero_and_nonfinite_values_cannot_wipe_the_account():
                 st, "US", agg, idx, "22:31", "2026-08-04", nav=_nav(100.0, 0.0))
             out = alpha.session_update(
                 st, "US", agg, idx, "22:36", "2026-08-04", nav=_nav(bad, 0.0))
-        assert abs(out["acct"]) < 1e-9, f"value={bad} 가 계좌를 지움: {out}"
+        # 누적 금지 + hold 동안 확정 숫자 금지(검증 중 None).
+        assert out["acct"] is None, f"value={bad} 가 계좌를 지움: {out}"
+        assert st["day"]["US"]["wealth"]["account"] == 1.0, bad
     print("[PASS] 잔고 0/붕괴 응답이 계좌 수익률을 지우지 못함")
 
 
@@ -517,7 +527,9 @@ def test_session_first_gap_allows_overnight_but_not_absurd():
         out2 = alpha.session_update(
             st2, "US", _flat_agg(), {"나스닥": 20000.0}, "22:31", "2026-08-04",
             nav=_nav(70.0, 0.0), idx_previous_close={"나스닥": 19900.0})
-    assert abs(out2["acct"]) < 1e-9, out2["acct"]          # 30% 갭은 보류
+    # 30% 갭은 보류 — hold 동안은 확정 숫자 대신 검증 중(None, V4 P2-1).
+    assert out2["acct"] is None, out2["acct"]
+    assert st2["day"]["US"]["wealth"]["account"] == 1.0    # 누적 없음
     print("[PASS] 첫 구간 갭은 허용범위까지만 · 과대 갭은 보류")
 
 
@@ -654,6 +666,131 @@ def test_dashboard_snapshot_is_percentage_only():
     print("[PASS] 개인 웹 성과 스냅샷 — A/B·4대 지수·퍼센트 전용")
 
 
+def test_missing_previous_close_never_becomes_zero_percent():
+    """Codex V4 P1-2: carry 세션에서 전일종가 없는 지수가 현재값 기준 0%로
+    quality=ok 확정되던 경로. 그 지수는 명시적 None(미확정)이어야 한다."""
+    carry = {"US": {"date": "2026-08-03", "nav_last": {
+        "account": {"value": 100.0, "flow": 0.0},
+        "A": {"value": 100.0, "flow": 0.0},
+        "B": {"value": 0.0, "flow": 0.0}}}}
+    st = {"carry": dict(carry)}
+    with mock.patch.object(alpha.notify, "send"), \
+            mock.patch.object(alpha.notify, "send_photo", return_value=True):
+        out = alpha.session_update(
+            st, "US", _flat_agg(), {"나스닥": 20000.0, "S&P500": 5100.0},
+            "22:31", "2026-08-04", nav=_nav(101.0, 0.0),
+            idx_previous_close={"S&P500": 5000.0})    # 나스닥 전일종가 결측
+    day = st["day"]["US"]
+    assert day["basis"] == "previous_close"
+    assert out["idx"]["나스닥"] is None, out["idx"]        # 0% 확정 금지
+    assert abs(out["idx"]["S&P500"] - 2.0) < 1e-9          # 있는 지수만 숫자
+    assert day["series"][-1][2] is None                    # 주 지수 자리 None
+    point = day["series_v2"][-1]
+    assert point["indices"]["나스닥"] is None
+    assert "나스닥" in point["daily_indices"]              # 키 자체는 존재 —
+    assert point["daily_indices"]["나스닥"] is None        # **명시적** None
+    assert point["daily_indices"]["S&P500"] is not None
+    # 다음 틱에 전일종가가 복구되면 — 현재값이 아니라 **전일종가**가 기준이 된다.
+    with mock.patch.object(alpha.notify, "send"):
+        out2 = alpha.session_update(
+            st, "US", _flat_agg(), {"나스닥": 20200.0, "S&P500": 5100.0},
+            "22:36", "2026-08-04", nav=_nav(101.0, 0.0),
+            idx_previous_close={"나스닥": 20000.0, "S&P500": 5000.0})
+    assert abs(out2["idx"]["나스닥"] - 1.0) < 1e-9, out2["idx"]  # 20000 기준 +1%
+    # 마감 행에도 결측이 숫자로 둔갑하지 않는다(스냅샷 직렬화 포함).
+    with mock.patch.object(alpha.notify, "send"), \
+            mock.patch.object(alpha.notify, "send_photo", return_value=True):
+        alpha._close_alert(st, "US", day)
+    row = st["days"][-1]
+    snap = alpha.dashboard_snapshot({"day": {}, "days": [
+        {**row, "indices": {"나스닥": None, "S&P500": 2.0},
+         "daily_indices": {"나스닥": None, "S&P500": 2.0}}]})
+    srow = snap["days"][0]
+    assert srow["indices"]["나스닥"] is None               # float(None) 금지
+    assert srow["daily_indices"]["나스닥"] is None
+    print("[PASS] 전일종가 결측 지수는 명시적 None — 현재값 0% 세탁 없음")
+
+
+def test_snapshot_omits_daily_indices_for_legacy_rows_only():
+    """Codex V4 P1-2 소비자 계약: 새 스키마 행은 daily_indices 키를 항상 갖고
+    (None 포함), 키가 없는 구버전 행만 프런트가 세션 값으로 폴백한다."""
+    snap = alpha.dashboard_snapshot({"day": {}, "days": [
+        {"d": "2026-08-01", "mkt": "US", "acct": 1.0, "idx": 0.5,
+         "indices": {"나스닥": 0.5}},                      # 구버전: daily 없음
+        {"d": "2026-08-02", "mkt": "US", "acct": 1.0, "idx": 0.5,
+         "indices": {"나스닥": 0.5}, "daily_indices": {"나스닥": None}},
+    ]})
+    legacy, fresh = snap["days"]
+    assert "daily_indices" not in legacy                   # 구버전 표식 보존
+    assert fresh["daily_indices"] == {"나스닥": None}      # 명시적 결측 보존
+    print("[PASS] 스냅샷이 구버전/명시적-결측 행을 구분해 전파")
+
+
+def test_close_alert_retry_is_time_based_not_count_based():
+    """Codex V4 P3-1: 12회 카운트는 호출 주기에 따라 12분이 될 수 있다.
+    5분 간격 재시도 + 최초 실패 후 1시간 경과 시에만 포기해야 한다."""
+    st, agg, idx = {}, _flat_agg(), {"나스닥": 20000.0}
+    with mock.patch.object(alpha.notify, "send", return_value=False), \
+            mock.patch.object(alpha.notify, "send_photo", return_value=False):
+        alpha.session_update(st, "US", agg, idx, "22:31", "2026-08-04",
+                             nav=_nav(100.0, 0.0))
+        day = st["day"]["US"]
+        with mock.patch.object(alpha, "_save"), \
+                mock.patch.object(alpha, "_quality_append") as qa:
+            t0 = 1_800_000_000.0
+            with mock.patch.object(alpha.time, "time", return_value=t0):
+                alpha._close_alert(st, "US", day)          # 1차 실패
+            assert day["close_alert_pending"] is True
+            assert day["close_alert_tries"] == 1
+            assert day["close_alert_first_fail_at"] == t0
+            # 1분 뒤 호출(빠른 buyloop 주기) — 재시도 간격 미도달, 소모 없음.
+            with mock.patch.object(alpha.time, "time", return_value=t0 + 60):
+                alpha._deliver_close_alert(st, "US", day)
+            assert day["close_alert_tries"] == 1
+            # 6분 뒤 — 실제 재시도 1회.
+            with mock.patch.object(alpha.time, "time", return_value=t0 + 360):
+                alpha._deliver_close_alert(st, "US", day)
+            assert day["close_alert_tries"] == 2
+            # 1시간 경과 — 포기하되 경보·품질 원장 기록, 본문은 보존.
+            with mock.patch.object(alpha.time, "time", return_value=t0 + 3601):
+                alpha._deliver_close_alert(st, "US", day)
+            assert day["close_alert_pending"] is False
+            assert day.get("close_alert_body")             # forensic 보존
+            assert any(c.args[0].get("ev") == "close_alert_giveup"
+                       for c in qa.call_args_list)
+    print("[PASS] 마감 알림 재시도는 시간 기준(5분 간격·1시간 포기)")
+
+
+def test_close_appends_to_long_term_days_ledger():
+    """Codex V4 P2-2: state days[]는 400일 창 — 창 밖으로 밀려도 원본이 남게
+    마감마다 append-only 장기 원장에 먼저 영속한다."""
+    st, agg, idx = {}, _flat_agg(), {"나스닥": 20000.0}
+    with tempfile.TemporaryDirectory() as tmp:
+        ledger_path = os.path.join(tmp, "days.jsonl")
+        with mock.patch.object(alpha, "DAYS_LEDGER_PATH", ledger_path), \
+                mock.patch.object(alpha.notify, "send"), \
+                mock.patch.object(alpha.notify, "send_photo", return_value=True):
+            alpha.session_update(st, "US", agg, idx, "22:31", "2026-08-04",
+                                 nav=_nav(100.0, 0.0))
+            alpha.session_update(st, "US", agg, idx, "22:36", "2026-08-04",
+                                 nav=_nav(101.0, 0.0))
+            alpha._close_alert(st, "US", st["day"]["US"])
+        import json as _json
+        lines = [_json.loads(l) for l in open(ledger_path, encoding="utf-8")]
+    assert len(lines) == 1
+    assert lines[0]["d"] == "2026-08-04" and lines[0]["mkt"] == "US"
+    assert abs(lines[0]["acct"] - 1.0) < 1e-6
+    print("[PASS] 마감 행이 append-only 장기 원장에 영속(400일 창 밖 보존)")
+
+
+def test_vs_line_holds_judgement_when_index_unknown():
+    """Codex V4 P1-1 백엔드 대칭: 주 지수 None이면 초과수익을 빼지 않는다."""
+    line = alpha._vs_line(1.25, {"나스닥": None})
+    assert "판정 보류" in line and "+1.25%p" not in line, line
+    assert "🔴" not in line and "🟢" not in line
+    print("[PASS] 지수 미확정이면 지수 대비 판정 보류(0% 뺄셈 없음)")
+
+
 def main():
     test_aggregate()
     test_session_and_flow_neutral()
@@ -682,6 +819,11 @@ def main():
     test_state_roundtrip()
     test_accounting_migration_rebase_is_atomic_and_idempotent()
     test_dashboard_snapshot_is_percentage_only()
+    test_missing_previous_close_never_becomes_zero_percent()
+    test_snapshot_omits_daily_indices_for_legacy_rows_only()
+    test_close_alert_retry_is_time_based_not_count_based()
+    test_close_appends_to_long_term_days_ledger()
+    test_vs_line_holds_judgement_when_index_unknown()
     print("\n알파 추적 검증 통과 — 집계·세션기준·캡처통계.")
 
 

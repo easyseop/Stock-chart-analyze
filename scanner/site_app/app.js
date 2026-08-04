@@ -1782,10 +1782,13 @@ function performanceRows(market, range) {
         holdings: coverage.value,
         holdingsCovered: coverage.covered,
         holdingsEligible: coverage.eligible,
+        // 명시적 null(미확정 지수)을 세션 값으로 폴백하지 않는다 — `??`는
+        //   null도 오른쪽으로 대체해 기준이 다른 값이 일간 누적에 섞였다
+        //   (Codex TWR-V4 P1-2). 구버전 행(키 자체 없음)만 세션 값 폴백.
         ...Object.fromEntries(indexNames.map((name) =>
-          [`idx:${name}`, row.daily_indices?.[name] ?? row.indices?.[name]])),
+          [`idx:${name}`, PortfolioMath.dailyIndexValue(row, name)])),
         ...Object.fromEntries(indexNames.map((name) =>
-          [`dailyidx:${name}`, row.daily_indices?.[name] ?? row.indices?.[name]])),
+          [`dailyidx:${name}`, PortfolioMath.dailyIndexValue(row, name)])),
       };
     });
   const current = marketDoc.series?.at(-1);
@@ -1818,12 +1821,8 @@ function performanceRows(market, range) {
   //   남아 있던 같은 결함(Codex TWR-V3 P1-3).
   const accountKeys = ["account", "A", "B",
     ...indexNames.map((name) => `idx:${name}`)];
-  const keyIncomplete = Object.fromEntries(accountKeys.map((key) => {
-    const missing = daily.filter((row) =>
-      row[key] === null || row[key] === undefined
-      || !Number.isFinite(Number(row[key]))).length;
-    return [key, missing];
-  }));
+  const keyIncomplete = Object.fromEntries(accountKeys.map((key) =>
+    [key, PortfolioMath.incompleteCount(daily, key)]));
   const cumulative = Object.fromEntries(keys.map((key) => [key, 0]));
   return daily.map((row) => {
     const out = { label: row.label };
@@ -1942,6 +1941,10 @@ function renderKisPerformance() {
     ? Number(latest.account) - Number(latest[`idx:${primary}`])
     : null;
   const age = relativeMinutes(state.performance?.generated_at);
+  // '전체' 라벨 정직성(Codex TWR-V4 P2-2): 서버 state는 시장별 400거래일 창만
+  //   유지한다. 창이 가득 찼으면 '전체'가 실제로는 절단 창임을 명시한다.
+  const marketDayCount = (state.performance?.days || [])
+    .filter((row) => row.market === market).length;
   content.innerHTML = `
     <div class="performance-controls">
       <div class="chart-range-row">
@@ -1990,7 +1993,10 @@ function renderKisPerformance() {
             </button>`;
           }).join("")}
         </div>
-        <p class="chart-note">위 이름을 누르면 해당 선을 끄거나 다시 켤 수 있습니다. ${escapeHTML(epochLabel || "현재 성과 기준")}부터 장기 누적하며, 이전 손상 구간은 비교에 섞지 않습니다. ${escapeHTML(state.performance?.basis || "KIS 봇 운용자산 NAV/TWR 기준")} · ${finite(state.performance?.sample_seconds, 300) / 60}분 간격.</p>
+        <p class="chart-note">위 이름을 누르면 해당 선을 끄거나 다시 켤 수 있습니다. ${escapeHTML(epochLabel || "현재 성과 기준")}부터 장기 누적하며, 이전 손상 구간은 비교에 섞지 않습니다. ${escapeHTML(state.performance?.basis || "KIS 봇 운용자산 NAV/TWR 기준")} · ${finite(state.performance?.sample_seconds, 300) / 60}분 간격.${
+          range === "all"
+            ? ` <b>전체 = ${rows.length ? `${escapeHTML(rows[0].label)}부터 ` : ""}최근 ${marketDayCount >= 400 ? "400거래일 창" : `${marketDayCount}거래일`}</b>${marketDayCount >= 400 ? " — 창 밖 과거 이력은 서버 장기 원장(alpha_days)에 보존되며 화면 누적에는 포함되지 않습니다." : "."}`
+            : ""}</p>
       </div>` :
       emptyState("지수 비교 데이터를 쌓는 중이에요",
         "장중 첫 수집이 완료되면 전략 A·B와 나스닥·S&P500·코스피·코스닥 차트가 자동으로 나타납니다.")}

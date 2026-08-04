@@ -174,6 +174,59 @@
     };
   }
 
+  // ── 성과 vs 지수 순수 계산(perf.html·app.js 공용) ──────────────
+  // null(미확정)은 어떤 산술에도 0처럼 넣지 않는다 — JS에서 `x - null`은
+  // 조용히 `x - 0`이 된다(Codex TWR-V4 P1-1). 아래 함수만 통해서 계산한다.
+
+  function todayIndexDiff(account, index) {
+    const acct = optionalNumber(account);
+    const idx = optionalNumber(index);
+    return acct === null || idx === null ? null : acct - idx;
+  }
+
+  function cumulativeAlphaSeries(rows) {
+    // 계좌·지수를 **각각 복리**한 뒤의 차이(%p). 어느 한쪽이라도 미확정/결측인
+    // 날부터는 잇지 않는다 — 끊긴 구간을 하나의 연속 곡선처럼 복리 금지.
+    let accountWealth = 1;
+    let indexWealth = 1;
+    let broken = false;
+    return rows.map((row) => {
+      const acct = optionalNumber(row.acct);
+      const idx = optionalNumber(row.idx);
+      if (broken || acct === null || idx === null) {
+        broken = true;
+        return null;
+      }
+      accountWealth *= 1 + acct / 100;
+      indexWealth *= 1 + idx / 100;
+      return Number(((accountWealth - indexWealth) * 100).toFixed(2));
+    });
+  }
+
+  function dailyIndexValue(row, name) {
+    // 일간 지수 수익률 선택. `daily_indices` 키가 있는 새 스키마 행에서는
+    // **명시적 null(미확정)을 세션 기준값으로 폴백하지 않는다** — 기준이 다른
+    // 값을 일간 수익률로 쓰면 모르는 지수가 숫자로 둔갑한다(TWR-V4 P1-2).
+    // 키 자체가 없는 구버전 행만 세션 값 폴백을 허용한다.
+    const daily = row ? row.daily_indices : null;
+    if (daily && typeof daily === "object") {
+      return Object.prototype.hasOwnProperty.call(daily, name)
+        ? optionalNumber(daily[name])
+        : null;
+    }
+    if (daily === undefined || daily === null) {
+      const session = row && row.indices;
+      return session && typeof session === "object"
+        ? optionalNumber(session[name])
+        : null;
+    }
+    return null;
+  }
+
+  function incompleteCount(rows, key) {
+    return rows.filter((row) => optionalNumber(row[key]) === null).length;
+  }
+
   return Object.freeze({
     optionalNumber,
     positionInvestmentSummary,
@@ -184,5 +237,9 @@
     maximumDrawdown,
     completeHoldingsValue,
     completeHoldingsSeries,
+    todayIndexDiff,
+    cumulativeAlphaSeries,
+    dailyIndexValue,
+    incompleteCount,
   });
 });
