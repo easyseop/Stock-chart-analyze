@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated_at": "2026-08-04T10:04:07+09:00",
+ "generated_at": "2026-08-04T10:19:42+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "shelf_debug": {
   "ok": 19,
@@ -445,24 +445,24 @@
    "group": "now",
    "entry_kind": "now",
    "stage": 3,
-   "price": 375000.0,
-   "entry": 375000.0,
-   "stop": 344138.1473,
-   "target": 436723.7054,
+   "price": 377000.0,
+   "entry": 377000.0,
+   "stop": 347413.9939,
+   "target": 436172.0121,
    "shares_1pct": 3,
-   "range_pos": 0.2154,
+   "range_pos": 0.2231,
    "norm": -0.0,
    "bear_share": 0.25,
    "fresh": false,
-   "break_gap": 0.0651,
+   "break_gap": 0.0738,
    "earnings_d": null,
    "tactic": {
-    "stop_pct": 8.2,
+    "stop_pct": 7.8,
     "pb_price": 350306.25,
-    "pb_stop_pct": 1.8,
+    "pb_stop_pct": 0.8,
     "mode": "pullback",
     "label": "⏳ 눌림 지정가만",
-    "desc": "지금 추격 금지(손절폭 8.2% · 돌파후 진행) — <b>350,306원 눌림 지정가만</b>. 눌리면 손절폭 1.8%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
+    "desc": "지금 추격 금지(손절폭 7.8% · 돌파후 진행) — <b>350,306원 눌림 지정가만</b>. 눌리면 손절폭 0.8%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
    }
   },
   {
@@ -2626,22 +2626,22 @@
    "stage": 2,
    "price": 131100.0,
    "entry": 131100.0,
-   "stop": 113243.8109,
-   "target": 166812.3781,
+   "stop": 113847.8244,
+   "target": 165604.3511,
    "shares_1pct": 5,
    "range_pos": 0.1202,
    "norm": -60.7,
    "bear_share": 0.5,
    "fresh": true,
-   "break_gap": 0.0177,
+   "break_gap": 0.0334,
    "earnings_d": null,
    "tactic": {
-    "stop_pct": 13.6,
+    "stop_pct": 13.2,
     "pb_price": 116900.0,
-    "pb_stop_pct": 3.1,
+    "pb_stop_pct": 2.6,
     "mode": "pullback",
     "label": "⏳ 눌림 지정가만",
-    "desc": "지금 추격 금지(손절폭 13.6% · 단기 이격) — <b>116,900원 눌림 지정가만</b>. 눌리면 손절폭 3.1%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
+    "desc": "지금 추격 금지(손절폭 13.2% · 단기 이격) — <b>116,900원 눌림 지정가만</b>. 눌리면 손절폭 2.6%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
    }
   },
   {
@@ -3245,6 +3245,27 @@
     "label": "⏳ 눌림 지정가만",
     "desc": "지금 추격 금지(손절폭 9.3% · 단기 이격) — <b>$24.42 눌림 지정가만</b>. 눌리면 손절폭 0.4%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
    }
+  },
+  {
+   "id": "192820-2026-08-04-watch",
+   "code": "192820",
+   "name": "코스맥스",
+   "ccy": "KRW",
+   "group": "watch",
+   "entry_kind": "pullback",
+   "stage": 1,
+   "price": 193400.0,
+   "entry": 189521.8333,
+   "stop": 166941.8648,
+   "target": 234681.7703,
+   "shares_1pct": 4,
+   "range_pos": 0.4062,
+   "norm": 6.6,
+   "bear_share": 0.375,
+   "fresh": true,
+   "break_gap": -0.0055,
+   "earnings_d": null,
+   "tactic": null
   },
   {
    "id": "IDXX-2026-08-04-watch",
