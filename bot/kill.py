@@ -42,9 +42,26 @@ def _path() -> str:
     return os.environ.get("KILL_STATE_PATH", _DEFAULT)
 
 
+def _log_path() -> str:
+    """감사 로그 경로 — 상태 경로를 옮기면 로그도 함께 옮긴다.
+
+    종전에는 모듈 상수 하나만 써서, KILL_STATE_PATH로 상태를 격리한 테스트도
+    **운영 감사로그**에 기록을 남겼다(`who=test·why=readiness` 오염 실측).
+    사고 조사 때 실제 상승 사유와 테스트 흔적이 섞여 판단을 흐린다.
+    """
+    override = os.environ.get("KILL_LOG_PATH")
+    if override:
+        return override
+    state = _path()
+    if os.path.abspath(state) == os.path.abspath(_DEFAULT):
+        return LOG_PATH
+    return os.path.join(
+        os.path.dirname(os.path.abspath(state)) or ".", "kill_log.jsonl")
+
+
 def _log(ev: dict) -> None:
     try:
-        with open(LOG_PATH, "a", encoding="utf-8") as f:
+        with open(_log_path(), "a", encoding="utf-8") as f:
             f.write(json.dumps({"ts": time.time(), **ev}, ensure_ascii=False) + "\n")
     except Exception:
         pass
@@ -143,11 +160,17 @@ def main(argv: list[str] | None = None) -> int:
                     help="상향 수행자")
     ap.add_argument("--lower", action="store_true",
                     help="레벨 하향(operator ack로 사유 필수)")
-    args = ap.parse_args(argv)
+    # argparse는 가변 위치인자(reason) 사이에 낀 옵션을 못 읽는다. 사고 대응 중에
+    #   `kill 0 --lower "사유"`처럼 치면 통째로 거부돼 하향이 막혔다(실측). 남은
+    #   토막은 사유로 합쳐 순서에 관계없이 동작시키되, 모르는 **옵션**은 계속 거부.
+    args, extra = ap.parse_known_args(argv)
+    unknown_flags = [a for a in extra if a.startswith("-")]
+    if unknown_flags:
+        ap.error(f"알 수 없는 옵션: {' '.join(unknown_flags)}")
     if args.level is None:
         print(f"L{level()}")
         return 0
-    why = " ".join(args.reason).strip()
+    why = " ".join(list(args.reason) + extra).strip()
     if not why:
         ap.error("레벨 변경 사유가 필요합니다")
     if args.lower:
