@@ -32,7 +32,7 @@ import urllib.parse
 import urllib.request
 from zoneinfo import ZoneInfo
 
-from bot import costbook, kis, kis_positions, notify, settings
+from bot import costbook, kis, kis_positions, ledger, notify, settings
 
 STATE_PATH = os.environ.get(
     "ALPHA_STATE_PATH", os.path.join(os.path.dirname(__file__), "alpha_state.json"))
@@ -279,11 +279,22 @@ def holdings_equal_weight(rows: list[dict], mkt: str, recs: dict,
     }
 
 
-def _twr_step(day: dict, nav: dict) -> dict[str, float]:
-    """한 관측 구간의 외부흐름을 제거해 일중 TWR을 누적한다."""
+def _twr_step(day: dict, nav: dict, *, settled: bool = True) -> dict[str, float]:
+    """한 관측 구간의 외부흐름을 제거해 일중 TWR을 누적한다.
+
+    ``settled=False``(미회계 체결 존재)면 **기준선을 그대로 두고** 누적을 건너뛴다.
+    보유평가액(브로커)만 먼저 움직이고 현금흐름(원장)이 늦게 붙는 구간을 그대로
+    누적하면 매도가 유령 손실로 각인되기 때문이다. 회계가 끝난 뒤 원래 기준선에서
+    한 번에 계산하면 평가액 변화와 외부흐름이 같은 구간에서 상쇄돼 정확해진다.
+    """
     values = {}
     prev = day.setdefault("nav_prev", {})
     wealth = day.setdefault("wealth", {"account": 1.0, "A": 1.0, "B": 1.0})
+    if not settled:
+        day["accounting_pending"] = True
+        return {key: (float(wealth.get(key, 1.0)) - 1.0) * 100.0
+                for key in ("account", "A", "B")}
+    day["accounting_pending"] = False
     for key in ("account", "A", "B"):
         cur_value = float((nav.get(key) or {}).get("value") or 0)
         cur_flow = float((nav.get(key) or {}).get("flow") or 0)
@@ -305,7 +316,8 @@ def session_update(st: dict, mkt: str, agg: dict, idx: dict,
                    nav: dict | None = None,
                    idx_previous_close: dict | None = None,
                    holdings_daily: dict | None = None,
-                   holding_start_codes: set[str] | None = None) -> dict:
+                   holding_start_codes: set[str] | None = None,
+                   accounting_settled: bool = True) -> dict:
     """세션 상태 갱신 → 계좌·A/B·모든 지수를 같은 0% 기준으로 저장."""
     day = st.setdefault("day", {}).get(mkt)
     tot_pl = agg[mkt]["A"]["pl"] + agg[mkt]["B"]["pl"]
@@ -338,7 +350,7 @@ def session_update(st: dict, mkt: str, agg: dict, idx: dict,
     day.setdefault("series_v2", [])
     day.setdefault("holding_start_codes", sorted(holding_start_codes or set()))
     if nav_mode:
-        twr = _twr_step(day, nav)
+        twr = _twr_step(day, nav, settled=accounting_settled)
         acct, a, b = twr["account"], twr["A"], twr["B"]
     else:
         acct = _pct(tot_pl - day["pl0"], tot_cost)
@@ -582,13 +594,18 @@ def tick(now: datetime.datetime | None = None) -> None:
                 start_codes.add(code)
         else:
             start_codes = {str(code).upper() for code in persisted_start}
+        try:
+            settled = ledger.unaccounted_fills() == 0
+        except Exception:
+            settled = False                  # 원장 판정 불가 = 누적 보류(fail-closed)
         r = session_update(
             st, mkt, agg, idx, now.strftime("%H:%M"), session_day,
             nav=nav_inputs(agg, mkt), idx_previous_close=idx_previous,
             holdings_daily=holdings_equal_weight(
                 rows, mkt, recs, baseline, session_day,
                 start_codes=start_codes),
-            holding_start_codes=start_codes)
+            holding_start_codes=start_codes,
+            accounting_settled=settled)
         st.setdefault("sampled_at", {})[mkt] = now.timestamp()
         first = len(r["series"]) == 1
         last_alert = st.setdefault("alert", {}).get(mkt, 0)
@@ -630,14 +647,19 @@ def _close_alert(st: dict, mkt: str, day: dict) -> None:
     rich = (day.get("series_v2") or [{}])[-1]
     d = acct - ipct
     days = st.setdefault("days", [])
-    days.append({
-        "d": day["date"], "mkt": mkt, "acct": acct, "idx": ipct,
-        "basis": day.get("basis") or "first_sample",
-        "a": rich.get("A"), "b": rich.get("B"),
-        "indices": rich.get("indices") or {IDX[mkt][0][1]: ipct},
-        "holdings": rich.get("holdings") or {},
-        "daily_indices": rich.get("daily_indices") or {},
-    })
+    # 회계 미정산으로 마감한 날의 계좌 수익률은 매도 시차만 반영된 값일 수 있다.
+    #   그 값을 누적 기록에 넣으면 1개월·3개월·전체가 영구 오염된다(예전 -17% 사례).
+    #   기록은 보류하고 다음 정산 세션부터 이어간다(지수·carry는 정상 저장).
+    pending = bool(day.get("accounting_pending"))
+    if not pending:
+        days.append({
+            "d": day["date"], "mkt": mkt, "acct": acct, "idx": ipct,
+            "basis": day.get("basis") or "first_sample",
+            "a": rich.get("A"), "b": rich.get("B"),
+            "indices": rich.get("indices") or {IDX[mkt][0][1]: ipct},
+            "holdings": rich.get("holdings") or {},
+            "daily_indices": rich.get("daily_indices") or {},
+        })
     if day.get("nav_last"):
         st.setdefault("carry", {})[mkt] = {
             "date": day.get("date"), "nav_last": day["nav_last"]}
@@ -645,11 +667,17 @@ def _close_alert(st: dict, mkt: str, day: dict) -> None:
     cap = capture_stats(days, mkt)
     name = "미장·나스닥" if mkt == "US" else "국장·코스피"
     mark = "🟢" if d >= 0 else "🔴"
-    body = (f"🏁 <b>장 마감 성과</b> ({name})\n"
-            f"오늘: 내 계좌 {_fmt(acct)} vs 지수 {_fmt(ipct)} "
-            f"→ {mark} {d:+.2f}%p\n"
-            + (f"누적 통계: {cap}" if cap
-               else "누적 통계: 5일 이상 쌓이면 상승/하락 캡처 표시"))
+    if pending:
+        body = (f"🏁 <b>장 마감 성과</b> ({name})\n"
+                f"⏳ 매도 회계 정산 대기 — 계좌 수익률 산정 보류"
+                f"(지수 {_fmt(ipct)})\n"
+                "정산되면 다음 세션부터 이어집니다. 누적 기록에는 넣지 않았습니다.")
+    else:
+        body = (f"🏁 <b>장 마감 성과</b> ({name})\n"
+                f"오늘: 내 계좌 {_fmt(acct)} vs 지수 {_fmt(ipct)} "
+                f"→ {mark} {d:+.2f}%p\n"
+                + (f"누적 통계: {cap}" if cap
+                   else "누적 통계: 5일 이상 쌓이면 상승/하락 캡처 표시"))
     idx_name = "나스닥" if mkt == "US" else "코스피"
     url = chart_url(day["series"], idx_name, f"{day['date']} 세션 추이")
     if not notify.send_photo(url, body):

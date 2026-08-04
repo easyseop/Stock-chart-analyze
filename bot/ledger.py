@@ -571,6 +571,23 @@ def orders_for(symbol: str | None = None, *, side: str | None = None,
     return out
 
 
+def unaccounted_fills(side: str | None = None) -> int:
+    """회계(costbook 반영)가 아직 안 끝난 체결 주문 수.
+
+    성과 계산은 보유평가액을 **브로커 실시간**에서, 현금흐름을 **이 원장**에서
+    읽는다. 두 소스의 시차 동안 매도는 '증발한 돈', 매수는 '공짜 이익'으로
+    보이므로 그 구간을 수익률에 누적하면 안 된다(2026-08-03 유령 -6%p 절벽).
+    """
+    want = str(side or "").upper() or None
+    n = 0
+    for cur in _fold().values():
+        if want and str(cur.get("side") or "").upper() != want:
+            continue
+        if int(cur.get("filled") or 0) > int(cur.get("accounted") or 0):
+            n += 1
+    return n
+
+
 def open_orders(symbol: str | None = None, *, side: str | None = None) -> list:
     """종료되지 않은(잔여 가능성 있는) 주문 목록 — 대사·경합 판정 대상."""
     return [o for o in orders_for(symbol, side=side)

@@ -99,6 +99,93 @@ def test_nav_twr_uses_previous_close_and_removes_trade_flows():
     print("[PASS] NAV/TWR: 전일종가 기준 + 매수·매도 현금흐름 제거")
 
 
+def _nav(value, flow):
+    return {"account": {"value": value, "flow": flow},
+            "A": {"value": value, "flow": flow},
+            "B": {"value": 0.0, "flow": 0.0}}
+
+
+def _flat_agg():
+    return {"US": {"A": {"cost": 0.0, "pl": 0.0},
+                   "B": {"cost": 0.0, "pl": 0.0}},
+            "KR": {"A": {"cost": 0.0, "pl": 0.0},
+                   "B": {"cost": 0.0, "pl": 0.0}}}
+
+
+def test_unaccounted_sell_does_not_carve_phantom_cliff():
+    """2026-08-03 재현: 매도로 브로커 평가액만 먼저 줄고 원장 회계는 지연.
+
+    종전에는 그 구간이 계좌 -6.2%p 절벽으로 각인되고, 회계가 세션 안에 못
+    따라잡으면 마감 기록까지 영구 오염됐다.
+    """
+    st, agg, idx = {}, _flat_agg(), {"나스닥": 20000.0}
+    base = alpha.session_update(
+        st, "US", agg, idx, "22:35", "2026-08-03", nav=_nav(100.0, 0.0))
+    assert abs(base["acct"]) < 1e-9
+
+    # 6.2원어치 손절 매도 — 평가액은 즉시 반영, 회계(flow)는 아직.
+    lag = alpha.session_update(
+        st, "US", agg, idx, "22:40", "2026-08-03",
+        nav=_nav(93.8, 0.0), accounting_settled=False)
+    assert abs(lag["acct"]) < 1e-9, f"유령 절벽 발생: {lag['acct']}"
+    assert st["day"]["US"]["accounting_pending"] is True
+
+    # 회계가 붙으면 원래 기준선에서 한 번에 계산 → 손실 0.
+    done = alpha.session_update(
+        st, "US", agg, idx, "22:45", "2026-08-03",
+        nav=_nav(93.8, -6.2), accounting_settled=True)
+    assert abs(done["acct"]) < 1e-9, f"정산 후에도 오차: {done['acct']}"
+    assert st["day"]["US"]["accounting_pending"] is False
+
+    # 정산 뒤의 진짜 시세 하락은 그대로 반영돼야 한다(과잉 억제 금지).
+    real = alpha.session_update(
+        st, "US", agg, idx, "22:50", "2026-08-03", nav=_nav(84.42, -6.2))
+    assert abs(real["acct"] - (-10.0)) < 1e-6, real["acct"]
+    print("[PASS] 미회계 매도는 유령 절벽 0 · 정산 후 실제 등락은 그대로")
+
+
+def test_unaccounted_buy_does_not_fabricate_gain():
+    st, agg, idx = {}, _flat_agg(), {"나스닥": 20000.0}
+    alpha.session_update(
+        st, "US", agg, idx, "22:35", "2026-08-03", nav=_nav(100.0, 0.0))
+    lag = alpha.session_update(
+        st, "US", agg, idx, "22:40", "2026-08-03",
+        nav=_nav(130.0, 0.0), accounting_settled=False)
+    assert abs(lag["acct"]) < 1e-9, f"유령 이익 발생: {lag['acct']}"
+    done = alpha.session_update(
+        st, "US", agg, idx, "22:45", "2026-08-03",
+        nav=_nav(130.0, 30.0), accounting_settled=True)
+    assert abs(done["acct"]) < 1e-9
+    print("[PASS] 미회계 매수도 공짜 이익으로 잡히지 않음")
+
+
+def test_pending_close_is_not_written_into_cumulative_days():
+    st, agg, idx = {}, _flat_agg(), {"나스닥": 20000.0}
+    alpha.session_update(
+        st, "US", agg, idx, "22:35", "2026-08-03", nav=_nav(100.0, 0.0))
+    alpha.session_update(
+        st, "US", agg, idx, "22:40", "2026-08-03",
+        nav=_nav(93.8, 0.0), accounting_settled=False)
+    sent = []
+    with mock.patch.object(alpha.notify, "send_photo", return_value=False), \
+            mock.patch.object(alpha.notify, "send",
+                              side_effect=lambda *a, **k: sent.append(a[0])):
+        alpha._close_alert(st, "US", st["day"]["US"])
+    assert st.get("days") == [] or not st.get("days"), st.get("days")
+    assert any("정산 대기" in text for text in sent), sent
+    # 다음 세션이 정산 상태로 마감하면 정상 기록된다.
+    st2 = {"carry": st.get("carry")}
+    alpha.session_update(
+        st2, "US", agg, idx, "22:35", "2026-08-04", nav=_nav(93.8, -6.2))
+    alpha.session_update(
+        st2, "US", agg, idx, "22:40", "2026-08-04", nav=_nav(98.49, -6.2))
+    with mock.patch.object(alpha.notify, "send_photo", return_value=True), \
+            mock.patch.object(alpha.notify, "send"):
+        alpha._close_alert(st2, "US", st2["day"]["US"])
+    assert len(st2["days"]) == 1 and st2["days"][0]["d"] == "2026-08-04"
+    print("[PASS] 미정산 마감일은 누적 기록에서 보류 · 정산일은 정상 기록")
+
+
 def test_holdings_equal_weight_uses_starting_positions_only():
     import pandas as pd
     rows = [
@@ -235,6 +322,9 @@ def main():
     test_aggregate()
     test_session_and_flow_neutral()
     test_nav_twr_uses_previous_close_and_removes_trade_flows()
+    test_unaccounted_sell_does_not_carve_phantom_cliff()
+    test_unaccounted_buy_does_not_fabricate_gain()
+    test_pending_close_is_not_written_into_cumulative_days()
     test_holdings_equal_weight_uses_starting_positions_only()
     test_capture_stats()
     test_state_roundtrip()
