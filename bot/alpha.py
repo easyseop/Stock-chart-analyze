@@ -156,19 +156,35 @@ QUALITY_PATH = os.environ.get(
     os.path.join(os.path.dirname(__file__), "alpha_quality.jsonl"))
 
 
+_quality_fail_alerted = False
+
+
 def _quality_append(ev: dict) -> None:
     """append-only 품질 원장(로컬 전용) — 격리·미확정 마감의 진단 근거 보존.
 
     day 내부 anomaly_log는 다음 세션 교체 때 사라진다(Codex P2-3). 다음 절벽의
     원인 확정에 필요한 원본을 여기 남긴다. 공개 API로는 내보내지 않는다.
+    fsync로 전원 장애 내구성을 확보하고, 쓰기 실패는 1회 경보한다(조용한 소실
+    방지 — Codex V3 P2-3).
     """
+    global _quality_fail_alerted
     try:
         with open(QUALITY_PATH, "a", encoding="utf-8") as f:
             f.write(json.dumps({"ts": time.time(), **ev},
                                ensure_ascii=False) + "\n")
+            f.flush()
+            os.fsync(f.fileno())
         os.chmod(QUALITY_PATH, 0o600)
-    except Exception:
-        pass
+        _quality_fail_alerted = False
+    except Exception as exc:
+        if not _quality_fail_alerted:
+            _quality_fail_alerted = True
+            try:
+                notify.send(f"⚠️ 성과 품질 원장 기록 실패({type(exc).__name__})"
+                            " — 진단 근거가 소실될 수 있음. 디스크·권한 확인 필요.",
+                            category="trade")
+            except Exception:
+                pass
 
 
 def _load() -> dict:
@@ -451,6 +467,12 @@ def _twr_step(day: dict, nav: dict, *, settled: bool = True,
         prev[key] = {"value": cur_value, "flow": cur_flow}
         quarantined.append(row)
 
+    # account는 A+B의 종속값이다 — 슬리브 하나가 미확정이면 그 의심 변화를
+    #   가중 포함한 account도 증명이 없다. "한계 안"이라는 이유로 확정하면
+    #   사용자가 가장 크게 보는 계좌-지수 비교에 유령 손익이 남는다(Codex V3
+    #   P1-1). 독립 총 NAV 원천이 생기기 전까지 함께 미확정으로 전파한다.
+    if unknown & {"A", "B"}:
+        unknown.add("account")
     day["unresolved"] = sorted(unknown)
     if pending:
         day["anomaly_pending"] = pending
@@ -572,8 +594,14 @@ def session_update(st: dict, mkt: str, agg: dict, idx: dict,
             v0 = v
         ipct[name] = (v / v0 - 1) * 100.0 if v0 else 0.0
     # 미확정(None)은 0으로 낮춰 표시하지 않는다 — 숫자로 보이는 순간 확정된다.
+    # 지수 자리는 **주 지수 전용**: 주 지수가 결측이면 None을 기록한다. 다른
+    #   지수를 대신 넣으면 화면·마감·일별 행이 그 값을 주 지수 이름으로 부른다
+    #   (Codex V3 P1-3 — 나스닥 결측일에 S&P500이 나스닥으로 둔갑).
+    primary_name = IDX[mkt][0][1]
+    primary_val = ipct.get(primary_name)
     day["series"].append([now_hhmm, (None if acct is None else round(acct, 3)),
-                          round(next(iter(ipct.values()), 0.0), 3)])
+                          (None if primary_val is None
+                           else round(primary_val, 3))])
     if day.get("basis") == "first_sample":
         # 리베이스 첫날 계좌 TWR과 동일한 첫 관측값을 지수의 일간 기준으로 쓴다.
         # 전일종가 갭을 지수에만 넣으면 1m/3m/전체에 영구 복리되는 비교 오차가 난다.
@@ -624,7 +652,9 @@ def capture_stats(days: list[dict], mkt: str) -> str:
     dropped = len(all_rows) - len(rows)
     suffix = f" · 미확정 제외 {dropped}일" if dropped else ""
     if len(rows) < 5:
-        return ""
+        # 표본 초기에도 제외 일수는 숨기지 않는다(Codex V3 P2-1 — 편향 가시화).
+        return (f"누적 {len(rows)}일 — 5일부터 캡처 통계 표시{suffix}"
+                if all_rows else "")
     up = [d for d in rows if d["idx"] > 0]
     dn = [d for d in rows if d["idx"] < 0]
     parts = [f"({len(rows)}일 기준)"]
@@ -691,13 +721,21 @@ def dashboard_snapshot(st: dict | None = None) -> dict:
         day = (st.get("day") or {}).get(market) or {}
         series = list(day.get("series_v2") or [])
         if not series:
+            # 구형 series 폴백 — None(미확정·주지수 결측)을 0으로 강등하거나
+            #   float(None)으로 죽지 않는다(Codex V3 P2-2). 손상 행만 제외.
             primary = IDX[market][0][1]
-            series = [
-                {"t": row[0], "account": float(row[1]), "A": None, "B": None,
-                 "indices": {primary: float(row[2])}}
-                for row in (day.get("series") or [])
-                if isinstance(row, list) and len(row) >= 3
-            ]
+            series = []
+            for row in (day.get("series") or []):
+                if not (isinstance(row, list) and len(row) >= 3):
+                    continue
+                try:
+                    account = None if row[1] is None else float(row[1])
+                    idx_val = None if row[2] is None else float(row[2])
+                except (TypeError, ValueError):
+                    continue                     # 손상 행 — fail-closed 제외
+                series.append({"t": row[0], "account": account,
+                               "A": None, "B": None,
+                               "indices": {primary: idx_val}})
         markets[market] = {
             "label": labels[market],
             "date": day.get("date"),
@@ -706,7 +744,7 @@ def dashboard_snapshot(st: dict | None = None) -> dict:
             "series": series[-SERIES_MAX * 4:],
         }
     days = []
-    for row in (st.get("days") or [])[-120:]:
+    for row in (st.get("days") or [])[-800:]:   # 시장별 400행 보관과 정합(P2-5)
         market = row.get("mkt")
         if market not in ("US", "KR"):
             continue
@@ -796,6 +834,8 @@ def _tick_locked(now: datetime.datetime | None = None) -> None:
                 _close_alert(st, mkt, day)
                 _save(st)
                 publish_dash(st)               # 마감 요약도 대시보드에 반영
+            elif day and day.get("close_alert_pending"):
+                _deliver_close_alert(st, mkt, day)   # 실패 알림 재시도(P2-4)
             continue
         sampled = float((st.get("sampled_at") or {}).get(mkt) or 0)
         if sampled and now.timestamp() - sampled < SAMPLE_SECONDS:
@@ -864,25 +904,27 @@ def _tick_locked(now: datetime.datetime | None = None) -> None:
         st.setdefault("sampled_at", {})[mkt] = now.timestamp()
         first = len(r["series"]) == 1
         last_alert = st.setdefault("alert", {}).get(mkt, 0)
-        send_first = send_mid = False
-        if first:
-            st["alert"][mkt] = time.time()
-            send_first = True
-        elif time.time() - last_alert >= ALERT_MIN * 60 - 90:
-            st["alert"][mkt] = time.time()
-            send_mid = True
+        want = ("first" if first
+                else "mid" if time.time() - last_alert >= ALERT_MIN * 60 - 90
+                else None)
         # 네트워크 알림보다 **먼저** 상태를 원자 저장한다. 알림 예외가 격리·표본·
-        #   sampled_at 저장을 날리면 다음 사이클마다 같은 격리를 반복한다(P1-1).
+        #   sampled_at 저장을 날리면 다음 사이클마다 같은 격리를 반복한다.
         _save(st)
-        try:
-            if send_first:
-                notify.send(
-                    f"📊 <b>성과 추적 시작</b> ({'미장' if mkt=='US' else '국장'})"
-                    f" — 세션 기준점 설정. 1시간마다 지수 대비 비교 알림.")
-            elif send_mid:
-                _mid_alert(st, mkt, r)
-        except Exception:
-            pass                               # 알림 실패는 다음 주기에 재시도
+        if want:
+            ok = False
+            try:
+                if want == "first":
+                    ok = bool(notify.send(
+                        f"📊 <b>성과 추적 시작</b> "
+                        f"({'미장' if mkt == 'US' else '국장'})"
+                        f" — 세션 기준점 설정. 1시간마다 지수 대비 비교 알림."))
+                else:
+                    ok = _mid_alert(st, mkt, r)
+            except Exception:
+                ok = False
+            if ok:                             # 전달 성공 후에만 시각 갱신 —
+                st["alert"][mkt] = time.time() # 실패면 다음 주기 실제 재시도(P2-4)
+                _save(st)
         try:
             publish_dash(st)                   # 웹 대시보드(perf.html)용 발행
         except Exception:
@@ -900,15 +942,14 @@ def _vs_line(acct: float | None, ipct: dict) -> str:
     return f"내 계좌 {_fmt(acct)} vs {idx_txt}\n→ 지수 대비 {mark} {d:+.2f}%p"
 
 
-def _mid_alert(st: dict, mkt: str, r: dict) -> None:
+def _mid_alert(st: dict, mkt: str, r: dict) -> bool:
     name = "미장·나스닥" if mkt == "US" else "국장·코스피/코스닥"
     body = (f"📊 <b>성과 vs 지수</b> ({name}, 장중)\n"
             + _vs_line(r["acct"], r["idx"])
             + f"\n전략별: A(전환) {_fmt(r['a'])} · B(매물대) {_fmt(r['b'])}")
     idx_name = next(iter(r["idx"].keys()), "지수")
     url = chart_url(r["series"], idx_name, f"오늘 장중 추이 vs {idx_name}")
-    if not notify.send_photo(url, body):
-        notify.send(body)
+    return bool(notify.send_photo(url, body) or notify.send(body))
 
 
 def _close_alert(st: dict, mkt: str, day: dict) -> None:
@@ -954,11 +995,26 @@ def _close_alert(st: dict, mkt: str, day: dict) -> None:
             "date": day.get("date"), "nav_last": day["nav_last"],
             "unresolved": carry_unres,
         }
-    del days[:-120]                                      # 최근 120일만 보관
+    # 시장별 장기 보관 — 두 시장 합산 120행 컷은 '전체' 비교 창을 시장당 약
+    #   60거래일(≈3개월)로 줄였다(Codex V3 P2-5). 시장별 400거래일(≈1.6년)씩
+    #   보관하고 공개 payload는 발행부에서 따로 자른다.
+    keep: set[int] = set()
+    for market in ("US", "KR"):
+        market_rows = [i for i, r in enumerate(days) if r.get("mkt") == market]
+        keep.update(market_rows[-400:])
+    keep.update(i for i, r in enumerate(days) if r.get("mkt") not in ("US", "KR"))
+    st["days"] = days = [r for i, r in enumerate(days) if i in keep]
     if quality != "ok":
         _quality_append({
             "ev": "close", "mkt": mkt, "date": day.get("date"),
             "quality": quality, "unresolved_keys": unresolved,
+            # 마감 원인 분석용 진단 스냅샷 — anomaly 없이 미정산만으로 끝난
+            #   날에도 미회계 수·환율이 남게(Codex V3 P2-3).
+            "unaccounted": ((st.get("diag") or {}).get(mkt) or {})
+            .get("unaccounted"),
+            "positions": len(day.get("holding_start_codes") or []),
+            "fx": (1.0 if mkt == "KR" else float(settings.FX_USDKRW)),
+            "accounting_pending": bool(day.get("accounting_pending")),
             "anomaly_log": (day.get("anomaly_log") or [])[-10:],
         })
     cap = capture_stats(days, mkt)
@@ -984,6 +1040,10 @@ def _close_alert(st: dict, mkt: str, day: dict) -> None:
         body = (f"🏁 <b>장 마감 성과</b> ({name})\n"
                 f"↺ 재기준 부분 세션 — 하루 성과로 집계하지 않음"
                 f"(지수 {_fmt(ipct)})")
+    elif ipct is None:
+        # 주 지수 결측 마감 — 계좌는 확정하되 지수 비교는 판정하지 않는다.
+        body = (f"🏁 <b>장 마감 성과</b> ({name})\n"
+                f"오늘: 내 계좌 {_fmt(acct)} · 주 지수 결측 — 지수 대비 판정 보류")
     else:
         d = acct - ipct
         mark = "🟢" if d >= 0 else "🔴"
@@ -992,13 +1052,33 @@ def _close_alert(st: dict, mkt: str, day: dict) -> None:
                 f"→ {mark} {d:+.2f}%p\n"
                 + (f"누적 통계: {cap}" if cap
                    else "누적 통계: 5일 이상 쌓이면 상승/하락 캡처 표시"))
-    # 네트워크 알림 전에 상태를 원자 저장(P1-1) — 알림 예외가 마감 기록을 날려
-    #   같은 마감을 반복하지 않게 한다.
+    # 네트워크 알림 전에 상태를 원자 저장 — 알림 예외가 마감 기록을 날려 같은
+    #   마감을 반복하지 않게 한다. 알림 전달 자체는 outbox로 재시도한다(V3 P2-4).
+    day["close_alert_body"] = body
+    day["close_alert_pending"] = True
     _save(st)
+    _deliver_close_alert(st, mkt, day)
+
+
+def _deliver_close_alert(st: dict, mkt: str, day: dict) -> None:
+    """마감 알림 전달 — 성공 시에만 pending 해제(다음 틱이 재시도)."""
+    body = day.get("close_alert_body")
+    if not body or not day.get("close_alert_pending"):
+        return
+    tries = int(day.get("close_alert_tries") or 0)
+    if tries >= 12:                       # 폭주 방지 — 12회(≈1시간) 후 포기
+        day["close_alert_pending"] = False
+        _save(st)
+        return
+    day["close_alert_tries"] = tries + 1
+    ok = False
     try:
         idx_name = "나스닥" if mkt == "US" else "코스피"
         url = chart_url(day["series"], idx_name, f"{day['date']} 세션 추이")
-        if not notify.send_photo(url, body):
-            notify.send(body)
+        ok = bool(notify.send_photo(url, body) or notify.send(body))
     except Exception:
-        pass
+        ok = False
+    if ok:
+        day["close_alert_pending"] = False
+        day.pop("close_alert_body", None)
+    _save(st)

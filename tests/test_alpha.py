@@ -301,16 +301,18 @@ def test_close_keeps_per_key_values_and_quality_row():
                    "B": {"value": 181.8, "flow": 0.0}}
             alpha.session_update(st, "US", agg, idx, f"22:{36 + i}",
                                  "2026-08-04", nav=nav)
-        assert st["day"]["US"]["unresolved"] == ["A"]
+        # account는 A+B 종속값 — A 격리는 account도 미확정으로 전파(V3 P1-1).
+        assert st["day"]["US"]["unresolved"] == ["A", "account"]
         alpha._close_alert(st, "US", st["day"]["US"])
-    # 하루가 사라지지 않는다 — 품질 행으로 남고, 정상 키는 숫자로 기록된다.
+    # 하루가 사라지지 않는다 — 품질 행으로 남고, 확정 가능한 키(B)는 숫자.
     assert len(st["days"]) == 1
     row = st["days"][0]
-    assert row["quality"] == "unresolved" and row["unresolved_keys"] == ["A"]
-    assert row["a"] is None                              # 미확정 키만 None
-    assert row["acct"] is not None and row["b"] is not None
-    # carry도 키 집합 — 다음 세션은 A만 첫 표본, 계좌·B는 이어받는다.
-    assert st["carry"]["US"]["unresolved"] == ["A"]
+    assert row["quality"] == "unresolved"
+    assert row["unresolved_keys"] == ["A", "account"]
+    assert row["a"] is None and row["acct"] is None      # 의심 가중 값 확정 금지
+    assert row["b"] is not None                          # 독립 증명 있는 B만 확정
+    # carry — account 미확정이므로 다음 세션은 계좌·지수를 같은 첫 표본 0%로.
+    assert set(st["carry"]["US"]["unresolved"]) == {"A", "account"}
     st2 = {"carry": {"US": st["carry"]["US"]}}
     out = alpha.session_update(
         st2, "US", agg, idx, "22:31", "2026-08-05",
@@ -318,14 +320,10 @@ def test_close_keeps_per_key_values_and_quality_row():
              "A": {"value": 17.0, "flow": 0.0},
              "B": {"value": 181.8, "flow": 0.0}},
         idx_previous_close={"나스닥": 20000.0})
-    assert st2["day"]["US"]["basis"] == "previous_close"     # 계좌는 정상 승계
-    assert "A" not in st2["day"]["US"]["nav_prev"] or \
-        st2["day"]["US"]["nav_prev"].get("A", {}).get("value") == 17.0
+    assert st2["day"]["US"]["basis"] == "first_sample"
     assert abs(out["acct"]) < 1e-9                           # 이월 손익 혼입 없음
-    # 마감 알림은 미확정 키를 이름으로 명시한다.
-    texts = [str(c.args[0]) for c in sent.call_args_list]
-    assert any("전략A" in t and "미확정" in t for t in texts) or True
-    print("[PASS] 미확정 하루도 품질 행으로 보존 · 정상 키 성과는 기록·승계")
+    assert abs(out["idx"]["나스닥"]) < 1e-9                  # 지수도 같은 기준
+    print("[PASS] 슬리브 미확정은 account로 전파 · B만 확정 · 품질 행 보존")
 
 
 def test_capture_stats_reports_dropped_quality_rows():
@@ -360,6 +358,76 @@ def test_none_consumers_do_not_crash_or_show_zero():
         text = kis_telegram._perf_text()
     assert "미확정" in text and "판정 보류" in text
     print("[PASS] 장중 알림·/성과가 None을 미확정으로 표시(예외·0% 없음)")
+
+
+def test_sleeve_quarantine_propagates_to_account():
+    """Codex V3 P1-1 재현: A는 미확정인데 A를 포함해 더한 account가 확정되던 것."""
+    st, agg, idx = {}, _flat_agg(), {"나스닥": 20000.0}
+    nav0 = {"account": {"value": 200.0, "flow": 0.0},
+            "A": {"value": 20.0, "flow": 0.0},
+            "B": {"value": 180.0, "flow": 0.0}}
+    nav1 = {"account": {"value": 198.8, "flow": 0.0},   # -0.6% (한계 안)
+            "A": {"value": 17.0, "flow": 0.0},          # -15% (한계 초과)
+            "B": {"value": 181.8, "flow": 0.0}}         # +1%
+    with mock.patch.object(alpha.notify, "send"):
+        alpha.session_update(st, "US", agg, idx, "22:31", "2026-08-04", nav=nav0)
+        out = None
+        for i in range(alpha._ANOMALY_HOLD_TICKS + 1):
+            out = alpha.session_update(st, "US", agg, idx, f"22:{36 + i}",
+                                       "2026-08-04", nav=nav1)
+    assert out["a"] is None                            # A 격리
+    assert out["acct"] is None, out["acct"]            # 종속값 account도 미확정
+    assert abs(out["b"] - 1.0) < 1e-6                  # 독립 확정 가능한 B만 숫자
+    assert "account" in st["day"]["US"]["unresolved"]
+    print("[PASS] 슬리브 격리가 종속값 account로 전파(의심 가중 값 확정 금지)")
+
+
+def test_missing_primary_index_is_none_not_substituted():
+    """Codex V3 P1-3: 주 지수 결측일이 0%/다른 지수로 둔갑하던 문제."""
+    st, agg = {}, _flat_agg()
+    with mock.patch.object(alpha.notify, "send"):
+        alpha.session_update(st, "US", agg, {"나스닥": 20000.0, "S&P500": 5000.0},
+                             "22:31", "2026-08-04", nav=_nav(100.0, 0.0))
+        # 나스닥만 결측 — S&P500이 주 지수 자리에 대체되면 안 된다.
+        out = alpha.session_update(st, "US", agg, {"S&P500": 5100.0},
+                                   "22:36", "2026-08-04", nav=_nav(101.0, 0.0))
+    last = st["day"]["US"]["series"][-1]
+    assert last[2] is None, last                       # 주 지수 자리 None
+    assert abs(out["idx"]["S&P500"] - 2.0) < 1e-9      # S&P500은 자기 이름으로
+    with mock.patch.object(alpha.notify, "send"), \
+            mock.patch.object(alpha.notify, "send_photo", return_value=True):
+        alpha._close_alert(st, "US", st["day"]["US"])
+    assert st["days"][0]["idx"] is None                # 일별 행도 결측 유지
+    text = alpha.capture_stats(st["days"], "US")
+    assert "미확정 제외 1일" in text, text             # 통계 표본에서 제외 표기
+    print("[PASS] 주 지수 결측은 None 유지 — 대체·0% 둔갑 없음")
+
+
+def test_capture_stats_shows_dropped_even_below_five_samples():
+    """Codex V3 P2-1: 표본 5일 미만이면 제외 일수까지 숨던 문제."""
+    days = ([{"mkt": "US", "acct": 1.0, "idx": 0.5}] * 4
+            + [{"mkt": "US", "acct": None, "idx": 0.4}] * 2)
+    text = alpha.capture_stats(days, "US")
+    assert "누적 4일" in text and "미확정 제외 2일" in text, text
+    assert alpha.capture_stats([], "US") == ""
+    print("[PASS] 표본 초기에도 미확정 제외 일수 표시")
+
+
+def test_legacy_series_with_none_does_not_crash_snapshot():
+    """Codex V3 P2-2: 구형 series에 None이 있으면 스냅샷 API 전체가 죽던 문제."""
+    st = {"day": {"US": {"date": "2026-08-04", "basis": "first_sample",
+                         "series": [["10:00", None, 0.2],
+                                    ["10:05", 1.0, None],
+                                    ["bad"],
+                                    ["10:10", "corrupt", 0.3]],
+                         "series_v2": []}},
+          "days": []}
+    snap = alpha.dashboard_snapshot(st)
+    series = snap["markets"]["US"]["series"]
+    assert len(series) == 2                            # 손상 행만 제외
+    assert series[0]["account"] is None                # None 보존(0 강등 금지)
+    assert series[1]["indices"]["나스닥"] is None
+    print("[PASS] 구형 series None·손상 행에서 스냅샷 API 생존")
 
 
 def test_dashboard_snapshot_preserves_none_and_quality():
@@ -489,7 +557,8 @@ def test_capture_stats():
                 [(0.5, 1.0), (1.2, 1.0), (-0.3, -1.0), (-0.5, -1.0), (0.2, 0.5)])]
     s = alpha.capture_stats(days, "US")
     assert "상승일 캡처" in s and "하락일 캡처" in s and "지수 이긴 날" in s
-    assert alpha.capture_stats(days[:3], "US") == ""            # 표본<5 → 미표시
+    # 표본<5 → 통계 대신 진행 상황 표시(제외 일수 가시화 계약 — V3 P2-1)
+    assert "누적 3일" in alpha.capture_stats(days[:3], "US")
     print("[PASS] 캡처 통계(상승/하락/승률) + 표본 최소 5일")
 
 
@@ -600,6 +669,10 @@ def main():
     test_capture_stats_reports_dropped_quality_rows()
     test_none_consumers_do_not_crash_or_show_zero()
     test_dashboard_snapshot_preserves_none_and_quality()
+    test_sleeve_quarantine_propagates_to_account()
+    test_missing_primary_index_is_none_not_substituted()
+    test_capture_stats_shows_dropped_even_below_five_samples()
+    test_legacy_series_with_none_does_not_crash_snapshot()
     test_unresolved_day_does_not_leak_into_next_session_basis()
     test_reanchored_partial_session_is_excluded_from_cumulative()
     test_zero_and_nonfinite_values_cannot_wipe_the_account()

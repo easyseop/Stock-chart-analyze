@@ -751,13 +751,15 @@ function briefingMarketCard(market) {
   const comparison = !available.length || account === null ? "지수 기록 중"
     : beats === available.length ? `${indexLabel}보다 앞섬`
       : beats === 0 ? `${indexLabel}보다 뒤처짐` : "지수별 엇갈림";
-  const tone = beats === available.length ? "gain" : beats === 0 ? "loss" : "";
+  // 미확정(account null)·지수 없음이면 색 판정 자체를 하지 않는다(V3 P3-1).
+  const tone = (account === null || !available.length) ? ""
+    : beats === available.length ? "gain" : beats === 0 ? "loss" : "";
   const indexText = available.map((row) =>
     `${escapeHTML(row.name)} ${performanceValue(row.value)}`).join(" · ");
   return `<button class="brief-card market-card" type="button" data-go-view="performance"
       data-performance-market-target="${escapeHTML(market)}">
     <span class="brief-card-top"><b>${escapeHTML(doc.label || market)}</b><span class="${tone}">${escapeHTML(comparison)}</span></span>
-    <strong class="${account !== null && account >= 0 ? "gain" : "loss"}">${performanceValue(account)}</strong>
+    <strong class="${account === null ? "" : account >= 0 ? "gain" : "loss"}">${performanceValue(account)}</strong>
     <p>${indexText || "지수 값을 기다리고 있어요."}</p>
   </button>`;
 }
@@ -1810,10 +1812,12 @@ function performanceRows(market, range) {
   })));
   const keys = ["account", "A", "B", "holdings",
     ...indexNames.map((name) => `idx:${name}`)];
-  // 계좌/전략 키는 미확정(null) 행이 하나라도 있으면 그 기간의 누적을 숫자로
-  //   확정하지 않는다. null 행을 건너뛰고 전후를 이어 붙이면 TWR 연결고리가
-  //   끊긴 구간을 하나의 연속 곡선처럼 복리하게 된다(Codex TWR-V2 P1-3).
-  const accountKeys = ["account", "A", "B"];
+  // 계좌/전략 그리고 **지수** 키 모두: 결측(null) 행이 하나라도 있으면 그 기간
+  //   누적을 숫자로 확정하지 않는다. null을 건너뛰고 전후를 이어 붙이면 끊긴
+  //   연결고리를 하나의 연속 곡선처럼 복리하게 된다 — 계좌에만 막고 지수에는
+  //   남아 있던 같은 결함(Codex TWR-V3 P1-3).
+  const accountKeys = ["account", "A", "B",
+    ...indexNames.map((name) => `idx:${name}`)];
   const keyIncomplete = Object.fromEntries(accountKeys.map((key) => {
     const missing = daily.filter((row) =>
       row[key] === null || row[key] === undefined
@@ -1850,8 +1854,18 @@ function performanceRows(market, range) {
     out.holdingsIncompleteDays = holdingsSeries.incompleteDays;
     out.accountIncompleteDays = keyIncomplete.account;
     out.accountRangeComplete = keyIncomplete.account === 0;
+    out.keyIncompleteDays = { ...keyIncomplete };   // A/B·지수 카드 표기용(P3-2)
     return out;
   });
+}
+
+function keyNote(latest, key, normal, range) {
+  // 키별 기간 결측(미확정) 일수를 카드에 명시한다(Codex TWR-V3 P3-2).
+  const missing = Number(latest?.keyIncompleteDays?.[key] || 0);
+  if (range !== "today" && missing > 0) {
+    return `미확정 ${missing}일 포함 · 기간 누적 비확정`;
+  }
+  return normal;
 }
 
 function performanceValue(value) {
@@ -1948,9 +1962,9 @@ function renderKisPerformance() {
             : optionalNumber(latest.account) === null
               ? "데이터 이상 격리 중 · 수동 확인 필요"
               : `${range === "today" ? basisLabel : "선택 기간"} 대비`}</p></div>
-        <div class="performance-card"><small>전략 A · 전환</small><strong>${performanceValue(latest.A)}</strong><p>A 보유 종목 기준</p></div>
-        <div class="performance-card"><small>전략 B · 매물대</small><strong>${performanceValue(latest.B)}</strong><p>B 보유 종목 기준</p></div>
-        <div class="performance-card"><small>${escapeHTML(primary || "주 지수")} 대비</small><strong class="${finite(alphaValue) >= 0 ? "gain" : "loss"}">${performanceValue(alphaValue)}</strong><p>초과수익률(%p)</p></div>
+        <div class="performance-card"><small>전략 A · 전환</small><strong>${performanceValue(latest.A)}</strong><p>${keyNote(latest, "A", "A 보유 종목 기준", range)}</p></div>
+        <div class="performance-card"><small>전략 B · 매물대</small><strong>${performanceValue(latest.B)}</strong><p>${keyNote(latest, "B", "B 보유 종목 기준", range)}</p></div>
+        <div class="performance-card"><small>${escapeHTML(primary || "주 지수")} 대비</small><strong class="${optionalNumber(alphaValue) === null ? "" : optionalNumber(alphaValue) >= 0 ? "gain" : "loss"}">${performanceValue(alphaValue)}</strong><p>${keyNote(latest, `idx:${primary}`, "초과수익률(%p)", range)}</p></div>
         <div class="performance-card"><small>장 시작 보유 · 동일가중</small><strong class="${coverageComplete && finite(holdingsValue) >= 0 ? "gain" : coverageComplete ? "loss" : ""}">${performanceValue(holdingsValue)}</strong><p>${coverageDetail}</p></div>
       </div>
       ${performanceInsights(rows, indexNames)}
@@ -2046,19 +2060,27 @@ function drawPerformanceChart(canvas, rows, keys, labels) {
     const color = palette[key] || (
       indexKeys.indexOf(key) > 0 ? colors.amber : colors.muted);
     let started = false;
+    let drewAny = false;
     ctx.beginPath();
     rows.forEach((row, index) => {
-      if (row[key] === null || row[key] === undefined) return;
+      if (row[key] === null || row[key] === undefined) {
+        started = false;                 // 결측일은 선으로 잇지 않는다(pen-up)
+        return;
+      }
       const value = Number(row[key]);
-      if (!Number.isFinite(value)) return;
+      if (!Number.isFinite(value)) {
+        started = false;
+        return;
+      }
       if (!started) {
         ctx.moveTo(x(index), y(value));
         started = true;
+        drewAny = true;
       } else {
         ctx.lineTo(x(index), y(value));
       }
     });
-    if (started) {
+    if (drewAny) {
       ctx.strokeStyle = color;
       ctx.lineWidth = key === "account" ? 2.7 : 1.55;
       ctx.lineJoin = "round";

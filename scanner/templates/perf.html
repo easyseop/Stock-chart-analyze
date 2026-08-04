@@ -109,11 +109,16 @@ function render(d) {
     }
     const rows = (d.days || []).filter(r => r.mkt === mkt);
     if (rows.length) {
-      // 미확정일 이후로는 누적 초과수익을 잇지 않는다(연결고리 끊김 = 복리 금지).
-      let cum = 0, broken = false;
+      // 누적 초과수익 = 계좌·지수를 **각각 복리**한 뒤의 차이. 일별 차이의 단순
+      //   합은 +10%→-10%를 본전으로 표시하는 수학 오류다(Codex V3 P1-2).
+      //   계좌 또는 지수가 미확정/결측인 날 이후로는 잇지 않는다(복리 금지).
+      let aw = 1, iw = 1, broken = false;
       const cumAlpha = rows.map(r => {
-        if (broken || num(r.acct) === null) { broken = true; return null; }
-        return +(cum += r.acct - r.idx).toFixed(2);
+        if (broken || num(r.acct) === null || num(r.idx) === null) {
+          broken = true; return null;
+        }
+        aw *= 1 + r.acct / 100; iw *= 1 + r.idx / 100;
+        return +((aw - iw) * 100).toFixed(2);
       });
       const card = $(`<div class="card"><h2>${label} 일별 추이 (최근 ${rows.length}일)</h2>
         <canvas></canvas>
