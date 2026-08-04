@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated_at": "2026-08-04T13:17:34+09:00",
+ "generated_at": "2026-08-04T13:31:10+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "shelf_debug": {
   "ok": 19,
@@ -445,24 +445,24 @@
    "group": "now",
    "entry_kind": "now",
    "stage": 3,
-   "price": 375000.0,
-   "entry": 375000.0,
-   "stop": 345413.9939,
-   "target": 434172.0121,
+   "price": 376500.0,
+   "entry": 376500.0,
+   "stop": 346913.9939,
+   "target": 435672.0121,
    "shares_1pct": 3,
-   "range_pos": 0.2154,
+   "range_pos": 0.2212,
    "norm": -0.0,
    "bear_share": 0.25,
    "fresh": false,
-   "break_gap": 0.0681,
+   "break_gap": 0.0724,
    "earnings_d": null,
    "tactic": {
     "stop_pct": 7.9,
     "pb_price": 350306.25,
-    "pb_stop_pct": 1.4,
+    "pb_stop_pct": 1.0,
     "mode": "pullback",
     "label": "⏳ 눌림 지정가만",
-    "desc": "지금 추격 금지(손절폭 7.9% · 돌파후 진행) — <b>350,306원 눌림 지정가만</b>. 눌리면 손절폭 1.4%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
+    "desc": "지금 추격 금지(손절폭 7.9% · 돌파후 진행) — <b>350,306원 눌림 지정가만</b>. 눌리면 손절폭 1.0%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
    }
   },
   {
@@ -2652,24 +2652,24 @@
    "group": "watch",
    "entry_kind": "now",
    "stage": 2,
-   "price": 131000.0,
-   "entry": 131000.0,
-   "stop": 113747.8244,
-   "target": 165504.3511,
+   "price": 131200.0,
+   "entry": 131200.0,
+   "stop": 113947.8244,
+   "target": 165704.3511,
    "shares_1pct": 5,
-   "range_pos": 0.1194,
+   "range_pos": 0.1211,
    "norm": -60.7,
    "bear_share": 0.5,
    "fresh": true,
-   "break_gap": 0.0326,
+   "break_gap": 0.0342,
    "earnings_d": null,
    "tactic": {
-    "stop_pct": 13.2,
+    "stop_pct": 13.1,
     "pb_price": 116900.0,
-    "pb_stop_pct": 2.7,
+    "pb_stop_pct": 2.5,
     "mode": "pullback",
     "label": "⏳ 눌림 지정가만",
-    "desc": "지금 추격 금지(손절폭 13.2% · 단기 이격) — <b>116,900원 눌림 지정가만</b>. 눌리면 손절폭 2.7%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
+    "desc": "지금 추격 금지(손절폭 13.1% · 단기 이격) — <b>116,900원 눌림 지정가만</b>. 눌리면 손절폭 2.5%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
    }
   },
   {
