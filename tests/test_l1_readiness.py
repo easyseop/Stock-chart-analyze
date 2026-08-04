@@ -221,6 +221,41 @@ def test_l0_fence_requires_declared_order_configuration():
     print("[PASS] 제한적 L0는 mirror(legacy명)·비어있지 않은 allowlist·명시적 설정 필수")
 
 
+def test_empty_env_allowlist_blocks_even_with_stale_file():
+    """Codex P1-1: 빈/공백 ALLOWED_SYMBOLS env가 낡은 allowlist 파일로 폴백해
+    rollout·readiness 양쪽을 PASS시키던 반례 — env 존재 시 파일 폴백 금지."""
+    import tempfile as _tempfile
+    from bot import rollout
+    with _tempfile.TemporaryDirectory() as tmp:
+        path = os.path.join(tmp, "allowlist.txt")
+        with open(path, "w", encoding="utf-8") as f:
+            f.write("AAPL\n")                       # 낡은 파일이 남아 있는 상황
+        old_file = os.environ.get("ALLOWED_SYMBOLS_FILE")
+        old_env = os.environ.get("ALLOWED_SYMBOLS")
+        try:
+            os.environ["ALLOWED_SYMBOLS_FILE"] = path
+            for empty in ("", "   "):
+                os.environ["ALLOWED_SYMBOLS"] = empty
+                # collect_runtime과 같은 수집식(env 우선) — 파일 폴백이면 {'AAPL'}.
+                collected = rollout.allowed_symbols() or set()
+                assert collected == set(), repr(empty)
+                snapshot = _snapshot()
+                snapshot["allowed_symbols"] = sorted(collected)
+                for scope in ("l0", "strict"):
+                    report = R.evaluate(snapshot, {}, scope=scope, now=NOW)
+                    assert "limited_l0_fence" in _blockers(report), (empty, scope)
+            os.environ.pop("ALLOWED_SYMBOLS")
+            assert rollout.allowed_symbols() == {"AAPL"}   # env 부재 시만 파일
+        finally:
+            for key, val in (("ALLOWED_SYMBOLS_FILE", old_file),
+                             ("ALLOWED_SYMBOLS", old_env)):
+                if val is None:
+                    os.environ.pop(key, None)
+                else:
+                    os.environ[key] = val
+    print("[PASS] 빈 env allowlist는 파일로 되살아나지 않음 — 양쪽 모두 차단")
+
+
 def test_unarmed_ownership_blocks_and_volatile_path_warns():
     # 2026-07-31 실사고 재현: baseline 소실(전 매수 거부)인데 체커가 GO를 냈다.
     snapshot = _snapshot()
@@ -446,6 +481,7 @@ def main():
     test_l0_scope_separates_independent_observation_gates()
     test_l0_scope_keeps_limited_mode_fences_blocking()
     test_l0_fence_requires_declared_order_configuration()
+    test_empty_env_allowlist_blocks_even_with_stale_file()
     test_unarmed_ownership_blocks_and_volatile_path_warns()
     test_unknown_scope_is_rejected()
     test_cli_forwards_l0_scope_without_mutation()

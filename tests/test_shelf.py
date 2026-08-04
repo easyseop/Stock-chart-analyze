@@ -143,14 +143,19 @@ def test_partition_budget_isolation():
     assert (na, ca) == (3, 350.0), (na, ca)   # AAA+BBB 보유 + DDD in-flight
     assert (nb, cb) == (2, 360.0), (nb, cb)   # CCC 보유 + EEE in-flight
     # shelf 후보 필터·정렬(RR 높은 순)
-    sigs = [{"group": "now", "code": "X", "entry": 1, "stop": 0.9},
+    sigs = [{"group": "now", "code": "X", "entry": 1, "stop": 0.9, "fresh": True},
             {"group": "shelf_watch", "code": "W", "entry": 10, "stop": 9,
-             "shelf": {"rr": 3.0}},
-            {"group": "shelf", "code": "Y", "entry": 10, "stop": 9, "shelf": {"rr": 1.6}},
-            {"group": "shelf", "code": "Z", "entry": 10, "stop": 9, "shelf": {"rr": 2.4}}]
+             "fresh": True, "shelf": {"rr": 3.0}},
+            {"group": "shelf", "code": "Y", "entry": 10, "stop": 9,
+             "fresh": True, "shelf": {"rr": 1.6}},
+            {"group": "shelf", "code": "Z", "entry": 10, "stop": 9,
+             "fresh": True, "shelf": {"rr": 2.4}},
+            # Codex P1-2: 신선 문서 안의 stale 행 — 후보 제외돼야 한다.
+            {"group": "shelf", "code": "S", "entry": 10, "stop": 9,
+             "fresh": False, "shelf": {"rr": 9.9}}]
     c = BL._shelf_cands(sigs)
     assert [x["code"] for x in c] == ["Z", "Y"], c
-    print("[PASS] B 관찰은 매수루프에서 제외 + 확정 shelf만 필터/정렬")
+    print("[PASS] B 관찰·stale 행은 매수루프에서 제외 + fresh shelf만 필터/정렬")
 
 
 def main():

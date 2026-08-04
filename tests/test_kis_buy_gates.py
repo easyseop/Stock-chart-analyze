@@ -151,6 +151,26 @@ def _ready_all_gates(M, tmp):
     M["kis_boot"]._STATE["done"] = True                # 부팅 대사 완료로 마킹
 
 
+def test_execute_entry_rejects_nonfinite_inputs():
+    """Codex P2 이중방어: NaN은 `<=0` 비교를 전부 미끄러진다 — 호출부 검사와
+    독립적으로 실행기 자신이 price/risk/fx NaN·inf를 input 게이트에서 차단."""
+    with tempfile.TemporaryDirectory() as tmp:
+        M = _setup(tmp)
+        X = M["kis_buy"]
+        os.environ["ALLOW_BUY"] = "1"
+        nan, inf = float("nan"), float("inf")
+        base = dict(price_usd=100.0, per_share_risk_usd=5.0,
+                    krw_per_usd=1400.0, risk_pct=0.001)
+        for field, val in (("price_usd", nan), ("price_usd", inf),
+                           ("per_share_risk_usd", nan),
+                           ("krw_per_usd", nan)):
+            kw = dict(base); kw[field] = val
+            d = X.execute_entry("p#nan", "AAPL", **kw)
+            assert d.gate == "input", (field, d)
+            assert "NaN" in d.why or "무효" in d.why
+    print("[PASS] 실행기 자체가 NaN·inf price/risk/fx를 input에서 차단(이중방어)")
+
+
 def test_x1_gate_chain_then_sent():
     with tempfile.TemporaryDirectory() as tmp:
         M = _setup(tmp)
@@ -423,7 +443,16 @@ def test_allowlist_file_fallback_and_env_precedence():
                                      session_open=True)[0]   # 파일 목록 밖
         os.environ["ALLOWED_SYMBOLS"] = "AAPL"
         assert R.allowed_symbols() == {"AAPL"}      # env가 파일을 이김
+        # Codex P1-1: env가 **존재하면** 빈 값·공백 값도 확정이다 — 파일로
+        #   폴백하면 운영자가 빈 env로 잠갔다고 믿는 동안 파일이 매수를 되살린다.
+        for empty in ("", "   ", " , ,"):
+            os.environ["ALLOWED_SYMBOLS"] = empty
+            assert R.allowed_symbols() == set(), repr(empty)   # 파일 폴백 금지
+            blocked, why = R.check_new_entry(
+                "FRPT", open_positions=0, risk_pct=0.001, session_open=True)
+            assert not blocked, (empty, why)                   # 전 종목 거부
         os.environ.pop("ALLOWED_SYMBOLS")
+        assert R.allowed_symbols() == {"FRPT", "ESTC", "DASH"}  # env 제거 시만 파일
         with open(path, "w", encoding="utf-8") as f:
             f.write("# 심볼 없음 — 편집 실수 시나리오\n")
         assert R.allowed_symbols() == set()
@@ -436,6 +465,7 @@ def main():
     test_kill_latch()
     test_rollout_gates()
     test_allowlist_file_fallback_and_env_precedence()
+    test_execute_entry_rejects_nonfinite_inputs()
     test_ownership()
     test_costbook()
     test_x1_gate_chain_then_sent()

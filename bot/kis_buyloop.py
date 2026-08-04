@@ -43,7 +43,7 @@ _KST = datetime.timezone(datetime.timedelta(hours=9))
 def _now_signals(signals: list[dict]) -> list[dict]:
     """'지금 진입'·신선·진입/손절 유효 신호만. 정렬: 갓전환·상위단계·상위점수."""
     cand = [s for s in signals
-            if s.get("group") == "now" and s.get("fresh")
+            if s.get("group") == "now" and s.get("fresh") is True
             and s.get("entry") and s.get("stop")]
     cand.sort(key=lambda s: (not s.get("fresh"), -s.get("stage", 0),
                              -s.get("norm", 0)))
@@ -187,8 +187,12 @@ def _partition(held_cost: dict, reservations: list[dict], sleeve: str,
 
 
 def _shelf_cands(signals: list[dict]) -> list[dict]:
-    """매물대 반등(B) 후보 — group='shelf'·진입/손절 유효. 손익비 높은 순."""
+    """매물대 반등(B) 후보 — group='shelf'·**fresh=True**·진입/손절 유효.
+    손익비 높은 순. freshness는 A와 동일하게 행 단위로도 요구한다 — 문서가
+    신선해도 stale 행이 실행기로 넘어가면 '신선한 신호만 집행' 전제가 깨진다
+    (Codex P1-2)."""
     c = [s for s in signals if s.get("group") == "shelf"
+         and s.get("fresh") is True
          and s.get("entry") and s.get("stop")]
     c.sort(key=lambda s: -float((s.get("shelf") or {}).get("rr") or 0))
     return c
@@ -199,13 +203,16 @@ def run_once(signals: list[dict], *, fx: float | None = None,
              # 원장 키/멱등성과 무관(표시·알림용). rename은 별도 cleanup PR.
              sleeve: str = "A", group: str = "now",
              seed_krw: float | None = None) -> list[dict]:
-    """신호를 KIS에 미러 매수 시도. 반환: 종목별 {code, gate, ok?, qty?, why}.
+    """신선한 스캐너 신호를 KIS 시세·게이트로 직접 집행 시도.
+    반환: 종목별 {code, gate, ok?, qty?, why}.
 
     sleeve/group: 'A'/'now'=전환확정(기본) · 'B'/'shelf'=매물대 반등(별도 예산).
     seed_krw: 이 슬리브 전용 SEED(None이면 execute_entry가 기본 BOT_SEED_KRW).
     fx: USD→KRW 환율. excg_of: {code: 거래소}.
     """
     fx = float(fx or settings.FX_USDKRW)
+    if not (math.isfinite(fx) and fx > 0):      # NaN 환율 = 전 후보 fail-closed
+        return [{"code": "*", "gate": "input", "why": "환율 무효(NaN·0)"}]
     excg_of = excg_of or {}
     results: list[dict] = []
 
@@ -262,7 +269,13 @@ def run_once(signals: list[dict], *, fx: float | None = None,
             results.append({"code": code, "gate": "cooldown",
                             "why": "당일 매도 종목 — 재진입 쿨다운"}); continue
         cur = kis.last_price(code, market=market, excg=excg)
-        if not cur or cur <= 0:
+        try:
+            cur = float(cur) if cur is not None else None
+        except (TypeError, ValueError):
+            cur = None
+        # NaN은 `not cur`도 `cur <= 0`도 False — 명시적 isfinite 없이는 NaN
+        #   시세가 실행기까지 흘러 사이클 예외를 낸다(Codex P2).
+        if cur is None or not math.isfinite(cur) or cur <= 0:
             results.append({"code": code, "gate": "quote", "why": "현재가 조회 실패"}); continue
         try:
             entry = float(s["entry"])
@@ -298,9 +311,12 @@ def run_once(signals: list[dict], *, fx: float | None = None,
         opened = settings.today_kst()
         tgt = None
         try:
-            tgt = float(s.get("target") or 0) or None
+            tgt = float(s.get("target") or 0)
         except (TypeError, ValueError):
-            pass
+            tgt = 0.0
+        # NaN target은 truthy라 `or None` 정규화를 통과해 원장·포지션 메타로
+        #   전파되고, 목표가 비교(NaN 비교=False)가 청산을 조용히 끈다(Codex P2).
+        tgt = tgt if math.isfinite(tgt) and tgt > 0 else None
         order_meta = {"pos_key": pos_key, "sleeve": sleeve, "stop": stop,
                       "target": tgt, "name": s.get("name", ""), "opened": opened,
                       "tactic": mode, "pending": mode == "pullback"}

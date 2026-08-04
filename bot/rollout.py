@@ -8,17 +8,19 @@ Stage 프로파일(환경변수 TRADE_STAGE, 기본 "1.5"):
   2      실전 첫 주: 1종목 · 하루 1건 · risk ≤0.1% · allowlist 필수 · US 정규장만
   2.5    확장:      3종목 · 하루 2건 · risk ≤0.25%
   3      정상:      5종목 · 하루 3건 · risk ≤1.0%
-  mirror KIS 미러: 동시 보유 종목 수 제한 없음 · 하루 10건 · risk ≤1.0% ·
-         allowlist 불필요. 신호·전술은 종목스크리너 페이퍼 시뮬(autopaper)을
-         따라가되, 신규 진입 가능 여부는 고정 종목 수가 아니라 슬리브 예산,
-         A+B 통합 운용한도, KIS 매수여력과 계산 수량으로 결정한다. 모의 전용으로
+  mirror KIS 스캐너 직접진입(limited mock — key 이름은 legacy alias, autopaper
+         미러 아님): 동시 보유 종목 수 제한 없음 · 하루 10건 · risk ≤1.0% ·
+         **allowlist 필수**. 신선한 스캐너 신호를 KIS 시세로 직접 집행하며,
+         신규 진입 가능 여부는 고정 종목 수가 아니라 슬리브 예산, A+B 통합
+         운용한도, KIS 매수여력과 계산 수량으로 결정한다. 모의 전용으로
          안전하다(live는 kis_orders가 Stage 2 게이트 전 하드블록).
 
 공통 강제(전 Stage):
   · **US 정규장만**(I1·Codex B7) — dayMarket/pre/after 신규 진입 hard-off.
   · whole-share만(소수점 주문 가능 여부 [대조필요]라 금지).
-  · ALLOWED_SYMBOLS(콤마 구분) 밖 종목 금지 — Stage 2.5까지는 allowlist 필수,
-    미설정이면 전 종목 거부(fail-closed).
+  · ALLOWED_SYMBOLS(콤마 구분) 밖 종목 금지 — allowlist 필수 Stage(1.5·2·
+    2.5·mirror)는 미설정이면 전 종목 거부(fail-closed). env가 존재하면 빈 값
+    포함 그 값이 확정이고, 미설정일 때만 git 파일 폴백.
   · 하루 신규 카운트는 원장(submit·side=BUY·당일)에서 계산 — 별도 상태 파일 없음
     (재시작에도 정확).
 """
@@ -85,10 +87,14 @@ def _allowlist_from_file() -> set[str] | None:
 
 
 def allowed_symbols() -> set[str] | None:
-    """env ALLOWED_SYMBOLS(콤마 구분) 우선, 없으면 git 추적 allowlist 파일.
-    둘 다 없으면 None(allowlist_required Stage면 전 거부)."""
-    raw = os.environ.get("ALLOWED_SYMBOLS", "").strip()
-    if raw:
+    """env ALLOWED_SYMBOLS(콤마 구분) 우선, **미설정일 때만** git 추적 파일.
+    둘 다 없으면 None(allowlist_required Stage면 전 거부).
+
+    env가 **존재하면** 값이 비었거나 공백뿐이어도 그 값이 확정이다 — 빈 env가
+    낡은 파일로 폴백하면 운영자가 빈 값으로 전 종목을 잠갔다고 믿는 동안
+    파일이 매수를 되살린다(Codex P1-1). 빈 env = 빈 set = 전 종목 거부."""
+    if "ALLOWED_SYMBOLS" in os.environ:
+        raw = os.environ["ALLOWED_SYMBOLS"]
         return {s.strip().upper() for s in raw.split(",") if s.strip()}
     return _allowlist_from_file()
 

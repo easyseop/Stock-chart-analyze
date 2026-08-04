@@ -21,6 +21,7 @@ fx: 미국주 가격은 USD — SEED(KRW) 사이징을 위해 환율(krw_per_usd
 """
 from __future__ import annotations
 
+import math
 import os
 from dataclasses import dataclass
 
@@ -76,6 +77,11 @@ def execute_entry(pos_key: str, symbol: str, *, price_usd: float,
     # 0) 환경 분리(I4)
     if os.environ.get("ALLOW_BUY") != "1":
         return BuyDecision(False, "env", "ALLOW_BUY != 1 (매수 경로 봉인)")
+    # NaN은 `<= 0` 비교가 전부 False라 이 게이트를 미끄러진다 — isfinite로
+    #   명시 차단(Codex P2 이중방어: 호출부 buyloop 검사와 독립).
+    if not (math.isfinite(price_usd) and math.isfinite(per_share_risk_usd)
+            and math.isfinite(fx)):
+        return BuyDecision(False, "input", "price/risk/fx 무효(NaN·inf)")
     if price_usd <= 0 or per_share_risk_usd <= 0 or fx <= 0:
         return BuyDecision(False, "input", "price/risk/fx 무효")
 

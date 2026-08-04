@@ -1,4 +1,4 @@
-"""매수 루프(Loop B) — autopaper 'now' 신호 KIS 미러 매수 검증(모킹).
+"""매수 루프(Loop B) — 신선한 스캐너 신호의 KIS 직접 집행 검증(모킹).
 
 브로커-진실: 이미 KIS 보유(3거래소 병합)·잔고 불명·가격 괴리·장외·어닝 D-3·
 당일 매도 쿨다운은 execute_entry 호출 전 skip. 게이트 통과분만 execute_entry로,
@@ -258,6 +258,52 @@ def test_a_has_no_fixed_position_count_cap():
     print("[PASS] A 고정 종목 수 상한 없음 — 예산 게이트에 위임")
 
 
+def test_b_stale_row_in_fresh_document_is_rejected():
+    """Codex P1-2 재현: 문서 자체는 신선해도 shelf 행이 fresh=False(또는 필드
+    없음)이면 실행기로 넘어가면 안 된다 — '신선한 신호만 집행' 전제."""
+    stale = _sig(code="TSLA", ccy="USD", group="shelf", fresh=False,
+                 shelf={"rr": 2.0})
+    nofield = _sig(code="NVDA", ccy="USD", group="shelf", shelf={"rr": 2.0})
+    del nofield["fresh"]
+    ok = _sig(code="AAPL", ccy="USD", group="shelf", fresh=True,
+              shelf={"rr": 2.5})
+    res, ex, _, _ = _run([stale, nofield, ok], holdings={},
+                         run_kwargs={"sleeve": "B", "group": "shelf"})
+    assert ex.call_count == 1, [c.args[1] for c in ex.call_args_list]
+    assert ex.call_args.args[1] == "AAPL"          # fresh=True만 실행기 도달
+    assert _g(res, "TSLA") is None and _g(res, "NVDA") is None
+    print("[PASS] B stale 행(fresh=False·필드 없음)은 실행기 미도달 — fresh만")
+
+
+def test_nan_quote_is_gated_without_crash():
+    """Codex P2 재현: NaN 현재가는 `not cur`도 `cur<=0`도 False — 예외 없이
+    quote 게이트에서 끝나야 한다(사이클 중단 금지)."""
+    for bad in (float("nan"), float("inf")):
+        res, ex, _, _ = _run([_sig()], holdings={}, last=bad)
+        assert _g(res, "005930")["gate"] == "quote", bad
+        assert not ex.called
+    print("[PASS] NaN·inf 현재가 → 예외 0·실행기 호출 0(quote 게이트)")
+
+
+def test_nan_target_is_not_persisted():
+    """Codex P2 재현: NaN target은 truthy — 원장·포지션 메타로 전파되면 목표가
+    비교(NaN 비교=False)가 청산을 조용히 끈다. None으로 정규화돼야 한다."""
+    res, ex, _, _ = _run([_sig(target=float("nan"))], holdings={})
+    assert ex.called
+    assert ex.call_args.kwargs["order_meta"]["target"] is None
+    res2, ex2, _, _ = _run([_sig(target=110.0)], holdings={})
+    assert ex2.call_args.kwargs["order_meta"]["target"] == 110.0  # 유효값 보존
+    print("[PASS] NaN 목표가는 메타에 남지 않음(None 정규화) · 유효값은 보존")
+
+
+def test_nan_fx_fails_closed_for_all_candidates():
+    res, ex, _, _ = _run([_sig(code="AAPL", ccy="USD")], holdings={},
+                         run_kwargs={"fx": float("nan")})
+    assert not ex.called
+    assert res and res[0]["gate"] == "input" and "환율" in res[0]["why"]
+    print("[PASS] NaN 환율 → 전 후보 fail-closed")
+
+
 def test_intra_cycle_accumulation():
     """한 사이클 두 매수 — 두 번째 호출은 첫 매수를 반영한 캡 입력을 받아야."""
     res, ex, rec, _ = _run([_sig(code="005930"), _sig(code="000660")], holdings={})
@@ -393,6 +439,10 @@ def main():
     test_malformed_signal_is_fail_closed()
     test_no_order_on_nan_zero_negative_or_inverted_stop()
     test_a_has_no_fixed_position_count_cap()
+    test_b_stale_row_in_fresh_document_is_rejected()
+    test_nan_quote_is_gated_without_crash()
+    test_nan_target_is_not_persisted()
+    test_nan_fx_fails_closed_for_all_candidates()
     test_intra_cycle_accumulation()
     test_non_now_filtered()
     test_us_signal_routes_and_fx()
@@ -401,7 +451,7 @@ def main():
     test_b_sleeve_survives_balance_before_position_reconcile()
     test_unfilled_b_plan_does_not_retag_existing_a_holding()
     test_partial_and_multiple_same_symbol_reservations_are_summed()
-    print("\n매수 루프 검증 통과 — 브로커-진실 미러(고정 종목수 무제한·예산 누적).")
+    print("\n매수 루프 검증 통과 — 스캐너 직접집행(고정 종목수 무제한·예산 누적).")
 
 
 if __name__ == "__main__":
