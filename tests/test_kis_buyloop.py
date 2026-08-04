@@ -42,10 +42,16 @@ def _rows_of(holdings, market, excg):
 
 
 def _run(signals, holdings=None, last=100.0, exec_ret=None, mkt_open=True,
-         fold=None, pd=None, run_kwargs=None):
-    """holdings: {code: qty}|None(None=잔고 조회실패). pd: positions_detail 대체."""
+         fold=None, pd=None, run_kwargs=None, mirrored="all"):
+    """holdings: {code: qty}|None(None=잔고 조회실패). pd: positions_detail 대체.
+
+    mirrored: autopaper 실제 진입 집합. "all"=신호 전체(기존 테스트 의미 유지),
+    None=피드 조회 실패, set=그 종목만 미러 대상.
+    """
     if exec_ret is None:
         exec_ret = kis_buy.BuyDecision(True, "sent", "ack ODNO=1", qty=3)
+    if mirrored == "all":
+        mirrored = {str(s.get("code", "")).upper() for s in signals}
 
     def fake_pd(market="US", excg="NASD"):
         if holdings is None:
@@ -54,7 +60,8 @@ def _run(signals, holdings=None, last=100.0, exec_ret=None, mkt_open=True,
 
     tf = tempfile.NamedTemporaryFile(suffix=".jsonl", delete=False); tf.close()
     lf = tempfile.NamedTemporaryFile(suffix=".jsonl", delete=False); lf.close()
-    with mock.patch.object(BL.kis, "positions_detail", side_effect=pd or fake_pd), \
+    with mock.patch.object(BL, "autopaper_entries", return_value=mirrored), \
+         mock.patch.object(BL.kis, "positions_detail", side_effect=pd or fake_pd), \
          mock.patch.object(BL.kis, "last_price", return_value=last), \
          mock.patch.object(BL.settings, "market_open", return_value=mkt_open), \
          mock.patch.object(BL.kis_positions, "PATH", tf.name), \
@@ -174,6 +181,59 @@ def test_b_sleeve_has_no_fixed_position_count_gate():
     assert ex.call_args.kwargs["open_positions"] == 25
     assert ex.call_args.kwargs["open_cost_krw"] == 250.0
     print("[PASS] B 25종목 예약 상태도 고정 개수 차단 없이 예산 게이트로 전달")
+
+
+def test_mirror_only_buys_what_autopaper_actually_entered():
+    """모듈 선언대로 '미러'가 되는지 — 신호에 있어도 autopaper 미진입이면 안 산다.
+
+    Codex 적대검토 P1: 종전에는 신호 피드의 fresh now 후보를 그대로 매수
+    경로에 넘겨, autopaper가 한도(동시 12·하루 3건)로 사지 않은 종목도 KIS가
+    샀다. 두 장부의 성과 비교가 성립하지 않는 정책 결함.
+    """
+    entered, skipped = _sig(code="005930"), _sig(code="000660")
+    res, ex, _, _ = _run([entered, skipped], holdings={},
+                         mirrored={"005930"})
+    assert _g(res, "005930")["gate"] == "sent"
+    blocked = _g(res, "000660")
+    assert blocked["gate"] == "mirror" and "미진입" in blocked["why"]
+    assert ex.call_count == 1                      # 미진입 종목은 주문 0건
+    print("[PASS] 미러는 autopaper 실제 진입 종목만 매수")
+
+
+def test_autopaper_feed_failure_holds_mirror_closed():
+    res, ex, _, _ = _run([_sig()], holdings={}, mirrored=None)
+    r = _g(res, "005930")
+    assert r["gate"] == "mirror" and "조회 실패" in r["why"]
+    assert not ex.called                           # 미러 대상 불명 → 매수 0건
+    print("[PASS] autopaper 피드 실패는 fail-closed(미러 보류)")
+
+
+def test_autopaper_caps_flow_through_to_mirror():
+    """autopaper 한도가 미러에 자동으로 전이되는지(별도 상한 재도입 불필요).
+
+    autopaper가 동시 12종목·하루 3건으로 12종목만 들고 있으면, 신호가 20건
+    있어도 미러 보유는 그 부분집합을 넘을 수 없다.
+    """
+    held = [f"A{i:04d}" for i in range(12)]
+    signals = [_sig(code=c) for c in held] + [
+        _sig(code=f"B{i:04d}") for i in range(8)]
+    res, ex, _, _ = _run(signals, holdings={}, mirrored=set(held))
+    bought = {r["code"] for r in res if r.get("gate") == "sent"}
+    assert bought <= set(held) and len(bought) <= 12, bought
+    assert all(_g(res, f"B{i:04d}")["gate"] == "mirror" for i in range(8))
+    print("[PASS] autopaper 동시보유 한도가 미러에 그대로 전이")
+
+
+def test_shelf_sleeve_is_not_gated_by_autopaper():
+    """B(매물대)는 autopaper가 다루지 않는 별도 예산 전략 — 이 게이트 미적용."""
+    sig = _sig(code="005930")
+    sig["group"] = "shelf"
+    sig["shelf"] = {"rr": 2.0}
+    res, ex, _, _ = _run([sig], holdings={}, mirrored=set(),
+                         run_kwargs={"sleeve": "B", "group": "shelf"})
+    assert _g(res, "005930")["gate"] != "mirror"
+    assert ex.called                               # autopaper 미보유여도 B는 진행
+    print("[PASS] 전략 B는 autopaper 미러 게이트에 막히지 않음")
 
 
 def test_intra_cycle_accumulation():
@@ -305,6 +365,10 @@ def main():
     test_cooldown_after_same_day_sell()
     test_inflight_buy_counts_toward_position_accounting()
     test_b_sleeve_has_no_fixed_position_count_gate()
+    test_mirror_only_buys_what_autopaper_actually_entered()
+    test_autopaper_feed_failure_holds_mirror_closed()
+    test_autopaper_caps_flow_through_to_mirror()
+    test_shelf_sleeve_is_not_gated_by_autopaper()
     test_intra_cycle_accumulation()
     test_non_now_filtered()
     test_us_signal_routes_and_fx()

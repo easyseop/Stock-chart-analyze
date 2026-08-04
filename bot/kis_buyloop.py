@@ -22,13 +22,56 @@
 from __future__ import annotations
 
 import datetime
+import json
 import os
 import sys
+import time
+import urllib.request
 
 from bot import envelope, kis, kis_buy, kis_pending, kis_positions, settings
 
 _US_EXCGS = ("NASD", "NYSE", "AMEX")   # 보유 병합용 — NYSE/AMEX 보유 누락 방지
 _KST = datetime.timezone(datetime.timedelta(hours=9))
+
+
+# 미러 패리티 게이트. 끄면 신호 피드 후보를 직접 사던 종전 동작으로 돌아간다 —
+#   그 경우 autopaper와 성과 비교가 성립하지 않으므로 기본값을 바꾸지 말 것.
+_MIRROR_REQUIRES_AUTOPAPER = os.environ.get(
+    "MIRROR_REQUIRES_AUTOPAPER", "1") != "0"
+
+
+def autopaper_entries() -> set[str] | None:
+    """autopaper가 **실제로 진입한** 종목 집합. 조회 실패=None(=미러 보류).
+
+    이 모듈은 첫 줄부터 "autopaper가 진입 결정한 신호를 KIS에 미러"라고 선언해
+    왔지만, 실제로는 신호 피드의 후보를 그대로 매수 경로에 넘겨 왔다(Codex
+    적대검토 P1). autopaper는 동시 12종목·하루 3건인데 미러는 무제한·하루
+    10건이라, autopaper가 한도·손실 게이트로 사지 않은 종목까지 KIS가 사면
+    두 장부의 성과를 비교하는 것 자체가 무의미해진다.
+
+    여기서 실제 진입 종목만 돌려주면 미러 보유는 autopaper 보유의 부분집합이
+    되어 동시보유·하루한도가 **자동으로** 따라온다(별도 상한 재도입 불필요).
+    """
+    for url in settings.PAPER_SOURCES:
+        try:
+            req = urllib.request.Request(
+                url + "?cb=" + str(int(time.time())),
+                headers={"User-Agent": "kis-buyloop"})
+            with urllib.request.urlopen(req, timeout=15) as resp:
+                payload = json.load(resp)
+        except Exception:
+            continue
+        rows = payload.get("positions")
+        if not isinstance(rows, list):
+            continue                          # 계약 위반 — 다음 소스로
+        out = set()
+        for row in rows:
+            code = str((row or {}).get("code")
+                       if isinstance(row, dict) else row or "").strip().upper()
+            if code:
+                out.add(code)
+        return out
+    return None                               # 전 소스 실패 — fail-closed
 
 
 def _now_signals(signals: list[dict]) -> list[dict]:
@@ -200,10 +243,25 @@ def run_once(signals: list[dict], *, fx: float | None = None,
     results: list[dict] = []
 
     src = _shelf_cands(signals) if group == "shelf" else _now_signals(signals)
+    # 슬리브 A는 **autopaper가 실제 진입한 종목만** 미러한다(모듈 선언과 코드 일치).
+    #   B(매물대)는 autopaper가 다루지 않는 별도 예산 전략이라 이 게이트를 쓰지 않는다.
+    mirrored: set[str] | None = None
+    if sleeve != "B" and _MIRROR_REQUIRES_AUTOPAPER:
+        mirrored = autopaper_entries()
+        if mirrored is None:                       # 피드 실패 = 미러 대상 불명
+            for s in src:
+                results.append({"code": str(s["code"]).upper(),
+                                "gate": "mirror",
+                                "why": "autopaper 보유 피드 조회 실패 — 미러 보류"})
+            return results
     # 1차 게이트(브로커 조회 전) — 세션·어닝. 후보가 없으면 잔고 조회도 안 한다.
     cand: list[dict] = []
     for s in src:
         code = str(s["code"]).upper()
+        if mirrored is not None and code not in mirrored:
+            results.append({"code": code, "gate": "mirror",
+                            "why": "autopaper 미진입 — 미러 대상 아님"})
+            continue
         if not settings.market_open(s.get("ccy", "USD")):
             results.append({"code": code, "gate": "session", "why": "장 아님"})
             continue
