@@ -118,25 +118,57 @@ def aggregate(rows: list[dict], b_codes: set, baseline: set) -> dict:
 
 # ── 상태 ──────────────────────────────────────────────────────
 @contextlib.contextmanager
-def state_lock():
+def state_lock(timeout_s: float = 10.0):
     """alpha 상태 파일 쓰기 임계구역 — tick()과 유지보수 스크립트 공용.
 
     두 프로세스가 읽기-수정-쓰기를 겹치면 나중에 저장하는 쪽이 상대의 갱신을
     통째로 덮어쓴다(Codex P2-2: 재기준 스크립트가 동시 KR 틱을 유실시킴).
-    잠금 획득에 실패하면 예외를 올려 조용한 유실 대신 실패로 드러낸다.
+
+    무한 블로킹 금지: alpha는 buyloop 끝에서 동기 호출되므로 누가 잠금을 쥔 채
+    멈추면 **다음 매수 사이클 전체가 멈춘다**(Codex TWR-V2 P2-2). timeout 안에
+    못 잡으면 TimeoutError — 호출부는 alpha만 건너뛰고 매수는 계속한다.
     """
     path = STATE_PATH + ".lock"
     parent = os.path.dirname(os.path.abspath(path)) or "."
     os.makedirs(parent, exist_ok=True)
     fd = os.open(path, os.O_CREAT | os.O_RDWR, 0o600)
+    deadline = time.monotonic() + max(0.1, float(timeout_s))
     try:
-        fcntl.flock(fd, fcntl.LOCK_EX)
+        while True:
+            try:
+                fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                break
+            except OSError:
+                if time.monotonic() >= deadline:
+                    raise TimeoutError(
+                        f"alpha 상태 잠금 {timeout_s}s 초과 — 성과 틱 건너뜀")
+                time.sleep(0.2)
         yield
     finally:
         try:
             fcntl.flock(fd, fcntl.LOCK_UN)
         finally:
             os.close(fd)
+
+
+QUALITY_PATH = os.environ.get(
+    "ALPHA_QUALITY_PATH",
+    os.path.join(os.path.dirname(__file__), "alpha_quality.jsonl"))
+
+
+def _quality_append(ev: dict) -> None:
+    """append-only 품질 원장(로컬 전용) — 격리·미확정 마감의 진단 근거 보존.
+
+    day 내부 anomaly_log는 다음 세션 교체 때 사라진다(Codex P2-3). 다음 절벽의
+    원인 확정에 필요한 원본을 여기 남긴다. 공개 API로는 내보내지 않는다.
+    """
+    try:
+        with open(QUALITY_PATH, "a", encoding="utf-8") as f:
+            f.write(json.dumps({"ts": time.time(), **ev},
+                               ensure_ascii=False) + "\n")
+        os.chmod(QUALITY_PATH, 0o600)
+    except Exception:
+        pass
 
 
 def _load() -> dict:
@@ -442,6 +474,7 @@ def _alert_interval_anomaly(day: dict, rows: list[dict], *, stage: str) -> None:
     forensic = day.setdefault("anomaly_log", [])
     if len(forensic) < 40:
         forensic.append({"stage": stage, "items": rows})
+    _quality_append({"ev": stage, "items": rows})       # 세션 교체에도 영속(P2-3)
     flags = day.setdefault("anomaly_notified", {})
     if not isinstance(flags, dict):
         flags = {}
@@ -480,10 +513,13 @@ def session_update(st: dict, mkt: str, agg: dict, idx: dict,
     nav_mode = nav is not None
     if (not day or day.get("date") != today
             or (nav_mode and day.get("calc_version") != 3)):
-        # 전날이 미정산·미확정으로 끝났으면 그 기준선을 이어받지 않는다. 이어받으면
-        #   계좌는 어제 기준·지수는 오늘 전일종가 기준이 되어 측정 기간이 어긋난다
-        #   (Codex P1-3). 그 경우 계좌·지수를 같은 첫 표본에서 함께 0%로 시작한다.
-        use_carry = bool(carry and nav_mode and not carry.get("unresolved"))
+        # 전날 미확정 **키**의 기준선만 버린다(P1-2 키별 독립). account가 미확정
+        #   이었으면 계좌-지수 비교 기준이 어긋나므로 전체를 첫 표본 0%로 재시작
+        #   (P1-3 — 계좌는 어제 기준·지수는 오늘 전일종가 기준이 되는 혼입 차단).
+        raw_unres = (carry or {}).get("unresolved")
+        carry_unres = (set(_KEYS) if raw_unres is True
+                       else set(raw_unres or []))       # 구버전 bool 호환
+        use_carry = bool(carry and nav_mode and "account" not in carry_unres)
         day = {"date": today, "pl0": tot_pl,
                "a_pl0": agg[mkt]["A"]["pl"], "b_pl0": agg[mkt]["B"]["pl"],
                "idx0": {
@@ -501,7 +537,11 @@ def session_update(st: dict, mkt: str, agg: dict, idx: dict,
         if ((st.get("reanchored") or {}).get(mkt) or {}).get("date") == today:
             day["partial_session"] = True
         if use_carry:
-            day["nav_prev"] = carry.get("nav_last") or {}
+            # 미확정 키는 carry 기준선을 이어받지 않고 첫 표본에서 새로 시작한다.
+            day["nav_prev"] = {
+                key: dict(value)
+                for key, value in (carry.get("nav_last") or {}).items()
+                if key not in carry_unres}
             day["wealth"] = {"account": 1.0, "A": 1.0, "B": 1.0}
         st["day"][mkt] = day
     day.setdefault("a_pl0", agg[mkt]["A"]["pl"])
@@ -515,6 +555,8 @@ def session_update(st: dict, mkt: str, agg: dict, idx: dict,
                         context={"t": now_hhmm, "mkt": mkt, "date": today,
                                  "positions": len(holding_start_codes or ()),
                                  "settled": bool(accounting_settled),
+                                 "unaccounted": ((st.get("diag") or {})
+                                                 .get(mkt) or {}).get("unaccounted"),
                                  "fx": (1.0 if mkt == "KR"
                                         else float(settings.FX_USDKRW))})
         acct, a, b = twr["account"], twr["A"], twr["B"]
@@ -571,8 +613,16 @@ def session_update(st: dict, mkt: str, agg: dict, idx: dict,
 
 
 def capture_stats(days: list[dict], mkt: str) -> str:
-    """상승/하락 캡처 + 지수 대비 승률. 표본<5면 빈 문자열."""
-    rows = [d for d in days if d.get("mkt") == mkt]
+    """상승/하락 캡처 + 지수 대비 승률. 표본<5면 빈 문자열.
+
+    품질 행(acct=None — 미확정·미정산·부분세션)은 표본에서 제외한다. 제외
+    자체가 편향일 수 있으므로 제외 일수를 함께 표기한다(사용자가 볼 수 있게).
+    """
+    all_rows = [d for d in days if d.get("mkt") == mkt]
+    rows = [d for d in all_rows if d.get("acct") is not None
+            and d.get("idx") is not None]
+    dropped = len(all_rows) - len(rows)
+    suffix = f" · 미확정 제외 {dropped}일" if dropped else ""
     if len(rows) < 5:
         return ""
     up = [d for d in rows if d["idx"] > 0]
@@ -586,7 +636,7 @@ def capture_stats(days: list[dict], mkt: str) -> str:
         parts.append(f"하락일 캡처 {cap:.0f}% (낮을수록 방어 잘함)")
     win = sum(1 for d in rows if d["acct"] > d["idx"]) / len(rows) * 100
     parts.append(f"지수 이긴 날 {win:.0f}%")
-    return " · ".join(parts)
+    return " · ".join(parts) + suffix
 
 
 def chart_url(series: list, idx_name: str, title: str) -> str:
@@ -667,7 +717,11 @@ def dashboard_snapshot(st: dict | None = None) -> dict:
             "date": row.get("d"),
             "market": market,
             "basis": row.get("basis") or "previous_close",
-            "account": float(row.get("acct") or 0),
+            # 미확정(None)은 0으로 낮추지 않는다 — 소비 측이 누적을 끊는 신호다.
+            "account": (float(row["acct"]) if row.get("acct") is not None
+                        else None),
+            "quality": row.get("quality") or "ok",
+            "unresolved_keys": list(row.get("unresolved_keys") or []),
             "A": (float(row["a"]) if row.get("a") is not None else None),
             "B": (float(row["b"]) if row.get("b") is not None else None),
             "indices": {str(k): float(v) for k, v in indices.items()},
@@ -691,18 +745,38 @@ def dashboard_snapshot(st: dict | None = None) -> dict:
 
 
 # ── 메인 틱 ────────────────────────────────────────────────────
-def _fmt(v: float) -> str:
-    return f"{v:+.2f}%"
+KEY_LABEL = {"account": "계좌", "A": "전략A", "B": "전략B"}
+
+
+def _fmt(v: float | None) -> str:
+    """미확정(None)은 숫자로 낮추지 않는다 — 숫자로 보이는 순간 확정이 된다."""
+    return "미확정" if v is None else f"{v:+.2f}%"
 
 
 def tick(now: datetime.datetime | None = None) -> None:
     """매수루프가 5분마다 호출. 세션 중 스냅샷·알림, 세션 종료 시 마감 요약.
 
     상태 파일 읽기-수정-쓰기 전체를 잠금 안에서 수행한다 — 유지보수 스크립트와
-    겹쳐 서로의 갱신을 덮어쓰지 않게(Codex P2-2).
+    겹쳐 서로의 갱신을 덮어쓰지 않게(Codex P2-2). 잠금을 timeout 안에 못 잡으면
+    이번 성과 틱만 건너뛴다(매수 사이클을 막지 않기 위해 — 알림은 1회).
     """
-    with state_lock():
-        _tick_locked(now)
+    global _lock_skip_alerted
+    try:
+        with state_lock():
+            _tick_locked(now)
+    except TimeoutError as exc:
+        if not _lock_skip_alerted:
+            _lock_skip_alerted = True
+            try:
+                notify.send(f"⚠️ 성과 추적 잠금 대기 초과 — {exc}. 매수는 정상,"
+                            " 성과 표본만 이번 주기 누락.", category="trade")
+            except Exception:
+                pass
+        return
+    _lock_skip_alerted = False
+
+
+_lock_skip_alerted = False
 
 
 def _tick_locked(now: datetime.datetime | None = None) -> None:
@@ -773,9 +847,12 @@ def _tick_locked(now: datetime.datetime | None = None) -> None:
         else:
             start_codes = {str(code).upper() for code in persisted_start}
         try:
-            settled = ledger.unaccounted_fills() == 0
+            unaccounted = ledger.unaccounted_fills()
+            settled = unaccounted == 0
         except Exception:
+            unaccounted = None
             settled = False                  # 원장 판정 불가 = 누적 보류(fail-closed)
+        st.setdefault("diag", {})[mkt] = {"unaccounted": unaccounted}
         r = session_update(
             st, mkt, agg, idx, now.strftime("%H:%M"), session_day,
             nav=nav_inputs(agg, mkt), idx_previous_close=idx_previous,
@@ -787,22 +864,39 @@ def _tick_locked(now: datetime.datetime | None = None) -> None:
         st.setdefault("sampled_at", {})[mkt] = now.timestamp()
         first = len(r["series"]) == 1
         last_alert = st.setdefault("alert", {}).get(mkt, 0)
+        send_first = send_mid = False
         if first:
             st["alert"][mkt] = time.time()
-            notify.send(f"📊 <b>성과 추적 시작</b> ({'미장' if mkt=='US' else '국장'})"
-                        f" — 세션 기준점 설정. 1시간마다 지수 대비 비교 알림.")
+            send_first = True
         elif time.time() - last_alert >= ALERT_MIN * 60 - 90:
             st["alert"][mkt] = time.time()
-            _mid_alert(st, mkt, r)
+            send_mid = True
+        # 네트워크 알림보다 **먼저** 상태를 원자 저장한다. 알림 예외가 격리·표본·
+        #   sampled_at 저장을 날리면 다음 사이클마다 같은 격리를 반복한다(P1-1).
         _save(st)
-        publish_dash(st)                       # 웹 대시보드(perf.html)용 발행
+        try:
+            if send_first:
+                notify.send(
+                    f"📊 <b>성과 추적 시작</b> ({'미장' if mkt=='US' else '국장'})"
+                    f" — 세션 기준점 설정. 1시간마다 지수 대비 비교 알림.")
+            elif send_mid:
+                _mid_alert(st, mkt, r)
+        except Exception:
+            pass                               # 알림 실패는 다음 주기에 재시도
+        try:
+            publish_dash(st)                   # 웹 대시보드(perf.html)용 발행
+        except Exception:
+            pass
 
 
-def _vs_line(acct: float, ipct: dict) -> str:
+def _vs_line(acct: float | None, ipct: dict) -> str:
+    idx_txt = " · ".join(f"{k} {_fmt(v)}" for k, v in ipct.items())
+    if acct is None:
+        # 미확정이면 초과수익·색상 판정을 하지 않는다(P1-1).
+        return f"내 계좌 미확정 vs {idx_txt}\n→ 지수 대비 판정 보류(수동 확인 필요)"
     main = next(iter(ipct.values()), 0.0)
     d = acct - main
     mark = "🟢" if d >= 0 else "🔴"
-    idx_txt = " · ".join(f"{k} {_fmt(v)}" for k, v in ipct.items())
     return f"내 계좌 {_fmt(acct)} vs {idx_txt}\n→ 지수 대비 {mark} {d:+.2f}%p"
 
 
@@ -824,55 +918,87 @@ def _close_alert(st: dict, mkt: str, day: dict) -> None:
     acct, ipct = last[1], last[2]
     rich = (day.get("series_v2") or [{}])[-1]
     days = st.setdefault("days", [])
-    # 누적 기록에 넣으면 안 되는 세 가지 상태:
-    #   · 회계 미정산 마감 — 매도 시차만 반영된 값일 수 있다.
-    #   · 이상 보류 중 마감 — 아직 판정 전이다.
-    #   · 미확정 격리 — 실제 손익인지 증명 못 했다. 숫자를 넣으면 확정이 된다.
-    #   · 재기준된 부분 세션 — 하루가 아니다(Codex P2-1).
-    pending = bool(day.get("accounting_pending") or day.get("anomaly_pending")
-                   or day.get("unresolved") or day.get("partial_session"))
-    d = None if acct is None else acct - ipct
-    if not pending:
-        days.append({
-            "d": day["date"], "mkt": mkt, "acct": acct, "idx": ipct,
-            "basis": day.get("basis") or "first_sample",
-            "a": rich.get("A"), "b": rich.get("B"),
-            "indices": rich.get("indices") or {IDX[mkt][0][1]: ipct},
-            "holdings": rich.get("holdings") or {},
-            "daily_indices": rich.get("daily_indices") or {},
-        })
+    unresolved = sorted(set(day.get("unresolved") or []))
+    acc_pending = bool(day.get("accounting_pending") or day.get("anomaly_pending"))
+    partial = bool(day.get("partial_session"))
+    # 품질 등급 — 미정산·부분세션은 전 키가 의심, unresolved는 해당 키만.
+    quality = ("partial" if partial else "pending" if acc_pending
+               else "unresolved" if unresolved else "ok")
+
+    def _val(key: str, value):
+        """키별 값 — 미확정 키·전체 의심 등급은 None(숫자로 확정 금지)."""
+        if quality in ("partial", "pending") or key in unresolved:
+            return None
+        return value
+
+    # **모든 거래일에 품질 행을 남긴다**(Codex P1-3). 미확정 하루가 역사에서
+    #   사라지면 그 전후 정상일이 하나의 연속 TWR처럼 복리돼 장기 비교가
+    #   거짓이 된다. 소비 측은 quality != ok 행에서 누적을 끊어야 한다.
+    days.append({
+        "d": day["date"], "mkt": mkt,
+        "acct": _val("account", acct), "idx": ipct,
+        "basis": day.get("basis") or "first_sample",
+        "a": _val("A", rich.get("A")), "b": _val("B", rich.get("B")),
+        "quality": quality,
+        "unresolved_keys": unresolved,
+        "indices": rich.get("indices") or {IDX[mkt][0][1]: ipct},
+        "holdings": rich.get("holdings") or {},
+        "daily_indices": rich.get("daily_indices") or {},
+    })
     if day.get("nav_last"):
-        # 미확정으로 끝난 날은 그 사실을 carry에 실어 다음 세션이 이 기준선을
-        #   이어받지 않게 한다. 이어받으면 계좌는 어제 기준·지수는 오늘 전일종가
-        #   기준이 되어 측정 기간이 어긋난다(Codex P1-3).
+        # 미확정 **키**의 기준선만 다음 세션이 버리게 키 집합으로 싣는다(P1-2 —
+        #   A만 이상인데 계좌·B의 carry까지 포기하면 정상 키 성과가 또 끊긴다).
+        carry_unres = (sorted(_KEYS) if quality in ("partial", "pending")
+                       else unresolved)
         st.setdefault("carry", {})[mkt] = {
             "date": day.get("date"), "nav_last": day["nav_last"],
-            "unresolved": bool(day.get("unresolved")
-                               or day.get("accounting_pending")
-                               or day.get("anomaly_pending")),
+            "unresolved": carry_unres,
         }
     del days[:-120]                                      # 최근 120일만 보관
+    if quality != "ok":
+        _quality_append({
+            "ev": "close", "mkt": mkt, "date": day.get("date"),
+            "quality": quality, "unresolved_keys": unresolved,
+            "anomaly_log": (day.get("anomaly_log") or [])[-10:],
+        })
     cap = capture_stats(days, mkt)
     name = "미장·나스닥" if mkt == "US" else "국장·코스피"
-    mark = "🟢" if (d or 0) >= 0 else "🔴"
-    if day.get("unresolved"):
+    if unresolved:
+        labels = ", ".join(KEY_LABEL.get(k, k) for k in unresolved)
+        ok_keys = [k for k in ("account", "A", "B") if k not in unresolved]
+        ok_txt = " · ".join(
+            f"{KEY_LABEL[k]} {_fmt(acct if k == 'account' else rich.get(k))}"
+            for k in ok_keys)
         body = (f"🏁 <b>장 마감 성과</b> ({name})\n"
-                f"❓ 계좌 수익률 <b>미확정</b> — {', '.join(day['unresolved'])} "
-                f"구간이 실제 손익인지 데이터 오류인지 증명하지 못했습니다"
-                f"(지수 {_fmt(ipct)})\n"
-                "0%로 확정하지 않았고 누적 기록에도 넣지 않았습니다. 수동 확인 필요.")
-    elif pending:
+                f"❓ <b>{labels} 미확정</b> — 실제 손익인지 데이터 오류인지 "
+                f"증명하지 못했습니다(지수 {_fmt(ipct)})\n"
+                + (f"정상 확정: {ok_txt}\n" if ok_txt else "")
+                + "미확정 키는 0%로 낮추지 않았고 장기 누적에서도 숫자로 "
+                  "확정하지 않습니다. 수동 확인 필요.")
+    elif quality == "pending":
         body = (f"🏁 <b>장 마감 성과</b> ({name})\n"
                 f"⏳ 매도 회계 정산 대기 — 계좌 수익률 산정 보류"
                 f"(지수 {_fmt(ipct)})\n"
-                "정산되면 다음 세션부터 이어집니다. 누적 기록에는 넣지 않았습니다.")
+                "정산되면 다음 세션부터 이어집니다. 누적에는 품질 행으로만 남깁니다.")
+    elif quality == "partial":
+        body = (f"🏁 <b>장 마감 성과</b> ({name})\n"
+                f"↺ 재기준 부분 세션 — 하루 성과로 집계하지 않음"
+                f"(지수 {_fmt(ipct)})")
     else:
+        d = acct - ipct
+        mark = "🟢" if d >= 0 else "🔴"
         body = (f"🏁 <b>장 마감 성과</b> ({name})\n"
                 f"오늘: 내 계좌 {_fmt(acct)} vs 지수 {_fmt(ipct)} "
                 f"→ {mark} {d:+.2f}%p\n"
                 + (f"누적 통계: {cap}" if cap
                    else "누적 통계: 5일 이상 쌓이면 상승/하락 캡처 표시"))
-    idx_name = "나스닥" if mkt == "US" else "코스피"
-    url = chart_url(day["series"], idx_name, f"{day['date']} 세션 추이")
-    if not notify.send_photo(url, body):
-        notify.send(body)
+    # 네트워크 알림 전에 상태를 원자 저장(P1-1) — 알림 예외가 마감 기록을 날려
+    #   같은 마감을 반복하지 않게 한다.
+    _save(st)
+    try:
+        idx_name = "나스닥" if mkt == "US" else "코스피"
+        url = chart_url(day["series"], idx_name, f"{day['date']} 세션 추이")
+        if not notify.send_photo(url, body):
+            notify.send(body)
+    except Exception:
+        pass

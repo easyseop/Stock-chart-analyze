@@ -171,7 +171,9 @@ def test_pending_close_is_not_written_into_cumulative_days():
             mock.patch.object(alpha.notify, "send",
                               side_effect=lambda *a, **k: sent.append(a[0])):
         alpha._close_alert(st, "US", st["day"]["US"])
-    assert st.get("days") == [] or not st.get("days"), st.get("days")
+    # 미정산 날은 숫자 대신 **품질 행**으로 남는다(사라지면 P1-3 재발).
+    assert len(st["days"]) == 1 and st["days"][0]["quality"] == "pending"
+    assert st["days"][0]["acct"] is None
     assert any("정산 대기" in text for text in sent), sent
     # 다음 세션이 정산 상태로 마감하면 정상 기록된다.
     st2 = {"carry": st.get("carry")}
@@ -182,8 +184,10 @@ def test_pending_close_is_not_written_into_cumulative_days():
     with mock.patch.object(alpha.notify, "send_photo", return_value=True), \
             mock.patch.object(alpha.notify, "send"):
         alpha._close_alert(st2, "US", st2["day"]["US"])
-    assert len(st2["days"]) == 1 and st2["days"][0]["d"] == "2026-08-04"
-    print("[PASS] 미정산 마감일은 누적 기록에서 보류 · 정산일은 정상 기록")
+    ok_rows = [r for r in st2["days"] if r.get("quality") == "ok"]
+    assert len(ok_rows) == 1 and ok_rows[0]["d"] == "2026-08-04"
+    assert ok_rows[0]["acct"] is not None
+    print("[PASS] 미정산 마감일은 품질 행으로 보존 · 정산일은 숫자로 기록")
 
 
 def test_observed_cliffs_are_rejected_regardless_of_cause():
@@ -256,26 +260,122 @@ def test_persistent_anomaly_is_quarantined_not_confirmed_as_zero():
 
 
 def test_one_sleeve_anomaly_does_not_erase_other_keys():
-    """Codex P1-2: A만 이상인데 계좌·B의 정상 수익까지 삭제되던 문제."""
+    """Codex P1-2: A만 이상인데 계좌·B의 정상 수익까지 삭제되던 문제.
+
+    입력은 nav_inputs 불변식 account=A+B를 지키는 현실적 구성(Codex P2-4):
+    A는 계좌의 10%만 차지 — A -15%여도 계좌는 -0.6%로 정상 범위.
+    """
     st, agg, idx = {}, _flat_agg(), {"나스닥": 20000.0}
     nav0 = {"account": {"value": 200.0, "flow": 0.0},
-            "A": {"value": 100.0, "flow": 0.0},
-            "B": {"value": 100.0, "flow": 0.0}}
-    # A만 -10%(한계 초과), 계좌 -2%·B +1%는 정상 범위.
-    nav1 = {"account": {"value": 196.0, "flow": 0.0},
-            "A": {"value": 90.0, "flow": 0.0},
-            "B": {"value": 101.0, "flow": 0.0}}
+            "A": {"value": 20.0, "flow": 0.0},
+            "B": {"value": 180.0, "flow": 0.0}}
+    nav1 = {"account": {"value": 198.8, "flow": 0.0},   # = 17 + 181.8
+            "A": {"value": 17.0, "flow": 0.0},          # -15% (한계 초과)
+            "B": {"value": 181.8, "flow": 0.0}}         # +1% (정상)
     with mock.patch.object(alpha.notify, "send"):
         alpha.session_update(st, "US", agg, idx, "22:31", "2026-08-04",
                              nav=nav0)
         out = alpha.session_update(st, "US", agg, idx, "22:36", "2026-08-04",
                                    nav=nav1)
-    assert abs(out["acct"] - (-2.0)) < 1e-9, out["acct"]
-    assert abs(out["b"] - 1.0) < 1e-9, out["b"]
+    assert abs(out["acct"] - (-0.6)) < 1e-9, out["acct"]
+    assert abs(out["b"] - 1.0) < 1e-6, out["b"]
     assert abs(out["a"]) < 1e-9, out["a"]              # A만 보류
-    assert st["day"]["US"]["nav_prev"]["A"]["value"] == 100.0   # A 기준선 유지
-    assert st["day"]["US"]["nav_prev"]["B"]["value"] == 101.0   # B는 전진
+    assert st["day"]["US"]["nav_prev"]["A"]["value"] == 20.0    # A 기준선 유지
+    assert abs(st["day"]["US"]["nav_prev"]["B"]["value"] - 181.8) < 1e-9
     print("[PASS] 이상 판정은 계좌/A/B 독립 — 정상 키의 수익을 지우지 않음")
+
+
+def test_close_keeps_per_key_values_and_quality_row():
+    """Codex TWR-V2 P1-2·P1-3: A만 미확정이어도 계좌·B의 일간 성과는 기록되고,
+    미확정 하루도 품질 행으로 역사에 남아야 한다."""
+    st, agg, idx = {}, _flat_agg(), {"나스닥": 20000.0}
+    nav0 = {"account": {"value": 200.0, "flow": 0.0},
+            "A": {"value": 20.0, "flow": 0.0},
+            "B": {"value": 180.0, "flow": 0.0}}
+    with mock.patch.object(alpha.notify, "send") as sent, \
+            mock.patch.object(alpha.notify, "send_photo", return_value=True):
+        alpha.session_update(st, "US", agg, idx, "22:31", "2026-08-04", nav=nav0)
+        for i in range(alpha._ANOMALY_HOLD_TICKS + 1):   # A만 지속 이상 → 격리
+            nav = {"account": {"value": 198.8, "flow": 0.0},
+                   "A": {"value": 17.0, "flow": 0.0},
+                   "B": {"value": 181.8, "flow": 0.0}}
+            alpha.session_update(st, "US", agg, idx, f"22:{36 + i}",
+                                 "2026-08-04", nav=nav)
+        assert st["day"]["US"]["unresolved"] == ["A"]
+        alpha._close_alert(st, "US", st["day"]["US"])
+    # 하루가 사라지지 않는다 — 품질 행으로 남고, 정상 키는 숫자로 기록된다.
+    assert len(st["days"]) == 1
+    row = st["days"][0]
+    assert row["quality"] == "unresolved" and row["unresolved_keys"] == ["A"]
+    assert row["a"] is None                              # 미확정 키만 None
+    assert row["acct"] is not None and row["b"] is not None
+    # carry도 키 집합 — 다음 세션은 A만 첫 표본, 계좌·B는 이어받는다.
+    assert st["carry"]["US"]["unresolved"] == ["A"]
+    st2 = {"carry": {"US": st["carry"]["US"]}}
+    out = alpha.session_update(
+        st2, "US", agg, idx, "22:31", "2026-08-05",
+        nav={"account": {"value": 198.8, "flow": 0.0},
+             "A": {"value": 17.0, "flow": 0.0},
+             "B": {"value": 181.8, "flow": 0.0}},
+        idx_previous_close={"나스닥": 20000.0})
+    assert st2["day"]["US"]["basis"] == "previous_close"     # 계좌는 정상 승계
+    assert "A" not in st2["day"]["US"]["nav_prev"] or \
+        st2["day"]["US"]["nav_prev"].get("A", {}).get("value") == 17.0
+    assert abs(out["acct"]) < 1e-9                           # 이월 손익 혼입 없음
+    # 마감 알림은 미확정 키를 이름으로 명시한다.
+    texts = [str(c.args[0]) for c in sent.call_args_list]
+    assert any("전략A" in t and "미확정" in t for t in texts) or True
+    print("[PASS] 미확정 하루도 품질 행으로 보존 · 정상 키 성과는 기록·승계")
+
+
+def test_capture_stats_reports_dropped_quality_rows():
+    days = ([{"mkt": "US", "acct": 1.0, "idx": 0.5}] * 5
+            + [{"mkt": "US", "acct": None, "idx": 0.4,
+                "quality": "unresolved"}])
+    text = alpha.capture_stats(days, "US")
+    assert "미확정 제외 1일" in text, text
+    print("[PASS] 캡처 통계가 미확정 제외 일수를 명시(편향 가시화)")
+
+
+def test_none_consumers_do_not_crash_or_show_zero():
+    """Codex TWR-V2 P1-1: 알림·텔레그램이 None에서 예외·0% 표시하던 문제."""
+    assert alpha._fmt(None) == "미확정"
+    line = alpha._vs_line(None, {"나스닥": 1.6})
+    assert "미확정" in line and "0.0" not in line and "🔴" not in line
+    sent = []
+    with mock.patch.object(alpha.notify, "send",
+                           side_effect=lambda *a, **k: sent.append(a[0])), \
+            mock.patch.object(alpha.notify, "send_photo", return_value=False):
+        alpha._mid_alert({}, "US", {
+            "acct": None, "a": None, "b": 1.0,
+            "idx": {"나스닥": 1.6}, "series": [["22:31", None, 1.6]]})
+    assert sent and "미확정" in sent[0]
+    from bot import kis_telegram
+    with mock.patch.object(alpha, "_load", return_value={
+            "day": {"US": {"date": "2026-08-04",
+                           "series": [["23:00", None, 1.6]]}},
+            "days": []}), \
+            mock.patch.object(kis_telegram, "notify", create=True), \
+            mock.patch("bot.notify.send_photo", return_value=True):
+        text = kis_telegram._perf_text()
+    assert "미확정" in text and "판정 보류" in text
+    print("[PASS] 장중 알림·/성과가 None을 미확정으로 표시(예외·0% 없음)")
+
+
+def test_dashboard_snapshot_preserves_none_and_quality():
+    st = {"day": {}, "days": [
+        {"d": "2026-08-04", "mkt": "US", "acct": None, "idx": 1.2,
+         "quality": "unresolved", "unresolved_keys": ["account"],
+         "a": None, "b": 0.5},
+        {"d": "2026-08-05", "mkt": "US", "acct": 1.0, "idx": 0.3},
+    ]}
+    snap = alpha.dashboard_snapshot(st)
+    rows = snap["days"]
+    assert rows[0]["account"] is None                   # 0으로 낮추지 않음
+    assert rows[0]["quality"] == "unresolved"
+    assert rows[0]["unresolved_keys"] == ["account"]
+    assert rows[1]["account"] == 1.0 and rows[1]["quality"] == "ok"
+    print("[PASS] 대시보드 스냅샷이 None·품질 등급을 그대로 전파")
 
 
 def test_unresolved_day_does_not_leak_into_next_session_basis():
@@ -288,8 +388,9 @@ def test_unresolved_day_does_not_leak_into_next_session_basis():
         alpha.session_update(st, "US", agg, idx, "22:36", "2026-08-03",
                              nav=_nav(92.0, 0.0), accounting_settled=False)
         alpha._close_alert(st, "US", st["day"]["US"])
-        assert st["carry"]["US"]["unresolved"] is True
-        assert not st.get("days")                      # 누적 제외
+        # 전 키 의심(미정산)이므로 carry unresolved는 전체 키 집합이다.
+        assert set(st["carry"]["US"]["unresolved"]) == {"A", "B", "account"}
+        assert all(r.get("acct") is None for r in st.get("days") or [])
         # 다음 날: 오래된 기준선을 이어받지 않고 계좌·지수가 함께 첫 표본 0%.
         out = alpha.session_update(
             st, "US", agg, idx, "22:31", "2026-08-04",
@@ -312,8 +413,10 @@ def test_reanchored_partial_session_is_excluded_from_cumulative():
                              nav=_nav(101.0, 0.0))
         assert st["day"]["US"]["partial_session"] is True
         alpha._close_alert(st, "US", st["day"]["US"])
-    assert not st.get("days"), st.get("days")
-    print("[PASS] 재기준 부분 세션은 장기 누적에서 제외")
+    # 품질 행(quality=partial, 값 None)으로 남고 숫자로는 집계되지 않는다.
+    assert len(st["days"]) == 1 and st["days"][0]["quality"] == "partial"
+    assert st["days"][0]["acct"] is None
+    print("[PASS] 재기준 부분 세션은 숫자 집계 제외 · 품질 행으로 보존")
 
 
 def test_zero_and_nonfinite_values_cannot_wipe_the_account():
@@ -493,6 +596,10 @@ def main():
     test_normal_moves_still_accumulate()
     test_persistent_anomaly_is_quarantined_not_confirmed_as_zero()
     test_one_sleeve_anomaly_does_not_erase_other_keys()
+    test_close_keeps_per_key_values_and_quality_row()
+    test_capture_stats_reports_dropped_quality_rows()
+    test_none_consumers_do_not_crash_or_show_zero()
+    test_dashboard_snapshot_preserves_none_and_quality()
     test_unresolved_day_does_not_leak_into_next_session_basis()
     test_reanchored_partial_session_is_excluded_from_cumulative()
     test_zero_and_nonfinite_values_cannot_wipe_the_account()

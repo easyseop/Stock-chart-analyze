@@ -208,11 +208,15 @@ def _perf_text() -> str:
         day = (st.get("day") or {}).get(mkt)
         if day and day.get("series"):
             last = day["series"][-1]
-            d = last[1] - last[2]
-            mark = "🟢" if d >= 0 else "🔴"
             L.append(f"{label} {day['date']} {last[0]} 기준(세션 시작 대비):")
-            L.append(f"  우리 {last[1]:+.2f}% vs {idxn} {last[2]:+.2f}% "
-                     f"→ {mark} {d:+.2f}%p")
+            if last[1] is None:                # 미확정 — 숫자·색 판정 금지(P1-1)
+                L.append(f"  우리 미확정 vs {idxn} {last[2]:+.2f}% "
+                         "→ 판정 보류(데이터 이상 격리, 수동 확인 필요)")
+            else:
+                d = last[1] - last[2]
+                mark = "🟢" if d >= 0 else "🔴"
+                L.append(f"  우리 {last[1]:+.2f}% vs {idxn} {last[2]:+.2f}% "
+                         f"→ {mark} {d:+.2f}%p")
             try:                                   # 그래프는 별도 사진으로
                 url = alpha.chart_url(day["series"], idxn,
                                       f"{day['date']} {label} 추이")

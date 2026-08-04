@@ -399,7 +399,19 @@ function updateHero() {
   } else {
     const market = state.performance?.markets?.[state.performanceMarket];
     const latest = market?.series?.at(-1);
-    const returnValue = latest ? finite(latest.account) : finite(state.paper?.ret_pct);
+    // 미확정(null)을 finite()로 0에 떨어뜨리면 "+0.0%"로 확정돼 보인다 —
+    //   숫자 대신 미확정을 그대로 표시한다(핵심 불변식).
+    const accountValue = latest ? optionalNumber(latest.account) : null;
+    if (latest && accountValue === null) {
+      number.textContent = "미확정";
+      unit.textContent = "";
+      kicker.textContent = `${market.label} 봇 운용자산 TWR · 데이터 이상 격리 중`;
+      description.textContent =
+        "이상 구간이 실제 손익인지 데이터 오류인지 증명되기 전에는 수익률을 숫자로 확정하지 않습니다.";
+      return;
+    }
+    const returnValue = accountValue !== null
+      ? accountValue : finite(state.paper?.ret_pct);
     number.textContent = formatPercent(returnValue);
     unit.textContent = "";
     kicker.textContent = latest
@@ -1798,12 +1810,26 @@ function performanceRows(market, range) {
   })));
   const keys = ["account", "A", "B", "holdings",
     ...indexNames.map((name) => `idx:${name}`)];
+  // 계좌/전략 키는 미확정(null) 행이 하나라도 있으면 그 기간의 누적을 숫자로
+  //   확정하지 않는다. null 행을 건너뛰고 전후를 이어 붙이면 TWR 연결고리가
+  //   끊긴 구간을 하나의 연속 곡선처럼 복리하게 된다(Codex TWR-V2 P1-3).
+  const accountKeys = ["account", "A", "B"];
+  const keyIncomplete = Object.fromEntries(accountKeys.map((key) => {
+    const missing = daily.filter((row) =>
+      row[key] === null || row[key] === undefined
+      || !Number.isFinite(Number(row[key]))).length;
+    return [key, missing];
+  }));
   const cumulative = Object.fromEntries(keys.map((key) => [key, 0]));
   return daily.map((row) => {
     const out = { label: row.label };
     keys.forEach((key) => {
       if (key === "holdings" && !holdingsSeries.complete) {
         out[key] = null;
+        return;
+      }
+      if (accountKeys.includes(key) && keyIncomplete[key] > 0) {
+        out[key] = null;                       // 기간 전체 미확정 — 복리 금지
         return;
       }
       if (row[key] === null || row[key] === undefined) {
@@ -1822,6 +1848,8 @@ function performanceRows(market, range) {
     out.holdingsEligible = row.holdingsEligible;
     out.holdingsRangeComplete = holdingsSeries.complete;
     out.holdingsIncompleteDays = holdingsSeries.incompleteDays;
+    out.accountIncompleteDays = keyIncomplete.account;
+    out.accountRangeComplete = keyIncomplete.account === 0;
     return out;
   });
 }
@@ -1914,7 +1942,12 @@ function renderKisPerformance() {
     </div>
     ${rows.length ? `
       <div class="performance-grid performance-kis-grid">
-        <div class="performance-card"><small>봇 운용자산 TWR</small><strong class="${finite(latest.account) >= 0 ? "gain" : "loss"}">${performanceValue(latest.account)}</strong><p>${range === "today" ? basisLabel : "선택 기간"} 대비</p></div>
+        <div class="performance-card"><small>봇 운용자산 TWR</small><strong class="${optionalNumber(latest.account) === null ? "" : optionalNumber(latest.account) >= 0 ? "gain" : "loss"}">${performanceValue(latest.account)}</strong><p>${
+          range !== "today" && latest.accountRangeComplete === false
+            ? `미확정 ${Number(latest.accountIncompleteDays || 0)}일 포함 · 기간 누적 비확정`
+            : optionalNumber(latest.account) === null
+              ? "데이터 이상 격리 중 · 수동 확인 필요"
+              : `${range === "today" ? basisLabel : "선택 기간"} 대비`}</p></div>
         <div class="performance-card"><small>전략 A · 전환</small><strong>${performanceValue(latest.A)}</strong><p>A 보유 종목 기준</p></div>
         <div class="performance-card"><small>전략 B · 매물대</small><strong>${performanceValue(latest.B)}</strong><p>B 보유 종목 기준</p></div>
         <div class="performance-card"><small>${escapeHTML(primary || "주 지수")} 대비</small><strong class="${finite(alphaValue) >= 0 ? "gain" : "loss"}">${performanceValue(alphaValue)}</strong><p>초과수익률(%p)</p></div>

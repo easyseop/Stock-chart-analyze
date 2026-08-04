@@ -38,45 +38,59 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--apply", action="store_true", help="실제 저장(기본 미리보기)")
     args = ap.parse_args(argv)
 
-    st = alpha._load()
-    day = (st.get("day") or {}).get(args.mkt)
-    if not day:
-        print(f"✗ {args.mkt} 진행 중인 세션이 없습니다 — 변경 없음")
-        return 1
-    series = day.get("series") or []
-    last = series[-1] if series else None
-    print(f"대상: {args.mkt} {day.get('date')} · 표본 {len(series)}개 "
-          f"· basis={day.get('basis')}")
-    if last:
-        print(f"  현재 표시: 계좌 {last[1]}% · 지수 {last[2]}%")
-    print(f"  이상 구간 기록: {len(day.get('anomaly_log') or [])}건 "
-          f"· 회계보류={bool(day.get('accounting_pending'))}")
-    print("\n재설정하면: 계좌·지수 모두 다음 틱을 0%로 잡고 그 이후만 비교합니다.")
-    print("  (지금까지의 세션 표시는 버려집니다 — 복원 불가 구간이라 추정하지 않음)")
+    def describe(day: dict) -> tuple[str, int]:
+        series = day.get("series") or []
+        last = series[-1] if series else None
+        print(f"대상: {args.mkt} {day.get('date')} · 표본 {len(series)}개 "
+              f"· basis={day.get('basis')}")
+        if last:
+            print(f"  현재 표시: 계좌 {last[1]}% · 지수 {last[2]}%")
+        print(f"  이상 구간 기록: {len(day.get('anomaly_log') or [])}건 "
+              f"· 회계보류={bool(day.get('accounting_pending'))}")
+        return str(day.get("date") or ""), len(series)
+
     if not args.apply:
+        st = alpha._load()
+        day = (st.get("day") or {}).get(args.mkt)
+        if not day:
+            print(f"✗ {args.mkt} 진행 중인 세션이 없습니다 — 변경 없음")
+            return 1
+        describe(day)
+        print("\n재설정하면: 계좌·지수 모두 다음 틱을 0%로 잡고 그 이후만 비교합니다.")
+        print("  (지금까지의 세션 표시는 버려집니다 — 복원 불가 구간이라 추정 안 함)")
         print("\n미리보기입니다. 실제로 적용하려면 --apply 를 붙이세요.")
         return 0
 
-    path = alpha.STATE_PATH
-    backup = f"{path}.bak-{time.strftime('%Y%m%d-%H%M%S')}"
-    shutil.copy2(path, backup)
-    os.chmod(backup, 0o600)
-
-    # alpha.tick()과 같은 파일을 쓰므로 잠금 안에서 **다시 읽고** 수정한다.
-    #   종전에는 잠금 없이 오래된 사본을 저장해 동시 진행 중이던 다른 시장의
-    #   틱을 통째로 덮어썼다(Codex P2-2 재현).
-    session_date = str(day.get("date") or "")
+    # 권위 있는 읽기·검증·백업·변경을 **모두 한 임계구역**에서 수행한다.
+    #   잠금 밖에서 미리 읽은 사본으로 판단하면, 그 사이 tick이 세션을 갱신/
+    #   교체했을 때 더 최신 세션을 지우고 marker에는 옛 날짜를 기록하며 백업도
+    #   실제 변경 직전 상태와 어긋난다(Codex TWR-V2 P2-1).
     with alpha.state_lock():
         st = alpha._load()
+        day = (st.get("day") or {}).get(args.mkt)
+        if not day:
+            print(f"✗ {args.mkt} 진행 중인 세션이 없습니다 — 변경 없음")
+            return 1
+        if day.get("closed"):
+            print(f"✗ {args.mkt} {day.get('date')} 세션은 이미 마감됨 — "
+                  "재기준 대상 아님(변경 없음)")
+            return 1
+        session_date, n_samples = describe(day)
+        series = day.get("series") or []
+        last = series[-1] if series else None
+        path = alpha.STATE_PATH
+        backup = f"{path}.bak-{time.strftime('%Y%m%d-%H%M%S')}-{os.getpid()}"
+        shutil.copy2(path, backup)
+        os.chmod(backup, 0o600)
         st.get("day", {}).pop(args.mkt, None)
         st.get("carry", {}).pop(args.mkt, None)
         st.setdefault("reanchored", {})[args.mkt] = {
             "at": time.time(), "date": session_date,
-            "dropped_samples": len(series),
+            "dropped_samples": n_samples,
             "was": (last[1] if last else None),
         }
         alpha._save(st)
-    print(f"✓ {args.mkt} 세션 기준점 재설정 · 표본 {len(series)}개 폐기")
+    print(f"✓ {args.mkt} 세션 기준점 재설정 · 표본 {n_samples}개 폐기")
     print(f"  백업: {backup}")
     print("  다음 틱(최대 5분)에 계좌·지수가 함께 0%로 다시 시작합니다.")
     return 0

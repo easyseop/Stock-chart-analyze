@@ -33,8 +33,10 @@
 <script>
 const TOPIC = "stock-alpha-c81f4e2b9d";                 // 서버 발행 토픽(퍼센트만)
 const $ = (h) => { const d = document.createElement("div"); d.innerHTML = h; return d.firstElementChild; };
-const f = (v) => (v >= 0 ? "+" : "") + v.toFixed(2) + "%";
-const cls = (v) => v >= 0 ? "up" : "dn";
+// 미확정(null)을 숫자로 낮추지 않는다 — 숫자로 보이는 순간 확정이 된다.
+const num = (v) => (v === null || v === undefined || !isFinite(v)) ? null : Number(v);
+const f = (v) => num(v) === null ? "미확정" : (v >= 0 ? "+" : "") + Number(v).toFixed(2) + "%";
+const cls = (v) => num(v) === null ? "" : v >= 0 ? "up" : "dn";
 
 function line(canvas, labels, seriesList, colors, names) {
   const W = canvas.width = canvas.clientWidth * 2, H = canvas.height = 360;
@@ -57,22 +59,32 @@ function line(canvas, labels, seriesList, colors, names) {
   const step = Math.max(1, Math.ceil(labels.length / 8));
   labels.forEach((lb, i) => { if (i % step === 0) c.fillText(lb, x(i) - 20, H - 8); });
   seriesList.forEach((s, k) => {
+    // null(미확정) 점은 선으로 잇지 않고 공백으로 남긴다(끊김 = 데이터 단절).
     c.strokeStyle = colors[k]; c.lineWidth = 3; c.beginPath();
-    s.forEach((v, i) => { const px = x(i), py = y(v);
-      i ? c.lineTo(px, py) : c.moveTo(px, py); });
+    let pen = false;
+    s.forEach((v, i) => {
+      if (!isFinite(v) || v === null) { pen = false; return; }
+      const px = x(i), py = y(v);
+      pen ? c.lineTo(px, py) : c.moveTo(px, py);
+      pen = true;
+    });
     c.stroke();
   });
 }
 
-function capture(rows) {
-  if (rows.length < 5) return "누적 " + rows.length + "일 — 5일부터 캡처 통계 표시";
+function capture(allRows) {
+  // 품질 행(acct 미확정)은 통계에서 빼되 제외 일수를 표기한다.
+  const rows = allRows.filter(r => num(r.acct) !== null && num(r.idx) !== null);
+  const dropped = allRows.length - rows.length;
+  const tail = dropped ? " · 미확정 제외 " + dropped + "일" : "";
+  if (rows.length < 5) return "누적 " + rows.length + "일 — 5일부터 캡처 통계 표시" + tail;
   const up = rows.filter(r => r.idx > 0), dn = rows.filter(r => r.idx < 0);
   const s = (a, k) => a.reduce((t, r) => t + r[k], 0);
   const parts = ["(" + rows.length + "일)"];
   if (up.length) parts.push("상승일 캡처 " + Math.round(s(up, "acct") / s(up, "idx") * 100) + "%");
   if (dn.length) parts.push("하락일 캡처 " + Math.round(s(dn, "acct") / s(dn, "idx") * 100) + "% (낮을수록 방어)");
   parts.push("지수 이긴 날 " + Math.round(rows.filter(r => r.acct > r.idx).length / rows.length * 100) + "%");
-  return parts.join(" · ");
+  return parts.join(" · ") + tail;
 }
 
 function render(d) {
@@ -83,11 +95,11 @@ function render(d) {
     const day = (d.day || {})[mkt];
     if (day && day.series && day.series.length) {
       const last = day.series[day.series.length - 1];
-      const diff = last[1] - last[2];
+      const diff = num(last[1]) === null ? null : last[1] - last[2];
       const card = $(`<div class="card"><h2>오늘 ${label} 세션 (${day.date}, 시작 대비)</h2>
         <div class="kpi"><div>우리 전략 <b class="${cls(last[1])}">${f(last[1])}</b></div>
         <div>${idxn} <b class="${cls(last[2])}">${f(last[2])}</b></div>
-        <div>지수 대비 <b class="${cls(diff)}">${f(diff)}p</b></div></div>
+        <div>지수 대비 <b class="${cls(diff)}">${num(diff) === null ? "판정 보류" : f(diff) + "p"}</b></div></div>
         <canvas></canvas>
         <div class="leg"><i style="background:#16a34a"></i>우리 전략<i style="background:#64748b"></i>${idxn}</div></div>`);
       root.appendChild(card);
@@ -97,8 +109,12 @@ function render(d) {
     }
     const rows = (d.days || []).filter(r => r.mkt === mkt);
     if (rows.length) {
-      let cum = 0;
-      const cumAlpha = rows.map(r => +(cum += r.acct - r.idx).toFixed(2));
+      // 미확정일 이후로는 누적 초과수익을 잇지 않는다(연결고리 끊김 = 복리 금지).
+      let cum = 0, broken = false;
+      const cumAlpha = rows.map(r => {
+        if (broken || num(r.acct) === null) { broken = true; return null; }
+        return +(cum += r.acct - r.idx).toFixed(2);
+      });
       const card = $(`<div class="card"><h2>${label} 일별 추이 (최근 ${rows.length}일)</h2>
         <canvas></canvas>
         <div class="leg"><i style="background:#16a34a"></i>우리(일별)<i style="background:#64748b"></i>지수(일별)<i style="background:#2563eb"></i>누적 초과수익(알파)</div>
