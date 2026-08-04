@@ -2,8 +2,8 @@
  "updated": "2026-08-05",
  "start": 100000000,
  "cash": 30001430,
- "equity": 100684930,
- "ret_pct": 0.68,
+ "equity": 100806699,
+ "ret_pct": 0.81,
  "positions": [
   {
    "code": "MRSH",
@@ -11,14 +11,14 @@
    "ccy": "USD",
    "q": 36,
    "avg": 174.3075,
-   "price": 190.34500122070312,
+   "price": 190.1699981689453,
    "stop": 184.80249938964843,
    "target": 192.2575,
    "half_done": true,
    "opened": "2026-07-06",
-   "pl_krw": 823405,
-   "pl_pct": 9.2,
-   "price_age_min": 7.4
+   "pl_krw": 814420,
+   "pl_pct": 9.1,
+   "price_age_min": 7.2
   },
   {
    "code": "HMC",
@@ -26,14 +26,14 @@
    "ccy": "USD",
    "q": 2,
    "avg": 27.665,
-   "price": 30.049999237060547,
+   "price": 30.114999771118164,
    "stop": 28.84219986877441,
    "target": 30.5824,
    "half_done": true,
    "opened": "2026-07-09",
-   "pl_krw": 6803,
-   "pl_pct": 8.62,
-   "price_age_min": 10.5
+   "pl_krw": 6988,
+   "pl_pct": 8.86,
+   "price_age_min": 9.9
   },
   {
    "code": "SARO",
@@ -41,14 +41,14 @@
    "ccy": "USD",
    "q": 81,
    "avg": 27.9,
-   "price": 30.3799991607666,
+   "price": 30.5049991607666,
    "stop": 27.9,
    "target": 31.9643,
    "half_done": true,
    "opened": "2026-07-10",
-   "pl_krw": 286491,
-   "pl_pct": 8.89,
-   "price_age_min": 7.5
+   "pl_krw": 300931,
+   "pl_pct": 9.34,
+   "price_age_min": 7.4
   },
   {
    "code": "J",
@@ -56,14 +56,14 @@
    "ccy": "USD",
    "q": 32,
    "avg": 126.585,
-   "price": 141.4199981689453,
-   "stop": 130.43489816894532,
+   "price": 141.97000122070312,
+   "stop": 130.98490122070314,
    "target": 141.2316,
    "half_done": true,
    "opened": "2026-07-11",
-   "pl_krw": 677036,
-   "pl_pct": 11.72,
-   "price_age_min": 7.4
+   "pl_krw": 702137,
+   "pl_pct": 12.15,
+   "price_age_min": 7.2
   },
   {
    "code": "MAIN",
@@ -71,14 +71,14 @@
    "ccy": "USD",
    "q": 39,
    "avg": 53.96,
-   "price": 56.650001525878906,
+   "price": 56.744998931884766,
    "stop": 53.96,
    "target": 58.7184,
    "half_done": true,
    "opened": "2026-07-22",
-   "pl_krw": 149621,
-   "pl_pct": 4.99,
-   "price_age_min": 8.7
+   "pl_krw": 154904,
+   "pl_pct": 5.16,
+   "price_age_min": 8.3
   },
   {
    "code": "004370",
@@ -93,7 +93,7 @@
    "opened": "2026-07-27",
    "pl_krw": 80000,
    "pl_pct": 2.17,
-   "price_age_min": 9.7
+   "price_age_min": 9.2
   },
   {
    "code": "CRC",
@@ -101,14 +101,14 @@
    "ccy": "USD",
    "q": 101,
    "avg": 51.16,
-   "price": 52.29499816894531,
+   "price": 52.38999938964844,
    "stop": 47.7785,
    "target": 57.923,
    "half_done": false,
    "opened": "2026-07-28",
-   "pl_krw": 163490,
-   "pl_pct": 2.22,
-   "price_age_min": 7.4
+   "pl_krw": 177174,
+   "pl_pct": 2.4,
+   "price_age_min": 7.2
   },
   {
    "code": "EQT",
@@ -116,14 +116,14 @@
    "ccy": "USD",
    "q": 242,
    "avg": 51.375,
-   "price": 52.5099983215332,
+   "price": 52.63990020751953,
    "stop": 48.5008,
    "target": 57.1234,
    "half_done": false,
    "opened": "2026-07-29",
-   "pl_krw": 391728,
-   "pl_pct": 2.21,
-   "price_age_min": 7.4
+   "pl_krw": 436562,
+   "pl_pct": 2.46,
+   "price_age_min": 7.2
   },
   {
    "code": "MDT",
@@ -131,14 +131,14 @@
    "ccy": "USD",
    "q": 93,
    "avg": 86.12,
-   "price": 85.66999816894531,
+   "price": 85.80000305175781,
    "stop": 81.6215,
    "target": 95.117,
    "half_done": false,
    "opened": "2026-07-30",
-   "pl_krw": -59686,
-   "pl_pct": -0.52,
-   "price_age_min": 7.4
+   "pl_krw": -42443,
+   "pl_pct": -0.37,
+   "price_age_min": 7.2
   },
   {
    "code": "AVY",
@@ -146,14 +146,14 @@
    "ccy": "USD",
    "q": 28,
    "avg": 169.73,
-   "price": 173.4600067138672,
+   "price": 173.7100067138672,
    "stop": 158.3847,
    "target": 192.4206,
    "half_done": false,
    "opened": "2026-08-03",
-   "pl_krw": 148951,
-   "pl_pct": 2.2,
-   "price_age_min": 10.1
+   "pl_krw": 158934,
+   "pl_pct": 2.34,
+   "price_age_min": 9.6
   }
  ],
  "pending": [
@@ -759,7 +759,7 @@
   },
   {
    "d": "2026-08-05",
-   "v": 100684930
+   "v": 100806699
   }
  ],
  "log": [
