@@ -62,14 +62,20 @@ def main(argv: list[str] | None = None) -> int:
     shutil.copy2(path, backup)
     os.chmod(backup, 0o600)
 
-    # carry까지 지워야 다음 틱이 전일종가가 아닌 '지금'을 첫 표본 기준으로 잡는다.
-    st.get("day", {}).pop(args.mkt, None)
-    st.get("carry", {}).pop(args.mkt, None)
-    st.setdefault("reanchored", {})[args.mkt] = {
-        "at": time.time(), "dropped_samples": len(series),
-        "was": (last[1] if last else None),
-    }
-    alpha._save(st)
+    # alpha.tick()과 같은 파일을 쓰므로 잠금 안에서 **다시 읽고** 수정한다.
+    #   종전에는 잠금 없이 오래된 사본을 저장해 동시 진행 중이던 다른 시장의
+    #   틱을 통째로 덮어썼다(Codex P2-2 재현).
+    session_date = str(day.get("date") or "")
+    with alpha.state_lock():
+        st = alpha._load()
+        st.get("day", {}).pop(args.mkt, None)
+        st.get("carry", {}).pop(args.mkt, None)
+        st.setdefault("reanchored", {})[args.mkt] = {
+            "at": time.time(), "date": session_date,
+            "dropped_samples": len(series),
+            "was": (last[1] if last else None),
+        }
+        alpha._save(st)
     print(f"✓ {args.mkt} 세션 기준점 재설정 · 표본 {len(series)}개 폐기")
     print(f"  백업: {backup}")
     print("  다음 틱(최대 5분)에 계좌·지수가 함께 0%로 다시 시작합니다.")

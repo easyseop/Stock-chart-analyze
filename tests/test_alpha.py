@@ -226,8 +226,12 @@ def test_normal_moves_still_accumulate():
     print("[PASS] 정상 등락·현금흐름은 과잉 억제 없이 그대로 반영")
 
 
-def test_persistent_anomaly_rebaselines_without_fabricating_pnl():
-    """이상이 계속되면(진짜 상태 변화) 영구 동결하지 않고 기준선만 옮긴다."""
+def test_persistent_anomaly_is_quarantined_not_confirmed_as_zero():
+    """Codex P1-1: 지속 이상을 0%로 확정하면 실제 폭락도 삭제된다.
+
+    실제 손익인지 데이터 오류인지 이 자리에서 증명할 수 없으므로 **미확정
+    (None)** 으로 격리하고, 이후 추적만 새 기준선에서 재개한다.
+    """
     st, agg, idx = {}, _flat_agg(), {"나스닥": 20000.0}
     sent = []
     with mock.patch.object(alpha.notify, "send",
@@ -238,18 +242,78 @@ def test_persistent_anomaly_rebaselines_without_fabricating_pnl():
             out = alpha.session_update(
                 st, "US", agg, idx, f"22:{36 + i}", "2026-08-04",
                 nav=_nav(90.0, 0.0))
-            assert abs(out["acct"]) < 1e-9, i          # 보류 중엔 0 유지
+            assert abs(out["acct"]) < 1e-9, i          # 보류 중엔 직전값 유지
         final = alpha.session_update(
             st, "US", agg, idx, "22:50", "2026-08-04", nav=_nav(90.0, 0.0))
-    assert abs(final["acct"]) < 1e-9                   # 점프는 누적하지 않음
-    assert not st["day"]["US"].get("anomaly_pending")  # 동결 해제됨
-    assert st["day"]["US"]["nav_prev"]["account"]["value"] == 90.0  # 기준선 이동
-    after = alpha.session_update(
-        st, "US", agg, idx, "22:55", "2026-08-04", nav=_nav(90.9, 0.0))
-    assert abs(after["acct"] - 1.0) < 1e-9             # 이후 추적 정상 재개
-    assert any("성과 계산 이상 구간" in text for text in sent)
-    assert len(st["day"]["US"]["anomaly_log"]) >= 1    # 사후 진단용 원본 보존
-    print("[PASS] 지속 이상은 기준선만 이동 · 유령 손익 0 · 경보·원본 보존")
+    assert final["acct"] is None, final["acct"]        # 0%로 확정하지 않는다
+    assert st["day"]["US"]["unresolved"] == ["A", "account"]
+    assert st["day"]["US"]["nav_prev"]["account"]["value"] == 90.0  # 추적 재개용
+    assert st["day"]["US"]["series"][-1][1] is None    # 차트에도 숫자 아님
+    # 격리 사실이 별도 경보로 나간다(보류 알림에 삼켜지지 않음 — P2-3).
+    assert any("미확정" in text for text in sent), sent
+    assert len(st["day"]["US"]["anomaly_log"]) >= 2    # hold + quarantine
+    print("[PASS] 지속 이상은 0% 확정 대신 미확정 격리 · 격리 경보 별도 발송")
+
+
+def test_one_sleeve_anomaly_does_not_erase_other_keys():
+    """Codex P1-2: A만 이상인데 계좌·B의 정상 수익까지 삭제되던 문제."""
+    st, agg, idx = {}, _flat_agg(), {"나스닥": 20000.0}
+    nav0 = {"account": {"value": 200.0, "flow": 0.0},
+            "A": {"value": 100.0, "flow": 0.0},
+            "B": {"value": 100.0, "flow": 0.0}}
+    # A만 -10%(한계 초과), 계좌 -2%·B +1%는 정상 범위.
+    nav1 = {"account": {"value": 196.0, "flow": 0.0},
+            "A": {"value": 90.0, "flow": 0.0},
+            "B": {"value": 101.0, "flow": 0.0}}
+    with mock.patch.object(alpha.notify, "send"):
+        alpha.session_update(st, "US", agg, idx, "22:31", "2026-08-04",
+                             nav=nav0)
+        out = alpha.session_update(st, "US", agg, idx, "22:36", "2026-08-04",
+                                   nav=nav1)
+    assert abs(out["acct"] - (-2.0)) < 1e-9, out["acct"]
+    assert abs(out["b"] - 1.0) < 1e-9, out["b"]
+    assert abs(out["a"]) < 1e-9, out["a"]              # A만 보류
+    assert st["day"]["US"]["nav_prev"]["A"]["value"] == 100.0   # A 기준선 유지
+    assert st["day"]["US"]["nav_prev"]["B"]["value"] == 101.0   # B는 전진
+    print("[PASS] 이상 판정은 계좌/A/B 독립 — 정상 키의 수익을 지우지 않음")
+
+
+def test_unresolved_day_does_not_leak_into_next_session_basis():
+    """Codex P1-3: 보류한 전날 손익이 다음 날 계좌 수익으로 넘어가던 경로."""
+    st, agg, idx = {}, _flat_agg(), {"나스닥": 20000.0}
+    with mock.patch.object(alpha.notify, "send"), \
+            mock.patch.object(alpha.notify, "send_photo", return_value=True):
+        alpha.session_update(st, "US", agg, idx, "22:31", "2026-08-03",
+                             nav=_nav(100.0, 0.0))
+        alpha.session_update(st, "US", agg, idx, "22:36", "2026-08-03",
+                             nav=_nav(92.0, 0.0), accounting_settled=False)
+        alpha._close_alert(st, "US", st["day"]["US"])
+        assert st["carry"]["US"]["unresolved"] is True
+        assert not st.get("days")                      # 누적 제외
+        # 다음 날: 오래된 기준선을 이어받지 않고 계좌·지수가 함께 첫 표본 0%.
+        out = alpha.session_update(
+            st, "US", agg, idx, "22:31", "2026-08-04",
+            nav=_nav(92.0, -6.0), idx_previous_close={"나스닥": 19800.0})
+    assert st["day"]["US"]["basis"] == "first_sample"
+    assert abs(out["acct"]) < 1e-9, out["acct"]        # 전날 손익이 안 넘어옴
+    assert abs(out["idx"]["나스닥"]) < 1e-9            # 지수도 같은 순간 0%
+    print("[PASS] 미확정 마감일의 기준선이 다음 세션 지수 비교로 새지 않음")
+
+
+def test_reanchored_partial_session_is_excluded_from_cumulative():
+    """Codex P2-1: 재기준 이후의 부분 세션이 하루처럼 누적에 들어가던 문제."""
+    st, agg, idx = {"reanchored": {"US": {"date": "2026-08-04"}}}, _flat_agg(), \
+        {"나스닥": 20000.0}
+    with mock.patch.object(alpha.notify, "send"), \
+            mock.patch.object(alpha.notify, "send_photo", return_value=True):
+        alpha.session_update(st, "US", agg, idx, "23:10", "2026-08-04",
+                             nav=_nav(100.0, 0.0))
+        alpha.session_update(st, "US", agg, idx, "23:15", "2026-08-04",
+                             nav=_nav(101.0, 0.0))
+        assert st["day"]["US"]["partial_session"] is True
+        alpha._close_alert(st, "US", st["day"]["US"])
+    assert not st.get("days"), st.get("days")
+    print("[PASS] 재기준 부분 세션은 장기 누적에서 제외")
 
 
 def test_zero_and_nonfinite_values_cannot_wipe_the_account():
@@ -427,7 +491,10 @@ def main():
     test_pending_close_is_not_written_into_cumulative_days()
     test_observed_cliffs_are_rejected_regardless_of_cause()
     test_normal_moves_still_accumulate()
-    test_persistent_anomaly_rebaselines_without_fabricating_pnl()
+    test_persistent_anomaly_is_quarantined_not_confirmed_as_zero()
+    test_one_sleeve_anomaly_does_not_erase_other_keys()
+    test_unresolved_day_does_not_leak_into_next_session_basis()
+    test_reanchored_partial_session_is_excluded_from_cumulative()
     test_zero_and_nonfinite_values_cannot_wipe_the_account()
     test_session_first_gap_allows_overnight_but_not_absurd()
     test_holdings_equal_weight_uses_starting_positions_only()

@@ -23,7 +23,9 @@
 """
 from __future__ import annotations
 
+import contextlib
 import datetime
+import fcntl
 import json
 import math
 import os
@@ -115,6 +117,28 @@ def aggregate(rows: list[dict], b_codes: set, baseline: set) -> dict:
 
 
 # ── 상태 ──────────────────────────────────────────────────────
+@contextlib.contextmanager
+def state_lock():
+    """alpha 상태 파일 쓰기 임계구역 — tick()과 유지보수 스크립트 공용.
+
+    두 프로세스가 읽기-수정-쓰기를 겹치면 나중에 저장하는 쪽이 상대의 갱신을
+    통째로 덮어쓴다(Codex P2-2: 재기준 스크립트가 동시 KR 틱을 유실시킴).
+    잠금 획득에 실패하면 예외를 올려 조용한 유실 대신 실패로 드러낸다.
+    """
+    path = STATE_PATH + ".lock"
+    parent = os.path.dirname(os.path.abspath(path)) or "."
+    os.makedirs(parent, exist_ok=True)
+    fd = os.open(path, os.O_CREAT | os.O_RDWR, 0o600)
+    try:
+        fcntl.flock(fd, fcntl.LOCK_EX)
+        yield
+    finally:
+        try:
+            fcntl.flock(fd, fcntl.LOCK_UN)
+        finally:
+            os.close(fd)
+
+
 def _load() -> dict:
     try:
         with open(STATE_PATH, encoding="utf-8") as f:
@@ -305,96 +329,133 @@ def _abs_float(raw: object, default: float) -> float:
 _ANOMALY_HOLD_TICKS = 3
 
 
-def _twr_step(day: dict, nav: dict, *, settled: bool = True) -> dict[str, float]:
+_KEYS = ("account", "A", "B")
+
+
+def _twr_step(day: dict, nav: dict, *, settled: bool = True,
+              context: dict | None = None) -> dict[str, float | None]:
     """한 관측 구간의 외부흐름을 제거해 일중 TWR을 누적한다.
 
     이 계산은 보유평가액을 **브로커 실시간**에서, 현금흐름을 **로컬 원장**에서
     읽어 뺀다. 두 소스가 한 틱이라도 어긋나면 그 차이가 통째로 손익으로 둔갑하고,
     한 번 곱해진 값은 세션 내내 남아 마감 기록·장기 누적까지 오염된다(2026-07
-    -17%, 08-03 -6.2%p, 08-04 -4.9%p — 원인은 매번 달랐고 증상은 같았다).
+    -17%, 08-03 -6.2%p, 08-04 -4.9%p).
 
-    그래서 원인별 대증요법 대신 **구간 자체를 검증**한다.
+    한계를 넘는 구간에서 **그것이 실제 손익인지 데이터 시차인지는 이 자리에서
+    판정할 수 없다.** 그래서 어느 쪽으로도 확정하지 않는다.
       ① ``settled=False``(미회계 체결) — 알려진 시차. 기준선 유지·누적 보류.
-      ② 구간 변동이 한계를 넘음 — 원인 불문 보류하고 원본 수치를 남긴다.
-      ③ 보류가 ``_ANOMALY_HOLD_TICKS``를 넘게 지속 — 시차가 아니라 실제 변화로
-         보고 기준선을 옮기되 **그 점프는 누적하지 않는다**(없는 손익을 만들지
-         않는다. 대신 표시가 과소해질 수 있으므로 경보로 사람이 확인한다).
+      ② 한계 초과 — 해당 키만 보류하고 기준선을 붙든다(시차면 자동 상쇄).
+      ③ 보류가 ``_ANOMALY_HOLD_TICKS``를 넘게 지속 — 시차가 아니다. 그렇다고
+         실제 손익이라고 단정할 수도 없으므로 **그 키의 세션 값을 `None`(미확정)
+         으로 격리**하고 이후 추적만 새 기준선에서 재개한다. 0%로 확정하지
+         않는다(Codex P1-1: 실제 -10% 폭락이 0%로 삭제되던 경로).
+
+    판정은 **키별로 독립**이다. A만 이상해도 계좌·B의 정상 수익을 지우지 않는다
+    (Codex P1-2).
     """
-    values = {}
     prev = day.setdefault("nav_prev", {})
     wealth = day.setdefault("wealth", {"account": 1.0, "A": 1.0, "B": 1.0})
+    unknown = set(day.get("unresolved") or [])
+    holds: dict = day.setdefault("hold_ticks", {})
+    if not isinstance(holds, dict):                 # 옛 스칼라 상태 호환
+        holds = {}
+        day["hold_ticks"] = holds
+
+    def shown() -> dict[str, float | None]:
+        return {k: (None if k in unknown
+                    else (float(wealth.get(k, 1.0)) - 1.0) * 100.0)
+                for k in _KEYS}
+
     if not settled:
         day["accounting_pending"] = True
-        day["hold_ticks"] = int(day.get("hold_ticks") or 0) + 1
-        return {key: (float(wealth.get(key, 1.0)) - 1.0) * 100.0
-                for key in ("account", "A", "B")}
+        for key in _KEYS:
+            holds[key] = int(holds.get(key) or 0) + 1
+        return shown()
     day["accounting_pending"] = False
 
     # 세션 첫 표본(아직 시리즈가 비어 있음)만 전일종가 갭 구간이다. carry 모드에선
     #   기준선이 이미 채워져 있으므로 기준선 유무로는 구분할 수 없다.
     first = not day.get("series")
     limit = _interval_limit(first and day.get("basis") == "previous_close")
-    intervals: dict[str, float] = {}
-    suspect: list[dict] = []
-    for key in ("account", "A", "B"):
-        cur_value = float((nav.get(key) or {}).get("value") or 0)
-        cur_flow = float((nav.get(key) or {}).get("flow") or 0)
+    # 두 순회 사이 입력 변이 가능성을 코드로 제거한다(Codex 권고).
+    snapshot = {
+        key: (float((nav.get(key) or {}).get("value") or 0),
+              float((nav.get(key) or {}).get("flow") or 0))
+        for key in _KEYS
+    }
+
+    pending: list[dict] = []
+    quarantined: list[dict] = []
+    for key in _KEYS:
+        cur_value, cur_flow = snapshot[key]
         old = prev.get(key)
         if not (old and float(old.get("value") or 0) > 0):
+            prev[key] = {"value": cur_value, "flow": cur_flow}
+            holds[key] = 0
             continue
-        external = cur_flow - float(old.get("flow") or 0)
         base = float(old["value"])
+        external = cur_flow - float(old.get("flow") or 0)
         interval = (cur_value - base - external) / base
-        intervals[key] = interval
-        if not math.isfinite(interval) or abs(interval) > limit:
-            suspect.append({
-                "key": key, "interval": round(interval, 6),
-                "limit": limit,
-                "prev_value": base, "prev_flow": float(old.get("flow") or 0),
-                "cur_value": cur_value, "cur_flow": cur_flow,
-            })
-
-    held = int(day.get("hold_ticks") or 0)
-    if suspect and held < _ANOMALY_HOLD_TICKS:
-        # 기준선을 붙들면, 시차가 해소된 뒤 원래 기준선에서 한 번에 계산돼
-        #   평가액 변화와 외부흐름이 같은 구간에서 상쇄된다(유령 손익 0).
-        day["hold_ticks"] = held + 1
-        day["anomaly_pending"] = suspect
-        _alert_interval_anomaly(day, suspect, resolved=False)
-        return {key: (float(wealth.get(key, 1.0)) - 1.0) * 100.0
-                for key in ("account", "A", "B")}
-
-    accept_jump = bool(suspect)              # 한계 초과가 계속됨 → 기준선만 이동
-    for key in ("account", "A", "B"):
-        cur_value = float((nav.get(key) or {}).get("value") or 0)
-        cur_flow = float((nav.get(key) or {}).get("flow") or 0)
-        interval = intervals.get(key)
-        if interval is not None and not accept_jump and math.isfinite(interval):
+        row = {
+            "key": key, "interval": round(interval, 6), "limit": limit,
+            "prev_value": base, "prev_flow": float(old.get("flow") or 0),
+            "cur_value": cur_value, "cur_flow": cur_flow,
+            **(context or {}),
+        }
+        if math.isfinite(interval) and abs(interval) <= limit:
             wealth[key] = float(wealth.get(key, 1.0)) * (1.0 + interval)
+            prev[key] = {"value": cur_value, "flow": cur_flow}
+            holds[key] = 0
+            continue
+        held = int(holds.get(key) or 0)
+        if held < _ANOMALY_HOLD_TICKS:
+            # 기준선을 붙들면 시차인 경우 다음 틱에 원래 기준선에서 상쇄된다.
+            holds[key] = held + 1
+            pending.append(row)
+            continue
+        # 시차가 아니다. 실제인지도 증명 못 한다 → 이 키의 세션 값을 미확정 격리.
+        unknown.add(key)
+        holds[key] = 0
         prev[key] = {"value": cur_value, "flow": cur_flow}
-        values[key] = (float(wealth.get(key, 1.0)) - 1.0) * 100.0
-    if accept_jump:
-        _alert_interval_anomaly(day, suspect, resolved=True)
-    day["hold_ticks"] = 0
-    day.pop("anomaly_pending", None)
+        quarantined.append(row)
+
+    day["unresolved"] = sorted(unknown)
+    if pending:
+        day["anomaly_pending"] = pending
+    else:
+        day.pop("anomaly_pending", None)
+    if pending:
+        _alert_interval_anomaly(day, pending, stage="hold")
+    if quarantined:
+        _alert_interval_anomaly(day, quarantined, stage="quarantine")
     day["nav_last"] = {key: dict(value) for key, value in prev.items()}
-    return values
+    return shown()
 
 
-def _alert_interval_anomaly(day: dict, suspect: list[dict],
-                            *, resolved: bool) -> None:
-    """같은 세션에서 한 번만 알린다. 원본 수치를 남겨 사후 진단이 가능하게."""
+def _alert_interval_anomaly(day: dict, rows: list[dict], *, stage: str) -> None:
+    """단계별로 한 번씩 알린다. 원본 수치를 남겨 사후 진단이 가능하게.
+
+    보류(hold)와 미확정 격리(quarantine)는 **서로 다른 사건**이므로 알림
+    플래그를 분리한다. 종전에는 첫 보류 알림이 최종 격리 알림을 삼켰다
+    (Codex P2-3 — 사람이 '잠시 보류' 통보만 받고 결과를 못 받음).
+    """
     forensic = day.setdefault("anomaly_log", [])
-    if len(forensic) < 20:
-        forensic.append({"resolved": resolved, "items": suspect})
-    if day.get("anomaly_notified"):
+    if len(forensic) < 40:
+        forensic.append({"stage": stage, "items": rows})
+    flags = day.setdefault("anomaly_notified", {})
+    if not isinstance(flags, dict):
+        flags = {}
+        day["anomaly_notified"] = flags
+    if flags.get(stage):
         return
-    day["anomaly_notified"] = True
-    worst = max(suspect, key=lambda row: abs(row["interval"]))
-    tail = ("한계 초과가 계속돼 기준선만 옮겼습니다 — 그 점프는 누적하지 "
-            "않았으므로 표시가 과소할 수 있습니다."
-            if resolved else
-            "누적을 보류하고 기준선을 유지합니다 — 시차면 자동 해소됩니다.")
+    flags[stage] = True
+    worst = max(rows, key=lambda row: abs(row["interval"]))
+    if stage == "quarantine":
+        tail = ("실제 손익인지 데이터 오류인지 증명하지 못해 <b>미확정</b>으로 "
+                "격리했습니다. 이 세션·기간 통계에서 계좌 수익률은 숫자 대신 "
+                "미확정으로 표시되며 장기 누적에도 넣지 않습니다. 수동 확인 필요.")
+    else:
+        tail = "누적을 보류하고 기준선을 유지합니다 — 시차면 자동 해소됩니다."
     try:
         notify.send(
             f"⚠️ <b>성과 계산 이상 구간</b> — {worst['key']} 한 틱 "
@@ -419,7 +480,10 @@ def session_update(st: dict, mkt: str, agg: dict, idx: dict,
     nav_mode = nav is not None
     if (not day or day.get("date") != today
             or (nav_mode and day.get("calc_version") != 3)):
-        use_carry = bool(carry and nav_mode)
+        # 전날이 미정산·미확정으로 끝났으면 그 기준선을 이어받지 않는다. 이어받으면
+        #   계좌는 어제 기준·지수는 오늘 전일종가 기준이 되어 측정 기간이 어긋난다
+        #   (Codex P1-3). 그 경우 계좌·지수를 같은 첫 표본에서 함께 0%로 시작한다.
+        use_carry = bool(carry and nav_mode and not carry.get("unresolved"))
         day = {"date": today, "pl0": tot_pl,
                "a_pl0": agg[mkt]["A"]["pl"], "b_pl0": agg[mkt]["B"]["pl"],
                "idx0": {
@@ -432,6 +496,10 @@ def session_update(st: dict, mkt: str, agg: dict, idx: dict,
                "calc_version": 3 if nav_mode else 2,
                "basis": ("previous_close" if use_carry else "first_sample"),
                "holding_start_codes": sorted(holding_start_codes or set())}
+        # 장중 재기준으로 새로 시작한 세션은 '하루'가 아니다 — 부분 세션을 한
+        #   거래일처럼 장기 누적에 넣지 않는다(Codex P2-1).
+        if ((st.get("reanchored") or {}).get(mkt) or {}).get("date") == today:
+            day["partial_session"] = True
         if use_carry:
             day["nav_prev"] = carry.get("nav_last") or {}
             day["wealth"] = {"account": 1.0, "A": 1.0, "B": 1.0}
@@ -443,7 +511,12 @@ def session_update(st: dict, mkt: str, agg: dict, idx: dict,
     day.setdefault("series_v2", [])
     day.setdefault("holding_start_codes", sorted(holding_start_codes or set()))
     if nav_mode:
-        twr = _twr_step(day, nav, settled=accounting_settled)
+        twr = _twr_step(day, nav, settled=accounting_settled,
+                        context={"t": now_hhmm, "mkt": mkt, "date": today,
+                                 "positions": len(holding_start_codes or ()),
+                                 "settled": bool(accounting_settled),
+                                 "fx": (1.0 if mkt == "KR"
+                                        else float(settings.FX_USDKRW))})
         acct, a, b = twr["account"], twr["A"], twr["B"]
     else:
         acct = _pct(tot_pl - day["pl0"], tot_cost)
@@ -456,7 +529,8 @@ def session_update(st: dict, mkt: str, agg: dict, idx: dict,
             day["idx0"][name] = v
             v0 = v
         ipct[name] = (v / v0 - 1) * 100.0 if v0 else 0.0
-    day["series"].append([now_hhmm, round(acct, 3),
+    # 미확정(None)은 0으로 낮춰 표시하지 않는다 — 숫자로 보이는 순간 확정된다.
+    day["series"].append([now_hhmm, (None if acct is None else round(acct, 3)),
                           round(next(iter(ipct.values()), 0.0), 3)])
     if day.get("basis") == "first_sample":
         # 리베이스 첫날 계좌 TWR과 동일한 첫 관측값을 지수의 일간 기준으로 쓴다.
@@ -468,11 +542,13 @@ def session_update(st: dict, mkt: str, agg: dict, idx: dict,
             for name, value in idx.items()
             if (idx_previous_close or {}).get(name)
         }
+    rnd = lambda v: None if v is None else round(v, 4)
     point = {
         "t": now_hhmm,
-        "account": round(acct, 4),
-        "A": round(a, 4),
-        "B": round(b, 4),
+        "account": rnd(acct),
+        "A": rnd(a),
+        "B": rnd(b),
+        "unresolved": list(day.get("unresolved") or []),
         "indices": {name: round(value, 4) for name, value in ipct.items()},
         "holdings": {
             key: (round(value, 4) if value is not None else None)
@@ -620,7 +696,16 @@ def _fmt(v: float) -> str:
 
 
 def tick(now: datetime.datetime | None = None) -> None:
-    """매수루프가 5분마다 호출. 세션 중 스냅샷·알림, 세션 종료 시 마감 요약."""
+    """매수루프가 5분마다 호출. 세션 중 스냅샷·알림, 세션 종료 시 마감 요약.
+
+    상태 파일 읽기-수정-쓰기 전체를 잠금 안에서 수행한다 — 유지보수 스크립트와
+    겹쳐 서로의 갱신을 덮어쓰지 않게(Codex P2-2).
+    """
+    with state_lock():
+        _tick_locked(now)
+
+
+def _tick_locked(now: datetime.datetime | None = None) -> None:
     now = now or datetime.datetime.now(
         datetime.timezone(datetime.timedelta(hours=9)))
     st = _load()
@@ -738,12 +823,15 @@ def _close_alert(st: dict, mkt: str, day: dict) -> None:
     last = day["series"][-1]
     acct, ipct = last[1], last[2]
     rich = (day.get("series_v2") or [{}])[-1]
-    d = acct - ipct
     days = st.setdefault("days", [])
-    # 회계 미정산으로 마감한 날의 계좌 수익률은 매도 시차만 반영된 값일 수 있다.
-    #   그 값을 누적 기록에 넣으면 1개월·3개월·전체가 영구 오염된다(예전 -17% 사례).
-    #   기록은 보류하고 다음 정산 세션부터 이어간다(지수·carry는 정상 저장).
-    pending = bool(day.get("accounting_pending") or day.get("anomaly_pending"))
+    # 누적 기록에 넣으면 안 되는 세 가지 상태:
+    #   · 회계 미정산 마감 — 매도 시차만 반영된 값일 수 있다.
+    #   · 이상 보류 중 마감 — 아직 판정 전이다.
+    #   · 미확정 격리 — 실제 손익인지 증명 못 했다. 숫자를 넣으면 확정이 된다.
+    #   · 재기준된 부분 세션 — 하루가 아니다(Codex P2-1).
+    pending = bool(day.get("accounting_pending") or day.get("anomaly_pending")
+                   or day.get("unresolved") or day.get("partial_session"))
+    d = None if acct is None else acct - ipct
     if not pending:
         days.append({
             "d": day["date"], "mkt": mkt, "acct": acct, "idx": ipct,
@@ -754,13 +842,26 @@ def _close_alert(st: dict, mkt: str, day: dict) -> None:
             "daily_indices": rich.get("daily_indices") or {},
         })
     if day.get("nav_last"):
+        # 미확정으로 끝난 날은 그 사실을 carry에 실어 다음 세션이 이 기준선을
+        #   이어받지 않게 한다. 이어받으면 계좌는 어제 기준·지수는 오늘 전일종가
+        #   기준이 되어 측정 기간이 어긋난다(Codex P1-3).
         st.setdefault("carry", {})[mkt] = {
-            "date": day.get("date"), "nav_last": day["nav_last"]}
+            "date": day.get("date"), "nav_last": day["nav_last"],
+            "unresolved": bool(day.get("unresolved")
+                               or day.get("accounting_pending")
+                               or day.get("anomaly_pending")),
+        }
     del days[:-120]                                      # 최근 120일만 보관
     cap = capture_stats(days, mkt)
     name = "미장·나스닥" if mkt == "US" else "국장·코스피"
-    mark = "🟢" if d >= 0 else "🔴"
-    if pending:
+    mark = "🟢" if (d or 0) >= 0 else "🔴"
+    if day.get("unresolved"):
+        body = (f"🏁 <b>장 마감 성과</b> ({name})\n"
+                f"❓ 계좌 수익률 <b>미확정</b> — {', '.join(day['unresolved'])} "
+                f"구간이 실제 손익인지 데이터 오류인지 증명하지 못했습니다"
+                f"(지수 {_fmt(ipct)})\n"
+                "0%로 확정하지 않았고 누적 기록에도 넣지 않았습니다. 수동 확인 필요.")
+    elif pending:
         body = (f"🏁 <b>장 마감 성과</b> ({name})\n"
                 f"⏳ 매도 회계 정산 대기 — 계좌 수익률 산정 보류"
                 f"(지수 {_fmt(ipct)})\n"
