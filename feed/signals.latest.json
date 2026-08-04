@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated_at": "2026-08-04T15:40:06+09:00",
+ "generated_at": "2026-08-04T16:14:53+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "shelf_debug": {
   "ok": 20,
@@ -214,34 +214,6 @@
    }
   },
   {
-   "id": "259960-2026-08-04-now",
-   "code": "259960",
-   "name": "크래프톤",
-   "ccy": "KRW",
-   "group": "now",
-   "entry_kind": "now",
-   "stage": 3,
-   "price": 238500.0,
-   "entry": 238500.0,
-   "stop": 210339.405,
-   "target": 294821.1901,
-   "shares_1pct": 3,
-   "range_pos": 0.2518,
-   "norm": -9.4,
-   "bear_share": 0.25,
-   "fresh": true,
-   "break_gap": 0.0359,
-   "earnings_d": null,
-   "tactic": {
-    "stop_pct": 11.8,
-    "pb_price": 227777.5,
-    "pb_stop_pct": 7.7,
-    "mode": "pullback",
-    "label": "⏳ 눌림 지정가만",
-    "desc": "지금 추격 금지(손절폭 11.8%) — <b>227,778원 눌림 지정가만</b>. 눌리면 손절폭 7.7%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
-   }
-  },
-  {
    "id": "APG-2026-08-04-now",
    "code": "APG",
    "name": "APi Group Corporation",
@@ -295,6 +267,34 @@
     "mode": "pullback",
     "label": "⏳ 눌림 지정가만",
     "desc": "지금 추격 금지(손절폭 8.0%) — <b>$76.42 눌림 지정가만</b>. 눌리면 손절폭 4.0%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
+   }
+  },
+  {
+   "id": "259960-2026-08-04-now",
+   "code": "259960",
+   "name": "크래프톤",
+   "ccy": "KRW",
+   "group": "now",
+   "entry_kind": "now",
+   "stage": 3,
+   "price": 238000.0,
+   "entry": 238000.0,
+   "stop": 209839.405,
+   "target": 294321.1901,
+   "shares_1pct": 3,
+   "range_pos": 0.2486,
+   "norm": -18.9,
+   "bear_share": 0.25,
+   "fresh": true,
+   "break_gap": 0.0338,
+   "earnings_d": null,
+   "tactic": {
+    "stop_pct": 11.8,
+    "pb_price": 227777.5,
+    "pb_stop_pct": 7.9,
+    "mode": "pullback",
+    "label": "⏳ 눌림 지정가만",
+    "desc": "지금 추격 금지(손절폭 11.8%) — <b>227,778원 눌림 지정가만</b>. 눌리면 손절폭 7.9%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
    }
   },
   {
@@ -473,24 +473,24 @@
    "group": "now",
    "entry_kind": "now",
    "stage": 3,
-   "price": 375500.0,
-   "entry": 375500.0,
-   "stop": 345913.9939,
-   "target": 434672.0121,
+   "price": 376500.0,
+   "entry": 376500.0,
+   "stop": 346913.9939,
+   "target": 435672.0121,
    "shares_1pct": 3,
-   "range_pos": 0.2173,
+   "range_pos": 0.2212,
    "norm": -0.0,
    "bear_share": 0.25,
    "fresh": false,
-   "break_gap": 0.0695,
+   "break_gap": 0.0724,
    "earnings_d": null,
    "tactic": {
     "stop_pct": 7.9,
     "pb_price": 350306.25,
-    "pb_stop_pct": 1.3,
+    "pb_stop_pct": 1.0,
     "mode": "pullback",
     "label": "⏳ 눌림 지정가만",
-    "desc": "지금 추격 금지(손절폭 7.9% · 돌파후 진행) — <b>350,306원 눌림 지정가만</b>. 눌리면 손절폭 1.3%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
+    "desc": "지금 추격 금지(손절폭 7.9% · 돌파후 진행) — <b>350,306원 눌림 지정가만</b>. 눌리면 손절폭 1.0%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
    }
   },
   {
@@ -2708,24 +2708,24 @@
    "group": "watch",
    "entry_kind": "now",
    "stage": 2,
-   "price": 130500.0,
-   "entry": 130500.0,
-   "stop": 113247.8244,
-   "target": 165004.3511,
+   "price": 132000.0,
+   "entry": 132000.0,
+   "stop": 114747.8244,
+   "target": 166504.3511,
    "shares_1pct": 5,
-   "range_pos": 0.1152,
+   "range_pos": 0.1279,
    "norm": -60.7,
    "bear_share": 0.5,
    "fresh": true,
-   "break_gap": 0.0287,
+   "break_gap": 0.0405,
    "earnings_d": null,
    "tactic": {
-    "stop_pct": 13.2,
+    "stop_pct": 13.1,
     "pb_price": 116900.0,
-    "pb_stop_pct": 3.1,
+    "pb_stop_pct": 1.8,
     "mode": "pullback",
     "label": "⏳ 눌림 지정가만",
-    "desc": "지금 추격 금지(손절폭 13.2% · 단기 이격) — <b>116,900원 눌림 지정가만</b>. 눌리면 손절폭 3.1%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
+    "desc": "지금 추격 금지(손절폭 13.1% · 단기 이격) — <b>116,900원 눌림 지정가만</b>. 눌리면 손절폭 1.8%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
    }
   },
   {
@@ -4213,27 +4213,6 @@
    "tactic": null
   },
   {
-   "id": "192820-2026-08-04-watch",
-   "code": "192820",
-   "name": "코스맥스",
-   "ccy": "KRW",
-   "group": "watch",
-   "entry_kind": "breakout",
-   "stage": 3,
-   "price": 195800.0,
-   "entry": 197500.0,
-   "stop": 174248.6029,
-   "target": 244002.7941,
-   "shares_1pct": 4,
-   "range_pos": 0.4248,
-   "norm": 2.5,
-   "bear_share": 0.5,
-   "fresh": false,
-   "break_gap": 0.1108,
-   "earnings_d": null,
-   "tactic": null
-  },
-  {
    "id": "BSX-2026-08-04-watch",
    "code": "BSX",
    "name": "Boston Scientific Corporation",
@@ -4315,6 +4294,27 @@
    "fresh": false,
    "break_gap": 0.0652,
    "earnings_d": 23,
+   "tactic": null
+  },
+  {
+   "id": "192820-2026-08-04-watch",
+   "code": "192820",
+   "name": "코스맥스",
+   "ccy": "KRW",
+   "group": "watch",
+   "entry_kind": "breakout",
+   "stage": 3,
+   "price": 195200.0,
+   "entry": 197500.0,
+   "stop": 174248.6029,
+   "target": 244002.7941,
+   "shares_1pct": 4,
+   "range_pos": 0.4202,
+   "norm": -7.4,
+   "bear_share": 0.5,
+   "fresh": false,
+   "break_gap": 0.1074,
+   "earnings_d": null,
    "tactic": null
   },
   {
