@@ -40,18 +40,106 @@ _MIRROR_REQUIRES_AUTOPAPER = os.environ.get(
     "MIRROR_REQUIRES_AUTOPAPER", "1") != "0"
 
 
-def autopaper_entries() -> set[str] | None:
-    """autopaper가 **실제로 진입한** 종목 집합. 조회 실패=None(=미러 보류).
+PAPER_FEED_MAX_AGE_MIN = float(
+    os.environ.get("PAPER_FEED_MAX_AGE_MIN", "45") or 45)
+
+
+# 미러 피드가 연속으로 무효면 신규매수가 조용히 멈춘다. 2026-08의 kill L1
+#   사고(5일간 아무도 모름)와 같은 실패 양상을 새 게이트로 재생산하지 않도록
+#   연속 실패/복구를 경보한다.
+_MIRROR_FEED_ALERT_AFTER = int(
+    os.environ.get("MIRROR_FEED_ALERT_AFTER", "10") or 10)
+_mirror_feed_fail_streak = 0
+_mirror_feed_alerted = False
+
+
+def _note_mirror_feed(*, ok: bool) -> None:
+    global _mirror_feed_fail_streak, _mirror_feed_alerted
+    if ok:
+        if _mirror_feed_alerted:
+            _mirror_feed_alerted = False
+            _notify_safe("✅ <b>미러 피드 복구</b> — autopaper 진입 미러 재개")
+        _mirror_feed_fail_streak = 0
+        return
+    _mirror_feed_fail_streak += 1
+    if (_mirror_feed_fail_streak >= _MIRROR_FEED_ALERT_AFTER
+            and not _mirror_feed_alerted):
+        _mirror_feed_alerted = True
+        _notify_safe(
+            f"🚨 <b>미러 피드 연속 무효 {_mirror_feed_fail_streak}회</b> — "
+            "슬리브 A 신규매수가 계속 보류 중입니다(손절·청산은 정상). "
+            "autopaper 발행 상태 확인 필요.")
+
+
+def _notify_safe(text: str) -> None:
+    try:
+        from bot import notify
+        notify.send(text, critical=True, category="trade")
+    except Exception:
+        pass
+
+
+def _parse_paper_feed(payload: object, *, now: datetime.datetime) -> dict | None:
+    """autopaper 공개 피드를 **엄격 파싱**. 계약 위반·낡음이면 None(소스 거부).
+
+    루트 dict · timezone 포함 `generated_at` · 허용 나이 · `positions`의 모든
+    행이 유효한 dict인지까지 본다. 하나라도 어긋나면 부분 채택 없이 전부
+    거부한다 — scalar 행 하나가 매수 권한이 되던 구멍을 닫는다(Codex P2-2).
+    """
+    if not isinstance(payload, dict):
+        return None
+    stamp = payload.get("generated_at")
+    try:
+        published = datetime.datetime.fromisoformat(str(stamp))
+    except (TypeError, ValueError):
+        return None                           # 시각 없음/형식 오류 = 나이 미상
+    if published.tzinfo is None:
+        return None                           # naive 시각은 나이를 못 믿는다
+    age_min = (now - published).total_seconds() / 60.0
+    if not (-5.0 <= age_min <= PAPER_FEED_MAX_AGE_MIN):
+        return None                           # 낡음(또는 미래 시각) = 거부
+    rows = payload.get("positions")
+    if not isinstance(rows, list):
+        return None
+    out: dict[str, dict] = {}
+    for row in rows:
+        if not isinstance(row, dict):
+            return None                       # scalar 행 = 스키마 손상 → 전부 거부
+        code = str(row.get("code") or "").strip().upper()
+        if not code:
+            return None
+        out[code] = {"opened": str(row.get("opened") or ""),
+                     "entry": row.get("avg"), "stop": row.get("stop"),
+                     "ccy": str(row.get("ccy") or "USD").upper()}
+    return {"age_min": age_min, "positions": out}
+
+
+def _mirror_window(now: datetime.datetime) -> set[str]:
+    """미러 대상으로 인정할 진입일(KST) 집합.
+
+    **오늘 진입만** 미러한다. 현재 보유 코드 전체를 허용하면, KIS가 L1·장애로
+    쉬는 동안 autopaper가 여러 날에 걸쳐 쌓은 보유를 재개 첫날 한꺼번에 사들인다
+    (Codex P1-1 재현: 12건 동시 전송). 진입시점·평단·손절계획이 모두 달라져
+    성과 비교가 다시 무너진다. 옛 진입은 자동 추격하지 않는다.
+
+    다만 미 정규장 한 세션은 KST 자정을 넘는다. 자정 이후 같은 세션이 계속되는
+    동안에는 그 세션이 시작된 전날 진입도 '오늘 진입'으로 인정한다.
+    """
+    days = {now.date().isoformat()}
+    if now.hour < 12 and settings.market_open("USD"):
+        days.add((now.date() - datetime.timedelta(days=1)).isoformat())
+    return days
+
+
+def autopaper_entries(now: datetime.datetime | None = None) -> set[str] | None:
+    """autopaper가 **이번 세션에 진입한** 종목 집합. 조회 실패=None(미러 보류).
 
     이 모듈은 첫 줄부터 "autopaper가 진입 결정한 신호를 KIS에 미러"라고 선언해
-    왔지만, 실제로는 신호 피드의 후보를 그대로 매수 경로에 넘겨 왔다(Codex
-    적대검토 P1). autopaper는 동시 12종목·하루 3건인데 미러는 무제한·하루
-    10건이라, autopaper가 한도·손실 게이트로 사지 않은 종목까지 KIS가 사면
-    두 장부의 성과를 비교하는 것 자체가 무의미해진다.
-
-    여기서 실제 진입 종목만 돌려주면 미러 보유는 autopaper 보유의 부분집합이
-    되어 동시보유·하루한도가 **자동으로** 따라온다(별도 상한 재도입 불필요).
+    왔지만, 실제로는 신호 피드의 후보를 그대로 매수 경로에 넘겼다(Codex P1).
+    현재 보유 코드 교집합만으로는 부족하다 — §_mirror_window 참조.
     """
+    now = now or datetime.datetime.now(_KST)
+    window = _mirror_window(now)
     for url in settings.PAPER_SOURCES:
         try:
             req = urllib.request.Request(
@@ -61,17 +149,12 @@ def autopaper_entries() -> set[str] | None:
                 payload = json.load(resp)
         except Exception:
             continue
-        rows = payload.get("positions")
-        if not isinstance(rows, list):
-            continue                          # 계약 위반 — 다음 소스로
-        out = set()
-        for row in rows:
-            code = str((row or {}).get("code")
-                       if isinstance(row, dict) else row or "").strip().upper()
-            if code:
-                out.add(code)
-        return out
-    return None                               # 전 소스 실패 — fail-closed
+        parsed = _parse_paper_feed(payload, now=now)
+        if parsed is None:
+            continue                          # 계약 위반·낡음 — 다음 소스로
+        return {code for code, row in parsed["positions"].items()
+                if row["opened"] in window}
+    return None                               # 유효 소스 없음 — fail-closed
 
 
 def _now_signals(signals: list[dict]) -> list[dict]:
@@ -248,12 +331,14 @@ def run_once(signals: list[dict], *, fx: float | None = None,
     mirrored: set[str] | None = None
     if sleeve != "B" and _MIRROR_REQUIRES_AUTOPAPER:
         mirrored = autopaper_entries()
-        if mirrored is None:                       # 피드 실패 = 미러 대상 불명
+        if mirrored is None:                       # 피드 실패/낡음 = 대상 불명
+            _note_mirror_feed(ok=False)
             for s in src:
                 results.append({"code": str(s["code"]).upper(),
                                 "gate": "mirror",
-                                "why": "autopaper 보유 피드 조회 실패 — 미러 보류"})
+                                "why": "autopaper 피드 무효(실패·낡음) — 미러 보류"})
             return results
+        _note_mirror_feed(ok=True)
     # 1차 게이트(브로커 조회 전) — 세션·어닝. 후보가 없으면 잔고 조회도 안 한다.
     cand: list[dict] = []
     for s in src:

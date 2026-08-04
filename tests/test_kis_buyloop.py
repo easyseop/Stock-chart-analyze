@@ -9,6 +9,7 @@ mirror의 동시 보유 수는 제한하지 않고 open_cost 기반 예산 게�
 """
 from __future__ import annotations
 
+import datetime
 import os
 import json
 import sys
@@ -203,25 +204,94 @@ def test_mirror_only_buys_what_autopaper_actually_entered():
 def test_autopaper_feed_failure_holds_mirror_closed():
     res, ex, _, _ = _run([_sig()], holdings={}, mirrored=None)
     r = _g(res, "005930")
-    assert r["gate"] == "mirror" and "조회 실패" in r["why"]
+    assert r["gate"] == "mirror" and "무효" in r["why"]
     assert not ex.called                           # 미러 대상 불명 → 매수 0건
     print("[PASS] autopaper 피드 실패는 fail-closed(미러 보류)")
 
 
-def test_autopaper_caps_flow_through_to_mirror():
-    """autopaper 한도가 미러에 자동으로 전이되는지(별도 상한 재도입 불필요).
+def _feed(positions, generated_at=None, **extra):
+    now = datetime.datetime.now(BL._KST)
+    return {"generated_at": (generated_at
+                             if generated_at is not None else now.isoformat()),
+            "positions": positions, **extra}
 
-    autopaper가 동시 12종목·하루 3건으로 12종목만 들고 있으면, 신호가 20건
-    있어도 미러 보유는 그 부분집합을 넘을 수 없다.
+
+def test_old_holdings_are_not_backfilled_in_one_day():
+    """Codex 미러 P1-1 재현: L1·장애로 쉬는 동안 쌓인 보유를 재개 첫날 몰아 사기.
+
+    autopaper 보유 12종목 중 오늘 진입은 3건뿐인데, 현재 보유 코드 교집합만
+    보면 12건이 한꺼번에 나간다. 진입시점·평단·손절계획이 모두 달라진다.
     """
-    held = [f"A{i:04d}" for i in range(12)]
-    signals = [_sig(code=c) for c in held] + [
-        _sig(code=f"B{i:04d}") for i in range(8)]
-    res, ex, _, _ = _run(signals, holdings={}, mirrored=set(held))
+    now = datetime.datetime(2026, 8, 4, 23, 0, tzinfo=BL._KST)
+    today, old = "2026-08-04", "2026-07-20"
+    rows = ([{"code": f"NEW{i}", "opened": today} for i in range(3)]
+            + [{"code": f"OLD{i}", "opened": old} for i in range(9)])
+    with mock.patch.object(BL, "_parse_paper_feed",
+                           return_value={"age_min": 1.0, "positions": {
+                               r["code"]: {"opened": r["opened"]} for r in rows}}), \
+         mock.patch.object(BL.urllib.request, "urlopen"), \
+         mock.patch.object(BL.json, "load", return_value={}):
+        entries = BL.autopaper_entries(now)
+    assert entries == {"NEW0", "NEW1", "NEW2"}, entries
+    signals = [_sig(code=r["code"]) for r in rows]
+    res, ex, _, _ = _run(signals, holdings={}, mirrored=entries)
     bought = {r["code"] for r in res if r.get("gate") == "sent"}
-    assert bought <= set(held) and len(bought) <= 12, bought
-    assert all(_g(res, f"B{i:04d}")["gate"] == "mirror" for i in range(8))
-    print("[PASS] autopaper 동시보유 한도가 미러에 그대로 전이")
+    assert bought == {"NEW0", "NEW1", "NEW2"}, bought
+    assert ex.call_count == 3                      # autopaper 하루 3건과 일치
+    print("[PASS] 옛 보유 일괄 백필 차단 — 오늘 진입만 미러(하루 상한 일치)")
+
+
+def test_us_session_across_kst_midnight_keeps_same_session_entries():
+    """미 정규장 한 세션은 KST 자정을 넘는다 — 그 세션 진입이 끊기면 안 된다."""
+    with mock.patch.object(BL.settings, "market_open", return_value=True):
+        past_midnight = datetime.datetime(2026, 8, 5, 3, 0, tzinfo=BL._KST)
+        assert BL._mirror_window(past_midnight) == {"2026-08-05", "2026-08-04"}
+    with mock.patch.object(BL.settings, "market_open", return_value=False):
+        daytime = datetime.datetime(2026, 8, 5, 15, 0, tzinfo=BL._KST)
+        assert BL._mirror_window(daytime) == {"2026-08-05"}
+    print("[PASS] 자정 넘는 미장 세션은 전날 진입 인정 · 장 밖에서는 오늘만")
+
+
+def test_stale_or_malformed_feed_is_rejected_not_trusted():
+    """Codex 미러 P1-2·P2-2: 성공했지만 낡은/계약 위반 피드가 fail-open이었다."""
+    now = datetime.datetime(2026, 8, 4, 23, 0, tzinfo=BL._KST)
+    ok_rows = [{"code": "AAPL", "opened": "2026-08-04"}]
+    bad_payloads = [
+        _feed(ok_rows, generated_at="2025-01-01T00:00:00+09:00"),   # 낡음
+        _feed(ok_rows, generated_at="2026-08-04"),                  # tz 없음
+        _feed(ok_rows, generated_at=None),                          # 시각 없음
+        {"positions": ok_rows},                                     # 시각 필드 부재
+        _feed(["AAPL"]),                                            # scalar 행
+        _feed([{"opened": "2026-08-04"}]),                          # code 없음
+        _feed("AAPL"),                                              # positions 비list
+        ["not", "a", "dict"],                                       # 루트 비dict
+        _feed(ok_rows, generated_at="2026-08-05T23:00:00+09:00"),   # 미래 시각
+    ]
+    for payload in bad_payloads:
+        assert BL._parse_paper_feed(payload, now=now) is None, payload
+    good = BL._parse_paper_feed(_feed(ok_rows), now=datetime.datetime.now(BL._KST))
+    assert good and set(good["positions"]) == {"AAPL"}
+    print("[PASS] 낡음·tz없음·scalar행·루트오류·미래시각 전부 소스 거부")
+
+
+def test_mirror_feed_outage_alerts_instead_of_silent_block():
+    """새 게이트가 '조용히 5일 막힘' 사고를 재생산하지 않는지."""
+    BL._mirror_feed_fail_streak = 0
+    BL._mirror_feed_alerted = False
+    sent = []
+    with mock.patch.object(BL, "_notify_safe",
+                           side_effect=lambda t: sent.append(t)):
+        for _ in range(BL._MIRROR_FEED_ALERT_AFTER):
+            BL._note_mirror_feed(ok=False)
+        assert any("연속 무효" in t for t in sent), sent
+        before = len(sent)
+        BL._note_mirror_feed(ok=False)
+        assert len(sent) == before                 # 폭주하지 않음
+        BL._note_mirror_feed(ok=True)
+        assert any("복구" in t for t in sent), sent
+    BL._mirror_feed_fail_streak = 0
+    BL._mirror_feed_alerted = False
+    print("[PASS] 미러 피드 연속 무효 경보 1회 + 복구 경보")
 
 
 def test_shelf_sleeve_is_not_gated_by_autopaper():
@@ -367,7 +437,10 @@ def main():
     test_b_sleeve_has_no_fixed_position_count_gate()
     test_mirror_only_buys_what_autopaper_actually_entered()
     test_autopaper_feed_failure_holds_mirror_closed()
-    test_autopaper_caps_flow_through_to_mirror()
+    test_old_holdings_are_not_backfilled_in_one_day()
+    test_us_session_across_kst_midnight_keeps_same_session_entries()
+    test_stale_or_malformed_feed_is_rejected_not_trusted()
+    test_mirror_feed_outage_alerts_instead_of_silent_block()
     test_shelf_sleeve_is_not_gated_by_autopaper()
     test_intra_cycle_accumulation()
     test_non_now_filtered()

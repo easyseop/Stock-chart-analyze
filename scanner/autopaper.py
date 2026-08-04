@@ -1041,6 +1041,11 @@ def update(results: list[dict], picks: dict, out_dir: str = "public") -> dict:
                           else None})
     stats = _stats(st)
     out = {
+        # KIS 미러가 낡은 피드를 신규매수 권한으로 오인하지 않게 timezone 포함
+        #   발행 시각을 싣는다. 종전 `updated`는 KST 날짜뿐이라 나이를 못 쟀다
+        #   (Codex 미러 P1-2: 성공한 낡은 피드가 fail-open).
+        "generated_at": datetime.datetime.now(
+            datetime.timezone(datetime.timedelta(hours=9))).isoformat(),
         "updated": _today(), "start": st["start"], "cash": round(st["cash"]),
         "equity": round(equity),
         "ret_pct": round((equity / st["start"] - 1) * 100, 2),

@@ -291,6 +291,15 @@ def evaluate(snapshot: dict, evidence: dict, *, scope: str = "strict",
         and allow_buy is True
         and orders_enabled is True
     )
+    # allowlist 없이 여는 근거는 "미러가 autopaper 진입만 산다"이다. 그 게이트가
+    #   꺼져 있으면 근거가 사라지므로 차단한다(Codex 미러 P1-3: 환경변수 하나로
+    #   조용히 원시 신호 직접매수로 돌아가는데 readiness가 GO를 냈다).
+    parity = snapshot.get("mirror_requires_autopaper")
+    add(
+        "mirror_parity_enforced",
+        parity is True or bool(allowed_symbols),
+        f"MIRROR_REQUIRES_AUTOPAPER={parity!r} — allowlist 없이 열려면 True 필요")
+
     add(
         "limited_l0_fence", limited_l0_ok,
         f"TRADE_STAGE={trade_stage or 'unknown'}, "
@@ -462,6 +471,8 @@ def collect_runtime(*, fetch_broker: bool = False,
         "frozen_symbols": sorted(frozen_state),
         "trade_stage": os.environ.get("TRADE_STAGE", "1.5").strip(),
         "allowed_symbols": sorted(allowed_symbols),
+        "mirror_requires_autopaper": (
+            os.environ.get("MIRROR_REQUIRES_AUTOPAPER", "1") != "0"),
         "allow_buy_enabled": os.environ.get("ALLOW_BUY") == "1",
         "orders_enabled": os.environ.get("KIS_ORDERS_ENABLED") == "1",
         "position_counts_by_sleeve": position_counts,

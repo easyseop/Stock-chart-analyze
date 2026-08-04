@@ -33,6 +33,7 @@ def _snapshot() -> dict:
         "open_cost_krw": 26_214_776.70,
         "operating_limit_krw": 33_250_000,
         "positions_match_broker": True,
+        "mirror_requires_autopaper": True,
         "ownership_armed": True,
         "baseline_symbol_count": 0,
         "baseline_path_volatile": False,
@@ -243,6 +244,26 @@ def test_unarmed_ownership_blocks_and_volatile_path_warns():
     print("[PASS] baseline 미캡처=차단, 휘발성 경로=경고, 필드 결손=fail-closed")
 
 
+def test_mirror_parity_must_be_on_when_allowlist_is_absent():
+    """Codex 미러 P1-3: 환경변수 하나로 패리티가 꺼져도 readiness가 GO를 냈다."""
+    snapshot = _snapshot()
+    snapshot.update({"mirror_requires_autopaper": False, "allowed_symbols": []})
+    for scope in ("l0", "strict"):
+        report = R.evaluate(snapshot, _evidence(), scope=scope, now=NOW)
+        assert "mirror_parity_enforced" in _blockers(report), scope
+    # allowlist가 있으면 그 울타리가 근거이므로 차단하지 않는다.
+    snapshot["allowed_symbols"] = ["AAPL"]
+    report = R.evaluate(snapshot, _evidence(), now=NOW)
+    assert "mirror_parity_enforced" not in _blockers(report)
+    # 필드 자체가 없는 구버전 수집도 fail-closed.
+    missing = _snapshot()
+    missing["allowed_symbols"] = []
+    del missing["mirror_requires_autopaper"]
+    report = R.evaluate(missing, _evidence(), now=NOW)
+    assert "mirror_parity_enforced" in _blockers(report)
+    print("[PASS] allowlist 없는 L0는 미러 패리티 강제 — 꺼짐·필드결손 모두 차단")
+
+
 def test_unknown_scope_is_rejected():
     try:
         R.evaluate(_snapshot(), _evidence(), scope="live", now=NOW)
@@ -445,6 +466,7 @@ def main():
     test_l0_scope_keeps_limited_mode_fences_blocking()
     test_l0_fence_requires_declared_order_configuration()
     test_unarmed_ownership_blocks_and_volatile_path_warns()
+    test_mirror_parity_must_be_on_when_allowlist_is_absent()
     test_unknown_scope_is_rejected()
     test_cli_forwards_l0_scope_without_mutation()
     test_collect_runtime_is_read_only_without_broker()
