@@ -139,8 +139,8 @@ def test_unaccounted_sell_does_not_carve_phantom_cliff():
 
     # 정산 뒤의 진짜 시세 하락은 그대로 반영돼야 한다(과잉 억제 금지).
     real = alpha.session_update(
-        st, "US", agg, idx, "22:50", "2026-08-03", nav=_nav(84.42, -6.2))
-    assert abs(real["acct"] - (-10.0)) < 1e-6, real["acct"]
+        st, "US", agg, idx, "22:50", "2026-08-03", nav=_nav(92.862, -6.2))
+    assert abs(real["acct"] - (-1.0)) < 1e-6, real["acct"]
     print("[PASS] 미회계 매도는 유령 절벽 0 · 정산 후 실제 등락은 그대로")
 
 
@@ -178,12 +178,112 @@ def test_pending_close_is_not_written_into_cumulative_days():
     alpha.session_update(
         st2, "US", agg, idx, "22:35", "2026-08-04", nav=_nav(93.8, -6.2))
     alpha.session_update(
-        st2, "US", agg, idx, "22:40", "2026-08-04", nav=_nav(98.49, -6.2))
+        st2, "US", agg, idx, "22:40", "2026-08-04", nav=_nav(94.738, -6.2))
     with mock.patch.object(alpha.notify, "send_photo", return_value=True), \
             mock.patch.object(alpha.notify, "send"):
         alpha._close_alert(st2, "US", st2["day"]["US"])
     assert len(st2["days"]) == 1 and st2["days"][0]["d"] == "2026-08-04"
     print("[PASS] 미정산 마감일은 누적 기록에서 보류 · 정산일은 정상 기록")
+
+
+def test_observed_cliffs_are_rejected_regardless_of_cause():
+    """실측된 3개 절벽을 원인 불문 차단한다.
+
+    2026-07 -17%p · 08-03 -6.2%p · 08-04 -4.9%p. 원인은 매번 달랐으므로
+    원인별 가드가 아니라 '한 틱 변동폭' 자체를 검증해야 재발이 끊긴다.
+    """
+    for label, drop in (("-17%", 0.17), ("08-03 -6.2%", 0.062),
+                        ("08-04 -4.9%", 0.049)):
+        st, agg, idx = {}, _flat_agg(), {"나스닥": 20000.0}
+        with mock.patch.object(alpha.notify, "send"):
+            alpha.session_update(
+                st, "US", agg, idx, "22:31", "2026-08-04", nav=_nav(100.0, 0.0))
+            # 원인 불문(회계는 정상이라고 보고됨) — 값만 절벽.
+            hit = alpha.session_update(
+                st, "US", agg, idx, "22:36", "2026-08-04",
+                nav=_nav(100.0 * (1 - drop), 0.0), accounting_settled=True)
+        assert abs(hit["acct"]) < 1e-9, f"{label} 절벽이 통과됨: {hit['acct']}"
+        assert st["day"]["US"]["anomaly_pending"], label
+    print("[PASS] 실측 절벽 3종(-17%·-6.2%·-4.9%) 원인 불문 차단")
+
+
+def test_normal_moves_still_accumulate():
+    """과잉 억제 금지 — 정상 범위 등락은 그대로 반영돼야 한다."""
+    st, agg, idx = {}, _flat_agg(), {"나스닥": 20000.0}
+    alpha.session_update(
+        st, "US", agg, idx, "22:31", "2026-08-04", nav=_nav(100.0, 0.0))
+    a = alpha.session_update(
+        st, "US", agg, idx, "22:36", "2026-08-04", nav=_nav(101.0, 0.0))
+    assert abs(a["acct"] - 1.0) < 1e-9, a["acct"]
+    b = alpha.session_update(
+        st, "US", agg, idx, "22:41", "2026-08-04", nav=_nav(99.99, 0.0))
+    assert abs(b["acct"] - (-0.01)) < 1e-6, b["acct"]   # 복리 누적 유지
+    assert not st["day"]["US"].get("anomaly_pending")
+    # 매수·매도 현금흐름은 절벽으로 오인되지 않는다(외부흐름 제거가 먼저).
+    c = alpha.session_update(
+        st, "US", agg, idx, "22:46", "2026-08-04", nav=_nav(149.99, 50.0))
+    assert abs(c["acct"] - (-0.01)) < 1e-6, c["acct"]
+    print("[PASS] 정상 등락·현금흐름은 과잉 억제 없이 그대로 반영")
+
+
+def test_persistent_anomaly_rebaselines_without_fabricating_pnl():
+    """이상이 계속되면(진짜 상태 변화) 영구 동결하지 않고 기준선만 옮긴다."""
+    st, agg, idx = {}, _flat_agg(), {"나스닥": 20000.0}
+    sent = []
+    with mock.patch.object(alpha.notify, "send",
+                           side_effect=lambda *a, **k: sent.append(a[0])):
+        alpha.session_update(
+            st, "US", agg, idx, "22:31", "2026-08-04", nav=_nav(100.0, 0.0))
+        for i in range(alpha._ANOMALY_HOLD_TICKS):
+            out = alpha.session_update(
+                st, "US", agg, idx, f"22:{36 + i}", "2026-08-04",
+                nav=_nav(90.0, 0.0))
+            assert abs(out["acct"]) < 1e-9, i          # 보류 중엔 0 유지
+        final = alpha.session_update(
+            st, "US", agg, idx, "22:50", "2026-08-04", nav=_nav(90.0, 0.0))
+    assert abs(final["acct"]) < 1e-9                   # 점프는 누적하지 않음
+    assert not st["day"]["US"].get("anomaly_pending")  # 동결 해제됨
+    assert st["day"]["US"]["nav_prev"]["account"]["value"] == 90.0  # 기준선 이동
+    after = alpha.session_update(
+        st, "US", agg, idx, "22:55", "2026-08-04", nav=_nav(90.9, 0.0))
+    assert abs(after["acct"] - 1.0) < 1e-9             # 이후 추적 정상 재개
+    assert any("성과 계산 이상 구간" in text for text in sent)
+    assert len(st["day"]["US"]["anomaly_log"]) >= 1    # 사후 진단용 원본 보존
+    print("[PASS] 지속 이상은 기준선만 이동 · 유령 손익 0 · 경보·원본 보존")
+
+
+def test_zero_and_nonfinite_values_cannot_wipe_the_account():
+    """브로커가 빈 잔고/0을 주면 종전 가드(interval > -1)는 -99%를 통과시켰다."""
+    for bad in (0.5, 0.0):
+        st, agg, idx = {}, _flat_agg(), {"나스닥": 20000.0}
+        with mock.patch.object(alpha.notify, "send"):
+            alpha.session_update(
+                st, "US", agg, idx, "22:31", "2026-08-04", nav=_nav(100.0, 0.0))
+            out = alpha.session_update(
+                st, "US", agg, idx, "22:36", "2026-08-04", nav=_nav(bad, 0.0))
+        assert abs(out["acct"]) < 1e-9, f"value={bad} 가 계좌를 지움: {out}"
+    print("[PASS] 잔고 0/붕괴 응답이 계좌 수익률을 지우지 못함")
+
+
+def test_session_first_gap_allows_overnight_but_not_absurd():
+    """세션 첫 구간만 전일 갭을 허용하되 무한정은 아니다."""
+    carry = {"US": {"date": "2026-08-03", "nav_last": {
+        "account": {"value": 100.0, "flow": 0.0},
+        "A": {"value": 100.0, "flow": 0.0},
+        "B": {"value": 0.0, "flow": 0.0}}}}
+    st = {"carry": dict(carry)}
+    out = alpha.session_update(
+        st, "US", _flat_agg(), {"나스닥": 20000.0}, "22:31", "2026-08-04",
+        nav=_nav(95.0, 0.0), idx_previous_close={"나스닥": 19900.0})
+    assert st["day"]["US"]["basis"] == "previous_close"
+    assert abs(out["acct"] - (-5.0)) < 1e-9, out["acct"]   # 5% 갭은 정상 반영
+    st2 = {"carry": dict(carry)}
+    with mock.patch.object(alpha.notify, "send"):
+        out2 = alpha.session_update(
+            st2, "US", _flat_agg(), {"나스닥": 20000.0}, "22:31", "2026-08-04",
+            nav=_nav(70.0, 0.0), idx_previous_close={"나스닥": 19900.0})
+    assert abs(out2["acct"]) < 1e-9, out2["acct"]          # 30% 갭은 보류
+    print("[PASS] 첫 구간 갭은 허용범위까지만 · 과대 갭은 보류")
 
 
 def test_holdings_equal_weight_uses_starting_positions_only():
@@ -325,6 +425,11 @@ def main():
     test_unaccounted_sell_does_not_carve_phantom_cliff()
     test_unaccounted_buy_does_not_fabricate_gain()
     test_pending_close_is_not_written_into_cumulative_days()
+    test_observed_cliffs_are_rejected_regardless_of_cause()
+    test_normal_moves_still_accumulate()
+    test_persistent_anomaly_rebaselines_without_fabricating_pnl()
+    test_zero_and_nonfinite_values_cannot_wipe_the_account()
+    test_session_first_gap_allows_overnight_but_not_absurd()
     test_holdings_equal_weight_uses_starting_positions_only()
     test_capture_stats()
     test_state_roundtrip()

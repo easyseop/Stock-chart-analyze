@@ -25,6 +25,7 @@ from __future__ import annotations
 
 import datetime
 import json
+import math
 import os
 import tempfile
 import time
@@ -279,36 +280,128 @@ def holdings_equal_weight(rows: list[dict], mkt: str, recs: dict,
     }
 
 
+def _interval_limit(first_of_session: bool) -> float:
+    """한 관측 구간에서 정상으로 인정할 최대 변동폭.
+
+    분산된 다종목 계좌가 5분 만에 몇 %씩 움직이는 일은 실질적으로 없다. 그런
+    값이 보이면 시장이 아니라 **두 소스(브로커 평가액 · 원장 현금흐름)의 불일치**
+    쪽을 먼저 의심해야 한다. 세션 첫 구간만 전일 종가 대비 갭을 포함하므로 넓다.
+    """
+    if first_of_session:
+        return _abs_float(os.environ.get("ALPHA_MAX_GAP_MOVE"), 0.10)
+    return _abs_float(os.environ.get("ALPHA_MAX_TICK_MOVE"), 0.03)
+
+
+def _abs_float(raw: object, default: float) -> float:
+    try:
+        out = abs(float(raw))
+    except (TypeError, ValueError):
+        return default
+    return out if out > 0 else default
+
+
+# 이상 구간을 몇 틱까지 '지연으로 보고' 기준선을 붙들지. 그 뒤로도 계속되면
+#   일시적 시차가 아니라 실제 상태 변화로 보고 기준선을 옮긴다(영구 동결 방지).
+_ANOMALY_HOLD_TICKS = 3
+
+
 def _twr_step(day: dict, nav: dict, *, settled: bool = True) -> dict[str, float]:
     """한 관측 구간의 외부흐름을 제거해 일중 TWR을 누적한다.
 
-    ``settled=False``(미회계 체결 존재)면 **기준선을 그대로 두고** 누적을 건너뛴다.
-    보유평가액(브로커)만 먼저 움직이고 현금흐름(원장)이 늦게 붙는 구간을 그대로
-    누적하면 매도가 유령 손실로 각인되기 때문이다. 회계가 끝난 뒤 원래 기준선에서
-    한 번에 계산하면 평가액 변화와 외부흐름이 같은 구간에서 상쇄돼 정확해진다.
+    이 계산은 보유평가액을 **브로커 실시간**에서, 현금흐름을 **로컬 원장**에서
+    읽어 뺀다. 두 소스가 한 틱이라도 어긋나면 그 차이가 통째로 손익으로 둔갑하고,
+    한 번 곱해진 값은 세션 내내 남아 마감 기록·장기 누적까지 오염된다(2026-07
+    -17%, 08-03 -6.2%p, 08-04 -4.9%p — 원인은 매번 달랐고 증상은 같았다).
+
+    그래서 원인별 대증요법 대신 **구간 자체를 검증**한다.
+      ① ``settled=False``(미회계 체결) — 알려진 시차. 기준선 유지·누적 보류.
+      ② 구간 변동이 한계를 넘음 — 원인 불문 보류하고 원본 수치를 남긴다.
+      ③ 보류가 ``_ANOMALY_HOLD_TICKS``를 넘게 지속 — 시차가 아니라 실제 변화로
+         보고 기준선을 옮기되 **그 점프는 누적하지 않는다**(없는 손익을 만들지
+         않는다. 대신 표시가 과소해질 수 있으므로 경보로 사람이 확인한다).
     """
     values = {}
     prev = day.setdefault("nav_prev", {})
     wealth = day.setdefault("wealth", {"account": 1.0, "A": 1.0, "B": 1.0})
     if not settled:
         day["accounting_pending"] = True
+        day["hold_ticks"] = int(day.get("hold_ticks") or 0) + 1
         return {key: (float(wealth.get(key, 1.0)) - 1.0) * 100.0
                 for key in ("account", "A", "B")}
     day["accounting_pending"] = False
+
+    # 세션 첫 표본(아직 시리즈가 비어 있음)만 전일종가 갭 구간이다. carry 모드에선
+    #   기준선이 이미 채워져 있으므로 기준선 유무로는 구분할 수 없다.
+    first = not day.get("series")
+    limit = _interval_limit(first and day.get("basis") == "previous_close")
+    intervals: dict[str, float] = {}
+    suspect: list[dict] = []
     for key in ("account", "A", "B"):
         cur_value = float((nav.get(key) or {}).get("value") or 0)
         cur_flow = float((nav.get(key) or {}).get("flow") or 0)
         old = prev.get(key)
-        if old and float(old.get("value") or 0) > 0:
-            external = cur_flow - float(old.get("flow") or 0)
-            interval = (cur_value - float(old["value"]) - external) / float(old["value"])
-            # 데이터 손상/통화 급변으로 -100% 이하가 나오면 그 틱은 누적하지 않는다.
-            if interval > -1 and abs(interval) < 5:
-                wealth[key] = float(wealth.get(key, 1.0)) * (1.0 + interval)
+        if not (old and float(old.get("value") or 0) > 0):
+            continue
+        external = cur_flow - float(old.get("flow") or 0)
+        base = float(old["value"])
+        interval = (cur_value - base - external) / base
+        intervals[key] = interval
+        if not math.isfinite(interval) or abs(interval) > limit:
+            suspect.append({
+                "key": key, "interval": round(interval, 6),
+                "limit": limit,
+                "prev_value": base, "prev_flow": float(old.get("flow") or 0),
+                "cur_value": cur_value, "cur_flow": cur_flow,
+            })
+
+    held = int(day.get("hold_ticks") or 0)
+    if suspect and held < _ANOMALY_HOLD_TICKS:
+        # 기준선을 붙들면, 시차가 해소된 뒤 원래 기준선에서 한 번에 계산돼
+        #   평가액 변화와 외부흐름이 같은 구간에서 상쇄된다(유령 손익 0).
+        day["hold_ticks"] = held + 1
+        day["anomaly_pending"] = suspect
+        _alert_interval_anomaly(day, suspect, resolved=False)
+        return {key: (float(wealth.get(key, 1.0)) - 1.0) * 100.0
+                for key in ("account", "A", "B")}
+
+    accept_jump = bool(suspect)              # 한계 초과가 계속됨 → 기준선만 이동
+    for key in ("account", "A", "B"):
+        cur_value = float((nav.get(key) or {}).get("value") or 0)
+        cur_flow = float((nav.get(key) or {}).get("flow") or 0)
+        interval = intervals.get(key)
+        if interval is not None and not accept_jump and math.isfinite(interval):
+            wealth[key] = float(wealth.get(key, 1.0)) * (1.0 + interval)
         prev[key] = {"value": cur_value, "flow": cur_flow}
         values[key] = (float(wealth.get(key, 1.0)) - 1.0) * 100.0
+    if accept_jump:
+        _alert_interval_anomaly(day, suspect, resolved=True)
+    day["hold_ticks"] = 0
+    day.pop("anomaly_pending", None)
     day["nav_last"] = {key: dict(value) for key, value in prev.items()}
     return values
+
+
+def _alert_interval_anomaly(day: dict, suspect: list[dict],
+                            *, resolved: bool) -> None:
+    """같은 세션에서 한 번만 알린다. 원본 수치를 남겨 사후 진단이 가능하게."""
+    forensic = day.setdefault("anomaly_log", [])
+    if len(forensic) < 20:
+        forensic.append({"resolved": resolved, "items": suspect})
+    if day.get("anomaly_notified"):
+        return
+    day["anomaly_notified"] = True
+    worst = max(suspect, key=lambda row: abs(row["interval"]))
+    tail = ("한계 초과가 계속돼 기준선만 옮겼습니다 — 그 점프는 누적하지 "
+            "않았으므로 표시가 과소할 수 있습니다."
+            if resolved else
+            "누적을 보류하고 기준선을 유지합니다 — 시차면 자동 해소됩니다.")
+    try:
+        notify.send(
+            f"⚠️ <b>성과 계산 이상 구간</b> — {worst['key']} 한 틱 "
+            f"{worst['interval'] * 100:+.2f}% (한계 {worst['limit'] * 100:.1f}%). "
+            f"{tail}", critical=True, category="trade")
+    except Exception:
+        pass
 
 
 def session_update(st: dict, mkt: str, agg: dict, idx: dict,
@@ -650,7 +743,7 @@ def _close_alert(st: dict, mkt: str, day: dict) -> None:
     # 회계 미정산으로 마감한 날의 계좌 수익률은 매도 시차만 반영된 값일 수 있다.
     #   그 값을 누적 기록에 넣으면 1개월·3개월·전체가 영구 오염된다(예전 -17% 사례).
     #   기록은 보류하고 다음 정산 세션부터 이어간다(지수·carry는 정상 저장).
-    pending = bool(day.get("accounting_pending"))
+    pending = bool(day.get("accounting_pending") or day.get("anomaly_pending"))
     if not pending:
         days.append({
             "d": day["date"], "mkt": mkt, "acct": acct, "idx": ipct,
