@@ -1479,3 +1479,34 @@ mock L0이므로 PR을 병합하면 autodeploy가 종목 수 제한 제거를 �
 SSH 접속 전에는 PR #105를 Draft에서 해제하거나 병합하지 않는다. GitHub
 병합만 먼저 하는 방식은 Oracle autodeploy 때문에 안전한 코드 보관과 운영
 적용을 분리하지 못하므로 금지한다.
+
+### 27. 2026-08-05 autopaper 미러 오해 정정 — KIS 스캐너 직접진입 전환
+
+사용자 구현지시서로 지금까지의 "autopaper 미러" 전제가 오해였음이 확정됐다.
+`scanner/autopaper.py`는 시드 1억의 **가상 시각화 시뮬레이터**이며 KIS 주문의
+권위 소스가 아니다. KIS mock 계좌는 autopaper의 보유·진입일·가상 체결을 따라
+사는 미러가 아니라, **신선한 스캐너 신호를 KIS 시세·KIS 잔고 기준 게이트로
+직접 집행하는 독립 계좌**다.
+
+브랜치 `claude/kis-direct-scanner-entry`(base `f0a2eb0d`)에서 다음을 수행했다.
+
+- buyloop에서 autopaper 런타임 의존 전부 제거(피드 fetch·parse·미러 게이트·
+  `_MIRROR_REQUIRES_AUTOPAPER`·mirror gate 결과). buyloop는 이제 외부 HTTP를
+  호출하지 않으며, 테스트 하네스가 `urllib.request.urlopen`을 트랩해 이를
+  회귀로 보증한다.
+- readiness의 `mirror_parity_enforced` 게이트·`mirror_requires_autopaper`
+  필드 제거. limited L0 fence는 `TRADE_STAGE=mirror`(legacy 키 이름) +
+  **비어 있지 않은 allowlist** + `ALLOW_BUY=1` + `KIS_ORDERS_ENABLED=1`.
+- rollout mirror 프로필 `allowlist_required: True` 복원. autopaper가 후보를
+  좁혀준다는 전제가 사라졌으므로 limited L0는 승인 목록 안에서만 산다.
+  하루 10건은 autopaper 3건의 복제가 아니라 주문 폭주 방지용 KIS 독립 상한.
+- KIS 안전 게이트(mock 하드블록·kill·boot·SLA·ownership·원장·사이징·세션·
+  어닝·쿨다운·호가 tolerance)는 전부 무변경. 고정 종목 수 상한 제거 유지.
+- NaN·inf 진입/손절가가 부등식 게이트를 미끄러져 통과하던 실결함을 새 적대
+  테스트가 발견해 `math.isfinite` 가드로 수정했다.
+
+§14·§20·§25 등 과거 기록의 "미러" 서술은 당시 이해의 기록이므로 고치지 않는다
+(이 항목이 정정 공지다). TWR 격리 작업은 이 PR에 섞지 않았다. 병합·Oracle
+배포는 Codex/Claude 적대검토 통과와 사용자 승인 전 금지이며, kill L1과
+`KIS_ENV=mock`은 유지한다. 후속 cleanup PR 후보: `TRADE_STAGE` 키 이름 정리,
+advisor·sentinel의 paper 피드 의존 정리, STRATEGY.md 서술 정리.

@@ -52,7 +52,7 @@ def _now_signals(signals: list[dict]) -> list[dict]:
 
 def _sold_today(fold: dict) -> set[str]:
     """오늘(KST) SELL 제출이 있는 종목들 — 당일 손절/청산 재진입 금지.
-    autopaper 쿨다운(당일 손절 종목 재등장 금지 불변식)의 미러."""
+    공유 전략규칙(당일 손절 종목 재등장 금지) — 판정 근거는 KIS 원장뿐."""
     day = datetime.datetime.now(_KST).date()
     out: set[str] = set()
     for cur in fold.values():
@@ -222,7 +222,7 @@ def run_once(signals: list[dict], *, fx: float | None = None,
             ed = float(ed) if ed is not None else None
         except (TypeError, ValueError):
             ed = None
-        if ed is not None and 0 <= ed <= 3:        # autopaper와 동일 규칙(갭 리스크)
+        if ed is not None and 0 <= ed <= 3:        # 공유 전략규칙: 어닝 D-3(갭 리스크)
             results.append({"code": code, "gate": "earnings",
                             "why": f"어닝 D-{int(ed)} 이내 — 신규 진입 금지"})
             continue
