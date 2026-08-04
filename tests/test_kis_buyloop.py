@@ -235,14 +235,28 @@ def test_malformed_signal_is_fail_closed():
 
 
 def test_no_order_on_nan_zero_negative_or_inverted_stop():
-    """지시 §9-16: stop>=entry·NaN·음수 손절폭은 주문 0."""
-    for sig in (_sig(entry=100.0, stop=100.0),      # 역전(손절폭 0)
-                _sig(entry=100.0, stop=120.0),      # 역전(음수 폭)
-                _sig(entry=100.0, stop=float("nan"))):
-        res, ex, _, _ = _run([sig], holdings={})
-        assert not ex.called, sig
-        assert all(r.get("gate") != "sent" for r in res), sig
-    print("[PASS] 역전·NaN 손절은 주문 0(fail-closed)")
+    """지시 §9-16 + Codex V2 P1: 0·음수·NaN·inf·역전 stop은 A/B 모두 주문 0.
+
+    음수 stop은 per_share가 오히려 큰 양수(100-(-5)=105)가 되어 sent까지
+    갔었다 — 체결되면 회계·보호원장이 stop<=0을 거부해 무보호 실보유가 남는다.
+    """
+    bad_stops = (0.0, -0.01, -5.0, float("-inf"), float("nan"),
+                 100.0,                              # stop == entry
+                 120.0)                              # stop > entry(역전)
+    for stop in bad_stops:
+        for group, sleeve, extra in (("now", "A", {}),
+                                     ("shelf", "B", {"shelf": {"rr": 2.0}})):
+            sig = _sig(code="AAPL", ccy="USD", entry=100.0, stop=stop,
+                       group=group, **extra)
+            res, ex, _, _ = _run(
+                [sig], holdings={},
+                run_kwargs={"sleeve": sleeve, "group": group})
+            assert not ex.called, (stop, group)
+            assert all(r.get("gate") != "sent" for r in res), (stop, group)
+    # 양성: 유효한 0 < stop < order_px는 기존대로 실행기까지 전달된다.
+    res, ex, _, _ = _run([_sig(entry=100.0, stop=95.0)], holdings={})
+    assert ex.called and _g(res, "005930")["gate"] == "sent"
+    print("[PASS] 0·음수·NaN·inf·역전 손절은 A/B 주문 0 · 유효 stop만 전달")
 
 
 def test_a_has_no_fixed_position_count_cap():
@@ -296,12 +310,22 @@ def test_nan_target_is_not_persisted():
     print("[PASS] NaN 목표가는 메타에 남지 않음(None 정규화) · 유효값은 보존")
 
 
-def test_nan_fx_fails_closed_for_all_candidates():
+def test_invalid_fx_fails_closed_for_all_candidates():
+    """Codex V2 P2: 명시적 fx=0이 `fx or 기본값`으로 되살아나 낡은 기본 환율로
+    사이징하던 문제 — None만 기본값, 전달된 값은 그대로 검증한다."""
+    for bad in (float("nan"), float("inf"), 0, -1, "invalid"):
+        res, ex, _, _ = _run([_sig(code="AAPL", ccy="USD")], holdings={},
+                             run_kwargs={"fx": bad})
+        assert not ex.called, bad
+        assert res and res[0]["gate"] == "input" and "환율" in res[0]["why"], bad
+    # fx=None(기본값 사용)·유효 양수는 그대로 실행기 도달.
     res, ex, _, _ = _run([_sig(code="AAPL", ccy="USD")], holdings={},
-                         run_kwargs={"fx": float("nan")})
-    assert not ex.called
-    assert res and res[0]["gate"] == "input" and "환율" in res[0]["why"]
-    print("[PASS] NaN 환율 → 전 후보 fail-closed")
+                         run_kwargs={"fx": None})
+    assert ex.called
+    res2, ex2, _, _ = _run([_sig(code="AAPL", ccy="USD")], holdings={},
+                           run_kwargs={"fx": 1400.0})
+    assert ex2.called and ex2.call_args.kwargs["krw_per_usd"] == 1400.0
+    print("[PASS] 0·음수·NaN·inf·비숫자 환율 fail-closed · None만 기본값")
 
 
 def test_intra_cycle_accumulation():
@@ -442,7 +466,7 @@ def main():
     test_b_stale_row_in_fresh_document_is_rejected()
     test_nan_quote_is_gated_without_crash()
     test_nan_target_is_not_persisted()
-    test_nan_fx_fails_closed_for_all_candidates()
+    test_invalid_fx_fails_closed_for_all_candidates()
     test_intra_cycle_accumulation()
     test_non_now_filtered()
     test_us_signal_routes_and_fx()

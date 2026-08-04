@@ -168,7 +168,19 @@ def test_execute_entry_rejects_nonfinite_inputs():
             d = X.execute_entry("p#nan", "AAPL", **kw)
             assert d.gate == "input", (field, d)
             assert "NaN" in d.why or "무효" in d.why
-    print("[PASS] 실행기 자체가 NaN·inf price/risk/fx를 input에서 차단(이중방어)")
+        # Codex V2 P1 이중방어: order_meta.stop이 제공됐다면 finite·양수여야
+        #   한다 — 무효 stop이 원장 메타로 남으면 체결 후 보호 기록이 거부돼
+        #   무보호 실보유가 된다.
+        for bad_stop in (0, -5.0, nan, -inf, "x"):
+            d = X.execute_entry("p#stop", "AAPL", **base,
+                                order_meta={"stop": bad_stop})
+            assert d.gate == "input", (bad_stop, d)
+        # stop 키가 없는 order_meta(호환 경로)·유효 stop은 input에서 막히지 않음.
+        d = X.execute_entry("p#meta", "AAPL", **base, order_meta={"name": "t"})
+        assert d.gate != "input", d
+        d = X.execute_entry("p#ok", "AAPL", **base, order_meta={"stop": 95.0})
+        assert d.gate != "input", d
+    print("[PASS] 실행기 자체가 NaN·inf price/risk/fx·무효 stop을 input에서 차단")
 
 
 def test_x1_gate_chain_then_sent():

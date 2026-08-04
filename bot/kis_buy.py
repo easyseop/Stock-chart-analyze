@@ -84,6 +84,17 @@ def execute_entry(pos_key: str, symbol: str, *, price_usd: float,
         return BuyDecision(False, "input", "price/risk/fx 무효(NaN·inf)")
     if price_usd <= 0 or per_share_risk_usd <= 0 or fx <= 0:
         return BuyDecision(False, "input", "price/risk/fx 무효")
+    # order_meta.stop이 **제공된 경우** finite·양수 재검사(Codex V2 P1 이중방어).
+    #   무효 stop이 원장 메타로 남으면 체결 후 회계·보호원장이 stop<=0을 거부해
+    #   실보유만 있고 보호 없는 상태가 된다 — 주문 전에 끊는다.
+    if order_meta is not None and "stop" in order_meta:
+        try:
+            meta_stop = float(order_meta["stop"])
+        except (TypeError, ValueError):
+            return BuyDecision(False, "input", "order_meta.stop 형식 오류")
+        if not (math.isfinite(meta_stop) and meta_stop > 0):
+            return BuyDecision(False, "input",
+                               f"order_meta.stop 무효({order_meta['stop']})")
 
     # 1) kill-switch(I6)
     if not kill.allows("buy_new"):

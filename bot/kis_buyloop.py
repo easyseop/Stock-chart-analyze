@@ -210,9 +210,15 @@ def run_once(signals: list[dict], *, fx: float | None = None,
     seed_krw: 이 슬리브 전용 SEED(None이면 execute_entry가 기본 BOT_SEED_KRW).
     fx: USD→KRW 환율. excg_of: {code: 거래소}.
     """
-    fx = float(fx or settings.FX_USDKRW)
-    if not (math.isfinite(fx) and fx > 0):      # NaN 환율 = 전 후보 fail-closed
-        return [{"code": "*", "gate": "input", "why": "환율 무효(NaN·0)"}]
+    # 명시적으로 전달된 환율은 그대로 검증한다 — `fx or 기본값`은 0을 조용히
+    #   기본값으로 되살려 낡은 환율로 사이징한다(Codex V2 P2). None만 기본값.
+    raw_fx = settings.FX_USDKRW if fx is None else fx
+    try:
+        fx = float(raw_fx)
+    except (TypeError, ValueError):
+        return [{"code": "*", "gate": "input", "why": "환율 형식 오류"}]
+    if not math.isfinite(fx) or fx <= 0:
+        return [{"code": "*", "gate": "input", "why": "환율 무효(NaN·inf·0·음수)"}]
     excg_of = excg_of or {}
     results: list[dict] = []
 
@@ -291,11 +297,13 @@ def run_once(signals: list[dict], *, fx: float | None = None,
         except (TypeError, ValueError):
             pb = 0.0
         if not (math.isfinite(entry) and math.isfinite(stop)
-                and math.isfinite(pb)) or entry <= 0:
-            # NaN·inf 손절/진입은 아래 부등식 게이트를 전부 미끄러져 통과한다
-            #   (nan<=0 == False) — 여기서 명시적으로 닫는다(fail-closed).
+                and math.isfinite(pb)) or entry <= 0 or stop <= 0:
+            # NaN·inf 손절/진입은 아래 부등식 게이트를 전부 미끄러져 통과하고
+            #   (nan<=0 == False), 음수 stop은 per_share가 오히려 큰 양수가
+            #   되어 sent까지 간다(Codex V2 P1 — 체결되면 회계·보호원장이
+            #   stop<=0을 거부해 무보호 실보유가 남는다). 명시적으로 닫는다.
             results.append({"code": code, "gate": "input",
-                            "why": "진입/손절가 무효(NaN·inf·0)"}); continue
+                            "why": "진입/손절가 무효(NaN·inf·0·음수)"}); continue
         if mode in ("full", "half") and abs(cur - entry) / entry > settings.ENTRY_TOLERANCE:
             results.append({"code": code, "gate": "tolerance",
                             "why": f"가격 괴리 {cur} vs 진입 {entry}"}); continue
