@@ -38,12 +38,15 @@ _PROFILES = {
             "allowlist_required": True},
     "3":   {"max_positions": 5, "max_new_per_day": 3, "risk_cap": 0.01,
             "allowlist_required": False},
-    # KIS 미러 — 동시 보유 수는 제한하지 않는다. 실제 신규 투입은 envelope의
-    #   슬리브 예산·A+B 통합 운용한도·브로커 매수여력·종목별 1/3·risk 1% 중
-    #   가장 작은 값으로 제한한다. 하루 신규는 운영 폭주 방지를 위해 사용자 지정
-    #   10건을 유지한다. ALLOWED_SYMBOLS를 설정하면 여전히 그 목록만 산다.
+    # KIS 스캐너 직접진입 limited mock 프로필(2026-08-05 정정 — key 이름 'mirror'는
+    #   legacy alias, autopaper 미러 의미 아님). 동시 보유 수는 제한하지 않고
+    #   실제 신규 투입은 envelope의 슬리브 예산·A+B 통합 운용한도·브로커
+    #   매수여력·종목별 1/3·risk 1% 중 가장 작은 값으로 제한한다.
+    #   allowlist는 **필수** — autopaper가 후보를 좁혀준다는 종전 전제가
+    #   사라졌으므로 limited L0는 승인된 목록 안에서만 산다.
+    #   하루 10건은 autopaper 3건의 복제가 아니라 주문 폭주 방지용 KIS 독립 상한.
     "mirror": {"max_positions": None, "max_new_per_day": 10, "risk_cap": 0.01,
-               "allowlist_required": False},
+               "allowlist_required": True},
 }
 
 

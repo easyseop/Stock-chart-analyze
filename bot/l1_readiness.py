@@ -284,26 +284,20 @@ def evaluate(snapshot: dict, evidence: dict, *, scope: str = "strict",
     }
     allow_buy = snapshot.get("allow_buy_enabled")
     orders_enabled = snapshot.get("orders_enabled")
-    # 2026-08-03 완전 L0 승인: allowlist는 더 이상 필수가 아니다(미러는 어차피
-    #   autopaper 진입 종목만 산다). 설정돼 있으면 정보로만 표시.
+    # 2026-08-05 정정: KIS는 autopaper 미러가 아니라 스캐너 신호 직접진입이다.
+    #   "autopaper가 후보를 좁혀주므로 allowlist 없어도 안전"이라는 종전 근거는
+    #   사용자 요구 오해에서 나온 것이었고, 직접진입 limited L0는 **비어 있지
+    #   않은 allowlist**가 다시 필수다. 빈 목록·공백뿐·필드 없음 전부 차단.
     limited_l0_ok = (
-        trade_stage == "mirror"
+        trade_stage == "mirror"          # legacy 프로필명 — 의미는 scanner-direct
+        and bool(allowed_symbols)
         and allow_buy is True
         and orders_enabled is True
     )
-    # allowlist 없이 여는 근거는 "미러가 autopaper 진입만 산다"이다. 그 게이트가
-    #   꺼져 있으면 근거가 사라지므로 차단한다(Codex 미러 P1-3: 환경변수 하나로
-    #   조용히 원시 신호 직접매수로 돌아가는데 readiness가 GO를 냈다).
-    parity = snapshot.get("mirror_requires_autopaper")
-    add(
-        "mirror_parity_enforced",
-        parity is True or bool(allowed_symbols),
-        f"MIRROR_REQUIRES_AUTOPAPER={parity!r} — allowlist 없이 열려면 True 필요")
-
     add(
         "limited_l0_fence", limited_l0_ok,
         f"TRADE_STAGE={trade_stage or 'unknown'}, "
-        f"ALLOWED_SYMBOLS={sorted(allowed_symbols) or '(없음=미러 전 종목)'}, "
+        f"ALLOWED_SYMBOLS={sorted(allowed_symbols)}, "
         f"ALLOW_BUY={1 if allow_buy is True else 0 if allow_buy is False else '?'}, "
         f"KIS_ORDERS_ENABLED={1 if orders_enabled is True else 0 if orders_enabled is False else '?'}")
 
@@ -471,8 +465,6 @@ def collect_runtime(*, fetch_broker: bool = False,
         "frozen_symbols": sorted(frozen_state),
         "trade_stage": os.environ.get("TRADE_STAGE", "1.5").strip(),
         "allowed_symbols": sorted(allowed_symbols),
-        "mirror_requires_autopaper": (
-            os.environ.get("MIRROR_REQUIRES_AUTOPAPER", "1") != "0"),
         "allow_buy_enabled": os.environ.get("ALLOW_BUY") == "1",
         "orders_enabled": os.environ.get("KIS_ORDERS_ENABLED") == "1",
         "position_counts_by_sleeve": position_counts,
