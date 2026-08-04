@@ -1,19 +1,19 @@
 {
  "version": 1,
- "generated_at": "2026-08-04T12:16:01+09:00",
+ "generated_at": "2026-08-04T12:37:28+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "shelf_debug": {
   "ok": 19,
-  "watch": 129,
+  "watch": 134,
   "reasons": {
-   "밸류영역 밖(지지대 아님)": 1129,
+   "밸류영역 밖(지지대 아님)": 1116,
    "매물대 정보 없음": 149,
-   "반등 미확인(터치·거래량)": 64,
    "저점권 아님(범위 94%)": 64,
-   "저점권 아님(범위 90%)": 61,
-   "저점권 아님(범위 56%)": 60,
-   "저점권 아님(범위 92%)": 56,
-   "저점권 아님(범위 91%)": 55
+   "반등 미확인(터치·거래량)": 63,
+   "저점권 아님(범위 56%)": 62,
+   "저점권 아님(범위 90%)": 62,
+   "반등 미확인(터치·상단마감·거래량)": 60,
+   "저점권 아님(범위 68%)": 56
   }
  },
  "signals": [
@@ -445,24 +445,24 @@
    "group": "now",
    "entry_kind": "now",
    "stage": 3,
-   "price": 374000.0,
-   "entry": 374000.0,
-   "stop": 344413.9939,
-   "target": 433172.0121,
+   "price": 375500.0,
+   "entry": 375500.0,
+   "stop": 345913.9939,
+   "target": 434672.0121,
    "shares_1pct": 3,
-   "range_pos": 0.2115,
+   "range_pos": 0.2173,
    "norm": -0.0,
    "bear_share": 0.25,
    "fresh": false,
-   "break_gap": 0.0652,
+   "break_gap": 0.0695,
    "earnings_d": null,
    "tactic": {
     "stop_pct": 7.9,
     "pb_price": 350306.25,
-    "pb_stop_pct": 1.7,
+    "pb_stop_pct": 1.3,
     "mode": "pullback",
     "label": "⏳ 눌림 지정가만",
-    "desc": "지금 추격 금지(손절폭 7.9% · 돌파후 진행) — <b>350,306원 눌림 지정가만</b>. 눌리면 손절폭 1.7%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
+    "desc": "지금 추격 금지(손절폭 7.9% · 돌파후 진행) — <b>350,306원 눌림 지정가만</b>. 눌리면 손절폭 1.3%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
    }
   },
   {
@@ -1002,6 +1002,42 @@
    "tactic": "watch"
   },
   {
+   "id": "NU-2026-08-04-shelf-watch",
+   "code": "NU",
+   "name": "Nu Holdings Ltd.",
+   "ccy": "USD",
+   "group": "shelf_watch",
+   "entry_kind": "shelf_watch",
+   "stage": 0,
+   "price": 14.44,
+   "entry": 14.44,
+   "stop": 13.7396,
+   "target": 16.5487,
+   "shares_1pct": 0,
+   "range_pos": 0.4165,
+   "norm": 19.7,
+   "bear_share": 0.0,
+   "shelf": {
+    "poc": 14.2796,
+    "val": 12.9829,
+    "vah": 16.5487,
+    "rr": 3.01,
+    "overhead": 0.521,
+    "reason": "반등 미확인(거래량)",
+    "checks": {
+     "터치": true,
+     "회복": true,
+     "상단마감": true,
+     "거래량": false,
+     "신저가아님": true
+    }
+   },
+   "fresh": false,
+   "break_gap": null,
+   "earnings_d": 9,
+   "tactic": "watch"
+  },
+  {
    "id": "GPK-2026-08-04-shelf-watch",
    "code": "GPK",
    "name": "Graphic Packaging Holding Company",
@@ -1074,6 +1110,42 @@
    "tactic": "watch"
   },
   {
+   "id": "068270-2026-08-04-shelf-watch",
+   "code": "068270",
+   "name": "셀트리온",
+   "ccy": "KRW",
+   "group": "shelf_watch",
+   "entry_kind": "shelf_watch",
+   "stage": 0,
+   "price": 183400.0,
+   "entry": 183400.0,
+   "stop": 176694.0,
+   "target": 193739.5859,
+   "shares_1pct": 0,
+   "range_pos": 0.3091,
+   "norm": 10.4,
+   "bear_share": 0.125,
+   "shelf": {
+    "poc": 176958.8307,
+    "val": 163534.2266,
+    "vah": 193739.5859,
+    "rr": 1.54,
+    "overhead": 0.474,
+    "reason": "반등 미확인(거래량)",
+    "checks": {
+     "터치": true,
+     "회복": true,
+     "상단마감": true,
+     "거래량": false,
+     "신저가아님": true
+    }
+   },
+   "fresh": false,
+   "break_gap": null,
+   "earnings_d": null,
+   "tactic": "watch"
+  },
+  {
    "id": "MQ-2026-08-04-shelf-watch",
    "code": "MQ",
    "name": "Marqeta, Inc.",
@@ -1143,42 +1215,6 @@
    "fresh": false,
    "break_gap": null,
    "earnings_d": 36,
-   "tactic": "watch"
-  },
-  {
-   "id": "012330-2026-08-04-shelf-watch",
-   "code": "012330",
-   "name": "현대모비스",
-   "ccy": "KRW",
-   "group": "shelf_watch",
-   "entry_kind": "shelf_watch",
-   "stage": 0,
-   "price": 493500.0,
-   "entry": 493500.0,
-   "stop": 426300.0,
-   "target": 652312.5,
-   "shares_1pct": 0,
-   "range_pos": 0.395,
-   "norm": -0.0,
-   "bear_share": 0.25,
-   "shelf": {
-    "poc": 448687.5,
-    "val": 358187.5,
-    "vah": 652312.5,
-    "rr": 2.36,
-    "overhead": 0.398,
-    "reason": "반등 미확인(거래량)",
-    "checks": {
-     "터치": true,
-     "회복": true,
-     "상단마감": true,
-     "거래량": false,
-     "신저가아님": true
-    }
-   },
-   "fresh": false,
-   "break_gap": null,
-   "earnings_d": null,
    "tactic": "watch"
   },
   {
@@ -1395,42 +1431,6 @@
    "fresh": false,
    "break_gap": null,
    "earnings_d": 7,
-   "tactic": "watch"
-  },
-  {
-   "id": "006400-2026-08-04-shelf-watch",
-   "code": "006400",
-   "name": "삼성SDI",
-   "ccy": "KRW",
-   "group": "shelf_watch",
-   "entry_kind": "shelf_watch",
-   "stage": 0,
-   "price": 389500.0,
-   "entry": 389500.0,
-   "stop": 343000.0,
-   "target": 485481.25,
-   "shares_1pct": 0,
-   "range_pos": 0.3857,
-   "norm": -45.3,
-   "bear_share": 0.375,
-   "shelf": {
-    "poc": 394997.9167,
-    "val": 214031.25,
-    "vah": 485481.25,
-    "rr": 2.06,
-    "overhead": 0.48,
-    "reason": "반등 미확인(거래량)",
-    "checks": {
-     "터치": true,
-     "회복": true,
-     "상단마감": true,
-     "거래량": false,
-     "신저가아님": true
-    }
-   },
-   "fresh": false,
-   "break_gap": null,
-   "earnings_d": null,
    "tactic": "watch"
   },
   {
@@ -2617,6 +2617,34 @@
    }
   },
   {
+   "id": "015760-2026-08-04-watch",
+   "code": "015760",
+   "name": "한국전력",
+   "ccy": "KRW",
+   "group": "watch",
+   "entry_kind": "now",
+   "stage": 2,
+   "price": 35300.0,
+   "entry": 35300.0,
+   "stop": 31513.3693,
+   "target": 42873.2613,
+   "shares_1pct": 26,
+   "range_pos": 0.088,
+   "norm": -32.1,
+   "bear_share": 0.375,
+   "fresh": true,
+   "break_gap": 0.0231,
+   "earnings_d": null,
+   "tactic": {
+    "stop_pct": 10.7,
+    "pb_price": 32000.0,
+    "pb_stop_pct": 1.5,
+    "mode": "pullback",
+    "label": "⏳ 눌림 지정가만",
+    "desc": "지금 추격 금지(손절폭 10.7%) — <b>32,000원 눌림 지정가만</b>. 눌리면 손절폭 1.5%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
+   }
+  },
+  {
    "id": "001040-2026-08-04-watch",
    "code": "001040",
    "name": "CJ",
@@ -2624,24 +2652,24 @@
    "group": "watch",
    "entry_kind": "now",
    "stage": 2,
-   "price": 130300.0,
-   "entry": 130300.0,
-   "stop": 113047.8244,
-   "target": 164804.3511,
+   "price": 130800.0,
+   "entry": 130800.0,
+   "stop": 113547.8244,
+   "target": 165304.3511,
    "shares_1pct": 5,
-   "range_pos": 0.1135,
+   "range_pos": 0.1177,
    "norm": -60.7,
    "bear_share": 0.5,
    "fresh": true,
-   "break_gap": 0.0271,
+   "break_gap": 0.031,
    "earnings_d": null,
    "tactic": {
     "stop_pct": 13.2,
     "pb_price": 116900.0,
-    "pb_stop_pct": 3.3,
+    "pb_stop_pct": 2.9,
     "mode": "pullback",
     "label": "⏳ 눌림 지정가만",
-    "desc": "지금 추격 금지(손절폭 13.2% · 단기 이격) — <b>116,900원 눌림 지정가만</b>. 눌리면 손절폭 3.3%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
+    "desc": "지금 추격 금지(손절폭 13.2% · 단기 이격) — <b>116,900원 눌림 지정가만</b>. 눌리면 손절폭 2.9%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
    }
   },
   {
@@ -3254,16 +3282,16 @@
    "group": "watch",
    "entry_kind": "pullback",
    "stage": 1,
-   "price": 193400.0,
+   "price": 193300.0,
    "entry": 189521.8333,
-   "stop": 166941.8648,
-   "target": 234681.7703,
+   "stop": 166513.2934,
+   "target": 235538.9132,
    "shares_1pct": 4,
-   "range_pos": 0.4062,
+   "range_pos": 0.4054,
    "norm": 6.6,
    "bear_share": 0.375,
    "fresh": true,
-   "break_gap": -0.0055,
+   "break_gap": -0.006,
    "earnings_d": null,
    "tactic": null
   },
@@ -3373,6 +3401,34 @@
    }
   },
   {
+   "id": "282330-2026-08-04-watch",
+   "code": "282330",
+   "name": "BGF리테일",
+   "ccy": "KRW",
+   "group": "watch",
+   "entry_kind": "now",
+   "stage": 1,
+   "price": 122400.0,
+   "entry": 122400.0,
+   "stop": 109536.4621,
+   "target": 148127.0758,
+   "shares_1pct": 7,
+   "range_pos": 0.4549,
+   "norm": -3.8,
+   "bear_share": 0.125,
+   "fresh": true,
+   "break_gap": -0.0194,
+   "earnings_d": null,
+   "tactic": {
+    "stop_pct": 10.5,
+    "pb_price": 120357.0667,
+    "pb_stop_pct": 9.0,
+    "mode": "pullback",
+    "label": "⏳ 눌림 지정가만",
+    "desc": "지금 추격 금지(손절폭 10.5%) — <b>120,357원 눌림 지정가만</b>. 눌리면 손절폭 9.0%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
+   }
+  },
+  {
    "id": "MAIN-2026-08-04-watch",
    "code": "MAIN",
    "name": "Main Street Capital Corporation",
@@ -3468,34 +3524,6 @@
     "mode": "half",
     "label": "⚖ 반반 진입",
     "desc": "손절폭 7.5% — 절반만 현재가, 나머지는 눌림 확인 후 추가"
-   }
-  },
-  {
-   "id": "012750-2026-08-04-watch",
-   "code": "012750",
-   "name": "에스원",
-   "ccy": "KRW",
-   "group": "watch",
-   "entry_kind": "now",
-   "stage": 1,
-   "price": 71900.0,
-   "entry": 71900.0,
-   "stop": 64708.5125,
-   "target": 86282.975,
-   "shares_1pct": 13,
-   "range_pos": 0.1409,
-   "norm": -9.8,
-   "bear_share": 0.375,
-   "fresh": true,
-   "break_gap": -0.0144,
-   "earnings_d": null,
-   "tactic": {
-    "stop_pct": 10.0,
-    "pb_price": 70000.0,
-    "pb_stop_pct": 7.6,
-    "mode": "pullback",
-    "label": "⏳ 눌림 지정가만",
-    "desc": "지금 추격 금지(손절폭 10.0%) — <b>70,000원 눌림 지정가만</b>. 눌리면 손절폭 7.6%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
    }
   },
   {
@@ -3664,34 +3692,6 @@
     "mode": "pullback",
     "label": "⏳ 눌림 지정가만",
     "desc": "지금 추격 금지(손절폭 11.2%) — <b>$16.80 눌림 지정가만</b>. 눌리면 손절폭 9.5%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
-   }
-  },
-  {
-   "id": "015760-2026-08-04-watch",
-   "code": "015760",
-   "name": "한국전력",
-   "ccy": "KRW",
-   "group": "watch",
-   "entry_kind": "now",
-   "stage": 1,
-   "price": 34500.0,
-   "entry": 34500.0,
-   "stop": 30637.4747,
-   "target": 42225.0507,
-   "shares_1pct": 25,
-   "range_pos": 0.0667,
-   "norm": -57.5,
-   "bear_share": 0.5,
-   "fresh": true,
-   "break_gap": -0.0083,
-   "earnings_d": null,
-   "tactic": {
-    "stop_pct": 11.2,
-    "pb_price": 32000.0,
-    "pb_stop_pct": 4.3,
-    "mode": "pullback",
-    "label": "⏳ 눌림 지정가만",
-    "desc": "지금 추격 금지(손절폭 11.2%) — <b>32,000원 눌림 지정가만</b>. 눌리면 손절폭 4.3%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
    }
   },
   {
