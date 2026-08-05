@@ -1,8 +1,8 @@
-# 매수 루프(Loop B) systemd 유닛 — autopaper 'now' 신호 KIS 미러 매수(모의 기본)
+# 매수 루프(Loop B) systemd 유닛 — 신선한 스캐너 신호를 KIS 시세로 직접 집행(모의 기본)
 # 파수꾼(매도)의 대칭. 실제 매수는 ALLOW_BUY=1 + KIS_ORDERS_ENABLED=1 있어야만.
 # 설치: infra/server/README.md 참조. 시크릿은 EnvironmentFile(권한 600)로만.
 [Unit]
-Description=stock buy loop (mirror autopaper entries to KIS)
+Description=stock buy loop (execute fresh scanner signals on KIS with broker-truth gates)
 After=network-online.target
 Wants=network-online.target
 

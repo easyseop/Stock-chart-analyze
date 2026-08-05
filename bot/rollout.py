@@ -8,17 +8,19 @@ Stage 프로파일(환경변수 TRADE_STAGE, 기본 "1.5"):
   2      실전 첫 주: 1종목 · 하루 1건 · risk ≤0.1% · allowlist 필수 · US 정규장만
   2.5    확장:      3종목 · 하루 2건 · risk ≤0.25%
   3      정상:      5종목 · 하루 3건 · risk ≤1.0%
-  mirror KIS 미러: 동시 보유 종목 수 제한 없음 · 하루 10건 · risk ≤1.0% ·
-         allowlist 불필요. 신호·전술은 종목스크리너 페이퍼 시뮬(autopaper)을
-         따라가되, 신규 진입 가능 여부는 고정 종목 수가 아니라 슬리브 예산,
-         A+B 통합 운용한도, KIS 매수여력과 계산 수량으로 결정한다. 모의 전용으로
+  mirror KIS 스캐너 직접진입(mock — key 이름은 legacy alias, autopaper
+         미러 아님): 동시 보유 종목 수 제한 없음 · 하루 10건 · risk ≤1.0% ·
+         **수동 종목 allowlist 없음**. 신선한 스캐너 신호를 KIS 시세로 직접 집행하며,
+         신규 진입 가능 여부는 고정 종목 수가 아니라 슬리브 예산, A+B 통합
+         운용한도, KIS 매수여력과 계산 수량으로 결정한다. 모의 전용으로
          안전하다(live는 kis_orders가 Stage 2 게이트 전 하드블록).
 
 공통 강제(전 Stage):
-  · **US 정규장만**(I1·Codex B7) — dayMarket/pre/after 신규 진입 hard-off.
+  · **각 시장 정규장만**(I1·Codex B7) — pre/after/dayMarket 신규 진입 hard-off.
   · whole-share만(소수점 주문 가능 여부 [대조필요]라 금지).
-  · ALLOWED_SYMBOLS(콤마 구분) 밖 종목 금지 — Stage 2.5까지는 allowlist 필수,
-    미설정이면 전 종목 거부(fail-closed).
+  · 1.5·2·2.5 Stage는 ALLOWED_SYMBOLS(콤마 구분) 밖 종목 금지. mirror는
+    스캐너의 유효 진입 후보 전체를 대상으로 하므로 수동 목록을 요구하지 않는다.
+    단, 비어 있지 않은 목록을 운영자가 긴급 축소용으로 명시하면 그 목록을 지킨다.
   · 하루 신규 카운트는 원장(submit·side=BUY·당일)에서 계산 — 별도 상태 파일 없음
     (재시작에도 정확).
 """
@@ -38,10 +40,14 @@ _PROFILES = {
             "allowlist_required": True},
     "3":   {"max_positions": 5, "max_new_per_day": 3, "risk_cap": 0.01,
             "allowlist_required": False},
-    # KIS 미러 — 동시 보유 수는 제한하지 않는다. 실제 신규 투입은 envelope의
-    #   슬리브 예산·A+B 통합 운용한도·브로커 매수여력·종목별 1/3·risk 1% 중
-    #   가장 작은 값으로 제한한다. 하루 신규는 운영 폭주 방지를 위해 사용자 지정
-    #   10건을 유지한다. ALLOWED_SYMBOLS를 설정하면 여전히 그 목록만 산다.
+    # KIS 스캐너 직접진입 limited mock 프로필(2026-08-05 정정 — key 이름 'mirror'는
+    #   legacy alias, autopaper 미러 의미 아님). 동시 보유 수는 제한하지 않고
+    #   실제 신규 투입은 envelope의 슬리브 예산·A+B 통합 운용한도·브로커
+    #   매수여력·종목별 1/3·risk 1% 중 가장 작은 값으로 제한한다.
+    #   사용자가 확정한 독립계좌 계약에 따라 수동 종목 allowlist는 요구하지
+    #   않는다. 신선도·전략계약·KIS 시세·잔고·예산·세션 게이트가 후보를 제한한다.
+    #   비어 있지 않은 목록을 별도로 주면 비상 축소용 optional fence로는 동작한다.
+    #   하루 10건은 autopaper 3건의 복제가 아니라 주문 폭주 방지용 KIS 독립 상한.
     "mirror": {"max_positions": None, "max_new_per_day": 10, "risk_cap": 0.01,
                "allowlist_required": False},
 }
@@ -82,10 +88,14 @@ def _allowlist_from_file() -> set[str] | None:
 
 
 def allowed_symbols() -> set[str] | None:
-    """env ALLOWED_SYMBOLS(콤마 구분) 우선, 없으면 git 추적 allowlist 파일.
-    둘 다 없으면 None(allowlist_required Stage면 전 거부)."""
-    raw = os.environ.get("ALLOWED_SYMBOLS", "").strip()
-    if raw:
+    """env ALLOWED_SYMBOLS(콤마 구분) 우선, **미설정일 때만** git 추적 파일.
+    둘 다 없으면 None(allowlist_required Stage면 전 거부).
+
+    env가 **존재하면** 값이 비었거나 공백뿐이어도 그 값이 확정이다 — 빈 env가
+    낡은 파일로 폴백하면 운영자가 빈 값으로 전 종목을 잠갔다고 믿는 동안
+    파일이 매수를 되살린다(Codex P1-1). 빈 env = 빈 set = 전 종목 거부."""
+    if "ALLOWED_SYMBOLS" in os.environ:
+        raw = os.environ["ALLOWED_SYMBOLS"]
         return {s.strip().upper() for s in raw.split(",") if s.strip()}
     return _allowlist_from_file()
 
@@ -146,9 +156,11 @@ def check_new_entry(symbol: str, *, open_positions: int,
     if not qty_is_whole:
         return False, "whole-share만 허용(소수점 금지)"
     al = allowed_symbols()
-    if p["allowlist_required"] and al is None:
+    if p["allowlist_required"] and not al:
         return False, "ALLOWED_SYMBOLS 미설정(allowlist 필수 Stage)"
-    if al is not None and symbol.upper() not in al:
+    # optional Stage에서는 None과 빈 목록이 모두 "수동 fence 없음"이다. 비어
+    # 있지 않은 목록만 운영자 긴급 축소로 해석한다.
+    if al and symbol.upper() not in al:
         return False, f"{symbol} allowlist 밖"
     max_positions = p.get("max_positions")
     if max_positions is not None and open_positions >= max_positions:

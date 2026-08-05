@@ -1,12 +1,19 @@
-"""매수 루프(Loop B) — autopaper 'now' 신호를 KIS 모의계좌에 **미러 매수**.
+"""매수 루프(Loop B) — **신선한 스캐너 신호를 KIS 시세로 직접 집행**.
 
-브레인/장부/손 아키텍처의 '손 - 매수' 쪽. 파수꾼(손절 매도)의 대칭:
-  · autopaper(가상 장부)가 '지금 진입' 결정한 신호를 KIS 계좌에 실제(모의) 집행.
+브레인/장부/손 아키텍처의 '손 - 매수' 쪽. 파수꾼(손절 매도)의 대칭.
+
+정정(2026-08-05): KIS는 scanner/autopaper(가상 시뮬레이터)의 보유·진입일·가상
+체결을 따라 사는 미러 계좌가 **아니다**. 공유하는 것은 전략 규칙(신호 선정·
+전술·진입/손절가)뿐이고, 계좌 상태의 진실은 KIS 브로커·원장이다. autopaper의
+가상 계좌상태(보유·진입일·평단·pending·하루 3건)는 KIS 주문 권한과 무관하며
+이 모듈은 그것을 읽지 않는다.
+  · 스캐너 'now' 신호(신선·유효 entry/stop)를 후보로, KIS 현재가가 진입 조건에
+    들어올 때만 주문을 검토한다.
   · **브로커가 진실**: 매수 전 KIS 잔고(KR+미 3거래소 병합)를 재조회해
     이미 보유한 종목은 건너뛴다(중복매수 금지). 조회 실패=보수적 전면 skip
     (전역 포지션 캡을 검증할 수 없으면 이번 사이클은 안 산다 — fail-closed).
   · 가격 괴리 가드: 현재가가 신호 진입가 ±ENTRY_TOLERANCE 밖이면 skip(늦은 미러 방지).
-  · autopaper 패리티 게이트(완전 미러, 2026-07-15): 어닝 D-3 이내 skip ·
+  · 공유 전략규칙 게이트(autopaper와 같은 규칙, 2026-07-15): 어닝 D-3 이내 skip ·
     당일 매도(손절) 종목 재진입 금지(쿨다운) — 페이퍼 시뮬과 같은 규칙.
   · 롤아웃·예산 입력도 브로커-진실: 포지션 수(n_open)·투입원가(open_cost)를
     잔고에서 계산해 넘긴다. mirror는 n_open으로 동시 보유 수를 제한하지 않지만
@@ -21,155 +28,216 @@
 """
 from __future__ import annotations
 
+import dataclasses
 import datetime
-import json
+import html
+import math
 import os
+import re
 import sys
 import time
-import urllib.request
 
-from bot import envelope, kis, kis_buy, kis_pending, kis_positions, settings
+from bot import envelope, kis, kis_buy, kis_orders, kis_pending, kis_positions, settings
 
 _US_EXCGS = ("NASD", "NYSE", "AMEX")   # 보유 병합용 — NYSE/AMEX 보유 누락 방지
 _KST = datetime.timezone(datetime.timedelta(hours=9))
 
-
-# 미러 패리티 게이트. 끄면 신호 피드 후보를 직접 사던 종전 동작으로 돌아간다 —
-#   그 경우 autopaper와 성과 비교가 성립하지 않으므로 기본값을 바꾸지 말 것.
-_MIRROR_REQUIRES_AUTOPAPER = os.environ.get(
-    "MIRROR_REQUIRES_AUTOPAPER", "1") != "0"
-
-
-PAPER_FEED_MAX_AGE_MIN = float(
-    os.environ.get("PAPER_FEED_MAX_AGE_MIN", "45") or 45)
+_ALLOWED_TACTICS = ("full", "half", "pullback")
+_ALLOWED_CCY = ("USD", "KRW")
+_SIGNAL_ID = re.compile(r"^[A-Za-z0-9._:-]{1,128}$")
+_MAX_NAME_LEN = 120
 
 
-# 미러 피드가 연속으로 무효면 신규매수가 조용히 멈춘다. 2026-08의 kill L1
-#   사고(5일간 아무도 모름)와 같은 실패 양상을 새 게이트로 재생산하지 않도록
-#   연속 실패/복구를 경보한다.
-_MIRROR_FEED_ALERT_AFTER = int(
-    os.environ.get("MIRROR_FEED_ALERT_AFTER", "10") or 10)
-_mirror_feed_fail_streak = 0
-_mirror_feed_alerted = False
+def _finite_number(value, field: str) -> float:
+    """주문 경로 공용 숫자 파서 — bool·NaN·inf·비숫자 전부 ValueError.
 
-
-def _note_mirror_feed(*, ok: bool) -> None:
-    global _mirror_feed_fail_streak, _mirror_feed_alerted
-    if ok:
-        if _mirror_feed_alerted:
-            _mirror_feed_alerted = False
-            _notify_safe("✅ <b>미러 피드 복구</b> — autopaper 진입 미러 재개")
-        _mirror_feed_fail_streak = 0
-        return
-    _mirror_feed_fail_streak += 1
-    if (_mirror_feed_fail_streak >= _MIRROR_FEED_ALERT_AFTER
-            and not _mirror_feed_alerted):
-        _mirror_feed_alerted = True
-        _notify_safe(
-            f"🚨 <b>미러 피드 연속 무효 {_mirror_feed_fail_streak}회</b> — "
-            "슬리브 A 신규매수가 계속 보류 중입니다(손절·청산은 정상). "
-            "autopaper 발행 상태 확인 필요.")
-
-
-def _notify_safe(text: str) -> None:
-    try:
-        from bot import notify
-        notify.send(text, critical=True, category="trade")
-    except Exception:
-        pass
-
-
-def _parse_paper_feed(payload: object, *, now: datetime.datetime) -> dict | None:
-    """autopaper 공개 피드를 **엄격 파싱**. 계약 위반·낡음이면 None(소스 거부).
-
-    루트 dict · timezone 포함 `generated_at` · 허용 나이 · `positions`의 모든
-    행이 유효한 dict인지까지 본다. 하나라도 어긋나면 부분 채택 없이 전부
-    거부한다 — scalar 행 하나가 매수 권한이 되던 구멍을 닫는다(Codex P2-2).
+    Python에서 bool은 int 하위 타입이라 `float(True)==1.0`,
+    `math.isfinite(True)==True`다 — JSON 손상으로 가격 필드에 true가 오면
+    개별 `float()` 호출은 이를 정상 양수 1.0으로 둔갑시킨다(Codex V5 P1-3,
+    특히 환율 1.0은 사이징 단위를 통째로 왜곡). 숫자 문자열("100")은 허용.
     """
-    if not isinstance(payload, dict):
-        return None
-    stamp = payload.get("generated_at")
+    if isinstance(value, bool):
+        raise ValueError(f"{field}: boolean은 숫자가 아님")
+    number = float(value)                  # TypeError/ValueError는 호출부가 처리
+    if not math.isfinite(number):
+        raise ValueError(f"{field}: 비유한")
+    return number
+
+
+@dataclasses.dataclass(frozen=True)
+class ValidatedCandidate:
+    """계약 검증을 **전부** 통과한 주문 후보 — 생성 경로는 _validate_candidate
+    하나뿐이다. run_once의 시세·잔고 게이트와 주문 실행기는 원본 신호 dict가
+    아니라 이 불변 객체만 소비한다(Codex V5 구조 개선: 잘못된 상태가 주문
+    코드에 표현되는 것 자체를 차단)."""
+    code: str
+    ccy: str                # 'USD'|'KRW' (정규화 완료)
+    market: str             # 'US'|'KR' — ccy·심볼 시장 일치 검증 완료
+    group: str              # 'now'|'shelf'
+    tactic: str             # 'full'|'half'|'pullback'
+    entry: float            # finite, > 0
+    stop: float             # finite, 0 < stop < entry
+    pb: float               # half/pullback: stop < pb < entry · full: 0.0 허용
+    target: float | None    # None(legacy 없음, A만) 또는 finite > entry
+    signal_id: str
+    name: str
+    earnings_d: float | None
+    stage: float            # 우선순위(정렬) — 부재=0, 명시 오염은 행 거부
+    norm: float
+    rr: float
+
+
+def _validate_candidate(s: dict, *, group: str
+                        ) -> tuple[ValidatedCandidate | None, str, str]:
+    """시세와 무관한 신호 계약 전체를 한 곳에서 검증. 실패 시 (None, gate, why).
+
+    강제 계약(Codex V5 §2): 타입(boolean 거부·숫자 문자열 허용) ·
+    `0 < stop < entry < target` · 전술 허용집합·전술별 pb 관계 ·
+    통화 허용집합·통화-심볼 시장 일치 · B는 target 필수.
+    legacy 기본값(full)은 **필드 부재**에만 적용하고 명시된 위반값은 거부한다.
+    현재가 관계(tolerance·손절선 이탈)는 시세 조회 후 run_once가 판정한다.
+    """
+    code = str(s.get("code") or "").strip().upper()
+    if not code:
+        return None, "input", "종목코드 없음"
+    raw_ccy = s.get("ccy")
+    ccy = raw_ccy.strip().upper() if isinstance(raw_ccy, str) else None
+    if ccy not in _ALLOWED_CCY:
+        return None, "input", f"통화 무효({raw_ccy!r})"
+    market = kis.market_of_ccy(ccy)
+    if kis.market_of_symbol(code) != market:
+        # 반대 시장 주문 API로 보내면 거절 주문·원장 소음·일일 카운트 소모가
+        # 남는다(Codex V5 P2-1) — 주문 전에 차단.
+        return None, "input", f"통화/종목 시장 불일치({code}/{ccy})"
+    raw_tactic = s.get("tactic")
+    mode = None
+    if raw_tactic is None:
+        mode = "full"                          # 필드 부재 = legacy 호환
+    elif isinstance(raw_tactic, dict):
+        if "mode" not in raw_tactic:
+            mode = "full"                      # mode 키 부재 = legacy 호환
+        elif isinstance(raw_tactic["mode"], str):
+            mode = raw_tactic["mode"].strip().lower()
+    elif isinstance(raw_tactic, str):
+        mode = raw_tactic.strip().lower()
+    if mode not in _ALLOWED_TACTICS:
+        # "필드가 정말 없음"만 legacy full — `raw or "full"` 한 줄은 []·{}·0·
+        # False·"" 같은 falsy 위반값을 전부 정상 full 주문으로 둔갑시켰다
+        # (Codex V4 P1-1). 비문자열 mode·빈 문자열·허용 집합 밖 전부 차단.
+        return None, "tactic", f"알 수 없는 진입 전술({raw_tactic!r})"
+    tactic_dict = raw_tactic if isinstance(raw_tactic, dict) else {}
     try:
-        published = datetime.datetime.fromisoformat(str(stamp))
+        entry = _finite_number(s.get("entry"), "entry")
+        stop = _finite_number(s.get("stop"), "stop")
     except (TypeError, ValueError):
-        return None                           # 시각 없음/형식 오류 = 나이 미상
-    if published.tzinfo is None:
-        return None                           # naive 시각은 나이를 못 믿는다
-    age_min = (now - published).total_seconds() / 60.0
-    if not (-5.0 <= age_min <= PAPER_FEED_MAX_AGE_MIN):
-        return None                           # 낡음(또는 미래 시각) = 거부
-    rows = payload.get("positions")
-    if not isinstance(rows, list):
-        return None
-    out: dict[str, dict] = {}
-    for row in rows:
-        if not isinstance(row, dict):
-            return None                       # scalar 행 = 스키마 손상 → 전부 거부
-        code = str(row.get("code") or "").strip().upper()
-        if not code:
-            return None
-        out[code] = {"opened": str(row.get("opened") or ""),
-                     "entry": row.get("avg"), "stop": row.get("stop"),
-                     "ccy": str(row.get("ccy") or "USD").upper()}
-    return {"age_min": age_min, "positions": out}
-
-
-def _mirror_window(now: datetime.datetime) -> set[str]:
-    """미러 대상으로 인정할 진입일(KST) 집합.
-
-    **오늘 진입만** 미러한다. 현재 보유 코드 전체를 허용하면, KIS가 L1·장애로
-    쉬는 동안 autopaper가 여러 날에 걸쳐 쌓은 보유를 재개 첫날 한꺼번에 사들인다
-    (Codex P1-1 재현: 12건 동시 전송). 진입시점·평단·손절계획이 모두 달라져
-    성과 비교가 다시 무너진다. 옛 진입은 자동 추격하지 않는다.
-
-    다만 미 정규장 한 세션은 KST 자정을 넘는다. 자정 이후 같은 세션이 계속되는
-    동안에는 그 세션이 시작된 전날 진입도 '오늘 진입'으로 인정한다.
-    """
-    days = {now.date().isoformat()}
-    if now.hour < 12 and settings.market_open("USD"):
-        days.add((now.date() - datetime.timedelta(days=1)).isoformat())
-    return days
-
-
-def autopaper_entries(now: datetime.datetime | None = None) -> set[str] | None:
-    """autopaper가 **이번 세션에 진입한** 종목 집합. 조회 실패=None(미러 보류).
-
-    이 모듈은 첫 줄부터 "autopaper가 진입 결정한 신호를 KIS에 미러"라고 선언해
-    왔지만, 실제로는 신호 피드의 후보를 그대로 매수 경로에 넘겼다(Codex P1).
-    현재 보유 코드 교집합만으로는 부족하다 — §_mirror_window 참조.
-    """
-    now = now or datetime.datetime.now(_KST)
-    window = _mirror_window(now)
-    for url in settings.PAPER_SOURCES:
+        return None, "input", "진입/손절가 형식 오류(비숫자·boolean·비유한)"
+    if entry <= 0 or stop <= 0 or stop >= entry:
+        # `stop >= entry`는 신호 불변식 — full의 order_px는 실시간 현재가라
+        # cur>entry일 때 stop==entry·소폭 역전이 per_share>0으로 통과했다
+        # (Codex V4 P1-2). 현재가와 무관하게 계약 위반은 주문 0.
+        return None, "input", "진입/손절가 무효(0·음수·역전)"
+    raw_pb = tactic_dict.get("pb_price")
+    pb = 0.0
+    if raw_pb is not None:
         try:
-            req = urllib.request.Request(
-                url + "?cb=" + str(int(time.time())),
-                headers={"User-Agent": "kis-buyloop"})
-            with urllib.request.urlopen(req, timeout=15) as resp:
-                payload = json.load(resp)
-        except Exception:
+            pb = _finite_number(raw_pb, "pb_price")
+        except (TypeError, ValueError):
+            return None, "input", "눌림가 형식 오류(비숫자·boolean·비유한)"
+    if mode in ("half", "pullback") and not (stop < pb < entry):
+        return None, "tactic", f"{mode} 눌림가 무효({pb})"
+    raw_target = s.get("target")
+    target = None
+    if raw_target is not None:
+        try:
+            t = _finite_number(raw_target, "target")
+        except (TypeError, ValueError):
+            return None, "input", "목표가 형식 오류(비숫자·boolean·비유한)"
+        if t != 0:                             # 0은 legacy '목표 없음'
+            if t <= entry:
+                # B는 target이 실제 전량청산 조건 — entry 이하가 저장되면 매수
+                # 직후 목표매도가 발동한다(Codex V5 P1-2). A도 오염값 저장 금지.
+                return None, "input", f"목표가 무효({t} ≤ entry)"
+            target = t
+    if group == "shelf" and target is None:
+        # B 전략 계약: VAH 목표 전량청산이 핵심 — target 없이 매수하면 목표청산
+        # 자체가 사라지고 21일 타임스탑만 남는다(Codex V5 P1-2).
+        return None, "input", "B 목표가 필수(finite target > entry)"
+    ed = s.get("earnings_d")
+    if ed is None:
+        earnings_d = None
+    else:
+        try:
+            earnings_d = _finite_number(ed, "earnings_d")
+        except (TypeError, ValueError):
+            return None, "input", f"어닝 일수 형식 오류({ed!r})"
+    # 우선순위 필드도 검증한다 — 원본 dict를 정렬에서 산술하면 구조값 하나가
+    # 사이클 전체를 중단시킨다(Codex V6 P2-1). 부재/None만 기본값 0, 명시
+    # 오염(bool·구조값·비숫자·비유한)은 행 단위 거부.
+    priority = {}
+    shelf_meta = s.get("shelf")
+    if group == "shelf" and not isinstance(shelf_meta, dict):
+        return None, "input", f"B shelf 메타 형식 오류({shelf_meta!r})"
+    for label, raw in (("stage", s.get("stage")), ("norm", s.get("norm")),
+                       ("rr", (shelf_meta.get("rr")
+                               if isinstance(shelf_meta, dict) else None))):
+        if raw is None:
+            priority[label] = 0.0
             continue
-        parsed = _parse_paper_feed(payload, now=now)
-        if parsed is None:
-            continue                          # 계약 위반·낡음 — 다음 소스로
-        return {code for code, row in parsed["positions"].items()
-                if row["opened"] in window}
-    return None                               # 유효 소스 없음 — fail-closed
+        try:
+            priority[label] = _finite_number(raw, label)
+        except (TypeError, ValueError):
+            return None, "input", f"우선순위 필드 형식 오류({label}={raw!r})"
+    if group == "shelf":
+        if shelf_meta.get("rr") is None or priority["rr"] <= 0:
+            return None, "input", "B shelf.rr 필수(finite > 0)"
+        signal_rr = (target - entry) / (entry - stop)
+        # scanner는 rr을 소수 둘째 자리로 반올림한다. 가격에서 다시 계산한 값과
+        # 0.05R 넘게 다르면 손상/서로 다른 시점의 필드 조합으로 보고 주문하지 않는다.
+        if abs(priority["rr"] - signal_rr) > 0.05:
+            return None, "input", (
+                f"B shelf.rr 불일치(meta={priority['rr']:.4f}, "
+                f"prices={signal_rr:.4f})")
+        signal_stop_pct = (entry - stop) / entry
+        if signal_rr + 1e-12 < settings.SHELF_MIN_RR:
+            return None, "input", f"B 신호 손익비 미달({signal_rr:.4f}R)"
+        if signal_stop_pct - 1e-12 > settings.SHELF_MAX_STOP:
+            return None, "input", (
+                f"B 신호 손절폭 초과({signal_stop_pct * 100:.2f}%)")
+    raw_id = s.get("id")
+    signal_id = code if raw_id is None else raw_id
+    if not isinstance(signal_id, str) or not _SIGNAL_ID.fullmatch(signal_id.strip()):
+        return None, "input", f"신호 ID 형식 오류({raw_id!r})"
+    raw_name = s.get("name")
+    if raw_name is None:
+        name = ""
+    elif not isinstance(raw_name, str) or len(raw_name.strip()) > _MAX_NAME_LEN:
+        return None, "input", "종목명 형식/길이 오류"
+    else:
+        name = raw_name.strip()
+    return ValidatedCandidate(
+        code=code, ccy=ccy, market=market, group=group, tactic=mode,
+        entry=entry, stop=stop, pb=pb, target=target,
+        signal_id=signal_id.strip(), name=name,
+        earnings_d=earnings_d, stage=priority["stage"], norm=priority["norm"],
+        rr=priority["rr"]), "", ""
 
 
 def _now_signals(signals: list[dict]) -> list[dict]:
     """'지금 진입'·신선·진입/손절 유효 신호만. 정렬: 갓전환·상위단계·상위점수."""
-    cand = [s for s in signals
-            if s.get("group") == "now" and s.get("fresh")
-            and s.get("entry") and s.get("stop")]
-    cand.sort(key=lambda s: (not s.get("fresh"), -s.get("stage", 0),
-                             -s.get("norm", 0)))
-    return cand
+    # entry/stop은 **키 존재만** 확인한다 — truthy 검사면 stop=0 같은 무효값이
+    #   진단 없이 후보에서 사라진다(Codex V3 P2). 숫자 유효성은 run_once의
+    #   공통 input 게이트가 판정해 일관된 gate=input을 남긴다.
+    # 필터만 한다 — **정렬은 검증 뒤** run_once가 ValidatedCandidate 필드로
+    #   수행한다. 원본 dict의 stage/norm을 여기서 산술하면 구조값(list/dict)
+    #   하나가 사이클 전체를 TypeError로 중단시킨다(Codex V6 P2-1).
+    return [s for s in signals
+            if s.get("group") == "now" and s.get("fresh") is True
+            and "entry" in s and "stop" in s]
 
 
 def _sold_today(fold: dict) -> set[str]:
     """오늘(KST) SELL 제출이 있는 종목들 — 당일 손절/청산 재진입 금지.
-    autopaper 쿨다운(당일 손절 종목 재등장 금지 불변식)의 미러."""
+    공유 전략규칙(당일 손절 종목 재등장 금지) — 판정 근거는 KIS 원장뿐."""
     day = datetime.datetime.now(_KST).date()
     out: set[str] = set()
     for cur in fold.values():
@@ -304,69 +372,75 @@ def _partition(held_cost: dict, reservations: list[dict], sleeve: str,
 
 
 def _shelf_cands(signals: list[dict]) -> list[dict]:
-    """매물대 반등(B) 후보 — group='shelf'·진입/손절 유효. 손익비 높은 순."""
-    c = [s for s in signals if s.get("group") == "shelf"
-         and s.get("entry") and s.get("stop")]
-    c.sort(key=lambda s: -float((s.get("shelf") or {}).get("rr") or 0))
-    return c
+    """매물대 반등(B) 후보 — group='shelf'·**fresh=True**·진입/손절 유효.
+    손익비 높은 순. freshness는 A와 동일하게 행 단위로도 요구한다 — 문서가
+    신선해도 stale 행이 실행기로 넘어가면 '신선한 신호만 집행' 전제가 깨진다
+    (Codex P1-2)."""
+    # 필터만 — 정렬은 검증 뒤 run_once가 수행(Codex V6 P2-1: rr 구조값이
+    #   float()에서 터져 사이클 중단). 무효값은 검증기가 행 단위로 진단.
+    return [s for s in signals if s.get("group") == "shelf"
+            and s.get("fresh") is True
+            and "entry" in s and "stop" in s]
 
 
 def run_once(signals: list[dict], *, fx: float | None = None,
-             excg_of: dict | None = None, reason: str = "미러진입",
+             excg_of: dict | None = None, reason: str = "미러진입",  # legacy 표시명 —
+             # 원장 키/멱등성과 무관(표시·알림용). rename은 별도 cleanup PR.
              sleeve: str = "A", group: str = "now",
              seed_krw: float | None = None) -> list[dict]:
-    """신호를 KIS에 미러 매수 시도. 반환: 종목별 {code, gate, ok?, qty?, why}.
+    """신선한 스캐너 신호를 KIS 시세·게이트로 직접 집행 시도.
+    반환: 종목별 {code, gate, ok?, qty?, why}.
 
     sleeve/group: 'A'/'now'=전환확정(기본) · 'B'/'shelf'=매물대 반등(별도 예산).
     seed_krw: 이 슬리브 전용 SEED(None이면 execute_entry가 기본 BOT_SEED_KRW).
     fx: USD→KRW 환율. excg_of: {code: 거래소}.
     """
-    fx = float(fx or settings.FX_USDKRW)
+    if (sleeve, group) not in (("A", "now"), ("B", "shelf")):
+        return [{"code": "*", "gate": "input",
+                 "why": f"sleeve/group 계약 위반({sleeve}/{group})"}]
+    # 명시적으로 전달된 환율은 그대로 검증한다 — `fx or 기본값`은 0을 조용히
+    #   기본값으로 되살려 낡은 환율로 사이징한다(Codex V2 P2). None만 기본값.
+    raw_fx = settings.FX_USDKRW if fx is None else fx
+    try:
+        fx = _finite_number(raw_fx, "fx")          # bool·NaN·inf·비숫자 거부
+    except (TypeError, ValueError):
+        return [{"code": "*", "gate": "input", "why": "환율 형식 오류(비숫자·boolean·비유한)"}]
+    if fx <= 0:
+        return [{"code": "*", "gate": "input", "why": "환율 무효(0·음수)"}]
     excg_of = excg_of or {}
     results: list[dict] = []
 
     src = _shelf_cands(signals) if group == "shelf" else _now_signals(signals)
-    # 슬리브 A는 **autopaper가 실제 진입한 종목만** 미러한다(모듈 선언과 코드 일치).
-    #   B(매물대)는 autopaper가 다루지 않는 별도 예산 전략이라 이 게이트를 쓰지 않는다.
-    mirrored: set[str] | None = None
-    if sleeve != "B" and _MIRROR_REQUIRES_AUTOPAPER:
-        mirrored = autopaper_entries()
-        if mirrored is None:                       # 피드 실패/낡음 = 대상 불명
-            _note_mirror_feed(ok=False)
-            for s in src:
-                results.append({"code": str(s["code"]).upper(),
-                                "gate": "mirror",
-                                "why": "autopaper 피드 무효(실패·낡음) — 미러 보류"})
-            return results
-        _note_mirror_feed(ok=True)
-    # 1차 게이트(브로커 조회 전) — 세션·어닝. 후보가 없으면 잔고 조회도 안 한다.
-    cand: list[dict] = []
+    # 1차 게이트(브로커 조회 전) — **계약 검증이 최우선**. 이후 코드는 원본
+    #   dict가 아니라 ValidatedCandidate만 소비한다(생성 경로 한 곳 —
+    #   Codex V5 구조 개선). 후보가 없으면 잔고 조회도 안 한다.
+    cand: list[ValidatedCandidate] = []
     for s in src:
-        code = str(s["code"]).upper()
-        if mirrored is not None and code not in mirrored:
-            results.append({"code": code, "gate": "mirror",
-                            "why": "autopaper 미진입 — 미러 대상 아님"})
+        vc, vgate, vwhy = _validate_candidate(s, group=group)
+        if vc is None:
+            results.append({"code": str(s.get("code") or "?").strip().upper(),
+                            "gate": vgate, "why": vwhy})
             continue
-        if not settings.market_open(s.get("ccy", "USD")):
-            results.append({"code": code, "gate": "session", "why": "장 아님"})
+        if not settings.market_open(vc.ccy):
+            results.append({"code": vc.code, "gate": "session", "why": "장 아님"})
             continue
-        ed = s.get("earnings_d")
-        try:
-            ed = float(ed) if ed is not None else None
-        except (TypeError, ValueError):
-            ed = None
-        if ed is not None and 0 <= ed <= 3:        # autopaper와 동일 규칙(갭 리스크)
-            results.append({"code": code, "gate": "earnings",
-                            "why": f"어닝 D-{int(ed)} 이내 — 신규 진입 금지"})
-            continue
-        cand.append(s)
+        if vc.earnings_d is not None and 0 <= vc.earnings_d <= 3:
+            results.append({"code": vc.code, "gate": "earnings",
+                            "why": f"어닝 D-{int(vc.earnings_d)} 이내 — 신규 진입 금지"})
+            continue                               # 공유 전략규칙: 어닝 D-3(갭 리스크)
+        cand.append(vc)
+    # 정렬은 **검증된 필드**로만 — A: 상위단계·상위점수, B: 손익비 높은 순.
+    if group == "shelf":
+        cand.sort(key=lambda v: -v.rr)
+    else:
+        cand.sort(key=lambda v: (-v.stage, -v.norm))
     if not cand:
         return results
 
     st = _broker_state(fx)
     if st is None:                                 # 잔고 불명 → 보수적으로 안 산다
-        for s in cand:
-            results.append({"code": str(s["code"]).upper(), "gate": "holdings",
+        for vc in cand:
+            results.append({"code": vc.code, "gate": "holdings",
                             "why": "잔고 조회실패/불완전 — skip"})
         return results
     held, held_cost, reservations, sold_today, held_sleeves = st
@@ -382,10 +456,11 @@ def run_once(signals: list[dict], *, fx: float | None = None,
     operating_limit = envelope.operating_limit_krw()
     prefix = "sb:" if sleeve == "B" else "kb:"
 
-    for s in cand:
-        code = str(s["code"]).upper()
-        ccy = s.get("ccy", "USD")
-        market = kis.market_of_ccy(ccy)
+    for vc in cand:
+        # 계약(타입·가격 관계·전술·통화)은 이미 _validate_candidate가 전부
+        # 증명했다 — 여기서는 **시장 상태 의존** 게이트만 판정한다.
+        code, market, mode = vc.code, vc.market, vc.tactic
+        entry, stop, pb = vc.entry, vc.stop, vc.pb
         excg = excg_of.get(code, "NASD")
 
         if code in held:                           # 브로커-진실: 이미 보유 = 중복 금지(A·B 공통)
@@ -395,39 +470,58 @@ def run_once(signals: list[dict], *, fx: float | None = None,
             results.append({"code": code, "gate": "cooldown",
                             "why": "당일 매도 종목 — 재진입 쿨다운"}); continue
         cur = kis.last_price(code, market=market, excg=excg)
-        if not cur or cur <= 0:
-            results.append({"code": code, "gate": "quote", "why": "현재가 조회 실패"}); continue
-        entry = float(s["entry"])
-        tactic = s.get("tactic") or {}
-        mode = (str(tactic.get("mode") or "full") if isinstance(tactic, dict)
-                else str(tactic or "full"))
         try:
-            pb = float(tactic.get("pb_price") or 0) if isinstance(tactic, dict) else 0.0
+            cur = _finite_number(cur, "cur") if cur is not None else None
         except (TypeError, ValueError):
-            pb = 0.0
-        stop = float(s["stop"])
-        if entry <= 0:
-            results.append({"code": code, "gate": "input", "why": "진입가 무효"}); continue
+            cur = None
+        if cur is None or cur <= 0:
+            # NaN·inf·boolean 시세는 파서가 거부 — 실행기까지 흘러 사이클
+            #   예외를 내던 경로 차단(Codex V2 P2).
+            results.append({"code": code, "gate": "quote", "why": "현재가 조회 실패"}); continue
+        if cur <= stop:
+            # 전술 무관 실시간 무효선: 손절선에 닿았거나 이탈한 종목은 신규
+            #   진입 금지(Codex V5 P1-1 — pullback 지정가 pb>cur가 시장성
+            #   주문이 되어 붕괴 종목을 사고 파수꾼이 되파는 왕복 손실).
+            results.append({"code": code, "gate": "tactic",
+                            "why": f"현재가 {cur} 손절선 {stop} 이탈 — 신호 무효"}); continue
         if mode in ("full", "half") and abs(cur - entry) / entry > settings.ENTRY_TOLERANCE:
             results.append({"code": code, "gate": "tolerance",
                             "why": f"가격 괴리 {cur} vs 진입 {entry}"}); continue
-        if mode in ("half", "pullback") and not (stop < pb < entry):
-            results.append({"code": code, "gate": "tactic",
-                            "why": f"{mode} 눌림가 무효({pb})"}); continue
-        order_px = pb if mode == "pullback" else cur
+        # full/half도 실제 전송은 현재가가 아니라 30bp 위 마켓터블 지정가다.
+        # 목표·RR·손절폭·사이징은 체결 가능한 최악 상한을 기준으로 해야 한다.
+        order_px = (pb if mode == "pullback" else
+                    kis_orders.marketable_limit_price(cur, "BUY", market=market))
+        if vc.group == "shelf" and (vc.target is None
+                                    or vc.target <= order_px):
+            # B target은 **이번 주문의 실제 발주가**보다 커야 한다 — entry보다
+            #   크더라도 order_px(현재가/눌림가) 이하면 체결 직후 decide_b가
+            #   즉시 전량 목표매도를 발동한다(Codex V6 P1-1). 임의 최소 간격이
+            #   아니라 '매수 직후 청산 금지'의 최소 의미 계약.
+            results.append({"code": code, "gate": "input",
+                            "why": f"B 목표가 {vc.target} ≤ 발주가 {order_px}"
+                                   " — 즉시 청산 위험"}); continue
         per_share = order_px - stop
-        if per_share <= 0:
+        if per_share <= 0:                         # 검증기 계약상 불가능 — 최종 벨트
             results.append({"code": code, "gate": "input", "why": "손절폭 무효"}); continue
+        if vc.group == "shelf":
+            actual_rr = (vc.target - order_px) / per_share
+            stop_pct = per_share / order_px
+            if actual_rr + 1e-12 < settings.SHELF_MIN_RR:
+                results.append({
+                    "code": code, "gate": "input",
+                    "why": f"B 실제 손익비 {actual_rr:.4f}R < "
+                           f"{settings.SHELF_MIN_RR:.2f}R"}); continue
+            if stop_pct - 1e-12 > settings.SHELF_MAX_STOP:
+                results.append({
+                    "code": code, "gate": "input",
+                    "why": f"B 실제 손절폭 {stop_pct * 100:.2f}% > "
+                           f"{settings.SHELF_MAX_STOP * 100:.2f}%"}); continue
 
-        pos_key = f"{prefix}{s.get('id') or code}"
+        # id가 종목 간 중복돼도 원장 키가 충돌하지 않도록 code를 항상 포함한다.
+        pos_key = f"{prefix}{code}:{vc.signal_id}"
         opened = settings.today_kst()
-        tgt = None
-        try:
-            tgt = float(s.get("target") or 0) or None
-        except (TypeError, ValueError):
-            pass
         order_meta = {"pos_key": pos_key, "sleeve": sleeve, "stop": stop,
-                      "target": tgt, "name": s.get("name", ""), "opened": opened,
+                      "target": vc.target, "name": vc.name, "opened": opened,
                       "tactic": mode, "pending": mode == "pullback"}
         d = kis_buy.execute_entry(pos_key, code, price_usd=order_px,
                                   per_share_risk_usd=per_share, krw_per_usd=fx,
@@ -439,7 +533,7 @@ def run_once(signals: list[dict], *, fx: float | None = None,
                                   operating_limit_krw=operating_limit,
                                   hldg_before=0, seed_krw=seed_krw,
                                   sleeve=sleeve,
-                                  limit_price=pb if mode == "pullback" else None,
+                                  limit_price=order_px,
                                   qty_fraction=0.5 if mode == "half" else 1.0,
                                   order_meta=order_meta)
         if d.ok:
@@ -469,10 +563,11 @@ def run_once(signals: list[dict], *, fx: float | None = None,
                 u = "원" if market == "KR" else "$"
                 tag = " (매물대B)" if sleeve == "B" else ""
                 notify.send(
-                    f"🟢 <b>KIS 매수 주문 접수{tag}</b> — {s.get('name', code)}({code})\n"
+                    f"🟢 <b>KIS 매수 주문 접수{tag}</b> — "
+                    f"{html.escape(vc.name or code)}({html.escape(code)})\n"
                     f"  전술 {mode} · 1차 {d.qty}주"
                     + (f" · 눌림대기 {pending_qty}주 @ {pb}{u}" if pending_qty else "")
-                    + f" · 손절 {s['stop']}{u}",
+                    + f" · 손절 {stop}{u}",
                     critical=True, category="trade")
             except Exception:
                 pass

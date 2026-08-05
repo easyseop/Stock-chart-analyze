@@ -550,6 +550,28 @@ def domestic_fills(start: str = "", end: str = "") -> dict | None:
                  "CTX_AREA_FK100": "", "CTX_AREA_NK100": ""})
 
 
+def domestic_unfilled_orders(start: str = "", end: str = "") -> dict | None:
+    """국내 일별주문체결조회의 미체결 전용 응답.
+
+    KIS mock은 ``inquire-psbl-rvsecncl``을 제공하지 않지만 같은 mock 계정의
+    ``inquire-daily-ccld``는 ``CCLD_DVSN=02``(미체결)를 지원한다. readiness가
+    국내 열린 주문 0건을 추측하지 않고 브로커 응답으로 증명할 때만 사용한다.
+    반환 형식·연속조회 완전성 검사는 호출부가 별도로 fail-closed 판정한다.
+    """
+    acct = account()
+    if not acct or not enabled():
+        return None
+    end = end or time.strftime("%Y%m%d")
+    start = start or end
+    return _get("/uapi/domestic-stock/v1/trading/inquire-daily-ccld",
+                tr_id("ccnl", market="KR"),
+                {**acct, "INQR_STRT_DT": start, "INQR_END_DT": end,
+                 "SLL_BUY_DVSN_CD": "00", "INQR_DVSN": "00", "PDNO": "",
+                 "CCLD_DVSN": "02", "ORD_GNO_BRNO": "", "ODNO": "",
+                 "INQR_DVSN_3": "00", "INQR_DVSN_1": "",
+                 "CTX_AREA_FK100": "", "CTX_AREA_NK100": ""})
+
+
 def domestic_buying_power(symbol: str, price: float) -> float | None:
     """국내 매수여력(원) — inquire-psbl-order. envelope feasibility 입력.
     · live: `ORD_DVSN=00`(지정가)·현금 기준 `nrcvb_buy_amt`(미수 없는 매수가능금액).

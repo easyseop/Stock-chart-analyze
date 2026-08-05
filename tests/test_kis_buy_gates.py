@@ -1,7 +1,7 @@
 """X1 매수 실행기 게이트 체인 + I6/I7/IS2/IS5/costbook 검증(모킹 — 전송 없음).
 
   kill(I6):    latch(하향 ack 필수)·allows 매핑·env 상향
-  rollout(I7): allowlist 필수·세션 게이트·하루 한도·risk cap
+  rollout(I7): 단계별 종목 fence·세션 게이트·하루 한도·risk cap
   ownership:   baseline 미캡처=전거부·denylist 병합(불축소)·claim>broker 동결
   costbook:    add/close lot·open_cost·부분청산 비례차감·totals
   X1 체인:     게이트가 순서대로 막는지 → 전부 열면 place_buy 도달(ack)
@@ -151,6 +151,212 @@ def _ready_all_gates(M, tmp):
     M["kis_boot"]._STATE["done"] = True                # 부팅 대사 완료로 마킹
 
 
+def test_execute_entry_rejects_invalid_optional_numeric_args():
+    """Codex V6 P2-3: 실행기 잔여 숫자 인자(limit_price·qty_fraction·비용/한도)
+    도 bool·NaN·inf·비숫자를 입력 게이트에서 예외 없이 거부(직접 호출 가정)."""
+    with tempfile.TemporaryDirectory() as tmp:
+        M = _setup(tmp)
+        X = M["kis_buy"]
+        os.environ["ALLOW_BUY"] = "1"
+        nan = float("nan")
+        base = dict(price_usd=100.0, per_share_risk_usd=5.0,
+                    krw_per_usd=1400.0, risk_pct=0.001)
+        for kw_extra in ({"limit_price": nan}, {"limit_price": float("inf")},
+                         {"limit_price": True}, {"limit_price": 0},
+                         {"limit_price": -1}, {"limit_price": "x"},
+                         {"qty_fraction": nan}, {"qty_fraction": 0},
+                         {"qty_fraction": 2}, {"qty_fraction": True},
+                         {"seed_krw": True}, {"seed_krw": nan},
+                         {"open_cost_krw": nan},
+                         {"operating_limit_krw": True},
+                         {"risk_pct": nan}):
+            d = X.execute_entry("p#opt", "AAPL", **{**base, **kw_extra})
+            assert d.gate == "input", (kw_extra, d)
+        # order_meta.target 오염 직접 주입(Codex V6 M15) — stop 이하·비숫자·
+        # bool·NaN 전부 input, 유효값·None은 통과.
+        for bad_tgt in (True, nan, "x", 0, -1, 90.0):   # stop=95 이하 포함
+            d = X.execute_entry("p#opt", "AAPL", **base,
+                                order_meta={"stop": 95.0, "target": bad_tgt})
+            assert d.gate == "input", (bad_tgt, d)
+        d = X.execute_entry("p#opt", "AAPL", **base,
+                            limit_price=100.0,
+                            order_meta={"stop": 95.0, "target": 110.0})
+        assert d.gate != "input", d
+        # 정상 옵션 인자는 input을 통과해 이후 게이트로 진행(kill에서 멈춤 등).
+        d = X.execute_entry("p#opt", "AAPL", **base,
+                            limit_price=100.0, qty_fraction=0.5)
+        assert d.gate != "input", d
+        # 값이 finite여도 부호·상호관계가 틀리면 input에서 끝나야 한다.
+        for kw_extra in ({"seed_krw": 0}, {"seed_krw": -1},
+                         {"open_cost_krw": -1},
+                         {"total_open_cost_krw": -1},
+                         {"held_cost_krw": -1},
+                         {"total_held_cost_krw": -1},
+                         {"operating_limit_krw": 0},
+                         {"operating_limit_krw": -1},
+                         {"risk_pct": 0}, {"risk_pct": -0.1},
+                         {"open_positions": -1}, {"hldg_before": -1},
+                         {"qty_cap": -1}):
+            d = X.execute_entry("p#rel", "AAPL", **{**base, **kw_extra})
+            assert d.gate == "input", (kw_extra, d)
+        relations = (
+            {"limit_price": 90.0,
+             "order_meta": {"stop": 95.0, "target": 110.0}},
+            {"limit_price": 100.0, "per_share_risk_usd": 4.0,
+             "order_meta": {"stop": 95.0, "target": 110.0}},
+            {"limit_price": 99.0,
+             "order_meta": {"stop": 95.0, "target": 110.0}},
+            {"sleeve": "B", "limit_price": 100.0,
+             "order_meta": {"stop": 95.0, "target": 101.0}},
+            {"sleeve": "B", "limit_price": 100.0,
+             "order_meta": {"stop": 80.0, "target": 130.0}},
+        )
+        for kw_extra in relations:
+            d = X.execute_entry("p#rel", "AAPL", **{**base, **kw_extra})
+            assert d.gate == "input", (kw_extra, d)
+        # V8 Claude P2: 실행기 계층의 B 이중방어를 다른 포섭 게이트와 분리해
+        # 직접 검증한다. 첫 케이스는 RR 하한을 완화해 target<=발주가 관계만,
+        # 둘째는 충분한 RR을 줘 최대 손절폭만 실패하게 한다.
+        with mock.patch.object(X.settings, "SHELF_MIN_RR", -1.0):
+            d = X.execute_entry(
+                "p#b-target", "AAPL", **{**base, "sleeve": "B",
+                "limit_price": 100.0,
+                "order_meta": {"stop": 95.0, "target": 100.0}})
+        assert d.gate == "input", d
+        d = X.execute_entry(
+            "p#b-stop", "AAPL", **{**base, "sleeve": "B",
+            "limit_price": 100.0, "per_share_risk_usd": 20.0,
+            "order_meta": {"stop": 80.0, "target": 150.0}})
+        assert d.gate == "input", d
+        # 직접 호출의 구조·정수 경계도 예외 대신 input으로 닫힌다.
+        for kw_extra in ({"open_positions": float("inf")},
+                         {"hldg_before": float("nan")},
+                         {"qty_cap": "not-an-int"}):
+            d = X.execute_entry("p#int", "AAPL", **{**base, **kw_extra})
+            assert d.gate == "input", (kw_extra, d)
+        for bad_symbol in (None, [], ""):
+            d = X.execute_entry("p#sym", bad_symbol, **base)
+            assert d.gate == "input", (bad_symbol, d)
+        d = X.execute_entry("p#market", "AAPL", market="XX", **base)
+        assert d.gate == "input", d
+    print("[PASS] 실행기 잔여 숫자 인자·order_meta.target 전부 input 차단")
+
+
+def test_run_once_end_to_end_side_effects():
+    """Codex V6 P2-2: 실행기 mock 없이 신호→검증기→실제 게이트 체인→주문
+    primitive(place_buy spy)까지 연결. 차단 입력은 원장·원가장부·보호 포지션·
+    kill 상태가 **전부 불변**, 허용 입력은 place_buy 정확히 1회 + 원장 선기록
+    1건 + ack 단계 포지션 미기록을 단언한다."""
+    import importlib
+    with tempfile.TemporaryDirectory() as tmp:
+        M = _setup(tmp)
+        os.environ["ALLOW_BUY"] = "1"
+        os.environ["TRADE_STAGE"] = "mirror"       # 직접진입 프로필(risk 1%)
+        _ready_all_gates(M, tmp)
+        import bot.kis_buyloop as BL
+        importlib.reload(BL)
+        kpos_path = os.path.join(tmp, "kpos.json")
+
+        def snapshot_state():
+            out = {}
+            for label, path in (("ledger", M["ledger"].LEDGER_PATH),
+                                ("costbook", os.environ["COSTBOOK_PATH"]),
+                                ("kpos", kpos_path),
+                                ("kill", os.environ["KILL_STATE_PATH"])):
+                try:
+                    with open(path, "rb") as f:
+                        out[label] = f.read()
+                except OSError:
+                    out[label] = b""
+            return out
+
+        def run(signals, **rk):
+            # 주문 primitive는 **HTTP 경계(_post)** 에서 spy — place_order의
+            # 원장 선기록·ack 처리 등 실제 부작용 경로를 그대로 태운다.
+            ok_resp = ({"rt_cd": "0", "msg_cd": "OK",
+                        "output": {"ODNO": "0001"}}, 200)
+            def no_network(*args, **kwargs):
+                raise AssertionError("e2e에서 예상하지 않은 외부 HTTP")
+            with mock.patch.object(BL.kis, "positions_detail",
+                                   return_value=[]), \
+                    mock.patch.object(BL.kis, "last_price",
+                                      return_value=100.4), \
+                    mock.patch.object(BL.kis, "us_excg_of",
+                                      return_value="NASD"), \
+                    mock.patch.object(BL.kis, "buying_power_of",
+                                      return_value=50_000.0), \
+                    mock.patch.object(BL.settings, "market_open",
+                                      return_value=True), \
+                    mock.patch.object(M["rollout"], "us_regular_open",
+                                      return_value=True), \
+                    mock.patch.object(BL.kis_positions, "PATH", kpos_path), \
+                    mock.patch("urllib.request.urlopen",
+                               side_effect=no_network), \
+                    mock.patch.object(M["kis_orders"], "_post",
+                                      return_value=ok_resp) as pb:
+                res = BL.run_once(signals, fx=1400.0, **rk)
+            return res, pb
+
+        sig = {"group": "now", "id": "e2e-AAPL", "code": "AAPL", "name": "t",
+               "ccy": "USD", "entry": 100.0, "stop": 95.0, "fresh": True,
+               "stage": 3, "norm": 50, "target": 110.0}
+        # ① 차단 입력(검증기: B target ≤ 발주가) — 주문 primitive 0 + 상태 불변.
+        before = snapshot_state()
+        bad = dict(sig, group="shelf", target=100.2, shelf={"rr": 0.04})
+        res, pb = run([bad], sleeve="B", group="shelf")
+        assert not pb.called and res[0]["gate"] == "input", res
+        assert snapshot_state() == before          # 원장·원가·포지션·kill 불변
+        # ② 허용 B 입력 — _post 정확히 1회, target/sleeve 원장 선기록,
+        #    ack 단계 포지션 0.
+        os.environ["BOT_SEED_SB_KRW"] = "1000000"
+        good = dict(sig, group="shelf", target=110.0, shelf={"rr": 2.0})
+        res, pb = run([good], sleeve="B", group="shelf")
+        assert pb.call_count == 1, res
+        assert res[0]["gate"] == "sent", res
+        after = snapshot_state()
+        assert after["ledger"] != before["ledger"]       # 선기록 남음
+        assert after["kpos"] in (b"", b"{}")             # ack는 체결 아님
+        assert after["kill"] == before["kill"]           # kill 무변경
+        orders = M["ledger"]._fold()
+        order = next(v for v in orders.values()
+                     if str(v.get("symbol")) == "AAPL" and v.get("side") == "BUY")
+        assert order.get("sleeve") == "B" and order.get("target") == 110.0
+    print("[PASS] e2e: 차단=부작용 0(파일 불변) · 허용=주문 primitive 1회")
+
+
+def test_execute_entry_rejects_nonfinite_inputs():
+    """Codex P2 이중방어: NaN은 `<=0` 비교를 전부 미끄러진다 — 호출부 검사와
+    독립적으로 실행기 자신이 price/risk/fx NaN·inf를 input 게이트에서 차단."""
+    with tempfile.TemporaryDirectory() as tmp:
+        M = _setup(tmp)
+        X = M["kis_buy"]
+        os.environ["ALLOW_BUY"] = "1"
+        nan, inf = float("nan"), float("inf")
+        base = dict(price_usd=100.0, per_share_risk_usd=5.0,
+                    krw_per_usd=1400.0, risk_pct=0.001)
+        for field, val in (("price_usd", nan), ("price_usd", inf),
+                           ("per_share_risk_usd", nan),
+                           ("krw_per_usd", nan)):
+            kw = dict(base); kw[field] = val
+            d = X.execute_entry("p#nan", "AAPL", **kw)
+            assert d.gate == "input", (field, d)
+            assert "NaN" in d.why or "무효" in d.why
+        # Codex V2 P1 이중방어: order_meta.stop이 제공됐다면 finite·양수여야
+        #   한다 — 무효 stop이 원장 메타로 남으면 체결 후 보호 기록이 거부돼
+        #   무보호 실보유가 된다.
+        for bad_stop in (0, -5.0, nan, -inf, "x"):
+            d = X.execute_entry("p#stop", "AAPL", **base,
+                                order_meta={"stop": bad_stop})
+            assert d.gate == "input", (bad_stop, d)
+        # stop 키가 없는 order_meta(호환 경로)·유효 stop은 input에서 막히지 않음.
+        d = X.execute_entry("p#meta", "AAPL", **base, order_meta={"name": "t"})
+        assert d.gate != "input", d
+        d = X.execute_entry("p#ok", "AAPL", **base, limit_price=100.0,
+                            order_meta={"stop": 95.0})
+        assert d.gate != "input", d
+    print("[PASS] 실행기 자체가 NaN·inf price/risk/fx·무효 stop을 input에서 차단")
+
+
 def test_x1_gate_chain_then_sent():
     with tempfile.TemporaryDirectory() as tmp:
         M = _setup(tmp)
@@ -200,7 +406,8 @@ def test_x1_gate_chain_then_sent():
 
 
 def test_mirror_stage():
-    """KIS 미러 — 동시보유 수 무제한·하루10건·risk1%·allowlist 선택."""
+    """mirror(legacy명=scanner-direct) — 동시보유 무제한·하루10건·risk1%·
+    수동 allowlist 없이 신선한 스캐너 후보 전체를 KIS 게이트로 직접 평가."""
     with tempfile.TemporaryDirectory() as tmp:
         M = _setup(tmp)
         R = M["rollout"]
@@ -208,7 +415,16 @@ def test_mirror_stage():
         os.environ.pop("ALLOWED_SYMBOLS", None)
         ok, why = R.check_new_entry("ANYTHING", open_positions=0, risk_pct=0.01,
                                     session_open=True)
-        assert ok, why                                     # allowlist 없이 통과
+        assert ok, why                                      # 목록 없음 = 전체 후보
+        for empty in ("", "   ", " , ,"):
+            os.environ["ALLOWED_SYMBOLS"] = empty
+            ok, why = R.check_new_entry(
+                "ANYTHING", open_positions=0, risk_pct=0.01, session_open=True)
+            assert ok, (empty, why)                         # 빈 env도 낡은 파일 복구 없음
+        os.environ.pop("ALLOWED_SYMBOLS", None)
+        ok, why = R.check_new_entry("ANYTHING", open_positions=0, risk_pct=0.01,
+                                    session_open=True)
+        assert ok, why
         assert R.profile()["max_positions"] is None
         assert R.check_new_entry("X", open_positions=12, risk_pct=0.01,
                                  session_open=True)[0]
@@ -225,12 +441,12 @@ def test_mirror_stage():
         M["ledger"].record_submit("m#9", "S9", 1, "x", meta={"side": "BUY"})
         assert not R.check_new_entry("X", open_positions=0, risk_pct=0.01,
                                      session_open=True)[0]  # 10/10 → 차단
-        # ALLOWED_SYMBOLS를 설정하면 여전히 그 목록만(선택적 추가 펜스)
+        # 비어 있지 않은 목록은 운영자 긴급 축소용 optional fence로 계속 동작한다.
         os.environ["ALLOWED_SYMBOLS"] = "AAPL"
         assert not R.check_new_entry("TSLA", open_positions=0, risk_pct=0.01,
                                      session_open=True)[0]
         os.environ["TRADE_STAGE"] = "1.5"
-    print("[PASS] mirror: 동시보유 수 무제한·하루10건·risk1%·선택 allowlist")
+    print("[PASS] mirror: 목록 없이 직접진입·동시보유 무제한·하루10건·risk1%")
 
 
 def test_broker_truth_open_cost_gate():
@@ -240,7 +456,7 @@ def test_broker_truth_open_cost_gate():
         M = _setup(tmp)
         X = M["kis_buy"]
         os.environ["TRADE_STAGE"] = "mirror"
-        os.environ.pop("ALLOWED_SYMBOLS", None)
+        os.environ["ALLOWED_SYMBOLS"] = "AAPL,MSFT,TSLA,NVDA,GAP1,X"
         _ready_all_gates(M, tmp)
         kw = dict(price_usd=100.0, per_share_risk_usd=5.0, krw_per_usd=1400.0,
                   risk_pct=0.01, held_cost_krw=9_850_000,
@@ -299,7 +515,7 @@ def test_combined_a_b_total_gate():
             "BOT_SEED_SB_KRW": "5000000",
             "TRADE_STAGE": "mirror",
         })
-        os.environ.pop("ALLOWED_SYMBOLS", None)
+        os.environ["ALLOWED_SYMBOLS"] = "AAPL,MSFT,TSLA,NVDA,GAP1,X"
         _ready_all_gates(M, tmp)
         kw = dict(price_usd=100.0, per_share_risk_usd=5.0,
                   krw_per_usd=1400.0, risk_pct=0.01,
@@ -320,7 +536,7 @@ def test_gap_price_reserves_marketable_limit_not_stale_quote():
         M = _setup(tmp)
         X = M["kis_buy"]
         os.environ["TRADE_STAGE"] = "mirror"
-        os.environ.pop("ALLOWED_SYMBOLS", None)
+        os.environ["ALLOWED_SYMBOLS"] = "AAPL,MSFT,TSLA,NVDA,GAP1,X"
         _ready_all_gates(M, tmp)
         fake = {"ok": True, "act": "ack", "key": "gap", "odno": "1"}
         with mock.patch.object(M["rollout"], "us_regular_open", return_value=True), \
@@ -345,7 +561,7 @@ def test_missing_broker_budget_snapshot_blocks_send():
         M = _setup(tmp)
         X = M["kis_buy"]
         os.environ["TRADE_STAGE"] = "mirror"
-        os.environ.pop("ALLOWED_SYMBOLS", None)
+        os.environ["ALLOWED_SYMBOLS"] = "AAPL,MSFT,TSLA,NVDA,GAP1,X"
         _ready_all_gates(M, tmp)
         with mock.patch.object(M["rollout"], "us_regular_open", return_value=True), \
              mock.patch("bot.kis_orders.place_buy") as place:
@@ -417,7 +633,16 @@ def test_allowlist_file_fallback_and_env_precedence():
                                      session_open=True)[0]   # 파일 목록 밖
         os.environ["ALLOWED_SYMBOLS"] = "AAPL"
         assert R.allowed_symbols() == {"AAPL"}      # env가 파일을 이김
+        # Codex P1-1: env가 **존재하면** 빈 값·공백 값도 확정이다 — 파일로
+        #   폴백하면 운영자가 빈 env로 잠갔다고 믿는 동안 파일이 매수를 되살린다.
+        for empty in ("", "   ", " , ,"):
+            os.environ["ALLOWED_SYMBOLS"] = empty
+            assert R.allowed_symbols() == set(), repr(empty)   # 파일 폴백 금지
+            blocked, why = R.check_new_entry(
+                "FRPT", open_positions=0, risk_pct=0.001, session_open=True)
+            assert not blocked, (empty, why)                   # 전 종목 거부
         os.environ.pop("ALLOWED_SYMBOLS")
+        assert R.allowed_symbols() == {"FRPT", "ESTC", "DASH"}  # env 제거 시만 파일
         with open(path, "w", encoding="utf-8") as f:
             f.write("# 심볼 없음 — 편집 실수 시나리오\n")
         assert R.allowed_symbols() == set()
@@ -430,6 +655,9 @@ def main():
     test_kill_latch()
     test_rollout_gates()
     test_allowlist_file_fallback_and_env_precedence()
+    test_execute_entry_rejects_nonfinite_inputs()
+    test_execute_entry_rejects_invalid_optional_numeric_args()
+    test_run_once_end_to_end_side_effects()
     test_ownership()
     test_costbook()
     test_x1_gate_chain_then_sent()

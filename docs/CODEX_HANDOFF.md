@@ -1,6 +1,6 @@
 # Codex 개발 인수인계
 
-마지막 갱신: 2026-07-31
+마지막 갱신: 2026-08-06
 저장소: `easyseop/Stock-chart-analyze`
 
 이 문서는 다른 노트북이나 새 Codex 작업에서 개발을 바로 이어가기 위한 현재 상태,
@@ -8,7 +8,7 @@
 개인키 등 비밀값은 이 문서와 Git에 절대 기록하지 않는다.
 
 > **현재 판단 기준:** 문서 앞부분은 완료 이력을 시간순으로 보존한다. 현재 개발
-> 상태와 다음 운영 절차는 문서 끝의 §26을 우선한다.
+> 상태와 다음 운영 절차는 문서 끝의 §29를 우선한다.
 
 ## 1. 현재 Git 상태
 
@@ -1479,3 +1479,161 @@ mock L0이므로 PR을 병합하면 autodeploy가 종목 수 제한 제거를 �
 SSH 접속 전에는 PR #105를 Draft에서 해제하거나 병합하지 않는다. GitHub
 병합만 먼저 하는 방식은 Oracle autodeploy 때문에 안전한 코드 보관과 운영
 적용을 분리하지 못하므로 금지한다.
+
+### 27. 2026-08-05 autopaper 미러 오해 정정 — KIS 스캐너 직접진입 전환
+
+사용자 구현지시서로 지금까지의 "autopaper 미러" 전제가 오해였음이 확정됐다.
+`scanner/autopaper.py`는 시드 1억의 **가상 시각화 시뮬레이터**이며 KIS 주문의
+권위 소스가 아니다. KIS mock 계좌는 autopaper의 보유·진입일·가상 체결을 따라
+사는 미러가 아니라, **신선한 스캐너 신호를 KIS 시세·KIS 잔고 기준 게이트로
+직접 집행하는 독립 계좌**다.
+
+브랜치 `claude/kis-direct-scanner-entry`(base `f0a2eb0d`)에서 다음을 수행했다.
+
+- buyloop에서 autopaper 런타임 의존 전부 제거(피드 fetch·parse·미러 게이트·
+  `_MIRROR_REQUIRES_AUTOPAPER`·mirror gate 결과). buyloop는 이제 외부 HTTP를
+  호출하지 않으며, 테스트 하네스가 `urllib.request.urlopen`을 트랩해 이를
+  회귀로 보증한다.
+- readiness의 `mirror_parity_enforced` 게이트·`mirror_requires_autopaper`
+  필드 제거. limited L0 fence는 `TRADE_STAGE=mirror`(legacy 키 이름) +
+  **비어 있지 않은 allowlist** + `ALLOW_BUY=1` + `KIS_ORDERS_ENABLED=1`.
+- rollout mirror 프로필 `allowlist_required: True` 복원. autopaper가 후보를
+  좁혀준다는 전제가 사라졌으므로 limited L0는 승인 목록 안에서만 산다.
+  하루 10건은 autopaper 3건의 복제가 아니라 주문 폭주 방지용 KIS 독립 상한.
+- KIS 안전 게이트(mock 하드블록·kill·boot·SLA·ownership·원장·사이징·세션·
+  어닝·쿨다운·호가 tolerance)는 전부 무변경. 고정 종목 수 상한 제거 유지.
+- NaN·inf 진입/손절가가 부등식 게이트를 미끄러져 통과하던 실결함을 새 적대
+  테스트가 발견해 `math.isfinite` 가드로 수정했다.
+
+§14·§20·§25 등 과거 기록의 "미러" 서술은 당시 이해의 기록이므로 고치지 않는다
+(이 항목이 정정 공지다). TWR 격리 작업은 이 PR에 섞지 않았다. 병합·Oracle
+배포는 Codex/Claude 적대검토 통과와 사용자 승인 전 금지이며, kill L1과
+`KIS_ENV=mock`은 유지한다. 후속 cleanup PR 후보: `TRADE_STAGE` 키 이름 정리,
+advisor·sentinel의 paper 피드 의존 정리, STRATEGY.md 서술 정리.
+
+### 28. 2026-08-06 KIS 직접진입 V8 — Codex가 V7 차단사항 수정
+
+Claude 브랜치의 V7 대상 `d0e177ea`를 Codex가 적대검토한 결과 P0 없음,
+P1 1건·P2 6건·P3 2건으로 병합을 차단했다. 핵심 P1은 B가 매수 직후 즉시
+청산만 피하면 주문되어 기존 전략의 최소 1.5R·최대 손절폭 15%를 실제 KIS
+발주가에서 우회한다는 문제였다.
+
+새 브랜치 `codex/kis-direct-scanner-entry-v8`, 코드 commit `3c035c36`에서
+다음을 수정했다.
+
+- B의 신호 가격과 실제 발주가 양쪽에서 1.5R·15% 계약 재계산
+- full/half 사이징·예약·실제 전송을 같은 마켓터블 지정가 상한으로 통일
+- shelf 메타 구조/rr 불일치, earnings 명시 오염, id/name 오염 차단
+- 실행기의 부호·관계·구조 입력 이중방어
+- 원장 키에 종목 코드를 넣어 다른 종목의 같은 signal id 충돌 제거
+- Telegram HTML escape
+- 외부 HTTP 전면 trap을 둔 B 허용/차단 E2E와 경계·계약 회귀 추가
+
+로컬에서 집중 테스트 3종, 전체 독립 Python 모듈 49/49, compileall,
+`git diff --check`가 통과했다. 실제 주문 HTTP는 0건이다. 상세 수정 내역과
+적대 재검토 질문은 `docs/CLAUDE_REVIEW_KIS_DIRECT_SCANNER_ENTRY_V8.md`에 있다.
+
+이 브랜치는 Claude 재검토 전 병합하지 않는다. Oracle 배포·kill 하향·KIS live
+전환은 하지 않았으며 이 코드 커밋 자체는 원격 검토용이다. 다음 작업은 Claude가
+`d0e177ea..3c035c36`을 독립 검증해 P0/P1 없음 판정을 내리는 것이다. 승인 뒤에도
+병합 및 운영 적용은 사용자에게 결과를 보여주고 별도 승인받아 진행한다.
+
+코드와 검토자료는 원격 `codex/kis-direct-scanner-entry-v8`에 push했고,
+Claude 브랜치 `claude/kis-direct-scanner-entry`를 base로 Draft PR #106을 열었다.
+PR 생성 직후 두 커밋의 GitHub Actions CI가 모두 통과했다. Draft 상태와 base를
+유지하며 Claude 판정 전에는 ready 전환이나 병합을 하지 않는다.
+
+### 29. 2026-08-06 KIS 직접진입 V9 — 수동 종목 allowlist 제거
+
+사용자가 KIS 독립계좌에서 수동 종목 allowlist를 사용하지 않기로 명시적으로
+확정했다. `mirror`는 가상계좌를 따라 사는 모드가 아니라 신선한 스캐너 A/B
+진입 신호 전체를 KIS 시세·잔고·예산·보호 게이트로 직접 검토하는 프로필이다.
+
+V9에서 `mirror.allowlist_required=False`로 바꾸고, 없음·빈 env·공백-only는
+전체 유효 후보 모드로 처리했다. Stage 1.5/2/2.5의 목록 필수와 빈 목록 차단은
+유지했다. 비어 있지 않은 목록은 코드상 긴급 축소용 optional fence로 남지만,
+L0 readiness는 `allowed_symbols=[]`만 승인하므로 Oracle의 과거 6종목 env가
+남아 있으면 NO-GO다.
+
+목록이 없을 때 다음 신호 시장을 미리 제한할 수 없으므로 readiness의 브로커
+미체결 점검은 KR·US 양쪽을 모두 조회하도록 강화했다. 국내 mock 미체결 API가
+미지원이면 열린 주문 0으로 추정하지 않고 L1을 유지한다. 이 점은 운영 적용 전에
+Oracle에서 반드시 실측한다.
+
+웹은 기존의 평균매수가·현재가·A/B 정의·B 관찰·거래이력·익절 사후추적·누적
+지수 비교를 유지한다. A/B 정의 상단에 KIS 직접진입 설명을 추가하고, 공개
+autopaper 성과는 KIS 주문과 무관한 별도 가상 시뮬레이션임을 명확히 표기했다.
+Claude V8 판정의 유일한 P2였던 B 실행기 이중방어 테스트 2건도 포섭 게이트와
+분리해 추가했다.
+
+전체 Python 테스트 49/49, buyloop·readiness·site 집중 테스트, compileall,
+Node syntax, diff check가 통과했다. 실제 주문 HTTP는 0건이다. 검토 요청은
+`docs/CLAUDE_REVIEW_KIS_DIRECT_SCANNER_ENTRY_V9.md`에 있다. 이 변경도 Draft PR
+#106에만 push하며 Claude 재검토·사용자 병합 승인 전에는 병합하지 않는다.
+Oracle env 수정·배포·kill 하향은 아직 수행하지 않았다.
+
+### 30. 2026-08-06 V9 기본 브랜치 통합·Oracle 실측 결과
+
+Claude가 V9 `fb680b66`을 P0/P1/P2 없음으로 승인했다. PR #106은 검토용
+Claude feature 브랜치를 base로 삼고 있어 기본 브랜치에 바로 병합되는 구조가
+아니었다. 최신 기본 브랜치 `af5232c8`에서 `codex/kis-direct-v9-default`를 만들고
+V9 전체를 통합했다. 충돌은 `infra/server/README.md` 한 파일뿐이었으며 직접진입
+설명과 기본 브랜치의 `/진단`·ops-status 설명을 모두 보존했다.
+
+미국 정규장(2026-08-06 02:11 KST, 뉴욕 13:11 EDT)이라 Oracle에는 쓰지 않고
+read-only로 실측했다.
+
+- Oracle HEAD `af5232c8`, clean, KIS mock, kill L1
+- sentinel/watchdog/buyloop/telegram/portfolio-web/autodeploy.timer active
+- fallback 0, stall shadow, heartbeat fresh
+- `ALLOWED_SYMBOLS`는 process env와 `/home/ubuntu/kis.env` 모두 이미 없음
+- UNKNOWN 0, 미회계 BUY 0, US 브로커 미체결 0
+
+현재 L0 readiness는 다음 운영 상태 때문에 NO-GO다.
+
+1. 로컬 SELL ACK 5건이 남았지만 브로커 미체결은 0건이다.
+2. 보호원장·costbook은 과거 수량, KIS는 체결 후 수량이라 5종목이 불일치한다.
+3. 전용계좌 baseline 파일이 없어 ownership이 unarmed다.
+4. 역사적으로 유지하기로 한 동결 6종목 파일도 현재 빈 상태다.
+5. 국내 `inquire-psbl-rvsecncl`은 KIS mock 업무 미지원이라 unrestricted의
+   KR·US 양시장 미체결 증명을 완료하지 못한다.
+
+5건의 정확한 불일치는 다음과 같다.
+
+- AQN: 로컬 129, KIS 0 — 전량 SELL 129 ACK
+- GPK: 로컬 123, KIS 0 — 전량 SELL 123 ACK
+- SNN: 로컬 25, KIS 0 — 전량 SELL 25 ACK
+- CHYM: 로컬 94, KIS 47 — 절반 SELL 47 ACK
+- MAIN: 로컬 92, KIS 46 — 절반 SELL 46 ACK
+
+운영 세 원장을 공유락 아래 임시 디렉터리로 복제한 뒤 정상 형식의 전용계좌 빈
+baseline(`{"symbols":[],"ts":...}`)을 **복제본에만** 만들고 `_resolve_acks()`를
+실행했다. 정확히 위 5건만 회계돼 AQN/GPK/SNN=0, CHYM=47, MAIN=46으로 KIS와
+일치했고 열린 주문 0, costbook healthy를 유지했다. 첫 복사 시도는 쓰기 경합으로
+불완전 snapshot이어서 폐기했고, 두 번째는 ledger→costbook→positions 공유락을
+잡아 일관 복사했다. 운영 원장·baseline·kill에는 쓰기 0건이다.
+
+국내 mock 대체 증명도 read-only 실측했다. 같은 계정의 일별주문체결 endpoint에
+`CCLD_DVSN=02`(미체결)를 사용하면 `rt_cd=0`, 0행, 연속조회 없음이 반환됐다.
+통합 브랜치에는 기존 국내 조회 실패 + mock일 때만 이 응답을 사용하는
+`domestic_unfilled_orders()`를 추가했다. 성공·list·완전 페이지가 아니면 계속
+`None`으로 L1을 유지하고, live에서는 대체하지 않는다.
+
+로컬 검증은 번들 Python 전체 50/50, readiness·KIS 집중 테스트, Node 웹 계산
+15/15, compileall, node syntax, diff check를 통과했다. 상세 적대검토 요청은
+`docs/CLAUDE_REVIEW_KIS_DIRECT_SCANNER_ENTRY_V10_RUNTIME.md`다.
+
+운영 적용은 미국 연장장 종료 후(09:10 KST 이후) 다음 순서만 허용한다.
+
+1. Claude V10 P0/P1 없음 확인, 기본 브랜치 대상 PR의 exact head·CI 확인
+2. autodeploy 정지, kill L1 재확인, sentinel/buyloop/watchdog의 자동 재기동 차단
+3. 기본 브랜치 병합·Oracle clean fast-forward·서버 회귀
+4. 전용 KIS mock 계좌임을 다시 확인하고 영속 빈 baseline을 0600 원자 생성
+5. ACK 대사 1회 후 위 5건·세 원장·KIS 수량을 다시 대조
+6. 기존 결정대로 AQN/CAG/GPK/LW/SNN/VRSK를 close-only 동결 상태로 복구
+7. 서비스 정상화 후 `--scope l0 --broker --json`; blockers 하나라도 있으면 L1 유지
+8. blockers=[]일 때만 이미 승인된 mock L0 operator ack 하향, 첫 buyloop 관찰
+9. autodeploy.timer 복구, 결과를 이 문서에 다시 원격 반영
+
+fallback 1, stall live, KIS live, 동결 해제는 승인되지 않았다. 장중에는 위 mutation과
+기본 브랜치 병합·Oracle 배포를 하지 않는다.

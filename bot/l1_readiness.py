@@ -284,26 +284,20 @@ def evaluate(snapshot: dict, evidence: dict, *, scope: str = "strict",
     }
     allow_buy = snapshot.get("allow_buy_enabled")
     orders_enabled = snapshot.get("orders_enabled")
-    # 2026-08-03 완전 L0 승인: allowlist는 더 이상 필수가 아니다(미러는 어차피
-    #   autopaper 진입 종목만 산다). 설정돼 있으면 정보로만 표시.
+    # KIS는 autopaper 미러가 아니라 스캐너 신호 직접진입이다. 사용자가 수동
+    # 종목 allowlist를 사용하지 않기로 확정했으므로 L0 readiness는 오히려 낡은
+    # 목록이 남지 않았음을 확인한다. 후보 안전성은 신선도·전략계약·KIS 시세·
+    # 잔고·예산·세션 게이트가 담당하며, 이 검사는 그 게이트를 대체하지 않는다.
     limited_l0_ok = (
-        trade_stage == "mirror"
+        trade_stage == "mirror"          # legacy 프로필명 — 의미는 scanner-direct
+        and not allowed_symbols
         and allow_buy is True
         and orders_enabled is True
     )
-    # allowlist 없이 여는 근거는 "미러가 autopaper 진입만 산다"이다. 그 게이트가
-    #   꺼져 있으면 근거가 사라지므로 차단한다(Codex 미러 P1-3: 환경변수 하나로
-    #   조용히 원시 신호 직접매수로 돌아가는데 readiness가 GO를 냈다).
-    parity = snapshot.get("mirror_requires_autopaper")
-    add(
-        "mirror_parity_enforced",
-        parity is True or bool(allowed_symbols),
-        f"MIRROR_REQUIRES_AUTOPAPER={parity!r} — allowlist 없이 열려면 True 필요")
-
     add(
         "limited_l0_fence", limited_l0_ok,
         f"TRADE_STAGE={trade_stage or 'unknown'}, "
-        f"ALLOWED_SYMBOLS={sorted(allowed_symbols) or '(없음=미러 전 종목)'}, "
+        f"ALLOWED_SYMBOLS={sorted(allowed_symbols)} (비어 있어야 함), "
         f"ALLOW_BUY={1 if allow_buy is True else 0 if allow_buy is False else '?'}, "
         f"KIS_ORDERS_ENABLED={1 if orders_enabled is True else 0 if orders_enabled is False else '?'}")
 
@@ -369,19 +363,47 @@ def _broker_open_count(response: dict | None) -> int | None:
     return count
 
 
+def _broker_domestic_unfilled_count(response: dict | None) -> int | None:
+    """``CCLD_DVSN=02`` 국내 응답의 미체결 행 수를 보수적으로 센다.
+
+    필터 계약상 반환 행 하나가 미체결 주문 하나다. 행이 있으면 세부 수량 필드가
+    비어도 열린 주문으로 세어 L0를 막고, 0건은 성공·완전한 단일 페이지일 때만
+    인정한다. 연속조회 키가 남거나 형식이 다르면 0으로 추측하지 않는다.
+    """
+    if not response or response.get("rt_cd") != "0":
+        return None
+    if str(response.get("ctx_area_nk100")
+           or response.get("CTX_AREA_NK100") or "").strip():
+        return None
+    if "output1" in response:
+        rows = response["output1"]
+    elif "output" in response:
+        rows = response["output"]
+    else:
+        return None
+    if not isinstance(rows, list) or any(not isinstance(row, dict) for row in rows):
+        return None
+    return len(rows)
+
+
 def _relevant_open_order_markets(
         local_positions: dict[str, dict],
         local_open_orders: list[dict],
         allowed_symbols: set[str],
         *,
-        market_of_symbol) -> set[str]:
+        market_of_symbol,
+        unrestricted: bool = False) -> set[str]:
     """자동매수/보유 범위에 해당하는 시장만 미체결 조회 대상으로 고른다.
 
-    KIS mock은 국내 미체결 API를 제공하지 않는다. 미국 종목만 보유·허용하고
+    scanner-direct unrestricted 모드는 다음 신호의 시장을 미리 제한하지 않으므로
+    항상 KR·US 양쪽을 증명한다. 그 밖에는 미국 종목만 보유·허용하고
     로컬 KR 주문도 없는데 이 미지원 응답 때문에 미국 제한적 L0까지 막지 않도록
     범위를 좁힌다. 반대로 KR 포지션·열린 주문·allowlist 중 하나라도 있으면 국내
     응답 실패를 계속 fail-closed로 처리한다.
     """
+    if unrestricted:
+        return {"KR", "US"}
+
     markets: set[str] = set()
 
     def add(symbol: object, row: dict | None = None) -> None:
@@ -471,8 +493,6 @@ def collect_runtime(*, fetch_broker: bool = False,
         "frozen_symbols": sorted(frozen_state),
         "trade_stage": os.environ.get("TRADE_STAGE", "1.5").strip(),
         "allowed_symbols": sorted(allowed_symbols),
-        "mirror_requires_autopaper": (
-            os.environ.get("MIRROR_REQUIRES_AUTOPAPER", "1") != "0"),
         "allow_buy_enabled": os.environ.get("ALLOW_BUY") == "1",
         "orders_enabled": os.environ.get("KIS_ORDERS_ENABLED") == "1",
         "position_counts_by_sleeve": position_counts,
@@ -524,23 +544,31 @@ def collect_runtime(*, fetch_broker: bool = False,
 
     relevant_markets = _relevant_open_order_markets(
         local_positions, open_orders, allowed_symbols,
-        market_of_symbol=kis.market_of_symbol)
-    responses: list[dict | None] = []
-    if "KR" in relevant_markets:
-        responses.append(kis.domestic_open_orders())
-    if "US" in relevant_markets:
-        responses.extend(
-            kis.open_orders(excg=exchange)
-            for exchange in ("NASD", "NYSE", "AMEX"))
+        market_of_symbol=kis.market_of_symbol,
+        unrestricted=(rollout.stage() == "mirror" and not allowed_symbols))
     open_counts: list[int] = []
-    for response in responses:
-        count = _broker_open_count(response)
-        if count is None:
-            open_counts = []
-            break
-        open_counts.append(count)
+    broker_orders_complete = True
+    if "KR" in relevant_markets:
+        kr_count = _broker_open_count(kis.domestic_open_orders())
+        # 모의 KIS는 정정취소가능주문조회가 업무 미지원이다. 실측 지원되는
+        # 일별주문체결의 미체결(02) 필터로만 대체 증명하며, live에서는 기존
+        # 조회 실패를 그대로 fail-closed 처리한다.
+        if kr_count is None and kis.IS_MOCK:
+            kr_count = _broker_domestic_unfilled_count(
+                kis.domestic_unfilled_orders())
+        if kr_count is None:
+            broker_orders_complete = False
+        else:
+            open_counts.append(kr_count)
+    if "US" in relevant_markets:
+        for exchange in ("NASD", "NYSE", "AMEX"):
+            count = _broker_open_count(kis.open_orders(excg=exchange))
+            if count is None:
+                broker_orders_complete = False
+            else:
+                open_counts.append(count)
     snapshot["broker_open_orders"] = (
-        sum(open_counts) if len(open_counts) == len(responses) else None)
+        sum(open_counts) if broker_orders_complete else None)
     return snapshot
 
 
