@@ -1510,3 +1510,30 @@ SSH 접속 전에는 PR #105를 Draft에서 해제하거나 병합하지 않는�
 배포는 Codex/Claude 적대검토 통과와 사용자 승인 전 금지이며, kill L1과
 `KIS_ENV=mock`은 유지한다. 후속 cleanup PR 후보: `TRADE_STAGE` 키 이름 정리,
 advisor·sentinel의 paper 피드 의존 정리, STRATEGY.md 서술 정리.
+
+### 28. 2026-08-06 KIS 직접진입 V8 — Codex가 V7 차단사항 수정
+
+Claude 브랜치의 V7 대상 `d0e177ea`를 Codex가 적대검토한 결과 P0 없음,
+P1 1건·P2 6건·P3 2건으로 병합을 차단했다. 핵심 P1은 B가 매수 직후 즉시
+청산만 피하면 주문되어 기존 전략의 최소 1.5R·최대 손절폭 15%를 실제 KIS
+발주가에서 우회한다는 문제였다.
+
+새 브랜치 `codex/kis-direct-scanner-entry-v8`, 코드 commit `3c035c36`에서
+다음을 수정했다.
+
+- B의 신호 가격과 실제 발주가 양쪽에서 1.5R·15% 계약 재계산
+- full/half 사이징·예약·실제 전송을 같은 마켓터블 지정가 상한으로 통일
+- shelf 메타 구조/rr 불일치, earnings 명시 오염, id/name 오염 차단
+- 실행기의 부호·관계·구조 입력 이중방어
+- 원장 키에 종목 코드를 넣어 다른 종목의 같은 signal id 충돌 제거
+- Telegram HTML escape
+- 외부 HTTP 전면 trap을 둔 B 허용/차단 E2E와 경계·계약 회귀 추가
+
+로컬에서 집중 테스트 3종, 전체 독립 Python 모듈 49/49, compileall,
+`git diff --check`가 통과했다. 실제 주문 HTTP는 0건이다. 상세 수정 내역과
+적대 재검토 질문은 `docs/CLAUDE_REVIEW_KIS_DIRECT_SCANNER_ENTRY_V8.md`에 있다.
+
+이 브랜치는 Claude 재검토 전 병합하지 않는다. Oracle 배포·kill 하향·KIS live
+전환은 하지 않았으며 이 코드 커밋 자체는 원격 검토용이다. 다음 작업은 Claude가
+`d0e177ea..3c035c36`을 독립 검증해 P0/P1 없음 판정을 내리는 것이다. 승인 뒤에도
+병합 및 운영 적용은 사용자에게 결과를 보여주고 별도 승인받아 진행한다.
