@@ -329,7 +329,9 @@ def test_corrupt_target_is_rejected_not_persisted():
     """Codex V2 P2 + V5 P1-2: 오염 목표가는 저장은커녕 **주문 자체를 차단**한다
     (NaN이 메타로 전파되면 목표청산 비교가 조용히 꺼지고, entry 이하 값은 매수
     직후 전량 목표매도를 발동). 명시 오염값은 gate=input."""
-    for bad in (float("nan"), float("inf"), -1.0, "x", True):
+    # entry와 정확히 같은 값(100.0)도 A에서 차단 — `<=`를 `<`로 약화하는
+    # mutation(M3)을 A 경로에서 잡는다(B는 runtime 발주가 게이트가 마스킹).
+    for bad in (float("nan"), float("inf"), -1.0, "x", True, 100.0, 99.0):
         res, ex, _, _ = _run([_sig(target=bad)], holdings={})
         assert not ex.called, bad
         assert _g(res, "005930")["gate"] == "input", (bad, res)
