@@ -1,12 +1,12 @@
 {
  "version": 1,
- "generated_at": "2026-08-05T10:23:29+09:00",
+ "generated_at": "2026-08-05T10:39:39+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "shelf_debug": {
   "ok": 21,
   "watch": 114,
   "reasons": {
-   "밸류영역 밖(지지대 아님)": 1028,
+   "밸류영역 밖(지지대 아님)": 1027,
    "매물대 정보 없음": 137,
    "저점권 아님(범위 97%)": 75,
    "저점권 아님(범위 98%)": 74,
@@ -55,22 +55,22 @@
    "stage": 3,
    "price": 238000.0,
    "entry": 238000.0,
-   "stop": 209839.405,
-   "target": 294321.1901,
+   "stop": 210779.4475,
+   "target": 292441.1051,
    "shares_1pct": 3,
    "range_pos": 0.2486,
-   "norm": -9.4,
-   "bear_share": 0.25,
+   "norm": -28.3,
+   "bear_share": 0.375,
    "fresh": true,
-   "break_gap": 0.0338,
+   "break_gap": 0.0391,
    "earnings_d": null,
    "tactic": {
-    "stop_pct": 11.8,
+    "stop_pct": 11.4,
     "pb_price": 227777.5,
-    "pb_stop_pct": 7.9,
+    "pb_stop_pct": 7.5,
     "mode": "pullback",
     "label": "⏳ 눌림 지정가만",
-    "desc": "지금 추격 금지(손절폭 11.8%) — <b>227,778원 눌림 지정가만</b>. 눌리면 손절폭 7.9%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
+    "desc": "지금 추격 금지(손절폭 11.4%) — <b>227,778원 눌림 지정가만</b>. 눌리면 손절폭 7.5%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
    }
   },
   {
@@ -183,34 +183,6 @@
     "mode": "half",
     "label": "⚖ 반반 진입",
     "desc": "손절폭 5.6% · 돌파후 진행 — 절반은 현재가, 절반은 눌림 $177.81 지정가(거기선 손절폭 4.9%)"
-   }
-  },
-  {
-   "id": "004370-2026-08-05-now",
-   "code": "004370",
-   "name": "농심",
-   "ccy": "KRW",
-   "group": "now",
-   "entry_kind": "now",
-   "stage": 3,
-   "price": 376500.0,
-   "entry": 376500.0,
-   "stop": 346913.9939,
-   "target": 435672.0121,
-   "shares_1pct": 3,
-   "range_pos": 0.2212,
-   "norm": -0.0,
-   "bear_share": 0.25,
-   "fresh": false,
-   "break_gap": 0.0724,
-   "earnings_d": null,
-   "tactic": {
-    "stop_pct": 7.9,
-    "pb_price": 350306.25,
-    "pb_stop_pct": 1.0,
-    "mode": "pullback",
-    "label": "⏳ 눌림 지정가만",
-    "desc": "지금 추격 금지(손절폭 7.9% · 돌파후 진행) — <b>350,306원 눌림 지정가만</b>. 눌리면 손절폭 1.0%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
    }
   },
   {
@@ -2694,6 +2666,34 @@
    "tactic": null
   },
   {
+   "id": "015760-2026-08-05-watch",
+   "code": "015760",
+   "name": "한국전력",
+   "ccy": "KRW",
+   "group": "watch",
+   "entry_kind": "now",
+   "stage": 2,
+   "price": 35975.0,
+   "entry": 35975.0,
+   "stop": 32265.9858,
+   "target": 43393.0284,
+   "shares_1pct": 26,
+   "range_pos": 0.106,
+   "norm": -22.6,
+   "bear_share": 0.25,
+   "fresh": true,
+   "break_gap": 0.0513,
+   "earnings_d": null,
+   "tactic": {
+    "stop_pct": 10.3,
+    "pb_price": null,
+    "pb_stop_pct": null,
+    "mode": "pullback",
+    "label": "⏳ 눌림 지정가만",
+    "desc": "지금 추격 금지(손절폭 10.3% · 단기 이격) — 받칠 지지에 눌릴 때까지 대기"
+   }
+  },
+  {
    "id": "TLK-2026-08-05-watch",
    "code": "TLK",
    "name": "PT Telekomunikasi Indonesia, Tbk",
@@ -2790,62 +2790,6 @@
    "break_gap": 0.0452,
    "earnings_d": null,
    "tactic": null
-  },
-  {
-   "id": "015760-2026-08-05-watch",
-   "code": "015760",
-   "name": "한국전력",
-   "ccy": "KRW",
-   "group": "watch",
-   "entry_kind": "now",
-   "stage": 2,
-   "price": 35150.0,
-   "entry": 35150.0,
-   "stop": 31363.3693,
-   "target": 42723.2613,
-   "shares_1pct": 26,
-   "range_pos": 0.084,
-   "norm": -43.4,
-   "bear_share": 0.5,
-   "fresh": true,
-   "break_gap": 0.0187,
-   "earnings_d": null,
-   "tactic": {
-    "stop_pct": 10.8,
-    "pb_price": 32000.0,
-    "pb_stop_pct": 2.0,
-    "mode": "pullback",
-    "label": "⏳ 눌림 지정가만",
-    "desc": "지금 추격 금지(손절폭 10.8%) — <b>32,000원 눌림 지정가만</b>. 눌리면 손절폭 2.0%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
-   }
-  },
-  {
-   "id": "001040-2026-08-05-watch",
-   "code": "001040",
-   "name": "CJ",
-   "ccy": "KRW",
-   "group": "watch",
-   "entry_kind": "now",
-   "stage": 2,
-   "price": 132000.0,
-   "entry": 132000.0,
-   "stop": 114747.8244,
-   "target": 166504.3511,
-   "shares_1pct": 5,
-   "range_pos": 0.1279,
-   "norm": -60.7,
-   "bear_share": 0.5,
-   "fresh": true,
-   "break_gap": 0.0405,
-   "earnings_d": null,
-   "tactic": {
-    "stop_pct": 13.1,
-    "pb_price": 116900.0,
-    "pb_stop_pct": 1.8,
-    "mode": "pullback",
-    "label": "⏳ 눌림 지정가만",
-    "desc": "지금 추격 금지(손절폭 13.1% · 단기 이격) — <b>116,900원 눌림 지정가만</b>. 눌리면 손절폭 1.8%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
-   }
   },
   {
    "id": "OWL-2026-08-05-watch",
@@ -4304,27 +4248,6 @@
    "tactic": null
   },
   {
-   "id": "192820-2026-08-05-watch",
-   "code": "192820",
-   "name": "코스맥스",
-   "ccy": "KRW",
-   "group": "watch",
-   "entry_kind": "breakout",
-   "stage": 3,
-   "price": 195200.0,
-   "entry": 197500.0,
-   "stop": 174248.6029,
-   "target": 244002.7941,
-   "shares_1pct": 4,
-   "range_pos": 0.4202,
-   "norm": 2.5,
-   "bear_share": 0.5,
-   "fresh": false,
-   "break_gap": 0.1074,
-   "earnings_d": null,
-   "tactic": null
-  },
-  {
    "id": "Z-2026-08-05-watch",
    "code": "Z",
    "name": "Zillow Group, Inc.",
@@ -4406,6 +4329,27 @@
    "fresh": false,
    "break_gap": 0.1813,
    "earnings_d": 1,
+   "tactic": null
+  },
+  {
+   "id": "192820-2026-08-05-watch",
+   "code": "192820",
+   "name": "코스맥스",
+   "ccy": "KRW",
+   "group": "watch",
+   "entry_kind": "breakout",
+   "stage": 3,
+   "price": 198400.0,
+   "entry": 198500.0,
+   "stop": 175409.417,
+   "target": 244681.166,
+   "shares_1pct": 4,
+   "range_pos": 0.445,
+   "norm": -5.7,
+   "bear_share": 0.5,
+   "fresh": false,
+   "break_gap": 0.1312,
+   "earnings_d": null,
    "tactic": null
   },
   {
@@ -4616,6 +4560,27 @@
    "fresh": false,
    "break_gap": 0.6964,
    "earnings_d": 8,
+   "tactic": null
+  },
+  {
+   "id": "001040-2026-08-05-watch",
+   "code": "001040",
+   "name": "CJ",
+   "ccy": "KRW",
+   "group": "watch",
+   "entry_kind": "pullback",
+   "stage": 3,
+   "price": 135500.0,
+   "entry": 116900.0,
+   "stop": 100208.6941,
+   "target": 150282.6118,
+   "shares_1pct": 5,
+   "range_pos": 0.1575,
+   "norm": -57.4,
+   "bear_share": 0.5,
+   "fresh": false,
+   "break_gap": 0.0848,
+   "earnings_d": null,
    "tactic": null
   }
  ]
