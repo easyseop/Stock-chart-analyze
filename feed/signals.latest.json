@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated_at": "2026-08-06T05:52:26+09:00",
+ "generated_at": "2026-08-06T06:31:51+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "shelf_debug": {
   "ok": 20,
@@ -430,7 +430,7 @@
     "val": 11.9344,
     "vah": 15.821,
     "rr": 1.5,
-    "overhead": 0.524
+    "overhead": 0.523
    },
    "fresh": true,
    "break_gap": null,
@@ -514,7 +514,7 @@
     "val": 22.0515,
     "vah": 33.1165,
     "rr": 2.19,
-    "overhead": 0.533
+    "overhead": 0.532
    },
    "fresh": true,
    "break_gap": null,
@@ -2575,6 +2575,27 @@
    "tactic": null
   },
   {
+   "id": "BR-2026-08-06-watch",
+   "code": "BR",
+   "name": "Broadridge Financial Solutions, Inc.",
+   "ccy": "USD",
+   "group": "watch",
+   "entry_kind": "pullback",
+   "stage": 4,
+   "price": 163.41,
+   "entry": 143.04,
+   "stop": 130.2839,
+   "target": 168.5522,
+   "shares_1pct": 7,
+   "range_pos": 0.2142,
+   "norm": 26.4,
+   "bear_share": 0.25,
+   "fresh": false,
+   "break_gap": 0.1007,
+   "earnings_d": null,
+   "tactic": null
+  },
+  {
    "id": "HMY-2026-08-06-watch",
    "code": "HMY",
    "name": "Harmony Gold Mining Company Limited",
@@ -3097,27 +3118,6 @@
    "fresh": false,
    "break_gap": 0.0633,
    "earnings_d": 82,
-   "tactic": null
-  },
-  {
-   "id": "BR-2026-08-06-watch",
-   "code": "BR",
-   "name": "Broadridge Financial Solutions, Inc.",
-   "ccy": "USD",
-   "group": "watch",
-   "entry_kind": "pullback",
-   "stage": 3,
-   "price": 163.41,
-   "entry": 143.04,
-   "stop": 130.2839,
-   "target": 168.5522,
-   "shares_1pct": 7,
-   "range_pos": 0.2142,
-   "norm": 21.7,
-   "bear_share": 0.25,
-   "fresh": false,
-   "break_gap": 0.1007,
-   "earnings_d": null,
    "tactic": null
   },
   {
