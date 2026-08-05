@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated_at": "2026-08-05T13:15:46+09:00",
+ "generated_at": "2026-08-05T13:31:02+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "shelf_debug": {
   "ok": 25,
@@ -43,34 +43,6 @@
     "mode": "half",
     "label": "⚖ 반반 진입",
     "desc": "손절폭 7.8% — 절반은 현재가, 절반은 눌림 $99.79 지정가(거기선 손절폭 7.2%)"
-   }
-  },
-  {
-   "id": "259960-2026-08-05-now",
-   "code": "259960",
-   "name": "크래프톤",
-   "ccy": "KRW",
-   "group": "now",
-   "entry_kind": "now",
-   "stage": 3,
-   "price": 233500.0,
-   "entry": 233500.0,
-   "stop": 205636.5903,
-   "target": 289226.8194,
-   "shares_1pct": 3,
-   "range_pos": 0.2197,
-   "norm": -37.7,
-   "bear_share": 0.5,
-   "fresh": true,
-   "break_gap": 0.0194,
-   "earnings_d": null,
-   "tactic": {
-    "stop_pct": 11.9,
-    "pb_price": 227777.5,
-    "pb_stop_pct": 9.7,
-    "mode": "pullback",
-    "label": "⏳ 눌림 지정가만",
-    "desc": "지금 추격 금지(손절폭 11.9%) — <b>227,778원 눌림 지정가만</b>. 눌리면 손절폭 9.7%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
    }
   },
   {
@@ -4591,16 +4563,16 @@
    "group": "watch",
    "entry_kind": "breakout",
    "stage": 3,
-   "price": 198400.0,
+   "price": 197200.0,
    "entry": 198500.0,
    "stop": 175409.417,
    "target": 244681.166,
    "shares_1pct": 4,
-   "range_pos": 0.445,
+   "range_pos": 0.4357,
    "norm": -15.6,
    "bear_share": 0.5,
    "fresh": false,
-   "break_gap": 0.1312,
+   "break_gap": 0.1244,
    "earnings_d": null,
    "tactic": null
   },
@@ -4675,16 +4647,16 @@
    "group": "watch",
    "entry_kind": "pullback",
    "stage": 3,
-   "price": 135800.0,
+   "price": 135300.0,
    "entry": 116900.0,
    "stop": 100094.4084,
    "target": 150511.1832,
    "shares_1pct": 5,
-   "range_pos": 0.16,
+   "range_pos": 0.1558,
    "norm": -57.4,
    "bear_share": 0.5,
    "fresh": false,
-   "break_gap": 0.0872,
+   "break_gap": 0.0832,
    "earnings_d": null,
    "tactic": null
   }
