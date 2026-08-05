@@ -154,8 +154,10 @@ def test_partition_budget_isolation():
             {"group": "shelf", "code": "S", "entry": 10, "stop": 9,
              "fresh": False, "shelf": {"rr": 9.9}}]
     c = BL._shelf_cands(sigs)
-    assert [x["code"] for x in c] == ["Z", "Y"], c
-    print("[PASS] B 관찰·stale 행은 매수루프에서 제외 + fresh shelf만 필터/정렬")
+    # 필터 계약만 검증 — 정렬(rr 높은 순)은 검증 후 run_once가 vc.rr로 수행
+    #   (Codex V6 P2-1: 원본 dict 정렬이 구조값에서 사이클을 죽이던 문제).
+    assert sorted(x["code"] for x in c) == ["Y", "Z"], c
+    print("[PASS] B 관찰·stale 행은 매수루프에서 제외 + fresh shelf만 필터")
 
 
 def main():

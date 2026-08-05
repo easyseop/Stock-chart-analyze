@@ -509,14 +509,79 @@ def test_b_requires_valid_target_above_entry():
                          run_kwargs={"sleeve": "B", "group": "shelf"})
     assert ex.call_count == 1 and ex.call_args.args[1] == "MSFT"
     assert ex.call_args.kwargs["order_meta"]["target"] == 101.0
-    # 경계: target=100.0001은 stop<entry<target 계약을 **엄밀히** 만족 — 통과.
-    #   (차단하려면 임의 최소 간격 한도가 필요 — 지시서 금지 '임의 한도 변경'.)
-    edge = _sig(code="NVDA", ccy="USD", entry=100.0, stop=95.0,
-                group="shelf", shelf={"rr": 2.0}, target=100.0001)
-    res, ex, _, _ = _run([edge], holdings={}, last=100.4,
-                         run_kwargs={"sleeve": "B", "group": "shelf"})
-    assert ex.called and ex.call_args.kwargs["order_meta"]["target"] == 100.0001
     print("[PASS] B는 finite target>entry 필수 — 오염값 주문 0·유효값만 전달")
+
+
+def test_b_target_must_exceed_actual_order_price():
+    """Codex V6 P1-1 재현: target>entry여도 **실제 발주가** 이하면 체결 직후
+    decide_b(price>=target)가 즉시 전량 목표매도를 발동한다. 계약은
+    `target > order_px`(full/half=현재가, pullback=눌림가) — 임의 최소 간격이
+    아니라 매수 직후 청산 금지의 최소 의미."""
+    from bot import kis_exits
+    today = datetime.date.today().isoformat()
+    # full: order_px = cur.
+    for target in (100.0001, 100.4, 100.4001, 101.0):
+        for cur in (99.9, 100.0, 100.4):
+            sig = _sig(code="AAPL", ccy="USD", entry=100.0, stop=95.0,
+                       group="shelf", shelf={"rr": 2.0}, target=target)
+            res, ex, _, _ = _run([sig], holdings={}, last=cur,
+                                 run_kwargs={"sleeve": "B", "group": "shelf"})
+            if target > cur:
+                assert ex.called, (target, cur)
+                assert ex.call_args.kwargs["price_usd"] == cur
+                # 허용 조합은 같은 가격에서 즉시 목표매도 0건이어야 한다.
+                acts = kis_exits.decide_b(target, cur, 3, today, today)
+                assert acts == [], (target, cur, acts)
+            else:
+                assert not ex.called, (target, cur)
+                assert _g(res, "AAPL")["gate"] == "input", (target, cur, res)
+    # pullback: order_px = pb. 검증기 계약(stop<entry<target)이 이미 target>entry
+    #   를 요구하고 pb<entry이므로 target>pb는 자동 충족 — 발주가 규칙은
+    #   full/half(현재가 발주)에서만 추가 제약이 된다. 경계를 그대로 고정:
+    for target, expect_gate in ((97.0, "input"),      # ≤ entry — 검증기 차단
+                                (97.0001, "input"),   # ≤ entry — 검증기 차단
+                                (100.0001, "sent")):  # > entry ⇒ > pb — 발주
+        sig = _sig(code="AAPL", ccy="USD", entry=100.0, stop=95.0,
+                   group="shelf", shelf={"rr": 2.0}, target=target,
+                   tactic={"mode": "pullback", "pb_price": 97.0})
+        res, ex, _, _ = _run([sig], holdings={}, last=98.0,
+                             run_kwargs={"sleeve": "B", "group": "shelf"})
+        if expect_gate == "sent":
+            assert ex.called and ex.call_args.kwargs["price_usd"] == 97.0
+            assert kis_exits.decide_b(target, 97.0, 3, today, today) == []
+        else:
+            assert not ex.called, (target, res)
+            assert _g(res, "AAPL")["gate"] == expect_gate, (target, res)
+    print("[PASS] B target은 실제 발주가 초과 필수 — 매수 직후 목표매도 0")
+
+
+def test_corrupt_priority_fields_reject_row_not_cycle():
+    """Codex V6 P2-1 재현: stage=[]·shelf.rr={dict} 같은 구조값이 원본 dict
+    정렬에서 TypeError를 일으켜 **사이클 전체**가 죽고 정상 후보까지 처리
+    불가였다. 이제 정렬은 검증 후 vc 필드로만 하고, 오염 행은 행 단위
+    gate=input, 정상 형제 행은 계속 처리된다."""
+    bad_a = _sig(code="AAPL", ccy="USD", stage=[])
+    ok_a = _sig(code="MSFT", ccy="USD", stage=3)
+    res, ex, _, _ = _run([bad_a, ok_a], holdings={})
+    assert ex.call_count == 1 and ex.call_args.args[1] == "MSFT"
+    assert _g(res, "AAPL")["gate"] == "input"
+    bad_norm = _sig(code="AAPL", ccy="USD", norm={"bad": 1})
+    res, ex, _, _ = _run([bad_norm], holdings={})
+    assert not ex.called and _g(res, "AAPL")["gate"] == "input"
+    bad_b = _sig(code="AAPL", ccy="USD", group="shelf",
+                 shelf={"rr": {"bad": 1}}, target=110.0)
+    ok_b = _sig(code="MSFT", ccy="USD", group="shelf",
+                shelf={"rr": 2.0}, target=110.0)
+    res, ex, _, _ = _run([bad_b, ok_b], holdings={},
+                         run_kwargs={"sleeve": "B", "group": "shelf"})
+    assert ex.call_count == 1 and ex.call_args.args[1] == "MSFT"
+    assert _g(res, "AAPL")["gate"] == "input"
+    # 부재/None은 기본값 0으로 정상 진행(legacy 호환).
+    absent = _sig(code="AAPL", ccy="USD")
+    absent.pop("stage", None); absent.pop("norm", None)
+    res, ex, _, _ = _run([absent], holdings={})
+    assert ex.called
+    print("[PASS] 오염 우선순위 필드는 행 거부·사이클 생존 — 정렬은 검증 후")
 
 
 def test_boolean_numbers_rejected_everywhere():
@@ -580,54 +645,66 @@ def test_execute_entry_rejects_boolean_inputs_directly():
 
 
 def test_property_sweep_only_validated_values_reach_executor():
-    """속성 스윕(Codex V5 구조 개선 §5·§7): 타입·경계 조합을 생성해 두 속성을
-    전 조합에서 단언한다 — ① 실행기에 도달한 인자는 전부 검증된 값이다
-    (bool 아님·finite·양수, stop<주문가, target은 None 또는 >stop),
-    ② 실행기 미도달 조합은 보호 포지션·원장에 아무 부작용이 없다."""
+    """속성 스윕(Codex V5 §5·§7, V6 강화): 타입·경계 조합 × A/B 그룹에서 —
+    ① 실행기 도달 인자는 전부 검증된 값(bool 아님·finite·양수, 주문가>stop,
+       target은 A: None 또는 >stop / **B: > 실제 발주가**),
+    ② 미주문 조합은 이 하네스가 관측하는 부작용(보호 포지션 기록·원장 이벤트)
+       0. 주문 primitive·costbook까지의 전체 부작용은 실행기 실체 테스트
+       (test_kis_buy_gates.test_run_once_end_to_end_side_effects)가 본다."""
     nan, inf = float("nan"), float("inf")
     entries = (100.0, "100", 0, -1, True, nan, None)
     stops = (95.0, 0, 100.0, 120.0, True, nan)
     tactics = (None, "full", {"mode": "pullback", "pb_price": 97.0},
                {"mode": []}, [], "banana", {"mode": "half", "pb_price": True})
-    targets = (None, 110.0, 99.0, True, 0)
-    combos = [(e, st, ta, tg)
+    targets = (None, 110.0, 100.2, 99.0, True, 0)
+    combos = [(e, st, ta, tg, grp)
               for e in entries for st in stops for ta in tactics
-              for tg in targets]
+              for tg in targets for grp in ("now", "shelf")]
     sent = blocked = 0
-    for i, (e, st, ta, tg) in enumerate(combos):
-        if i % 3:                                  # 결정론적 표본(런타임 상한)
+    for i, (e, st, ta, tg, grp) in enumerate(combos):
+        if i % 5:                                  # 결정론적 표본(런타임 상한)
             continue
-        sig = _sig(code="AAPL", ccy="USD", entry=e, stop=st)
+        extra = {"shelf": {"rr": 2.0}} if grp == "shelf" else {}
+        sig = _sig(code="AAPL", ccy="USD", entry=e, stop=st, group=grp, **extra)
         if ta is not None:
             sig["tactic"] = ta
         if tg is not None:
             sig["target"] = tg
-        res, ex, recorded, ledger_events = _run([sig], holdings={}, last=100.4)
+        else:
+            sig.pop("target", None)                # shelf 기본 주입 제거 — 원값
+        sleeve = "B" if grp == "shelf" else "A"
+        res, ex, recorded, ledger_events = _run(
+            [sig], holdings={}, last=100.4,
+            run_kwargs={"sleeve": sleeve, "group": grp})
         if ex.called:
             sent += 1
             kw = ex.call_args.kwargs
             for field in ("price_usd", "per_share_risk_usd", "krw_per_usd"):
                 v = kw[field]
                 assert not isinstance(v, bool) and math.isfinite(v) and v > 0, \
-                    (field, v, e, st, ta, tg)
+                    (field, v, e, st, ta, tg, grp)
             meta = kw["order_meta"]
             assert not isinstance(meta["stop"], bool)
             assert math.isfinite(meta["stop"]) and meta["stop"] > 0
-            assert kw["price_usd"] > meta["stop"], (e, st, ta, tg)
-            assert meta["target"] is None or (
-                not isinstance(meta["target"], bool)
-                and math.isfinite(meta["target"])
-                and meta["target"] > meta["stop"]), (e, st, ta, tg)
+            assert kw["price_usd"] > meta["stop"], (e, st, ta, tg, grp)
+            if grp == "shelf":
+                # V6 P1-1 속성: B target은 실제 발주가보다 커야 한다.
+                assert meta["target"] is not None \
+                    and meta["target"] > kw["price_usd"], (e, st, ta, tg)
+            else:
+                assert meta["target"] is None or (
+                    not isinstance(meta["target"], bool)
+                    and math.isfinite(meta["target"])
+                    and meta["target"] > meta["stop"]), (e, st, ta, tg)
         else:
             blocked += 1
-        # 미주문 조합은 부작용 0 — gate 표시만 차단이고 다른 경로로 주문되는
-        #   거짓 통과를 막는다(실행기 mock이라 원장 submit은 항상 0이어야).
-        assert recorded == {}, (e, st, ta, tg)
+        # 미주문 조합의 하네스 관측 부작용 0(실행기 mock 하에서의 보증 범위).
+        assert recorded == {}, (e, st, ta, tg, grp)
         if not ex.called:
-            assert ledger_events == [], (e, st, ta, tg)
+            assert ledger_events == [], (e, st, ta, tg, grp)
     assert sent > 0 and blocked > sent             # 스윕이 실제로 양쪽을 커버
-    print(f"[PASS] 속성 스윕 {sent + blocked}조합 — 검증된 값만 실행기 도달"
-          f"(sent {sent} · blocked {blocked})")
+    print(f"[PASS] 속성 스윕 sent {sent} · blocked {blocked} "
+          f"(총 {sent + blocked}조합, A/B 포함)")
 
 
 def test_intra_cycle_accumulation():
@@ -771,6 +848,8 @@ def main():
     test_corrupt_target_is_rejected_not_persisted()
     test_no_entry_when_price_at_or_below_stop()
     test_b_requires_valid_target_above_entry()
+    test_b_target_must_exceed_actual_order_price()
+    test_corrupt_priority_fields_reject_row_not_cycle()
     test_boolean_numbers_rejected_everywhere()
     test_ccy_market_mismatch_blocked()
     test_execute_entry_rejects_boolean_inputs_directly()

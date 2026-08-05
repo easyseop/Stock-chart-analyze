@@ -102,6 +102,52 @@ def execute_entry(pos_key: str, symbol: str, *, price_usd: float,
         if not (math.isfinite(meta_stop) and meta_stop > 0):
             return BuyDecision(False, "input",
                                f"order_meta.stop 무효({order_meta['stop']})")
+    if order_meta is not None and order_meta.get("target") is not None:
+        # target이 명시됐다면 finite·양수·stop 초과여야 한다 — 오염 target이
+        # 원장 메타로 남으면 목표청산이 꺼지거나 즉시매도된다(Codex V6 M15).
+        tgt_raw = order_meta["target"]
+        try:
+            meta_tgt = (None if isinstance(tgt_raw, bool)
+                        else float(tgt_raw))
+        except (TypeError, ValueError):
+            meta_tgt = None
+        if meta_tgt is None or not math.isfinite(meta_tgt) or meta_tgt <= 0 \
+                or ("stop" in order_meta and meta_tgt <= float(order_meta["stop"])):
+            return BuyDecision(False, "input",
+                               f"order_meta.target 무효({tgt_raw!r})")
+    # 잔여 숫자 인자도 같은 경계에서 검증(Codex V6 P2-3) — 정상 호출부는 이미
+    #   정제된 값을 주지만, 실행기는 직접 호출을 가정한 최종 이중방어다.
+    #   None은 '미지정'으로 허용, 명시값은 bool·NaN·inf·비숫자 거부.
+    for label, value in (("seed_krw", seed_krw),
+                         ("open_cost_krw", open_cost_krw),
+                         ("total_open_cost_krw", total_open_cost_krw),
+                         ("held_cost_krw", held_cost_krw),
+                         ("total_held_cost_krw", total_held_cost_krw),
+                         ("operating_limit_krw", operating_limit_krw),
+                         ("risk_pct", risk_pct)):
+        if value is None:
+            continue
+        try:
+            if isinstance(value, bool) or not math.isfinite(float(value)):
+                return BuyDecision(False, "input",
+                                   f"{label} 무효(boolean·NaN·inf)")
+        except (TypeError, ValueError):
+            return BuyDecision(False, "input", f"{label} 형식 오류")
+    if limit_price is not None:
+        try:
+            if not math.isfinite(float(limit_price)) or float(limit_price) <= 0:
+                return BuyDecision(False, "input",
+                                   f"limit_price 무효({limit_price})")
+        except (TypeError, ValueError):
+            return BuyDecision(False, "input", "limit_price 형식 오류")
+    try:
+        if (isinstance(qty_fraction, bool)
+                or not math.isfinite(float(qty_fraction))
+                or not (0 < float(qty_fraction) <= 1)):
+            return BuyDecision(False, "input",
+                               f"qty_fraction 무효({qty_fraction})")
+    except (TypeError, ValueError):
+        return BuyDecision(False, "input", "qty_fraction 형식 오류")
 
     # 1) kill-switch(I6)
     if not kill.allows("buy_new"):

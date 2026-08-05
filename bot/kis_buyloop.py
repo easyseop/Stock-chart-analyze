@@ -78,6 +78,9 @@ class ValidatedCandidate:
     signal_id: str
     name: str
     earnings_d: float | None
+    stage: float            # 우선순위(정렬) — 부재=0, 명시 오염은 행 거부
+    norm: float
+    rr: float
 
 
 def _validate_candidate(s: dict, *, group: str
@@ -160,11 +163,27 @@ def _validate_candidate(s: dict, *, group: str
         earnings_d = float(ed) if ed is not None else None
     except (TypeError, ValueError):
         earnings_d = None
+    # 우선순위 필드도 검증한다 — 원본 dict를 정렬에서 산술하면 구조값 하나가
+    # 사이클 전체를 중단시킨다(Codex V6 P2-1). 부재/None만 기본값 0, 명시
+    # 오염(bool·구조값·비숫자·비유한)은 행 단위 거부.
+    priority = {}
+    shelf_meta = s.get("shelf")
+    for label, raw in (("stage", s.get("stage")), ("norm", s.get("norm")),
+                       ("rr", (shelf_meta.get("rr")
+                               if isinstance(shelf_meta, dict) else None))):
+        if raw is None:
+            priority[label] = 0.0
+            continue
+        try:
+            priority[label] = _finite_number(raw, label)
+        except (TypeError, ValueError):
+            return None, "input", f"우선순위 필드 형식 오류({label}={raw!r})"
     return ValidatedCandidate(
         code=code, ccy=ccy, market=market, group=group, tactic=mode,
         entry=entry, stop=stop, pb=pb, target=target,
         signal_id=str(s.get("id") or code), name=str(s.get("name") or ""),
-        earnings_d=earnings_d), "", ""
+        earnings_d=earnings_d, stage=priority["stage"], norm=priority["norm"],
+        rr=priority["rr"]), "", ""
 
 
 def _now_signals(signals: list[dict]) -> list[dict]:
@@ -172,12 +191,12 @@ def _now_signals(signals: list[dict]) -> list[dict]:
     # entry/stop은 **키 존재만** 확인한다 — truthy 검사면 stop=0 같은 무효값이
     #   진단 없이 후보에서 사라진다(Codex V3 P2). 숫자 유효성은 run_once의
     #   공통 input 게이트가 판정해 일관된 gate=input을 남긴다.
-    cand = [s for s in signals
+    # 필터만 한다 — **정렬은 검증 뒤** run_once가 ValidatedCandidate 필드로
+    #   수행한다. 원본 dict의 stage/norm을 여기서 산술하면 구조값(list/dict)
+    #   하나가 사이클 전체를 TypeError로 중단시킨다(Codex V6 P2-1).
+    return [s for s in signals
             if s.get("group") == "now" and s.get("fresh") is True
             and "entry" in s and "stop" in s]
-    cand.sort(key=lambda s: (not s.get("fresh"), -s.get("stage", 0),
-                             -s.get("norm", 0)))
-    return cand
 
 
 def _sold_today(fold: dict) -> set[str]:
@@ -321,11 +340,11 @@ def _shelf_cands(signals: list[dict]) -> list[dict]:
     손익비 높은 순. freshness는 A와 동일하게 행 단위로도 요구한다 — 문서가
     신선해도 stale 행이 실행기로 넘어가면 '신선한 신호만 집행' 전제가 깨진다
     (Codex P1-2)."""
-    c = [s for s in signals if s.get("group") == "shelf"
-         and s.get("fresh") is True
-         and "entry" in s and "stop" in s]     # 무효값은 input 게이트가 진단(P2)
-    c.sort(key=lambda s: -float((s.get("shelf") or {}).get("rr") or 0))
-    return c
+    # 필터만 — 정렬은 검증 뒤 run_once가 수행(Codex V6 P2-1: rr 구조값이
+    #   float()에서 터져 사이클 중단). 무효값은 검증기가 행 단위로 진단.
+    return [s for s in signals if s.get("group") == "shelf"
+            and s.get("fresh") is True
+            and "entry" in s and "stop" in s]
 
 
 def run_once(signals: list[dict], *, fx: float | None = None,
@@ -371,6 +390,11 @@ def run_once(signals: list[dict], *, fx: float | None = None,
                             "why": f"어닝 D-{int(vc.earnings_d)} 이내 — 신규 진입 금지"})
             continue                               # 공유 전략규칙: 어닝 D-3(갭 리스크)
         cand.append(vc)
+    # 정렬은 **검증된 필드**로만 — A: 상위단계·상위점수, B: 손익비 높은 순.
+    if group == "shelf":
+        cand.sort(key=lambda v: -v.rr)
+    else:
+        cand.sort(key=lambda v: (-v.stage, -v.norm))
     if not cand:
         return results
 
@@ -425,6 +449,15 @@ def run_once(signals: list[dict], *, fx: float | None = None,
             results.append({"code": code, "gate": "tolerance",
                             "why": f"가격 괴리 {cur} vs 진입 {entry}"}); continue
         order_px = pb if mode == "pullback" else cur
+        if vc.group == "shelf" and (vc.target is None
+                                    or vc.target <= order_px):
+            # B target은 **이번 주문의 실제 발주가**보다 커야 한다 — entry보다
+            #   크더라도 order_px(현재가/눌림가) 이하면 체결 직후 decide_b가
+            #   즉시 전량 목표매도를 발동한다(Codex V6 P1-1). 임의 최소 간격이
+            #   아니라 '매수 직후 청산 금지'의 최소 의미 계약.
+            results.append({"code": code, "gate": "input",
+                            "why": f"B 목표가 {vc.target} ≤ 발주가 {order_px}"
+                                   " — 즉시 청산 위험"}); continue
         per_share = order_px - stop
         if per_share <= 0:                         # 검증기 계약상 불가능 — 최종 벨트
             results.append({"code": code, "gate": "input", "why": "손절폭 무효"}); continue
