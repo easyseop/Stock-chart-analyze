@@ -417,8 +417,9 @@ def test_mock_domestic_unfilled_query_contract():
             "CANO": "masked", "ACNT_PRDT_CD": "01"}), \
          mock.patch.object(kis, "enabled", return_value=True), \
          mock.patch.object(kis, "tr_id", return_value="VTTC8001R"), \
+         mock.patch.object(kis.time, "strftime", return_value="20260806"), \
          mock.patch.object(kis, "_get", return_value=response) as get:
-        assert kis.domestic_unfilled_orders("20260806", "20260806") is response
+        assert kis.domestic_unfilled_orders() is response
     path, tr, params = get.call_args.args
     assert path.endswith("/inquire-daily-ccld")
     assert tr == "VTTC8001R"
@@ -541,6 +542,24 @@ def test_broker_read_only_snapshot_matches_three_ledgers():
                                return_value=empty_orders):
             snapshot = R.collect_runtime(fetch_broker=True, evidence={})
         assert snapshot["broker_open_orders"] is None
+
+        # live에서는 mock 전용 대체 증명을 절대 호출하지 않는다. 기존 국내 조회를
+        # 증명하지 못하면 그대로 None을 유지해 L1을 막는다.
+        with mock.patch.object(modules["kis"], "IS_MOCK", False), \
+             mock.patch.object(
+                 modules["kis"], "holdings",
+                 side_effect=[{}, {"AAPL": 2}, {"AAPL": 2}, {"AAPL": 2}]), \
+             mock.patch.object(modules["kis"], "domestic_open_orders",
+                               return_value=None) as domestic, \
+             mock.patch.object(modules["kis"], "domestic_unfilled_orders",
+                               return_value={"rt_cd": "0", "output1": []
+                                             }) as domestic_fallback, \
+             mock.patch.object(modules["kis"], "open_orders",
+                               return_value=empty_orders) as overseas:
+            snapshot = R.collect_runtime(fetch_broker=True, evidence={})
+        assert snapshot["broker_open_orders"] is None
+        assert domestic.call_count == 1 and domestic_fallback.call_count == 0
+        assert overseas.call_count == 3
     print("[PASS] unrestricted는 양 시장 미체결 증명, fallback 결손은 fail-closed")
 
 

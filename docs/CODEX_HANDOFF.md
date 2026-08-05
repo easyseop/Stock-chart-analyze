@@ -1642,3 +1642,22 @@ baseline(`{"symbols":[],"ts":...}`)을 **복제본에만** 만들고 `_resolve_a
 
 fallback 1, stall live, KIS live, 동결 해제는 승인되지 않았다. 장중에는 위 mutation과
 기본 브랜치 병합·Oracle 배포를 하지 않는다.
+
+### 31. 2026-08-06 Claude V10 승인·비차단 권고까지 보완
+
+Claude가 `codex/kis-direct-v9-default@2af790b5`를 격리 재검토해 P0 0,
+P1 0, P2 1, P3 3으로 병합 승인했다. 반증 질문 10개와 mutation 10종에서
+mock 국내 미체결 대체 증명, live 비사용 코드, V9 직접진입 안전 게이트, TWR·웹
+통합이 모두 유지됨을 확인했다.
+
+병합 전에 비차단 권고도 전부 보완했다.
+
+- `IS_MOCK=False` + 기존 국내 조회 실패에서 fallback 호출 0회,
+  `broker_open_orders=None` 유지 테스트 추가(P2 폐쇄)
+- `domestic_unfilled_orders()` 인자 없는 호출의 start=end=오늘 계약 테스트 추가
+- V10 검토 문서 끝의 여분 빈 줄 제거, `git diff --check` 재통과
+
+수정 뒤 번들 Python 전체 50/50, readiness 집중 테스트, Node 웹 계산 15/15,
+compileall, node syntax, diff check를 다시 통과했다. 이 보완은 테스트·문서뿐이며
+Oracle 운영 상태와 주문 경로를 변경하지 않는다. PR #107은 장외 운영 절차를
+시작할 때까지 Draft로 유지한다.
