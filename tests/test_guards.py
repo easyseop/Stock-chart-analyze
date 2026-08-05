@@ -24,6 +24,10 @@ def test_violation_escalation() -> list[str]:
     import bot.notify as notify
     notify.send = lambda text, **kw: sent.append(text) or True   # 캡처
 
+    # 시뮬 알림은 기본 꺼짐(2026-08-05) — 경보 메커니즘 자체는 켰을 때 여전히
+    #   동작해야 하므로 테스트에서 명시적으로 켠다.
+    orig_notify_enabled = ap.NOTIFY_ENABLED
+    ap.NOTIFY_ENABLED = True
     st = {"pos": {}, "pending": {}, "log": []}
     v1 = [{"code": "AAA", "name": "위반주", "pct": 50.0}]
     ap._report_violations(st, v1, [])
@@ -35,7 +39,14 @@ def test_violation_escalation() -> list[str]:
     ap._report_violations(st, v1, ["하루 신규 진입 5건 > 상한 3"])   # 위반 추가 → 재경보
     if len(sent) != 2:
         return [f"위반 변경 시 재경보 실패: {len(sent)}회"]
-    print(f"  [PASS] 위반 경보: 1회 발송·중복 억제·변경 시 재발송 ({len(sent)}회)")
+    # 기본(꺼짐) 상태에서는 발송 0 — KIS 직접매매 전환 뒤 시뮬 소음 차단.
+    ap.NOTIFY_ENABLED = False
+    st2 = {"pos": {}, "pending": {}, "log": []}
+    ap._report_violations(st2, v1, [])
+    if len(sent) != 2:
+        return [f"알림 꺼짐인데 발송됨: {len(sent)}회"]
+    ap.NOTIFY_ENABLED = orig_notify_enabled
+    print(f"  [PASS] 위반 경보: 켜면 1회·중복 억제·변경 재발송, 꺼짐(기본)은 침묵")
     return []
 
 

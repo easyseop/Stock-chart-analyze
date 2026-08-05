@@ -50,6 +50,11 @@ LOCK_MIN = 20              # 매매 분산 락 유효(분) — fast/bulk 두 차
 STALE_ENTRY_MIN = 30       # 시세 캐시 나이(분) 초과 종목은 신규 진입·지정가 체결 금지 —
                            #   "낡은 가격으로 주문 내지 않는다"(F5·2차 SRE 검토 A3).
 STALE_HELD_MIN = 30        # 보유 종목 시세가 장중 이만큼 낡으면 텔레그램 경보(하루 1회).
+# 가상 시뮬 알림 스위치 — 기본 꺼짐(2026-08-05 사용자 결정: KIS 직접매매 전환으로
+#   시뮬 알림은 더 받지 않는다. 실계좌 알림과의 혼동 소음 제거). 공개 웹 발행·
+#   피드 생성·가상 매매 자체는 계속 — §13 후속 cleanup에서 존치 여부 별도 결정.
+#   다시 켜려면 AUTOPAPER_NOTIFY=1.
+NOTIFY_ENABLED = os.environ.get("AUTOPAPER_NOTIFY", "0") == "1"
 STALL_MODE = config.STALL_EXIT_MODE
 STALL_TIGHTEN_DAYS = config.STALL_TIGHTEN_DAYS
 STALL_EXIT_DAYS = config.STALL_EXIT_DAYS
@@ -143,6 +148,9 @@ def _advance_stall_position(
 
 
 def _stall_notice(text: str) -> None:
+    if not NOTIFY_ENABLED:
+        print("[모의 시뮬 알림 억제] " + text.replace("\n", " ")[:120], flush=True)
+        return
     try:
         from bot import notify
         # 가상 시뮬 알림임을 명시 — KIS 실계좌 알림과 혼동 방지(2026-08-05,
@@ -229,6 +237,8 @@ def _kill_notice(st: dict) -> None:
     if st.get("_kill_day") == _today():
         return
     st["_kill_day"] = _today()
+    if not NOTIFY_ENABLED:
+        return
     try:
         from bot import notify
         notify.send("⛔ <b>[모의 시뮬] 긴급 정지(KILL_NEW_ENTRIES) 작동</b> — "
@@ -646,6 +656,9 @@ def _report_violations(st: dict, cap_viol: list, rule_viol: list) -> None:
     text = ("🚨 <b>[모의 시뮬] 자동매매 규칙 위반 감지</b> (즉시 점검)\n"
             + "\n".join("· " + x for x in items)
             + "\n→ 사이징·쿨다운·상한 로직 확인 필요.")
+    if not NOTIFY_ENABLED:
+        print("[모의 시뮬 알림 억제] " + text.replace("\n", " ")[:160], flush=True)
+        return
     try:
         from bot import notify
         notify.send(text, critical=True)   # 규칙 위반=P0(ntfy 이중화)
@@ -705,6 +718,8 @@ def _report(st: dict, equity: float) -> None:
             + "\n\n".join(blocks)
             + f"\n\n───────\n💰 평가 <b>{equity:,.0f}원</b> "
               f"({sg}{ret:.2f}%) · 현금 {st['cash']:,.0f}원 · 보유 {len(st['pos'])}종목")
+    if not NOTIFY_ENABLED:
+        return                             # 시뮬 체결 알림 억제(웹 화면에는 계속 표시)
     try:
         from bot import notify
         notify.send(text)
@@ -846,7 +861,8 @@ def update(results: list[dict], picks: dict, out_dir: str = "public") -> dict:
     stale_held = [c for c, p in st["pos"].items()
                   if _market_open(p["ccy"])
                   and (_price_age_min(c) or 0) > STALE_HELD_MIN]
-    if trade_ok and stale_held and st.get("_stale_day") != _today():
+    if trade_ok and stale_held and st.get("_stale_day") != _today() \
+            and NOTIFY_ENABLED:
         st["_stale_day"] = _today()
         try:
             from bot import notify
