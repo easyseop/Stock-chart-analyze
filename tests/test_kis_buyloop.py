@@ -10,6 +10,7 @@ mirror의 동시 보유 수는 제한하지 않고 open_cost 기반 예산 게�
 from __future__ import annotations
 
 import datetime
+import math
 import os
 import json
 import sys
@@ -23,9 +24,17 @@ from bot import kis_buyloop as BL, kis_buy  # noqa: E402
 
 def _sig(code="005930", ccy="KRW", entry=100.0, stop=95.0,
          group="now", fresh=True, **kw):
-    return {"group": group, "id": f"s-{code}", "code": code, "name": "t",
-            "ccy": ccy, "entry": entry, "stop": stop, "fresh": fresh,
-            "stage": 3, "norm": 50, **kw}
+    sig = {"group": group, "id": f"s-{code}", "code": code, "name": "t",
+           "ccy": ccy, "entry": entry, "stop": stop, "fresh": fresh,
+           "stage": 3, "norm": 50, **kw}
+    # B(shelf)는 target이 필수 계약(finite > entry) — 명시하지 않은 테스트
+    # 픽스처에 기본 유효 목표가를 채운다(entry가 숫자가 아닌 반례는 그대로).
+    if group == "shelf" and "target" not in kw:
+        try:
+            sig["target"] = float(entry) * 1.1
+        except (TypeError, ValueError):
+            pass
+    return sig
 
 
 def _rows_of(holdings, market, excg):
@@ -302,15 +311,26 @@ def test_nan_quote_is_gated_without_crash():
     print("[PASS] NaN·inf 현재가 → 예외 0·실행기 호출 0(quote 게이트)")
 
 
-def test_nan_target_is_not_persisted():
-    """Codex P2 재현: NaN target은 truthy — 원장·포지션 메타로 전파되면 목표가
-    비교(NaN 비교=False)가 청산을 조용히 끈다. None으로 정규화돼야 한다."""
-    res, ex, _, _ = _run([_sig(target=float("nan"))], holdings={})
-    assert ex.called
-    assert ex.call_args.kwargs["order_meta"]["target"] is None
+def test_corrupt_target_is_rejected_not_persisted():
+    """Codex V2 P2 + V5 P1-2: 오염 목표가는 저장은커녕 **주문 자체를 차단**한다
+    (NaN이 메타로 전파되면 목표청산 비교가 조용히 꺼지고, entry 이하 값은 매수
+    직후 전량 목표매도를 발동). 명시 오염값은 gate=input."""
+    for bad in (float("nan"), float("inf"), -1.0, "x", True):
+        res, ex, _, _ = _run([_sig(target=bad)], holdings={})
+        assert not ex.called, bad
+        assert _g(res, "005930")["gate"] == "input", (bad, res)
+    # legacy 호환: target 부재·0(목표 없음)은 A에서 None으로 진행.
+    for absent in ("omit", 0):
+        sig = _sig()
+        if absent == "omit":
+            sig.pop("target", None)
+        else:
+            sig["target"] = 0
+        res, ex, _, _ = _run([sig], holdings={})
+        assert ex.called and ex.call_args.kwargs["order_meta"]["target"] is None
     res2, ex2, _, _ = _run([_sig(target=110.0)], holdings={})
     assert ex2.call_args.kwargs["order_meta"]["target"] == 110.0  # 유효값 보존
-    print("[PASS] NaN 목표가는 메타에 남지 않음(None 정규화) · 유효값은 보존")
+    print("[PASS] 오염 목표가는 주문 차단 · 부재/0은 legacy None · 유효값 보존")
 
 
 def test_invalid_fx_fails_closed_for_all_candidates():
@@ -425,6 +445,175 @@ def test_stop_at_or_above_entry_blocked_regardless_of_price():
                          holdings={}, last=100.4)
     assert ex.called and _g(res, "AAPL")["gate"] == "sent"
     print("[PASS] stop>=entry는 현재가와 무관하게 input 차단 · 유효 stop 통과")
+
+
+def test_no_entry_when_price_at_or_below_stop():
+    """Codex V5 P1-1 재현: 손절선을 이미 깬 현재가에서 pullback 지정가(pb>cur)
+    가 시장성 주문이 되어 붕괴 종목을 즉시 매수했다. 전술 무관 실시간 무효선:
+    cur <= stop이면 신규 주문 0."""
+    pb_tac = {"mode": "pullback", "pb_price": 97.0}
+    for cur, expect_sent in ((95.01, True), (95.0, False), (94.9, False)):
+        for group, sleeve, extra in (("now", "A", {}),
+                                     ("shelf", "B", {"shelf": {"rr": 2.0}})):
+            sig = _sig(code="AAPL", ccy="USD", entry=100.0, stop=95.0,
+                       group=group, tactic=dict(pb_tac), **extra)
+            res, ex, _, _ = _run(
+                [sig], holdings={}, last=cur,
+                run_kwargs={"sleeve": sleeve, "group": group})
+            if expect_sent:                      # stop 위 — pb 상한 지정가 유지
+                assert ex.called, (cur, group)
+                assert ex.call_args.kwargs["price_usd"] == 97.0
+            else:
+                assert not ex.called, (cur, group)
+                assert _g(res, "AAPL")["gate"] == "tactic", (cur, group, res)
+    # full도 동일 — stop이 entry에 붙어 있으면 tolerance 안에서도 이탈 가능.
+    res, ex, _, _ = _run([_sig(code="AAPL", ccy="USD",
+                               entry=100.0, stop=99.5)],
+                         holdings={}, last=99.4)
+    assert not ex.called and _g(res, "AAPL")["gate"] == "tactic"
+    print("[PASS] cur<=stop이면 전술 무관 신규 주문 0 · stop 위 눌림은 유지")
+
+
+def test_b_requires_valid_target_above_entry():
+    """Codex V5 P1-2 재현: B target<=entry가 저장되면 매수 직후 전량 목표매도
+    발동, 오염 target을 None으로 눙치면 VAH 목표청산 자체가 사라졌다.
+    B는 finite target > entry 필수."""
+    for bad in (None, 0, -1, float("nan"), float("inf"),
+                99.0, 100.0, "x", True):
+        sig = _sig(code="AAPL", ccy="USD", entry=100.0, stop=95.0,
+                   group="shelf", shelf={"rr": 2.0}, target=bad)
+        res, ex, _, _ = _run([sig], holdings={}, last=100.4,
+                             run_kwargs={"sleeve": "B", "group": "shelf"})
+        assert not ex.called, bad
+        assert _g(res, "AAPL")["gate"] == "input", (bad, res)
+    # target 필드 자체가 없어도 B는 필수 위반.
+    sig = _sig(code="AAPL", ccy="USD", entry=100.0, stop=95.0,
+               group="shelf", shelf={"rr": 2.0}, target=None)
+    ok = _sig(code="MSFT", ccy="USD", entry=100.0, stop=95.0,
+              group="shelf", shelf={"rr": 2.0}, target=101.0)
+    res, ex, _, _ = _run([sig, ok], holdings={}, last=100.4,
+                         run_kwargs={"sleeve": "B", "group": "shelf"})
+    assert ex.call_count == 1 and ex.call_args.args[1] == "MSFT"
+    assert ex.call_args.kwargs["order_meta"]["target"] == 101.0
+    # 경계: target=100.0001은 stop<entry<target 계약을 **엄밀히** 만족 — 통과.
+    #   (차단하려면 임의 최소 간격 한도가 필요 — 지시서 금지 '임의 한도 변경'.)
+    edge = _sig(code="NVDA", ccy="USD", entry=100.0, stop=95.0,
+                group="shelf", shelf={"rr": 2.0}, target=100.0001)
+    res, ex, _, _ = _run([edge], holdings={}, last=100.4,
+                         run_kwargs={"sleeve": "B", "group": "shelf"})
+    assert ex.called and ex.call_args.kwargs["order_meta"]["target"] == 100.0001
+    print("[PASS] B는 finite target>entry 필수 — 오염값 주문 0·유효값만 전달")
+
+
+def test_boolean_numbers_rejected_everywhere():
+    """Codex V5 P1-3 재현: bool은 int 하위 타입이라 float(True)==1.0 —
+    JSON true가 가격·손절·눌림가·목표·환율 1.0으로 주문됐다."""
+    cases = (
+        {"entry": True, "stop": 0.5},
+        {"entry": 2.0, "stop": True},
+        {"entry": 2.0, "stop": 0.5, "tactic": {"mode": "pullback",
+                                               "pb_price": True}},
+        {"entry": 2.0, "stop": 0.5, "target": True},
+    )
+    for kw in cases:
+        sig = _sig(code="AAPL", ccy="USD", **kw)
+        res, ex, _, _ = _run([sig], holdings={}, last=1.0)
+        assert not ex.called, kw
+        assert _g(res, "AAPL")["gate"] in ("input", "tactic"), (kw, res)
+    res, ex, _, _ = _run([_sig(code="AAPL", ccy="USD")], holdings={},
+                         run_kwargs={"fx": True})
+    assert not ex.called and res[0]["gate"] == "input"       # fx=True → 1.0 금지
+    print("[PASS] boolean 가격·손절·눌림·목표·환율 전부 주문 0(공용 파서 거부)")
+
+
+def test_ccy_market_mismatch_blocked():
+    """Codex V5 P2-1 재현: AAPL/KRW가 KR 주문 경로로, 005930/USD가 US 경로로
+    전달됐다 — 거절 주문·원장 소음·일일 카운트 소모. 통화 정규화 + 허용집합 +
+    심볼 시장 일치를 주문 전에 강제한다."""
+    for code, ccy in (("AAPL", "KRW"), ("005930", "USD"),
+                      ("AAPL", "krw"), ("AAPL", "EUR"), ("AAPL", None)):
+        sig = _sig(code=code, ccy=ccy, entry=100.0, stop=95.0)
+        res, ex, _, _ = _run([sig], holdings={})
+        assert not ex.called, (code, ccy)
+        assert _g(res, code)["gate"] == "input", (code, ccy, res)
+    # 정상 조합·소문자 정규화는 통과.
+    for code, ccy in (("AAPL", "USD"), ("005930", "KRW"), ("005930", "krw")):
+        res, ex, _, _ = _run([_sig(code=code, ccy=ccy)], holdings={})
+        assert ex.called, (code, ccy)
+        assert ex.call_args.kwargs["market"] == ("KR" if code == "005930"
+                                                 else "US")
+    print("[PASS] 통화/시장 불일치·미지원 통화 주문 0 · 정규화 정상 통과")
+
+
+def test_execute_entry_rejects_boolean_inputs_directly():
+    """실행기 이중방어(Codex V5 P1-3): buyloop 검증과 독립으로 bool 직접 주입
+    차단."""
+    with mock.patch.dict(os.environ, {"ALLOW_BUY": "1"}):
+        d = kis_buy.execute_entry("p#b", "AAPL", price_usd=True,
+                                  per_share_risk_usd=5.0, krw_per_usd=1400.0)
+        assert d.gate == "input" and "boolean" in d.why, d
+        d = kis_buy.execute_entry("p#b", "AAPL", price_usd=100.0,
+                                  per_share_risk_usd=True, krw_per_usd=1400.0)
+        assert d.gate == "input", d
+        d = kis_buy.execute_entry("p#b", "AAPL", price_usd=100.0,
+                                  per_share_risk_usd=5.0, krw_per_usd=True)
+        assert d.gate == "input", d
+        d = kis_buy.execute_entry("p#b", "AAPL", price_usd=100.0,
+                                  per_share_risk_usd=5.0, krw_per_usd=1400.0,
+                                  order_meta={"stop": True})
+        assert d.gate == "input", d
+    print("[PASS] 실행기 직접 bool 주입도 input 차단(이중방어)")
+
+
+def test_property_sweep_only_validated_values_reach_executor():
+    """속성 스윕(Codex V5 구조 개선 §5·§7): 타입·경계 조합을 생성해 두 속성을
+    전 조합에서 단언한다 — ① 실행기에 도달한 인자는 전부 검증된 값이다
+    (bool 아님·finite·양수, stop<주문가, target은 None 또는 >stop),
+    ② 실행기 미도달 조합은 보호 포지션·원장에 아무 부작용이 없다."""
+    nan, inf = float("nan"), float("inf")
+    entries = (100.0, "100", 0, -1, True, nan, None)
+    stops = (95.0, 0, 100.0, 120.0, True, nan)
+    tactics = (None, "full", {"mode": "pullback", "pb_price": 97.0},
+               {"mode": []}, [], "banana", {"mode": "half", "pb_price": True})
+    targets = (None, 110.0, 99.0, True, 0)
+    combos = [(e, st, ta, tg)
+              for e in entries for st in stops for ta in tactics
+              for tg in targets]
+    sent = blocked = 0
+    for i, (e, st, ta, tg) in enumerate(combos):
+        if i % 3:                                  # 결정론적 표본(런타임 상한)
+            continue
+        sig = _sig(code="AAPL", ccy="USD", entry=e, stop=st)
+        if ta is not None:
+            sig["tactic"] = ta
+        if tg is not None:
+            sig["target"] = tg
+        res, ex, recorded, ledger_events = _run([sig], holdings={}, last=100.4)
+        if ex.called:
+            sent += 1
+            kw = ex.call_args.kwargs
+            for field in ("price_usd", "per_share_risk_usd", "krw_per_usd"):
+                v = kw[field]
+                assert not isinstance(v, bool) and math.isfinite(v) and v > 0, \
+                    (field, v, e, st, ta, tg)
+            meta = kw["order_meta"]
+            assert not isinstance(meta["stop"], bool)
+            assert math.isfinite(meta["stop"]) and meta["stop"] > 0
+            assert kw["price_usd"] > meta["stop"], (e, st, ta, tg)
+            assert meta["target"] is None or (
+                not isinstance(meta["target"], bool)
+                and math.isfinite(meta["target"])
+                and meta["target"] > meta["stop"]), (e, st, ta, tg)
+        else:
+            blocked += 1
+        # 미주문 조합은 부작용 0 — gate 표시만 차단이고 다른 경로로 주문되는
+        #   거짓 통과를 막는다(실행기 mock이라 원장 submit은 항상 0이어야).
+        assert recorded == {}, (e, st, ta, tg)
+        if not ex.called:
+            assert ledger_events == [], (e, st, ta, tg)
+    assert sent > 0 and blocked > sent             # 스윕이 실제로 양쪽을 커버
+    print(f"[PASS] 속성 스윕 {sent + blocked}조합 — 검증된 값만 실행기 도달"
+          f"(sent {sent} · blocked {blocked})")
 
 
 def test_intra_cycle_accumulation():
@@ -564,7 +753,13 @@ def main():
     test_a_has_no_fixed_position_count_cap()
     test_b_stale_row_in_fresh_document_is_rejected()
     test_nan_quote_is_gated_without_crash()
-    test_nan_target_is_not_persisted()
+    test_corrupt_target_is_rejected_not_persisted()
+    test_no_entry_when_price_at_or_below_stop()
+    test_b_requires_valid_target_above_entry()
+    test_boolean_numbers_rejected_everywhere()
+    test_ccy_market_mismatch_blocked()
+    test_execute_entry_rejects_boolean_inputs_directly()
+    test_property_sweep_only_validated_values_reach_executor()
     test_invalid_fx_fails_closed_for_all_candidates()
     test_unknown_tactic_never_bypasses_tolerance()
     test_falsy_tactic_values_do_not_default_to_full()

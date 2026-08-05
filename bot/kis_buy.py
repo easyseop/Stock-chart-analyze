@@ -77,8 +77,13 @@ def execute_entry(pos_key: str, symbol: str, *, price_usd: float,
     # 0) 환경 분리(I4)
     if os.environ.get("ALLOW_BUY") != "1":
         return BuyDecision(False, "env", "ALLOW_BUY != 1 (매수 경로 봉인)")
-    # NaN은 `<= 0` 비교가 전부 False라 이 게이트를 미끄러진다 — isfinite로
-    #   명시 차단(Codex P2 이중방어: 호출부 buyloop 검사와 독립).
+    # NaN은 `<= 0` 비교가 전부 False라 이 게이트를 미끄러지고, bool은 float
+    #   1.0/0.0으로 둔갑한다(`float(True)==1.0`, isfinite(True)==True — 특히
+    #   환율 1.0은 사이징 단위를 통째로 왜곡, Codex V5 P1-3). 호출부 검사와
+    #   독립인 이중방어로 명시 차단한다.
+    if any(isinstance(v, bool) for v in (price_usd, per_share_risk_usd, fx)) \
+            or isinstance(limit_price, bool):
+        return BuyDecision(False, "input", "price/risk/fx 무효(boolean)")
     if not (math.isfinite(price_usd) and math.isfinite(per_share_risk_usd)
             and math.isfinite(fx)):
         return BuyDecision(False, "input", "price/risk/fx 무효(NaN·inf)")
@@ -88,6 +93,8 @@ def execute_entry(pos_key: str, symbol: str, *, price_usd: float,
     #   무효 stop이 원장 메타로 남으면 체결 후 회계·보호원장이 stop<=0을 거부해
     #   실보유만 있고 보호 없는 상태가 된다 — 주문 전에 끊는다.
     if order_meta is not None and "stop" in order_meta:
+        if isinstance(order_meta["stop"], bool):
+            return BuyDecision(False, "input", "order_meta.stop 무효(boolean)")
         try:
             meta_stop = float(order_meta["stop"])
         except (TypeError, ValueError):
