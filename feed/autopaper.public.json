@@ -1,10 +1,10 @@
 {
- "generated_at": "2026-08-05T12:32:39.893934+09:00",
+ "generated_at": "2026-08-05T13:15:19.033511+09:00",
  "updated": "2026-08-05",
  "start": 100000000,
  "cash": 30001430,
- "equity": 101062124,
- "ret_pct": 1.06,
+ "equity": 101047124,
+ "ret_pct": 1.05,
  "positions": [
   {
    "code": "MRSH",
@@ -19,7 +19,7 @@
    "opened": "2026-07-06",
    "pl_krw": 880138,
    "pl_pct": 9.83,
-   "price_age_min": 26.2
+   "price_age_min": 7.8
   },
   {
    "code": "HMC",
@@ -34,7 +34,7 @@
    "opened": "2026-07-09",
    "pl_krw": 7003,
    "pl_pct": 8.87,
-   "price_age_min": 28.7
+   "price_age_min": 10.2
   },
   {
    "code": "SARO",
@@ -49,7 +49,7 @@
    "opened": "2026-07-10",
    "pl_krw": 321147,
    "pl_pct": 9.96,
-   "price_age_min": 27.1
+   "price_age_min": 8.6
   },
   {
    "code": "J",
@@ -64,7 +64,7 @@
    "opened": "2026-07-11",
    "pl_krw": 734539,
    "pl_pct": 12.71,
-   "price_age_min": 26.2
+   "price_age_min": 7.8
   },
   {
    "code": "MAIN",
@@ -79,7 +79,7 @@
    "opened": "2026-07-22",
    "pl_krw": 177431,
    "pl_pct": 5.91,
-   "price_age_min": 27.0
+   "price_age_min": 8.6
   },
   {
    "code": "004370",
@@ -87,14 +87,14 @@
    "ccy": "KRW",
    "q": 10,
    "avg": 368500.0,
-   "price": 378500.0,
+   "price": 377000.0,
    "stop": 368500.0,
    "target": 420011.1858,
    "half_done": true,
    "opened": "2026-07-27",
-   "pl_krw": 100000,
-   "pl_pct": 2.71,
-   "price_age_min": 6.2
+   "pl_krw": 85000,
+   "pl_pct": 2.31,
+   "price_age_min": 7.8
   },
   {
    "code": "CRC",
@@ -109,7 +109,7 @@
    "opened": "2026-07-28",
    "pl_krw": 190138,
    "pl_pct": 2.58,
-   "price_age_min": 26.2
+   "price_age_min": 7.8
   },
   {
    "code": "EQT",
@@ -124,7 +124,7 @@
    "opened": "2026-07-29",
    "pl_krw": 481464,
    "pl_pct": 2.72,
-   "price_age_min": 26.2
+   "price_age_min": 7.8
   },
   {
    "code": "MDT",
@@ -139,7 +139,7 @@
    "opened": "2026-07-30",
    "pl_krw": 10610,
    "pl_pct": 0.09,
-   "price_age_min": 26.2
+   "price_age_min": 7.8
   },
   {
    "code": "AVY",
@@ -154,7 +154,7 @@
    "opened": "2026-08-03",
    "pl_krw": 142561,
    "pl_pct": 2.1,
-   "price_age_min": 28.4
+   "price_age_min": 9.9
   }
  ],
  "pending": [
@@ -760,7 +760,7 @@
   },
   {
    "d": "2026-08-05",
-   "v": 101062124
+   "v": 101047124
   }
  ],
  "log": [
