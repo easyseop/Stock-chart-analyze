@@ -1,19 +1,19 @@
 {
  "version": 1,
- "generated_at": "2026-08-05T17:32:21+09:00",
+ "generated_at": "2026-08-05T18:21:32+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "shelf_debug": {
   "ok": 25,
-  "watch": 102,
+  "watch": 103,
   "reasons": {
-   "밸류영역 밖(지지대 아님)": 1018,
+   "밸류영역 밖(지지대 아님)": 1020,
    "매물대 정보 없음": 137,
    "저점권 아님(범위 97%)": 75,
    "저점권 아님(범위 98%)": 74,
    "저점권 아님(범위 99%)": 73,
    "저점권 아님(범위 93%)": 65,
    "저점권 아님(범위 95%)": 64,
-   "저점권 아님(범위 89%)": 63
+   "저점권 아님(범위 89%)": 62
   }
  },
  "signals": [
@@ -2848,6 +2848,27 @@
    "tactic": null
   },
   {
+   "id": "010140-2026-08-05-watch",
+   "code": "010140",
+   "name": "삼성중공업",
+   "ccy": "KRW",
+   "group": "watch",
+   "entry_kind": "pullback",
+   "stage": 2,
+   "price": 22200.0,
+   "entry": 20690.0,
+   "stop": 17660.5655,
+   "target": 26748.869,
+   "shares_1pct": 33,
+   "range_pos": 0.2421,
+   "norm": -54.7,
+   "bear_share": 0.5,
+   "fresh": true,
+   "break_gap": 0.007,
+   "earnings_d": null,
+   "tactic": null
+  },
+  {
    "id": "OWL-2026-08-05-watch",
    "code": "OWL",
    "name": "Blue Owl Capital Inc.",
@@ -3653,46 +3674,25 @@
    "group": "watch",
    "entry_kind": "now",
    "stage": 1,
-   "price": 229500.0,
-   "entry": 229500.0,
-   "stop": 200922.3046,
-   "target": 286655.3908,
+   "price": 229000.0,
+   "entry": 229000.0,
+   "stop": 200279.4475,
+   "target": 286441.1051,
    "shares_1pct": 3,
-   "range_pos": 0.194,
+   "range_pos": 0.1908,
    "norm": -37.7,
    "bear_share": 0.5,
    "fresh": true,
-   "break_gap": 0.002,
+   "break_gap": -0.0002,
    "earnings_d": null,
    "tactic": {
     "stop_pct": 12.5,
     "pb_price": 227777.5,
-    "pb_stop_pct": 11.8,
+    "pb_stop_pct": 12.1,
     "mode": "pullback",
     "label": "⏳ 눌림 지정가만",
-    "desc": "지금 추격 금지(손절폭 12.5%) — <b>227,778원 눌림 지정가만</b>. 눌리면 손절폭 11.8%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
+    "desc": "지금 추격 금지(손절폭 12.5%) — <b>227,778원 눌림 지정가만</b>. 눌리면 손절폭 12.1%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
    }
-  },
-  {
-   "id": "010140-2026-08-05-watch",
-   "code": "010140",
-   "name": "삼성중공업",
-   "ccy": "KRW",
-   "group": "watch",
-   "entry_kind": "pullback",
-   "stage": 1,
-   "price": 22150.0,
-   "entry": 20690.0,
-   "stop": 17660.5655,
-   "target": 26748.869,
-   "shares_1pct": 33,
-   "range_pos": 0.2392,
-   "norm": -50.0,
-   "bear_share": 0.5,
-   "fresh": true,
-   "break_gap": 0.0047,
-   "earnings_d": null,
-   "tactic": null
   },
   {
    "id": "FRPT-2026-08-05-watch",
