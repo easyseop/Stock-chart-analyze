@@ -284,6 +284,20 @@ def test_a_has_no_fixed_position_count_cap():
     print("[PASS] A 고정 종목 수 상한 없음 — 예산 게이트에 위임")
 
 
+def test_non_boolean_fresh_is_rejected_for_a_too():
+    """freshness 계약은 `fresh is True`(엄격) — truthy 문자열("yes"·"1")이
+    통과하면 손상 문서의 비-bool 값이 신선 판정을 위조한다. A/B 동일."""
+    for fake in ("yes", "1", 1, ["x"]):
+        for group, sleeve, extra in (("now", "A", {}),
+                                     ("shelf", "B", {"shelf": {"rr": 2.0}})):
+            sig = _sig(code="AAPL", ccy="USD", group=group,
+                       fresh=fake, **extra)
+            res, ex, _, _ = _run([sig], holdings={},
+                                 run_kwargs={"sleeve": sleeve, "group": group})
+            assert not ex.called, (fake, group)
+    print("[PASS] truthy 비-bool fresh는 A/B 모두 후보 제외(is True 엄격)")
+
+
 def test_b_stale_row_in_fresh_document_is_rejected():
     """Codex P1-2 재현: 문서 자체는 신선해도 shelf 행이 fresh=False(또는 필드
     없음)이면 실행기로 넘어가면 안 된다 — '신선한 신호만 집행' 전제."""
@@ -751,6 +765,7 @@ def main():
     test_malformed_signal_is_fail_closed()
     test_no_order_on_nan_zero_negative_or_inverted_stop()
     test_a_has_no_fixed_position_count_cap()
+    test_non_boolean_fresh_is_rejected_for_a_too()
     test_b_stale_row_in_fresh_document_is_rejected()
     test_nan_quote_is_gated_without_crash()
     test_corrupt_target_is_rejected_not_persisted()
