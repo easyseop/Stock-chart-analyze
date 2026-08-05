@@ -145,7 +145,9 @@ def _advance_stall_position(
 def _stall_notice(text: str) -> None:
     try:
         from bot import notify
-        notify.send(text, category="trade")
+        # 가상 시뮬 알림임을 명시 — KIS 실계좌 알림과 혼동 방지(2026-08-05,
+        #   농심·체이스 혼동 재발 방지: 사용자가 실매수로 오인).
+        notify.send("[모의 시뮬] " + text, category="trade")
     except Exception:
         pass
 
@@ -229,8 +231,9 @@ def _kill_notice(st: dict) -> None:
     st["_kill_day"] = _today()
     try:
         from bot import notify
-        notify.send("⛔ <b>긴급 정지(KILL_NEW_ENTRIES) 작동</b> — 신규 진입·신규 "
-                    "지정가 중단. 보유 관리·손절·백업은 계속. "
+        notify.send("⛔ <b>[모의 시뮬] 긴급 정지(KILL_NEW_ENTRIES) 작동</b> — "
+                    "가상 시뮬의 신규 진입·신규 지정가 중단(KIS 실계좌 아님). "
+                    "보유 관리·손절·백업은 계속. "
                     "해제: 저장소 Variable KILL_NEW_ENTRIES 끄기.", critical=True)
     except Exception:
         pass
@@ -640,7 +643,7 @@ def _report_violations(st: dict, cap_viol: list, rule_viol: list) -> None:
     if st.get("_viol_sig") == sig:
         return                             # 같은 위반 이미 알림함(당일)
     st["_viol_sig"] = sig
-    text = ("🚨 <b>자동매매 규칙 위반 감지</b> (즉시 점검)\n"
+    text = ("🚨 <b>[모의 시뮬] 자동매매 규칙 위반 감지</b> (즉시 점검)\n"
             + "\n".join("· " + x for x in items)
             + "\n→ 사이징·쿨다운·상한 로직 확인 필요.")
     try:
@@ -697,7 +700,8 @@ def _report(st: dict, equity: float) -> None:
         blocks.append(f'…외 {len(ev) - 10}건')
     ret = (equity / st["start"] - 1) * 100
     sg = "+" if ret >= 0 else ""
-    text = ("🤖 <b>자동매매 체결 상세</b> (시드 1억 · 가상)\n\n"
+    text = ("🤖 <b>[모의 시뮬] 자동매매 체결 상세</b> (시드 1억 · 가상 — "
+            "KIS 실계좌 아님)\n\n"
             + "\n\n".join(blocks)
             + f"\n\n───────\n💰 평가 <b>{equity:,.0f}원</b> "
               f"({sg}{ret:.2f}%) · 현금 {st['cash']:,.0f}원 · 보유 {len(st['pos'])}종목")
@@ -846,10 +850,11 @@ def update(results: list[dict], picks: dict, out_dir: str = "public") -> dict:
         st["_stale_day"] = _today()
         try:
             from bot import notify
-            notify.send("⚠️ <b>보유 종목 시세 정체</b> — "
+            notify.send("⚠️ <b>[모의 시뮬] 보유 종목 시세 정체</b> — "
                         + ", ".join(stale_held)
-                        + f" ({STALE_HELD_MIN}분+ 미갱신). 손절 관리는 마지막 "
-                          "가격으로 계속. 데이터소스 확인 필요.", critical=True)
+                        + f" ({STALE_HELD_MIN}분+ 미갱신). 가상 포트폴리오 감시 "
+                          "알림(KIS 실계좌 아님). 손절 관리는 마지막 가격으로 "
+                          "계속. 데이터소스 확인 필요.", critical=True)
         except Exception:
             pass
 
