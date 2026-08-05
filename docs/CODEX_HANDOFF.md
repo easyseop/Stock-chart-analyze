@@ -1537,3 +1537,8 @@ P1 1건·P2 6건·P3 2건으로 병합을 차단했다. 핵심 P1은 B가 매수
 전환은 하지 않았으며 이 코드 커밋 자체는 원격 검토용이다. 다음 작업은 Claude가
 `d0e177ea..3c035c36`을 독립 검증해 P0/P1 없음 판정을 내리는 것이다. 승인 뒤에도
 병합 및 운영 적용은 사용자에게 결과를 보여주고 별도 승인받아 진행한다.
+
+코드와 검토자료는 원격 `codex/kis-direct-scanner-entry-v8`에 push했고,
+Claude 브랜치 `claude/kis-direct-scanner-entry`를 base로 Draft PR #106을 열었다.
+PR 생성 직후 두 커밋의 GitHub Actions CI가 모두 통과했다. Draft 상태와 base를
+유지하며 Claude 판정 전에는 ready 전환이나 병합을 하지 않는다.
