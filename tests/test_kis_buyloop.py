@@ -252,7 +252,10 @@ def test_no_order_on_nan_zero_negative_or_inverted_stop():
                 [sig], holdings={},
                 run_kwargs={"sleeve": sleeve, "group": group})
             assert not ex.called, (stop, group)
-            assert all(r.get("gate") != "sent" for r in res), (stop, group)
+            # 조용히 사라지면 안 된다 — 후보에 남아 **명시적 input 진단**을
+            #   남겨야 한다(Codex V3 P2: stop=0이 truthy 필터에서 무진단 소멸).
+            r = _g(res, "AAPL")
+            assert r is not None and r["gate"] == "input", (stop, group, res)
     # 양성: 유효한 0 < stop < order_px는 기존대로 실행기까지 전달된다.
     res, ex, _, _ = _run([_sig(entry=100.0, stop=95.0)], holdings={})
     assert ex.called and _g(res, "005930")["gate"] == "sent"
@@ -326,6 +329,40 @@ def test_invalid_fx_fails_closed_for_all_candidates():
                            run_kwargs={"fx": 1400.0})
     assert ex2.called and ex2.call_args.kwargs["krw_per_usd"] == 1400.0
     print("[PASS] 0·음수·NaN·inf·비숫자 환율 fail-closed · None만 기본값")
+
+
+def test_unknown_tactic_never_bypasses_tolerance():
+    """Codex V3 P1 재현: tactic.mode='banana'가 full/half tolerance와 눌림가
+    검사를 전부 우회해 entry에서 100% 이탈한 현재가로 sent까지 갔다."""
+    for bad in ("banana", "unknown", ["x"], {"weird": 1}):
+        for group, sleeve, extra in (("now", "A", {}),
+                                     ("shelf", "B", {"shelf": {"rr": 2.0}})):
+            sig = _sig(code="AAPL", ccy="USD", entry=100.0, stop=95.0,
+                       group=group, tactic={"mode": bad}, **extra)
+            res, ex, _, _ = _run(
+                [sig], holdings={}, last=200.0,      # entry 대비 +100% 이탈
+                run_kwargs={"sleeve": sleeve, "group": group})
+            assert not ex.called, (bad, group)
+            r = _g(res, "AAPL")
+            assert r is not None and r["gate"] == "tactic", (bad, group, res)
+    # 대소문자·공백 변형은 정상 full로 정규화 → tolerance가 적용된다.
+    for variant in ("FULL", " full ", "Full"):
+        res, ex, _, _ = _run(
+            [_sig(code="AAPL", ccy="USD", entry=100.0, stop=95.0,
+                  tactic={"mode": variant})], holdings={}, last=200.0)
+        assert not ex.called, variant
+        assert _g(res, "AAPL")["gate"] == "tolerance", (variant, res)
+        res2, ex2, _, _ = _run(
+            [_sig(code="AAPL", ccy="USD", entry=100.0, stop=95.0,
+                  tactic={"mode": variant})], holdings={}, last=100.4)
+        assert ex2.called and _g(res2, "AAPL")["gate"] == "sent", variant
+    # 정규화가 pullback 계약도 보존: 대문자 PULLBACK + 유효 pb → 지정가 경로.
+    res3, ex3, _, _ = _run(
+        [_sig(code="AAPL", ccy="USD", entry=100.0, stop=95.0,
+              tactic={"mode": "PULLBACK", "pb_price": 97.0})],
+        holdings={}, last=200.0)                     # pullback은 tolerance 무관
+    assert ex3.called and ex3.call_args.kwargs["price_usd"] == 97.0
+    print("[PASS] 알 수 없는 전술 차단·변형 정규화 — tolerance 우회 경로 없음")
 
 
 def test_intra_cycle_accumulation():
@@ -467,6 +504,7 @@ def main():
     test_nan_quote_is_gated_without_crash()
     test_nan_target_is_not_persisted()
     test_invalid_fx_fails_closed_for_all_candidates()
+    test_unknown_tactic_never_bypasses_tolerance()
     test_intra_cycle_accumulation()
     test_non_now_filtered()
     test_us_signal_routes_and_fx()

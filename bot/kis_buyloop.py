@@ -42,9 +42,12 @@ _KST = datetime.timezone(datetime.timedelta(hours=9))
 
 def _now_signals(signals: list[dict]) -> list[dict]:
     """'지금 진입'·신선·진입/손절 유효 신호만. 정렬: 갓전환·상위단계·상위점수."""
+    # entry/stop은 **키 존재만** 확인한다 — truthy 검사면 stop=0 같은 무효값이
+    #   진단 없이 후보에서 사라진다(Codex V3 P2). 숫자 유효성은 run_once의
+    #   공통 input 게이트가 판정해 일관된 gate=input을 남긴다.
     cand = [s for s in signals
             if s.get("group") == "now" and s.get("fresh") is True
-            and s.get("entry") and s.get("stop")]
+            and "entry" in s and "stop" in s]
     cand.sort(key=lambda s: (not s.get("fresh"), -s.get("stage", 0),
                              -s.get("norm", 0)))
     return cand
@@ -193,7 +196,7 @@ def _shelf_cands(signals: list[dict]) -> list[dict]:
     (Codex P1-2)."""
     c = [s for s in signals if s.get("group") == "shelf"
          and s.get("fresh") is True
-         and s.get("entry") and s.get("stop")]
+         and "entry" in s and "stop" in s]     # 무효값은 input 게이트가 진단(P2)
     c.sort(key=lambda s: -float((s.get("shelf") or {}).get("rr") or 0))
     return c
 
@@ -290,8 +293,14 @@ def run_once(signals: list[dict], *, fx: float | None = None,
             results.append({"code": code, "gate": "input",
                             "why": "진입/손절가 형식 오류"}); continue
         tactic = s.get("tactic") or {}
-        mode = (str(tactic.get("mode") or "full") if isinstance(tactic, dict)
-                else str(tactic or "full"))
+        raw_mode = (tactic.get("mode") if isinstance(tactic, dict) else tactic)
+        mode = str(raw_mode or "full").strip().lower()
+        if mode not in ("full", "half", "pullback"):
+            # 알 수 없는 전술명은 tolerance·눌림가 검사를 전부 우회해 현재가
+            #   주문으로 폴백했다(Codex V3 P1 — entry에서 100% 이탈해도 sent).
+            #   공백·대소문자만 정규화하고 허용 집합 밖은 주문 전에 차단한다.
+            results.append({"code": code, "gate": "tactic",
+                            "why": f"알 수 없는 진입 전술({mode})"}); continue
         try:
             pb = float(tactic.get("pb_price") or 0) if isinstance(tactic, dict) else 0.0
         except (TypeError, ValueError):
