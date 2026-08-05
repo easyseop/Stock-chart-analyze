@@ -179,12 +179,52 @@ def test_execute_entry_rejects_invalid_optional_numeric_args():
                                 order_meta={"stop": 95.0, "target": bad_tgt})
             assert d.gate == "input", (bad_tgt, d)
         d = X.execute_entry("p#opt", "AAPL", **base,
+                            limit_price=100.0,
                             order_meta={"stop": 95.0, "target": 110.0})
         assert d.gate != "input", d
         # 정상 옵션 인자는 input을 통과해 이후 게이트로 진행(kill에서 멈춤 등).
         d = X.execute_entry("p#opt", "AAPL", **base,
-                            limit_price=97.0, qty_fraction=0.5)
+                            limit_price=100.0, qty_fraction=0.5)
         assert d.gate != "input", d
+        # 값이 finite여도 부호·상호관계가 틀리면 input에서 끝나야 한다.
+        for kw_extra in ({"seed_krw": 0}, {"seed_krw": -1},
+                         {"open_cost_krw": -1},
+                         {"total_open_cost_krw": -1},
+                         {"held_cost_krw": -1},
+                         {"total_held_cost_krw": -1},
+                         {"operating_limit_krw": 0},
+                         {"operating_limit_krw": -1},
+                         {"risk_pct": 0}, {"risk_pct": -0.1},
+                         {"open_positions": -1}, {"hldg_before": -1},
+                         {"qty_cap": -1}):
+            d = X.execute_entry("p#rel", "AAPL", **{**base, **kw_extra})
+            assert d.gate == "input", (kw_extra, d)
+        relations = (
+            {"limit_price": 90.0,
+             "order_meta": {"stop": 95.0, "target": 110.0}},
+            {"limit_price": 100.0, "per_share_risk_usd": 4.0,
+             "order_meta": {"stop": 95.0, "target": 110.0}},
+            {"limit_price": 99.0,
+             "order_meta": {"stop": 95.0, "target": 110.0}},
+            {"sleeve": "B", "limit_price": 100.0,
+             "order_meta": {"stop": 95.0, "target": 101.0}},
+            {"sleeve": "B", "limit_price": 100.0,
+             "order_meta": {"stop": 80.0, "target": 130.0}},
+        )
+        for kw_extra in relations:
+            d = X.execute_entry("p#rel", "AAPL", **{**base, **kw_extra})
+            assert d.gate == "input", (kw_extra, d)
+        # 직접 호출의 구조·정수 경계도 예외 대신 input으로 닫힌다.
+        for kw_extra in ({"open_positions": float("inf")},
+                         {"hldg_before": float("nan")},
+                         {"qty_cap": "not-an-int"}):
+            d = X.execute_entry("p#int", "AAPL", **{**base, **kw_extra})
+            assert d.gate == "input", (kw_extra, d)
+        for bad_symbol in (None, [], ""):
+            d = X.execute_entry("p#sym", bad_symbol, **base)
+            assert d.gate == "input", (bad_symbol, d)
+        d = X.execute_entry("p#market", "AAPL", market="XX", **base)
+        assert d.gate == "input", d
     print("[PASS] 실행기 잔여 숫자 인자·order_meta.target 전부 input 차단")
 
 
@@ -221,15 +261,23 @@ def test_run_once_end_to_end_side_effects():
             # 원장 선기록·ack 처리 등 실제 부작용 경로를 그대로 태운다.
             ok_resp = ({"rt_cd": "0", "msg_cd": "OK",
                         "output": {"ODNO": "0001"}}, 200)
+            def no_network(*args, **kwargs):
+                raise AssertionError("e2e에서 예상하지 않은 외부 HTTP")
             with mock.patch.object(BL.kis, "positions_detail",
                                    return_value=[]), \
                     mock.patch.object(BL.kis, "last_price",
                                       return_value=100.4), \
+                    mock.patch.object(BL.kis, "us_excg_of",
+                                      return_value="NASD"), \
+                    mock.patch.object(BL.kis, "buying_power_of",
+                                      return_value=50_000.0), \
                     mock.patch.object(BL.settings, "market_open",
                                       return_value=True), \
                     mock.patch.object(M["rollout"], "us_regular_open",
                                       return_value=True), \
                     mock.patch.object(BL.kis_positions, "PATH", kpos_path), \
+                    mock.patch("urllib.request.urlopen",
+                               side_effect=no_network), \
                     mock.patch.object(M["kis_orders"], "_post",
                                       return_value=ok_resp) as pb:
                 res = BL.run_once(signals, fx=1400.0, **rk)
@@ -240,12 +288,15 @@ def test_run_once_end_to_end_side_effects():
                "stage": 3, "norm": 50, "target": 110.0}
         # ① 차단 입력(검증기: B target ≤ 발주가) — 주문 primitive 0 + 상태 불변.
         before = snapshot_state()
-        bad = dict(sig, group="shelf", target=100.2, shelf={"rr": 2.0})
+        bad = dict(sig, group="shelf", target=100.2, shelf={"rr": 0.04})
         res, pb = run([bad], sleeve="B", group="shelf")
         assert not pb.called and res[0]["gate"] == "input", res
         assert snapshot_state() == before          # 원장·원가·포지션·kill 불변
-        # ② 허용 입력 — place_buy 정확히 1회, 원장 선기록, ack 단계 포지션 0.
-        res, pb = run([sig])
+        # ② 허용 B 입력 — _post 정확히 1회, target/sleeve 원장 선기록,
+        #    ack 단계 포지션 0.
+        os.environ["BOT_SEED_SB_KRW"] = "1000000"
+        good = dict(sig, group="shelf", target=110.0, shelf={"rr": 2.0})
+        res, pb = run([good], sleeve="B", group="shelf")
         assert pb.call_count == 1, res
         assert res[0]["gate"] == "sent", res
         after = snapshot_state()
@@ -253,8 +304,9 @@ def test_run_once_end_to_end_side_effects():
         assert after["kpos"] in (b"", b"{}")             # ack는 체결 아님
         assert after["kill"] == before["kill"]           # kill 무변경
         orders = M["ledger"]._fold()
-        assert any(str(v.get("symbol")) == "AAPL" and v.get("side") == "BUY"
-                   for v in orders.values())
+        order = next(v for v in orders.values()
+                     if str(v.get("symbol")) == "AAPL" and v.get("side") == "BUY")
+        assert order.get("sleeve") == "B" and order.get("target") == 110.0
     print("[PASS] e2e: 차단=부작용 0(파일 불변) · 허용=주문 primitive 1회")
 
 
@@ -285,7 +337,8 @@ def test_execute_entry_rejects_nonfinite_inputs():
         # stop 키가 없는 order_meta(호환 경로)·유효 stop은 input에서 막히지 않음.
         d = X.execute_entry("p#meta", "AAPL", **base, order_meta={"name": "t"})
         assert d.gate != "input", d
-        d = X.execute_entry("p#ok", "AAPL", **base, order_meta={"stop": 95.0})
+        d = X.execute_entry("p#ok", "AAPL", **base, limit_price=100.0,
+                            order_meta={"stop": 95.0})
         assert d.gate != "input", d
     print("[PASS] 실행기 자체가 NaN·inf price/risk/fx·무효 stop을 input에서 차단")
 

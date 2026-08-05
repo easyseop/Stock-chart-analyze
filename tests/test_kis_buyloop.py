@@ -34,6 +34,12 @@ def _sig(code="005930", ccy="KRW", entry=100.0, stop=95.0,
             sig["target"] = float(entry) * 1.1
         except (TypeError, ValueError):
             pass
+    if group == "shelf" and "shelf" not in kw:
+        try:
+            e, st, tg = float(entry), float(stop), float(sig["target"])
+            sig["shelf"] = {"rr": (tg - e) / (e - st)}
+        except (TypeError, ValueError, ZeroDivisionError, KeyError):
+            sig["shelf"] = {"rr": 2.0}
     return sig
 
 
@@ -306,7 +312,7 @@ def test_b_stale_row_in_fresh_document_is_rejected():
     nofield = _sig(code="NVDA", ccy="USD", group="shelf", shelf={"rr": 2.0})
     del nofield["fresh"]
     ok = _sig(code="AAPL", ccy="USD", group="shelf", fresh=True,
-              shelf={"rr": 2.5})
+              shelf={"rr": 2.0})
     res, ex, _, _ = _run([stale, nofield, ok], holdings={},
                          run_kwargs={"sleeve": "B", "group": "shelf"})
     assert ex.call_count == 1, [c.args[1] for c in ex.call_args_list]
@@ -506,11 +512,11 @@ def test_b_requires_valid_target_above_entry():
     sig = _sig(code="AAPL", ccy="USD", entry=100.0, stop=95.0,
                group="shelf", shelf={"rr": 2.0}, target=None)
     ok = _sig(code="MSFT", ccy="USD", entry=100.0, stop=95.0,
-              group="shelf", shelf={"rr": 2.0}, target=101.0)
+              group="shelf", shelf={"rr": 2.0}, target=110.0)
     res, ex, _, _ = _run([sig, ok], holdings={}, last=100.4,
                          run_kwargs={"sleeve": "B", "group": "shelf"})
     assert ex.call_count == 1 and ex.call_args.args[1] == "MSFT"
-    assert ex.call_args.kwargs["order_meta"]["target"] == 101.0
+    assert ex.call_args.kwargs["order_meta"]["target"] == 110.0
     print("[PASS] B는 finite target>entry 필수 — 오염값 주문 0·유효값만 전달")
 
 
@@ -521,30 +527,32 @@ def test_b_target_must_exceed_actual_order_price():
     아니라 매수 직후 청산 금지의 최소 의미."""
     from bot import kis_exits
     today = datetime.date.today().isoformat()
-    # full: order_px = cur.
-    for target in (100.0001, 100.4, 100.4001, 101.0):
+    # full: 실제 order_px는 현재가+30bp 마켓터블 지정가. 즉시매도만 피하고
+    # 1.5R 미만인 목표도 모두 차단한다.
+    for target in (100.0001, 100.4, 100.4001, 101.0, 107.9):
         for cur in (99.9, 100.0, 100.4):
             sig = _sig(code="AAPL", ccy="USD", entry=100.0, stop=95.0,
-                       group="shelf", shelf={"rr": 2.0}, target=target)
+                       group="shelf", target=target)
             res, ex, _, _ = _run([sig], holdings={}, last=cur,
                                  run_kwargs={"sleeve": "B", "group": "shelf"})
-            if target > cur:
-                assert ex.called, (target, cur)
-                assert ex.call_args.kwargs["price_usd"] == cur
-                # 허용 조합은 같은 가격에서 즉시 목표매도 0건이어야 한다.
-                acts = kis_exits.decide_b(target, cur, 3, today, today)
-                assert acts == [], (target, cur, acts)
-            else:
-                assert not ex.called, (target, cur)
-                assert _g(res, "AAPL")["gate"] == "input", (target, cur, res)
-    # pullback: order_px = pb. 검증기 계약(stop<entry<target)이 이미 target>entry
-    #   를 요구하고 pb<entry이므로 target>pb는 자동 충족 — 발주가 규칙은
-    #   full/half(현재가 발주)에서만 추가 제약이 된다. 경계를 그대로 고정:
-    for target, expect_gate in ((97.0, "input"),      # ≤ entry — 검증기 차단
-                                (97.0001, "input"),   # ≤ entry — 검증기 차단
-                                (100.0001, "sent")):  # > entry ⇒ > pb — 발주
+            assert not ex.called, (target, cur, res)
+            assert _g(res, "AAPL")["gate"] == "input", (target, cur, res)
+    # 정상 2R 신호는 실제 마켓터블 상한에서도 1.5R 이상이면 허용.
+    sig = _sig(code="AAPL", ccy="USD", entry=100.0, stop=95.0,
+               group="shelf", target=110.0)
+    res, ex, _, _ = _run([sig], holdings={}, last=100.4,
+                         run_kwargs={"sleeve": "B", "group": "shelf"})
+    assert ex.called, res
+    order_px = ex.call_args.kwargs["price_usd"]
+    assert order_px == 100.7
+    assert (110.0 - order_px) / (order_px - 95.0) >= 1.5
+    assert kis_exits.decide_b(110.0, order_px, 3, today, today) == []
+    # pullback도 신호 시점·실제 pb 시점 양쪽 계약을 만족해야 허용.
+    for target, expect_gate in ((97.0, "input"),
+                                (100.0001, "input"),
+                                (110.0, "sent")):
         sig = _sig(code="AAPL", ccy="USD", entry=100.0, stop=95.0,
-                   group="shelf", shelf={"rr": 2.0}, target=target,
+                   group="shelf", target=target,
                    tactic={"mode": "pullback", "pb_price": 97.0})
         res, ex, _, _ = _run([sig], holdings={}, last=98.0,
                              run_kwargs={"sleeve": "B", "group": "shelf"})
@@ -554,7 +562,7 @@ def test_b_target_must_exceed_actual_order_price():
         else:
             assert not ex.called, (target, res)
             assert _g(res, "AAPL")["gate"] == expect_gate, (target, res)
-    print("[PASS] B target은 실제 발주가 초과 필수 — 매수 직후 목표매도 0")
+    print("[PASS] B target·실제RR·손절폭은 마켓터블 발주가 기준 계약 준수")
 
 
 def test_corrupt_priority_fields_reject_row_not_cycle():
@@ -578,12 +586,79 @@ def test_corrupt_priority_fields_reject_row_not_cycle():
                          run_kwargs={"sleeve": "B", "group": "shelf"})
     assert ex.call_count == 1 and ex.call_args.args[1] == "MSFT"
     assert _g(res, "AAPL")["gate"] == "input"
+    for bad_shelf in ([], "bad", False, None):
+        sig = _sig(code="AAPL", ccy="USD", group="shelf",
+                   shelf=bad_shelf, target=110.0)
+        res, ex, _, _ = _run([sig], holdings={},
+                             run_kwargs={"sleeve": "B", "group": "shelf"})
+        assert not ex.called and _g(res, "AAPL")["gate"] == "input"
     # 부재/None은 기본값 0으로 정상 진행(legacy 호환).
     absent = _sig(code="AAPL", ccy="USD")
     absent.pop("stage", None); absent.pop("norm", None)
     res, ex, _, _ = _run([absent], holdings={})
     assert ex.called
     print("[PASS] 오염 우선순위 필드는 행 거부·사이클 생존 — 정렬은 검증 후")
+
+
+def test_b_actual_rr_and_stop_width_boundaries():
+    """B의 승인된 1.5R·15% 계약을 실제 마켓터블 발주가로 재검증."""
+    cur, stop = 100.0, 95.0
+    order_px = BL.kis_orders.marketable_limit_price(cur, "BUY", market="US")
+    exact_target = order_px + BL.settings.SHELF_MIN_RR * (order_px - stop)
+    for delta, sent in ((-1e-6, False), (0.0, True), (1e-6, True)):
+        target = exact_target + delta
+        sig = _sig(code="AAPL", ccy="USD", entry=100.0, stop=stop,
+                   group="shelf", target=target)
+        res, ex, _, _ = _run([sig], holdings={}, last=cur,
+                             run_kwargs={"sleeve": "B", "group": "shelf"})
+        assert ex.called is sent, (delta, res)
+    exact_stop = order_px * (1.0 - BL.settings.SHELF_MAX_STOP)
+    for delta, sent in ((-1e-6, False), (0.0, True), (1e-6, True)):
+        st = exact_stop + delta
+        target = order_px + 2.0 * (order_px - st)
+        sig = _sig(code="AAPL", ccy="USD", entry=100.0, stop=st,
+                   group="shelf", target=target)
+        res, ex, _, _ = _run([sig], holdings={}, last=cur,
+                             run_kwargs={"sleeve": "B", "group": "shelf"})
+        assert ex.called is sent, (delta, res)
+    # 메타 RR가 가격과 다르면, 숫자 자체가 그럴듯해도 거부한다.
+    sig = _sig(code="AAPL", ccy="USD", entry=100.0, stop=95.0,
+               group="shelf", target=110.0, shelf={"rr": 9.9})
+    res, ex, _, _ = _run([sig], holdings={}, last=100.0,
+                         run_kwargs={"sleeve": "B", "group": "shelf"})
+    assert not ex.called and _g(res, "AAPL")["gate"] == "input"
+    print("[PASS] B 실제 1.5R·15% 경계와 rr 메타 일치 계약")
+
+
+def test_signal_identity_name_and_call_contract():
+    """원장 키 충돌·HTML 알림 오염·잘못된 내부 sleeve/group 호출 차단."""
+    for bad_id in (True, 7, "", "has space", "bad/slash", "x" * 129):
+        sig = _sig(code="AAPL", ccy="USD", id=bad_id)
+        res, ex, _, _ = _run([sig], holdings={})
+        assert not ex.called and _g(res, "AAPL")["gate"] == "input", bad_id
+    for bad_name in (True, {"x": 1}, "x" * 121):
+        sig = _sig(code="AAPL", ccy="USD", name=bad_name)
+        res, ex, _, _ = _run([sig], holdings={})
+        assert not ex.called and _g(res, "AAPL")["gate"] == "input", bad_name
+    one = _sig(code="AAPL", ccy="USD", id="same-id")
+    two = _sig(code="MSFT", ccy="USD", id="same-id")
+    _, ex, _, _ = _run([one, two], holdings={})
+    keys = [call.args[0] for call in ex.call_args_list]
+    assert keys == ["kb:AAPL:same-id", "kb:MSFT:same-id"]
+    with mock.patch("bot.notify.send") as send:
+        sig = _sig(code="AAPL", ccy="USD", name="AT&T <bad>")
+        _, ex, _, _ = _run([sig], holdings={})
+    assert ex.called and send.call_count == 1
+    text = send.call_args.args[0]
+    assert "AT&amp;T &lt;bad&gt;" in text and "AT&T <bad>" not in text
+    for sleeve, group in (("A", "shelf"), ("B", "now"), ("X", "now")):
+        res = BL.run_once([], sleeve=sleeve, group=group)
+        assert res[0]["gate"] == "input", (sleeve, group, res)
+    for bad_ed in (True, "bad", {}, float("nan"), float("inf")):
+        sig = _sig(code="AAPL", ccy="USD", earnings_d=bad_ed)
+        res, ex, _, _ = _run([sig], holdings={})
+        assert not ex.called and _g(res, "AAPL")["gate"] == "input", bad_ed
+    print("[PASS] signal id/name/earnings + sleeve/group 계약 · HTML escape")
 
 
 def test_boolean_numbers_rejected_everywhere():
@@ -852,6 +927,8 @@ def main():
     test_b_requires_valid_target_above_entry()
     test_b_target_must_exceed_actual_order_price()
     test_corrupt_priority_fields_reject_row_not_cycle()
+    test_b_actual_rr_and_stop_width_boundaries()
+    test_signal_identity_name_and_call_contract()
     test_boolean_numbers_rejected_everywhere()
     test_ccy_market_mismatch_blocked()
     test_execute_entry_rejects_boolean_inputs_directly()

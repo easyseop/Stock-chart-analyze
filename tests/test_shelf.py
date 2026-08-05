@@ -17,10 +17,17 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import numpy as np
 import pandas as pd
+import config
 
+from bot import settings
 from scanner import analyze as A
 from scanner import gates
 from scanner import screener
+
+
+def test_kis_shelf_contract_matches_scanner_config():
+    assert settings.SHELF_MIN_RR == config.SHELF_MIN_RR
+    assert settings.SHELF_MAX_STOP == config.SHELF_MAX_STOP
 
 
 def _df(lows, today_low, today_close, today_high, vol_bars=None):
@@ -161,6 +168,7 @@ def test_partition_budget_isolation():
 
 
 def main():
+    test_kis_shelf_contract_matches_scanner_config()
     test_bounce_ok()
     test_falling_knife_rejected()
     test_low_volume_rejected()
