@@ -1623,6 +1623,11 @@ baseline(`{"symbols":[],"ts":...}`)을 **복제본에만** 만들고 `_resolve_a
 15/15, compileall, node syntax, diff check를 통과했다. 상세 적대검토 요청은
 `docs/CLAUDE_REVIEW_KIS_DIRECT_SCANNER_ENTRY_V10_RUNTIME.md`다.
 
+통합 코드·실측 문서는 commit `44f71d2f`로 원격
+`codex/kis-direct-v9-default`에 push했고, 기본 브랜치 대상 Draft PR #107을
+열었다. PR은 mergeable이며 생성 직후 GitHub Actions 4/4가 통과했다. Draft를
+유지해 장중 기본 브랜치 병합과 Oracle autodeploy를 막고 있다.
+
 운영 적용은 미국 연장장 종료 후(09:10 KST 이후) 다음 순서만 허용한다.
 
 1. Claude V10 P0/P1 없음 확인, 기본 브랜치 대상 PR의 exact head·CI 확인
