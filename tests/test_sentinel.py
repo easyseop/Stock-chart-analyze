@@ -287,6 +287,22 @@ def main() -> int:
         else:
             print("  [PASS] BUY 잔량 취소확인 → KIS 실잔고 재조회 → 3주만 손절")
 
+    # ⑫ 공개 paper feed 실패/빈 목록이어도 로컬 kis_positions 손절선으로 보호 지속
+    #    (KIS는 autopaper 미러가 아니다 — feed는 참고 손절선일 뿐, 보호의 전제가 아님)
+    with tempfile.TemporaryDirectory() as tmp:
+        NOTES = []
+        _setup(tmp, [])                       # feed 404/빈 positions와 동일한 결과
+        bk = TruthKis({"TT": 98.0}, {"TT": 10})
+        krec = {"TT": {"name": "테스트", "ccy": "USD", "stop": 100.0,
+                       "opened": "2026-07-25", "sleeve": "A", "pos_key": "kb:tt"}}
+        with mock.patch("bot.kis_positions.load", return_value=krec), \
+             mock.patch("bot.kis_exits.manage"):
+            sn.check_once(bk, {})             # 98.0 < 99.0(하드) → 즉시 매도여야
+        if [s[0] for s in bk.sells] != ["TT"]:
+            fails.append(f"빈 paper feed에서 로컬 stop 보호 실패: {bk.sells}")
+        else:
+            print("  [PASS] paper feed 빈 목록 → 로컬 kis_positions 손절선으로 보호")
+
     # ⑫ KIS 주문 직전 보유 재조회 — 사이클 수량 8이어도 실제 3주만 전송
     with tempfile.TemporaryDirectory() as tmp:
         L.LEDGER_PATH = os.path.join(tmp, "ledger.jsonl")

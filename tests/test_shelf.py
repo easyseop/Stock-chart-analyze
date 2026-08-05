@@ -17,10 +17,17 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import numpy as np
 import pandas as pd
+import config
 
+from bot import settings
 from scanner import analyze as A
 from scanner import gates
 from scanner import screener
+
+
+def test_kis_shelf_contract_matches_scanner_config():
+    assert settings.SHELF_MIN_RR == config.SHELF_MIN_RR
+    assert settings.SHELF_MAX_STOP == config.SHELF_MAX_STOP
 
 
 def _df(lows, today_low, today_close, today_high, vol_bars=None):
@@ -143,17 +150,25 @@ def test_partition_budget_isolation():
     assert (na, ca) == (3, 350.0), (na, ca)   # AAA+BBB 보유 + DDD in-flight
     assert (nb, cb) == (2, 360.0), (nb, cb)   # CCC 보유 + EEE in-flight
     # shelf 후보 필터·정렬(RR 높은 순)
-    sigs = [{"group": "now", "code": "X", "entry": 1, "stop": 0.9},
+    sigs = [{"group": "now", "code": "X", "entry": 1, "stop": 0.9, "fresh": True},
             {"group": "shelf_watch", "code": "W", "entry": 10, "stop": 9,
-             "shelf": {"rr": 3.0}},
-            {"group": "shelf", "code": "Y", "entry": 10, "stop": 9, "shelf": {"rr": 1.6}},
-            {"group": "shelf", "code": "Z", "entry": 10, "stop": 9, "shelf": {"rr": 2.4}}]
+             "fresh": True, "shelf": {"rr": 3.0}},
+            {"group": "shelf", "code": "Y", "entry": 10, "stop": 9,
+             "fresh": True, "shelf": {"rr": 1.6}},
+            {"group": "shelf", "code": "Z", "entry": 10, "stop": 9,
+             "fresh": True, "shelf": {"rr": 2.4}},
+            # Codex P1-2: 신선 문서 안의 stale 행 — 후보 제외돼야 한다.
+            {"group": "shelf", "code": "S", "entry": 10, "stop": 9,
+             "fresh": False, "shelf": {"rr": 9.9}}]
     c = BL._shelf_cands(sigs)
-    assert [x["code"] for x in c] == ["Z", "Y"], c
-    print("[PASS] B 관찰은 매수루프에서 제외 + 확정 shelf만 필터/정렬")
+    # 필터 계약만 검증 — 정렬(rr 높은 순)은 검증 후 run_once가 vc.rr로 수행
+    #   (Codex V6 P2-1: 원본 dict 정렬이 구조값에서 사이클을 죽이던 문제).
+    assert sorted(x["code"] for x in c) == ["Y", "Z"], c
+    print("[PASS] B 관찰·stale 행은 매수루프에서 제외 + fresh shelf만 필터")
 
 
 def main():
+    test_kis_shelf_contract_matches_scanner_config()
     test_bounce_ok()
     test_falling_knife_rejected()
     test_low_volume_rejected()

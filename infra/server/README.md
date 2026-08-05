@@ -8,7 +8,7 @@
 | 파일 | 역할 |
 |---|---|
 | `sentinel.service` | 파수꾼(매도) 상시 실행(`python -m bot.sentinel`, `SENTINEL_BROKER=kis`) |
-| `buyloop.service` | 매수 루프 — autopaper 'now' 신호를 KIS에 미러 매수(`python -m bot.kis_buyloop --loop`) |
+| `buyloop.service` | 매수 루프 — 신선한 스캐너 신호를 KIS 시세로 직접 집행(`python -m bot.kis_buyloop --loop`) |
 | `telegram.service` | 텔레그램 조회 봇(읽기전용) — `/보유`·`/종목 <코드>`·`/진단`(서버 건강 실측) + 10분마다 자가진단 스냅샷을 ntfy `OPS_STATUS_TOPIC`에 발행(SSH 없는 원격 진단) |
 | `portfolio-web.service` | 실제 KIS 보유종목·평단·현재가·손익을 보여주는 사설 웹 화면(`127.0.0.1:8888`) |
 | `post-exit-refresh.timer` | 수익 매도 뒤 공개 일봉을 하루 2회 갱신하는 읽기전용 사후추적 |
@@ -24,8 +24,9 @@
 KIS 호출 폭주가 매매 안정성을 해치지 않게 한다.
 
 > **손 = 매수(buyloop) + 매도(sentinel) 대칭.** 파수꾼만 켜면 손절만, 둘 다 켜면
-> 종목스크리너의 신호·전술을 KIS 모의계좌에서 집행(진입+청산). 공개 autopaper와
-> KIS는 예산·동시 보유 정책이 서로 다르므로 계좌 상태까지 똑같이 복제하지 않는다.
+> 종목스크리너의 신호·전술을 KIS 모의계좌에서 집행(진입+청산). KIS는 공개
+> autopaper(가상 시각화 시뮬)의 보유·체결을 미러하는 계좌가 **아니라**, 신선한
+> 스캐너 신호를 KIS 시세·KIS 잔고 기준 게이트로 직접 집행하는 독립 계좌다.
 > 처음엔 **매도만**(파수꾼)으로 검증하고, 안정되면 매수 루프를 켜는 걸 권장.
 
 ## 설치 순서 (Ubuntu 계열, Stage 1.5 모의 기준)
@@ -158,13 +159,18 @@ Environment=AUTODEPLOY_SERVICES=sentinel buyloop telegram portfolio-web
 4. **롤아웃**: `TRADE_STAGE=1.5`(1종목·하루1건). 안정되면 `2.5`→`3`으로.
    비상시 `python -m bot.kill 1 "사유"`(kill-switch L1=신규매수 중지, 손절은 유지).
 
-## KIS 미러 모드 (TRADE_STAGE=mirror, 모의 전용)
-종목스크리너의 신호와 진입 전술을 KIS 모의계좌에서 따라가는 모드다.
-**동시 보유 종목 수에는 고정 상한이 없고**, 신규매수 가능 금액은 A/B 슬리브
+## KIS 스캐너 직접진입 모드 (TRADE_STAGE=mirror, 모의 전용)
+> `mirror`는 legacy 프로필 키 이름일 뿐이다(2026-08-05 정정). KIS는 autopaper의
+> 보유·진입일·가상 체결을 따라 사지 않는다 — **신선한 스캐너 신호를 KIS 시세로
+> 직접 집행**하는 limited mock 프로필이다.
+
+**동시 보유 종목 수와 수동 종목 allowlist에는 고정 상한이 없고**, 신규매수 가능 금액은 A/B 슬리브
 예산·A+B 통합 운용한도·KIS 매수여력·종목별 비중·risk 중 가장 작은 값으로
-결정한다. 하루 신규 10건·거래당 risk 1%·선택적 allowlist는 유지한다.
+결정한다. 하루 신규 10건(주문 폭주 방지용 KIS 독립 상한)·거래당 risk 1%를
+유지한다. KIS는 가상계좌 보유내역이 아니라 신선한 스캐너 A/B 진입 신호를
+전략계약·KIS 현재가·잔고·예산·세션 게이트로 다시 검증해 직접 집행한다.
 ```bash
-# kis.env에 (ALLOWED_SYMBOLS는 필요 없음 — 넣으면 그 목록만 사는 추가 펜스가 됨):
+# kis.env에 (낡은 ALLOWED_SYMBOLS 줄은 삭제):
 KIS_ORDERS_ENABLED=1
 ALLOW_BUY=1
 TRADE_STAGE=mirror
@@ -197,7 +203,7 @@ denylist)·원장(UNKNOWN 잠금·동일종목 in-flight·60s 간격)·사이징
 - `--scope l0`: KIS mock의 제한적 신규매수 재개용이다. 7일 shadow,
   Oracle 한·미 세션, GitHub 장애주입, 9종목 래칫, 동결 해제 결정은
   `INFO`로 표시한다. 대신 mock·L1·원장·미체결·수량·예산·heartbeat·
-  fallback 0·stall shadow·동결 6종목 유지·mirror allowlist를 차단
+  fallback 0·stall shadow·동결 6종목 유지·mirror 직접진입 설정을 차단
   조건으로 사용한다.
 - `--scope strict`(기본): 위 관찰 증거까지 모두 차단 조건으로 사용한다.
 
