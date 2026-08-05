@@ -6,8 +6,8 @@
    2. 부팅 대사 완료: kis_boot.trading_allowed() (O4 — 대사 전 매매 금지)
    3. 파수꾼 생존성: heartbeat.entry_allowed(has_positions) (R4 —
       보호자가 죽어있으면 새 리스크 안 늘림)
-   4. 롤아웃 가드: rollout.check_new_entry (I7+I1 — Stage 캡·allowlist·
-      US 정규장만·whole-share·하루 한도)
+   4. 롤아웃 가드: rollout.check_new_entry (I7+I1 — Stage 캡·정규장·
+      whole-share·하루 한도; scanner-direct mirror는 수동 종목목록 없음)
    5. 계좌 격리: ownership.buy_denied (IS2 — baseline denylist·동결)
    6. 원장: ledger.can_submit (UNKNOWN 잠금·동일종목 in-flight·간격)
    7. 사이징: envelope.size_buy — 분모 SEED·총량 게이트(deployable)·
@@ -26,7 +26,7 @@ import os
 from dataclasses import dataclass
 
 from bot import (costbook, daily_loss, envelope, heartbeat, kill, kis, kis_boot,
-                 kis_orders, ledger, ownership, rollout)
+                 kis_orders, ledger, ownership, rollout, settings)
 
 
 @dataclass
@@ -69,8 +69,16 @@ def execute_entry(pos_key: str, symbol: str, *, price_usd: float,
       메운다. costbook 값과 **max**로 합성(보수적) — 배선 후에도 안전.
     hldg_before: 주문 직전 그 종목 보유수량(브로커-진실). 원장 meta로 남아
       ack(접수)→체결 확정의 잔고-delta 대사 기준이 된다."""
-    symbol = symbol.upper()
+    if order_meta is not None and not isinstance(order_meta, dict):
+        return BuyDecision(False, "input", "order_meta 형식 오류(dict 필요)")
+    if sleeve not in ("A", "B"):
+        return BuyDecision(False, "input", f"sleeve 무효({sleeve!r})")
+    if not isinstance(symbol, str) or not symbol.strip():
+        return BuyDecision(False, "input", f"symbol 형식 오류({symbol!r})")
+    symbol = symbol.strip().upper()
     market = market or kis.market_of_symbol(symbol)
+    if market not in ("KR", "US"):
+        return BuyDecision(False, "input", f"market 무효({market!r})")
     # 원화 환산계수: US는 fx(krw_per_usd), KR은 표시통화가 이미 원화 → 1.0.
     fx = 1.0 if market == "KR" else krw_per_usd
 
@@ -84,6 +92,12 @@ def execute_entry(pos_key: str, symbol: str, *, price_usd: float,
     if any(isinstance(v, bool) for v in (price_usd, per_share_risk_usd, fx)) \
             or isinstance(limit_price, bool):
         return BuyDecision(False, "input", "price/risk/fx 무효(boolean)")
+    try:
+        price_usd = float(price_usd)
+        per_share_risk_usd = float(per_share_risk_usd)
+        fx = float(fx)
+    except (TypeError, ValueError, OverflowError):
+        return BuyDecision(False, "input", "price/risk/fx 형식 오류")
     if not (math.isfinite(price_usd) and math.isfinite(per_share_risk_usd)
             and math.isfinite(fx)):
         return BuyDecision(False, "input", "price/risk/fx 무효(NaN·inf)")
@@ -92,6 +106,7 @@ def execute_entry(pos_key: str, symbol: str, *, price_usd: float,
     # order_meta.stop이 **제공된 경우** finite·양수 재검사(Codex V2 P1 이중방어).
     #   무효 stop이 원장 메타로 남으면 체결 후 회계·보호원장이 stop<=0을 거부해
     #   실보유만 있고 보호 없는 상태가 된다 — 주문 전에 끊는다.
+    meta_stop = None
     if order_meta is not None and "stop" in order_meta:
         if isinstance(order_meta["stop"], bool):
             return BuyDecision(False, "input", "order_meta.stop 무효(boolean)")
@@ -102,6 +117,7 @@ def execute_entry(pos_key: str, symbol: str, *, price_usd: float,
         if not (math.isfinite(meta_stop) and meta_stop > 0):
             return BuyDecision(False, "input",
                                f"order_meta.stop 무효({order_meta['stop']})")
+    meta_tgt = None
     if order_meta is not None and order_meta.get("target") is not None:
         # target이 명시됐다면 finite·양수·stop 초과여야 한다 — 오염 target이
         # 원장 메타로 남으면 목표청산이 꺼지거나 즉시매도된다(Codex V6 M15).
@@ -118,6 +134,9 @@ def execute_entry(pos_key: str, symbol: str, *, price_usd: float,
     # 잔여 숫자 인자도 같은 경계에서 검증(Codex V6 P2-3) — 정상 호출부는 이미
     #   정제된 값을 주지만, 실행기는 직접 호출을 가정한 최종 이중방어다.
     #   None은 '미지정'으로 허용, 명시값은 bool·NaN·inf·비숫자 거부.
+    nonnegative = {"open_cost_krw", "total_open_cost_krw",
+                   "held_cost_krw", "total_held_cost_krw"}
+    positive = {"seed_krw", "operating_limit_krw", "risk_pct"}
     for label, value in (("seed_krw", seed_krw),
                          ("open_cost_krw", open_cost_krw),
                          ("total_open_cost_krw", total_open_cost_krw),
@@ -128,14 +147,21 @@ def execute_entry(pos_key: str, symbol: str, *, price_usd: float,
         if value is None:
             continue
         try:
-            if isinstance(value, bool) or not math.isfinite(float(value)):
+            number = float(value)
+            if isinstance(value, bool) or not math.isfinite(number):
                 return BuyDecision(False, "input",
                                    f"{label} 무효(boolean·NaN·inf)")
-        except (TypeError, ValueError):
+            if label in nonnegative and number < 0:
+                return BuyDecision(False, "input", f"{label} 음수 무효")
+            if label in positive and number <= 0:
+                return BuyDecision(False, "input", f"{label} 0·음수 무효")
+        except (TypeError, ValueError, OverflowError):
             return BuyDecision(False, "input", f"{label} 형식 오류")
+    normalized_limit = None
     if limit_price is not None:
         try:
-            if not math.isfinite(float(limit_price)) or float(limit_price) <= 0:
+            normalized_limit = float(limit_price)
+            if not math.isfinite(normalized_limit) or normalized_limit <= 0:
                 return BuyDecision(False, "input",
                                    f"limit_price 무효({limit_price})")
         except (TypeError, ValueError):
@@ -148,6 +174,41 @@ def execute_entry(pos_key: str, symbol: str, *, price_usd: float,
                                f"qty_fraction 무효({qty_fraction})")
     except (TypeError, ValueError):
         return BuyDecision(False, "input", "qty_fraction 형식 오류")
+    if normalized_limit is not None and not math.isclose(
+            price_usd, normalized_limit, rel_tol=1e-9, abs_tol=1e-9):
+        return BuyDecision(False, "input", "price_usd/limit_price 불일치")
+    if meta_stop is not None:
+        if normalized_limit is None:
+            return BuyDecision(False, "input", "보호 메타 주문은 발주 상한 필수")
+        effective_price = normalized_limit
+        if effective_price <= meta_stop:
+            return BuyDecision(False, "input", "발주가가 손절선 이하")
+        expected_risk = effective_price - meta_stop
+        if not math.isclose(per_share_risk_usd, expected_risk,
+                            rel_tol=1e-9, abs_tol=1e-9):
+            return BuyDecision(False, "input", "주당 위험과 발주가/손절선 불일치")
+        if sleeve == "B":
+            if meta_tgt is None or meta_tgt <= effective_price:
+                return BuyDecision(False, "input", "B 목표가가 발주가 이하")
+            actual_rr = (meta_tgt - effective_price) / expected_risk
+            stop_pct = expected_risk / effective_price
+            if actual_rr + 1e-12 < settings.SHELF_MIN_RR:
+                return BuyDecision(False, "input", "B 실제 손익비 미달")
+            if stop_pct - 1e-12 > settings.SHELF_MAX_STOP:
+                return BuyDecision(False, "input", "B 실제 손절폭 초과")
+    for label, value in (("open_positions", open_positions),
+                         ("hldg_before", hldg_before),
+                         ("qty_cap", qty_cap)):
+        if value is None:
+            continue
+        if isinstance(value, bool):
+            return BuyDecision(False, "input", f"{label} boolean 무효")
+        try:
+            number = int(value)
+        except (TypeError, ValueError, OverflowError):
+            return BuyDecision(False, "input", f"{label} 형식 오류")
+        if number < 0 or float(value) != number:
+            return BuyDecision(False, "input", f"{label} 음수/비정수 무효")
 
     # 1) kill-switch(I6)
     if not kill.allows("buy_new"):
@@ -252,7 +313,7 @@ def execute_entry(pos_key: str, symbol: str, *, price_usd: float,
     #   매수가 live에서 거부). KR은 excg 무관.
     if market != "KR":
         excg = kis.us_excg_of(symbol)
-    limit = (float(limit_price) if limit_price is not None
+    limit = (normalized_limit if normalized_limit is not None
              else kis_orders.marketable_limit_price(price_usd, "BUY", market=market))
     reservation_qty = (min(planned_qty, max(0, int(qty_cap)))
                        if qty_cap is not None else planned_qty)

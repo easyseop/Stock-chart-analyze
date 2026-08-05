@@ -164,17 +164,16 @@ Environment=AUTODEPLOY_SERVICES=sentinel buyloop telegram portfolio-web
 > 보유·진입일·가상 체결을 따라 사지 않는다 — **신선한 스캐너 신호를 KIS 시세로
 > 직접 집행**하는 limited mock 프로필이다.
 
-**동시 보유 종목 수에는 고정 상한이 없고**, 신규매수 가능 금액은 A/B 슬리브
+**동시 보유 종목 수와 수동 종목 allowlist에는 고정 상한이 없고**, 신규매수 가능 금액은 A/B 슬리브
 예산·A+B 통합 운용한도·KIS 매수여력·종목별 비중·risk 중 가장 작은 값으로
 결정한다. 하루 신규 10건(주문 폭주 방지용 KIS 독립 상한)·거래당 risk 1%를
-유지하며, **allowlist는 필수**다 — autopaper가 후보를 좁혀준다는 전제가
-사라졌으므로 limited L0는 승인된 목록 안에서만 산다.
+유지한다. KIS는 가상계좌 보유내역이 아니라 신선한 스캐너 A/B 진입 신호를
+전략계약·KIS 현재가·잔고·예산·세션 게이트로 다시 검증해 직접 집행한다.
 ```bash
-# kis.env에 (ALLOWED_SYMBOLS 필수 — 비어 있으면 전 종목 거부 fail-closed):
+# kis.env에 (낡은 ALLOWED_SYMBOLS 줄은 삭제):
 KIS_ORDERS_ENABLED=1
 ALLOW_BUY=1
 TRADE_STAGE=mirror
-ALLOWED_SYMBOLS=...   # 승인 종목 콤마 구분(또는 git 추적 allowed_symbols.txt)
 ```
 그대로 유지되는 방어선: kill-switch·부팅 대사·파수꾼 SLA·ownership(baseline
 denylist)·원장(UNKNOWN 잠금·동일종목 in-flight·60s 간격)·사이징(SEED 분모·
@@ -204,7 +203,7 @@ denylist)·원장(UNKNOWN 잠금·동일종목 in-flight·60s 간격)·사이징
 - `--scope l0`: KIS mock의 제한적 신규매수 재개용이다. 7일 shadow,
   Oracle 한·미 세션, GitHub 장애주입, 9종목 래칫, 동결 해제 결정은
   `INFO`로 표시한다. 대신 mock·L1·원장·미체결·수량·예산·heartbeat·
-  fallback 0·stall shadow·동결 6종목 유지·mirror allowlist를 차단
+  fallback 0·stall shadow·동결 6종목 유지·mirror 직접진입 설정을 차단
   조건으로 사용한다.
 - `--scope strict`(기본): 위 관찰 증거까지 모두 차단 조건으로 사용한다.
 

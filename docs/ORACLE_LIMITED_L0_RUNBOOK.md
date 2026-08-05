@@ -10,7 +10,7 @@
 - 대상 기본 브랜치: `claude/happy-gauss-cwoq21`
 - 준비도 점검기 PR: #97 `Add read-only L1 readiness audit` (병합·Oracle 배포 완료)
 - 현재 상태: 2026-07-30 Oracle에서 기존 코드의 limited mock L0 전환 완료.
-  allowlist는 `EQT,CEG,EXE,MARA,TBBK,CLBK`이며, 동시 보유 수 제한 제거
+  과거 allowlist는 `EQT,CEG,EXE,MARA,TBBK,CLBK`였으며, 동시 보유 수 제한 제거
   브랜치는 로컬 검증만 완료하고 아직 기본 브랜치 병합·Oracle 배포 전이다.
 - 2026-07-31 01:49 KST 적용 요청을 받았지만 미국 정규장 진행 중이었고, 현재
   Mac에 Oracle SSH 설정이 없어 병합·배포하지 않았다. PR #105는 Draft이며
@@ -27,13 +27,13 @@
 - `ORACLE_SIGNAL_FALLBACK_ENABLED=0`
 - AQN, CAG, GPK, LW, SNN, VRSK close-only 동결
 - `TRADE_STAGE=mirror`
-- 비어 있지 않은 `ALLOWED_SYMBOLS`
+- `ALLOWED_SYMBOLS` 미설정/빈 값(수동 종목목록 없음)
 - `ALLOW_BUY=1`, `KIS_ORDERS_ENABLED=1`
 - 실제 L0 전환 전까지 kill-switch L1
 
-`ALLOWED_SYMBOLS`는 Git이 정할 수 없는 사람의 결정이다. 실제로 재매수를
-허용할 종목만 쉼표로 구분해 기록한다. 동결 6종목을 목록에 넣어도 ownership
-게이트가 차단하지만, 운영 의도를 명확히 하려면 목록에서 제외한다.
+KIS는 가상계좌를 미러링하지 않고 신선한 스캐너 후보를 직접 집행한다. 따라서
+과거 6종목 `ALLOWED_SYMBOLS`는 삭제한다. 동결 6종목은 종목목록이 아니라
+ownership의 close-only 상태로 계속 차단한다.
 
 ## 3. Oracle에서 실행할 순서
 
@@ -97,7 +97,7 @@ KIS_ENV=mock
 KIS_ORDERS_ENABLED=1
 ALLOW_BUY=1
 TRADE_STAGE=mirror
-ALLOWED_SYMBOLS=<사용자가 승인한 종목 목록>
+# ALLOWED_SYMBOLS 줄은 삭제(빈 값도 허용하지만 제거가 명확함)
 ORACLE_SIGNAL_FALLBACK_ENABLED=0
 ```
 
@@ -138,19 +138,19 @@ done
 ```
 
 sentinel은 `KIS_ENV=mock`, `STALL_EXIT_MODE=shadow`여야 한다. buyloop는
-`KIS_ENV=mock`, fallback 0, mirror, 비어 있지 않은 allowlist, 두 주문
-플래그 1이어야 한다. 누락이나 불일치가 있으면 L1을 유지하고 unit/env부터
-수정한다.
+`KIS_ENV=mock`, fallback 0, mirror, 두 주문 플래그 1이어야 하며
+`ALLOWED_SYMBOLS`는 출력되지 않거나 빈 값이어야 한다. 낡은 목록이 남으면 L1을
+유지하고 제거한다.
 
 ### 3.5 읽기 전용 L0 점검
 
 아래 명령은 브로커 잔고와 미체결을 조회하지만 주문을 보내거나 L1을 바꾸지
 않는다. service 설정 확인과 동일한 안전값으로 평가기를 실행한다.
 
-미국 보유·열린 주문·allowlist만 있는 경우에는 KIS mock이 지원하지 않는 국내
-미체결 API를 호출하지 않는다. 국내 종목이 하나라도 범위에 있으면 국내 조회
-실패를 계속 NO-GO로 처리하며, 범위를 판정할 수 없을 때도 양 시장을 모두
-조회해 fail-closed를 유지한다.
+수동 종목목록이 없으므로 미래의 한국·미국 신호를 모두 안전하게 처리하려면
+양 시장 미체결 조회가 성공해야 한다. KIS mock 국내 미체결 API가 미지원이면
+0건으로 추정하지 않고 NO-GO로 둔다. 이 경우 별도 브로커-진실 대사 방안을
+검증하기 전에는 L0로 내리지 않는다.
 
 ```bash
 sudo -u ubuntu bash -lc '
@@ -170,7 +170,7 @@ sudo -u ubuntu bash -lc '
 - `"scope": "l0"`
 - `"ready_for_operator_review": true`
 - `"blockers": []`
-- `context.allowed_symbols`가 승인할 목록과 정확히 일치
+- `context.allowed_symbols`가 빈 목록
 - `context.position_counts_by_sleeve`의 A/B 개수를 사람이 확인. 이 값은 배포
   전후 대조용이며 mirror의 승인·차단 조건은 아니다.
 
@@ -190,11 +190,12 @@ sudo systemctl is-active autodeploy.timer
 
 ## 4. 사용자 승인과 L0 전환
 
-여기부터는 자동 진행하지 않는다. 점검 JSON과 A/B 개수, allowlist를 사용자에게
+여기부터는 자동 진행하지 않는다. 점검 JSON과 A/B 개수를 사용자에게
 보여주고 다음 범위를 명시적으로 승인받는다.
 
-> KIS mock 계좌의 제한적 L0 신규매수를 승인한다. `ALLOWED_SYMBOLS` 펜스,
-> 정체청산 shadow, Oracle fallback 0, 동결 6종목, 실전 하드블록을 유지한다.
+> KIS mock 계좌의 scanner-direct L0 신규매수를 승인한다. 수동 종목목록 없이
+> 신선한 A/B 진입 후보를 대상으로 하되 정체청산 shadow, Oracle fallback 0,
+> 동결 6종목, 실전 하드블록을 유지한다.
 > 동시 보유 종목 수는 신규매수 차단 기준으로 사용하지 않으며, 슬리브 예산,
 > A+B 통합 운용한도, KIS 매수여력과 계산 수량으로 신규매수를 제한한다.
 > stall live, fallback 1, 동결 해제, 실전 전환은 승인하지 않는다.
@@ -208,11 +209,11 @@ sudo -u ubuntu bash -lc '
   . /home/ubuntu/kis.env
   set +a
   .venv/bin/python -m bot.kill 0 \
-    "사용자 승인: mock 제한적 L0, allowlist 확인" --lower
+    "사용자 승인: mock scanner-direct L0, 수동 종목목록 없음" --lower
 '
 ```
 
-출력이 `L0`인지 확인한다. 정규장에 fresh 신호, 가격 범위, allowlist, 포지션
+출력이 `L0`인지 확인한다. 정규장에 fresh 신호, 가격 범위, 포지션
 예산, A+B 통합 운용한도와 매수 가능 현금 조건을 모두 만족하는 종목이 있으면
 기본 60초 매수루프 안에 주문을 시도한다. mirror에서는 A/B 동시 보유 종목 수를
 고정 숫자로 제한하지 않는다. 현금이 없거나 계산 수량이 0이면 주문하지 않는다.
@@ -229,7 +230,7 @@ sudo -u ubuntu bash -lc '
 
 운영자는 먼저 kill-switch를 L1로 올리고 신규매수를 중지한 뒤, 장외에 clean
 fast-forward와 회귀 테스트를 수행한다. 배포 후 `--scope l0 --broker --json`의
-`blockers=[]`와 승인 allowlist를 다시 확인하고, 변경된 의미를 사용자가 승인한
+`blockers=[]`와 빈 `context.allowed_symbols`를 다시 확인하고, 변경된 의미를 사용자가 승인한
 경우에만 operator ack로 L0를 복구한다. 문제가 있으면 L1을 유지하며 이전 코드를
 강제로 reset하지 말고 Git revert PR로 복구한다.
 
@@ -246,7 +247,7 @@ sudo journalctl -u buyloop -f
 - 브로커·보호원장·costbook 수량 불일치
 - sentinel heartbeat 120초 초과
 - 예산·현금·수량 계산 이상
-- allowlist 밖 주문 또는 동결종목 주문 시도
+- stale/관찰 신호 주문 또는 동결종목 주문 시도
 
 ```bash
 cd /home/ubuntu/Stock-chart-analyze

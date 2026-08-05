@@ -30,18 +30,22 @@ from __future__ import annotations
 
 import dataclasses
 import datetime
+import html
 import math
 import os
+import re
 import sys
 import time
 
-from bot import envelope, kis, kis_buy, kis_pending, kis_positions, settings
+from bot import envelope, kis, kis_buy, kis_orders, kis_pending, kis_positions, settings
 
 _US_EXCGS = ("NASD", "NYSE", "AMEX")   # 보유 병합용 — NYSE/AMEX 보유 누락 방지
 _KST = datetime.timezone(datetime.timedelta(hours=9))
 
 _ALLOWED_TACTICS = ("full", "half", "pullback")
 _ALLOWED_CCY = ("USD", "KRW")
+_SIGNAL_ID = re.compile(r"^[A-Za-z0-9._:-]{1,128}$")
+_MAX_NAME_LEN = 120
 
 
 def _finite_number(value, field: str) -> float:
@@ -159,15 +163,20 @@ def _validate_candidate(s: dict, *, group: str
         # 자체가 사라지고 21일 타임스탑만 남는다(Codex V5 P1-2).
         return None, "input", "B 목표가 필수(finite target > entry)"
     ed = s.get("earnings_d")
-    try:
-        earnings_d = float(ed) if ed is not None else None
-    except (TypeError, ValueError):
+    if ed is None:
         earnings_d = None
+    else:
+        try:
+            earnings_d = _finite_number(ed, "earnings_d")
+        except (TypeError, ValueError):
+            return None, "input", f"어닝 일수 형식 오류({ed!r})"
     # 우선순위 필드도 검증한다 — 원본 dict를 정렬에서 산술하면 구조값 하나가
     # 사이클 전체를 중단시킨다(Codex V6 P2-1). 부재/None만 기본값 0, 명시
     # 오염(bool·구조값·비숫자·비유한)은 행 단위 거부.
     priority = {}
     shelf_meta = s.get("shelf")
+    if group == "shelf" and not isinstance(shelf_meta, dict):
+        return None, "input", f"B shelf 메타 형식 오류({shelf_meta!r})"
     for label, raw in (("stage", s.get("stage")), ("norm", s.get("norm")),
                        ("rr", (shelf_meta.get("rr")
                                if isinstance(shelf_meta, dict) else None))):
@@ -178,10 +187,37 @@ def _validate_candidate(s: dict, *, group: str
             priority[label] = _finite_number(raw, label)
         except (TypeError, ValueError):
             return None, "input", f"우선순위 필드 형식 오류({label}={raw!r})"
+    if group == "shelf":
+        if shelf_meta.get("rr") is None or priority["rr"] <= 0:
+            return None, "input", "B shelf.rr 필수(finite > 0)"
+        signal_rr = (target - entry) / (entry - stop)
+        # scanner는 rr을 소수 둘째 자리로 반올림한다. 가격에서 다시 계산한 값과
+        # 0.05R 넘게 다르면 손상/서로 다른 시점의 필드 조합으로 보고 주문하지 않는다.
+        if abs(priority["rr"] - signal_rr) > 0.05:
+            return None, "input", (
+                f"B shelf.rr 불일치(meta={priority['rr']:.4f}, "
+                f"prices={signal_rr:.4f})")
+        signal_stop_pct = (entry - stop) / entry
+        if signal_rr + 1e-12 < settings.SHELF_MIN_RR:
+            return None, "input", f"B 신호 손익비 미달({signal_rr:.4f}R)"
+        if signal_stop_pct - 1e-12 > settings.SHELF_MAX_STOP:
+            return None, "input", (
+                f"B 신호 손절폭 초과({signal_stop_pct * 100:.2f}%)")
+    raw_id = s.get("id")
+    signal_id = code if raw_id is None else raw_id
+    if not isinstance(signal_id, str) or not _SIGNAL_ID.fullmatch(signal_id.strip()):
+        return None, "input", f"신호 ID 형식 오류({raw_id!r})"
+    raw_name = s.get("name")
+    if raw_name is None:
+        name = ""
+    elif not isinstance(raw_name, str) or len(raw_name.strip()) > _MAX_NAME_LEN:
+        return None, "input", "종목명 형식/길이 오류"
+    else:
+        name = raw_name.strip()
     return ValidatedCandidate(
         code=code, ccy=ccy, market=market, group=group, tactic=mode,
         entry=entry, stop=stop, pb=pb, target=target,
-        signal_id=str(s.get("id") or code), name=str(s.get("name") or ""),
+        signal_id=signal_id.strip(), name=name,
         earnings_d=earnings_d, stage=priority["stage"], norm=priority["norm"],
         rr=priority["rr"]), "", ""
 
@@ -359,6 +395,9 @@ def run_once(signals: list[dict], *, fx: float | None = None,
     seed_krw: 이 슬리브 전용 SEED(None이면 execute_entry가 기본 BOT_SEED_KRW).
     fx: USD→KRW 환율. excg_of: {code: 거래소}.
     """
+    if (sleeve, group) not in (("A", "now"), ("B", "shelf")):
+        return [{"code": "*", "gate": "input",
+                 "why": f"sleeve/group 계약 위반({sleeve}/{group})"}]
     # 명시적으로 전달된 환율은 그대로 검증한다 — `fx or 기본값`은 0을 조용히
     #   기본값으로 되살려 낡은 환율로 사이징한다(Codex V2 P2). None만 기본값.
     raw_fx = settings.FX_USDKRW if fx is None else fx
@@ -448,7 +487,10 @@ def run_once(signals: list[dict], *, fx: float | None = None,
         if mode in ("full", "half") and abs(cur - entry) / entry > settings.ENTRY_TOLERANCE:
             results.append({"code": code, "gate": "tolerance",
                             "why": f"가격 괴리 {cur} vs 진입 {entry}"}); continue
-        order_px = pb if mode == "pullback" else cur
+        # full/half도 실제 전송은 현재가가 아니라 30bp 위 마켓터블 지정가다.
+        # 목표·RR·손절폭·사이징은 체결 가능한 최악 상한을 기준으로 해야 한다.
+        order_px = (pb if mode == "pullback" else
+                    kis_orders.marketable_limit_price(cur, "BUY", market=market))
         if vc.group == "shelf" and (vc.target is None
                                     or vc.target <= order_px):
             # B target은 **이번 주문의 실제 발주가**보다 커야 한다 — entry보다
@@ -461,8 +503,22 @@ def run_once(signals: list[dict], *, fx: float | None = None,
         per_share = order_px - stop
         if per_share <= 0:                         # 검증기 계약상 불가능 — 최종 벨트
             results.append({"code": code, "gate": "input", "why": "손절폭 무효"}); continue
+        if vc.group == "shelf":
+            actual_rr = (vc.target - order_px) / per_share
+            stop_pct = per_share / order_px
+            if actual_rr + 1e-12 < settings.SHELF_MIN_RR:
+                results.append({
+                    "code": code, "gate": "input",
+                    "why": f"B 실제 손익비 {actual_rr:.4f}R < "
+                           f"{settings.SHELF_MIN_RR:.2f}R"}); continue
+            if stop_pct - 1e-12 > settings.SHELF_MAX_STOP:
+                results.append({
+                    "code": code, "gate": "input",
+                    "why": f"B 실제 손절폭 {stop_pct * 100:.2f}% > "
+                           f"{settings.SHELF_MAX_STOP * 100:.2f}%"}); continue
 
-        pos_key = f"{prefix}{vc.signal_id}"
+        # id가 종목 간 중복돼도 원장 키가 충돌하지 않도록 code를 항상 포함한다.
+        pos_key = f"{prefix}{code}:{vc.signal_id}"
         opened = settings.today_kst()
         order_meta = {"pos_key": pos_key, "sleeve": sleeve, "stop": stop,
                       "target": vc.target, "name": vc.name, "opened": opened,
@@ -477,7 +533,7 @@ def run_once(signals: list[dict], *, fx: float | None = None,
                                   operating_limit_krw=operating_limit,
                                   hldg_before=0, seed_krw=seed_krw,
                                   sleeve=sleeve,
-                                  limit_price=pb if mode == "pullback" else None,
+                                  limit_price=order_px,
                                   qty_fraction=0.5 if mode == "half" else 1.0,
                                   order_meta=order_meta)
         if d.ok:
@@ -507,7 +563,8 @@ def run_once(signals: list[dict], *, fx: float | None = None,
                 u = "원" if market == "KR" else "$"
                 tag = " (매물대B)" if sleeve == "B" else ""
                 notify.send(
-                    f"🟢 <b>KIS 매수 주문 접수{tag}</b> — {vc.name or code}({code})\n"
+                    f"🟢 <b>KIS 매수 주문 접수{tag}</b> — "
+                    f"{html.escape(vc.name or code)}({html.escape(code)})\n"
                     f"  전술 {mode} · 1차 {d.qty}주"
                     + (f" · 눌림대기 {pending_qty}주 @ {pb}{u}" if pending_qty else "")
                     + f" · 손절 {stop}{u}",
