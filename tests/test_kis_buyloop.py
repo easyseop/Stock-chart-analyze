@@ -365,6 +365,68 @@ def test_unknown_tactic_never_bypasses_tolerance():
     print("[PASS] 알 수 없는 전술 차단·변형 정규화 — tolerance 우회 경로 없음")
 
 
+def test_falsy_tactic_values_do_not_default_to_full():
+    """Codex V4 P1-1 재현: `raw or "full"` 한 줄이 []·{}·0·False·""를 전부
+    정상 full 주문으로 둔갑시켰다(tolerance 안이면 sent). 명시된 위반값은
+    gate=tactic, **필드가 정말 없을 때만** legacy full이어야 한다."""
+    falsy_modes = ([], {}, 0, False, None, "", "   ")
+    for bad in falsy_modes:
+        for group, sleeve, extra in (("now", "A", {}),
+                                     ("shelf", "B", {"shelf": {"rr": 2.0}})):
+            sig = _sig(code="AAPL", ccy="USD", entry=100.0, stop=95.0,
+                       group=group, tactic={"mode": bad}, **extra)
+            res, ex, _, _ = _run(
+                [sig], holdings={}, last=100.4,      # tolerance 안 — 종전엔 sent
+                run_kwargs={"sleeve": sleeve, "group": group})
+            assert not ex.called, (bad, group)
+            r = _g(res, "AAPL")
+            assert r is not None and r["gate"] == "tactic", (bad, group, res)
+    # tactic 자체가 falsy 구조로 온 경우도 동일(종전 `or {}`가 정상화했음).
+    for bad_tactic in ([], 0, False):
+        sig = _sig(code="AAPL", ccy="USD", entry=100.0, stop=95.0,
+                   tactic=bad_tactic)
+        res, ex, _, _ = _run([sig], holdings={}, last=100.4)
+        assert not ex.called, bad_tactic
+        assert _g(res, "AAPL")["gate"] == "tactic", (bad_tactic, res)
+    # legacy 호환은 **부재**에만: tactic 필드 없음·tactic=None·dict에 mode 키
+    #   없음 → full로 정상 진행. 문자열 전술("full")도 종전대로 허용.
+    for legacy in (None, {}, "full"):
+        sig = _sig(code="AAPL", ccy="USD", entry=100.0, stop=95.0)
+        if legacy is None:
+            sig.pop("tactic", None)
+        else:
+            sig["tactic"] = legacy
+        res, ex, _, _ = _run([sig], holdings={}, last=100.4)
+        assert ex.called and _g(res, "AAPL")["gate"] == "sent", legacy
+    print("[PASS] falsy 전술값은 full 둔갑 없이 차단 · 부재만 legacy full")
+
+
+def test_stop_at_or_above_entry_blocked_regardless_of_price():
+    """Codex V4 P1-2 재현: full의 order_px는 실시간 현재가라, cur이 entry보다
+    조금 높으면 stop==entry·소폭 역전이 per_share>0으로 통과해 sent까지 갔다
+    (극소 손절폭 → 위험기반 수량 폭증 방향). 신호 불변식 stop<entry를
+    현재가와 무관하게 강제한다."""
+    for stop in (100.0, 100.0001, 100.2, 120.0):
+        for cur in (100.0, 100.1, 100.4, 101.49):    # 전부 tolerance 안
+            for group, sleeve, extra in (("now", "A", {}),
+                                         ("shelf", "B", {"shelf": {"rr": 2.0}})):
+                sig = _sig(code="AAPL", ccy="USD", entry=100.0, stop=stop,
+                           group=group, **extra)
+                res, ex, _, _ = _run(
+                    [sig], holdings={}, last=cur,
+                    run_kwargs={"sleeve": sleeve, "group": group})
+                assert not ex.called, (stop, cur, group)
+                r = _g(res, "AAPL")
+                assert r is not None and r["gate"] == "input", \
+                    (stop, cur, group, res)
+    # 유효 경계 0 < stop < entry는 기존대로 통과.
+    res, ex, _, _ = _run([_sig(code="AAPL", ccy="USD",
+                               entry=100.0, stop=99.9)],
+                         holdings={}, last=100.4)
+    assert ex.called and _g(res, "AAPL")["gate"] == "sent"
+    print("[PASS] stop>=entry는 현재가와 무관하게 input 차단 · 유효 stop 통과")
+
+
 def test_intra_cycle_accumulation():
     """한 사이클 두 매수 — 두 번째 호출은 첫 매수를 반영한 캡 입력을 받아야."""
     res, ex, rec, _ = _run([_sig(code="005930"), _sig(code="000660")], holdings={})
@@ -505,6 +567,8 @@ def main():
     test_nan_target_is_not_persisted()
     test_invalid_fx_fails_closed_for_all_candidates()
     test_unknown_tactic_never_bypasses_tolerance()
+    test_falsy_tactic_values_do_not_default_to_full()
+    test_stop_at_or_above_entry_blocked_regardless_of_price()
     test_intra_cycle_accumulation()
     test_non_now_filtered()
     test_us_signal_routes_and_fx()

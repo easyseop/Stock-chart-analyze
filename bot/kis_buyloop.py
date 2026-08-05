@@ -292,27 +292,45 @@ def run_once(signals: list[dict], *, fx: float | None = None,
         except (TypeError, ValueError):
             results.append({"code": code, "gate": "input",
                             "why": "진입/손절가 형식 오류"}); continue
-        tactic = s.get("tactic") or {}
-        raw_mode = (tactic.get("mode") if isinstance(tactic, dict) else tactic)
-        mode = str(raw_mode or "full").strip().lower()
+        # 전술 파싱 — "필드가 정말 없음"(None/부재/dict에 mode 키 없음)만 legacy
+        #   기본값 full이다. **명시적으로 들어온 값**은 타입부터 검증한다:
+        #   `raw or "full"` 한 줄은 []·{}·0·False·"" 같은 falsy 위반값을 전부
+        #   정상 full 주문으로 둔갑시켰다(Codex V4 P1-1 — 계약 위반 데이터가
+        #   fail-closed 대신 즉시 현재가 매수로 의미 변조).
+        raw_tactic = s.get("tactic")
+        mode = None
+        if raw_tactic is None:
+            mode = "full"                              # 필드 부재 = legacy 호환
+        elif isinstance(raw_tactic, dict):
+            if "mode" not in raw_tactic:
+                mode = "full"                          # mode 키 부재 = legacy 호환
+            elif isinstance(raw_tactic["mode"], str):
+                mode = raw_tactic["mode"].strip().lower()
+        elif isinstance(raw_tactic, str):
+            mode = raw_tactic.strip().lower()
         if mode not in ("full", "half", "pullback"):
-            # 알 수 없는 전술명은 tolerance·눌림가 검사를 전부 우회해 현재가
-            #   주문으로 폴백했다(Codex V3 P1 — entry에서 100% 이탈해도 sent).
-            #   공백·대소문자만 정규화하고 허용 집합 밖은 주문 전에 차단한다.
+            # 비문자열 mode·빈 문자열·허용 집합 밖 전부 여기서 차단 —
+            #   알 수 없는 전술이 tolerance를 우회하는 경로 없음(Codex V3 P1).
             results.append({"code": code, "gate": "tactic",
-                            "why": f"알 수 없는 진입 전술({mode})"}); continue
+                            "why": f"알 수 없는 진입 전술({raw_tactic!r})"}); continue
+        tactic = raw_tactic if isinstance(raw_tactic, dict) else {}
         try:
-            pb = float(tactic.get("pb_price") or 0) if isinstance(tactic, dict) else 0.0
+            pb = float(tactic.get("pb_price") or 0)
         except (TypeError, ValueError):
             pb = 0.0
         if not (math.isfinite(entry) and math.isfinite(stop)
-                and math.isfinite(pb)) or entry <= 0 or stop <= 0:
+                and math.isfinite(pb)) or entry <= 0 or stop <= 0 \
+                or stop >= entry:
             # NaN·inf 손절/진입은 아래 부등식 게이트를 전부 미끄러져 통과하고
             #   (nan<=0 == False), 음수 stop은 per_share가 오히려 큰 양수가
             #   되어 sent까지 간다(Codex V2 P1 — 체결되면 회계·보호원장이
-            #   stop<=0을 거부해 무보호 실보유가 남는다). 명시적으로 닫는다.
+            #   stop<=0을 거부해 무보유 보호 상태가 남는다). `stop >= entry`도
+            #   **신호 불변식**으로 여기서 강제한다 — full의 order_px는 실시간
+            #   현재가라 cur이 entry보다 조금 높으면 stop==entry·소폭 역전이
+            #   per_share>0으로 통과했다(Codex V4 P1-2, 극소 손절폭 → 위험기반
+            #   수량 폭증 방향). 현재가와 무관하게 계약 위반은 주문 0.
             results.append({"code": code, "gate": "input",
-                            "why": "진입/손절가 무효(NaN·inf·0·음수)"}); continue
+                            "why": "진입/손절가 무효(NaN·inf·0·음수·역전)"}); continue
         if mode in ("full", "half") and abs(cur - entry) / entry > settings.ENTRY_TOLERANCE:
             results.append({"code": code, "gate": "tolerance",
                             "why": f"가격 괴리 {cur} vs 진입 {entry}"}); continue
