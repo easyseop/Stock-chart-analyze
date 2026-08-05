@@ -95,12 +95,40 @@ def test_not_held_and_query_fail():
     print("[PASS] 미보유 안내 + 전체 조회 실패 시 실패 응답")
 
 
+def test_diag_is_read_only_and_reports_failures():
+    """/진단 — SSH 없이 서버 건강 실측. 조회 실패도 예외 없이 표시(읽기전용)."""
+    from unittest import mock
+    import subprocess
+    _install(kr=[_KR], us=[_US])
+    with mock.patch.object(subprocess, "run",
+                           side_effect=RuntimeError("no systemd")), \
+            mock.patch.dict("os.environ", {"KIS_ENV": "mock",
+                                           "TRADE_STAGE": "mirror"}):
+        text = kt.handle("/진단")
+    assert "서버 자가진단" in text
+    assert "KIS 잔고 조회" in text and "KR(1)" in text     # 시장별 실측 표시
+    assert "KIS_ENV=mock" in text and "STAGE=mirror" in text
+    assert "주문" in text                                  # 원장 요약 존재
+    # 전 시장 조회 실패 — 예외 없이 실패 표기 + 손절 차단 경고.
+    _install(fail=True)
+    with mock.patch.object(subprocess, "run",
+                           side_effect=RuntimeError("no systemd")):
+        text = kt.handle("상태")                           # 별칭 라우팅
+    assert "전부 실패" in text and "손절 자동매도가 차단" in text
+    # 읽기전용 원칙 — 진단 코드에 주문 함수 호출이 없다.
+    import inspect
+    src = inspect.getsource(kt._diag_text)
+    assert "place_buy" not in src and "place_sell" not in src
+    print("[PASS] /진단: 시장별 실측·실패 표기·읽기전용")
+
+
 def main():
     test_holdings_summary()
     test_detail_realtime()
     test_bare_code_and_name()
     test_routing_and_help()
     test_not_held_and_query_fail()
+    test_diag_is_read_only_and_reports_failures()
     print("\n텔레그램 조회 봇 검증 통과 — 읽기전용 요약/상세/보안/실패 처리.")
 
 

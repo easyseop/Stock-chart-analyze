@@ -9,7 +9,7 @@
 |---|---|
 | `sentinel.service` | 파수꾼(매도) 상시 실행(`python -m bot.sentinel`, `SENTINEL_BROKER=kis`) |
 | `buyloop.service` | 매수 루프 — autopaper 'now' 신호를 KIS에 미러 매수(`python -m bot.kis_buyloop --loop`) |
-| `telegram.service` | 텔레그램 조회 봇(읽기전용) — `/보유`·`/종목 <코드>`(`python -m bot.kis_telegram`) |
+| `telegram.service` | 텔레그램 조회 봇(읽기전용) — `/보유`·`/종목 <코드>`·`/진단`(서버 건강 실측) + 10분마다 자가진단 스냅샷을 ntfy `OPS_STATUS_TOPIC`에 발행(SSH 없는 원격 진단) |
 | `portfolio-web.service` | 실제 KIS 보유종목·평단·현재가·손익을 보여주는 사설 웹 화면(`127.0.0.1:8888`) |
 | `post-exit-refresh.timer` | 수익 매도 뒤 공개 일봉을 하루 2회 갱신하는 읽기전용 사후추적 |
 | `watchdog.service` | heartbeat 감시 — 60s P0 · 90s 재기동(≤3회/10분) · 120s+ kill L1 |

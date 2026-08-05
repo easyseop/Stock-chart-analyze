@@ -126,6 +126,7 @@ def _help_text() -> str:
             "  예) /종목 005930 · /종목 AAPL\n"
             "/슬리브 — 매물대(B) 슬리브 종목별 수익률\n"
             "/성과 — 지수(나스닥·코스피) 대비 성과 + 그래프\n"
+            "/진단 — 서버 건강(kill·heartbeat·KIS 조회·서비스) 실측\n"
             "코드만 보내도 상세 조회됩니다.")
 
 
@@ -231,6 +232,104 @@ def _perf_text() -> str:
     return "\n".join(L)
 
 
+def _diag_text() -> str:
+    """/진단 — SSH 없이 폰에서 서버 건강 확인(전부 읽기 전용, 주문 경로 없음).
+
+    사용자 요청(2026-08-05): 'KIS 잔고 조회 실패' 경보가 왔을 때 다른 컴퓨터
+    없이 현재 상태를 확인할 방법이 필요하다. 경보는 실패 스트릭당 1회 래치라
+    침묵이 복구를 뜻하지 않는다 — 이 명령이 지금 시점의 실측을 보여준다.
+    """
+    import subprocess
+    L = ["🩺 <b>서버 자가진단</b> (읽기 전용)", ""]
+
+    # 1) kill-switch — 신규매수 허용 수준
+    try:
+        from bot import kill
+        lv = kill.level()
+        L.append(f"kill-switch: L{lv} "
+                 + ("(정상 — 신규매수 허용)" if lv == 0 else
+                    "(신규매수 중지 · 손절은 계속)" if lv == 1 else
+                    "(상위 차단 — 수동 확인)"))
+    except Exception as e:
+        L.append(f"kill-switch: 확인 실패({type(e).__name__})")
+
+    # 2) 파수꾼 heartbeat — 손절 감시 생존
+    try:
+        from bot import heartbeat
+        age = heartbeat.age_s()
+        L.append("파수꾼 heartbeat: "
+                 + ("기록 없음 ⚠️" if age is None else
+                    f"{age:.0f}초 전 {'✅' if age <= 60 else '⚠️ 지연'}"))
+    except Exception as e:
+        L.append(f"파수꾼 heartbeat: 확인 실패({type(e).__name__})")
+
+    # 3) KIS 잔고 조회 — 시장별 실측(경보 래치와 무관한 현재 시점 프로브)
+    try:
+        from bot import kis
+        parts = []
+        fails = 0
+        for market, excg in [("KR", None)] + [("US", e) for e in _US_EXCGS]:
+            r = (kis.positions_detail(market) if market == "KR"
+                 else kis.positions_detail(market, excg=excg))
+            name = market if market == "KR" else excg
+            if r is None:
+                parts.append(f"{name}✗")
+                fails += 1
+            else:
+                parts.append(f"{name}({len(r)})")
+        mark = "✅" if fails == 0 else ("⚠️ 일부 실패" if fails < 4 else "🚨 전부 실패")
+        L.append(f"KIS 잔고 조회: {' '.join(parts)} {mark}")
+        if fails:
+            L.append("  └ 실패 지속 시 손절 자동매도가 차단됩니다(수량 불명 fail-closed)")
+    except Exception as e:
+        L.append(f"KIS 잔고 조회: 확인 실패({type(e).__name__})")
+
+    # 4) 원장 — 열린 주문·UNKNOWN(주문 경로 건강)
+    try:
+        from bot import ledger
+        fold = ledger._fold()
+        open_n = sum(1 for c in fold.values() if c.get("open_order"))
+        unk = sum(1 for c in fold.values() if c.get("state") == "unknown")
+        L.append(f"원장: 열린 주문 {open_n} · UNKNOWN {unk} "
+                 + ("✅" if unk == 0 else "🚨 UNKNOWN 수동 확인 필요"))
+    except Exception as e:
+        L.append(f"원장: 확인 실패({type(e).__name__})")
+
+    # 5) 신호 피드 나이(파수꾼 참고 손절선 소스)
+    try:
+        from bot import sentinel
+        _rows, feed_age = sentinel._fetch_positions()
+        L.append("포지션 피드: "
+                 + ("나이 미상" if feed_age is None else
+                    f"{feed_age:.0f}분 전 {'✅' if feed_age <= 60 else '⚠️ 정체'}"))
+    except Exception as e:
+        L.append(f"포지션 피드: 확인 실패({type(e).__name__})")
+
+    # 6) 서비스 상태(systemctl is-active는 무권한 읽기)
+    try:
+        states = []
+        for unit in ("sentinel", "buyloop", "watchdog", "portfolio-web"):
+            try:
+                out = subprocess.run(
+                    ["systemctl", "is-active", unit], capture_output=True,
+                    text=True, timeout=5).stdout.strip() or "?"
+            except Exception:
+                out = "?"
+            states.append(f"{unit}={'✅' if out == 'active' else out}")
+        L.append("서비스: " + " · ".join(states))
+    except Exception:
+        pass
+
+    # 7) 안전 플래그(시크릿 아님 — 값 자체가 운영 상태)
+    env = os.environ
+    L.append(f"환경: KIS_ENV={env.get('KIS_ENV', '?')} · "
+             f"STAGE={env.get('TRADE_STAGE', '?')} · "
+             f"BUY={'on' if env.get('ALLOW_BUY') == '1' else 'off'} · "
+             f"ORDERS={'on' if env.get('KIS_ORDERS_ENABLED') == '1' else 'off'} · "
+             f"fallback={env.get('ORACLE_SIGNAL_FALLBACK_ENABLED', '0')}")
+    return "\n".join(L)
+
+
 def handle(text: str) -> str:
     """메시지 텍스트 → 응답 문자열(라우팅). 빈 응답이면 무시."""
     raw = (text or "").strip()
@@ -251,6 +350,8 @@ def handle(text: str) -> str:
         return sleeve_stats.report_text()
     if cmd in ("성과", "알파", "지수", "perf"):
         return _perf_text()
+    if cmd in ("진단", "상태", "diag", "status"):
+        return _diag_text()
     return _detail_text(raw)          # 접두어 없이 코드/이름만 → 상세
 
 
@@ -291,6 +392,13 @@ def main() -> int:
     offset = _drain_backlog()
     print("텔레그램 조회 봇 시작 — /보유 · /종목 <코드> (읽기전용)", flush=True)
     while True:
+        # 주기 자가진단 발행(기본 10분) — SSH 없는 원격 진단 루프(읽기 전용,
+        #   실패 무해). 롱폴링(30s) 사이마다 시간만 확인하므로 비용이 없다.
+        try:
+            from bot import ops_status
+            ops_status.maybe_publish()
+        except Exception:
+            pass
         try:
             res = _tg("getUpdates", {"offset": offset, "timeout": 30}, timeout=40)
         except Exception as e:
