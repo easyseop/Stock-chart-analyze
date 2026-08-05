@@ -1,6 +1,6 @@
 # Codex 개발 인수인계
 
-마지막 갱신: 2026-07-31
+마지막 갱신: 2026-08-06
 저장소: `easyseop/Stock-chart-analyze`
 
 이 문서는 다른 노트북이나 새 Codex 작업에서 개발을 바로 이어가기 위한 현재 상태,
@@ -8,7 +8,7 @@
 개인키 등 비밀값은 이 문서와 Git에 절대 기록하지 않는다.
 
 > **현재 판단 기준:** 문서 앞부분은 완료 이력을 시간순으로 보존한다. 현재 개발
-> 상태와 다음 운영 절차는 문서 끝의 §26을 우선한다.
+> 상태와 다음 운영 절차는 문서 끝의 §29를 우선한다.
 
 ## 1. 현재 Git 상태
 
@@ -1542,3 +1542,32 @@ P1 1건·P2 6건·P3 2건으로 병합을 차단했다. 핵심 P1은 B가 매수
 Claude 브랜치 `claude/kis-direct-scanner-entry`를 base로 Draft PR #106을 열었다.
 PR 생성 직후 두 커밋의 GitHub Actions CI가 모두 통과했다. Draft 상태와 base를
 유지하며 Claude 판정 전에는 ready 전환이나 병합을 하지 않는다.
+
+### 29. 2026-08-06 KIS 직접진입 V9 — 수동 종목 allowlist 제거
+
+사용자가 KIS 독립계좌에서 수동 종목 allowlist를 사용하지 않기로 명시적으로
+확정했다. `mirror`는 가상계좌를 따라 사는 모드가 아니라 신선한 스캐너 A/B
+진입 신호 전체를 KIS 시세·잔고·예산·보호 게이트로 직접 검토하는 프로필이다.
+
+V9에서 `mirror.allowlist_required=False`로 바꾸고, 없음·빈 env·공백-only는
+전체 유효 후보 모드로 처리했다. Stage 1.5/2/2.5의 목록 필수와 빈 목록 차단은
+유지했다. 비어 있지 않은 목록은 코드상 긴급 축소용 optional fence로 남지만,
+L0 readiness는 `allowed_symbols=[]`만 승인하므로 Oracle의 과거 6종목 env가
+남아 있으면 NO-GO다.
+
+목록이 없을 때 다음 신호 시장을 미리 제한할 수 없으므로 readiness의 브로커
+미체결 점검은 KR·US 양쪽을 모두 조회하도록 강화했다. 국내 mock 미체결 API가
+미지원이면 열린 주문 0으로 추정하지 않고 L1을 유지한다. 이 점은 운영 적용 전에
+Oracle에서 반드시 실측한다.
+
+웹은 기존의 평균매수가·현재가·A/B 정의·B 관찰·거래이력·익절 사후추적·누적
+지수 비교를 유지한다. A/B 정의 상단에 KIS 직접진입 설명을 추가하고, 공개
+autopaper 성과는 KIS 주문과 무관한 별도 가상 시뮬레이션임을 명확히 표기했다.
+Claude V8 판정의 유일한 P2였던 B 실행기 이중방어 테스트 2건도 포섭 게이트와
+분리해 추가했다.
+
+전체 Python 테스트 49/49, buyloop·readiness·site 집중 테스트, compileall,
+Node syntax, diff check가 통과했다. 실제 주문 HTTP는 0건이다. 검토 요청은
+`docs/CLAUDE_REVIEW_KIS_DIRECT_SCANNER_ENTRY_V9.md`에 있다. 이 변경도 Draft PR
+#106에만 push하며 Claude 재검토·사용자 병합 승인 전에는 병합하지 않는다.
+Oracle env 수정·배포·kill 하향은 아직 수행하지 않았다.

@@ -358,7 +358,7 @@ function updateHero() {
       ? attention.length
         ? "보호선과 목표선에 가까운 종목부터 보여드려요. 아래에서 전략과 시장 대비 성과까지 이어서 확인하세요."
         : "현재 보호선에 급하게 가까운 종목은 없습니다. 전략 A·B와 시장 대비 성과를 함께 확인하세요."
-      : "공개 화면에서는 새 신호와 모의성과를 요약합니다. KIS 보유자산 브리핑은 Oracle 로컬 화면에서만 보여요.";
+      : "공개 화면에서는 새 신호와 별도 가상 시뮬레이션 성과를 요약합니다. KIS 보유자산 브리핑은 Oracle 로컬 화면에서만 보여요.";
   } else if (VIEW_META[state.view].group) {
     const group = currentSignalGroup();
     const items = groupSignals(group);
@@ -404,10 +404,10 @@ function updateHero() {
     unit.textContent = "";
     kicker.textContent = latest
       ? `${market.label} 봇 운용자산 TWR · 지수와 같은 기준점`
-      : "모의투자 누적 수익률";
+      : "별도 가상 시뮬레이션 누적 수익률";
     description.textContent = latest
       ? "매수·매도 금액 변화는 제거하고 전략 A·B와 시장지수의 실제 성과를 비교합니다."
-      : "지수 비교 데이터가 쌓이기 전에는 기존 모의투자 성과를 표시합니다.";
+      : "지수 비교 데이터가 쌓이기 전에는 KIS 주문과 무관한 가상 시뮬레이션 성과를 표시합니다.";
   }
 }
 
@@ -437,6 +437,7 @@ function stageBars(stage) {
 
 function strategyDefinitionMarkup({ compact = false } = {}) {
   return `<section class="strategy-definition ${compact ? "compact" : ""}" aria-label="전략 A와 B 정의">
+    <p class="strategy-execution-note"><b>KIS 직접진입:</b> 가상 모의계좌의 보유내역을 복제하지 않습니다. 신선한 아래 후보를 KIS 현재가·잔고·예산·보호 게이트로 다시 확인해 독립적으로 집행합니다.</p>
     <article>
       <span class="badge strategy-a">전략 A · 전환 확인</span>
       <strong>하락 흐름이 상승으로 돌아서는 것을 확인하고 진입</strong>
@@ -812,7 +813,7 @@ function renderBriefing() {
     <div class="local-gate briefing-gate">
       <span class="state-icon">⌂</span>
       <h2>KIS 보유종목 브리핑은 Oracle 화면에서만 보여요</h2>
-      <p>공개 사이트에는 계좌와 보유종목을 보내지 않습니다. 아래 공개 신호와 모의성과는 그대로 확인할 수 있어요.</p>
+      <p>공개 사이트에는 계좌와 보유종목을 보내지 않습니다. 아래 공개 신호와 별도 가상 시뮬레이션 성과는 참고용으로 확인할 수 있어요.</p>
     </div>`;
   content.innerHTML = `
     ${privateSection}

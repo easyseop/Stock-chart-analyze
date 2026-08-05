@@ -1,7 +1,7 @@
 """X1 매수 실행기 게이트 체인 + I6/I7/IS2/IS5/costbook 검증(모킹 — 전송 없음).
 
   kill(I6):    latch(하향 ack 필수)·allows 매핑·env 상향
-  rollout(I7): allowlist 필수·세션 게이트·하루 한도·risk cap
+  rollout(I7): 단계별 종목 fence·세션 게이트·하루 한도·risk cap
   ownership:   baseline 미캡처=전거부·denylist 병합(불축소)·claim>broker 동결
   costbook:    add/close lot·open_cost·부분청산 비례차감·totals
   X1 체인:     게이트가 순서대로 막는지 → 전부 열면 place_buy 도달(ack)
@@ -214,6 +214,20 @@ def test_execute_entry_rejects_invalid_optional_numeric_args():
         for kw_extra in relations:
             d = X.execute_entry("p#rel", "AAPL", **{**base, **kw_extra})
             assert d.gate == "input", (kw_extra, d)
+        # V8 Claude P2: 실행기 계층의 B 이중방어를 다른 포섭 게이트와 분리해
+        # 직접 검증한다. 첫 케이스는 RR 하한을 완화해 target<=발주가 관계만,
+        # 둘째는 충분한 RR을 줘 최대 손절폭만 실패하게 한다.
+        with mock.patch.object(X.settings, "SHELF_MIN_RR", -1.0):
+            d = X.execute_entry(
+                "p#b-target", "AAPL", **{**base, "sleeve": "B",
+                "limit_price": 100.0,
+                "order_meta": {"stop": 95.0, "target": 100.0}})
+        assert d.gate == "input", d
+        d = X.execute_entry(
+            "p#b-stop", "AAPL", **{**base, "sleeve": "B",
+            "limit_price": 100.0, "per_share_risk_usd": 20.0,
+            "order_meta": {"stop": 80.0, "target": 150.0}})
+        assert d.gate == "input", d
         # 직접 호출의 구조·정수 경계도 예외 대신 input으로 닫힌다.
         for kw_extra in ({"open_positions": float("inf")},
                          {"hldg_before": float("nan")},
@@ -393,7 +407,7 @@ def test_x1_gate_chain_then_sent():
 
 def test_mirror_stage():
     """mirror(legacy명=scanner-direct) — 동시보유 무제한·하루10건·risk1%·
-    **allowlist 필수**(2026-08-05 정정: autopaper가 후보를 좁혀준다는 전제 폐기)."""
+    수동 allowlist 없이 신선한 스캐너 후보 전체를 KIS 게이트로 직접 평가."""
     with tempfile.TemporaryDirectory() as tmp:
         M = _setup(tmp)
         R = M["rollout"]
@@ -401,9 +415,13 @@ def test_mirror_stage():
         os.environ.pop("ALLOWED_SYMBOLS", None)
         ok, why = R.check_new_entry("ANYTHING", open_positions=0, risk_pct=0.01,
                                     session_open=True)
-        assert not ok and "allowlist" in why               # allowlist 없으면 전 거부
-        os.environ["ALLOWED_SYMBOLS"] = "ANYTHING,X," + ",".join(
-            f"S{i}" for i in range(10))
+        assert ok, why                                      # 목록 없음 = 전체 후보
+        for empty in ("", "   ", " , ,"):
+            os.environ["ALLOWED_SYMBOLS"] = empty
+            ok, why = R.check_new_entry(
+                "ANYTHING", open_positions=0, risk_pct=0.01, session_open=True)
+            assert ok, (empty, why)                         # 빈 env도 낡은 파일 복구 없음
+        os.environ.pop("ALLOWED_SYMBOLS", None)
         ok, why = R.check_new_entry("ANYTHING", open_positions=0, risk_pct=0.01,
                                     session_open=True)
         assert ok, why
@@ -423,12 +441,12 @@ def test_mirror_stage():
         M["ledger"].record_submit("m#9", "S9", 1, "x", meta={"side": "BUY"})
         assert not R.check_new_entry("X", open_positions=0, risk_pct=0.01,
                                      session_open=True)[0]  # 10/10 → 차단
-        # 목록 밖 종목은 거부
+        # 비어 있지 않은 목록은 운영자 긴급 축소용 optional fence로 계속 동작한다.
         os.environ["ALLOWED_SYMBOLS"] = "AAPL"
         assert not R.check_new_entry("TSLA", open_positions=0, risk_pct=0.01,
                                      session_open=True)[0]
         os.environ["TRADE_STAGE"] = "1.5"
-    print("[PASS] mirror: 동시보유 수 무제한·하루10건·risk1%·allowlist 필수")
+    print("[PASS] mirror: 목록 없이 직접진입·동시보유 무제한·하루10건·risk1%")
 
 
 def test_broker_truth_open_cost_gate():

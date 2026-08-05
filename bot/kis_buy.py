@@ -6,8 +6,8 @@
    2. 부팅 대사 완료: kis_boot.trading_allowed() (O4 — 대사 전 매매 금지)
    3. 파수꾼 생존성: heartbeat.entry_allowed(has_positions) (R4 —
       보호자가 죽어있으면 새 리스크 안 늘림)
-   4. 롤아웃 가드: rollout.check_new_entry (I7+I1 — Stage 캡·allowlist·
-      US 정규장만·whole-share·하루 한도)
+   4. 롤아웃 가드: rollout.check_new_entry (I7+I1 — Stage 캡·정규장·
+      whole-share·하루 한도; scanner-direct mirror는 수동 종목목록 없음)
    5. 계좌 격리: ownership.buy_denied (IS2 — baseline denylist·동결)
    6. 원장: ledger.can_submit (UNKNOWN 잠금·동일종목 in-flight·간격)
    7. 사이징: envelope.size_buy — 분모 SEED·총량 게이트(deployable)·

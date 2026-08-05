@@ -42,7 +42,7 @@ def _snapshot() -> dict:
         "half_ratchet_verified": list(HALF),
         "frozen_symbols": list(FROZEN),
         "trade_stage": "mirror",
-        "allowed_symbols": ["AAPL", "MSFT"],
+        "allowed_symbols": [],
         "allow_buy_enabled": True,
         "orders_enabled": True,
         "position_counts_by_sleeve": {"A": 16, "B": 0},
@@ -196,17 +196,17 @@ def test_l0_scope_keeps_limited_mode_fences_blocking():
         "positions_match_broker",
     } <= _blockers(report)
     assert "stall_shadow_observed" in _pending(report)
-    print("[PASS] L0 scope도 fallback·shadow·동결6·allowlist·수량대조를 차단")
+    print("[PASS] L0 scope도 fallback·shadow·동결6·주문설정·수량대조를 차단")
 
 
-def test_l0_fence_requires_declared_order_configuration():
-    # 2026-08-05 정정: 직접진입 limited L0는 비어 있지 않은 allowlist가 필수다.
-    #   빈 목록·공백뿐인 목록·필드 없음 전부 fail-closed.
+def test_l0_fence_requires_direct_entry_configuration_without_allowlist():
+    # scanner-direct L0는 수동 종목목록이 없어야 한다. 낡은 목록이 남으면 실제
+    # 집행범위를 사용자가 오해할 수 있으므로 readiness가 제거 전환을 차단한다.
     for field, value in (
             ("trade_stage", "1.5"),
             ("trade_stage", "MIRROR"),
-            ("allowed_symbols", []),
-            ("allowed_symbols", ["  ", ""]),
+            ("allowed_symbols", ["AAPL"]),
+            ("allowed_symbols", ["  ", "AAPL"]),
             ("allow_buy_enabled", False),
             ("orders_enabled", False)):
         snapshot = _snapshot()
@@ -217,13 +217,12 @@ def test_l0_fence_requires_declared_order_configuration():
     snapshot = _snapshot()
     del snapshot["allowed_symbols"]
     report = R.evaluate(snapshot, {}, scope="l0", now=NOW)
-    assert "limited_l0_fence" in _blockers(report)
-    print("[PASS] 제한적 L0는 mirror(legacy명)·비어있지 않은 allowlist·명시적 설정 필수")
+    assert "limited_l0_fence" not in _blockers(report)
+    print("[PASS] scanner-direct L0는 mirror·allowlist 없음·명시적 주문설정 필수")
 
 
-def test_empty_env_allowlist_blocks_even_with_stale_file():
-    """Codex P1-1: 빈/공백 ALLOWED_SYMBOLS env가 낡은 allowlist 파일로 폴백해
-    rollout·readiness 양쪽을 PASS시키던 반례 — env 존재 시 파일 폴백 금지."""
+def test_empty_env_disables_stale_file_and_allows_direct_entry_scope():
+    """빈/공백 env는 낡은 파일을 되살리지 않고 scanner-direct 전체 후보 모드다."""
     import tempfile as _tempfile
     from bot import rollout
     with _tempfile.TemporaryDirectory() as tmp:
@@ -243,7 +242,7 @@ def test_empty_env_allowlist_blocks_even_with_stale_file():
                 snapshot["allowed_symbols"] = sorted(collected)
                 for scope in ("l0", "strict"):
                     report = R.evaluate(snapshot, {}, scope=scope, now=NOW)
-                    assert "limited_l0_fence" in _blockers(report), (empty, scope)
+                    assert "limited_l0_fence" not in _blockers(report), (empty, scope)
             os.environ.pop("ALLOWED_SYMBOLS")
             assert rollout.allowed_symbols() == {"AAPL"}   # env 부재 시만 파일
         finally:
@@ -253,7 +252,7 @@ def test_empty_env_allowlist_blocks_even_with_stale_file():
                     os.environ.pop(key, None)
                 else:
                     os.environ[key] = val
-    print("[PASS] 빈 env allowlist는 파일로 되살아나지 않음 — 양쪽 모두 차단")
+    print("[PASS] 빈 env는 낡은 파일을 되살리지 않고 scanner-direct 전체 후보 유지")
 
 
 def test_unarmed_ownership_blocks_and_volatile_path_warns():
@@ -454,7 +453,7 @@ def test_broker_read_only_snapshot_matches_three_ledgers():
         assert snapshot["position_counts_by_sleeve"] == {"A": 1, "B": 0}
         assert domestic.call_count == 0 and overseas.call_count == 3
 
-        # KR 종목이 allowlist에 들어오면 mock 미지원 국내 API도 다시 필수다.
+        # 비어 있지 않은 optional 축소목록에 KR 종목이 들어오면 국내 API도 필수다.
         # 이때 실패를 0건으로 추측하지 않고 L0 점검을 계속 차단한다.
         os.environ["ALLOWED_SYMBOLS"] = "AAPL,005930"
         with mock.patch.object(
@@ -469,7 +468,25 @@ def test_broker_read_only_snapshot_matches_three_ledgers():
             snapshot = R.collect_runtime(fetch_broker=True, evidence={})
         assert snapshot["broker_open_orders"] is None
         assert domestic.call_count == 1 and overseas.call_count == 3
-    print("[PASS] 미국-only는 KR mock 미지원 격리·KR 범위는 계속 fail-closed")
+
+        # 사용자가 확정한 unrestricted scanner-direct는 목록이 없으므로 미래에
+        # 어느 시장 신호가 와도 안전하도록 KR+US 양쪽 미체결을 모두 증명한다.
+        # 국내 mock 조회가 미지원이면 이를 우회하지 않고 L1을 유지한다.
+        os.environ["ALLOWED_SYMBOLS"] = ""
+        with mock.patch.object(
+                modules["kis"], "holdings",
+                side_effect=[{}, {"AAPL": 2}, {"AAPL": 2}, {"AAPL": 2}]), \
+             mock.patch.object(
+                 modules["kis"], "domestic_open_orders",
+                 return_value=None) as domestic, \
+             mock.patch.object(
+                 modules["kis"], "open_orders",
+                 return_value=empty_orders) as overseas:
+            snapshot = R.collect_runtime(fetch_broker=True, evidence={})
+        assert snapshot["allowed_symbols"] == []
+        assert snapshot["broker_open_orders"] is None
+        assert domestic.call_count == 1 and overseas.call_count == 3
+    print("[PASS] unrestricted는 양 시장 미체결 증명·미지원 응답은 fail-closed")
 
 
 def main():
@@ -480,8 +497,8 @@ def main():
     test_required_symbol_lists_cannot_be_shortened_or_silently_unfrozen()
     test_l0_scope_separates_independent_observation_gates()
     test_l0_scope_keeps_limited_mode_fences_blocking()
-    test_l0_fence_requires_declared_order_configuration()
-    test_empty_env_allowlist_blocks_even_with_stale_file()
+    test_l0_fence_requires_direct_entry_configuration_without_allowlist()
+    test_empty_env_disables_stale_file_and_allows_direct_entry_scope()
     test_unarmed_ownership_blocks_and_volatile_path_warns()
     test_unknown_scope_is_rejected()
     test_cli_forwards_l0_scope_without_mutation()
