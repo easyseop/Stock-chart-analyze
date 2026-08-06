@@ -121,11 +121,13 @@ def evaluate(snapshot: dict, evidence: dict, *, scope: str = "strict",
         f"주문 원장 healthy={snapshot.get('ledger_healthy')}")
 
     local_open = snapshot.get("local_open_orders")
+    local_planned = snapshot.get("local_planned_orders", 0)
     broker_open = snapshot.get("broker_open_orders")
     add(
         "no_open_orders",
         local_open == 0 and broker_open == 0,
-        f"원장 열린주문={local_open!r}, 브로커 열린주문={broker_open!r}")
+        f"원장 브로커주문={local_open!r}, 브로커 열린주문={broker_open!r}, "
+        f"미제출 계획={local_planned!r}")
 
     unknowns = snapshot.get("unresolved_unknowns")
     unaccounted = snapshot.get("unaccounted_buy_fills")
@@ -462,13 +464,16 @@ def collect_runtime(*, fetch_broker: bool = False,
         position_counts[sleeve] += 1
 
     open_orders = ledger.open_orders()
+    planned_orders = [o for o in open_orders if o.get("state") == "planned"]
+    broker_orders = [o for o in open_orders if o.get("state") != "planned"]
     snapshot: dict[str, Any] = {
         "kis_env": kis.ENV,
         "kill_level": kill.level(),
         "buy_new_allowed": kill.allows("buy_new"),
         "protect_sell_allowed": kill.allows("protect_sell"),
         "ledger_healthy": ledger.ledger_healthy(),
-        "local_open_orders": len(open_orders),
+        "local_open_orders": len(broker_orders),
+        "local_planned_orders": len(planned_orders),
         "broker_open_orders": None,
         "unresolved_unknowns": sum(
             1 for order in folded_orders

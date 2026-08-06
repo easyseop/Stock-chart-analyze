@@ -79,6 +79,16 @@ def test_complete_evidence_only_allows_operator_review():
     print("[PASS] 전체 기술 증거 → operator 검토 가능, 자동 L1 하향 없음")
 
 
+def test_unsubmitted_plans_are_reported_but_not_broker_open_orders():
+    snapshot = _snapshot()
+    snapshot["local_planned_orders"] = 3
+    report = R.evaluate(snapshot, _evidence(), now=NOW)
+    assert "no_open_orders" not in _blockers(report)
+    gate = next(g for g in report["gates"] if g["name"] == "no_open_orders")
+    assert "미제출 계획=3" in gate["detail"]
+    print("[PASS] 미제출 planned는 표시하되 브로커 열린주문으로 오인하지 않음")
+
+
 def test_missing_or_stale_observations_block():
     evidence = _evidence()
     evidence["oracle_brain_sessions"]["US"] = 0
@@ -565,6 +575,7 @@ def test_broker_read_only_snapshot_matches_three_ledgers():
 
 def main():
     test_complete_evidence_only_allows_operator_review()
+    test_unsubmitted_plans_are_reported_but_not_broker_open_orders()
     test_missing_or_stale_observations_block()
     test_runtime_safety_invariants_block_independently()
     test_missing_evidence_fails_closed()

@@ -32,6 +32,14 @@ _SELL_CODES = {"01"}
 _BUY_CODES = {"02"}
 
 
+def order_no_key(value) -> str:
+    """KIS 숫자 주문번호의 선행 0 표현 차이를 제거한 비교키."""
+    value = str(value or "").strip()
+    if value.isdigit():
+        return str(int(value))
+    return value
+
+
 def _side_of(row: dict) -> str | None:
     """행의 매매 방향 'SELL'/'BUY'/None. 이름 필드 우선, 코드 폴백."""
     name = str(row.get("sll_buy_dvsn_cd_name") or row.get("sll_buy_dvsn_name") or "")
@@ -96,7 +104,7 @@ def normalize_rows(nccs: dict | None, ccnl: dict | None) -> list[dict]:
             n = _norm(row, src)
             if not n:
                 continue
-            k = n["odno"] or f"{src}:{id(row)}"
+            k = order_no_key(n["odno"]) or f"{src}:{id(row)}"
             if k in out and src == "ccnl":
                 out[k].update({kk: n[kk] for kk in
                                ("filled", "price", "src") if n[kk] or kk == "src"})
@@ -136,7 +144,7 @@ def normalize_domestic_rows(nccs: dict | None, ccnl: dict | None) -> list[dict]:
             n = norm(row, src)
             if not n:
                 continue
-            k = n["odno"] or f"{src}:{id(row)}"
+            k = order_no_key(n["odno"]) or f"{src}:{id(row)}"
             if k in out and src == "ccnl":
                 out[k].update({kk: n[kk] for kk in
                                ("filled", "price", "src") if n[kk] or kk == "src"})
@@ -153,11 +161,11 @@ def resolve_acks_from_rows(rows: list[dict]) -> list[dict]:
     by_odno: dict[str, list[dict]] = {}
     for row in rows:
         if row.get("odno"):
-            by_odno.setdefault(str(row["odno"]), []).append(row)
+            by_odno.setdefault(order_no_key(row["odno"]), []).append(row)
     for o in ledger.open_orders():
         if o.get("state") not in ("submitted", "ack", "partial", "cancel_pending"):
             continue
-        odno = str(o.get("odno") or "")
+        odno = order_no_key(o.get("odno"))
         symbol = str(o.get("symbol") or "").upper()
         side = str(o.get("side") or "").upper()
         matches = [r for r in by_odno.get(odno, [])
@@ -206,9 +214,9 @@ def candidates_for(unknown: dict, rows: list[dict], known_odnos: set[str],
       · 아니면: 같은 종목 ∧ (side 알면 같은 방향) ∧ 주문수량==의도수량 ∧
         이미 다른 주문에 결속된 ODNO 제외 ∧ (둘 다 시각 있으면 ±window_s 이내).
     """
-    odno = str(unknown.get("odno") or "")
+    odno = order_no_key(unknown.get("odno"))
     if odno:
-        return [r for r in rows if r["odno"] == odno]
+        return [r for r in rows if order_no_key(r.get("odno")) == odno]
     symbol = unknown.get("symbol")
     side = (unknown.get("side") or "").upper() or None
     intended = int(unknown.get("intended", 0))
@@ -217,7 +225,7 @@ def candidates_for(unknown: dict, rows: list[dict], known_odnos: set[str],
     for r in rows:
         if r["pdno"] != symbol:
             continue
-        if r["odno"] and r["odno"] in known_odnos:
+        if r["odno"] and order_no_key(r["odno"]) in known_odnos:
             continue                              # 이미 귀속된(우리가 아는) 주문
         if side and r["side"] and r["side"] != side:
             continue
@@ -524,7 +532,7 @@ def reconcile_unknowns(nccs: dict | None, ccnl: dict | None,
     rows = normalize_rows(nccs, ccnl)
     fold_open = ledger.open_orders()
     # 이미 결속된 ODNO들 — 다른 UNKNOWN의 후보에서 제외(교차 오귀속 방지)
-    known = {str(o.get("odno")) for o in fold_open if o.get("odno")}
+    known = {order_no_key(o.get("odno")) for o in fold_open if o.get("odno")}
     results = []
     for o in fold_open:
         if o.get("state") != "unknown" or o.get("reconciled"):
@@ -534,7 +542,8 @@ def reconcile_unknowns(nccs: dict | None, ccnl: dict | None,
                 or kis.market_of_symbol(o.get("symbol", "")) == "KR"):
             continue
         key = o["key"]
-        cands = candidates_for(o, rows, known_odnos=known - {str(o.get("odno") or "")},
+        cands = candidates_for(o, rows,
+                               known_odnos=known - {order_no_key(o.get("odno"))},
                                window_s=window_s)
         r = ledger.reconcile_from_candidates(key, cands,
                                              intended=o.get("intended"))
