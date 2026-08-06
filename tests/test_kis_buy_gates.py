@@ -432,21 +432,23 @@ def test_mirror_stage():
                                  session_open=True)[0]     # 종목 수만으로 차단하지 않음
         assert not R.check_new_entry("X", open_positions=0, risk_pct=0.02,
                                      session_open=True)[0]  # risk 1% 캡
-        # 하루 10건(사용자 지정 2026-07-15): 9건까지 허용, 10건째 기록 후 거부
+        # mirror는 1·2차 leg와 거절을 주문 횟수로 중복 집계하지 않고 신규 심볼로 센다.
         for i in range(9):
             M["ledger"].record_submit(f"m#{i}", f"S{i}", 1, "x",
                                       meta={"side": "BUY"})
+        M["ledger"].record_submit("m#0:pb", "S0", 1, "x",
+                                  meta={"side": "BUY"})
         assert R.check_new_entry("X", open_positions=0, risk_pct=0.01,
-                                 session_open=True)[0]      # 9/10 → 허용
+                                 session_open=True)[0]      # 10 submit, 9심볼 → 허용
         M["ledger"].record_submit("m#9", "S9", 1, "x", meta={"side": "BUY"})
         assert not R.check_new_entry("X", open_positions=0, risk_pct=0.01,
-                                     session_open=True)[0]  # 10/10 → 차단
+                                     session_open=True)[0]  # 10심볼 → 차단
         # 비어 있지 않은 목록은 운영자 긴급 축소용 optional fence로 계속 동작한다.
         os.environ["ALLOWED_SYMBOLS"] = "AAPL"
         assert not R.check_new_entry("TSLA", open_positions=0, risk_pct=0.01,
                                      session_open=True)[0]
         os.environ["TRADE_STAGE"] = "1.5"
-    print("[PASS] mirror: 목록 없이 직접진입·동시보유 무제한·하루10건·risk1%")
+    print("[PASS] mirror: 목록 없이 직접진입·신규 10종목·leg 중복 제외·risk1%")
 
 
 def test_broker_truth_open_cost_gate():

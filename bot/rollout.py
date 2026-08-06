@@ -21,8 +21,9 @@ Stage 프로파일(환경변수 TRADE_STAGE, 기본 "1.5"):
   · 1.5·2·2.5 Stage는 ALLOWED_SYMBOLS(콤마 구분) 밖 종목 금지. mirror는
     스캐너의 유효 진입 후보 전체를 대상으로 하므로 수동 목록을 요구하지 않는다.
     단, 비어 있지 않은 목록을 운영자가 긴급 축소용으로 명시하면 그 목록을 지킨다.
-  · 하루 신규 카운트는 원장(submit·side=BUY·당일)에서 계산 — 별도 상태 파일 없음
-    (재시작에도 정확).
+  · 하루 신규 카운트는 원장(side=BUY·당일)에서 계산 — 별도 상태 파일 없음
+    (재시작에도 정확). mirror는 1·2차 leg와 거절을 중복 집계하지 않고 서로 다른
+    신규 종목 수로 센다. 하위 Stage는 기존처럼 submit 건수를 센다.
 """
 from __future__ import annotations
 
@@ -105,18 +106,28 @@ def _today_kst() -> datetime.date:
         datetime.timezone(datetime.timedelta(hours=9))).date()
 
 
-def new_entries_today() -> int:
-    """오늘(KST) 원장에 기록된 신규 매수 submit 수 — 하루 한도 계산용."""
+def new_entries_today(*, distinct_symbols: bool = False) -> int:
+    """오늘(KST) 신규 BUY 수.
+
+    ``distinct_symbols=True``는 mirror 전용이다. 한 종목의 1·2차 leg와 거절
+    재시도를 여러 신규매수로 부풀리지 않고, 제출된 서로 다른 심볼만 센다.
+    """
     day = _today_kst()
     n = 0
+    symbols: set[str] = set()
     for cur in ledger._fold().values():
         if cur.get("side") != "BUY":
             continue
         ts = cur.get("submitted_at") or 0
         if ts and datetime.datetime.fromtimestamp(
                 ts, datetime.timezone(datetime.timedelta(hours=9))).date() == day:
-            n += 1
-    return n
+            if distinct_symbols:
+                symbol = str(cur.get("symbol") or "").strip().upper()
+                if symbol:
+                    symbols.add(symbol)
+            else:
+                n += 1
+    return len(symbols) if distinct_symbols else n
 
 
 def us_regular_open() -> bool:
@@ -165,7 +176,8 @@ def check_new_entry(symbol: str, *, open_positions: int,
     max_positions = p.get("max_positions")
     if max_positions is not None and open_positions >= max_positions:
         return False, f"동시 보유 한도({max_positions}) 도달"
-    if new_entries_today() >= p["max_new_per_day"]:
+    if new_entries_today(distinct_symbols=(stage() == "mirror")) \
+            >= p["max_new_per_day"]:
         return False, f"하루 신규 한도({p['max_new_per_day']}) 도달"
     if risk_pct > p["risk_cap"] + 1e-12:
         return False, f"risk {risk_pct:.4f} > cap {p['risk_cap']:.4f}"
