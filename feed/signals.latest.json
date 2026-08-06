@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated_at": "2026-08-06T13:30:18+09:00",
+ "generated_at": "2026-08-06T13:42:49+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "shelf_debug": {
   "ok": 22,
@@ -3870,6 +3870,27 @@
    "tactic": null
   },
   {
+   "id": "192820-2026-08-06-watch",
+   "code": "192820",
+   "name": "코스맥스",
+   "ccy": "KRW",
+   "group": "watch",
+   "entry_kind": "pullback",
+   "stage": 3,
+   "price": 199100.0,
+   "entry": 189521.8333,
+   "stop": 166794.8634,
+   "target": 234975.7732,
+   "shares_1pct": 4,
+   "range_pos": 0.4504,
+   "norm": -1.6,
+   "bear_share": 0.375,
+   "fresh": false,
+   "break_gap": 0.141,
+   "earnings_d": null,
+   "tactic": null
+  },
+  {
    "id": "EL-2026-08-06-watch",
    "code": "EL",
    "name": "Estee Lauder Companies, Inc.",
@@ -4017,27 +4038,6 @@
    "tactic": null
   },
   {
-   "id": "192820-2026-08-06-watch",
-   "code": "192820",
-   "name": "코스맥스",
-   "ccy": "KRW",
-   "group": "watch",
-   "entry_kind": "pullback",
-   "stage": 3,
-   "price": 198500.0,
-   "entry": 189521.8333,
-   "stop": 166794.8634,
-   "target": 234975.7732,
-   "shares_1pct": 4,
-   "range_pos": 0.4457,
-   "norm": -11.5,
-   "bear_share": 0.375,
-   "fresh": false,
-   "break_gap": 0.1375,
-   "earnings_d": null,
-   "tactic": null
-  },
-  {
    "id": "LEU-2026-08-06-watch",
    "code": "LEU",
    "name": "Centrus Energy Corp.",
@@ -4129,16 +4129,16 @@
    "group": "watch",
    "entry_kind": "pullback",
    "stage": 3,
-   "price": 143100.0,
+   "price": 142900.0,
    "entry": 116900.0,
    "stop": 99521.3384,
    "target": 151657.3232,
    "shares_1pct": 5,
-   "range_pos": 0.2218,
+   "range_pos": 0.2202,
    "norm": -41.0,
    "bear_share": 0.375,
    "fresh": false,
-   "break_gap": 0.1639,
+   "break_gap": 0.1623,
    "earnings_d": null,
    "tactic": null
   }
