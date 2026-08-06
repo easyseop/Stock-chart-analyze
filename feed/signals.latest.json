@@ -1,12 +1,12 @@
 {
  "version": 1,
- "generated_at": "2026-08-07T06:59:41+09:00",
+ "generated_at": "2026-08-07T07:15:18+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "shelf_debug": {
   "ok": 18,
-  "watch": 167,
+  "watch": 168,
   "reasons": {
-   "밸류영역 밖(지지대 아님)": 1063,
+   "밸류영역 밖(지지대 아님)": 1064,
    "매물대 정보 없음": 137,
    "반등 미확인(터치·상단마감·거래량)": 91,
    "저점권 아님(범위 95%)": 72,
@@ -71,6 +71,34 @@
     "mode": "pullback",
     "label": "⏳ 눌림 지정가만",
     "desc": "지금 추격 금지(손절폭 6.9% · 단기 이격) — <b>$580.15 눌림 지정가만</b>. 눌리면 손절폭 5.3%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
+   }
+  },
+  {
+   "id": "BZ-2026-08-07-now",
+   "code": "BZ",
+   "name": "KANZHUN LIMITED",
+   "ccy": "USD",
+   "group": "now",
+   "entry_kind": "now",
+   "stage": 3,
+   "price": 16.09,
+   "entry": 16.09,
+   "stop": 15.0331,
+   "target": 18.2038,
+   "shares_1pct": 94,
+   "range_pos": 0.2774,
+   "norm": 21.3,
+   "bear_share": 0.25,
+   "fresh": true,
+   "break_gap": 0.0092,
+   "earnings_d": 13,
+   "tactic": {
+    "stop_pct": 6.6,
+    "pb_price": null,
+    "pb_stop_pct": null,
+    "mode": "half",
+    "label": "⚖ 반반 진입",
+    "desc": "손절폭 6.6% — 절반만 현재가, 나머지는 눌림 확인 후 추가"
    }
   },
   {
@@ -1686,6 +1714,34 @@
    "tactic": null
   },
   {
+   "id": "ETD-2026-08-07-watch",
+   "code": "ETD",
+   "name": "Ethan Allen Interiors Inc.",
+   "ccy": "USD",
+   "group": "watch",
+   "entry_kind": "now",
+   "stage": 1,
+   "price": 23.51,
+   "entry": 23.51,
+   "stop": 22.0447,
+   "target": 26.4407,
+   "shares_1pct": 68,
+   "range_pos": 0.3983,
+   "norm": 34.9,
+   "bear_share": 0.125,
+   "fresh": true,
+   "break_gap": -0.0031,
+   "earnings_d": 83,
+   "tactic": {
+    "stop_pct": 6.2,
+    "pb_price": null,
+    "pb_stop_pct": null,
+    "mode": "half",
+    "label": "⚖ 반반 진입",
+    "desc": "손절폭 6.2% — 절반만 현재가, 나머지는 눌림 확인 후 추가"
+   }
+  },
+  {
    "id": "PINS-2026-08-07-watch",
    "code": "PINS",
    "name": "Pinterest, Inc.",
@@ -1761,34 +1817,6 @@
    "break_gap": -0.0076,
    "earnings_d": 84,
    "tactic": null
-  },
-  {
-   "id": "ETD-2026-08-07-watch",
-   "code": "ETD",
-   "name": "Ethan Allen Interiors Inc.",
-   "ccy": "USD",
-   "group": "watch",
-   "entry_kind": "now",
-   "stage": 1,
-   "price": 23.5252,
-   "entry": 23.5252,
-   "stop": 22.0677,
-   "target": 26.4401,
-   "shares_1pct": 68,
-   "range_pos": 0.3995,
-   "norm": 31.1,
-   "bear_share": 0.125,
-   "fresh": true,
-   "break_gap": -0.0025,
-   "earnings_d": 83,
-   "tactic": {
-    "stop_pct": 6.2,
-    "pb_price": null,
-    "pb_stop_pct": null,
-    "mode": "half",
-    "label": "⚖ 반반 진입",
-    "desc": "손절폭 6.2% — 절반만 현재가, 나머지는 눌림 확인 후 추가"
-   }
   },
   {
    "id": "BX-2026-08-07-watch",
@@ -1963,34 +1991,6 @@
     "mode": "pullback",
     "label": "⏳ 눌림 지정가만",
     "desc": "지금 추격 금지(손절폭 7.2% · 단기 이격) — <b>$113.30 눌림 지정가만</b>. 눌리면 손절폭 4.8%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
-   }
-  },
-  {
-   "id": "BZ-2026-08-07-watch",
-   "code": "BZ",
-   "name": "KANZHUN LIMITED",
-   "ccy": "USD",
-   "group": "watch",
-   "entry_kind": "now",
-   "stage": 1,
-   "price": 15.99,
-   "entry": 15.99,
-   "stop": 14.9367,
-   "target": 18.0967,
-   "shares_1pct": 94,
-   "range_pos": 0.2695,
-   "norm": 21.3,
-   "bear_share": 0.25,
-   "fresh": true,
-   "break_gap": 0.0029,
-   "earnings_d": 13,
-   "tactic": {
-    "stop_pct": 6.6,
-    "pb_price": null,
-    "pb_stop_pct": null,
-    "mode": "half",
-    "label": "⚖ 반반 진입",
-    "desc": "손절폭 6.6% — 절반만 현재가, 나머지는 눌림 확인 후 추가"
    }
   },
   {
