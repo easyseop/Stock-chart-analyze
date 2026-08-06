@@ -22,6 +22,9 @@ def test_service_cadence_contract():
     watchdog_oracle = (
         ROOT / "infra/server/watchdog.oracle-ubuntu.conf"
     ).read_text(encoding="utf-8")
+    buyloop_oracle = (
+        ROOT / "infra/server/buyloop.oracle-ubuntu.conf"
+    ).read_text(encoding="utf-8")
     autodeploy = (ROOT / "infra/server/autodeploy.sh").read_text(encoding="utf-8")
     assert "BUYLOOP_POLL_SECONDS=60" in buy
     assert "ORACLE_SIGNAL_FALLBACK_ENABLED=0" in buy
@@ -40,6 +43,9 @@ def test_service_cadence_contract():
     assert "EnvironmentFile=\n" in watchdog_oracle
     assert "source /home/ubuntu/kis.env" in watchdog_oracle
     assert "ExecStart=/usr/bin/python3 infra/server/watchdog.py" not in watchdog_oracle
+    assert "ExecStart=\n" in buyloop_oracle
+    assert "set -a; source /home/ubuntu/kis.env; set +a; exec" in buyloop_oracle
+    assert "python -m bot.kis_buyloop --loop" in buyloop_oracle
     assert "bot.signal_feed" in autodeploy
     assert "scanner.oracle_brain" not in autodeploy
     for forbidden in ("bot.kis_buyloop", "bot.sentinel", "kis_orders"):
