@@ -109,6 +109,7 @@ def test_confirmed_sales_join_exact_prices_reasons_and_pnl():
     assert row["qty"] == 4 and row["remaining_qty"] == 6
     assert row["partial_exit"] is True
     assert row["entry_price"] == 100.0 and row["exit_price"] == 90.0
+    assert row["cost_closed_krw"] == 400_000.0
     assert row["realized_pnl_krw"] == -40_000.0
     assert row["return_pct"] == -10.0
     assert row["verified"] is True

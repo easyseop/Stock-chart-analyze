@@ -383,6 +383,10 @@ def _trade_rows(position_events: list[dict], cost_events: list[dict],
             "position_qty_after": remaining,
             "price_pnl": round((exit_price - entry_price) * qty, 6)
             if entry_price > 0 else None,
+            # 월별 실현수익률의 분모. 공개 성과 API가 아니라 인증된 개인
+            # 거래이력에만 노출하며, 원화 실현손익과 같은 costbook 원천이다.
+            "cost_closed_krw": (
+                round(cost_closed, 2) if cost_closed is not None else None),
             "realized_pnl_krw": round(pnl_krw, 2) if pnl_krw is not None else None,
             "return_pct": round(return_pct, 4) if return_pct is not None else None,
             "remaining_qty": remaining,

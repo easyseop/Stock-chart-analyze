@@ -167,9 +167,11 @@ button:focus-visible, input:focus-visible, select:focus-visible, a:focus-visible
 
 .main {
   width: min(1180px, 100%);
+  min-width: 0;
   margin: 0 auto;
   padding: 36px 42px 56px;
 }
+#content { min-width: 0; }
 .topbar {
   display: flex;
   align-items: center;
@@ -1068,6 +1070,53 @@ button.brief-card:hover {
 }
 .chart-note { margin: 12px 3px 0; color: var(--muted); font-size: 10px; line-height: 1.55; }
 
+.monthly-performance {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  margin-top: 14px;
+  padding: 20px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  box-shadow: var(--shadow-soft);
+}
+.monthly-head { margin-bottom: 13px; }
+.monthly-head h3 { margin: 2px 0 0; font-size: 18px; }
+.monthly-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 14px;
+}
+.monthly-summary-grid .summary-card { min-width: 0; }
+.monthly-summary-grid .summary-card strong { font-size: 20px; }
+.monthly-summary-grid .summary-card p {
+  margin: 5px 0 0;
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 1.45;
+}
+.monthly-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.monthly-table {
+  width: 100%;
+  min-width: 900px;
+  border-collapse: collapse;
+  font-size: 11px;
+}
+.monthly-table th, .monthly-table td {
+  padding: 11px 10px;
+  border-bottom: 1px solid var(--line);
+  text-align: right;
+  white-space: nowrap;
+}
+.monthly-table thead th { color: var(--muted); font-size: 9px; font-weight: 800; }
+.monthly-table th:first-child { text-align: left; }
+.monthly-table tbody th strong { display: block; font-size: 11px; }
+.monthly-table tbody th small { display: block; margin-top: 3px; color: var(--muted); font-size: 9px; }
+.monthly-table tbody tr:last-child th,
+.monthly-table tbody tr:last-child td { border-bottom: 0; }
+
 .portfolio-tabs {
   margin: 0 0 16px;
   overflow-x: auto;
@@ -1341,6 +1390,7 @@ button.brief-card:hover {
   .signal-card, .portfolio-card { padding: 19px; }
   .performance-grid { grid-template-columns: 1fr 1fr; }
   .performance-kis-grid { grid-template-columns: 1fr 1fr; }
+  .monthly-summary-grid { grid-template-columns: 1fr 1fr; }
   .strategy-brief-grid, .signal-brief-grid { grid-template-columns: 1fr 1fr; }
   .performance-wide { grid-column: span 2; }
   .performance-controls { display: grid; }
@@ -1359,6 +1409,7 @@ button.brief-card:hover {
 @media (max-width: 430px) {
   .performance-grid, .portfolio-summary { grid-template-columns: 1fr; }
   .performance-kis-grid { grid-template-columns: 1fr; }
+  .monthly-summary-grid { grid-template-columns: 1fr; }
   .strategy-brief-grid, .market-brief-grid, .signal-brief-grid, .insight-grid { grid-template-columns: 1fr; }
   .strategy-definition { grid-template-columns: 1fr; }
   .performance-wide { grid-column: span 1; }

@@ -12,6 +12,10 @@ const {
   maximumDrawdown,
   completeHoldingsValue,
   completeHoldingsSeries,
+  monthlyPerformance,
+  monthlyTradeStats,
+  strategyTradeStats,
+  unrealizedSummary,
 } = require("../scanner/site_app/portfolio_math.js");
 
 function assertClose(actual, expected, epsilon = 1e-10) {
@@ -228,4 +232,60 @@ test("dailyIndexValue keeps explicit nulls instead of session fallback", () => {
 test("incompleteCount counts null/undefined/non-finite as missing", () => {
   const rows = [{ v: 1 }, { v: null }, {}, { v: "x" }, { v: 0 }];
   assert.equal(incompleteCount(rows, "v"), 3);
+});
+
+test("monthlyPerformance compounds each month and never bridges a missing value", () => {
+  const rows = monthlyPerformance([
+    { date: "2026-07-01", account: 10, A: 2, B: 1,
+      daily_indices: { NASDAQ: 5 } },
+    { date: "2026-07-02", account: 10, A: -2, B: null,
+      daily_indices: { NASDAQ: 5 } },
+    { date: "2026-08-03", account: -10, A: 1, B: 3,
+      daily_indices: { NASDAQ: null } },
+  ], ["NASDAQ"]);
+  assert.equal(rows.length, 2);
+  assertClose(rows[0].account, 21);
+  assertClose(rows[0].A, -0.04);
+  assert.equal(rows[0].B, null);
+  assertClose(rows[0].indices.NASDAQ, 10.25);
+  assert.equal(rows[1].indices.NASDAQ, null);
+});
+
+test("monthlyTradeStats uses sell month cost basis and exposes estimated samples", () => {
+  const rows = monthlyTradeStats([
+    { side: "sell", market: "US", day: "2026-07-25",
+      realized_pnl_krw: 60, cost_closed_krw: 1000, price_estimated: true },
+    { side: "sell", market: "US", day: "2026-07-28",
+      realized_pnl_krw: -20, cost_closed_krw: 1000, price_estimated: false },
+    { side: "buy", market: "US", day: "2026-07-28" },
+    { side: "sell", market: "KR", day: "2026-07-28",
+      realized_pnl_krw: 999, cost_closed_krw: 1 },
+  ], "US");
+  assert.deepEqual(rows, [{
+    month: "2026-07", exits: 2, wins: 1, losses: 1, winRate: 50,
+    realizedPnlKrw: 40, costClosedKrw: 2000, realizedReturnPct: 2,
+    estimatedCount: 1, complete: true,
+  }]);
+});
+
+test("strategyTradeStats keeps a one-trade B win visibly small", () => {
+  assert.deepEqual(strategyTradeStats([{
+    side: "sell", market: "US", sleeve: "B", realized_pnl_krw: 96_606.9,
+    price_estimated: true,
+  }], "B", "US"), {
+    exits: 1, wins: 1, losses: 0, winRate: 100,
+    estimatedCount: 1, realizedPnlKrw: 96_606.9,
+  });
+});
+
+test("unrealizedSummary never adds an incomplete broker snapshot", () => {
+  assert.deepEqual(unrealizedSummary([
+    { ccy: "USD", buy_amt: 1000, pl_amt: 50 },
+    { ccy: "USD", buy_amt: 500, pl_amt: -10 },
+    { ccy: "KRW", buy_amt: 100_000, pl_amt: 1_000 },
+  ], "US"), { count: 2, invested: 1500, pnl: 40,
+    returnPct: 40 / 1500 * 100, complete: true });
+  assert.equal(unrealizedSummary([
+    { ccy: "USD", buy_amt: 1000, pl_amt: null },
+  ], "US").complete, false);
 });

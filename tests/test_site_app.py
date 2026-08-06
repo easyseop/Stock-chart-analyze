@@ -60,7 +60,9 @@ def test_decision_brief_uses_existing_read_only_data():
         assert f"function {feature}" in js
     for feature in ("positionInvestmentSummary", "holdingPeriod",
                     "positionDistances", "strategyStats",
-                    "concentrationRows", "maximumDrawdown"):
+                    "concentrationRows", "maximumDrawdown",
+                    "monthlyPerformance", "monthlyTradeStats",
+                    "strategyTradeStats", "unrealizedSummary"):
         assert f"function {feature}" in math_js
     for label in ("내 평균매수가", "현재가", "총 투입금", "현재 평가금",
                   "매수일 미확인", "가격 분석", "거래이력", "실제 매도가",
@@ -71,6 +73,9 @@ def test_decision_brief_uses_existing_read_only_data():
                   "KIS 직접진입", "가상 모의계좌의 보유내역을 복제하지 않습니다",
                   "별도 가상 시뮬레이션"):
         assert label in js
+    for label in ("월별 투자 성과", "월 수익률 기준", "매도월 실현",
+                  "전략 B 완료 승률", "TWR 우선"):
+        assert label in js
     assert "손절선 또는 목표선 3% 안" in js
     assert "보호선 정보 없음" in js
     assert "남은 손익비" in js
@@ -80,6 +85,7 @@ def test_decision_brief_uses_existing_read_only_data():
     assert "data-performance-series" in js
     assert "data-chart-series" in js
     assert ".trade-history-card" in css and ".strategy-definition" in css
+    assert ".monthly-performance" in css and ".monthly-table-wrap" in css
     assert "/api/risk" not in js
 
 

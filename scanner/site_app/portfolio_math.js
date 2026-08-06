@@ -227,6 +227,129 @@
     return rows.filter((row) => optionalNumber(row[key]) === null).length;
   }
 
+  function compoundComplete(values) {
+    if (!Array.isArray(values) || !values.length) return null;
+    let wealth = 1;
+    for (const raw of values) {
+      const value = optionalNumber(raw);
+      if (value === null || value <= -100) return null;
+      wealth *= 1 + value / 100;
+    }
+    return (wealth - 1) * 100;
+  }
+
+  function monthlyPerformance(rows, indexNames = []) {
+    const groups = new Map();
+    (Array.isArray(rows) ? rows : []).forEach((row) => {
+      const date = String(row?.date || "");
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return;
+      const month = date.slice(0, 7);
+      if (!groups.has(month)) groups.set(month, []);
+      groups.get(month).push(row);
+    });
+    return [...groups.entries()].sort(([a], [b]) => a.localeCompare(b))
+      .map(([month, samples]) => {
+        const indices = Object.fromEntries(indexNames.map((name) => [
+          name, compoundComplete(samples.map((row) => dailyIndexValue(row, name))),
+        ]));
+        return {
+          month,
+          days: samples.length,
+          account: compoundComplete(samples.map((row) => row.account)),
+          A: compoundComplete(samples.map((row) => row.A)),
+          B: compoundComplete(samples.map((row) => row.B)),
+          indices,
+        };
+      });
+  }
+
+  function tradeMonth(row) {
+    const day = String(row?.day || "");
+    if (/^\d{4}-\d{2}-\d{2}$/.test(day)) return day.slice(0, 7);
+    const executed = String(row?.executed_at || "");
+    return /^\d{4}-\d{2}/.test(executed) ? executed.slice(0, 7) : "";
+  }
+
+  function monthlyTradeStats(trades, market) {
+    const groups = new Map();
+    (Array.isArray(trades) ? trades : []).forEach((row) => {
+      if (String(row?.side || "").toLowerCase() !== "sell"
+          || String(row?.market || "").toUpperCase() !== String(market || "").toUpperCase()) {
+        return;
+      }
+      const month = tradeMonth(row);
+      if (!month) return;
+      if (!groups.has(month)) groups.set(month, []);
+      groups.get(month).push(row);
+    });
+    return [...groups.entries()].sort(([a], [b]) => a.localeCompare(b))
+      .map(([month, sales]) => {
+        const realized = sales.map((row) => optionalNumber(row.realized_pnl_krw));
+        const costs = sales.map((row) => optionalNumber(row.cost_closed_krw));
+        const completePnl = realized.every((value) => value !== null);
+        const completeCost = costs.every((value) => value !== null && value > 0);
+        const pnl = completePnl ? realized.reduce((sum, value) => sum + value, 0) : null;
+        const cost = completeCost ? costs.reduce((sum, value) => sum + value, 0) : null;
+        const wins = realized.filter((value) => value !== null && value > 0).length;
+        const losses = realized.filter((value) => value !== null && value < 0).length;
+        const decided = wins + losses;
+        return {
+          month,
+          exits: sales.length,
+          wins,
+          losses,
+          winRate: decided ? wins / decided * 100 : null,
+          realizedPnlKrw: pnl,
+          costClosedKrw: cost,
+          realizedReturnPct: pnl !== null && cost > 0 ? pnl / cost * 100 : null,
+          estimatedCount: sales.filter((row) => row.price_estimated === true).length,
+          complete: completePnl && completeCost,
+        };
+      });
+  }
+
+  function strategyTradeStats(trades, sleeve, market = "") {
+    const sales = (Array.isArray(trades) ? trades : []).filter((row) =>
+      String(row?.side || "").toLowerCase() === "sell"
+      && String(row?.sleeve || "A").toUpperCase() === String(sleeve || "A").toUpperCase()
+      && (!market || String(row?.market || "").toUpperCase() === String(market).toUpperCase()));
+    const pnl = sales.map((row) => optionalNumber(row.realized_pnl_krw));
+    const wins = pnl.filter((value) => value !== null && value > 0).length;
+    const losses = pnl.filter((value) => value !== null && value < 0).length;
+    const decided = wins + losses;
+    return {
+      exits: sales.length,
+      wins,
+      losses,
+      winRate: decided ? wins / decided * 100 : null,
+      estimatedCount: sales.filter((row) => row.price_estimated === true).length,
+      realizedPnlKrw: pnl.every((value) => value !== null)
+        ? pnl.reduce((sum, value) => sum + value, 0) : null,
+    };
+  }
+
+  function unrealizedSummary(positions, market) {
+    const selected = (Array.isArray(positions) ? positions : []).filter((row) => {
+      const rowMarket = String(row?.market || "").toUpperCase()
+        || (String(row?.ccy || "").toUpperCase() === "KRW" ? "KR" : "US");
+      return rowMarket === String(market || "").toUpperCase();
+    });
+    const buys = selected.map((row) => optionalNumber(row.buy_amt));
+    const pnls = selected.map((row) => optionalNumber(row.pl_amt));
+    const complete = selected.length > 0
+      && buys.every((value) => value !== null && value >= 0)
+      && pnls.every((value) => value !== null);
+    const invested = complete ? buys.reduce((sum, value) => sum + value, 0) : null;
+    const pnl = complete ? pnls.reduce((sum, value) => sum + value, 0) : null;
+    return {
+      count: selected.length,
+      invested,
+      pnl,
+      returnPct: invested > 0 ? pnl / invested * 100 : null,
+      complete,
+    };
+  }
+
   return Object.freeze({
     optionalNumber,
     positionInvestmentSummary,
@@ -241,5 +364,10 @@
     cumulativeAlphaSeries,
     dailyIndexValue,
     incompleteCount,
+    compoundComplete,
+    monthlyPerformance,
+    monthlyTradeStats,
+    strategyTradeStats,
+    unrealizedSummary,
   });
 });
