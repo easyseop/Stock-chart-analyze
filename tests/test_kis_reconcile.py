@@ -14,6 +14,7 @@ from __future__ import annotations
 import os
 import sys
 import tempfile
+from unittest import mock
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -46,6 +47,38 @@ def test_normalize_merge():
     assert r["filled"] == 4 and r["src"] == "ccnl" and r["side"] == "SELL"
     assert r["ord_qty"] == 10 and r["price"] == 99.50
     print("[PASS] 정규화: nccs+ccnl 같은 ODNO 병합(ccnl 체결치 우선)·부분체결 유추")
+
+
+def test_order_number_leading_zero_is_same_identity():
+    rows = R.normalize_rows(
+        _nccs([{"odno": "0000043481", "pdno": "TAP", "ft_ord_qty": "40",
+                "nccs_qty": "40", "sll_buy_dvsn_cd_name": "매도"}]),
+        _ccnl([{"odno": "43481", "pdno": "TAP", "ft_ord_qty": "40",
+                "ft_ccld_qty": "0", "sll_buy_dvsn_cd_name": "매도"}]))
+    assert len(rows) == 1
+    assert R.order_no_key("0000043481") == R.order_no_key("43481") == "43481"
+    print("[PASS] KIS ODNO 선행 0 차이는 같은 주문으로 병합")
+
+
+def test_bound_ack_matches_broker_order_without_leading_zeroes():
+    """원장 ODNO가 0-padding돼도 KIS 체결행의 같은 숫자 주문을 찾아 닫는다."""
+    with tempfile.TemporaryDirectory() as tmp:
+        _fresh(tmp)
+        L.record_submit("tap:half#1", "TAP", 40, "절반 익절",
+                        meta={"side": "SELL", "market": "US"})
+        L.bind_broker_order("tap:half#1", "0000043481", ord_tmd="101500")
+        L.on_result("tap:half#1", "ack", 0)
+        rows = [{
+            "odno": "43481", "pdno": "TAP", "side": "SELL",
+            "ord_qty": 40, "filled": 0, "price": 0,
+            "ord_tmd": "101500", "src": "ccnl", "open": False,
+        }]
+        with mock.patch("bot.kis_accounting.sync_fill", return_value={}):
+            result = R.resolve_acks_from_rows(rows)
+        assert len(result) == 1 and result[0]["state"] == "rejected"
+        assert L.state_of("tap:half#1")["state"] == "rejected"
+        assert L.open_order_count("TAP", side="SELL") == 0
+    print("[PASS] 0-padding ODNO ACK가 동일 브로커 주문행으로 대사·종결")
 
 
 def test_high_fully_filled_found_in_ccnl_only():
@@ -141,6 +174,8 @@ def test_time_window_filter():
 
 def main():
     test_normalize_merge()
+    test_order_number_leading_zero_is_same_identity()
+    test_bound_ack_matches_broker_order_without_leading_zeroes()
     test_high_fully_filled_found_in_ccnl_only()
     test_low_twin_orders_same_second()
     test_known_odno_excluded()

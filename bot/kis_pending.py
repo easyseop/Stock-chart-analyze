@@ -62,9 +62,10 @@ def _cancel_confirmed(o: dict) -> bool:
             return False
         rows = kis_reconcile.normalize_rows(nccs, ccnl)
     kis_reconcile.resolve_acks_from_rows(rows)      # 취소 중 체결을 먼저 회계
-    odno = str(o.get("odno") or "")
+    odno = kis_reconcile.order_no_key(o.get("odno"))
     return bool(odno) and not any(
-        str(r.get("odno") or "") == odno and r.get("open") for r in rows)
+        kis_reconcile.order_no_key(r.get("odno")) == odno and r.get("open")
+        for r in rows)
 
 
 def _cancel_family_state(base: str) -> str:
