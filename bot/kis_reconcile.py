@@ -283,7 +283,17 @@ def reconcile_unknowns_kr(balance: dict | None) -> list[dict]:
 
     hmap, complete = _kr_holdings(balance)
     open_count: dict[str, int] = {}
-    for o in fold_open:                            # 심볼별 non-terminal 주문 수
+    # ``ledger.open_orders``에는 아직 브로커로 전송하지 않은 half 전술의 2차
+    # ``planned`` leg도 포함된다. 잔고 delta 귀속의 모호성은 실제 브로커
+    # in-flight끼리만 생기므로 planned까지 세면 1차 BUY가 체결돼도 영원히 ACK로
+    # 남아 보호원장에 들어가지 못한다. ledger.open_order_count와 같은 상태 집합을
+    # 사용해 전송 전 계획은 제외하되 실제 동시 주문 2건은 계속 보류한다.
+    broker_inflight = {"submitted", "ack", "partial", "cancel_pending", "unknown"}
+    for o in fold_open:
+        if o.get("state") not in broker_inflight:
+            continue
+        if o.get("state") == "partial" and o.get("open") is False:
+            continue
         s = str(o.get("symbol") or "").upper()
         open_count[s] = open_count.get(s, 0) + 1
 
@@ -418,7 +428,15 @@ def resolve_acks_by_balance(hmaps: dict[str, dict | None],
     now_ts = _t.time() if now_ts is None else float(now_ts)
     fold_open = ledger.open_orders()
     open_count: dict[str, int] = {}
-    for o in fold_open:                            # 심볼별 non-terminal 주문 수
+    broker_inflight = {"submitted", "ack", "partial", "cancel_pending", "unknown"}
+    for o in fold_open:
+        # half 전술의 2차 ``planned`` leg는 아직 브로커 주문이 아니므로 1차 ACK의
+        # 잔고 delta 귀속을 모호하게 만들지 않는다. 실제 브로커 in-flight 2건은
+        # 계속 open_count=2로 남아 자동대사를 보류한다.
+        if o.get("state") not in broker_inflight:
+            continue
+        if o.get("state") == "partial" and o.get("open") is False:
+            continue
         s = str(o.get("symbol") or "").upper()
         open_count[s] = open_count.get(s, 0) + 1
 
