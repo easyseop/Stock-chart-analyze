@@ -254,6 +254,19 @@ python3 scripts/kis_l1_readiness.py \
 python3 scripts/kis_l1_readiness.py --scope l0 --broker --json
 ```
 
+Oracle에서 `buyloop.service`가 `/home/ubuntu/kis.env`를 shell `source`로 읽는
+구성이라면 반드시 다음 drop-in을 설치한다. 단순 `source`만 쓰면 파일 안의
+일반 `KEY=VALUE`(예: `USER_BASELINE_PATH`)가 Python 자식 프로세스에 전달되지 않아
+readiness는 통과해도 buyloop가 전 종목을 fail-closed할 수 있다.
+
+```bash
+sudo install -d -m 755 /etc/systemd/system/buyloop.service.d
+sudo install -m 644 infra/server/buyloop.oracle-ubuntu.conf \
+  /etc/systemd/system/buyloop.service.d/oracle-ubuntu.conf
+sudo systemctl daemon-reload
+sudo systemctl restart buyloop.service
+```
+
 종료코드 `0`은 선택한 scope의 차단 게이트가 통과해 운영자 승인 검토가 가능하다는
 뜻일 뿐이다. 실제 L1 하향은 사용자 별도 승인과 사유가 포함된
 `python -m bot.kill 0 --lower ...` 절차가 여전히 필요하다. 하나라도 불명확하면
