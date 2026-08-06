@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated_at": "2026-08-06T10:56:09+09:00",
+ "generated_at": "2026-08-06T11:44:58+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "shelf_debug": {
   "ok": 22,
@@ -127,34 +127,6 @@
     "mode": "full",
     "label": "⚡ 즉시 분할",
     "desc": "손절폭 5.7%로 타이트 — 현재가에서 1~2회 분할 매수. 기다리는 이득보다 놓치는 비용이 큼"
-   }
-  },
-  {
-   "id": "015760-2026-08-06-now",
-   "code": "015760",
-   "name": "한국전력",
-   "ccy": "KRW",
-   "group": "now",
-   "entry_kind": "now",
-   "stage": 3,
-   "price": 35400.0,
-   "entry": 35400.0,
-   "stop": 31848.7725,
-   "target": 42502.4549,
-   "shares_1pct": 28,
-   "range_pos": 0.0907,
-   "norm": -6.6,
-   "bear_share": 0.25,
-   "fresh": true,
-   "break_gap": 0.0432,
-   "earnings_d": null,
-   "tactic": {
-    "stop_pct": 10.0,
-    "pb_price": 32000.0,
-    "pb_stop_pct": 0.5,
-    "mode": "pullback",
-    "label": "⏳ 눌림 지정가만",
-    "desc": "지금 추격 금지(손절폭 10.0% · 단기 이격) — <b>32,000원 눌림 지정가만</b>. 눌리면 손절폭 0.5%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
    }
   },
   {
@@ -351,6 +323,34 @@
     "mode": "pullback",
     "label": "⏳ 눌림 지정가만",
     "desc": "지금 추격 금지(손절폭 6.3% · 돌파후 진행) — 받칠 지지에 눌릴 때까지 대기"
+   }
+  },
+  {
+   "id": "015760-2026-08-06-now",
+   "code": "015760",
+   "name": "한국전력",
+   "ccy": "KRW",
+   "group": "now",
+   "entry_kind": "now",
+   "stage": 3,
+   "price": 35700.0,
+   "entry": 35700.0,
+   "stop": 32148.7725,
+   "target": 42802.4549,
+   "shares_1pct": 28,
+   "range_pos": 0.0987,
+   "norm": -6.6,
+   "bear_share": 0.25,
+   "fresh": false,
+   "break_gap": 0.0521,
+   "earnings_d": null,
+   "tactic": {
+    "stop_pct": 9.9,
+    "pb_price": null,
+    "pb_stop_pct": null,
+    "mode": "pullback",
+    "label": "⏳ 눌림 지정가만",
+    "desc": "지금 추격 금지(손절폭 9.9% · 돌파후 진행) — 받칠 지지에 눌릴 때까지 대기"
    }
   },
   {
@@ -2010,8 +2010,8 @@
    "stage": 2,
    "price": 402.38,
    "entry": 402.38,
-   "stop": 342.6836,
-   "target": 521.7729,
+   "stop": 342.7064,
+   "target": 521.7272,
    "shares_1pct": 1,
    "range_pos": 0.4426,
    "norm": -11.5,
@@ -4052,16 +4052,16 @@
    "group": "watch",
    "entry_kind": "pullback",
    "stage": 3,
-   "price": 195400.0,
+   "price": 197600.0,
    "entry": 189521.8333,
    "stop": 166794.8634,
    "target": 234975.7732,
    "shares_1pct": 4,
-   "range_pos": 0.4217,
+   "range_pos": 0.4388,
    "norm": -11.5,
    "bear_share": 0.375,
    "fresh": false,
-   "break_gap": 0.1198,
+   "break_gap": 0.1324,
    "earnings_d": null,
    "tactic": null
   },
@@ -4157,16 +4157,16 @@
    "group": "watch",
    "entry_kind": "pullback",
    "stage": 3,
-   "price": 141400.0,
+   "price": 143100.0,
    "entry": 116900.0,
    "stop": 99521.3384,
    "target": 151657.3232,
    "shares_1pct": 5,
-   "range_pos": 0.2075,
+   "range_pos": 0.2218,
    "norm": -41.0,
    "bear_share": 0.375,
    "fresh": false,
-   "break_gap": 0.1501,
+   "break_gap": 0.1639,
    "earnings_d": null,
    "tactic": null
   }
