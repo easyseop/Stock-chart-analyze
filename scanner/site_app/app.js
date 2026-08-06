@@ -10,6 +10,10 @@ const {
   maximumDrawdown,
   completeHoldingsValue,
   completeHoldingsSeries,
+  monthlyPerformance,
+  monthlyTradeStats,
+  strategyTradeStats,
+  unrealizedSummary,
 } = globalThis.PortfolioMath;
 
 const API = Object.freeze({
@@ -198,7 +202,7 @@ async function loadData({ quiet = false } = {}) {
       state.performanceError = error;
     }
     try {
-      state.trades = await fetchJSON(`${API.trades}?limit=200`, 10000);
+      state.trades = await fetchJSON(`${API.trades}?limit=500`, 10000);
       state.tradesError = null;
     } catch (error) {
       state.trades = null;
@@ -237,7 +241,7 @@ async function refreshPortfolio() {
     state.performanceError = error;
   }
   try {
-    state.trades = await fetchJSON(`${API.trades}?limit=200`, 10000);
+    state.trades = await fetchJSON(`${API.trades}?limit=500`, 10000);
     state.tradesError = null;
   } catch (error) {
     state.tradesError = error;
@@ -1910,6 +1914,88 @@ function performanceInsights(rows, indexNames) {
   </div>`;
 }
 
+function monthlyPerformanceMarkup(market, marketDoc) {
+  const indexNames = marketDoc.indices || [];
+  const primary = indexNames[0];
+  const daily = (state.performance?.days || [])
+    .filter((row) => row.market === market)
+    .map((row) => ({ ...row }));
+  const current = marketDoc.series?.at(-1);
+  if (current && /^\d{4}-\d{2}-\d{2}$/.test(String(marketDoc.date || ""))
+      && !daily.some((row) => row.date === marketDoc.date)) {
+    // 진행 중 세션은 계좌와 지수 모두 '오늘 첫 수집' 기준을 사용한다. 전일종가
+    // daily_indices를 섞으면 첫날 앵커가 달라져 월 누적이 오염된다.
+    daily.push({
+      date: marketDoc.date,
+      account: current.account,
+      A: current.A,
+      B: current.B,
+      daily_indices: current.indices || {},
+    });
+  }
+  const performance = monthlyPerformance(daily, indexNames);
+  const tradeStats = monthlyTradeStats(state.trades?.trades || [], market);
+  const performanceByMonth = new Map(performance.map((row) => [row.month, row]));
+  const tradesByMonth = new Map(tradeStats.map((row) => [row.month, row]));
+  const months = [...new Set([...performanceByMonth.keys(), ...tradesByMonth.keys()])]
+    .sort().slice(-6).reverse();
+  const currentMonth = String(marketDoc.date || "").slice(0, 7);
+  const bStats = strategyTradeStats(state.trades?.trades || [], "B", market);
+  const unrealized = unrealizedSummary(state.portfolio?.positions || [], market);
+  const ccy = market === "KR" ? "KRW" : "USD";
+  const bRate = bStats.winRate === null ? "—" : formatPercent(bStats.winRate, 1);
+  const bWarning = bStats.exits === 0 ? "완료 거래를 기다리는 중"
+    : `${bStats.wins}승 ${bStats.losses}패 · 완료 ${bStats.exits}건${
+      bStats.estimatedCount ? ` · 추정가 ${bStats.estimatedCount}건` : ""}`;
+  const unrealizedTone = unrealized.returnPct === null ? ""
+    : unrealized.returnPct >= 0 ? "gain" : "loss";
+  const body = months.map((month) => {
+    const perf = performanceByMonth.get(month) || {};
+    const sales = tradesByMonth.get(month);
+    const indexValue = perf.indices?.[primary];
+    const alpha = optionalNumber(perf.account) !== null && optionalNumber(indexValue) !== null
+      ? Number(perf.account) - Number(indexValue) : null;
+    const realized = sales?.realizedPnlKrw;
+    const realizedTone = optionalNumber(realized) === null ? ""
+      : realized >= 0 ? "gain" : "loss";
+    const monthLabel = `${month.slice(0, 4)}년 ${Number(month.slice(5))}월${
+      month === currentMonth ? " · 진행 중" : ""}`;
+    const salesNote = !sales ? "매도 없음"
+      : sales.complete
+        ? `${formatPrice(realized, "KRW", true)} · ${performanceValue(sales.realizedReturnPct)}`
+        : "원가 자료 일부 미확정";
+    const winNote = !sales ? "—"
+      : `${sales.winRate === null ? "—" : performanceValue(sales.winRate)} · ${sales.wins}승 ${sales.losses}패${
+        sales.estimatedCount ? ` · 추정 ${sales.estimatedCount}` : ""}`;
+    return `<tr>
+      <th scope="row"><strong>${escapeHTML(monthLabel)}</strong><small>${Number(perf.days || 0)}거래일</small></th>
+      <td>${performanceValue(perf.account)}</td>
+      <td>${performanceValue(perf.A)}</td>
+      <td>${performanceValue(perf.B)}</td>
+      <td>${performanceValue(indexValue)}</td>
+      <td class="${optionalNumber(alpha) === null ? "" : alpha >= 0 ? "gain" : "loss"}">${performanceValue(alpha).replace("%", "%p")}</td>
+      <td class="${realizedTone}">${salesNote}</td>
+      <td>${winNote}</td>
+    </tr>`;
+  }).join("");
+  return `<section class="monthly-performance" aria-labelledby="monthly-performance-title">
+    <div class="section-head monthly-head">
+      <div><p class="eyebrow">MONTHLY REVIEW</p><h3 id="monthly-performance-title">월별 투자 성과</h3></div>
+      <span class="status-chip">최근 6개월</span>
+    </div>
+    <div class="monthly-summary-grid">
+      <div class="summary-card"><small>현재 미실현 · ${market}</small><strong class="${unrealizedTone}">${performanceValue(unrealized.returnPct)}</strong><p>${unrealized.complete ? `${formatPrice(unrealized.pnl, ccy, true)} · ${unrealized.count}종목` : "현재 잔고 자료 확인 중"}</p></div>
+      <div class="summary-card"><small>전략 B 완료 승률 · ${market}</small><strong>${bRate}</strong><p>${escapeHTML(bWarning)}</p></div>
+      <div class="summary-card"><small>월 수익률 기준</small><strong>TWR 우선</strong><p>입출금 영향을 뺀 운용성과 · 매도월 실현손익은 보조</p></div>
+    </div>
+    ${body ? `<div class="monthly-table-wrap"><table class="monthly-table">
+      <thead><tr><th>월</th><th>계좌 TWR</th><th>A</th><th>B</th><th>${escapeHTML(primary || "주 지수")}</th><th>초과수익</th><th>매도월 실현</th><th>승률</th></tr></thead>
+      <tbody>${body}</tbody>
+    </table></div>` : `<p class="history-note">월별로 묶을 성과·매도 기록을 쌓는 중입니다.</p>`}
+    <p class="chart-note">월 TWR은 해당 월의 일별 수익률을 복리로 연결합니다. 매도월 실현수익률은 그 달에 매도된 원가 대비 확정손익이며, 현재 미실현 손익과 합산하지 않습니다. 월 중 하루라도 값이 빠지면 해당 지표를 —로 둡니다.</p>
+  </section>`;
+}
+
 function renderKisPerformance() {
   const market = state.performanceMarket;
   const marketDoc = state.performance?.markets?.[market] || {};
@@ -1973,6 +2059,7 @@ function renderKisPerformance() {
       </div>
       ${performanceInsights(rows, indexNames)}
       ${strategyDefinitionMarkup({ compact: true })}
+      ${monthlyPerformanceMarkup(market, marketDoc)}
       <div class="performance-chart-card">
         <div class="chart-head">
           <div><strong>${escapeHTML(marketDoc.label || market)} 시장 비교</strong><span>${escapeHTML(epochLabel ? `${epochLabel} · ${basisLabel}` : basisLabel)}에 계좌·지수를 함께 0%로 맞춰 비교</span></div>

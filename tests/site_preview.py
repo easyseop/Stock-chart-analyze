@@ -147,6 +147,19 @@ PERFORMANCE = {
 }
 for market, index_names in (("US", ["나스닥", "S&P500"]),
                             ("KR", ["코스피", "코스닥"])):
+    for day, account, sleeve_a, sleeve_b, idx_a, idx_b in (
+            ("2026-06-27", 0.45, 0.61, 0.18, 0.21, 0.14),
+            ("2026-06-30", -0.12, -0.08, -0.25, 0.08, 0.03),
+            ("2026-07-21", 0.31, 0.42, 0.12, 0.17, 0.10),
+            ("2026-07-22", -0.08, -0.03, -0.14, -0.21, -0.15),
+            ("2026-07-23", 0.52, 0.68, 0.26, 0.34, 0.29)):
+        PERFORMANCE["days"].append({
+            "date": day, "market": market,
+            "account": account, "A": sleeve_a, "B": sleeve_b,
+            "daily_indices": {index_names[0]: idx_a, index_names[1]: idx_b},
+        })
+for market, index_names in (("US", ["나스닥", "S&P500"]),
+                            ("KR", ["코스피", "코스닥"])):
     for i in range(24):
         PERFORMANCE["markets"][market]["series"].append({
             "t": f"{9 + i // 12:02d}:{(i % 12) * 5:02d}",
@@ -208,6 +221,7 @@ TRADES = {
             "ccy": "USD", "sleeve": "A", "reason": "하드 손절(손절가 이탈)",
             "reason_kind": "stop", "qty": 8, "entry_price": 62.40,
             "exit_price": 58.10, "price_pnl": -34.40,
+            "cost_closed_krw": 683200,
             "realized_pnl_krw": -47200, "return_pct": -6.91,
             "remaining_qty": 0, "partial_exit": False, "verified": True,
         },
@@ -218,6 +232,7 @@ TRADES = {
             "ccy": "KRW", "sleeve": "B", "reason": "B 목표(VAH) 도달",
             "reason_kind": "take_profit", "qty": 12, "entry_price": 75200,
             "exit_price": 82100, "price_pnl": 82800,
+            "cost_closed_krw": 902400,
             "realized_pnl_krw": 81600, "return_pct": 9.04,
             "remaining_qty": 12, "partial_exit": True, "verified": True,
         },
@@ -228,6 +243,7 @@ TRADES = {
             "ccy": "USD", "sleeve": "A", "reason": "익절 +1R 절반",
             "reason_kind": "take_profit", "qty": 6, "entry_price": 189.40,
             "exit_price": 214.20, "price_pnl": 148.80,
+            "cost_closed_krw": 1403500,
             "realized_pnl_krw": 184000, "return_pct": 13.11,
             "remaining_qty": 6, "partial_exit": True, "verified": True,
         },
