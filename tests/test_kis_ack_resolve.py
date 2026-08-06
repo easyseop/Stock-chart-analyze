@@ -126,6 +126,31 @@ def test_concurrent_and_baseline_and_fail_hold():
     print("[PASS] 동시주문·baseline 심볼·잔고실패 → 전부 보류(fail-closed)")
 
 
+def test_unsubmitted_planned_leg_does_not_block_first_fill_reconcile():
+    """half 전술의 전송 전 2차 계획은 1차 BUY의 잔고 귀속을 모호하게 하지 않는다."""
+    with tempfile.TemporaryDirectory() as tmp:
+        M = _setup(tmp)
+        L, R = M["ledger"], M["kis_reconcile"]
+        _ack(L, "kb:half#1", "AAPL", "BUY", 3, before=0)
+        L._append({
+            "ev": "submit", "key": "kb:half#1:pb", "symbol": "AAPL",
+            "intended": 3, "filled": 0, "state": "planned",
+            "reason": "pullback second leg",
+            "meta": {"side": "BUY", "hldg_before": 0, "market": "US"},
+            "ts": time.time() - 200,
+        })
+        # 실제 브로커 in-flight는 첫 leg 하나뿐이다. planned는 중복 발주 방지용
+        # 원장 상태로 유지하되 잔고 대사의 open_count에는 포함하지 않는다.
+        assert L.open_order_count("AAPL", side="BUY") == 1
+        rs = R.resolve_acks_by_balance(
+            {"US": {"AAPL": 3}}, complete_snapshot=True)
+        assert len(rs) == 1 and rs[0]["key"] == "kb:half#1"
+        assert L.state_of("kb:half#1")["state"] == "filled"
+        assert L.state_of("kb:half#1:pb")["state"] == "planned"
+        assert L.open_order_count("AAPL", side="BUY") == 0
+    print("[PASS] half planned 2차 leg는 실제 1차 BUY ACK 대사를 막지 않음")
+
+
 def test_migrated_baseline_sell_resolves_but_uses_sell_order_price():
     """baseline 예외는 이관 pos_key+원가+before 3중 일치 SELL만 통과한다."""
     with tempfile.TemporaryDirectory() as tmp:
@@ -249,6 +274,7 @@ def main():
     test_age_gate_holds_fresh_orders()
     test_partial_holds_and_anomaly_freezes()
     test_concurrent_and_baseline_and_fail_hold()
+    test_unsubmitted_planned_leg_does_not_block_first_fill_reconcile()
     test_migrated_baseline_sell_resolves_but_uses_sell_order_price()
     test_partial_balance_map_requires_exact_keys_or_complete_contract()
     test_boot_wires_ack_resolution()
