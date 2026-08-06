@@ -1719,3 +1719,55 @@ STE 3, TAP 80, WAL 13, WDAY 2`
 전략 계약 게이트로 직접 검토해 신규매수할 수 있다. autopaper 보유내역은 주문
 권위 소스가 아니다. `KIS live`, fallback 1, stall live, 동결 해제는 계속 승인되지
 않았으며 변경하지 않았다. 이상 발생 시 kill-switch를 즉시 L1 이상으로 올린다.
+
+### 33. 2026-08-06 L0 본장 첫 집행·ACK 대사 후속 수정·운영 결과
+
+미국 본장에서 L0 직접집행이 처음 동작해 PAAS 5주(B), BX 12주(A), IDXX 3주(A),
+MKC 33주(A)가 먼저 체결됐다. 1차 체결 뒤 원장에 `planned`로 남긴 half 전술의
+2차 leg가 실제 브로커 주문이 아닌데도 ACK 잔고 대사의 동시주문 수와 readiness의
+열린 주문 수에 포함되는 문제를 확인했다. PR #110(`b9e4be67`)에서 잔고 대사는
+실제 in-flight 상태만 세도록 수정했고, 배포 뒤 BX·IDXX·MKC 1차 체결이 모두
+accounted 및 보호원장에 반영됐다.
+
+TAP 절반익절 주문은 원장 ODNO `0000043481`과 KIS 체결조회 ODNO `43481`의 선행
+0 표기 차이 때문에 닫힌 거절 주문을 찾지 못했다. PR #111, merge
+`6d448ca98d41bc9b7ecc5a5ba0afc14de57e5d6c`에서 KIS 숫자 주문번호 비교키를
+정규화하고 취소확인·ACK·UNKNOWN·국내외 행 병합 전 경로에 적용했다. 같은 PR에서
+미전송 `planned` leg는 readiness에 별도 표시하되 브로커 열린 주문으로 세지 않게
+했다. 집중 테스트와 CI 통과 뒤 Oracle에 배포했고, TAP은 새 주문 없이 거절 종결,
+readiness는 실제 열린 주문 0·미전송 계획 3으로 정확히 판정했다.
+
+readiness `blockers=[]`를 다시 확인하고 사용자 승인에 따라 L0를 복구했다. 이후
+BX 2차 12주와 IDXX 2차 3주는 체결·회계됐고, MKC 2차 33주는 0주 거절됐다.
+UFPI 14주와 ALC 6주도 새 A 신호로 체결됐다. 이때 UFPI 2차 0주 거절을
+`kis_boot._resolve_acks()`가 `✅ 체결 확정 ... 0주`로 알리는 표시 오류와, mirror의
+하루 10건 상한이 1차·2차 leg·거절을 각각 세어 정상 후보를 조기 차단하는 운영
+문제를 확인했다.
+
+PR #112, merge `122c65402491c26f63ea0d1574353c1239afe971`에서 다음을 수정했다.
+
+- ACK 대사 결과 중 `filled > 0`만 trade 체결 알림 전송. 거절·미체결 0주는 원장에
+  남기되 체결 알림을 보내지 않는다.
+- mirror의 하루 상한은 submit 10회가 아니라 **서로 다른 신규 심볼 10종목**으로
+  계산한다. 같은 종목의 1·2차 leg와 거절은 한 종목이다.
+- Stage 1.5/2/2.5/3의 기존 submit 한도는 변경하지 않았다.
+- 원자 총시드, 5% 완충 운영한도, A/B 슬리브, 종목 1/3, 브로커 매수여력,
+  risk 1%, 세션·신선도·계좌격리·중복주문 게이트는 모두 유지했다.
+
+`test_kis_boot`, `test_kis_buy_gates`, ACK/ODNO/readiness 집중 회귀, compileall,
+diff check와 GitHub CI가 통과했다. 로컬 전체 실행에서 pandas/numpy 미설치 모듈은
+환경 의존으로 실행되지 않았고, 동일 전체 스위트는 GitHub Actions에서 통과했다.
+
+autodeploy.timer가 merge `122c6540`을 Oracle에 반영한 뒤 INGR 12주와 HLF 4주가
+예산 안에서 체결·회계됐다. 최종 신규 포지션 보호값은 다음과 같다.
+
+- INGR 12주: 평단 $103.86583333, 손절/초기손절 $98.5875, 목표 $113.0099
+- HLF 4주: 평단 $11.40, 손절/초기손절 $10.8316, 목표 $14.1268
+
+최종 운영 상태는 Oracle clean HEAD `122c6540`, KIS mock L0, buy_new/protect_sell
+허용, fallback 0, stall shadow, 동결 6종목 유지다. 오늘 신규 심볼은 8/10,
+열린 주문 0, UNKNOWN 0, 미회계 BUY 0, heartbeat fresh이며 모든 서비스가 active다.
+costbook 운용원가는 32,708,656.50원(한도 33,250,000원)이다. A 슬리브 잔여는
+약 10,832원뿐이라 A 후보는 수량 0으로 차단되고, B도 유효 후보와 해당 슬리브·총량
+여유를 모두 만족할 때만 주문된다. `KIS live`, fallback 1, stall live, 동결 해제는
+계속 승인되지 않았고 변경하지 않았다.
