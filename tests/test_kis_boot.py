@@ -117,6 +117,8 @@ def test_fill_notifications_use_explicit_trade_category():
         resolved = [
             {"symbol": "AAPL", "side": "BUY", "filled": 1, "residual": 0},
             {"symbol": "TSLA", "side": "SELL", "filled": 2, "residual": 1},
+            {"symbol": "UFPI", "side": "BUY", "state": "rejected",
+             "filled": 0, "residual": 14},
         ]
         with mock.patch.object(B.ledger, "open_orders", side_effect=[aged, []]), \
              mock.patch.object(B.kis, "open_orders",
@@ -129,12 +131,12 @@ def test_fill_notifications_use_explicit_trade_category():
                                return_value=[]), \
              mock.patch.object(B, "_notify") as send:
             assert B._resolve_acks() == resolved
-        assert send.call_count == 2
+        assert send.call_count == 2                # rejected 0주는 체결 알림 금지
         assert send.call_args_list[0].kwargs == {
             "critical": False, "category": "trade"}
         assert send.call_args_list[1].kwargs == {
             "critical": True, "category": "trade"}
-    print("[PASS] 매수·매도 체결확정 → 문구와 무관한 명시적 trade 분류")
+    print("[PASS] 양수 체결만 trade 알림·거절 0주는 체결 알림 없음")
 
 
 def test_full_sell_order_does_not_close_remaining_position():
