@@ -1661,3 +1661,61 @@ mock 국내 미체결 대체 증명, live 비사용 코드, V9 직접진입 안�
 compileall, node syntax, diff check를 다시 통과했다. 이 보완은 테스트·문서뿐이며
 Oracle 운영 상태와 주문 경로를 변경하지 않는다. PR #107은 장외 운영 절차를
 시작할 때까지 Draft로 유지한다.
+
+### 32. 2026-08-06 SELL ACK 5건 운영 대사·KIS mock L0 전환 완료
+
+사용자가 즉시 진행을 명시적으로 승인해 Oracle 운영 브랜치
+`claude/happy-gauss-cwoq21`의 exact HEAD
+`334495913fa40bf3790c20718b9a0f039704d76a`에서 §30 런북을 수행했다. 작업 전
+Oracle은 clean, `KIS_ENV=mock`, kill-switch L1, `TRADE_STAGE=mirror`,
+`ORACLE_SIGNAL_FALLBACK_ENABLED=0`, `STALL_EXIT_MODE=shadow`, 수동 allowlist 없음,
+원장 healthy, UNKNOWN 0, 미회계 BUY 0이었다. sentinel·buyloop·watchdog·telegram·
+portfolio-web·autodeploy.timer도 모두 active였다.
+
+autodeploy.timer와 sentinel·buyloop·watchdog를 정지하고 runtime mask한 뒤
+`bot.sentinel`·`bot.kis_buyloop` 수동 프로세스가 0임을 확인했다. 다음 백업을
+`/home/ubuntu/backups/kis-l0-20260806-1308Z`에 권한 0700/파일 0600으로 만들고
+`manifest.sha256` 검증을 통과했다.
+
+- order ledger, costbook, KIS positions
+- symbol freeze, kill-switch와 kill 감사 로그
+- 영속 user baseline, `/home/ubuntu/kis.env`
+
+KIS 해외 잔고는 거래소별 응답이 동일 보유종목을 중복 반환할 수 있으므로 수량을
+합산하지 않고 운영 `_resolve_acks()`와 같은 심볼 병합 방식으로 재확인했다. 그
+결과 승인된 KIS 표와 정확히 일치했고, 열린 주문도 아래 SELL ACK 5건뿐이었다.
+
+- AQN SELL 129: KIS 잔고 0
+- GPK SELL 123: KIS 잔고 0
+- SNN SELL 25: KIS 잔고 0
+- CHYM SELL 47(이전 94): KIS 잔고 47
+- MAIN SELL 46(이전 92): KIS 잔고 46
+
+새 주문 HTTP나 JSON 직접 편집 없이 배포 코드의 `kis_boot._resolve_acks()`를 정확히
+한 번 호출했다. 5건 모두 `ack-balance`로 회계됐고 열린 주문은 5→0이 됐다.
+보호원장과 costbook의 최종 수량은 KIS와 다음처럼 일치했다.
+
+`ALK 8, BIPC 17, CAG 13, CHYM 47, KKR 7, LW 13, MAIN 46, PUK 24,
+STE 3, TAP 80, WAL 13, WDAY 2`
+
+공식 `ownership.freeze()`로 AQN·CAG·GPK·LW·SNN·VRSK를 close-only 동결 상태로
+복구했다. 서비스를 재가동한 뒤 `scripts/kis_l1_readiness.py --scope l0 --broker
+--json`을 실행한 결과 `blockers=[]`, 열린 원장/브로커 주문 0, UNKNOWN 0,
+미회계 BUY 0, 세 원장·KIS 수량 일치, 운용원가 16,609,853.88원(5% 완충 후 한도
+33,250,000원), heartbeat fresh, 동결 6종목 보존을 확인했다.
+
+사용자 operator ack로 kill-switch를 **KIS mock L0**로 하향했다. 이후 buyloop 두
+사이클에서 신선한 GitHub 신호를 읽었으나 미국 프리마켓이라 모든 유효 후보가
+`session=장 아님`으로 차단됐고 신규 주문은 0건이었다. 최종 상태는 다음과 같다.
+
+- kill-switch L0, KIS mock, fallback 0, stall shadow, allowlist 없음
+- 열린 주문 0, UNKNOWN 0, 미회계 BUY 0
+- 보호원장·costbook·KIS 수량 일치
+- close-only 동결 6종목 유지
+- sentinel·buyloop·watchdog·telegram·portfolio-web·autodeploy.timer active
+- Telegram `Stock_machine` 성공 알림 전송 완료
+
+미국 정규장이 열리면 신선한 스캐너 A/B 신호를 KIS 시세·잔고·세션·예산·손절·
+전략 계약 게이트로 직접 검토해 신규매수할 수 있다. autopaper 보유내역은 주문
+권위 소스가 아니다. `KIS live`, fallback 1, stall live, 동결 해제는 계속 승인되지
+않았으며 변경하지 않았다. 이상 발생 시 kill-switch를 즉시 L1 이상으로 올린다.
