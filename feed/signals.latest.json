@@ -1,10 +1,10 @@
 {
  "version": 1,
- "generated_at": "2026-08-06T23:01:52+09:00",
+ "generated_at": "2026-08-06T23:18:34+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "shelf_debug": {
   "ok": 14,
-  "watch": 174,
+  "watch": 173,
   "reasons": {
    "밸류영역 밖(지지대 아님)": 1051,
    "매물대 정보 없음": 137,
@@ -270,6 +270,34 @@
    }
   },
   {
+   "id": "LCII-2026-08-06-now",
+   "code": "LCII",
+   "name": "LCI Industries",
+   "ccy": "USD",
+   "group": "now",
+   "entry_kind": "now",
+   "stage": 3,
+   "price": 105.7,
+   "entry": 105.7,
+   "stop": 98.1637,
+   "target": 120.7727,
+   "shares_1pct": 13,
+   "range_pos": 0.2837,
+   "norm": 0.9,
+   "bear_share": 0.25,
+   "fresh": true,
+   "break_gap": 0.0087,
+   "earnings_d": null,
+   "tactic": {
+    "stop_pct": 7.1,
+    "pb_price": 100.2169,
+    "pb_stop_pct": 2.0,
+    "mode": "half",
+    "label": "⚖ 반반 진입",
+    "desc": "손절폭 7.1% — 절반은 현재가, 절반은 눌림 $100.22 지정가(거기선 손절폭 2.0%)"
+   }
+  },
+  {
    "id": "HLF-2026-08-06-now",
    "code": "HLF",
    "name": "Herbalife Ltd.",
@@ -351,34 +379,6 @@
     "mode": "pullback",
     "label": "⏳ 눌림 지정가만",
     "desc": "지금 추격 금지(손절폭 9.2% · 단기 이격) — <b>$5.50 눌림 지정가만</b>. 눌리면 손절폭 2.3%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
-   }
-  },
-  {
-   "id": "LCII-2026-08-06-now",
-   "code": "LCII",
-   "name": "LCI Industries",
-   "ccy": "USD",
-   "group": "now",
-   "entry_kind": "now",
-   "stage": 3,
-   "price": 105.7,
-   "entry": 105.7,
-   "stop": 98.1637,
-   "target": 120.7727,
-   "shares_1pct": 13,
-   "range_pos": 0.2837,
-   "norm": -10.4,
-   "bear_share": 0.25,
-   "fresh": true,
-   "break_gap": 0.0087,
-   "earnings_d": null,
-   "tactic": {
-    "stop_pct": 7.1,
-    "pb_price": 100.2169,
-    "pb_stop_pct": 2.0,
-    "mode": "half",
-    "label": "⚖ 반반 진입",
-    "desc": "손절폭 7.1% — 절반은 현재가, 절반은 눌림 $100.22 지정가(거기선 손절폭 2.0%)"
    }
   },
   {
@@ -1756,6 +1756,34 @@
    "tactic": null
   },
   {
+   "id": "PINS-2026-08-06-watch",
+   "code": "PINS",
+   "name": "Pinterest, Inc.",
+   "ccy": "USD",
+   "group": "watch",
+   "entry_kind": "now",
+   "stage": 1,
+   "price": 23.62,
+   "entry": 23.62,
+   "stop": 21.548,
+   "target": 27.7639,
+   "shares_1pct": 48,
+   "range_pos": 0.3763,
+   "norm": 44.3,
+   "bear_share": 0.125,
+   "fresh": true,
+   "break_gap": 0.0047,
+   "earnings_d": 95,
+   "tactic": {
+    "stop_pct": 8.8,
+    "pb_price": null,
+    "pb_stop_pct": null,
+    "mode": "pullback",
+    "label": "⏳ 눌림 지정가만",
+    "desc": "지금 추격 금지(손절폭 8.8%) — 받칠 지지에 눌릴 때까지 대기"
+   }
+  },
+  {
    "id": "OWL-2026-08-06-watch",
    "code": "OWL",
    "name": "Blue Owl Capital Inc.",
@@ -1824,34 +1852,6 @@
    "break_gap": -0.0077,
    "earnings_d": 84,
    "tactic": null
-  },
-  {
-   "id": "PINS-2026-08-06-watch",
-   "code": "PINS",
-   "name": "Pinterest, Inc.",
-   "ccy": "USD",
-   "group": "watch",
-   "entry_kind": "now",
-   "stage": 1,
-   "price": 23.62,
-   "entry": 23.62,
-   "stop": 21.548,
-   "target": 27.7639,
-   "shares_1pct": 48,
-   "range_pos": 0.3763,
-   "norm": 33.0,
-   "bear_share": 0.125,
-   "fresh": true,
-   "break_gap": 0.0047,
-   "earnings_d": 95,
-   "tactic": {
-    "stop_pct": 8.8,
-    "pb_price": null,
-    "pb_stop_pct": null,
-    "mode": "pullback",
-    "label": "⏳ 눌림 지정가만",
-    "desc": "지금 추격 금지(손절폭 8.8%) — 받칠 지지에 눌릴 때까지 대기"
-   }
   },
   {
    "id": "KNSL-2026-08-06-watch",
@@ -2859,27 +2859,6 @@
    "fresh": false,
    "break_gap": 0.0727,
    "earnings_d": 82,
-   "tactic": null
-  },
-  {
-   "id": "TTAN-2026-08-06-watch",
-   "code": "TTAN",
-   "name": "ServiceTitan, Inc.",
-   "ccy": "USD",
-   "group": "watch",
-   "entry_kind": "pullback",
-   "stage": 3,
-   "price": 84.06,
-   "entry": 67.5008,
-   "stop": 57.4499,
-   "target": 87.6028,
-   "shares_1pct": 9,
-   "range_pos": 0.4541,
-   "norm": 44.3,
-   "bear_share": 0.125,
-   "fresh": false,
-   "break_gap": 0.065,
-   "earnings_d": 35,
    "tactic": null
   },
   {
