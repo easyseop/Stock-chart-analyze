@@ -256,12 +256,16 @@ jobs:
       # 어닝 발표일: 마감후 스케줄 또는 수동 full에서만(하루 1회 충분). 실패해도 무시.
       - name: 어닝 발표일 갱신(best-effort)
         if: ${{ github.event.schedule == '9 22 * * 1-5' || (github.event_name == 'workflow_dispatch' && github.event.inputs.update == 'full') }}
-        run: python main.py --update-earnings || true
+        # timeout: 외부 API 행이 빌드 잡 전체(120분)를 태우고 후속 빌드까지
+        #   연쇄 취소시킨 2026-08-07 피드 정체 재발 방지. 내부 시간 예산
+        #   (EARNINGS_BUDGET_S)이 먼저 걸려 진행분 저장 후 정상 종료하는 게
+        #   기본 경로고, 셸 timeout은 단일 호출이 무한 행일 때의 최후 방어선.
+        run: timeout -k 30 720 python main.py --update-earnings || true
 
       # 시간봉: 데이터 갱신을 하는 실행에서만(push/none이면 건너뜀). 상위 80종목.
       - name: 시간봉(60분) 갱신(전환후보 상위, best-effort)
         if: ${{ github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && github.event.inputs.update != 'none') }}
-        run: python main.py --update-hourly 80 || true
+        run: timeout -k 30 720 python main.py --update-hourly 80 || true
 
       - name: 스크리너 생성(캐시 전체 — 즉석조회 추가분 포함, 네트워크 0)
         env:
