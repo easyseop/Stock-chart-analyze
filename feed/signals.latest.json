@@ -1,10 +1,10 @@
 {
  "version": 1,
- "generated_at": "2026-08-08T05:46:55+09:00",
+ "generated_at": "2026-08-08T06:19:17+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "shelf_debug": {
-  "ok": 15,
-  "watch": 181,
+  "ok": 16,
+  "watch": 180,
   "reasons": {
    "밸류영역 밖(지지대 아님)": 1046,
    "매물대 정보 없음": 138,
@@ -548,6 +548,34 @@
     "label": "⏳ 눌림 지정가만",
     "desc": "지금 추격 금지(손절폭 11.4% · 돌파후 진행) — 받칠 지지에 눌릴 때까지 대기"
    }
+  },
+  {
+   "id": "CTSH-2026-08-08-shelf",
+   "code": "CTSH",
+   "name": "Cognizant Technology Solutions Corporation",
+   "ccy": "USD",
+   "group": "shelf",
+   "entry_kind": "shelf",
+   "stage": 0,
+   "price": 57.67,
+   "entry": 57.67,
+   "stop": 51.744,
+   "target": 69.3394,
+   "shares_1pct": 0,
+   "range_pos": 0.4122,
+   "norm": 39.3,
+   "bear_share": 0.25,
+   "shelf": {
+    "poc": 52.6894,
+    "val": 40.2019,
+    "vah": 69.3394,
+    "rr": 1.97,
+    "overhead": 0.547
+   },
+   "fresh": true,
+   "break_gap": null,
+   "earnings_d": 82,
+   "tactic": "full"
   },
   {
    "id": "CRVL-2026-08-08-shelf",
