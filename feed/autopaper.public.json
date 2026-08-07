@@ -1,10 +1,10 @@
 {
- "generated_at": "2026-08-07T22:32:09.337743+09:00",
+ "generated_at": "2026-08-07T23:15:05.497703+09:00",
  "updated": "2026-08-07",
  "start": 100000000,
- "cash": 30001430,
- "equity": 100790254,
- "ret_pct": 0.79,
+ "cash": 24977788,
+ "equity": 100913113,
+ "ret_pct": 0.91,
  "positions": [
   {
    "code": "MRSH",
@@ -12,14 +12,14 @@
    "ccy": "USD",
    "q": 36,
    "avg": 174.3075,
-   "price": 193.2899932861328,
+   "price": 192.25999450683597,
    "stop": 184.80249938964843,
    "target": 192.2575,
    "half_done": true,
    "opened": "2026-07-06",
-   "pl_krw": 971738,
-   "pl_pct": 10.89,
-   "price_age_min": 7.5
+   "pl_krw": 919011,
+   "pl_pct": 10.3,
+   "price_age_min": 7.3
   },
   {
    "code": "HMC",
@@ -27,14 +27,14 @@
    "ccy": "USD",
    "q": 2,
    "avg": 27.665,
-   "price": 30.729999542236328,
-   "stop": 28.84219986877441,
+   "price": 31.729999542236328,
+   "stop": 29.54209954223633,
    "target": 30.5824,
    "half_done": true,
    "opened": "2026-07-09",
-   "pl_krw": 8717,
-   "pl_pct": 11.08,
-   "price_age_min": 9.9
+   "pl_krw": 11561,
+   "pl_pct": 14.69,
+   "price_age_min": 9.6
   },
   {
    "code": "SARO",
@@ -42,14 +42,14 @@
    "ccy": "USD",
    "q": 81,
    "avg": 27.9,
-   "price": 30.0,
+   "price": 29.76000022888184,
    "stop": 28.4517,
    "target": 31.9643,
    "half_done": true,
    "opened": "2026-07-10",
-   "pl_krw": 241879,
-   "pl_pct": 7.53,
-   "price_age_min": 7.8
+   "pl_krw": 214236,
+   "pl_pct": 6.67,
+   "price_age_min": 7.6
   },
   {
    "code": "J",
@@ -57,14 +57,14 @@
    "ccy": "USD",
    "q": 32,
    "avg": 126.585,
-   "price": 144.02999877929688,
+   "price": 144.72999572753906,
    "stop": 136.33490732421876,
    "target": 141.2316,
    "half_done": true,
    "opened": "2026-07-11",
-   "pl_krw": 793806,
-   "pl_pct": 13.78,
-   "price_age_min": 7.5
+   "pl_krw": 825658,
+   "pl_pct": 14.33,
+   "price_age_min": 7.3
   },
   {
    "code": "MAIN",
@@ -72,14 +72,14 @@
    "ccy": "USD",
    "q": 39,
    "avg": 53.96,
-   "price": 56.790000915527344,
-   "stop": 54.10119816894531,
+   "price": 58.4900016784668,
+   "stop": 54.921201678466794,
    "target": 58.7184,
    "half_done": true,
    "opened": "2026-07-22",
-   "pl_krw": 156944,
-   "pl_pct": 5.24,
-   "price_age_min": 10.5
+   "pl_krw": 251221,
+   "pl_pct": 8.4,
+   "price_age_min": 10.2
   },
   {
    "code": "004370",
@@ -94,7 +94,7 @@
    "opened": "2026-07-27",
    "pl_krw": 365000,
    "pl_pct": 9.91,
-   "price_age_min": 7.5
+   "price_age_min": 7.3
   },
   {
    "code": "CRC",
@@ -102,14 +102,14 @@
    "ccy": "USD",
    "q": 101,
    "avg": 51.16,
-   "price": 52.58000183105469,
+   "price": 52.119998931884766,
    "stop": 47.7785,
    "target": 57.923,
    "half_done": false,
    "opened": "2026-07-28",
-   "pl_krw": 203941,
-   "pl_pct": 2.78,
-   "price_age_min": 7.5
+   "pl_krw": 137875,
+   "pl_pct": 1.88,
+   "price_age_min": 7.3
   },
   {
    "code": "EQT",
@@ -117,14 +117,14 @@
    "ccy": "USD",
    "q": 242,
    "avg": 51.375,
-   "price": 51.59999847412109,
+   "price": 51.73500061035156,
    "stop": 48.5008,
    "target": 57.1234,
    "half_done": false,
    "opened": "2026-07-29",
-   "pl_krw": 77426,
-   "pl_pct": 0.44,
-   "price_age_min": 7.5
+   "pl_krw": 123883,
+   "pl_pct": 0.7,
+   "price_age_min": 7.3
   },
   {
    "code": "MDT",
@@ -132,14 +132,14 @@
    "ccy": "USD",
    "q": 93,
    "avg": 86.12,
-   "price": 85.91999816894531,
+   "price": 86.16010284423828,
    "stop": 81.6215,
    "target": 95.117,
    "half_done": false,
    "opened": "2026-07-30",
-   "pl_krw": -26449,
-   "pl_pct": -0.23,
-   "price_age_min": 7.5
+   "pl_krw": 5303,
+   "pl_pct": 0.05,
+   "price_age_min": 7.3
   },
   {
    "code": "AVY",
@@ -147,44 +147,32 @@
    "ccy": "USD",
    "q": 28,
    "avg": 169.73,
-   "price": 173.99000549316406,
+   "price": 175.5500030517578,
    "stop": 158.3847,
    "target": 192.4206,
    "half_done": false,
    "opened": "2026-08-03",
-   "pl_krw": 169614,
-   "pl_pct": 2.51,
-   "price_age_min": 7.5
+   "pl_krw": 231726,
+   "pl_pct": 3.43,
+   "price_age_min": 7.3
+  },
+  {
+   "code": "DPZ",
+   "name": "Domino's Pizza Inc",
+   "ccy": "USD",
+   "q": 10,
+   "avg": 353.285,
+   "price": 353.2850036621094,
+   "stop": 328.6353,
+   "target": 402.5845,
+   "half_done": false,
+   "opened": "2026-08-07",
+   "pl_krw": 0,
+   "pl_pct": 0.0,
+   "price_age_min": 9.3
   }
  ],
  "pending": [
-  {
-   "code": "VEEV",
-   "name": "Veeva Systems Inc.",
-   "ccy": "USD",
-   "limit": 186.3691,
-   "stop": 184.7932,
-   "target": 233.4435,
-   "q": 19,
-   "created": "2026-08-01",
-   "atr": 8.1084,
-   "plan": {
-    "entry": 201.01,
-    "stop": 184.7932,
-    "target": 233.4435,
-    "pb": 186.3691,
-    "tactic": "pullback"
-   },
-   "ctx": {
-    "mode": "pullback",
-    "fresh": true,
-    "stage": 3,
-    "rp": 33,
-    "rec": 4,
-    "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권33% · 체크4/6 · 손절폭8.1%"
-   },
-   "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권33% · 체크4/6 · 손절폭8.1%"
-  },
   {
    "code": "015760",
    "name": "한국전력",
@@ -768,10 +756,34 @@
   },
   {
    "d": "2026-08-07",
-   "v": 100790254
+   "v": 100913113
   }
  ],
  "log": [
+  {
+   "d": "2026-08-07",
+   "type": "buy",
+   "code": "DPZ",
+   "name": "Domino's Pizza Inc",
+   "q": 10,
+   "price": 353.285,
+   "ccy": "USD",
+   "amt": 5023642,
+   "note": "반반 1차 — 🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권38% · 체크6/6 · 손절폭7.0%",
+   "stop": 328.6353,
+   "target": 402.5845
+  },
+  {
+   "d": "2026-08-07",
+   "type": "cancel",
+   "code": "VEEV",
+   "name": "Veeva Systems Inc.",
+   "q": 0,
+   "price": 229.05,
+   "ccy": "USD",
+   "amt": 0,
+   "note": "지정가 취소 — 신호 부패: 제외 게이트 — 이미 폭등"
+  },
   {
    "d": "2026-08-07",
    "type": "order",
@@ -1380,30 +1392,6 @@
    "note": "즉시 분할 — 🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권24% · 체크4/6 · 손절폭5.1%",
    "stop": 202.063,
    "target": 234.934
-  },
-  {
-   "d": "2026-07-07",
-   "type": "buy",
-   "code": "EQT",
-   "name": "EQT Corporation",
-   "q": 256,
-   "price": 52.085,
-   "ccy": "USD",
-   "amt": 20429054,
-   "note": "즉시 분할 — 🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권18% · 체크4/6 · 손절폭4.9%",
-   "stop": 49.5451,
-   "target": 57.1649
-  },
-  {
-   "d": "2026-07-07",
-   "type": "order",
-   "code": "SHOP",
-   "name": "Shopify Inc.",
-   "q": 59,
-   "price": 114.9801,
-   "ccy": "USD",
-   "amt": 10393703,
-   "note": "눌림 지정가 주문(추격 금지) — 🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권26% · 체크4/6 · 손절폭9.5%"
   }
  ],
  "lane": "bulk",
