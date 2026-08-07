@@ -122,6 +122,58 @@ def test_diag_is_read_only_and_reports_failures():
     print("[PASS] /진단: 시장별 실측·실패 표기·읽기전용")
 
 
+def test_collect_dispatches_lookup_only():
+    """/수집 — 형식 검증 통과 시 lookup.yml 디스패치 1회, 그 외 네트워크 0."""
+    from unittest import mock
+    import urllib.request
+
+    calls = []
+
+    class _Resp:
+        status = 204
+        def __enter__(self): return self
+        def __exit__(self, *a): return False
+
+    def fake_urlopen(req, timeout=0):
+        calls.append(req)
+        return _Resp()
+
+    with mock.patch.object(urllib.request, "urlopen", fake_urlopen), \
+            mock.patch.dict("os.environ", {"GH_PAT": "tok-test"}):
+        r = kt.handle("/수집 aapl")
+    assert "AAPL 수집 시작" in r, r
+    assert len(calls) == 1
+    req = calls[0]
+    assert req.full_url.endswith("/actions/workflows/lookup.yml/dispatches")
+    body = __import__("json").loads(req.data.decode())
+    assert body["inputs"]["ticker"] == "AAPL" and body["ref"]
+    assert req.headers.get("Authorization") == "Bearer tok-test"
+    assert "tok-test" not in r                    # 응답에 토큰 비노출
+    print("[PASS] /수집: lookup.yml 단일 디스패치 + 토큰 비노출")
+
+
+def test_collect_rejects_bad_input_without_network():
+    """형식 불일치·토큰 부재 시 네트워크 호출 자체가 없어야 한다."""
+    from unittest import mock
+    import urllib.request
+
+    def must_not_call(*a, **kw):
+        raise AssertionError("검증 실패 입력인데 네트워크 호출")
+
+    with mock.patch.object(urllib.request, "urlopen", must_not_call):
+        for bad in ("/수집 aa;rm", "/수집 $(x)", "/수집 12345",
+                    "/수집 TOOLONGTICKER1", "/수집 .AAPL"):
+            assert "사용법" in kt.handle(bad), bad
+        assert "사용법" in kt.handle("/수집")           # 인자 없음
+        with mock.patch.dict("os.environ", {"GH_PAT": ""}):
+            r = kt.handle("/수집 AAPL")                 # 토큰 없음 → 안내만
+        assert "GH_PAT" in r
+    # 유효 예시들이 검증을 통과하는지(형식만 — 네트워크는 위에서 별도 검증)
+    for good in ("AAPL", "BRK.B", "BF-B", "005930"):
+        assert kt._TICKER_RE.match(good), good
+    print("[PASS] /수집: 불량 입력·토큰 부재 → 네트워크 0")
+
+
 def main():
     test_holdings_summary()
     test_detail_realtime()
@@ -129,6 +181,8 @@ def main():
     test_routing_and_help()
     test_not_held_and_query_fail()
     test_diag_is_read_only_and_reports_failures()
+    test_collect_dispatches_lookup_only()
+    test_collect_rejects_bad_input_without_network()
     print("\n텔레그램 조회 봇 검증 통과 — 읽기전용 요약/상세/보안/실패 처리.")
 
 

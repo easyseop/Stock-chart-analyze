@@ -22,6 +22,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import sys
 import time
 import urllib.request
@@ -118,6 +119,62 @@ def _resolve(query: str, positions: list[dict]) -> dict | None:
     return None
 
 
+# ── 수시수집(lookup 워크플로 디스패치) ─────────────────────────────────────
+# 읽기전용 원칙의 유일한 확장이지만 **고정된 단일 액션**이다: 임의 명령
+#   채널이 아니라 lookup.yml(캐시 추가→스크리너 재생성→사이트 배포) 실행
+#   요청 하나뿐이고, 형식 검증을 통과한 티커 문자열만 input으로 전달된다.
+#   매매 서버(주문·kill·설정)에는 아무 영향이 없다.
+# 토큰: GH_PAT — fine-grained PAT(이 저장소 한정, Actions RW)만 권장.
+#   /etc/stock/kis.env(600)에 두고 응답·로그에 절대 노출하지 않는다.
+_GH_REPO = os.environ.get("GH_REPO", "easyseop/Stock-chart-analyze")
+_GH_BRANCH = os.environ.get("GH_BRANCH", "claude/happy-gauss-cwoq21")
+_TICKER_RE = re.compile(r"^(\d{6}|[A-Z][A-Z.\-]{0,9})$")   # KR 6자리 | US 티커
+
+
+def _dispatch_lookup(ticker: str) -> tuple[bool, str]:
+    """lookup.yml workflow_dispatch 1회 호출. (성공여부, 실패사유)."""
+    token = os.environ.get("GH_PAT") or ""
+    if not token:
+        return False, "GH_PAT 미설정"
+    url = (f"https://api.github.com/repos/{_GH_REPO}"
+           "/actions/workflows/lookup.yml/dispatches")
+    body = json.dumps({"ref": _GH_BRANCH,
+                       "inputs": {"ticker": ticker}}).encode()
+    req = urllib.request.Request(url, data=body, headers={
+        "Authorization": f"Bearer {token}",
+        "Accept": "application/vnd.github+json",
+        "Content-Type": "application/json",
+        "User-Agent": "stock-telegram-bot",
+    })
+    try:
+        with urllib.request.urlopen(req, timeout=15) as r:
+            if r.status == 204:
+                return True, ""
+            return False, f"HTTP {r.status}"
+    except Exception as e:                       # HTTPError 포함 — 토큰 비노출
+        code = getattr(e, "code", None)
+        return False, f"HTTP {code}" if code else type(e).__name__
+
+
+def _collect_text(arg: str) -> str:
+    """/수집 <티커|코드> — 즉석 수집 요청(검증→디스패치→안내)."""
+    code = (arg or "").strip().upper()
+    if not _TICKER_RE.match(code):
+        return ("사용법: /수집 &lt;티커|6자리코드&gt;\n"
+                "예) /수집 AAPL · /수집 BRK.B · /수집 005930")
+    ok, why = _dispatch_lookup(code)
+    if ok:
+        return (f"🛰 <b>{code} 수집 시작</b>\n"
+                "5~10분 뒤 차트 사이트 목록·상세에 반영됩니다.\n"
+                "이미 등록된 종목이면 데이터 갱신만 합니다.")
+    if why == "GH_PAT 미설정":
+        return ("⚙️ 수집 트리거 토큰(GH_PAT)이 서버에 없습니다.\n"
+                "/etc/stock/kis.env에 GH_PAT=&lt;fine-grained PAT"
+                "(이 저장소 Actions RW)&gt; 추가 후 "
+                "telegram 서비스 재시작이 필요합니다.")
+    return f"⚠️ 수집 요청 실패({why}) — 잠시 후 다시 시도해 주세요."
+
+
 # ── 응답 빌더 ──────────────────────────────────────────────────────────────
 def _help_text() -> str:
     return ("🤖 <b>KIS 모의계좌 조회</b>\n\n"
@@ -127,6 +184,8 @@ def _help_text() -> str:
             "/슬리브 — 매물대(B) 슬리브 종목별 수익률\n"
             "/성과 — 지수(나스닥·코스피) 대비 성과 + 그래프\n"
             "/진단 — 서버 건강(kill·heartbeat·KIS 조회·서비스) 실측\n"
+            "/수집 &lt;티커&gt; — 종목 즉석 수집(차트 사이트 등록·갱신)\n"
+            "  예) /수집 AAPL · /수집 005930\n"
             "코드만 보내도 상세 조회됩니다.")
 
 
@@ -170,7 +229,8 @@ def _detail_text(query: str) -> str:
     p = _resolve(query, rows)
     if not p:
         held = ", ".join(x["code"] for x in rows) or "없음"
-        return f"'{query.strip()}' 보유 없음.\n현재 보유: {held}"
+        return (f"'{query.strip()}' 보유 없음.\n현재 보유: {held}\n"
+                f"차트 수집이 목적이면: /수집 {query.strip().upper()}")
     code, market, ccy = p["code"], p["market"], p["ccy"]
     avg, qty = float(p["avg"]), int(p["qty"])
     cur = kis.last_price(code, market=market) or float(p["cur"])   # 실시간 재조회
@@ -352,6 +412,11 @@ def handle(text: str) -> str:
         return _perf_text()
     if cmd in ("진단", "상태", "diag", "status"):
         return _diag_text()
+    if cmd in ("수집", "추가", "collect", "add", "lookup"):
+        if len(parts) >= 2:
+            return _collect_text(parts[1])
+        return ("사용법: /수집 &lt;티커|6자리코드&gt;  "
+                "예) /수집 AAPL · /수집 005930")
     return _detail_text(raw)          # 접두어 없이 코드/이름만 → 상세
 
 

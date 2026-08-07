@@ -39,16 +39,22 @@ jobs:
           restore-keys: |
             data-cache-
 
+      # inputs.ticker는 env 간접 참조로만 셸에 전달(런 스크립트 보간 주입 방지 —
+      #   텔레그램 /수집 등 외부 트리거가 생겨 입력 경로가 넓어짐, 2026-08-07).
       - name: 캐시에 추가 + 유니버스 영구등록(신호 카드 로그)
-        run: python main.py --add "${{ inputs.ticker }}"
+        env:
+          TICKER: ${{ inputs.ticker }}
+        run: python main.py --add "$TICKER"
 
       - name: 유니버스 변경 커밋(즉석조회 종목 영구 보존 — 캐시 리셋에도 안 사라짐)
+        env:
+          TICKER: ${{ inputs.ticker }}
         run: |
           if ! git diff --quiet -- universe.csv; then
             git config user.name "github-actions[bot]"
             git config user.email "github-actions[bot]@users.noreply.github.com"
             git add universe.csv
-            git commit -m "lookup: ${{ inputs.ticker }} 유니버스 등록"
+            git commit -m "lookup: $TICKER 유니버스 등록"
             git push || echo "push 실패(권한/충돌) — 캐시엔 이미 추가됨"
           else
             echo "유니버스 변경 없음(이미 등록된 종목)"

@@ -57,6 +57,9 @@ KIS_ACCOUNTING_ALERT_CYCLES=3
 TELEGRAM_BOT_TOKEN=여기에
 TELEGRAM_CHAT_ID=여기에
 NTFY_TOPIC=여기에
+# 텔레그램 /수집 <티커> (즉석 수집 = lookup.yml 디스패치 전용) — 선택.
+#   fine-grained PAT: 이 저장소 한정 + Actions Read/Write 만. 없으면 /수집만 비활성.
+# GH_PAT=여기에
 # 실제 매매·사용자 조회·치명 안전 경보만 전송(제안·성과·일상 운영 알림 억제)
 NOTIFY_MODE=trade_only
 EOF
