@@ -1,10 +1,10 @@
 {
  "version": 1,
- "generated_at": "2026-08-08T10:12:29+09:00",
+ "generated_at": "2026-08-08T11:01:31+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "shelf_debug": {
   "ok": 14,
-  "watch": 175,
+  "watch": 174,
   "reasons": {
    "밸류영역 밖(지지대 아님)": 996,
    "매물대 정보 없음": 138,
@@ -4233,7 +4233,7 @@
    "target": 150574.6572,
    "shares_1pct": 5,
    "range_pos": 0.2439,
-   "norm": -40.6,
+   "norm": -29.2,
    "bear_share": 0.375,
    "fresh": false,
    "break_gap": 0.2042,
