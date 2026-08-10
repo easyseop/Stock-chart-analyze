@@ -18,6 +18,7 @@
 """
 from __future__ import annotations
 
+import datetime
 import fcntl
 import json
 import os
@@ -155,7 +156,8 @@ def _resolve_acks() -> list[dict]:
 
         def _day(order: dict) -> str:
             stamp = float(order.get("submitted_at") or now)
-            return time.strftime("%Y%m%d", time.localtime(stamp))
+            kst = datetime.timezone(datetime.timedelta(hours=9))
+            return datetime.datetime.fromtimestamp(stamp, kst).strftime("%Y%m%d")
 
         fill_rows: list[dict] = []
         proofs: dict[str, dict] = {}
@@ -266,7 +268,7 @@ def _resolve_acks() -> list[dict]:
                 proof["holdings"] = hmaps.get("KR" if _is_kr(order) else "US")
 
         absence_rs, contradictions = kis_reconcile.resolve_acks_by_absence(
-            proofs, now_ts=now)
+            proofs, now_ts=now, orders=aged)
         rs += absence_rs
         contradiction_keys = {str(r.get("key") or "") for r in contradictions}
         for item in contradictions:
@@ -279,17 +281,18 @@ def _resolve_acks() -> list[dict]:
                       "hldg_now": item["hldg_now"], "side": item["side"],
                       "intended": item["intended"]})
             _notify(f"🚨 주문 대사 모순 — {item['symbol']} "
-                    f"잔고 {item['hldg_before']}→{item['hldg_now']} 부러운데 "
+                    f"잔고 {item['hldg_before']}→{item['hldg_now']} 변했는데 "
                     "미체결·체결내역에 ODNO 없음; 자동 정산 금지",
                     critical=True, category="trade")
 
         remaining_keys = {
-            str(o.get("key") or "") for o in ledger.open_orders()
+            str(o.get("key") or "") for o in aged
             if o.get("state") in ("submitted", "ack")
             and str(o.get("key") or "") not in contradiction_keys
         }
-        rs += kis_reconcile.resolve_acks_by_balance(
-            hmaps, fill_prices=fill_prices, only_keys=remaining_keys)
+        if remaining_keys:
+            rs += kis_reconcile.resolve_acks_by_balance(
+                hmaps, fill_prices=fill_prices, only_keys=remaining_keys)
 
         for r in rs:
             try:

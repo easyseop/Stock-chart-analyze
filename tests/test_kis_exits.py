@@ -180,6 +180,47 @@ def test_open_buy_does_not_block_stop_ratchet_but_defers_sell():
     print("[PASS] BUY 잔량 중 래칫은 계속·매도는 취소 대사 전 보류")
 
 
+def test_time_btgt_retry_keys_are_session_capped_and_legacy_compatible():
+    """거절된 time/btgt는 파생 키로 다음 세션에만 재시도한다."""
+    import datetime
+    with tempfile.TemporaryDirectory() as tmp:
+        L.LEDGER_PATH = os.path.join(tmp, "orders.jsonl")
+        base = "xe:TAP:time:2026-07-20"
+        stamp = datetime.datetime.fromisoformat("2026-08-11T12:00:00").timestamp()
+        # 배포 전 고정 키도 attempts=1로 세어 다음은 #2다.
+        L._append({"ev": "submit", "key": base, "symbol": "TAP",
+                   "intended": 80, "filled": 0, "state": "submitted",
+                   "reason": "time", "meta": {"side": "SELL"}, "ts": stamp})
+        L.on_result(base, "rejected", 0)
+        xs = {}
+        with mock.patch.object(X, "EXIT_RETRY_MAX_PER_SESSION", 1):
+            key, capped, notice = X._next_exit_retry(
+                "TAP", {"opened": "2026-07-20"}, xs, "time", "2026-08-11")
+            assert key is None and capped and notice
+            key, capped, notice = X._next_exit_retry(
+                "TAP", {"opened": "2026-07-20"}, xs, "time", "2026-08-12")
+            assert key == base + "#2" and capped and not notice
+
+    with tempfile.TemporaryDirectory() as tmp, mock.patch.object(X.notify, "send") as send:
+        KP.PATH = os.path.join(tmp, "positions.jsonl")
+        L.LEDGER_PATH = os.path.join(tmp, "orders.jsonl")
+        X.STATE_PATH = os.path.join(tmp, "exits.json")
+        KP.record("BTG", stop=90, ccy="USD", entry=100, qty=7,
+                  opened="2026-07-20", sleeve="B", target=110,
+                  pos_key="kb:btg")
+        held = {"BTG": {"code": "BTG", "q": 7, "ccy": "USD", "stop": 90}}
+        broker = _SeqBroker([False, False])
+        with mock.patch.object(X, "EXIT_RETRY_MAX_PER_SESSION", 1):
+            X.manage(broker, held, "2026-08-11")
+            X.manage(broker, held, "2026-08-11")
+            assert len(broker.calls) == 1 and broker.calls[0][2].endswith("#1")
+            assert len([c for c in send.call_args_list if "재시도 상한" in c.args[0]]) == 1
+            X.manage(broker, held, "2026-08-12")
+            assert len(broker.calls) == 2              # 다음 세션에만 다시 시도
+            assert len([c for c in send.call_args_list if "재시도 상한" in c.args[0]]) == 2
+    print("[PASS] time/btgt 파생키·과거 고정키 승계·세션당 상한·다음세션 리셋")
+
+
 def main():
     test_half_proposal_and_fail_retry()
     test_trail_ratchet_only_up()
@@ -190,6 +231,7 @@ def main():
     test_half_ack_is_not_fill()
     test_half_partial_retries_only_residual()
     test_open_buy_does_not_block_stop_ratchet_but_defers_sell()
+    test_time_btgt_retry_keys_are_session_capped_and_legacy_compatible()
     print("\nKIS 청산 관리자 검증 통과 — 익절/래칫/타임스탑/B청산.")
 
 

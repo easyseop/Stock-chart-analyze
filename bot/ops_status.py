@@ -24,6 +24,52 @@ import time
 import urllib.request
 
 _US_EXCGS = ("NASD", "NYSE", "AMEX")
+ACK_STUCK_ALERT_S = int(
+    os.environ.get("ACK_STUCK_ALERT_S", "1800") or 1800)
+_stuck_ack_alerted: set[str] = set()
+
+
+def _stuck_ack_rows(now: float | None = None) -> list[dict]:
+    """30분 이상 submitted/ack에 머문 브로커 주문만 반환."""
+    from bot import ledger
+    stamp = time.time() if now is None else float(now)
+    rows = []
+    for row in ledger.open_orders():
+        if row.get("state") not in ("submitted", "ack"):
+            continue
+        try:
+            age = stamp - float(row.get("submitted_at") or 0)
+        except (TypeError, ValueError):
+            continue
+        if age >= max(60, ACK_STUCK_ALERT_S):
+            rows.append(row)
+    return rows
+
+
+def maybe_alert_stuck_acks(now: float | None = None) -> bool:
+    """ACK 방치를 행별 1회 경보하고 해소되면 1회 회복 알림."""
+    global _stuck_ack_alerted
+    try:
+        from bot import notify
+        rows = _stuck_ack_rows(now)
+        current = {str(row.get("key") or "") for row in rows if row.get("key")}
+        by_key = {str(row.get("key")): row for row in rows if row.get("key")}
+        sent = False
+        for key in sorted(current - _stuck_ack_alerted):
+            row = by_key[key]
+            notify.send(
+                f"⚠️ 주문 ACK {max(1, ACK_STUCK_ALERT_S // 60)}분 초과 — "
+                f"{row.get('symbol')} {str(row.get('side') or '').upper()} 대사 필요",
+                critical=True, category="trade")
+            sent = True
+        for _key in sorted(_stuck_ack_alerted - current):
+            notify.send("✅ 주문 ACK 방치 해소 — 대사 잠금 해제 확인",
+                        critical=True, category="trade")
+            sent = True
+        _stuck_ack_alerted = current
+        return sent
+    except Exception:
+        return False
 
 
 def snapshot() -> dict:
@@ -62,6 +108,7 @@ def snapshot() -> dict:
         out["open_orders"] = sum(1 for c in fold.values() if c.get("open_order"))
         out["unknown_orders"] = sum(
             1 for c in fold.values() if c.get("state") == "unknown")
+        out["stuck_acks"] = len(_stuck_ack_rows())
     except Exception as e:
         out["ledger_error"] = type(e).__name__
     try:

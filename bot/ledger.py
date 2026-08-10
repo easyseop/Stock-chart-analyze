@@ -453,7 +453,14 @@ def record_reconcile_meta(key: str, *, reason: str, meta: dict) -> None:
         "nccs_count", "ccnl_count", "hldg_before", "hldg_now",
         "side", "intended",
     }
-    clean = {str(k): v for k, v in (meta or {}).items()
+    def safe_value(value):
+        if not isinstance(value, str):
+            return value
+        text = "".join(ch if ch >= " " and ch != "\x7f" else " "
+                       for ch in value)
+        return " ".join(text.split())[:200]
+
+    clean = {str(k): safe_value(v) for k, v in (meta or {}).items()
              if str(k) in allowed and v is not None}
     _append({"ev": "reconcile_meta", "key": str(key),
              "reason": str(reason or "")[:80], "meta": clean})

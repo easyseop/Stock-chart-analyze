@@ -50,6 +50,8 @@ STALL_TIGHTEN_DAYS = settings.STALL_TIGHTEN_DAYS
 STALL_EXIT_DAYS = settings.STALL_EXIT_DAYS
 STALL_NEW_HIGH_R = settings.STALL_NEW_HIGH_R
 STALL_TIGHT_TRAIL_R = settings.STALL_TIGHT_TRAIL_R
+EXIT_RETRY_MAX_PER_SESSION = max(
+    1, int(os.environ.get("EXIT_RETRY_MAX_PER_SESSION", "1") or 1))
 
 
 # 정체 상태에서 숫자/불리언으로 소비되는 필드 — 타입이 틀리면 "유효한 JSON이지만
@@ -57,10 +59,13 @@ STALL_TIGHT_TRAIL_R = settings.STALL_TIGHT_TRAIL_R
 _STATE_BOOL_FIELDS = (
     "half", "stall_tight_notified", "stall_exit_notified",
     "half_stop_raised", "state_recovery_quarantine",
+    "time_retry_capped", "btgt_retry_capped",
 )
 _STATE_NUM_FIELDS = ("high", "stall_anchor_high", "stall_days",
-                     "half_target", "half_filled")
-_STATE_STR_FIELDS = ("high_day", "counted_days")
+                     "half_target", "half_filled", "time_retry_count",
+                     "btgt_retry_count")
+_STATE_STR_FIELDS = ("high_day", "counted_days", "time_retry_day",
+                     "btgt_retry_day")
 
 
 def _valid_state_shape(payload: dict) -> bool:
@@ -245,6 +250,49 @@ def _half_marker_id(code: str, rec: dict) -> str:
     if not identity:
         identity = f"{code}:{rec.get('opened', '')}"
     return f"half:{identity}"
+
+
+def _next_exit_retry(code: str, rec: dict, xs: dict, kind: str,
+                     today: str) -> tuple[str | None, bool, bool]:
+    """time/btgt의 파생 키와 세션 재시도 상한을 결정한다.
+
+    반환은 ``(key, 이 시도가 상한인지, 상한 경보를 지금 보낼지)``.
+    과거 고정 키도 ``ledger.attempts(base)``에 포함되어 다음 파생
+    키가 #2부터 자연스럽게 이어진다. 브로커 전송 전 매도가능수량
+    검사에서 거부된 시도는 원장에 없으므로 상태파일 카운터가 보완한다.
+    """
+    if kind not in ("time", "btgt"):
+        return None, False, False
+    day_field = f"{kind}_retry_day"
+    count_field = f"{kind}_retry_count"
+    cap_field = f"{kind}_retry_capped"
+    day = str(today or "")
+    if xs.get(day_field) != day:
+        xs[day_field] = day
+        xs[count_field] = 0
+        xs[cap_field] = False
+
+    base = f"xe:{code}:{kind}:{rec.get('opened','')}"
+    durable_session = 0
+    kst = datetime.timezone(datetime.timedelta(hours=9))
+    for order in ledger.orders_for(code, side="SELL", key_prefix=base):
+        try:
+            order_day = datetime.datetime.fromtimestamp(
+                float(order.get("submitted_at") or 0), kst).date().isoformat()
+        except (OSError, OverflowError, TypeError, ValueError):
+            continue
+        if order_day == day:
+            durable_session += 1
+    used = max(int(xs.get(count_field) or 0), durable_session)
+    if used >= EXIT_RETRY_MAX_PER_SESSION:
+        first_notice = not bool(xs.get(cap_field))
+        xs[count_field] = used
+        xs[cap_field] = True
+        return None, True, first_notice
+
+    xs[count_field] = used + 1
+    key = f"{base}#{ledger.attempts(base) + 1}"
+    return key, used + 1 >= EXIT_RETRY_MAX_PER_SESSION, False
 
 
 def _half_progress(code: str, rec: dict, xs: dict) -> dict:
@@ -482,14 +530,36 @@ def manage(broker, held: dict, today: str) -> None:
                 if "정체 청산" in why:
                     base = f"xe:{code}:stall:{rec.get('opened','')}"
                     key = f"{base}#{ledger.attempts(base) + 1}"
+                    at_session_cap = False
+                    cap_notice = False
                 else:
-                    key = f"xe:{code}:{'btgt' if '목표' in why else 'time'}:{rec.get('opened','')}"
+                    kind = "btgt" if "목표" in why else "time"
+                    key, at_session_cap, cap_notice = _next_exit_retry(
+                        code, rec, xs, kind, today)
+                    if key is None:
+                        if cap_notice:
+                            notify.send(
+                                f"⏸️ <b>KIS {why}</b> — {code} "
+                                f"세션 재시도 상한 "
+                                f"{EXIT_RETRY_MAX_PER_SESSION}회 도달 · "
+                                "다음 세션까지 대기, 보호는 유지",
+                                critical=True, category="trade")
+                        continue
                 r = broker.place_sell(code, int(sq), why, key)
                 ok = bool(r) if not isinstance(r, dict) else r.get("state") in ("ack", "filled")
                 if ok:
                     _SELL_FAIL_NOTIFIED.pop(key, None)   # 성공 → 억제 리셋
                     notify.send(f"💰 <b>KIS {why}</b> — {code} {sq}주 매도 접수",
                                 critical=True, category="trade")
+                elif "정체 청산" not in why and at_session_cap:
+                    cap_field = f"{'btgt' if '목표' in why else 'time'}_retry_capped"
+                    if not xs.get(cap_field):
+                        xs[cap_field] = True
+                        notify.send(
+                            f"⏸️ <b>KIS {why}</b> — {code} {sq}주 매도 실패 · "
+                            f"세션 재시도 상한 {EXIT_RETRY_MAX_PER_SESSION}회 도달, "
+                            "다음 세션까지 대기(보호 유지)",
+                            critical=True, category="trade")
                 elif _sell_fail_alert_due(key, time.time()):
                     notify.send(f"💰 <b>KIS {why}</b> — {code} {sq}주 매도 실패 "
                                 "— 재시도는 계속, 같은 실패 경보는 1시간 억제",

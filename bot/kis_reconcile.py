@@ -267,7 +267,8 @@ REJECT_ABSENCE_MIN_S = int(
 
 
 def resolve_acks_by_absence(evidence_by_key: dict[str, dict],
-                            now_ts: float | None = None
+                            now_ts: float | None = None,
+                            orders: list[dict] | None = None,
                             ) -> tuple[list[dict], list[dict]]:
     """미체결·체결 모두 부재이고 잔고가 불변인 오래된 ACK만 거절 종결한다.
 
@@ -280,10 +281,13 @@ def resolve_acks_by_absence(evidence_by_key: dict[str, dict],
     import time as _time
 
     now_ts = _time.time() if now_ts is None else float(now_ts)
-    open_orders = ledger.open_orders()
+    open_orders = ledger.open_orders() if orders is None else list(orders)
     open_count: dict[str, int] = {}
+    broker_inflight = {"submitted", "ack", "partial", "cancel_pending", "unknown"}
     for row in open_orders:
-        if row.get("state") not in ("submitted", "ack"):
+        if row.get("state") not in broker_inflight:
+            continue
+        if row.get("state") == "partial" and row.get("open") is False:
             continue
         symbol = str(row.get("symbol") or "").upper()
         open_count[symbol] = open_count.get(symbol, 0) + 1
