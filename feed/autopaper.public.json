@@ -1,10 +1,10 @@
 {
- "generated_at": "2026-08-10T11:29:30.663837+09:00",
+ "generated_at": "2026-08-10T11:44:39.199682+09:00",
  "updated": "2026-08-10",
  "start": 100000000,
  "cash": 24977788,
- "equity": 100219193,
- "ret_pct": 0.22,
+ "equity": 100234193,
+ "ret_pct": 0.23,
  "positions": [
   {
    "code": "MRSH",
@@ -19,7 +19,7 @@
    "opened": "2026-07-06",
    "pl_krw": 878713,
    "pl_pct": 9.95,
-   "price_age_min": 7.3
+   "price_age_min": 7.1
   },
   {
    "code": "HMC",
@@ -49,7 +49,7 @@
    "opened": "2026-07-10",
    "pl_krw": 147065,
    "pl_pct": 4.62,
-   "price_age_min": 7.3
+   "price_age_min": 7.1
   },
   {
    "code": "J",
@@ -64,7 +64,7 @@
    "opened": "2026-07-11",
    "pl_krw": 832535,
    "pl_pct": 14.6,
-   "price_age_min": 7.3
+   "price_age_min": 7.1
   },
   {
    "code": "MAIN",
@@ -87,14 +87,14 @@
    "ccy": "KRW",
    "q": 10,
    "avg": 368500.0,
-   "price": 400500.0,
+   "price": 402000.0,
    "stop": 368500.0,
    "target": 420011.1858,
    "half_done": true,
    "opened": "2026-07-27",
-   "pl_krw": 320000,
-   "pl_pct": 8.68,
-   "price_age_min": 7.3
+   "pl_krw": 335000,
+   "pl_pct": 9.09,
+   "price_age_min": 7.1
   },
   {
    "code": "CRC",
@@ -109,7 +109,7 @@
    "opened": "2026-07-28",
    "pl_krw": 130781,
    "pl_pct": 1.8,
-   "price_age_min": 7.3
+   "price_age_min": 7.1
   },
   {
    "code": "EQT",
@@ -124,7 +124,7 @@
    "opened": "2026-07-29",
    "pl_krw": 107289,
    "pl_pct": 0.61,
-   "price_age_min": 7.3
+   "price_age_min": 7.1
   },
   {
    "code": "MDT",
@@ -139,7 +139,7 @@
    "opened": "2026-07-30",
    "pl_krw": 136129,
    "pl_pct": 1.21,
-   "price_age_min": 7.3
+   "price_age_min": 7.1
   },
   {
    "code": "AVY",
@@ -154,7 +154,7 @@
    "opened": "2026-08-03",
    "pl_krw": 293594,
    "pl_pct": 4.39,
-   "price_age_min": 7.2
+   "price_age_min": 7.1
   },
   {
    "code": "DPZ",
@@ -169,7 +169,7 @@
    "opened": "2026-08-07",
    "pl_krw": -32864,
    "pl_pct": -0.66,
-   "price_age_min": 8.5
+   "price_age_min": 8.4
   }
  ],
  "pending": [
@@ -768,7 +768,7 @@
   },
   {
    "d": "2026-08-10",
-   "v": 100219193
+   "v": 100234193
   }
  ],
  "log": [
