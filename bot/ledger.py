@@ -165,6 +165,11 @@ def _fold_unlocked() -> tuple[dict, list[int]]:
                     for f, value in meta.items():
                         if value is not None:
                             cur[f] = value
+                elif ev.get("ev") == "reconcile_meta":
+                    cur["reconcile_reason"] = str(ev.get("reason") or "")
+                    meta = ev.get("meta") or {}
+                    if isinstance(meta, dict):
+                        cur["reconcile_meta"] = dict(meta)
     except FileNotFoundError:
         pass
     except (OSError, UnicodeError):
@@ -434,6 +439,24 @@ def reconcile(key: str, actual_filled: int, *, fill_price: float | None = None,
     return {"state": state, "filled": actual,
             "residual": max(0, intended - actual),
             "fill_price": fill_price, "open": bool(open_order)}
+
+
+def record_reconcile_meta(key: str, *, reason: str, meta: dict) -> None:
+    """대사 판정 근거를 주문 상태 전이와 분리해 append-only로 보존한다.
+
+    ``reconcile``의 공개 시그니처와 상태 의미는 바꾸지 않는다. 호출자는 아래
+    whitelist에 해당하는 브로커 판정 정보만 기록할 수 있어 계좌번호·토큰·주문
+    내부키가 meta로 흘러드는 것을 막는다.
+    """
+    allowed = {
+        "source", "msg_cd", "msg1", "broker_reason",
+        "nccs_count", "ccnl_count", "hldg_before", "hldg_now",
+        "side", "intended",
+    }
+    clean = {str(k): v for k, v in (meta or {}).items()
+             if str(k) in allowed and v is not None}
+    _append({"ev": "reconcile_meta", "key": str(key),
+             "reason": str(reason or "")[:80], "meta": clean})
 
 
 def record_plan(key: str, symbol: str, qty: int, *, meta: dict) -> None:
