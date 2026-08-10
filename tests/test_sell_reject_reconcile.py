@@ -193,16 +193,18 @@ def test_kr_mock_fallback_and_live_prohibition():
         _paths(tmp)
         order = _ack(key="xe:005930:time:2026-07-20", symbol="005930",
                      market="KR", excg="KRX", odno="0007")
+        live_fallback = mock.Mock(side_effect=AssertionError("live fallback called"))
         with mock.patch.object(B.kis, "market_of_symbol", return_value="KR"), \
                 mock.patch.object(B.kis, "IS_MOCK", False), \
                 mock.patch.object(B.kis, "domestic_open_orders", return_value=None), \
                 mock.patch.object(B.kis, "domestic_unfilled_orders",
-                                  side_effect=AssertionError("live fallback called")), \
+                                  live_fallback), \
                 mock.patch.object(B.kis, "domestic_fills", return_value=empty), \
                 mock.patch.object(B.kis, "holdings", return_value={"005930": 80}), \
                 mock.patch.object(B.kis, "enabled", return_value=False), \
                 mock.patch.object(B, "_notify"):
             assert B._resolve_acks() == []
+        assert live_fallback.call_count == 0
         assert L.state_of(order["key"])["state"] == "ack"
     print("[PASS] KR mock 강한 폴백은 부재증명 · live 폴백 호출 0")
 
