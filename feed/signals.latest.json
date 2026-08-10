@@ -1,9 +1,9 @@
 {
  "version": 1,
- "generated_at": "2026-08-11T05:59:08+09:00",
+ "generated_at": "2026-08-11T06:38:09+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "shelf_debug": {
-  "ok": 13,
+  "ok": 15,
   "watch": 181,
   "reasons": {
    "밸류영역 밖(지지대 아님)": 996,
@@ -12,7 +12,7 @@
    "저점권 아님(범위 91%)": 75,
    "저점권 아님(범위 90%)": 72,
    "저점권 아님(범위 84%)": 65,
-   "반등 미확인(터치·상단마감·거래량)": 64,
+   "반등 미확인(터치·상단마감·거래량)": 63,
    "저점권 아님(범위 82%)": 63
   }
  },
@@ -830,6 +830,34 @@
    "tactic": "full"
   },
   {
+   "id": "KGC-2026-08-11-shelf",
+   "code": "KGC",
+   "name": "Kinross Gold Corporation",
+   "ccy": "USD",
+   "group": "shelf",
+   "entry_kind": "shelf",
+   "stage": 0,
+   "price": 27.4,
+   "entry": 27.4,
+   "stop": 24.7352,
+   "target": 32.6538,
+   "shares_1pct": 0,
+   "range_pos": 0.4332,
+   "norm": -20.8,
+   "bear_share": 0.5,
+   "shelf": {
+    "poc": 24.0454,
+    "val": 22.3238,
+    "vah": 32.6538,
+    "rr": 1.97,
+    "overhead": 0.45
+   },
+   "fresh": true,
+   "break_gap": null,
+   "earnings_d": 92,
+   "tactic": "full"
+  },
+  {
    "id": "047040-2026-08-11-shelf",
    "code": "047040",
    "name": "대우건설",
@@ -963,42 +991,6 @@
    "fresh": false,
    "break_gap": null,
    "earnings_d": 79,
-   "tactic": "watch"
-  },
-  {
-   "id": "UPBD-2026-08-11-shelf-watch",
-   "code": "UPBD",
-   "name": "Upbound Group, Inc.",
-   "ccy": "USD",
-   "group": "shelf_watch",
-   "entry_kind": "shelf_watch",
-   "stage": 0,
-   "price": 19.83,
-   "entry": 19.83,
-   "stop": 18.9728,
-   "target": 21.1619,
-   "shares_1pct": 0,
-   "range_pos": 0.3284,
-   "norm": 30.2,
-   "bear_share": 0.125,
-   "shelf": {
-    "poc": 18.6181,
-    "val": 17.6006,
-    "vah": 21.1619,
-    "rr": 1.55,
-    "overhead": 0.431,
-    "reason": "반등 미확인(거래량)",
-    "checks": {
-     "터치": true,
-     "회복": true,
-     "상단마감": true,
-     "거래량": false,
-     "신저가아님": true
-    }
-   },
-   "fresh": false,
-   "break_gap": null,
-   "earnings_d": 80,
    "tactic": "watch"
   },
   {
@@ -1398,6 +1390,42 @@
    "tactic": "watch"
   },
   {
+   "id": "277810-2026-08-11-shelf-watch",
+   "code": "277810",
+   "name": "레인보우로보틱스",
+   "ccy": "KRW",
+   "group": "shelf_watch",
+   "entry_kind": "shelf_watch",
+   "stage": 0,
+   "price": 489000.0,
+   "entry": 489000.0,
+   "stop": 437325.0,
+   "target": 629447.9167,
+   "shares_1pct": 0,
+   "range_pos": 0.3283,
+   "norm": -43.4,
+   "bear_share": 0.375,
+   "shelf": {
+    "poc": 477468.75,
+    "val": 264697.9167,
+    "vah": 629447.9167,
+    "rr": 2.72,
+    "overhead": 0.477,
+    "reason": "반등 미확인(거래량)",
+    "checks": {
+     "터치": true,
+     "회복": true,
+     "상단마감": true,
+     "거래량": false,
+     "신저가아님": true
+    }
+   },
+   "fresh": false,
+   "break_gap": null,
+   "earnings_d": null,
+   "tactic": "watch"
+  },
+  {
    "id": "307950-2026-08-11-shelf-watch",
    "code": "307950",
    "name": "현대오토에버",
@@ -1515,6 +1543,27 @@
    "fresh": true,
    "break_gap": 0.0355,
    "earnings_d": 57,
+   "tactic": null
+  },
+  {
+   "id": "257720-2026-08-11-watch",
+   "code": "257720",
+   "name": "실리콘투",
+   "ccy": "KRW",
+   "group": "watch",
+   "entry_kind": "pullback",
+   "stage": 3,
+   "price": 38400.0,
+   "entry": 37116.6667,
+   "stop": 31979.7408,
+   "target": 47390.5185,
+   "shares_1pct": 19,
+   "range_pos": 0.3257,
+   "norm": 4.7,
+   "bear_share": 0.25,
+   "fresh": true,
+   "break_gap": 0.0346,
+   "earnings_d": null,
    "tactic": null
   },
   {
@@ -1845,27 +1894,6 @@
     "label": "⏳ 눌림 지정가만",
     "desc": "지금 추격 금지(손절폭 8.4%) — 받칠 지지에 눌릴 때까지 대기"
    }
-  },
-  {
-   "id": "257720-2026-08-11-watch",
-   "code": "257720",
-   "name": "실리콘투",
-   "ccy": "KRW",
-   "group": "watch",
-   "entry_kind": "pullback",
-   "stage": 2,
-   "price": 39300.0,
-   "entry": 37116.6667,
-   "stop": 31884.5926,
-   "target": 47580.8148,
-   "shares_1pct": 19,
-   "range_pos": 0.36,
-   "norm": 2.8,
-   "bear_share": 0.25,
-   "fresh": true,
-   "break_gap": 0.0535,
-   "earnings_d": null,
-   "tactic": null
   },
   {
    "id": "036460-2026-08-11-watch",
@@ -3807,6 +3835,27 @@
    "tactic": null
   },
   {
+   "id": "003380-2026-08-11-watch",
+   "code": "003380",
+   "name": "하림지주",
+   "ccy": "KRW",
+   "group": "watch",
+   "entry_kind": "pullback",
+   "stage": 3,
+   "price": 11330.0,
+   "entry": 8513.75,
+   "stop": 7282.7875,
+   "target": 10975.6749,
+   "shares_1pct": 81,
+   "range_pos": 0.3402,
+   "norm": 5.7,
+   "bear_share": 0.375,
+   "fresh": false,
+   "break_gap": 0.2242,
+   "earnings_d": null,
+   "tactic": null
+  },
+  {
    "id": "MP-2026-08-11-watch",
    "code": "MP",
    "name": "MP Materials Corp.",
@@ -4056,27 +4105,6 @@
    "fresh": false,
    "break_gap": 0.4056,
    "earnings_d": 22,
-   "tactic": null
-  },
-  {
-   "id": "003380-2026-08-11-watch",
-   "code": "003380",
-   "name": "하림지주",
-   "ccy": "KRW",
-   "group": "watch",
-   "entry_kind": "breakout",
-   "stage": 3,
-   "price": 11030.0,
-   "entry": 11100.0,
-   "stop": 9846.6558,
-   "target": 13606.6884,
-   "shares_1pct": 79,
-   "range_pos": 0.3163,
-   "norm": -13.2,
-   "bear_share": 0.5,
-   "fresh": false,
-   "break_gap": 0.1799,
-   "earnings_d": null,
    "tactic": null
   },
   {
