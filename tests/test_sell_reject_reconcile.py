@@ -100,7 +100,7 @@ def test_order_presence_partial_and_balance_contradiction_hold():
         _paths(tmp)
         order = _ack()
         same = {"ODNO": "38291"}
-        rs, contradictions = R.resolve_acks_by_absence(_proof(order, nccs=[same]))
+        rs, contradictions = R.resolve_acks_by_absence(_proof(order, ccnl=[same]))
         assert rs == contradictions == [] and L.state_of(order["key"])["state"] == "ack"
         rs, contradictions = R.resolve_acks_by_absence(
             _proof(order, holdings={"TAP": 79}))
