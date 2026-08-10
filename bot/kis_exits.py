@@ -20,8 +20,26 @@ import json
 import os
 import shutil
 import tempfile
+import time
 
 from bot import kis_positions, ledger, notify, settings, stall_exit
+
+# 같은 키 매도 실패 경보의 중복 억제(2026-08-11 TAP 타임스탑 1분 폭주 실측).
+#   고정 키(time/btgt)가 원장에 rejected로 종결돼 있으면 재시도가 멱등 게이트에서
+#   거부되는 무해한 no-op인데, 사이클마다 critical 경보가 반복돼 진짜 경보가
+#   묻혔다. 실패 경보는 키당 1시간 1회로 억제하고 접수 성공은 항상 알린다.
+#   (재시도 가능한 키 설계는 CODEX_SPEC_SELL_REJECT_RECONCILE R5에서 근본 수정.)
+_SELL_FAIL_NOTIFIED: dict[str, float] = {}
+_SELL_FAIL_REALERT_S = 3600.0
+
+
+def _sell_fail_alert_due(key: str, now: float) -> bool:
+    """이 키의 실패 경보를 지금 보내야 하나(억제 창 밖) — 보낸다고 표시까지."""
+    last = _SELL_FAIL_NOTIFIED.get(key)
+    if last is not None and now - last < _SELL_FAIL_REALERT_S:
+        return False
+    _SELL_FAIL_NOTIFIED[key] = now
+    return True
 
 STATE_PATH = os.environ.get(
     "KIS_EXITS_STATE", os.path.join(os.path.dirname(__file__), "kis_exits_state.json"))
@@ -468,9 +486,14 @@ def manage(broker, held: dict, today: str) -> None:
                     key = f"xe:{code}:{'btgt' if '목표' in why else 'time'}:{rec.get('opened','')}"
                 r = broker.place_sell(code, int(sq), why, key)
                 ok = bool(r) if not isinstance(r, dict) else r.get("state") in ("ack", "filled")
-                notify.send(f"💰 <b>KIS {why}</b> — {code} {sq}주 매도 "
-                            f"{'접수' if ok else '실패 — 다음 사이클 재시도'}",
-                            critical=True, category="trade")
+                if ok:
+                    _SELL_FAIL_NOTIFIED.pop(key, None)   # 성공 → 억제 리셋
+                    notify.send(f"💰 <b>KIS {why}</b> — {code} {sq}주 매도 접수",
+                                critical=True, category="trade")
+                elif _sell_fail_alert_due(key, time.time()):
+                    notify.send(f"💰 <b>KIS {why}</b> — {code} {sq}주 매도 실패 "
+                                "— 재시도는 계속, 같은 실패 경보는 1시간 억제",
+                                critical=True, category="trade")
         st[code] = xs
     # 시장별 holdings()는 열린 시장만 반환한다. KR 장중에 US 상태를 지우지 않도록
     # 소멸 판정은 시장과 무관한 봇 포지션 원장을 단일 기준으로 쓴다.
