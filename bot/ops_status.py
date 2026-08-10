@@ -37,8 +37,29 @@ def _stuck_latch_path() -> str:
         os.path.join(os.path.dirname(ledger.LEDGER_PATH), "ack_stuck_alerts.json"))
 
 
-def _swap_stuck_latch(current: set[str]) -> set[str]:
-    """방치 ACK 알림 래치를 프로세스 재시작 뒤에도 유지한다."""
+def _read_stuck_latch() -> set[str]:
+    """프로세스 재시작 뒤에도 유지되는 방치 ACK 알림 래치를 읽는다."""
+    global _stuck_ack_alerted
+    path = _stuck_latch_path()
+    try:
+        with open(path + ".lock", "a+", encoding="utf-8") as lock:
+            os.chmod(path + ".lock", 0o600)
+            fcntl.flock(lock.fileno(), fcntl.LOCK_EX)
+            try:
+                with open(path, encoding="utf-8") as fp:
+                    raw = json.load(fp)
+                previous = {str(k) for k in raw if str(k)} \
+                    if isinstance(raw, list) else set()
+            except (FileNotFoundError, OSError, UnicodeError, json.JSONDecodeError):
+                previous = set(_stuck_ack_alerted)
+            _stuck_ack_alerted = set(previous)
+            return previous
+    except OSError:
+        return set(_stuck_ack_alerted)
+
+
+def _update_stuck_latch(*, add: set[str], remove: set[str]) -> None:
+    """성공한 전송만 래치에 원자 반영하고 변화가 없으면 쓰지 않는다."""
     global _stuck_ack_alerted
     path = _stuck_latch_path()
     parent = os.path.dirname(path) or "."
@@ -54,19 +75,18 @@ def _swap_stuck_latch(current: set[str]) -> set[str]:
                     if isinstance(raw, list) else set()
             except (FileNotFoundError, OSError, UnicodeError, json.JSONDecodeError):
                 previous = set(_stuck_ack_alerted)
-            tmp = f"{path}.tmp.{os.getpid()}"
-            with open(tmp, "w", encoding="utf-8") as fp:
-                json.dump(sorted(current), fp, separators=(",", ":"))
-                fp.flush()
-                os.fsync(fp.fileno())
-            os.chmod(tmp, 0o600)
-            os.replace(tmp, path)
+            current = (previous | set(add)) - set(remove)
+            if current != previous:
+                tmp = f"{path}.tmp.{os.getpid()}"
+                with open(tmp, "w", encoding="utf-8") as fp:
+                    json.dump(sorted(current), fp, separators=(",", ":"))
+                    fp.flush()
+                    os.fsync(fp.fileno())
+                os.chmod(tmp, 0o600)
+                os.replace(tmp, path)
             _stuck_ack_alerted = set(current)
-            return previous
     except OSError:
-        previous = set(_stuck_ack_alerted)
-        _stuck_ack_alerted = set(current)
-        return previous
+        _stuck_ack_alerted = (_stuck_ack_alerted | set(add)) - set(remove)
 
 
 def _stuck_ack_rows(now: float | None = None) -> list[dict]:
@@ -94,21 +114,26 @@ def maybe_alert_stuck_acks(now: float | None = None) -> bool:
         rows = _stuck_ack_rows(now)
         current = {str(row.get("key") or "") for row in rows if row.get("key")}
         by_key = {str(row.get("key")): row for row in rows if row.get("key")}
-        previous = _swap_stuck_latch(current)
+        previous = _read_stuck_latch()
         sent = False
+        delivered: set[str] = set()
         for key in sorted(current - previous):
             row = by_key[key]
-            notify.send(
+            if notify.send(
                 f"⚠️ 주문 ACK {max(1, ACK_STUCK_ALERT_S // 60)}분 초과 — "
                 f"{row.get('symbol')} {str(row.get('side') or '').upper()} 대사 필요",
-                critical=True, category="trade")
-            sent = True
+                    critical=True, category="trade"):
+                delivered.add(key)
+                sent = True
         resolved = previous - current
+        recovered: set[str] = set()
         if resolved:
-            notify.send(f"✅ 주문 ACK 방치 {len(resolved)}건 해소 — "
-                        "대사 잠금 해제 확인",
-                        critical=True, category="trade")
-            sent = True
+            if notify.send(f"✅ 주문 ACK 방치 {len(resolved)}건 해소 — "
+                           "대사 잠금 해제 확인",
+                           critical=True, category="trade"):
+                recovered = set(resolved)
+                sent = True
+        _update_stuck_latch(add=delivered, remove=recovered)
         return sent
     except Exception:
         return False

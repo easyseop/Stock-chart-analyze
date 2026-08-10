@@ -75,7 +75,7 @@ def _update_status(*, success: bool, error: str = "") -> tuple[dict, bool]:
                 alerted = bool(state.get("failure_alerted"))
                 should_alert = streak >= max(1, RECONCILE_FAILURE_ALERT_N) and not alerted
                 state.update(failure_streak=streak, last_error=str(error)[:160],
-                             failure_alerted=alerted or should_alert)
+                             failure_alerted=alerted)
             tmp = f"{path}.tmp.{os.getpid()}"
             with open(tmp, "w", encoding="utf-8") as fp:
                 json.dump(state, fp, ensure_ascii=False, separators=(",", ":"))
@@ -95,9 +95,40 @@ def _update_status(*, success: bool, error: str = "") -> tuple[dict, bool]:
             should_alert = (_STATE["failure_streak"]
                             >= max(1, RECONCILE_FAILURE_ALERT_N)
                             and not _STATE.get("failure_alerted"))
-            _STATE["failure_alerted"] = bool(
-                _STATE.get("failure_alerted") or should_alert)
         return dict(_STATE), should_alert
+
+
+def _mark_failure_alerted(expected_streak: int) -> None:
+    """경보 전송 성공 뒤에만 공유 래치를 잠근다."""
+    path = _status_path()
+    parent = os.path.dirname(path) or "."
+    os.makedirs(parent, exist_ok=True)
+    try:
+        with open(path + ".lock", "a+", encoding="utf-8") as lock:
+            os.chmod(path + ".lock", 0o600)
+            fcntl.flock(lock.fileno(), fcntl.LOCK_EX)
+            disk = _read_status_unlocked(path)
+            state = {key: disk.get(key, _STATE.get(key))
+                     for key in _HEALTH_KEYS}
+            # 전송 중 다른 프로세스가 성공 대사를 기록했다면, 이미 끝난 실패
+            # 구간의 래치를 새 성공 구간 위에 덮어쓰지 않는다.
+            if int(state.get("failure_streak") or 0) < int(expected_streak):
+                _STATE.update(state)
+                return
+            state["failure_alerted"] = True
+            tmp = f"{path}.tmp.{os.getpid()}"
+            with open(tmp, "w", encoding="utf-8") as fp:
+                json.dump(state, fp, ensure_ascii=False, separators=(",", ":"))
+                fp.flush()
+                os.fsync(fp.fileno())
+            os.chmod(tmp, 0o600)
+            os.replace(tmp, path)
+            _STATE.update(state)
+    except OSError:
+        # 디스크 실패 시 같은 프로세스에서만 중복을 줄인다. 다음 프로세스의
+        # 재경보 가능성은 남겨 경보 영구 유실보다 안전한 방향을 택한다.
+        if int(_STATE.get("failure_streak") or 0) >= int(expected_streak):
+            _STATE["failure_alerted"] = True
 
 
 def reconcile_health() -> dict:
@@ -118,18 +149,21 @@ def _record_failure(error: str) -> None:
     print(f"[kis-reconcile] 대사 실패 #{state['failure_streak']}: "
           f"{state.get('last_error') or 'unknown'}", flush=True)
     if should_alert:
-        _notify(f"🚨 KIS 주문 대사 {state['failure_streak']}회 연속 실패 — "
-                "조회 실패를 부재로 판정하지 않고 주문 잠금 유지",
-                critical=True, category="trade")
+        delivered = _notify(
+            f"🚨 KIS 주문 대사 {state['failure_streak']}회 연속 실패 — "
+            "조회 실패를 부재로 판정하지 않고 주문 잠금 유지",
+            critical=True, category="trade")
+        if delivered:
+            _mark_failure_alerted(int(state.get("failure_streak") or 0))
 
 
 def _notify(text: str, *, critical: bool = False,
-            category: str | None = None) -> None:
+            category: str | None = None) -> bool:
     try:
         from bot import notify
-        notify.send(text, critical=critical, category=category)
+        return bool(notify.send(text, critical=critical, category=category))
     except Exception:
-        pass
+        return False
 
 
 def pending_unknowns() -> list[dict]:

@@ -182,6 +182,19 @@ def test_order_presence_partial_and_balance_contradiction_hold():
     print("[PASS] ODNO 선행0 정규화·부분체결 존재·잔고 모순 → 자동정산 0")
 
 
+def test_absence_reject_requires_single_symbol_inflight():
+    """같은 종목의 fresh broker 주문이 공존하면 오래된 ACK를 단독 종결하지 않는다."""
+    with tempfile.TemporaryDirectory() as tmp:
+        _paths(tmp)
+        old = _ack()
+        _ack(key="xe:TAP:btgt:2026-08-11#1", qty=5, before=80,
+             age_s=10, odno="0000038292")
+        rs, contradictions = R.resolve_acks_by_absence(_proof(old))
+        assert rs == contradictions == []
+        assert L.state_of(old["key"])["state"] == "ack"
+    print("[PASS] 동일 종목 fresh in-flight 공존 → 오래된 ACK 부재증명 금지")
+
+
 def test_closed_row_reason_is_sanitized_and_bounded():
     with tempfile.TemporaryDirectory() as tmp:
         _paths(tmp)
@@ -323,7 +336,7 @@ def test_reconcile_failure_streak_alert_once_and_reset():
         sent = []
         with mock.patch.object(B, "RECONCILE_FAILURE_ALERT_N", 2), \
                 mock.patch.object(B, "_notify",
-                                  side_effect=lambda text, **kw: sent.append(text)):
+                                  side_effect=lambda text, **kw: sent.append(text) or True):
             B._record_failure("nccs unavailable")
             assert B.reconcile_health()["failure_streak"] == 1 and not sent
             B._record_failure("ccnl unavailable")
@@ -334,6 +347,45 @@ def test_reconcile_failure_streak_alert_once_and_reset():
         health = B.reconcile_health()
         assert health["failure_streak"] == 0 and health["last_success_at"]
     print("[PASS] 대사 실패 streak 증가·임계 1회 경보·성공 리셋")
+
+
+def test_reconcile_failure_alert_latches_only_after_delivery():
+    with tempfile.TemporaryDirectory() as tmp:
+        _paths(tmp)
+        delivery = mock.Mock(side_effect=[False, True])
+        with mock.patch.object(B, "RECONCILE_FAILURE_ALERT_N", 2), \
+                mock.patch.object(B, "_notify", delivery):
+            B._record_failure("first")
+            B._record_failure("delivery down")     # 첫 임계 경보 실패
+            with open(os.environ["KIS_RECONCILE_STATUS_PATH"],
+                      encoding="utf-8") as fp:
+                assert json.load(fp)["failure_alerted"] is False
+            B._record_failure("retry succeeds")    # 다음 사이클 재시도 성공
+            with open(os.environ["KIS_RECONCILE_STATUS_PATH"],
+                      encoding="utf-8") as fp:
+                assert json.load(fp)["failure_alerted"] is True
+            B._record_failure("no duplicate")
+        assert delivery.call_count == 2
+    print("[PASS] 대사 연속실패 경보는 전송 실패 시 재시도·성공 뒤에만 래치")
+
+
+def test_reconcile_success_during_alert_does_not_relock_old_failure():
+    with tempfile.TemporaryDirectory() as tmp:
+        _paths(tmp)
+
+        def succeeds_after_recovery(*_args, **_kwargs):
+            B._record_success()
+            return True
+
+        with mock.patch.object(B, "RECONCILE_FAILURE_ALERT_N", 1), \
+                mock.patch.object(B, "_notify", side_effect=succeeds_after_recovery):
+            B._record_failure("transient")
+        with open(os.environ["KIS_RECONCILE_STATUS_PATH"],
+                  encoding="utf-8") as fp:
+            state = json.load(fp)
+        assert state["failure_streak"] == 0
+        assert state["failure_alerted"] is False
+    print("[PASS] 경보 전송 중 성공 대사가 와도 지난 실패 래치 재잠금 없음")
 
 
 def test_shared_health_file_cannot_open_local_trading_gate():
@@ -362,11 +414,14 @@ def main():
     test_absence_evidence_counts_and_ownership_gate()
     test_failure_is_never_absence_and_age_gate()
     test_order_presence_partial_and_balance_contradiction_hold()
+    test_absence_reject_requires_single_symbol_inflight()
     test_closed_row_reason_is_sanitized_and_bounded()
     test_boot_tap_path_notifies_once_and_contradiction_does_not_fall_through()
     test_us_absence_scans_all_exchanges_and_keeps_live_order()
     test_kr_mock_fallback_and_live_prohibition()
     test_reconcile_failure_streak_alert_once_and_reset()
+    test_reconcile_failure_alert_latches_only_after_delivery()
+    test_reconcile_success_during_alert_does_not_relock_old_failure()
     test_shared_health_file_cannot_open_local_trading_gate()
     print("\n매도 거절 대사 검증 통과.")
 
