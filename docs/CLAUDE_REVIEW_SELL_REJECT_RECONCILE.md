@@ -9,6 +9,36 @@
 - 원본 지시서: `docs/CODEX_SPEC_SELL_REJECT_RECONCILE.md`
 - 금지: 이 검토는 읽기전용이다. 병합·Oracle 배포·kill 변경·원장 수정 금지.
 
+## V2 재검토 안내
+
+1차 Claude 검토의 P0 1건·P1 2건·P2 3건과 P3 개선사항을 반영했다.
+구체적인 1차 판정과 보완 내역은
+`docs/CLAUDE_REVIEW_SELL_REJECT_RECONCILE_RESULT.md`에 기록했다.
+
+V2에서는 기존 20개 질문을 전부 다시 판정하는 동시에 다음 반례를 반드시
+직접 재현한다.
+
+1. 원장 `excg=NASD` 또는 거래소 누락인데 실제 NYSE 미체결에 ODNO가 있으면
+   `ack` 유지·알림 0·브로커 주문 재시도 0인지.
+2. 미국 `NASD/NYSE/AMEX` 중 한 곳이라도 미체결 또는 접수일 체결 조회가
+   `None`/불완전하면 세 거래소의 빈 결과를 합쳐 부재로 세탁하지 않는지.
+3. 본문 연속키가 비어 있어도 응답 헤더 `tr_cont=F/M`,
+   `msg_cd=...12000`, 페이지 상한 포화 중 하나면 자동종결 0인지.
+4. ownership baseline 미armed, symbol freeze, 사용자 baseline 종목에서
+   부재 증명이 차단되고, 검증된 legacy 이관 SELL만 기존 예외를 유지하는지.
+5. 근거 meta의 `nccs_count/ccnl_count`가 실제 무관행 수와 같고
+   `odno_absent=true`가 저장되는지.
+6. 미국 한 정규/연장 세션이 KST 자정을 통과해도 R5 세션 상한이 두 번 열리지
+   않고, 다음 뉴욕 거래일에만 `#N+1`이 열리는지.
+7. 공유 health 파일에 `done=true, low=0`을 주입해도 로컬 프로세스의
+   `done/low`가 바뀌지 않고, 새 파일에도 두 필드가 저장되지 않는지.
+8. ACK 방치 경보 후 프로세스 메모리 래치를 지워도 디스크 래치로 중복 0,
+   여러 건 해소는 1회 요약인지.
+9. row-level 사유와 response-level 조회 메시지가 `msg_source`로 구분되고,
+   일반 조회완료가 실제 거절사유로 표시되지 않는지.
+
+V2 전체 tracked 파일을 포함한 ZIP을 기준으로 전이 import·호출 경로도 확인한다.
+
 ## 실측 전제(R0)
 
 Oracle KIS mock에서 ODNO `0000038291`을 시크릿 없이 조회했다.
@@ -99,7 +129,7 @@ node --check scanner/site_app/app.js
 git diff --check c3949ace..HEAD
 ```
 
-Codex 환경 실측: Python 모듈 `52/52`, Node `19/19`, compileall,
+Codex V2 환경 실측: Python 모듈 `52/52`, Node `19/19`, compileall,
 JS syntax, diff check 통과. 기본 `/usr/local` Node는 삭제된 ICU 71을
 참조해 exit 134가 났고, 번들 Node v24.15.0으로 동일 테스트가
 19/19로 통과했다(코드 실패와 구분).

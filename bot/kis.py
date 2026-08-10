@@ -330,6 +330,12 @@ def _get(path: str, tr: str, params: dict) -> dict | None:
             req = urllib.request.Request(url, headers=headers)
             with urllib.request.urlopen(req, timeout=_HTTP_TIMEOUT) as resp:
                 d = json.load(resp)
+                # 연속조회 여부는 본문 ctx_area_nk*뿐 아니라 응답 헤더
+                # tr_cont(F/M)로도 전달된다. 이 값을 버리면 절단된 첫 페이지를
+                # 완전한 부재 응답으로 오인할 수 있다.
+                if isinstance(d, dict):
+                    d["_tr_cont"] = str(
+                        getattr(resp, "headers", {}).get("tr_cont") or "").strip()
         except urllib.error.HTTPError as e:
             http = e.code
             try:

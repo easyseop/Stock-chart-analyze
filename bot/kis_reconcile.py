@@ -28,7 +28,7 @@ from __future__ import annotations
 import os
 import re
 
-from bot import ledger
+from bot import ledger, ownership
 
 # 매도/매수 구분 — 코드와 이름 둘 다 본다(코드 정의 [대조필요] 방어)
 _SELL_CODES = {"01"}
@@ -55,6 +55,14 @@ def trusted_response_rows(response: dict | None, *, domestic: bool = False
     if str(response.get(f"ctx_area_nk{suffix}")
            or response.get(f"CTX_AREA_NK{suffix}") or "").strip():
         return None
+    # KIS는 연속 페이지를 헤더 tr_cont=F/M 또는 msg_cd=...12000으로도
+    # 알린다. 어느 한 신호라도 있으면 부재 증명에 쓸 수 없다.
+    if str(response.get("_tr_cont") or response.get("tr_cont") or "").strip().upper() \
+            in {"F", "M"}:
+        return None
+    msg_cd = clean_broker_text(response.get("msg_cd"))
+    if msg_cd.endswith("12000"):
+        return None
     if "output1" in response:
         rows = response.get("output1")
     elif "output" in response:
@@ -63,7 +71,11 @@ def trusted_response_rows(response: dict | None, *, domestic: bool = False
         return None
     if not isinstance(rows, list) or any(not isinstance(row, dict) for row in rows):
         return None
-    msg_cd = clean_broker_text(response.get("msg_cd"))
+    # 연속 신호가 누락된 구형 응답도 페이지 상한에 꽉 찼으면 완전성을
+    # 증명할 수 없다. 자동 정산만 보류하는 fail-closed 조건이다.
+    page_limit = 100 if domestic else 15
+    if len(rows) >= page_limit:
+        return None
     msg1 = clean_broker_text(response.get("msg1"))
     return [{**row, "_response_msg_cd": msg_cd,
              "_response_msg1": msg1} for row in rows]
@@ -130,12 +142,13 @@ def normalize_rows(nccs: dict | None, ccnl: dict | None) -> list[dict]:
             cq = _f(row.get("ft_ccld_qty"), default=-1.0)
             filled = cq if cq >= 0 else (max(0.0, ord_qty - nq) if nq >= 0 else 0.0)
             still_open = nq > 0            # nccs 잔량>0 = 주문 아직 살아있음(체결 대기)
-        broker_reason = clean_broker_text(
-            row.get("msg1") or row.get("rjct_rson_name"))
-        msg_cd = clean_broker_text(row.get("msg_cd") or row.get("rjct_rson")
-                                   or row.get("_response_msg_cd"))
-        msg1 = clean_broker_text(row.get("msg1") or row.get("rjct_rson_name")
-                                 or row.get("_response_msg1"))
+        row_msg_cd = clean_broker_text(row.get("msg_cd") or row.get("rjct_rson"))
+        row_msg1 = clean_broker_text(row.get("msg1") or row.get("rjct_rson_name"))
+        broker_reason = row_msg1
+        msg_cd = row_msg_cd or clean_broker_text(row.get("_response_msg_cd"))
+        msg1 = row_msg1 or clean_broker_text(row.get("_response_msg1"))
+        msg_source = ("row" if row_msg_cd or row_msg1 else
+                      "response" if msg_cd or msg1 else "")
         status = clean_broker_text(row.get("prcs_stat_name")
                                    or row.get("rvse_cncl_dvsn_name"))
         return {"odno": odno, "pdno": pdno, "side": _side_of(row),
@@ -143,6 +156,7 @@ def normalize_rows(nccs: dict | None, ccnl: dict | None) -> list[dict]:
                 "price": _f(row.get("ft_ccld_unpr3") or row.get("ft_ord_unpr3")),
                 "ord_tmd": str(row.get("ord_tmd") or ""), "src": src,
                 "open": still_open, "msg_cd": msg_cd, "msg1": msg1,
+                "msg_source": msg_source,
                 "broker_status": status, "broker_reason": broker_reason}
 
     for src, d in (("nccs", nccs), ("ccnl", ccnl)):
@@ -154,6 +168,7 @@ def normalize_rows(nccs: dict | None, ccnl: dict | None) -> list[dict]:
             if k in out and src == "ccnl":
                 out[k].update({kk: n[kk] for kk in
                                ("filled", "price", "src", "msg_cd", "msg1",
+                                "msg_source",
                                 "broker_status", "broker_reason")
                                if n[kk] or kk == "src"})
             else:
@@ -260,6 +275,7 @@ def resolve_acks_from_rows(rows: list[dict]) -> list[dict]:
                 o["key"], reason="broker-closed-zero-fill",
                 meta={"source": str(row.get("src") or "broker"),
                       "msg_cd": msg_cd, "msg1": msg1,
+                      "msg_source": clean_broker_text(row.get("msg_source")),
                       "broker_reason": broker_reason,
                       "side": side, "intended": intended})
             r.update({"broker_reason": broker_reason,
@@ -346,6 +362,12 @@ def resolve_acks_by_absence(evidence_by_key: dict[str, dict],
             current = int(float(holdings.get(symbol, 0)))
         except (TypeError, ValueError):
             continue
+        base = ownership.baseline()
+        verified_migrated = _verified_migrated_baseline_sell(order, symbol, before)
+        if base is None:
+            continue
+        if (ownership.is_frozen(symbol) or symbol in base) and not verified_migrated:
+            continue
         unchanged = current == before
         if not unchanged:
             contradictions.append({
@@ -357,8 +379,9 @@ def resolve_acks_by_absence(evidence_by_key: dict[str, dict],
         result = ledger.reconcile(key, 0, open_order=False)
         ledger.record_reconcile_meta(
             key, reason="absence-proof",
-            meta={"source": "absence-proof", "nccs_count": 0,
-                  "ccnl_count": 0, "hldg_before": before,
+            meta={"source": "absence-proof", "nccs_count": len(nccs_rows),
+                  "ccnl_count": len(ccnl_rows), "odno_absent": True,
+                  "hldg_before": before,
                   "hldg_now": current, "side": side,
                   "intended": intended,
                   "broker_reason": "사유 미상(부재 증명)"})

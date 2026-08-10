@@ -21,6 +21,7 @@ import os
 import shutil
 import tempfile
 import time
+from zoneinfo import ZoneInfo
 
 from bot import kis_positions, ledger, notify, settings, stall_exit
 
@@ -253,7 +254,8 @@ def _half_marker_id(code: str, rec: dict) -> str:
 
 
 def _next_exit_retry(code: str, rec: dict, xs: dict, kind: str,
-                     today: str) -> tuple[str | None, bool, bool]:
+                     today: str, *, now_ts: float | None = None
+                     ) -> tuple[str | None, bool, bool]:
     """time/btgt의 파생 키와 세션 재시도 상한을 결정한다.
 
     반환은 ``(key, 이 시도가 상한인지, 상한 경보를 지금 보낼지)``.
@@ -266,7 +268,14 @@ def _next_exit_retry(code: str, rec: dict, xs: dict, kind: str,
     day_field = f"{kind}_retry_day"
     count_field = f"{kind}_retry_count"
     cap_field = f"{kind}_retry_capped"
-    day = str(today or "")
+    now_ts = time.time() if now_ts is None else float(now_ts)
+    is_kr = str(code).isdigit() and len(str(code)) == 6
+    session_zone = ZoneInfo("Asia/Seoul" if is_kr else "America/New_York")
+    # 미국 정규장은 KST 자정을 관통한다. KST 달력일을 쓰면 한 세션이 둘로
+    # 갈려 세션당 상한이 두 번 열린다. US는 뉴욕 거래일, KR은 호출자가 이미
+    # 계산한 KST 거래일을 사용한다.
+    day = (str(today or "") if is_kr else
+           datetime.datetime.fromtimestamp(now_ts, session_zone).date().isoformat())
     if xs.get(day_field) != day:
         xs[day_field] = day
         xs[count_field] = 0
@@ -274,11 +283,10 @@ def _next_exit_retry(code: str, rec: dict, xs: dict, kind: str,
 
     base = f"xe:{code}:{kind}:{rec.get('opened','')}"
     durable_session = 0
-    kst = datetime.timezone(datetime.timedelta(hours=9))
     for order in ledger.orders_for(code, side="SELL", key_prefix=base):
         try:
             order_day = datetime.datetime.fromtimestamp(
-                float(order.get("submitted_at") or 0), kst).date().isoformat()
+                float(order.get("submitted_at") or 0), session_zone).date().isoformat()
         except (OSError, OverflowError, TypeError, ValueError):
             continue
         if order_day == day:
@@ -535,7 +543,7 @@ def manage(broker, held: dict, today: str) -> None:
                 else:
                     kind = "btgt" if "목표" in why else "time"
                     key, at_session_cap, cap_notice = _next_exit_retry(
-                        code, rec, xs, kind, today)
+                        code, rec, xs, kind, today, now_ts=time.time())
                     if key is None:
                         if cap_notice:
                             notify.send(

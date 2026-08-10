@@ -23,6 +23,7 @@ import fcntl
 import json
 import os
 import time
+from zoneinfo import ZoneInfo
 
 from bot import kis, kis_reconcile, ledger
 
@@ -30,6 +31,8 @@ from bot import kis, kis_reconcile, ledger
 # 읽으므로 메모리 dict만으로는 buyloop/sentinel의 성공·실패가 보이지 않는다.
 _STATE = {"done": False, "low": 0, "last_success_at": None,
           "failure_streak": 0, "last_error": "", "failure_alerted": False}
+_HEALTH_KEYS = ("last_success_at", "failure_streak", "last_error",
+                "failure_alerted")
 RECONCILE_FAILURE_ALERT_N = int(
     os.environ.get("RECONCILE_FAILURE_ALERT_N", "6") or 6)
 
@@ -61,7 +64,9 @@ def _update_status(*, success: bool, error: str = "") -> tuple[dict, bool]:
         with open(lock_path, "a+", encoding="utf-8") as lock:
             os.chmod(lock_path, 0o600)
             fcntl.flock(lock.fileno(), fcntl.LOCK_EX)
-            state = {**_STATE, **_read_status_unlocked(path)}
+            disk = _read_status_unlocked(path)
+            state = {key: disk.get(key, _STATE.get(key))
+                     for key in _HEALTH_KEYS}
             if success:
                 state.update(last_success_at=time.time(), failure_streak=0,
                              last_error="", failure_alerted=False)
@@ -97,7 +102,8 @@ def _update_status(*, success: bool, error: str = "") -> tuple[dict, bool]:
 
 def reconcile_health() -> dict:
     """진단용 대사 상태. 시크릿이나 주문 상세를 포함하지 않는다."""
-    state = {**_STATE, **_read_status_unlocked(_status_path())}
+    disk = _read_status_unlocked(_status_path())
+    state = {key: disk.get(key, _STATE.get(key)) for key in _HEALTH_KEYS}
     return {"last_success_at": state.get("last_success_at"),
             "failure_streak": int(state.get("failure_streak") or 0),
             "last_error": str(state.get("last_error") or "")[:160]}
@@ -157,8 +163,9 @@ def _resolve_acks() -> list[dict]:
 
         def _day(order: dict) -> str:
             stamp = float(order.get("submitted_at") or now)
-            kst = datetime.timezone(datetime.timedelta(hours=9))
-            return datetime.datetime.fromtimestamp(stamp, kst).strftime("%Y%m%d")
+            zone = ZoneInfo("Asia/Seoul") if _is_kr(order) \
+                else ZoneInfo("America/New_York")
+            return datetime.datetime.fromtimestamp(stamp, zone).strftime("%Y%m%d")
 
         fill_rows: list[dict] = []
         proofs: dict[str, dict] = {}
@@ -193,33 +200,50 @@ def _resolve_acks() -> list[dict]:
                     "holdings": None,
                 }
 
-        # 해외: 기본 7일 ccnl은 연속키로 TAP 당일 행을 놓쳤다. 접수일 단일
-        # 조회로 페이지 완전성을 검증하고 주문별 근거를 분리한다.
+        # 해외: 주문 meta.excg는 구버전에서 없거나 시세 판별 실패로 NASD가
+        # 기록될 수 있다. 모의 KIS는 잘못된 거래소 접수도 허용하므로 한 거래소
+        # 부재는 증명이 아니다. 모든 미국 ACK에 대해 3거래소를 전부 조회하고
+        # union하며, 하나라도 실패/불완전하면 부재 증명을 보류한다.
         us_orders = [o for o in aged if not _is_kr(o)]
-        for ex in sorted({str(o.get("excg") or "NASD") for o in us_orders}):
-            ex_orders = [o for o in us_orders if str(o.get("excg") or "NASD") == ex]
+        us_days = sorted({_day(o) for o in us_orders})
+        nccs_parts: list[list[dict]] = []
+        ccnl_parts: dict[str, list[list[dict]]] = {day: [] for day in us_days}
+        nccs_complete = True
+        ccnl_complete = {day: True for day in us_days}
+        for ex in ("NASD", "NYSE", "AMEX") if us_orders else ():
             n_raw = kis.open_orders(excg=ex)
             n_rows = kis_reconcile.trusted_response_rows(n_raw)
             if n_rows is None:
                 errors.append(f"US {ex} nccs untrusted")
-            c_by_day: dict[str, list[dict] | None] = {}
+                nccs_complete = False
+            else:
+                nccs_parts.append(n_rows)
             c_all: list[dict] = []
-            for day in sorted({_day(o) for o in ex_orders}):
+            for day in us_days:
                 raw = kis.fills(excg=ex, start=day, end=day)
                 rows = kis_reconcile.trusted_response_rows(raw)
-                c_by_day[day] = rows
                 if rows is None:
                     errors.append(f"US {ex} ccnl {day} untrusted")
+                    ccnl_complete[day] = False
                 else:
                     c_all.extend(rows)
+                    ccnl_parts[day].append(rows)
             fill_rows += kis_reconcile.normalize_rows(
                 {"rt_cd": "0", "output": n_rows} if n_rows is not None else None,
                 {"rt_cd": "0", "output": c_all})
-            for order in ex_orders:
-                proofs[str(order.get("key") or "")] = {
-                    "nccs_rows": n_rows, "ccnl_rows": c_by_day.get(_day(order)),
-                    "holdings": None,
-                }
+        combined_nccs = ([row for part in nccs_parts for row in part]
+                         if nccs_complete else None)
+        combined_ccnl = {
+            day: ([row for part in ccnl_parts[day] for row in part]
+                  if ccnl_complete[day] else None)
+            for day in us_days
+        }
+        for order in us_orders:
+            proofs[str(order.get("key") or "")] = {
+                "nccs_rows": combined_nccs,
+                "ccnl_rows": combined_ccnl.get(_day(order)),
+                "holdings": None,
+            }
 
         # 1순위: ODNO 행. 0주 종결도 여기서 즉시 rejected로 닫힌.
         rs = kis_reconcile.resolve_acks_from_rows(fill_rows)

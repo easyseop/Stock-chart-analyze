@@ -183,10 +183,12 @@ def test_open_buy_does_not_block_stop_ratchet_but_defers_sell():
 def test_time_btgt_retry_keys_are_session_capped_and_legacy_compatible():
     """거절된 time/btgt는 파생 키로 다음 세션에만 재시도한다."""
     import datetime
+    from zoneinfo import ZoneInfo
     with tempfile.TemporaryDirectory() as tmp:
         L.LEDGER_PATH = os.path.join(tmp, "orders.jsonl")
         base = "xe:TAP:time:2026-07-20"
-        stamp = datetime.datetime.fromisoformat("2026-08-11T12:00:00").timestamp()
+        stamp = datetime.datetime(2026, 8, 10, 10, 0,
+                                  tzinfo=ZoneInfo("America/New_York")).timestamp()
         # 배포 전 고정 키도 attempts=1로 세어 다음은 #2다.
         L._append({"ev": "submit", "key": base, "symbol": "TAP",
                    "intended": 80, "filled": 0, "state": "submitted",
@@ -195,10 +197,12 @@ def test_time_btgt_retry_keys_are_session_capped_and_legacy_compatible():
         xs = {}
         with mock.patch.object(X, "EXIT_RETRY_MAX_PER_SESSION", 1):
             key, capped, notice = X._next_exit_retry(
-                "TAP", {"opened": "2026-07-20"}, xs, "time", "2026-08-11")
+                "TAP", {"opened": "2026-07-20"}, xs, "time", "2026-08-11",
+                now_ts=stamp + 3600)
             assert key is None and capped and notice
             key, capped, notice = X._next_exit_retry(
-                "TAP", {"opened": "2026-07-20"}, xs, "time", "2026-08-12")
+                "TAP", {"opened": "2026-07-20"}, xs, "time", "2026-08-12",
+                now_ts=stamp + 86400)
             assert key == base + "#2" and capped and not notice
 
     with tempfile.TemporaryDirectory() as tmp, mock.patch.object(X.notify, "send") as send:
@@ -210,11 +214,18 @@ def test_time_btgt_retry_keys_are_session_capped_and_legacy_compatible():
                   pos_key="kb:btg")
         held = {"BTG": {"code": "BTG", "q": 7, "ccy": "USD", "stop": 90}}
         broker = _SeqBroker([False, False])
-        with mock.patch.object(X, "EXIT_RETRY_MAX_PER_SESSION", 1):
-            X.manage(broker, held, "2026-08-11")
-            X.manage(broker, held, "2026-08-11")
+        same_session = datetime.datetime(2026, 8, 10, 23, 30,
+                                         tzinfo=ZoneInfo("America/New_York")).timestamp()
+        next_session = datetime.datetime(2026, 8, 11, 9, 30,
+                                         tzinfo=ZoneInfo("America/New_York")).timestamp()
+        with mock.patch.object(X, "EXIT_RETRY_MAX_PER_SESSION", 1), \
+                mock.patch.object(X.time, "time", return_value=same_session):
+            X.manage(broker, held, "2026-08-11")  # KST 자정 전후여도 NY 8/10
+            X.manage(broker, held, "2026-08-12")
             assert len(broker.calls) == 1 and broker.calls[0][2].endswith("#1")
             assert len([c for c in send.call_args_list if "재시도 상한" in c.args[0]]) == 1
+        with mock.patch.object(X, "EXIT_RETRY_MAX_PER_SESSION", 1), \
+                mock.patch.object(X.time, "time", return_value=next_session):
             X.manage(broker, held, "2026-08-12")
             assert len(broker.calls) == 2              # 다음 세션에만 다시 시도
             assert len([c for c in send.call_args_list if "재시도 상한" in c.args[0]]) == 2

@@ -2,18 +2,28 @@
 from __future__ import annotations
 
 import os
+import json
+import io
 import tempfile
 import time
 from unittest import mock
 
 from bot import kis_boot as B
+from bot import kis as K
 from bot import kis_reconcile as R
 from bot import ledger as L
+from bot import ownership as O
 
 
 def _paths(tmp: str) -> None:
     L.LEDGER_PATH = os.path.join(tmp, "orders.jsonl")
     os.environ["KIS_RECONCILE_STATUS_PATH"] = os.path.join(tmp, "status.json")
+    os.environ["USER_BASELINE_PATH"] = os.path.join(tmp, "baseline.json")
+    os.environ["SYMBOL_FREEZE_PATH"] = os.path.join(tmp, "freeze.json")
+    with open(os.environ["USER_BASELINE_PATH"], "w", encoding="utf-8") as fp:
+        json.dump({"symbols": []}, fp)
+    with open(os.environ["SYMBOL_FREEZE_PATH"], "w", encoding="utf-8") as fp:
+        json.dump({}, fp)
     B._STATE.update(done=False, low=0, last_success_at=None,
                     failure_streak=0, last_error="", failure_alerted=False)
 
@@ -69,6 +79,12 @@ def test_raw_response_trust_contract():
     assert R.trusted_response_rows(
         {"rt_cd": "0", "output1": [], "ctx_area_nk100": "NEXT"},
         domestic=True) is None
+    assert R.trusted_response_rows(
+        {"rt_cd": "0", "output": [], "_tr_cont": "F"}) is None
+    assert R.trusted_response_rows(
+        {"rt_cd": "0", "msg_cd": "20312000", "output": []}) is None
+    assert R.trusted_response_rows(
+        {"rt_cd": "0", "output": [{}] * 15}) is None
     raw = {"rt_cd": "0", "msg_cd": "20310000", "msg1": "query complete",
            "output": [{"odno": "38291", "ovrs_pdno": "TAP",
                        "sll_buy_dvsn_cd": "01", "ft_ord_qty": "80",
@@ -76,8 +92,55 @@ def test_raw_response_trust_contract():
     rows = R.trusted_response_rows(raw)
     norm = R.normalize_rows(None, {"rt_cd": "0", "output": rows})
     assert norm[0]["msg_cd"] == "20310000" and norm[0]["msg1"] == "query complete"
+    assert norm[0]["msg_source"] == "response"
     assert norm[0]["broker_reason"] == ""    # 일반 조회완료를 거절사유로 과장 금지
     print("[PASS] 원응답: rt_cd·연속키·행 스키마 완전성 계약")
+
+
+def test_kis_get_preserves_tr_cont_header():
+    response = io.BytesIO(b'{"rt_cd":"0","msg_cd":"20310000","output":[]}')
+    response.headers = {"tr_cont": "F"}
+    with mock.patch.object(K, "_token", return_value="test-token"), \
+            mock.patch.object(K, "_cred", return_value=("key", "secret")), \
+            mock.patch.object(K._LIMITER, "acquire", return_value=True), \
+            mock.patch.object(K.urllib.request, "urlopen", return_value=response):
+        raw = K._get("/read-only", "TEST", {})
+    assert raw["_tr_cont"] == "F"
+    assert R.trusted_response_rows(raw) is None
+    print("[PASS] KIS GET가 tr_cont 헤더를 보존해 절단 페이지를 차단")
+
+
+def test_absence_evidence_counts_and_ownership_gate():
+    with tempfile.TemporaryDirectory() as tmp:
+        _paths(tmp)
+        order = _ack()
+        unrelated_n = [{"odno": "91"}, {"odno": "92"}]
+        unrelated_c = [{"odno": "93"}]
+        rs, contradictions = R.resolve_acks_by_absence(
+            _proof(order, nccs=unrelated_n, ccnl=unrelated_c))
+        assert len(rs) == 1 and not contradictions
+        meta = L.state_of(order["key"])["reconcile_meta"]
+        assert meta["nccs_count"] == 2 and meta["ccnl_count"] == 1
+        assert meta["odno_absent"] is True
+
+    for mode in ("unarmed", "frozen", "baseline"):
+        with tempfile.TemporaryDirectory() as tmp:
+            _paths(tmp)
+            order = _ack()
+            if mode == "unarmed":
+                os.unlink(os.environ["USER_BASELINE_PATH"])
+            elif mode == "frozen":
+                with open(os.environ["SYMBOL_FREEZE_PATH"], "w",
+                          encoding="utf-8") as fp:
+                    json.dump({"TAP": {"why": "operator freeze"}}, fp)
+            else:
+                with open(os.environ["USER_BASELINE_PATH"], "w",
+                          encoding="utf-8") as fp:
+                    json.dump({"symbols": ["TAP"]}, fp)
+            rs, contradictions = R.resolve_acks_by_absence(_proof(order))
+            assert rs == contradictions == []
+            assert L.state_of(order["key"])["state"] == "ack"
+    print("[PASS] 부재 meta 실측 행수·미armed/동결/baseline 자동종결 차단")
 
 
 def test_failure_is_never_absence_and_age_gate():
@@ -178,6 +241,43 @@ def test_boot_tap_path_notifies_once_and_contradiction_does_not_fall_through():
     print("[PASS] 부재증명 SELL 경보 1회 · 잔고모순은 종결/잔고대사 모두 차단")
 
 
+def test_us_absence_scans_all_exchanges_and_keeps_live_order():
+    """원장 거래소가 틀리거나 없어도 다른 미국 거래소의 주문을 놓치지 않는다."""
+    for recorded_excg in ("NASD", ""):
+        with tempfile.TemporaryDirectory() as tmp:
+            _paths(tmp)
+            order = _ack(excg=recorded_excg)
+            empty = {"rt_cd": "0", "output": []}
+            live = {"rt_cd": "0", "output": [{
+                "odno": "38291", "ovrs_pdno": "TAP",
+                "sll_buy_dvsn_cd": "01", "ft_ord_qty": "80",
+                "ft_ccld_qty": "0", "nccs_qty": "80",
+            }]}
+            queried = []
+
+            def open_orders(excg="NASD"):
+                queried.append(("nccs", excg))
+                return live if excg == "NYSE" else empty
+
+            def fills(excg="NASD", start="", end=""):
+                queried.append(("ccnl", excg))
+                return empty
+
+            with mock.patch.object(B.kis, "market_of_symbol", return_value="US"), \
+                    mock.patch.object(B.kis, "open_orders", side_effect=open_orders), \
+                    mock.patch.object(B.kis, "fills", side_effect=fills), \
+                    mock.patch.object(B.kis, "holdings",
+                                      side_effect=lambda market, excg=None: {"TAP": 80}), \
+                    mock.patch.object(B.kis, "enabled", return_value=False), \
+                    mock.patch.object(B, "_notify") as sent:
+                assert B._resolve_acks() == []
+            assert {ex for kind, ex in queried if kind == "nccs"} == {
+                "NASD", "NYSE", "AMEX"}
+            assert L.state_of(order["key"])["state"] == "ack"
+            assert sent.call_count == 0
+    print("[PASS] US 3거래소 union: NYSE 생존 주문을 NASD/미기재 원장도 보존")
+
+
 def test_kr_mock_fallback_and_live_prohibition():
     empty = {"rt_cd": "0", "output": []}
     with tempfile.TemporaryDirectory() as tmp:
@@ -236,15 +336,38 @@ def test_reconcile_failure_streak_alert_once_and_reset():
     print("[PASS] 대사 실패 streak 증가·임계 1회 경보·성공 리셋")
 
 
+def test_shared_health_file_cannot_open_local_trading_gate():
+    """다른 프로세스가 쓴 진단 상태는 done/low를 전달하지 않는다."""
+    with tempfile.TemporaryDirectory() as tmp:
+        _paths(tmp)
+        path = os.environ["KIS_RECONCILE_STATUS_PATH"]
+        with open(path, "w", encoding="utf-8") as fp:
+            json.dump({"done": True, "low": 0, "failure_streak": 4,
+                       "last_error": "peer query failed"}, fp)
+        B._STATE.update(done=False, low=3, last_success_at=None,
+                        failure_streak=0, last_error="", failure_alerted=False)
+        B._record_success()
+        assert B._STATE["done"] is False and B._STATE["low"] == 3
+        with open(path, encoding="utf-8") as fp:
+            persisted = json.load(fp)
+        assert "done" not in persisted and "low" not in persisted
+        assert persisted["failure_streak"] == 0
+    print("[PASS] 공유 health 파일은 로컬 done/low 매매 게이트와 완전 분리")
+
+
 def main():
     test_tap_absence_proof_rejects_and_records_evidence()
     test_raw_response_trust_contract()
+    test_kis_get_preserves_tr_cont_header()
+    test_absence_evidence_counts_and_ownership_gate()
     test_failure_is_never_absence_and_age_gate()
     test_order_presence_partial_and_balance_contradiction_hold()
     test_closed_row_reason_is_sanitized_and_bounded()
     test_boot_tap_path_notifies_once_and_contradiction_does_not_fall_through()
+    test_us_absence_scans_all_exchanges_and_keeps_live_order()
     test_kr_mock_fallback_and_live_prohibition()
     test_reconcile_failure_streak_alert_once_and_reset()
+    test_shared_health_file_cannot_open_local_trading_gate()
     print("\n매도 거절 대사 검증 통과.")
 
 

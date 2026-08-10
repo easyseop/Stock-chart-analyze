@@ -164,6 +164,7 @@ def test_stuck_ack_alert_once_recovery_and_snapshot_count():
     from bot import ledger, notify
     with tempfile.TemporaryDirectory() as tmp:
         ledger.LEDGER_PATH = os.path.join(tmp, "orders.jsonl")
+        os.environ["ACK_STUCK_LATCH_PATH"] = os.path.join(tmp, "stuck.json")
         ledger._append({
             "ev": "submit", "key": "stuck:1", "symbol": "TAP",
             "intended": 80, "filled": 0, "state": "submitted",
@@ -181,6 +182,9 @@ def test_stuck_ack_alert_once_recovery_and_snapshot_count():
             assert ops_status.maybe_alert_stuck_acks()
             assert not ops_status.maybe_alert_stuck_acks()
             assert len(sent) == 1 and "ACK" in sent[0] and "TAP" in sent[0]
+            # 프로세스 메모리를 잃어도 디스크 래치가 중복 경보를 막는다.
+            ops_status._stuck_ack_alerted = set()
+            assert not ops_status.maybe_alert_stuck_acks()
             ledger.reconcile("stuck:1", 0)
             assert ops_status.maybe_alert_stuck_acks()
             assert len(sent) == 2 and "해소" in sent[1]

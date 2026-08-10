@@ -17,6 +17,7 @@
 from __future__ import annotations
 
 import datetime
+import fcntl
 import json
 import os
 import subprocess
@@ -27,6 +28,45 @@ _US_EXCGS = ("NASD", "NYSE", "AMEX")
 ACK_STUCK_ALERT_S = int(
     os.environ.get("ACK_STUCK_ALERT_S", "1800") or 1800)
 _stuck_ack_alerted: set[str] = set()
+
+
+def _stuck_latch_path() -> str:
+    from bot import ledger
+    return os.environ.get(
+        "ACK_STUCK_LATCH_PATH",
+        os.path.join(os.path.dirname(ledger.LEDGER_PATH), "ack_stuck_alerts.json"))
+
+
+def _swap_stuck_latch(current: set[str]) -> set[str]:
+    """방치 ACK 알림 래치를 프로세스 재시작 뒤에도 유지한다."""
+    global _stuck_ack_alerted
+    path = _stuck_latch_path()
+    parent = os.path.dirname(path) or "."
+    os.makedirs(parent, exist_ok=True)
+    try:
+        with open(path + ".lock", "a+", encoding="utf-8") as lock:
+            os.chmod(path + ".lock", 0o600)
+            fcntl.flock(lock.fileno(), fcntl.LOCK_EX)
+            try:
+                with open(path, encoding="utf-8") as fp:
+                    raw = json.load(fp)
+                previous = {str(k) for k in raw if str(k)} \
+                    if isinstance(raw, list) else set()
+            except (FileNotFoundError, OSError, UnicodeError, json.JSONDecodeError):
+                previous = set(_stuck_ack_alerted)
+            tmp = f"{path}.tmp.{os.getpid()}"
+            with open(tmp, "w", encoding="utf-8") as fp:
+                json.dump(sorted(current), fp, separators=(",", ":"))
+                fp.flush()
+                os.fsync(fp.fileno())
+            os.chmod(tmp, 0o600)
+            os.replace(tmp, path)
+            _stuck_ack_alerted = set(current)
+            return previous
+    except OSError:
+        previous = set(_stuck_ack_alerted)
+        _stuck_ack_alerted = set(current)
+        return previous
 
 
 def _stuck_ack_rows(now: float | None = None) -> list[dict]:
@@ -54,19 +94,21 @@ def maybe_alert_stuck_acks(now: float | None = None) -> bool:
         rows = _stuck_ack_rows(now)
         current = {str(row.get("key") or "") for row in rows if row.get("key")}
         by_key = {str(row.get("key")): row for row in rows if row.get("key")}
+        previous = _swap_stuck_latch(current)
         sent = False
-        for key in sorted(current - _stuck_ack_alerted):
+        for key in sorted(current - previous):
             row = by_key[key]
             notify.send(
                 f"⚠️ 주문 ACK {max(1, ACK_STUCK_ALERT_S // 60)}분 초과 — "
                 f"{row.get('symbol')} {str(row.get('side') or '').upper()} 대사 필요",
                 critical=True, category="trade")
             sent = True
-        for _key in sorted(_stuck_ack_alerted - current):
-            notify.send("✅ 주문 ACK 방치 해소 — 대사 잠금 해제 확인",
+        resolved = previous - current
+        if resolved:
+            notify.send(f"✅ 주문 ACK 방치 {len(resolved)}건 해소 — "
+                        "대사 잠금 해제 확인",
                         critical=True, category="trade")
             sent = True
-        _stuck_ack_alerted = current
         return sent
     except Exception:
         return False

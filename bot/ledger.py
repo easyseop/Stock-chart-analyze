@@ -449,8 +449,8 @@ def record_reconcile_meta(key: str, *, reason: str, meta: dict) -> None:
     내부키가 meta로 흘러드는 것을 막는다.
     """
     allowed = {
-        "source", "msg_cd", "msg1", "broker_reason",
-        "nccs_count", "ccnl_count", "hldg_before", "hldg_now",
+        "source", "msg_cd", "msg1", "msg_source", "broker_reason",
+        "nccs_count", "ccnl_count", "odno_absent", "hldg_before", "hldg_now",
         "side", "intended",
     }
     def safe_value(value):
