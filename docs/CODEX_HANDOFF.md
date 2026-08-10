@@ -1852,3 +1852,17 @@ V2 검증은 Python 전체 `52/52`, Node `19/19`, compileall, JS syntax,
 대응 테스트가 exit 1로 실패해 KILLED됨을 확인했다. 현재 단계는 V2 전체 tracked ZIP을 Claude에게
 다시 보내 20개 반례와 신규 9개 반례를 재검토받는 것이다. P0/P1=0과 사용자
 별도 승인 전에는 병합·Oracle 배포를 하지 않는다.
+
+Claude V2 판정(`5503683e`)은 P0 0·P1 0·P2 2·P3 3의 조건부 승인이었다.
+병합 전 권고 P2 두 건을 `60b517c`에서 모두 반영했다. 동일 종목의 fresh
+in-flight가 공존하면 오래된 ACK 부재증명을 막는 회귀를 추가했고, 대사 실패
+및 ACK 방치/회복 경보는 `notify.send` 성공 뒤에만 래치하도록 바꿨다. 전송
+실패는 다음 사이클에 재시도하며, 전송 중 성공 대사가 들어오면 과거 실패
+래치를 다시 잠그지 않는다. 상세 증거는
+`docs/CLAUDE_REVIEW_SELL_REJECT_RECONCILE_P2_RESPONSE.md`에 기록했다.
+
+P2 후속 전체 검증은 Python `52/52`, Node `19/19`, compileall, JS syntax,
+`git diff --check`를 통과했다. MA 동일 뮤테이션, 대사 경보 선잠금 회귀,
+ACK 경보 선잠금 회귀도 각각 대응 테스트가 exit 1로 실패해 KILLED됐다.
+Claude 전면 재검토는 불필요하고 위 증거만 제출하면 된다. 사용자 승인 전
+병합·Oracle 배포는 여전히 금지다.
