@@ -147,6 +147,12 @@ JS syntax, diff check 통과. 기본 `/usr/local` Node는 삭제된 ICU 71을
 | M4 잔고 불변 검사 제거 | 동일 테스트의 contradiction assertion | 1 |
 | M5 live에서 KR mock 폴백 허용 | `test_kr_mock_fallback_and_live_prohibition`, `call_count == 0` | 1 |
 | M6 R5 세션 상한 검사 제거 | `test_time_btgt_retry_keys_are_session_capped_and_legacy_compatible` | 1 |
+| M7 미국 3거래소 union을 원장 거래소 1개로 축소 | `test_us_absence_scans_all_exchanges_and_keeps_live_order`, line 273 | 1 |
+| M8 `tr_cont` 헤더 연속페이지 검사 제거 | `test_raw_response_trust_contract`, line 82 | 1 |
+| M9 ownership baseline·동결 가드 제거 | `test_absence_evidence_counts_and_ownership_gate`, line 141 | 1 |
+| M10 근거 행수를 0으로 고정 | `test_absence_evidence_counts_and_ownership_gate`, line 123 | 1 |
+| M11 미국 R5 세션을 KST로 회귀 | `test_time_btgt_retry_keys_are_session_capped_and_legacy_compatible`, line 202 | 1 |
+| M12 ACK 래치를 프로세스 메모리로 회귀 | `test_stuck_ack_alert_once_recovery_and_snapshot_count`, line 187 | 1 |
 
 ## 판정 형식
 

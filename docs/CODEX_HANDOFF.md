@@ -1848,6 +1848,7 @@ Claude 1차 검토는 P0 1·P1 2·P2 3으로 차단했다. 지적은 미국 거�
 `docs/CLAUDE_REVIEW_SELL_REJECT_RECONCILE_RESULT.md`에 기록했다.
 
 V2 검증은 Python 전체 `52/52`, Node `19/19`, compileall, JS syntax,
-`git diff --check`를 통과했다. 현재 단계는 V2 전체 tracked ZIP을 Claude에게
+`git diff --check`를 통과했다. 신규 안전장치 M7~M12 뮤테이션도 모두
+대응 테스트가 exit 1로 실패해 KILLED됨을 확인했다. 현재 단계는 V2 전체 tracked ZIP을 Claude에게
 다시 보내 20개 반례와 신규 9개 반례를 재검토받는 것이다. P0/P1=0과 사용자
 별도 승인 전에는 병합·Oracle 배포를 하지 않는다.
