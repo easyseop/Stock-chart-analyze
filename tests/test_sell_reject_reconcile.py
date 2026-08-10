@@ -59,6 +59,19 @@ def test_tap_absence_proof_rejects_and_records_evidence():
     print("[PASS] TAP 형태: 600s+·두 주문조회 부재·잔고불변 → rejected+근거")
 
 
+def test_raw_response_trust_contract():
+    assert R.trusted_response_rows({"rt_cd": "0", "output": []}) == []
+    assert R.trusted_response_rows({"rt_cd": "1", "output": []}) is None
+    assert R.trusted_response_rows(
+        {"rt_cd": "0", "output": [], "ctx_area_nk200": "NEXT"}) is None
+    assert R.trusted_response_rows({"rt_cd": "0"}) is None
+    assert R.trusted_response_rows({"rt_cd": "0", "output": {}}) is None
+    assert R.trusted_response_rows(
+        {"rt_cd": "0", "output1": [], "ctx_area_nk100": "NEXT"},
+        domestic=True) is None
+    print("[PASS] 원응답: rt_cd·연속키·행 스키마 완전성 계약")
+
+
 def test_failure_is_never_absence_and_age_gate():
     bad_proofs = [
         {"nccs_rows": None, "ccnl_rows": [], "holdings": {"TAP": 80}},
@@ -215,6 +228,7 @@ def test_reconcile_failure_streak_alert_once_and_reset():
 
 def main():
     test_tap_absence_proof_rejects_and_records_evidence()
+    test_raw_response_trust_contract()
     test_failure_is_never_absence_and_age_gate()
     test_order_presence_partial_and_balance_contradiction_hold()
     test_closed_row_reason_is_sanitized_and_bounded()
