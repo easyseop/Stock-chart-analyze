@@ -84,3 +84,28 @@ in-flight가 공존하는 회귀 테스트 1개를 추가하라.
 
 P2 2건 반영 후: 신규 테스트 이름과 래치 순서 diff, 그리고 기존 스위트
 무손상 증거만 제출하면 된다(전면 재검토 불필요 — 해당 부위만 확인).
+
+---
+
+## P2 반영 확인 추기 (2026-08-11 01:5x) — **최종 승인**
+
+Codex 반영 커밋 `60b517cf`(+증거 `bb4f98ac`)를 독립 검증했다.
+
+- **번들 대응 확인**: 검토했던 ZIP의 코드는 브랜치 `7a3509e9`와 바이트
+  일치. 검토 이후 신규 코드는 `60b517cf` 하나뿐이며 diff 범위가
+  kis_boot 래치·ops_status 래치·테스트 2파일로 국한됨(주문·kill 경로 무변경).
+- **P2-1 해소**: 신규 회귀
+  `test_absence_reject_requires_single_symbol_inflight` 확인. 검토자
+  뮤테이션 MA(`open_count != 1` 가드 제거) 재실행 → **exit=1 KILLED**
+  (`assert rs == contradictions == []`).
+- **P2-2 해소**: 두 래치 모두 "전송 성공 후 잠금"으로 변경 —
+  `_mark_failure_alerted`는 expected_streak 비교로 전송 중 성공 리셋과의
+  경쟁을 방어하고, `maybe_alert_stuck_acks`는 read→send→성공분만
+  `_update_stuck_latch(add/remove)` 원자 반영. 디스크 실패 시 "중복 감수·
+  유실 회피" 방향 선택 — 타당. **P3-1(무변화 시 재기록)도 함께 해소.**
+- 집중 6모듈 PASS, `run_all` 51/52 + `test_ownership_baseline`(알려진
+  /tmp 워크트리 아티팩트, 코드 결함 아님).
+
+**최종 판정: 승인 — P0 0 · P1 0 · P2 0 · 잔여 P3 2건(비차단: 페이지 포화
+시 fill_price 정밀도, 상한 알림 문구).** 병합·Oracle 배포는 사용자 승인
+후에만 진행한다.
