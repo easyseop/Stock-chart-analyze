@@ -1,10 +1,10 @@
 {
- "generated_at": "2026-08-11T01:01:09.962573+09:00",
+ "generated_at": "2026-08-11T01:43:27.590734+09:00",
  "updated": "2026-08-11",
  "start": 100000000,
- "cash": 32385352,
- "equity": 101186265,
- "ret_pct": 1.19,
+ "cash": 32568976,
+ "equity": 101321337,
+ "ret_pct": 1.32,
  "positions": [
   {
    "code": "MRSH",
@@ -12,14 +12,14 @@
    "ccy": "USD",
    "q": 36,
    "avg": 174.3075,
-   "price": 190.88999938964844,
+   "price": 190.77999877929688,
    "stop": 184.80249938964843,
    "target": 192.2575,
    "half_done": true,
    "opened": "2026-07-06",
-   "pl_krw": 846014,
-   "pl_pct": 9.51,
-   "price_age_min": 6.6
+   "pl_krw": 840402,
+   "pl_pct": 9.45,
+   "price_age_min": 7.3
   },
   {
    "code": "HMC",
@@ -27,29 +27,14 @@
    "ccy": "USD",
    "q": 2,
    "avg": 27.665,
-   "price": 31.700000762939453,
+   "price": 31.71500015258789,
    "stop": 29.60260064086914,
    "target": 30.5824,
    "half_done": true,
    "opened": "2026-07-09",
-   "pl_krw": 11437,
-   "pl_pct": 14.59,
-   "price_age_min": 9.8
-  },
-  {
-   "code": "SARO",
-   "name": "StandardAero, Inc.",
-   "ccy": "USD",
-   "q": 81,
-   "avg": 27.9,
-   "price": 28.374000549316406,
-   "stop": 28.4517,
-   "target": 31.9643,
-   "half_done": true,
-   "opened": "2026-07-10",
-   "pl_krw": 54411,
-   "pl_pct": 1.7,
-   "price_age_min": 6.6
+   "pl_krw": 11479,
+   "pl_pct": 14.64,
+   "price_age_min": 10.1
   },
   {
    "code": "J",
@@ -57,14 +42,14 @@
    "ccy": "USD",
    "q": 32,
    "avg": 126.585,
-   "price": 146.60000610351562,
+   "price": 146.7949981689453,
    "stop": 136.33490732421876,
    "target": 141.2316,
    "half_done": true,
    "opened": "2026-07-11",
-   "pl_krw": 907676,
-   "pl_pct": 15.81,
-   "price_age_min": 6.6
+   "pl_krw": 916519,
+   "pl_pct": 15.97,
+   "price_age_min": 7.3
   },
   {
    "code": "MAIN",
@@ -72,14 +57,14 @@
    "ccy": "USD",
    "q": 39,
    "avg": 53.96,
-   "price": 57.970001220703125,
+   "price": 57.9900016784668,
    "stop": 55.83619877929688,
    "target": 58.7184,
    "half_done": true,
    "opened": "2026-07-22",
-   "pl_krw": 221633,
-   "pl_pct": 7.43,
-   "price_age_min": 8.8
+   "pl_krw": 222738,
+   "pl_pct": 7.47,
+   "price_age_min": 9.2
   },
   {
    "code": "004370",
@@ -94,7 +79,7 @@
    "opened": "2026-07-27",
    "pl_krw": 285000,
    "pl_pct": 7.73,
-   "price_age_min": 6.6
+   "price_age_min": 7.3
   },
   {
    "code": "EQT",
@@ -102,14 +87,14 @@
    "ccy": "USD",
    "q": 242,
    "avg": 51.375,
-   "price": 53.22499847412109,
+   "price": 53.52000045776367,
    "stop": 48.5008,
    "target": 57.1234,
    "half_done": false,
    "opened": "2026-07-29",
-   "pl_krw": 634471,
-   "pl_pct": 3.6,
-   "price_age_min": 6.6
+   "pl_krw": 735644,
+   "pl_pct": 4.18,
+   "price_age_min": 7.8
   },
   {
    "code": "MDT",
@@ -117,14 +102,14 @@
    "ccy": "USD",
    "q": 93,
    "avg": 86.12,
-   "price": 88.67500305175781,
+   "price": 88.87999725341797,
    "stop": 81.6215,
    "target": 95.117,
    "half_done": false,
    "opened": "2026-07-30",
-   "pl_krw": 336744,
-   "pl_pct": 2.97,
-   "price_age_min": 6.6
+   "pl_krw": 363761,
+   "pl_pct": 3.2,
+   "price_age_min": 7.3
   },
   {
    "code": "AVY",
@@ -132,14 +117,14 @@
    "ccy": "USD",
    "q": 28,
    "avg": 169.73,
-   "price": 177.36000061035156,
+   "price": 177.55999755859375,
    "stop": 158.3847,
    "target": 192.4206,
    "half_done": false,
    "opened": "2026-08-03",
-   "pl_krw": 302766,
-   "pl_pct": 4.5,
-   "price_age_min": 6.6
+   "pl_krw": 310702,
+   "pl_pct": 4.61,
+   "price_age_min": 7.3
   },
   {
    "code": "DPZ",
@@ -147,14 +132,29 @@
    "ccy": "USD",
    "q": 10,
    "avg": 353.285,
-   "price": 346.7349853515625,
+   "price": 346.0599975585937,
    "stop": 328.6353,
    "target": 402.5845,
    "half_done": false,
    "opened": "2026-08-07",
-   "pl_krw": -92826,
-   "pl_pct": -1.85,
-   "price_age_min": 8.2
+   "pl_krw": -102391,
+   "pl_pct": -2.05,
+   "price_age_min": 8.7
+  },
+  {
+   "code": "UFPI",
+   "name": "UFP Industries, Inc.",
+   "ccy": "USD",
+   "q": 24,
+   "avg": 90.485,
+   "price": 90.48500061035156,
+   "stop": 84.0446,
+   "target": 103.3659,
+   "half_done": false,
+   "opened": "2026-08-11",
+   "pl_krw": 0,
+   "pl_pct": 0.0,
+   "price_age_min": 9.3
   }
  ],
  "pending": [
@@ -213,18 +213,18 @@
    "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권35% · 체크6/6 · 손절폭9.6%"
   }
  ],
- "trades": 10,
- "win_trades": 8,
+ "trades": 11,
+ "win_trades": 9,
  "pos_cap_pct": 33.3,
  "cap_violations": [],
  "rule_violations": [],
  "fx": 1417.18,
  "stats": {
   "all": {
-   "n": 10,
-   "win": 8,
-   "win_rate": 80,
-   "avg_r": 0.25
+   "n": 11,
+   "win": 9,
+   "win_rate": 82,
+   "avg_r": 0.28
   },
   "by_mode": {
    "full": {
@@ -234,10 +234,10 @@
     "avg_r": -0.61
    },
    "half": {
-    "n": 3,
-    "win": 3,
+    "n": 4,
+    "win": 4,
     "win_rate": 100,
-    "avg_r": 0.77
+    "avg_r": 0.73
    },
    "pullback": {
     "n": 4,
@@ -247,10 +247,10 @@
    }
   },
   "fresh": {
-   "n": 9,
-   "win": 7,
-   "win_rate": 78,
-   "avg_r": 0.23
+   "n": 10,
+   "win": 8,
+   "win_rate": 80,
+   "avg_r": 0.27
   },
   "stale": {
    "n": 1,
@@ -260,10 +260,10 @@
   },
   "by_stage": {
    "3": {
-    "n": 10,
-    "win": 8,
-    "win_rate": 80,
-    "avg_r": 0.25
+    "n": 11,
+    "win": 9,
+    "win_rate": 82,
+    "avg_r": 0.28
    }
   },
   "by_ccy": {
@@ -274,16 +274,58 @@
     "avg_r": 0.38
    },
    "USD": {
-    "n": 9,
-    "win": 7,
-    "win_rate": 78,
-    "avg_r": 0.23
+    "n": 10,
+    "win": 8,
+    "win_rate": 80,
+    "avg_r": 0.27
    }
   },
-  "slip_entry_pct": -0.54,
+  "slip_entry_pct": -0.49,
   "slip_stop_pct": -1.14
  },
  "closed": [
+  {
+   "code": "SARO",
+   "name": "StandardAero, Inc.",
+   "ccy": "USD",
+   "ctx": {
+    "mode": "half",
+    "fresh": true,
+    "stage": 3,
+    "rp": 38,
+    "rec": 4,
+    "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권38% · 체크4/6 · 손절폭7.3%"
+   },
+   "plan": {
+    "entry": 27.9,
+    "stop": 25.8678,
+    "target": 31.9643,
+    "pb": null,
+    "tactic": "half"
+   },
+   "fill": {
+    "avg": 27.9,
+    "q": 161
+   },
+   "exits": [
+    {
+     "d": "2026-07-29",
+     "q": 80,
+     "price": 30.04,
+     "note": "+1R 절반 익절"
+    },
+    {
+     "d": "2026-08-11",
+     "q": 81,
+     "price": 28.41,
+     "note": "트레일 스탑"
+    }
+   ],
+   "opened": "2026-07-10",
+   "closed": "2026-08-11",
+   "pl": 307482,
+   "r": 0.62
+  },
   {
    "code": "CRC",
    "name": "California Resources Corporation",
@@ -820,10 +862,37 @@
   },
   {
    "d": "2026-08-11",
-   "v": 101186265
+   "v": 101321337
   }
  ],
  "log": [
+  {
+   "d": "2026-08-11",
+   "type": "buy",
+   "code": "UFPI",
+   "name": "UFP Industries, Inc.",
+   "q": 24,
+   "price": 90.485,
+   "ccy": "USD",
+   "amt": 3077605,
+   "note": "반반 1차 — 🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권31% · 체크6/6 · 손절폭7.1%",
+   "stop": 84.0446,
+   "target": 103.3659
+  },
+  {
+   "d": "2026-08-11",
+   "type": "sell",
+   "code": "SARO",
+   "name": "StandardAero, Inc.",
+   "q": 81,
+   "price": 28.41,
+   "ccy": "USD",
+   "amt": 3261229,
+   "note": "트레일 스탑",
+   "pl": 58544,
+   "pl_pct": 1.8,
+   "r": 0.62
+  },
   {
    "d": "2026-08-10",
    "type": "order",
@@ -1431,30 +1500,6 @@
    "note": "눌림 지정가 체결 — 🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권28% · 체크4/6 · 손절폭9.4%",
    "stop": 51.1158,
    "target": 67.0734
-  },
-  {
-   "d": "2026-07-08",
-   "type": "buy",
-   "code": "ORC",
-   "name": "Orchid Island Capital, Inc.",
-   "q": 4,
-   "price": 6.81,
-   "ccy": "USD",
-   "amt": 41245,
-   "note": "즉시 분할 — 🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권20% · 체크4/6 · 손절폭3.8%",
-   "stop": 6.5493,
-   "target": 7.3314
-  },
-  {
-   "d": "2026-07-08",
-   "type": "order",
-   "code": "SOFI",
-   "name": "SoFi Technologies, Inc.",
-   "q": 18,
-   "price": 16.6667,
-   "ccy": "USD",
-   "amt": 454243,
-   "note": "눌림 지정가 주문(추격 금지) — 🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권17% · 체크5/6 · 손절폭10.6%"
   }
  ],
  "lane": "bulk",
