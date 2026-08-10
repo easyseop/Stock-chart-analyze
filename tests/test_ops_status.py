@@ -114,12 +114,58 @@ def test_read_only_no_order_paths():
     print("[PASS] 주문·kill 변경 경로 0(읽기 전용)")
 
 
+def test_kill_remind_cycle():
+    """L1 유지 → 한 주기 뒤부터 리마인드, 주기 내 침묵, L0 복구 1회 알림."""
+    from bot import kill, notify
+    sent = []
+    iv = ops_status.KILL_REMIND_INTERVAL_S
+    with mock.patch.object(notify, "send",
+                           lambda text, **kw: sent.append(text) or True), \
+            mock.patch.object(kill, "level", lambda: 1), \
+            mock.patch.object(kill, "status",
+                              lambda: {"level": 1, "who": "watchdog",
+                                       "why": "잔고 플래핑", "ts": 1000.0}):
+        ops_status._kill_last_level = None
+        ops_status._kill_remind_at = 0.0
+        assert not ops_status.maybe_remind_kill(now=1000.0)     # 첫 관찰 — 침묵
+        assert not ops_status.maybe_remind_kill(now=1000.0 + iv - 1)
+        assert ops_status.maybe_remind_kill(now=1000.0 + iv + 1)  # 한 주기 뒤
+        assert len(sent) == 1 and "L1 유지" in sent[0], sent
+        assert "잔고 플래핑" in sent[0]                          # 사유 표시
+        assert not ops_status.maybe_remind_kill(now=1000.0 + iv + 2)  # 주기 내 침묵
+        assert ops_status.maybe_remind_kill(now=1000.0 + 2 * iv + 2)  # 다음 주기
+    with mock.patch.object(notify, "send",
+                           lambda text, **kw: sent.append(text) or True), \
+            mock.patch.object(kill, "level", lambda: 0):
+        assert ops_status.maybe_remind_kill(now=1000.0 + 2 * iv + 3)  # 복구 1회
+        assert "L0 복구" in sent[-1]
+        assert not ops_status.maybe_remind_kill(now=1000.0 + 2 * iv + 4)  # 반복 없음
+    assert len(sent) == 3, sent
+    print("[PASS] kill 리마인드: 주기 발송·주기 내 침묵·L0 복구 1회")
+
+
+def test_kill_remind_restart_no_spam():
+    """프로세스 재시작 직후(L1 지속 중)엔 즉시 안 울리고 한 주기 뒤부터."""
+    from bot import kill, notify
+    sent = []
+    with mock.patch.object(notify, "send",
+                           lambda text, **kw: sent.append(text) or True), \
+            mock.patch.object(kill, "level", lambda: 1):
+        ops_status._kill_last_level = None      # 재시작 상태
+        ops_status._kill_remind_at = 0.0
+        assert not ops_status.maybe_remind_kill(now=5000.0)
+        assert sent == []
+    print("[PASS] kill 리마인드: 재시작 직후 스팸 없음")
+
+
 def main():
     test_snapshot_shape_and_no_secrets()
     test_query_failure_is_reported_not_raised()
     test_publish_posts_to_ops_topic_and_failure_is_harmless()
     test_maybe_publish_respects_interval()
     test_read_only_no_order_paths()
+    test_kill_remind_cycle()
+    test_kill_remind_restart_no_spam()
     print("\n서버 자가진단 발행 검증 통과 — 읽기전용·무시크릿·실패무해.")
 
 

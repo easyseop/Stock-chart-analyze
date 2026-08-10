@@ -125,6 +125,57 @@ def maybe_publish() -> bool:
     return publish()
 
 
+# ── kill L1+ 지속 리마인드(사용자 요청 2026-08-10) ─────────────────────────
+# 8/7 밤 워치독 자동 상향이 주말 내내 L1로 남아 월요일 매수가 통째로 빠진 사건
+#   재발 방지: 상향 순간의 즉시 경보(kill 모듈이 발송)와 별개로, L1 이상이
+#   '유지되는 동안' 주기적으로 알려 잊히지 않게 한다. L0 복구도 1회 알린다.
+KILL_REMIND_INTERVAL_S = int(
+    os.environ.get("KILL_REMIND_INTERVAL_S", "14400") or 14400)   # 기본 4시간
+_kill_remind_at = 0.0        # 다음 리마인드 허용 시각
+_kill_last_level = None      # 마지막 관찰 레벨(전환 감지·재시작 시 None)
+
+
+def maybe_remind_kill(now: float | None = None) -> bool:
+    """kill 레벨을 관찰해 L1+ 지속 리마인드·L0 복구 알림을 보낸다(실패 무해).
+
+    · 상향 직후는 kill 모듈의 즉시 경보가 있으므로 첫 리마인드는 한 주기 뒤.
+    · 프로세스 재시작 직후도 즉시 울리지 않는다(재시작 스팸 방지, prev=None).
+    · critical=True로 보내 NOTIFY_MODE=trade_only에서도 걸러지지 않는다.
+    """
+    global _kill_remind_at, _kill_last_level
+    try:
+        from bot import kill, notify
+        t = time.time() if now is None else float(now)
+        lv = kill.level()
+        prev = _kill_last_level
+        _kill_last_level = lv
+        if lv <= 0:
+            _kill_remind_at = 0.0
+            if prev is not None and prev >= 1:
+                notify.send("✅ kill-switch L0 복구 관찰 — 신규매수 재개",
+                            critical=True)
+                return True
+            return False
+        if prev is None or prev <= 0:      # 방금 상향/재시작 — 한 주기 뒤부터
+            _kill_remind_at = t + max(600, KILL_REMIND_INTERVAL_S)
+            return False
+        if t < _kill_remind_at:
+            return False
+        _kill_remind_at = t + max(600, KILL_REMIND_INTERVAL_S)
+        st = kill.status()
+        since_h = (t - st["ts"]) / 3600 if st.get("ts") else None
+        dur = f" {since_h:.1f}시간째" if since_h and 0 < since_h < 24 * 30 else ""
+        why = f" · 사유: {st['why']}" if st.get("why") else ""
+        notify.send(
+            f"⏳ kill-switch L{lv} 유지 중{dur} — 신규매수 차단, "
+            f"매도 보호는 정상{why}\n"
+            "해제하려면: 서버 readiness(--scope l0) GO 확인 후 kill 하향",
+            critical=True)
+        return True
+    except Exception:
+        return False
+
+
 if __name__ == "__main__":
     import sys
     sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))

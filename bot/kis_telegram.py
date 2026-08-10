@@ -462,6 +462,7 @@ def main() -> int:
         try:
             from bot import ops_status
             ops_status.maybe_publish()
+            ops_status.maybe_remind_kill()   # L1+ 지속 리마인드(2026-08-10)
         except Exception:
             pass
         try:

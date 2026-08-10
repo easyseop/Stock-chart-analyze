@@ -109,6 +109,21 @@ def level() -> int:
     return max(0, min(4, max(file_lv, env_lv)))
 
 
+def status() -> dict:
+    """상태 파일 내용(level/who/why/ts) — 조회 전용. 레벨 판정은 level() 사용.
+
+    리마인드 알림(ops_status)이 '언제·왜 올라갔나'를 표시할 때 쓴다.
+    파일이 없거나 손상이면 사유 없이 level()만 신뢰한다.
+    """
+    try:
+        with open(_path(), encoding="utf-8") as f:
+            d = json.load(f)
+        return {"level": int(d.get("level", 0)), "who": str(d.get("who", "")),
+                "why": str(d.get("why", "")), "ts": float(d.get("ts", 0) or 0)}
+    except Exception:
+        return {"level": level(), "who": "", "why": "", "ts": 0.0}
+
+
 def raise_level(lv: int, who: str, why: str) -> int:
     """레벨 상향(자동/수동 모두 허용). 하향 시도는 무시(래치)."""
     lv = max(0, min(4, int(lv)))
