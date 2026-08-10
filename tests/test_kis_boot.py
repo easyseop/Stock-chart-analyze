@@ -131,11 +131,14 @@ def test_fill_notifications_use_explicit_trade_category():
                                return_value=[]), \
              mock.patch.object(B, "_notify") as send:
             assert B._resolve_acks() == resolved
-        assert send.call_count == 2                # rejected 0주는 체결 알림 금지
+        assert send.call_count == 3                # 양수 체결 2건 + 거절 종결 1건
         assert send.call_args_list[0].kwargs == {
             "critical": False, "category": "trade"}
         assert send.call_args_list[1].kwargs == {
             "critical": True, "category": "trade"}
+        assert send.call_args_list[2].kwargs == {
+            "critical": False, "category": "trade"}
+        assert "거절 종결" in send.call_args_list[2].args[0]
     print("[PASS] 양수 체결만 trade 알림·거절 0주는 체결 알림 없음")
 
 

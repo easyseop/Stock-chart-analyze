@@ -109,6 +109,7 @@ def test_diag_is_read_only_and_reports_failures():
     assert "KIS 잔고 조회" in text and "KR(1)" in text     # 시장별 실측 표시
     assert "KIS_ENV=mock" in text and "STAGE=mirror" in text
     assert "주문" in text                                  # 원장 요약 존재
+    assert "대사:" in text and "연속 실패" in text
     # 전 시장 조회 실패 — 예외 없이 실패 표기 + 손절 차단 경고.
     _install(fail=True)
     with mock.patch.object(subprocess, "run",

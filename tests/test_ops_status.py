@@ -8,6 +8,8 @@ import json
 import os
 import subprocess
 import sys
+import tempfile
+import time
 from unittest import mock
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -158,6 +160,65 @@ def test_kill_remind_restart_no_spam():
     print("[PASS] kill 리마인드: 재시작 직후 스팸 없음")
 
 
+def test_stuck_ack_alert_once_recovery_and_snapshot_count():
+    from bot import ledger, notify
+    with tempfile.TemporaryDirectory() as tmp:
+        ledger.LEDGER_PATH = os.path.join(tmp, "orders.jsonl")
+        os.environ["ACK_STUCK_LATCH_PATH"] = os.path.join(tmp, "stuck.json")
+        ledger._append({
+            "ev": "submit", "key": "stuck:1", "symbol": "TAP",
+            "intended": 80, "filled": 0, "state": "submitted",
+            "reason": "time", "meta": {"side": "SELL", "market": "US"},
+            "ts": time.time() - ops_status.ACK_STUCK_ALERT_S - 1,
+        })
+        ledger.on_result("stuck:1", "ack", 0)
+        sent = []
+        ops_status._stuck_ack_alerted = set()
+        patches = _quiet_probes()
+        with mock.patch.object(notify, "send",
+                               side_effect=lambda text, **kw: sent.append(text) or True), \
+                patches[0], patches[1], patches[2]:
+            assert ops_status.snapshot()["stuck_acks"] == 1
+            assert ops_status.maybe_alert_stuck_acks()
+            assert not ops_status.maybe_alert_stuck_acks()
+            assert len(sent) == 1 and "ACK" in sent[0] and "TAP" in sent[0]
+            # 프로세스 메모리를 잃어도 디스크 래치가 중복 경보를 막는다.
+            ops_status._stuck_ack_alerted = set()
+            assert not ops_status.maybe_alert_stuck_acks()
+            ledger.reconcile("stuck:1", 0)
+            assert ops_status.maybe_alert_stuck_acks()
+            assert len(sent) == 2 and "해소" in sent[1]
+            assert not ops_status.maybe_alert_stuck_acks()
+            assert ops_status.snapshot()["stuck_acks"] == 0
+    print("[PASS] ACK 방치: 행별 1회·중복 억제·해소 1회·스냅샷 수량")
+
+
+def test_stuck_ack_alert_latches_only_after_delivery():
+    from bot import ledger, notify
+    with tempfile.TemporaryDirectory() as tmp:
+        ledger.LEDGER_PATH = os.path.join(tmp, "orders.jsonl")
+        os.environ["ACK_STUCK_LATCH_PATH"] = os.path.join(tmp, "stuck.json")
+        ledger._append({
+            "ev": "submit", "key": "stuck:retry", "symbol": "TAP",
+            "intended": 80, "filled": 0, "state": "submitted",
+            "reason": "time", "meta": {"side": "SELL", "market": "US"},
+            "ts": time.time() - ops_status.ACK_STUCK_ALERT_S - 1,
+        })
+        ledger.on_result("stuck:retry", "ack", 0)
+        ops_status._stuck_ack_alerted = set()
+        delivery = mock.Mock(side_effect=[False, True, False, True])
+        with mock.patch.object(notify, "send", delivery):
+            assert not ops_status.maybe_alert_stuck_acks()   # 실패 → 미래 재시도
+            assert ops_status.maybe_alert_stuck_acks()       # 성공 → 그때 래치
+            assert not ops_status.maybe_alert_stuck_acks()   # 중복 0
+            ledger.reconcile("stuck:retry", 0)
+            assert not ops_status.maybe_alert_stuck_acks()   # 회복 실패 → 래치 유지
+            assert ops_status.maybe_alert_stuck_acks()       # 회복 성공 → 제거
+            assert not ops_status.maybe_alert_stuck_acks()
+        assert delivery.call_count == 4
+    print("[PASS] ACK/회복 경보 전송 실패는 미래 재시도·성공 뒤에만 래치")
+
+
 def main():
     test_snapshot_shape_and_no_secrets()
     test_query_failure_is_reported_not_raised()
@@ -166,6 +227,8 @@ def main():
     test_read_only_no_order_paths()
     test_kill_remind_cycle()
     test_kill_remind_restart_no_spam()
+    test_stuck_ack_alert_once_recovery_and_snapshot_count()
+    test_stuck_ack_alert_latches_only_after_delivery()
     print("\n서버 자가진단 발행 검증 통과 — 읽기전용·무시크릿·실패무해.")
 
 

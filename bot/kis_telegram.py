@@ -355,7 +355,21 @@ def _diag_text() -> str:
     except Exception as e:
         L.append(f"원장: 확인 실패({type(e).__name__})")
 
-    # 5) 신호 피드 나이(파수꾼 참고 손절선 소스)
+    # 5) ACK 대사 건강 — buyloop/sentinel이 공유 상태파일에 기록.
+    try:
+        from bot import kis_boot
+        health = kis_boot.reconcile_health()
+        last = health.get("last_success_at")
+        if last is None:
+            ago = "성공 기록 없음"
+        else:
+            ago = f"마지막 성공 {max(0, (time.time() - float(last)) / 60):.0f}분 전"
+        L.append(f"대사: {ago} · 연속 실패 "
+                 f"{int(health.get('failure_streak') or 0)}회")
+    except Exception as e:
+        L.append(f"대사: 확인 실패({type(e).__name__})")
+
+    # 6) 신호 피드 나이(파수꾼 참고 손절선 소스)
     try:
         from bot import sentinel
         _rows, feed_age = sentinel._fetch_positions()
@@ -365,7 +379,7 @@ def _diag_text() -> str:
     except Exception as e:
         L.append(f"포지션 피드: 확인 실패({type(e).__name__})")
 
-    # 6) 서비스 상태(systemctl is-active는 무권한 읽기)
+    # 7) 서비스 상태(systemctl is-active는 무권한 읽기)
     try:
         states = []
         for unit in ("sentinel", "buyloop", "watchdog", "portfolio-web"):
@@ -463,6 +477,7 @@ def main() -> int:
             from bot import ops_status
             ops_status.maybe_publish()
             ops_status.maybe_remind_kill()   # L1+ 지속 리마인드(2026-08-10)
+            ops_status.maybe_alert_stuck_acks()
         except Exception:
             pass
         try:

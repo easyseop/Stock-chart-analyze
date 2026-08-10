@@ -17,6 +17,7 @@
 from __future__ import annotations
 
 import datetime
+import fcntl
 import json
 import os
 import subprocess
@@ -24,6 +25,118 @@ import time
 import urllib.request
 
 _US_EXCGS = ("NASD", "NYSE", "AMEX")
+ACK_STUCK_ALERT_S = int(
+    os.environ.get("ACK_STUCK_ALERT_S", "1800") or 1800)
+_stuck_ack_alerted: set[str] = set()
+
+
+def _stuck_latch_path() -> str:
+    from bot import ledger
+    return os.environ.get(
+        "ACK_STUCK_LATCH_PATH",
+        os.path.join(os.path.dirname(ledger.LEDGER_PATH), "ack_stuck_alerts.json"))
+
+
+def _read_stuck_latch() -> set[str]:
+    """프로세스 재시작 뒤에도 유지되는 방치 ACK 알림 래치를 읽는다."""
+    global _stuck_ack_alerted
+    path = _stuck_latch_path()
+    try:
+        with open(path + ".lock", "a+", encoding="utf-8") as lock:
+            os.chmod(path + ".lock", 0o600)
+            fcntl.flock(lock.fileno(), fcntl.LOCK_EX)
+            try:
+                with open(path, encoding="utf-8") as fp:
+                    raw = json.load(fp)
+                previous = {str(k) for k in raw if str(k)} \
+                    if isinstance(raw, list) else set()
+            except (FileNotFoundError, OSError, UnicodeError, json.JSONDecodeError):
+                previous = set(_stuck_ack_alerted)
+            _stuck_ack_alerted = set(previous)
+            return previous
+    except OSError:
+        return set(_stuck_ack_alerted)
+
+
+def _update_stuck_latch(*, add: set[str], remove: set[str]) -> None:
+    """성공한 전송만 래치에 원자 반영하고 변화가 없으면 쓰지 않는다."""
+    global _stuck_ack_alerted
+    path = _stuck_latch_path()
+    parent = os.path.dirname(path) or "."
+    os.makedirs(parent, exist_ok=True)
+    try:
+        with open(path + ".lock", "a+", encoding="utf-8") as lock:
+            os.chmod(path + ".lock", 0o600)
+            fcntl.flock(lock.fileno(), fcntl.LOCK_EX)
+            try:
+                with open(path, encoding="utf-8") as fp:
+                    raw = json.load(fp)
+                previous = {str(k) for k in raw if str(k)} \
+                    if isinstance(raw, list) else set()
+            except (FileNotFoundError, OSError, UnicodeError, json.JSONDecodeError):
+                previous = set(_stuck_ack_alerted)
+            current = (previous | set(add)) - set(remove)
+            if current != previous:
+                tmp = f"{path}.tmp.{os.getpid()}"
+                with open(tmp, "w", encoding="utf-8") as fp:
+                    json.dump(sorted(current), fp, separators=(",", ":"))
+                    fp.flush()
+                    os.fsync(fp.fileno())
+                os.chmod(tmp, 0o600)
+                os.replace(tmp, path)
+            _stuck_ack_alerted = set(current)
+    except OSError:
+        _stuck_ack_alerted = (_stuck_ack_alerted | set(add)) - set(remove)
+
+
+def _stuck_ack_rows(now: float | None = None) -> list[dict]:
+    """30분 이상 submitted/ack에 머문 브로커 주문만 반환."""
+    from bot import ledger
+    stamp = time.time() if now is None else float(now)
+    rows = []
+    for row in ledger.open_orders():
+        if row.get("state") not in ("submitted", "ack"):
+            continue
+        try:
+            age = stamp - float(row.get("submitted_at") or 0)
+        except (TypeError, ValueError):
+            continue
+        if age >= max(60, ACK_STUCK_ALERT_S):
+            rows.append(row)
+    return rows
+
+
+def maybe_alert_stuck_acks(now: float | None = None) -> bool:
+    """ACK 방치를 행별 1회 경보하고 해소되면 1회 회복 알림."""
+    global _stuck_ack_alerted
+    try:
+        from bot import notify
+        rows = _stuck_ack_rows(now)
+        current = {str(row.get("key") or "") for row in rows if row.get("key")}
+        by_key = {str(row.get("key")): row for row in rows if row.get("key")}
+        previous = _read_stuck_latch()
+        sent = False
+        delivered: set[str] = set()
+        for key in sorted(current - previous):
+            row = by_key[key]
+            if notify.send(
+                f"⚠️ 주문 ACK {max(1, ACK_STUCK_ALERT_S // 60)}분 초과 — "
+                f"{row.get('symbol')} {str(row.get('side') or '').upper()} 대사 필요",
+                    critical=True, category="trade"):
+                delivered.add(key)
+                sent = True
+        resolved = previous - current
+        recovered: set[str] = set()
+        if resolved:
+            if notify.send(f"✅ 주문 ACK 방치 {len(resolved)}건 해소 — "
+                           "대사 잠금 해제 확인",
+                           critical=True, category="trade"):
+                recovered = set(resolved)
+                sent = True
+        _update_stuck_latch(add=delivered, remove=recovered)
+        return sent
+    except Exception:
+        return False
 
 
 def snapshot() -> dict:
@@ -62,6 +175,7 @@ def snapshot() -> dict:
         out["open_orders"] = sum(1 for c in fold.values() if c.get("open_order"))
         out["unknown_orders"] = sum(
             1 for c in fold.values() if c.get("state") == "unknown")
+        out["stuck_acks"] = len(_stuck_ack_rows())
     except Exception as e:
         out["ledger_error"] = type(e).__name__
     try:

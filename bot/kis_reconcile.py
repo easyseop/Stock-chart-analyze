@@ -25,11 +25,60 @@
 """
 from __future__ import annotations
 
-from bot import ledger
+import os
+import re
+
+from bot import ledger, ownership
 
 # 매도/매수 구분 — 코드와 이름 둘 다 본다(코드 정의 [대조필요] 방어)
 _SELL_CODES = {"01"}
 _BUY_CODES = {"02"}
+_CONTROL_RE = re.compile(r"[\x00-\x1f\x7f]+")
+
+
+def clean_broker_text(value, limit: int = 200) -> str:
+    """브로커 메시지를 제어문자 없이 제한 길이로 정규화한다."""
+    text = _CONTROL_RE.sub(" ", str(value or ""))
+    return " ".join(text.split())[:max(0, int(limit))]
+
+
+def trusted_response_rows(response: dict | None, *, domestic: bool = False
+                          ) -> list[dict] | None:
+    """부재 증명에 쓸 수 있는 완전한 단일 페이지 응답만 행으로 반환한다.
+
+    빈 리스트는 성공한 부재 증거이고 ``None``은 조회 실패·형식 불신·연속조회
+    미완이다. 두 값을 절대 합치지 않는다.
+    """
+    if not isinstance(response, dict) or response.get("rt_cd") != "0":
+        return None
+    suffix = "100" if domestic else "200"
+    if str(response.get(f"ctx_area_nk{suffix}")
+           or response.get(f"CTX_AREA_NK{suffix}") or "").strip():
+        return None
+    # KIS는 연속 페이지를 헤더 tr_cont=F/M 또는 msg_cd=...12000으로도
+    # 알린다. 어느 한 신호라도 있으면 부재 증명에 쓸 수 없다.
+    if str(response.get("_tr_cont") or response.get("tr_cont") or "").strip().upper() \
+            in {"F", "M"}:
+        return None
+    msg_cd = clean_broker_text(response.get("msg_cd"))
+    if msg_cd.endswith("12000"):
+        return None
+    if "output1" in response:
+        rows = response.get("output1")
+    elif "output" in response:
+        rows = response.get("output")
+    else:
+        return None
+    if not isinstance(rows, list) or any(not isinstance(row, dict) for row in rows):
+        return None
+    # 연속 신호가 누락된 구형 응답도 페이지 상한에 꽉 찼으면 완전성을
+    # 증명할 수 없다. 자동 정산만 보류하는 fail-closed 조건이다.
+    page_limit = 100 if domestic else 15
+    if len(rows) >= page_limit:
+        return None
+    msg1 = clean_broker_text(response.get("msg1"))
+    return [{**row, "_response_msg_cd": msg_cd,
+             "_response_msg1": msg1} for row in rows]
 
 
 def order_no_key(value) -> str:
@@ -93,11 +142,22 @@ def normalize_rows(nccs: dict | None, ccnl: dict | None) -> list[dict]:
             cq = _f(row.get("ft_ccld_qty"), default=-1.0)
             filled = cq if cq >= 0 else (max(0.0, ord_qty - nq) if nq >= 0 else 0.0)
             still_open = nq > 0            # nccs 잔량>0 = 주문 아직 살아있음(체결 대기)
+        row_msg_cd = clean_broker_text(row.get("msg_cd") or row.get("rjct_rson"))
+        row_msg1 = clean_broker_text(row.get("msg1") or row.get("rjct_rson_name"))
+        broker_reason = row_msg1
+        msg_cd = row_msg_cd or clean_broker_text(row.get("_response_msg_cd"))
+        msg1 = row_msg1 or clean_broker_text(row.get("_response_msg1"))
+        msg_source = ("row" if row_msg_cd or row_msg1 else
+                      "response" if msg_cd or msg1 else "")
+        status = clean_broker_text(row.get("prcs_stat_name")
+                                   or row.get("rvse_cncl_dvsn_name"))
         return {"odno": odno, "pdno": pdno, "side": _side_of(row),
                 "ord_qty": int(round(ord_qty)), "filled": int(round(filled)),
                 "price": _f(row.get("ft_ccld_unpr3") or row.get("ft_ord_unpr3")),
                 "ord_tmd": str(row.get("ord_tmd") or ""), "src": src,
-                "open": still_open}   # 감사 수정 #6: 살아있는 주문은 잔여 재발주 금지
+                "open": still_open, "msg_cd": msg_cd, "msg1": msg1,
+                "msg_source": msg_source,
+                "broker_status": status, "broker_reason": broker_reason}
 
     for src, d in (("nccs", nccs), ("ccnl", ccnl)):
         for row in ((d or {}).get("output") or []):
@@ -107,7 +167,10 @@ def normalize_rows(nccs: dict | None, ccnl: dict | None) -> list[dict]:
             k = order_no_key(n["odno"]) or f"{src}:{id(row)}"
             if k in out and src == "ccnl":
                 out[k].update({kk: n[kk] for kk in
-                               ("filled", "price", "src") if n[kk] or kk == "src"})
+                               ("filled", "price", "src", "msg_cd", "msg1",
+                                "msg_source",
+                                "broker_status", "broker_reason")
+                               if n[kk] or kk == "src"})
             else:
                 out.setdefault(k, n)
     return list(out.values())
@@ -132,12 +195,22 @@ def normalize_domestic_rows(nccs: dict | None, ccnl: dict | None) -> list[dict]:
                  or row.get("ord_psbl_qty"), default=-1.0)
         if src == "nccs" and filled <= 0 and rem >= 0:
             filled = max(0, oq - int(round(rem)))
+        broker_reason = clean_broker_text(
+            row.get("msg1") or row.get("rjct_rson_name"))
+        msg_cd = clean_broker_text(row.get("msg_cd") or row.get("rjct_rson")
+                                   or row.get("_response_msg_cd"))
+        msg1 = clean_broker_text(row.get("msg1") or row.get("rjct_rson_name")
+                                 or row.get("_response_msg1"))
+        status = clean_broker_text(row.get("prcs_stat_name")
+                                   or row.get("rvse_cncl_dvsn_name"))
         return {"odno": odno, "pdno": pdno, "side": _side_of(row),
                 "ord_qty": oq, "filled": filled,
                 "price": _f(row.get("avg_prvs") or row.get("avg_prc")
                             or row.get("ccld_unpr") or row.get("ord_unpr")),
                 "ord_tmd": str(row.get("ord_tmd") or ""),
-                "src": "kr-" + src, "open": src == "nccs" and rem != 0}
+                "src": "kr-" + src, "open": src == "nccs" and rem != 0,
+                "msg_cd": msg_cd, "msg1": msg1, "broker_status": status,
+                "broker_reason": broker_reason}
 
     for src, d in (("nccs", nccs), ("ccnl", ccnl)):
         for row in rows_of(d):
@@ -147,7 +220,9 @@ def normalize_domestic_rows(nccs: dict | None, ccnl: dict | None) -> list[dict]:
             k = order_no_key(n["odno"]) or f"{src}:{id(row)}"
             if k in out and src == "ccnl":
                 out[k].update({kk: n[kk] for kk in
-                               ("filled", "price", "src") if n[kk] or kk == "src"})
+                               ("filled", "price", "src", "msg_cd", "msg1",
+                                "broker_status", "broker_reason")
+                               if n[kk] or kk == "src"})
                 out[k]["open"] = False
             else:
                 out.setdefault(k, n)
@@ -190,9 +265,21 @@ def resolve_acks_from_rows(rows: list[dict]) -> list[dict]:
                  "residual": max(0, intended - filled), "fill_price": price,
                  "open": opened}
         elif not opened:
-            ledger.on_result(o["key"], "rejected", 0, open_order=False)
-            r = {"state": "rejected", "filled": 0, "residual": intended,
-                 "fill_price": None, "open": False}
+            r = ledger.reconcile(o["key"], 0, open_order=False)
+            msg_cd = clean_broker_text(row.get("msg_cd"))
+            msg1 = clean_broker_text(row.get("msg1"))
+            status = clean_broker_text(row.get("broker_status"))
+            broker_reason = (clean_broker_text(row.get("broker_reason"))
+                             or status or "사유 미상(브로커 종결 행)")
+            ledger.record_reconcile_meta(
+                o["key"], reason="broker-closed-zero-fill",
+                meta={"source": str(row.get("src") or "broker"),
+                      "msg_cd": msg_cd, "msg1": msg1,
+                      "msg_source": clean_broker_text(row.get("msg_source")),
+                      "broker_reason": broker_reason,
+                      "side": side, "intended": intended})
+            r.update({"broker_reason": broker_reason,
+                      "reason": "broker-closed-zero-fill"})
         else:
             continue
         acct = kis_accounting.sync_fill(
@@ -202,6 +289,107 @@ def resolve_acks_from_rows(rows: list[dict]) -> list[dict]:
                         "side": o.get("side"), "market": o.get("market"),
                         "via": "broker-fills", "accounting": acct, **r})
     return results
+
+
+REJECT_ABSENCE_MIN_S = int(
+    os.environ.get("REJECT_ABSENCE_MIN_S", "600") or 600)
+
+
+def resolve_acks_by_absence(evidence_by_key: dict[str, dict],
+                            now_ts: float | None = None,
+                            orders: list[dict] | None = None,
+                            ) -> tuple[list[dict], list[dict]]:
+    """미체결·체결 모두 부재이고 잔고가 불변인 오래된 ACK만 거절 종결한다.
+
+    ``evidence_by_key``의 각 값은 호출자가 강한 응답 검증을 끝낸
+    ``nccs_rows``/``ccnl_rows``(빈 list=성공, None=실패)와 완전한
+    ``holdings`` map을 담는다. 하나라도 None이면 그 주문에는 어떤 이벤트도 쓰지
+    않는다. 잔고가 바뀌었는데 두 주문조회에 행이 없는 모순은 자동정산하지 않고
+    호출자가 경보할 수 있도록 별도로 반환한다.
+    """
+    import time as _time
+
+    now_ts = _time.time() if now_ts is None else float(now_ts)
+    open_orders = ledger.open_orders() if orders is None else list(orders)
+    open_count: dict[str, int] = {}
+    broker_inflight = {"submitted", "ack", "partial", "cancel_pending", "unknown"}
+    for row in open_orders:
+        if row.get("state") not in broker_inflight:
+            continue
+        if row.get("state") == "partial" and row.get("open") is False:
+            continue
+        symbol = str(row.get("symbol") or "").upper()
+        open_count[symbol] = open_count.get(symbol, 0) + 1
+
+    resolved: list[dict] = []
+    contradictions: list[dict] = []
+    for order in open_orders:
+        key = str(order.get("key") or "")
+        if order.get("state") not in ("submitted", "ack"):
+            continue
+        if now_ts - float(order.get("submitted_at") or 0) \
+                < max(REJECT_ABSENCE_MIN_S, ACK_AGE_MIN_S):
+            continue
+        symbol = str(order.get("symbol") or "").upper()
+        side = str(order.get("side") or "").upper()
+        odno = order_no_key(order.get("odno"))
+        intended = int(order.get("intended") or 0)
+        before_raw = order.get("hldg_before")
+        proof = evidence_by_key.get(key)
+        if (not proof or side not in ("BUY", "SELL") or not odno
+                or not symbol or intended <= 0 or before_raw is None
+                or open_count.get(symbol) != 1):
+            continue
+        nccs_rows = proof.get("nccs_rows")
+        ccnl_rows = proof.get("ccnl_rows")
+        holdings = proof.get("holdings")
+        if (nccs_rows is None or ccnl_rows is None or holdings is None
+                or not isinstance(nccs_rows, list)
+                or not isinstance(ccnl_rows, list)
+                or not isinstance(holdings, dict)):
+            continue
+        if any(not isinstance(row, dict) for row in nccs_rows + ccnl_rows):
+            continue
+
+        def has_order(rows: list[dict]) -> bool:
+            return any(order_no_key(row.get("odno") or row.get("ODNO")) == odno
+                       for row in rows)
+
+        if has_order(nccs_rows) or has_order(ccnl_rows):
+            continue
+        try:
+            before = int(float(before_raw))
+            current = int(float(holdings.get(symbol, 0)))
+        except (TypeError, ValueError):
+            continue
+        base = ownership.baseline()
+        verified_migrated = _verified_migrated_baseline_sell(order, symbol, before)
+        if base is None:
+            continue
+        if (ownership.is_frozen(symbol) or symbol in base) and not verified_migrated:
+            continue
+        unchanged = current == before
+        if not unchanged:
+            contradictions.append({
+                "key": key, "symbol": symbol, "side": side,
+                "intended": intended, "hldg_before": before,
+                "hldg_now": current, "reason": "absence-balance-contradiction",
+            })
+            continue
+        result = ledger.reconcile(key, 0, open_order=False)
+        ledger.record_reconcile_meta(
+            key, reason="absence-proof",
+            meta={"source": "absence-proof", "nccs_count": len(nccs_rows),
+                  "ccnl_count": len(ccnl_rows), "odno_absent": True,
+                  "hldg_before": before,
+                  "hldg_now": current, "side": side,
+                  "intended": intended,
+                  "broker_reason": "사유 미상(부재 증명)"})
+        resolved.append({"key": key, "symbol": symbol, "side": side,
+                         "market": order.get("market"), "via": "absence-proof",
+                         "broker_reason": "사유 미상(부재 증명)",
+                         **result})
+    return resolved, contradictions
 
 
 def candidates_for(unknown: dict, rows: list[dict], known_odnos: set[str],
