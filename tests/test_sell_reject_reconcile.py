@@ -69,6 +69,14 @@ def test_raw_response_trust_contract():
     assert R.trusted_response_rows(
         {"rt_cd": "0", "output1": [], "ctx_area_nk100": "NEXT"},
         domestic=True) is None
+    raw = {"rt_cd": "0", "msg_cd": "20310000", "msg1": "query complete",
+           "output": [{"odno": "38291", "ovrs_pdno": "TAP",
+                       "sll_buy_dvsn_cd": "01", "ft_ord_qty": "80",
+                       "ft_ccld_qty": "0", "nccs_qty": "80"}]}
+    rows = R.trusted_response_rows(raw)
+    norm = R.normalize_rows(None, {"rt_cd": "0", "output": rows})
+    assert norm[0]["msg_cd"] == "20310000" and norm[0]["msg1"] == "query complete"
+    assert norm[0]["broker_reason"] == ""    # 일반 조회완료를 거절사유로 과장 금지
     print("[PASS] 원응답: rt_cd·연속키·행 스키마 완전성 계약")
 
 

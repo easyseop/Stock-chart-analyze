@@ -63,7 +63,10 @@ def trusted_response_rows(response: dict | None, *, domestic: bool = False
         return None
     if not isinstance(rows, list) or any(not isinstance(row, dict) for row in rows):
         return None
-    return rows
+    msg_cd = clean_broker_text(response.get("msg_cd"))
+    msg1 = clean_broker_text(response.get("msg1"))
+    return [{**row, "_response_msg_cd": msg_cd,
+             "_response_msg1": msg1} for row in rows]
 
 
 def order_no_key(value) -> str:
@@ -127,9 +130,12 @@ def normalize_rows(nccs: dict | None, ccnl: dict | None) -> list[dict]:
             cq = _f(row.get("ft_ccld_qty"), default=-1.0)
             filled = cq if cq >= 0 else (max(0.0, ord_qty - nq) if nq >= 0 else 0.0)
             still_open = nq > 0            # nccs 잔량>0 = 주문 아직 살아있음(체결 대기)
-        msg_cd = clean_broker_text(row.get("msg_cd") or row.get("rjct_rson"))
+        broker_reason = clean_broker_text(
+            row.get("msg1") or row.get("rjct_rson_name"))
+        msg_cd = clean_broker_text(row.get("msg_cd") or row.get("rjct_rson")
+                                   or row.get("_response_msg_cd"))
         msg1 = clean_broker_text(row.get("msg1") or row.get("rjct_rson_name")
-                                 or row.get("prcs_stat_name"))
+                                 or row.get("_response_msg1"))
         status = clean_broker_text(row.get("prcs_stat_name")
                                    or row.get("rvse_cncl_dvsn_name"))
         return {"odno": odno, "pdno": pdno, "side": _side_of(row),
@@ -137,7 +143,7 @@ def normalize_rows(nccs: dict | None, ccnl: dict | None) -> list[dict]:
                 "price": _f(row.get("ft_ccld_unpr3") or row.get("ft_ord_unpr3")),
                 "ord_tmd": str(row.get("ord_tmd") or ""), "src": src,
                 "open": still_open, "msg_cd": msg_cd, "msg1": msg1,
-                "broker_status": status}
+                "broker_status": status, "broker_reason": broker_reason}
 
     for src, d in (("nccs", nccs), ("ccnl", ccnl)):
         for row in ((d or {}).get("output") or []):
@@ -148,7 +154,8 @@ def normalize_rows(nccs: dict | None, ccnl: dict | None) -> list[dict]:
             if k in out and src == "ccnl":
                 out[k].update({kk: n[kk] for kk in
                                ("filled", "price", "src", "msg_cd", "msg1",
-                                "broker_status") if n[kk] or kk == "src"})
+                                "broker_status", "broker_reason")
+                               if n[kk] or kk == "src"})
             else:
                 out.setdefault(k, n)
     return list(out.values())
@@ -173,9 +180,12 @@ def normalize_domestic_rows(nccs: dict | None, ccnl: dict | None) -> list[dict]:
                  or row.get("ord_psbl_qty"), default=-1.0)
         if src == "nccs" and filled <= 0 and rem >= 0:
             filled = max(0, oq - int(round(rem)))
-        msg_cd = clean_broker_text(row.get("msg_cd") or row.get("rjct_rson"))
+        broker_reason = clean_broker_text(
+            row.get("msg1") or row.get("rjct_rson_name"))
+        msg_cd = clean_broker_text(row.get("msg_cd") or row.get("rjct_rson")
+                                   or row.get("_response_msg_cd"))
         msg1 = clean_broker_text(row.get("msg1") or row.get("rjct_rson_name")
-                                 or row.get("prcs_stat_name"))
+                                 or row.get("_response_msg1"))
         status = clean_broker_text(row.get("prcs_stat_name")
                                    or row.get("rvse_cncl_dvsn_name"))
         return {"odno": odno, "pdno": pdno, "side": _side_of(row),
@@ -184,7 +194,8 @@ def normalize_domestic_rows(nccs: dict | None, ccnl: dict | None) -> list[dict]:
                             or row.get("ccld_unpr") or row.get("ord_unpr")),
                 "ord_tmd": str(row.get("ord_tmd") or ""),
                 "src": "kr-" + src, "open": src == "nccs" and rem != 0,
-                "msg_cd": msg_cd, "msg1": msg1, "broker_status": status}
+                "msg_cd": msg_cd, "msg1": msg1, "broker_status": status,
+                "broker_reason": broker_reason}
 
     for src, d in (("nccs", nccs), ("ccnl", ccnl)):
         for row in rows_of(d):
@@ -195,7 +206,8 @@ def normalize_domestic_rows(nccs: dict | None, ccnl: dict | None) -> list[dict]:
             if k in out and src == "ccnl":
                 out[k].update({kk: n[kk] for kk in
                                ("filled", "price", "src", "msg_cd", "msg1",
-                                "broker_status") if n[kk] or kk == "src"})
+                                "broker_status", "broker_reason")
+                               if n[kk] or kk == "src"})
                 out[k]["open"] = False
             else:
                 out.setdefault(k, n)
@@ -242,7 +254,8 @@ def resolve_acks_from_rows(rows: list[dict]) -> list[dict]:
             msg_cd = clean_broker_text(row.get("msg_cd"))
             msg1 = clean_broker_text(row.get("msg1"))
             status = clean_broker_text(row.get("broker_status"))
-            broker_reason = msg1 or status or "사유 미상(브로커 종결 행)"
+            broker_reason = (clean_broker_text(row.get("broker_reason"))
+                             or status or "사유 미상(브로커 종결 행)")
             ledger.record_reconcile_meta(
                 o["key"], reason="broker-closed-zero-fill",
                 meta={"source": str(row.get("src") or "broker"),
