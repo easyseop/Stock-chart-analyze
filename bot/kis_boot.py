@@ -141,7 +141,8 @@ def _resolve_acks() -> list[dict]:
     """
     try:
         now = time.time()
-        aged = [o for o in ledger.open_orders()
+        initial_open = ledger.open_orders()
+        aged = [o for o in initial_open
                 if o.get("state") in ("submitted", "ack")
                 and (o.get("side") or "").upper() in ("BUY", "SELL")
                 and now - float(o.get("submitted_at") or 0)
@@ -225,7 +226,8 @@ def _resolve_acks() -> list[dict]:
 
         # 잔고는 주문조회 두 종류 다음에 읽는다. US 3거래소 중 하나라도
         # 실패하면 전체 snapshot을 None으로 남겨 '미보유'로 오판하지 않는다.
-        aged = [o for o in ledger.open_orders()
+        current_open = ledger.open_orders()
+        aged = [o for o in current_open
                 if o.get("state") in ("submitted", "ack")
                 and (o.get("side") or "").upper() in ("BUY", "SELL")
                 and now - float(o.get("submitted_at") or 0)
@@ -268,7 +270,7 @@ def _resolve_acks() -> list[dict]:
                 proof["holdings"] = hmaps.get("KR" if _is_kr(order) else "US")
 
         absence_rs, contradictions = kis_reconcile.resolve_acks_by_absence(
-            proofs, now_ts=now, orders=aged)
+            proofs, now_ts=now, orders=current_open)
         rs += absence_rs
         contradiction_keys = {str(r.get("key") or "") for r in contradictions}
         for item in contradictions:
