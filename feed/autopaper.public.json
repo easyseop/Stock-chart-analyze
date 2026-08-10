@@ -1,10 +1,10 @@
 {
- "generated_at": "2026-08-10T22:29:35.697924+09:00",
+ "generated_at": "2026-08-10T23:14:14.283372+09:00",
  "updated": "2026-08-10",
  "start": 100000000,
- "cash": 24977788,
- "equity": 100184193,
- "ret_pct": 0.18,
+ "cash": 32385352,
+ "equity": 100369567,
+ "ret_pct": 0.37,
  "positions": [
   {
    "code": "MRSH",
@@ -12,14 +12,14 @@
    "ccy": "USD",
    "q": 36,
    "avg": 174.3075,
-   "price": 191.6499938964844,
+   "price": 190.3800048828125,
    "stop": 184.80249938964843,
    "target": 192.2575,
    "half_done": true,
    "opened": "2026-07-06",
-   "pl_krw": 878713,
-   "pl_pct": 9.95,
-   "price_age_min": 6.7
+   "pl_krw": 814365,
+   "pl_pct": 9.22,
+   "price_age_min": 6.9
   },
   {
    "code": "HMC",
@@ -27,14 +27,14 @@
    "ccy": "USD",
    "q": 2,
    "avg": 27.665,
-   "price": 31.81999969482422,
+   "price": 31.584999084472656,
    "stop": 29.60260064086914,
    "target": 30.5824,
    "half_done": true,
    "opened": "2026-07-09",
-   "pl_krw": 11696,
-   "pl_pct": 15.02,
-   "price_age_min": 9.4
+   "pl_krw": 11034,
+   "pl_pct": 14.17,
+   "price_age_min": 9.5
   },
   {
    "code": "SARO",
@@ -42,14 +42,14 @@
    "ccy": "USD",
    "q": 81,
    "avg": 27.9,
-   "price": 29.190000534057617,
+   "price": 28.43000030517578,
    "stop": 28.4517,
    "target": 31.9643,
    "half_done": true,
    "opened": "2026-07-10",
-   "pl_krw": 147065,
-   "pl_pct": 4.62,
-   "price_age_min": 6.6
+   "pl_krw": 60422,
+   "pl_pct": 1.9,
+   "price_age_min": 6.9
   },
   {
    "code": "J",
@@ -57,14 +57,14 @@
    "ccy": "USD",
    "q": 32,
    "avg": 126.585,
-   "price": 145.07000732421875,
+   "price": 146.47999572753906,
    "stop": 136.33490732421876,
    "target": 141.2316,
    "half_done": true,
    "opened": "2026-07-11",
-   "pl_krw": 832535,
-   "pl_pct": 14.6,
-   "price_age_min": 6.6
+   "pl_krw": 896039,
+   "pl_pct": 15.72,
+   "price_age_min": 6.9
   },
   {
    "code": "MAIN",
@@ -72,14 +72,14 @@
    "ccy": "USD",
    "q": 39,
    "avg": 53.96,
-   "price": 58.93999862670898,
+   "price": 58.09999847412109,
    "stop": 55.83619877929688,
    "target": 58.7184,
    "half_done": true,
    "opened": "2026-07-22",
-   "pl_krw": 273355,
-   "pl_pct": 9.23,
-   "price_age_min": 9.4
+   "pl_krw": 227247,
+   "pl_pct": 7.67,
+   "price_age_min": 9.5
   },
   {
    "code": "004370",
@@ -94,22 +94,7 @@
    "opened": "2026-07-27",
    "pl_krw": 285000,
    "pl_pct": 7.73,
-   "price_age_min": 6.6
-  },
-  {
-   "code": "CRC",
-   "name": "California Resources Corporation",
-   "ccy": "USD",
-   "q": 101,
-   "avg": 51.16,
-   "price": 52.08000183105469,
-   "stop": 47.7785,
-   "target": 57.923,
-   "half_done": false,
-   "opened": "2026-07-28",
-   "pl_krw": 130781,
-   "pl_pct": 1.8,
-   "price_age_min": 6.6
+   "price_age_min": 6.9
   },
   {
    "code": "EQT",
@@ -117,14 +102,14 @@
    "ccy": "USD",
    "q": 242,
    "avg": 51.375,
-   "price": 51.68999862670898,
+   "price": 52.7599983215332,
    "stop": 48.5008,
    "target": 57.1234,
    "half_done": false,
    "opened": "2026-07-29",
-   "pl_krw": 107289,
-   "pl_pct": 0.61,
-   "price_age_min": 6.6
+   "pl_krw": 471734,
+   "pl_pct": 2.7,
+   "price_age_min": 6.9
   },
   {
    "code": "MDT",
@@ -132,14 +117,14 @@
    "ccy": "USD",
    "q": 93,
    "avg": 86.12,
-   "price": 87.16000366210938,
+   "price": 87.95999908447266,
    "stop": 81.6215,
    "target": 95.117,
    "half_done": false,
    "opened": "2026-07-30",
-   "pl_krw": 136129,
-   "pl_pct": 1.21,
-   "price_age_min": 6.6
+   "pl_krw": 240843,
+   "pl_pct": 2.14,
+   "price_age_min": 6.8
   },
   {
    "code": "AVY",
@@ -147,14 +132,14 @@
    "ccy": "USD",
    "q": 28,
    "avg": 169.73,
-   "price": 177.17999267578125,
+   "price": 175.31500244140625,
    "stop": 158.3847,
    "target": 192.4206,
    "half_done": false,
    "opened": "2026-08-03",
-   "pl_krw": 293594,
-   "pl_pct": 4.39,
-   "price_age_min": 6.6
+   "pl_krw": 220097,
+   "pl_pct": 3.29,
+   "price_age_min": 6.8
   },
   {
    "code": "DPZ",
@@ -162,14 +147,14 @@
    "ccy": "USD",
    "q": 10,
    "avg": 353.285,
-   "price": 350.95001220703125,
+   "price": 345.2449951171875,
    "stop": 328.6353,
    "target": 402.5845,
    "half_done": false,
    "opened": "2026-08-07",
-   "pl_krw": -32864,
-   "pl_pct": -0.66,
-   "price_age_min": 7.9
+   "pl_krw": -113159,
+   "pl_pct": -2.28,
+   "price_age_min": 8.1
   }
  ],
  "pending": [
@@ -199,20 +184,47 @@
     "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권8% · 체크4/6 · 손절폭9.8%"
    },
    "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권8% · 체크4/6 · 손절폭9.8%"
+  },
+  {
+   "code": "FND",
+   "name": "Floor & Decor Holdings, Inc.",
+   "ccy": "USD",
+   "limit": 54.6923,
+   "stop": 54.2692,
+   "target": 71.5365,
+   "q": 103,
+   "created": "2026-08-10",
+   "atr": 2.8779,
+   "plan": {
+    "entry": 60.025,
+    "stop": 54.2692,
+    "target": 71.5365,
+    "pb": 54.6923,
+    "tactic": "pullback"
+   },
+   "ctx": {
+    "mode": "pullback",
+    "fresh": true,
+    "stage": 3,
+    "rp": 35,
+    "rec": 6,
+    "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권35% · 체크6/6 · 손절폭9.6%"
+   },
+   "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권35% · 체크6/6 · 손절폭9.6%"
   }
  ],
- "trades": 9,
- "win_trades": 7,
+ "trades": 10,
+ "win_trades": 8,
  "pos_cap_pct": 33.3,
  "cap_violations": [],
  "rule_violations": [],
  "fx": 1407.45,
  "stats": {
   "all": {
-   "n": 9,
-   "win": 7,
-   "win_rate": 78,
-   "avg_r": 0.24
+   "n": 10,
+   "win": 8,
+   "win_rate": 80,
+   "avg_r": 0.25
   },
   "by_mode": {
    "full": {
@@ -222,10 +234,10 @@
     "avg_r": -0.61
    },
    "half": {
-    "n": 2,
-    "win": 2,
+    "n": 3,
+    "win": 3,
     "win_rate": 100,
-    "avg_r": 1.02
+    "avg_r": 0.77
    },
    "pullback": {
     "n": 4,
@@ -235,9 +247,9 @@
    }
   },
   "fresh": {
-   "n": 8,
-   "win": 6,
-   "win_rate": 75,
+   "n": 9,
+   "win": 7,
+   "win_rate": 78,
    "avg_r": 0.23
   },
   "stale": {
@@ -248,10 +260,10 @@
   },
   "by_stage": {
    "3": {
-    "n": 9,
-    "win": 7,
-    "win_rate": 78,
-    "avg_r": 0.24
+    "n": 10,
+    "win": 8,
+    "win_rate": 80,
+    "avg_r": 0.25
    }
   },
   "by_ccy": {
@@ -262,16 +274,52 @@
     "avg_r": 0.38
    },
    "USD": {
-    "n": 8,
-    "win": 6,
-    "win_rate": 75,
+    "n": 9,
+    "win": 7,
+    "win_rate": 78,
     "avg_r": 0.23
    }
   },
-  "slip_entry_pct": -0.6,
+  "slip_entry_pct": -0.54,
   "slip_stop_pct": -1.14
  },
  "closed": [
+  {
+   "code": "CRC",
+   "name": "California Resources Corporation",
+   "ccy": "USD",
+   "ctx": {
+    "mode": "half",
+    "fresh": true,
+    "stage": 3,
+    "rp": 28,
+    "rec": 3,
+    "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권28% · 체크3/6 · 손절폭6.6%"
+   },
+   "plan": {
+    "entry": 51.16,
+    "stop": 47.7785,
+    "target": 57.923,
+    "pb": 49.8145,
+    "tactic": "half"
+   },
+   "fill": {
+    "avg": 51.16,
+    "q": 101
+   },
+   "exits": [
+    {
+     "d": "2026-08-10",
+     "q": 101,
+     "price": 52.11,
+     "note": "어닝 회피 — 전량(진행 없음, MFE<0.5R)"
+    }
+   ],
+   "opened": "2026-07-28",
+   "closed": "2026-08-10",
+   "pl": 135045,
+   "r": 0.27
+  },
   {
    "code": "SHOP",
    "name": "Shopify Inc.",
@@ -768,10 +816,35 @@
   },
   {
    "d": "2026-08-10",
-   "v": 100184193
+   "v": 100369567
   }
  ],
  "log": [
+  {
+   "d": "2026-08-10",
+   "type": "order",
+   "code": "FND",
+   "name": "Floor & Decor Holdings, Inc.",
+   "q": 103,
+   "price": 54.6923,
+   "ccy": "USD",
+   "amt": 7928598,
+   "note": "눌림 지정가 주문(추격 금지) — 🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권35% · 체크6/6 · 손절폭9.6%"
+  },
+  {
+   "d": "2026-08-10",
+   "type": "sell",
+   "code": "CRC",
+   "name": "California Resources Corporation",
+   "q": 101,
+   "price": 52.11,
+   "ccy": "USD",
+   "amt": 7407564,
+   "note": "어닝 회피 — 전량(진행 없음, MFE<0.5R)",
+   "pl": 135045,
+   "pl_pct": 1.9,
+   "r": 0.27
+  },
   {
    "d": "2026-08-07",
    "type": "buy",
@@ -1378,32 +1451,6 @@
    "ccy": "USD",
    "amt": 454243,
    "note": "눌림 지정가 주문(추격 금지) — 🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권17% · 체크5/6 · 손절폭10.6%"
-  },
-  {
-   "d": "2026-07-07",
-   "type": "buy",
-   "code": "068270",
-   "name": "셀트리온",
-   "q": 54,
-   "price": 175348.4128,
-   "ccy": "KRW",
-   "amt": 9468814,
-   "note": "눌림 지정가 체결 — ↗ 돌파후 진행(승률↓) · ③ 돌파후 횡보(대기) · 저점권28% · 체크4/6 · 손절폭10.5%",
-   "stop": 157651.1713,
-   "target": 212997.6574
-  },
-  {
-   "d": "2026-07-07",
-   "type": "buy",
-   "code": "STE",
-   "name": "STERIS plc",
-   "q": 6,
-   "price": 213.02,
-   "ccy": "USD",
-   "amt": 1958246,
-   "note": "즉시 분할 — 🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권24% · 체크4/6 · 손절폭5.1%",
-   "stop": 202.063,
-   "target": 234.934
   }
  ],
  "lane": "bulk",
