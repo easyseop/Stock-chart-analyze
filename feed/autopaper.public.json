@@ -1,9 +1,9 @@
 {
- "generated_at": "2026-08-11T12:16:05.471644+09:00",
+ "generated_at": "2026-08-11T12:31:25.560504+09:00",
  "updated": "2026-08-11",
  "start": 100000000,
  "cash": 32568976,
- "equity": 101743158,
+ "equity": 101738158,
  "ret_pct": 1.74,
  "positions": [
   {
@@ -34,7 +34,7 @@
    "opened": "2026-07-09",
    "pl_krw": 11493,
    "pl_pct": 14.66,
-   "price_age_min": 11.0
+   "price_age_min": 9.9
   },
   {
    "code": "J",
@@ -64,7 +64,7 @@
    "opened": "2026-07-22",
    "pl_krw": 252031,
    "pl_pct": 8.45,
-   "price_age_min": 9.6
+   "price_age_min": 8.9
   },
   {
    "code": "004370",
@@ -72,13 +72,13 @@
    "ccy": "KRW",
    "q": 10,
    "avg": 368500.0,
-   "price": 400500.0,
+   "price": 400000.0,
    "stop": 368500.0,
    "target": 420011.1858,
    "half_done": true,
    "opened": "2026-07-27",
-   "pl_krw": 320000,
-   "pl_pct": 8.68,
+   "pl_krw": 315000,
+   "pl_pct": 8.55,
    "price_age_min": 7.4
   },
   {
@@ -109,7 +109,7 @@
    "opened": "2026-07-30",
    "pl_krw": 433615,
    "pl_pct": 3.82,
-   "price_age_min": 7.3
+   "price_age_min": 7.4
   },
   {
    "code": "AVY",
@@ -124,7 +124,7 @@
    "opened": "2026-08-03",
    "pl_krw": 342051,
    "pl_pct": 5.08,
-   "price_age_min": 7.3
+   "price_age_min": 7.4
   },
   {
    "code": "DPZ",
@@ -139,7 +139,7 @@
    "opened": "2026-08-07",
    "pl_krw": -77024,
    "pl_pct": -1.54,
-   "price_age_min": 9.1
+   "price_age_min": 8.6
   },
   {
    "code": "UFPI",
@@ -154,7 +154,7 @@
    "opened": "2026-08-11",
    "pl_krw": 14115,
    "pl_pct": 0.46,
-   "price_age_min": 10.0
+   "price_age_min": 9.2
   }
  ],
  "pending": [
@@ -862,7 +862,7 @@
   },
   {
    "d": "2026-08-11",
-   "v": 101743158
+   "v": 101738158
   }
  ],
  "log": [
