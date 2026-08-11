@@ -1880,3 +1880,5 @@ Claude 전면 재검토는 불필요하고 위 증거만 제출하면 된다. �
 - 테스트: 신규 7+6+7 및 sentinel/ops/telegram 핵심 회귀/compileall/diff-check 통과.
 - 검토 요청: `docs/CLAUDE_REVIEW_OBSERVABILITY_SAFETY.md`.
 - 금지선: Claude P0/P1=0 및 사용자 승인 전 merge/Oracle deploy 금지.
+- 추가 H4(c51a085): 대사 알림 접수시각·브로커/장부 정합·5분 내 체결/과거전표
+  관계 설명 구현. H4 4/4 + SELL/ACK/boot 회귀 통과.

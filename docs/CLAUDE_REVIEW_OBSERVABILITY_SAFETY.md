@@ -2,7 +2,7 @@
 
 검토 브랜치: `codex/observability-safety`
 
-기준: `claude/happy-gauss-cwoq21@f0599b2`
+기준: `claude/happy-gauss-cwoq21@c51a085`
 범위: 배포 유예창 + 잔고 경보 위생/진단 + 제한적 L1 자가복구
 
 ## 판정 기준
@@ -35,6 +35,11 @@
   24시간보다 오래되거나 미래/손상 파일은 0으로 처리한다.
 - ops의 4시장 KIS 구간은 daemon 격리 + 전체 60초 예산. 초과 시장과 남은 시장은
   `None`, snapshot 발행은 계속한다.
+- H4 대사 알림은 원장 `submitted_at`을 `MM/DD HH:MM`으로 표시하고, 대사 직후
+  기존 KIS holdings 읽기 경로와 `kis_positions` 장부를 대조한다. 일치/불일치/
+  조회불가를 구분하며 불일치는 매수·매도와 무관하게 critical이다.
+- 같은 심볼에서 5분 안에 체결 확정과 거절 종결이 이어지면 후행 알림에 “체결분과
+  별개인 과거 전표 정리” 관계를 붙인다. 이 메모리는 주문/원장을 변경하지 않는다.
 
 ### C. L1 자가복구
 
@@ -69,6 +74,13 @@
 5. 90초 상당 블로킹 주입: 축소 예산 시점에 반환, 4시장 None.
 6. sentinel 공개 feed 수량 매도 금지·주문 직전 재조회 계약 유지.
 
+### H4 대사 알림 4
+
+1. 접수시각 표시 + 보유4/장부4 정합 문구.
+2. 보유4/장부3 불일치·critical 신호, 조회불가 시 미확인(0 추측 금지).
+3. 같은 심볼 체결→120초 뒤 과거 거절: 별개 사건 관계 설명.
+4. 기존 hmap이 없을 때 US 3거래소 `kis.holdings` 읽기만 재사용.
+
 ### 자가복구 7
 
 1. 허용 watchdog L1 + 연속관찰 + GO: L0, who=self-heal 감사, 알림.
@@ -93,12 +105,17 @@
 10. pending 알림을 미리 기록한 뒤 하향 전 크래시하면 거짓 L0 알림이 나가는가?
 11. self-heal 예외가 기존 restart/L1 상향 루프를 중단시키는가?
 12. `git diff`에 buyloop/kis_buy/kis_orders/ledger 주문 경로 변경이 정말 0인가?
+13. 대사 정합 확인의 holdings 일부 실패가 보유 0 또는 정합으로 세탁되는가?
+14. 장부 load 실패/손상에서 불일치를 지어내거나 대사 결과를 되돌리는가?
+15. 5분 관계 메모리가 다른 심볼·같은 종류·301초 뒤 사건을 잘못 묶는가?
 
 ## 실행 증거
 
-- 신규 계약: `test_deploy_grace` 7/7, `test_balance_alert_hygiene` 6/6,
+- 신규 계약: `test_deploy_grace` 7/7, `test_balance_alert_hygiene` H1~H3 6/6 + H4 4/4,
   `test_kill_self_heal` 7/7 — 종료코드 0.
 - 핵심 회귀: `test_sentinel`, `test_ops_status`, `test_kis_telegram` — 종료코드 0.
+- H4 회귀: `test_sell_reject_reconcile`, `test_kis_ack_resolve`, `test_kis_boot`
+  — 종료코드 0.
 - `python3 -m compileall -q bot infra/server/watchdog.py tests` — 종료코드 0.
 - `git diff --check` — 종료코드 0.
 - 로컬 전체 55모듈 실행: 변경과 무관한 46모듈은 통과했고 9모듈은 기본 Python의

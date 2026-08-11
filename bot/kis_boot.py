@@ -35,6 +35,7 @@ _HEALTH_KEYS = ("last_success_at", "failure_streak", "last_error",
                 "failure_alerted")
 RECONCILE_FAILURE_ALERT_N = int(
     os.environ.get("RECONCILE_FAILURE_ALERT_N", "6") or 6)
+_RECENT_RECONCILE_EVENTS: dict[str, dict] = {}
 
 
 def _status_path() -> str:
@@ -164,6 +165,122 @@ def _notify(text: str, *, critical: bool = False,
         return bool(notify.send(text, critical=critical, category=category))
     except Exception:
         return False
+
+
+def _reconcile_notice_context(results: list[dict], orders: list[dict],
+                              hmaps: dict[str, dict | None], *,
+                              now: float | None = None) -> dict[str, dict]:
+    """대사 결과의 접수시각·브로커/장부 정합·5분 내 반대사건 관계를 만든다.
+
+    관측 실패는 ``미확인``일 뿐 대사 결과나 주문 상태를 되돌리지 않는다.
+    반환 key는 주문 원장 key이며 알림 문자열 외에는 아무 상태도 변경하지 않는다.
+    """
+    from bot import kis_positions
+
+    stamp = time.time() if now is None else float(now)
+    order_by_key = {str(row.get("key") or ""): row for row in orders}
+    balances = dict(hmaps)
+
+    def market_of(result: dict, order: dict) -> str:
+        market = str(result.get("market") or order.get("market") or "").upper()
+        return "KR" if market == "KR" or kis.market_of_symbol(
+            result.get("symbol") or order.get("symbol") or "") == "KR" else "US"
+
+    needed = {market_of(row, order_by_key.get(str(row.get("key") or ""), {}))
+              for row in results}
+    if "KR" in needed and "KR" not in balances:
+        balances["KR"] = kis.holdings("KR")
+    if "US" in needed and "US" not in balances:
+        merged: dict | None = {}
+        for excg in ("NASD", "NYSE", "AMEX"):
+            rows = kis.holdings("US", excg=excg)
+            if rows is None:
+                merged = None
+                break
+            merged.update(rows)
+        balances["US"] = merged
+    try:
+        book = kis_positions.load()
+        book_ok = isinstance(book, dict)
+    except Exception:
+        book, book_ok = {}, False
+
+    tz = ZoneInfo("Asia/Seoul")
+    # 5분보다 오래된 사건은 관계 후보에서 제거한다.
+    for symbol, event in list(_RECENT_RECONCILE_EVENTS.items()):
+        if stamp - float(event.get("at") or 0) > 300:
+            _RECENT_RECONCILE_EVENTS.pop(symbol, None)
+
+    contexts: dict[str, dict] = {}
+    for result in results:
+        key = str(result.get("key") or "")
+        order = order_by_key.get(key, {})
+        symbol = str(result.get("symbol") or order.get("symbol") or "").upper()
+        market = market_of(result, order)
+        submitted_at = float(order.get("submitted_at") or 0)
+        submitted_text = (datetime.datetime.fromtimestamp(submitted_at, tz)
+                          .strftime("%m/%d %H:%M") if submitted_at > 0 else "시각 미상")
+        broker = balances.get(market)
+        if broker is None or not book_ok:
+            parity = "정합 미확인(잔고 조회 실패)"
+            mismatch = False
+        else:
+            try:
+                broker_qty = int(broker.get(symbol, 0))
+                book_qty = int((book.get(symbol) or {}).get("qty") or 0)
+                mismatch = broker_qty != book_qty
+                parity = (f"🚨 불일치(보유 {broker_qty} vs 장부 {book_qty}) — "
+                          "수동 확인 필요" if mismatch else
+                          f"✅ 정합(보유 {broker_qty}주 = 장부 {book_qty}주)")
+            except (TypeError, ValueError):
+                parity, mismatch = "정합 미확인(잔고 조회 실패)", False
+        kind = "filled" if int(result.get("filled") or 0) > 0 else "rejected"
+        relation = ""
+        previous = _RECENT_RECONCILE_EVENTS.get(symbol)
+        if previous and previous.get("kind") != kind \
+                and stamp - float(previous.get("at") or 0) <= 300:
+            if kind == "rejected" and previous.get("kind") == "filled":
+                fill_hm = datetime.datetime.fromtimestamp(
+                    float(previous["at"]), tz).strftime("%H:%M")
+                relation = (f"오늘 {fill_hm} 체결분과 별개 — "
+                            f"{submitted_text[:5]} 접수 과거 전표 정리")
+            else:
+                previous_hm = datetime.datetime.fromtimestamp(
+                    float(previous["at"]), tz).strftime("%H:%M")
+                relation = (f"오늘 {previous_hm} 거절 종결분과 별개 — "
+                            f"{submitted_text} 접수 주문 체결")
+        contexts[key] = {"submitted": submitted_text, "parity": parity,
+                         "mismatch": mismatch, "relation": relation}
+        _RECENT_RECONCILE_EVENTS[symbol] = {
+            "kind": kind, "at": stamp, "submitted_at": submitted_at}
+    return contexts
+
+
+def _format_reconcile_notice(result: dict, context: dict) -> tuple[str, bool] | None:
+    """H4 알림 본문과 critical 여부를 순수하게 결정한다."""
+    detail = (f" · 접수 {context.get('submitted', '시각 미상')}\n"
+              f"{context.get('parity', '정합 미확인(잔고 조회 실패)')}")
+    if context.get("relation"):
+        detail += f"\n{context['relation']}"
+    try:
+        filled = int(result.get("filled") or 0)
+    except (TypeError, ValueError):
+        return None
+    mismatch = context.get("mismatch") is True
+    if filled <= 0:
+        if result.get("state") != "rejected":
+            return None
+        side_name = "매도" if result.get("side") == "SELL" else "매수"
+        via = "부재 증명" if result.get("via") == "absence-proof" else "브로커 종결 행"
+        qty = int(result.get("residual") or result.get("intended") or 0)
+        reason = str(result.get("broker_reason") or "사유 미상")
+        suffix = " · 보호는 유지" if result.get("side") == "SELL" else ""
+        return (f"⚠️ {side_name} 거절 종결({via}) — "
+                f"{result.get('symbol')} {qty}주 · {reason}{suffix}{detail}",
+                result.get("side") == "SELL" or mismatch)
+    return (f"✅ 체결 확정(잔고대사) — {result.get('symbol')} "
+            f"{'매수' if result.get('side') == 'BUY' else '매도'} "
+            f"{filled}주{detail}", result.get("side") == "SELL" or mismatch)
 
 
 def pending_unknowns() -> list[dict]:
@@ -354,29 +471,17 @@ def _resolve_acks() -> list[dict]:
             rs += kis_reconcile.resolve_acks_by_balance(
                 hmaps, fill_prices=fill_prices, only_keys=remaining_keys)
 
+        notice_context = _reconcile_notice_context(
+            rs, initial_open, hmaps, now=now) if rs else {}
         for r in rs:
-            try:
-                filled = int(r.get("filled") or 0)
-            except (TypeError, ValueError):
-                continue
-            if filled <= 0:
-                if r.get("state") == "rejected":
-                    side_name = "매도" if r.get("side") == "SELL" else "매수"
-                    via = "부재 증명" if r.get("via") == "absence-proof" else "브로커 종결 행"
-                    qty = int(r.get("residual") or r.get("intended") or 0)
-                    reason = str(r.get("broker_reason") or "사유 미상")
-                    suffix = " · 보호는 유지" if r.get("side") == "SELL" else ""
-                    _notify(f"⚠️ {side_name} 거절 종결({via}) — "
-                            f"{r.get('symbol')} {qty}주 · {reason}{suffix}",
-                            critical=(r.get("side") == "SELL"), category="trade")
+            context = notice_context.get(str(r.get("key") or ""), {})
+            notice = _format_reconcile_notice(r, context)
+            if notice is None:
                 continue
             # 포지션 차감/소멸은 kis_accounting.apply_sell_fill이 실제 체결수량으로
             # 이미 처리한다. 주문 1건이 full-fill이어도 절반익절일 수 있으므로
             # residual==0만 보고 포지션 전체를 close하면 남은 보유가 무보호가 된다.
-            _notify(f"✅ 체결 확정(잔고대사) — {r.get('symbol')} "
-                    f"{'매수' if r.get('side') == 'BUY' else '매도'} "
-                    f"{filled}주", critical=(r.get("side") == "SELL"),
-                    category="trade")
+            _notify(notice[0], critical=notice[1], category="trade")
         if errors:
             _record_failure("; ".join(sorted(set(errors))))
         else:

@@ -1,7 +1,7 @@
 from __future__ import annotations
 import inspect, os, stat, subprocess, time
 from unittest import mock
-from bot import balance_health, kis, kis_telegram, ops_status
+from bot import balance_health, kis, kis_boot, kis_telegram, ops_status
 
 def test_ten_failures_are_bundled_and_escalated():
     balance_health.reset_for_tests(); sent=[]
@@ -34,8 +34,47 @@ def test_snapshot_total_time_budget_and_publishable_shape():
 def test_sentinel_fail_closed_contract_is_unchanged():
     import bot.sentinel as s
     src=inspect.getsource(s.check_once); assert "bh = {}" in src and "held = feed" in src and "balance_health.record_failure" in src and "place_sell" not in inspect.getsource(balance_health)
+
+def test_h4_submitted_time_and_matching_parity():
+    kis_boot._RECENT_RECONCILE_EVENTS.clear()
+    order={"key":"k1","symbol":"LCII","market":"US","submitted_at":1723302000}
+    result={"key":"k1","symbol":"LCII","market":"US","filled":4}
+    with mock.patch("bot.kis_positions.load",return_value={"LCII":{"qty":4}}):
+        ctx=kis_boot._reconcile_notice_context([result],[order],{"US":{"LCII":4}},now=1723303000)["k1"]
+    assert ctx["submitted"]!="시각 미상" and ctx["parity"]=="✅ 정합(보유 4주 = 장부 4주)" and not ctx["mismatch"]
+
+def test_h4_mismatch_is_critical_signal_and_unavailable_is_honest():
+    kis_boot._RECENT_RECONCILE_EVENTS.clear(); order={"key":"k2","symbol":"LCII","market":"US","submitted_at":1723302000}; result={"key":"k2","symbol":"LCII","market":"US","filled":0}
+    with mock.patch("bot.kis_positions.load",return_value={"LCII":{"qty":3}}):
+        bad=kis_boot._reconcile_notice_context([result],[order],{"US":{"LCII":4}},now=1723303000)["k2"]
+        unknown=kis_boot._reconcile_notice_context([result],[order],{"US":None},now=1723303401)["k2"]
+    assert bad["mismatch"] and "수동 확인 필요" in bad["parity"]
+    assert unknown["parity"]=="정합 미확인(잔고 조회 실패)" and not unknown["mismatch"]
+    text, critical=kis_boot._format_reconcile_notice(
+        {**result,"state":"rejected","side":"BUY","intended":4},bad)
+    assert "접수" in text and "불일치" in text and critical
+    text, critical=kis_boot._format_reconcile_notice(
+        {**result,"state":"rejected","side":"BUY","intended":4},unknown)
+    assert "정합 미확인" in text and not critical
+
+def test_h4_five_minute_opposite_events_explain_relationship():
+    kis_boot._RECENT_RECONCILE_EVENTS.clear(); now=1723303000
+    filled={"key":"new","symbol":"LCII","market":"US","filled":4}; rejected={"key":"old","symbol":"LCII","market":"US","filled":0}
+    orders=[{"key":"new","symbol":"LCII","market":"US","submitted_at":now-60},{"key":"old","symbol":"LCII","market":"US","submitted_at":now-86400}]
+    with mock.patch("bot.kis_positions.load",return_value={"LCII":{"qty":4}}):
+        kis_boot._reconcile_notice_context([filled],orders,{"US":{"LCII":4}},now=now)
+        ctx=kis_boot._reconcile_notice_context([rejected],orders,{"US":{"LCII":4}},now=now+120)["old"]
+        late=kis_boot._reconcile_notice_context([filled],orders,{"US":{"LCII":4}},now=now+421)["new"]
+    assert "체결분과 별개" in ctx["relation"] and "과거 전표 정리" in ctx["relation"] and late["relation"]==""
+
+def test_h4_missing_balance_reuses_read_only_holdings_only():
+    kis_boot._RECENT_RECONCILE_EVENTS.clear(); calls=[]
+    def holdings(market,excg=None): calls.append((market,excg)); return {"LCII":4}
+    with mock.patch.object(kis,"holdings",side_effect=holdings), mock.patch("bot.kis_positions.load",return_value={"LCII":{"qty":4}}):
+        ctx=kis_boot._reconcile_notice_context([{"key":"k","symbol":"LCII","market":"US","filled":4}],[{"key":"k","symbol":"LCII","market":"US","submitted_at":1723302000}],{},now=1723303000)["k"]
+    assert calls==[("US","NASD"),("US","NYSE"),("US","AMEX")] and "정합" in ctx["parity"]
 def main():
     with __import__('tempfile').TemporaryDirectory() as tmp, mock.patch.dict(os.environ,{"BALANCE_HEALTH_PATH":f"{tmp}/health.json"}):
-        for fn in (test_ten_failures_are_bundled_and_escalated,test_recovery_once_and_new_incident,test_delivery_failure_does_not_latch,test_cause_counter_and_diag,test_snapshot_total_time_budget_and_publishable_shape,test_sentinel_fail_closed_contract_is_unchanged): fn()
-    print("balance alert hygiene 6/6 PASS")
+        for fn in (test_ten_failures_are_bundled_and_escalated,test_recovery_once_and_new_incident,test_delivery_failure_does_not_latch,test_cause_counter_and_diag,test_snapshot_total_time_budget_and_publishable_shape,test_sentinel_fail_closed_contract_is_unchanged,test_h4_submitted_time_and_matching_parity,test_h4_mismatch_is_critical_signal_and_unavailable_is_honest,test_h4_five_minute_opposite_events_explain_relationship,test_h4_missing_balance_reuses_read_only_holdings_only): fn()
+    print("balance alert hygiene H1-H3 6/6 + H4 4/4 PASS")
 if __name__=="__main__": main()
