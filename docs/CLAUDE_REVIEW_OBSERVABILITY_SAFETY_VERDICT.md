@@ -84,3 +84,24 @@ cycle 결과: {'action': 'notice_delivered'}
 
 P1-1 수정 + 교대 원인 회귀 테스트, P2-1 pending 귀속 확인, P2-2 계약
 테스트 — 세 부위 diff와 테스트 증거만 제출하면 부분 재검토로 처리한다.
+
+---
+
+## 부분 재검토 추기 (2026-08-12) — **최종 승인**
+
+수정 커밋 `1c98deed`를 독립 검증했다. diff 범위는 balance_health(사건
+단일화+Counter 통계)·kill_self_heal(pending 귀속 확인)·테스트 2파일로
+국한(주문·감시 코어 무변경).
+
+- **P1-1 해소**: 검토자 프로브 재실행 — 교대 원인 10회 → **경보 1건**,
+  30분 후 지속 경보에 "누적 11회 · 최다 원인 TimeoutError 5회 · 원인
+  3종" 통계 표기. 정보 손실 없이 억제 복원.
+- **P2-1 해소**: 잔재 pending 재현 → `notice_discarded
+  (l0_owner_not_self_heal)`·발송 0. 거짓 귀속 차단.
+- **P2-2 해소**: M-S1(접두 일치 약화) 재실행 → **KILLED (exit 1)**.
+- 회귀 8모듈 PASS.
+
+**최종 판정: 승인 — P0 0 · P1 0 · P2 0 · 잔여 P3 3건(비차단).**
+병합·Oracle 배포는 사용자 승인 후. 배포 시 운영 주의: autodeploy 기본
+재시작 목록에 watchdog이 없으므로 fast-forward 뒤 `watchdog.service`를
+별도 1회 재시작해야 새 유예·자가복구 루프가 적재된다.
