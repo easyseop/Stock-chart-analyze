@@ -48,6 +48,12 @@ for m in ('bot.kis', 'bot.kis_boot', 'bot.kis_buyloop', 'bot.sentinel',
   exit 1
 fi
 
+if ! python3 -m bot.deploy_grace "$REMOTE"; then
+  git reset --hard "$LOCAL" --quiet
+  notify "🚨 자동배포 실패(유예 마커 기록 불가) — ${REMOTE:0:7} 롤백. 수동 확인 필요." 1
+  exit 1
+fi
+
 # shellcheck disable=SC2086  # SERVICES는 의도적 워드 스플릿(여러 유닛)
 sudo systemctl restart $SERVICES
 notify "🔄 서버 자동배포 — $(git log -1 --format='%h %s') · 재시작: $SERVICES"

@@ -77,12 +77,12 @@ def _market_open(ccy: str) -> bool:
     return cfg.market_open(ccy)
 
 
-def _notify(text: str, *, critical: bool = False) -> None:
+def _notify(text: str, *, critical: bool = False) -> bool:
     try:
         from bot import notify
-        notify.send(text, critical=critical)
+        return bool(notify.send(text, critical=critical))
     except Exception:
-        pass
+        return False
 
 
 def _fetch_positions() -> tuple[list[dict], float | None]:
@@ -519,31 +519,25 @@ def check_once(broker, state: dict) -> None:
         bh = broker.holdings()
         used_cached_holdings = False
         if bh is not None and is_kis_truth:
+            from bot import balance_health
+            balance_health.record_success(sender=lambda text: _notify(text, critical=True))
             state["_broker_holdings"] = {
                 str(k).upper(): int(v) for k, v in bh.items()}
             state["_broker_holdings_at"] = time.time()
             state["_broker_holdings_failed"] = False
         elif bh is None and is_kis_truth:
+            from bot import balance_health, kis
+            balance_health.record_failure(
+                kis.last_get_failure(), sender=lambda text: _notify(text, critical=True))
             cached = state.get("_broker_holdings")
             cached_at = float(state.get("_broker_holdings_at") or 0)
             cache_age = time.time() - cached_at
             if isinstance(cached, dict) and cache_age <= BROKER_HOLDINGS_MAX_AGE_SEC:
                 bh = dict(cached)
                 used_cached_holdings = True
-                if not state.get("_broker_holdings_failed"):
-                    _notify(
-                        f"🚨 KIS 잔고 조회 실패 — 마지막 정상 잔고 "
-                        f"{max(0, cache_age):.0f}초 전 스냅샷으로 감시만 계속. "
-                        "주문 직전 재조회 실패 시 매도 차단",
-                        critical=True)
                 state["_broker_holdings_failed"] = True
             else:
                 bh = {}                           # 절대 공개 feed 수량으로 폴백하지 않음
-                if not state.get("_broker_holdings_failed"):
-                    _notify(
-                        "🚨 KIS 잔고 조회 실패·정상 캐시 만료 — 실계좌 수량 불명으로 "
-                        "자동매도 차단. 즉시 수동 확인 필요",
-                        critical=True)
                 state["_broker_holdings_failed"] = True
         if bh is not None:
             from bot import kis_positions

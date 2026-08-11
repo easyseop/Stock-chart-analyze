@@ -343,6 +343,13 @@ def _diag_text() -> str:
             L.append("  └ 실패 지속 시 손절 자동매도가 차단됩니다(수량 불명 fail-closed)")
     except Exception as e:
         L.append(f"KIS 잔고 조회: 확인 실패({type(e).__name__})")
+    try:
+        from bot import balance_health
+        health = balance_health.summary()
+        L.append(f"잔고 실패(24h): {health['count']}회 · 최다 원인 "
+                 f"{health['top_cause']} (프로세스 기동 후)")
+    except Exception as e:
+        L.append(f"잔고 실패(24h): 확인 실패({type(e).__name__})")
 
     # 4) 원장 — 열린 주문·UNKNOWN(주문 경로 건강)
     try:

@@ -21,6 +21,7 @@ import fcntl
 import json
 import os
 import subprocess
+import threading
 import time
 import urllib.request
 
@@ -28,6 +29,23 @@ _US_EXCGS = ("NASD", "NYSE", "AMEX")
 ACK_STUCK_ALERT_S = int(
     os.environ.get("ACK_STUCK_ALERT_S", "1800") or 1800)
 _stuck_ack_alerted: set[str] = set()
+
+
+def _kis_budget_s() -> float:
+    try: value = float(os.environ.get("OPS_KIS_BUDGET_S", "60") or 60)
+    except (TypeError, ValueError): value = 60.0
+    return max(1.0, min(120.0, value))
+
+
+def _call_before_deadline(fn, deadline: float):
+    box: dict = {}
+    def run():
+        try: box["value"] = fn()
+        except Exception as exc: box["error"] = type(exc).__name__
+    worker = threading.Thread(target=run, daemon=True, name="ops-kis-query")
+    worker.start(); worker.join(max(0.0, deadline - time.monotonic()))
+    if worker.is_alive() or "error" in box: return None, False
+    return box.get("value"), True
 
 
 def _stuck_latch_path() -> str:
@@ -158,17 +176,31 @@ def snapshot() -> dict:
     except Exception as e:
         out["heartbeat_error"] = type(e).__name__
     try:
+        from bot import deploy_grace
+        out["deploy_grace"] = deploy_grace.active()
+    except Exception:
+        out["deploy_grace"] = False
+    try:
         from bot import kis
-        markets = {}
+        markets = {"KR": None, **{e: None for e in _US_EXCGS}}
+        deadline = time.monotonic() + _kis_budget_s()
         for market, excg in [("KR", None)] + [("US", e) for e in _US_EXCGS]:
-            r = (kis.positions_detail(market) if market == "KR"
-                 else kis.positions_detail(market, excg=excg))
-            markets[market if market == "KR" else excg] = (
-                None if r is None else len(r))       # None=조회 실패, 숫자=보유 수
+            if time.monotonic() >= deadline: break
+            fn = (lambda m=market: kis.positions_detail(m)) if market == "KR" \
+                else (lambda m=market, e=excg: kis.positions_detail(m, excg=e))
+            r, completed = _call_before_deadline(fn, deadline)
+            name = market if market == "KR" else excg
+            markets[name] = None if not completed or r is None else len(r)
+            if not completed: break
         out["kis_positions_query"] = markets
         out["kis_query_ok"] = all(v is not None for v in markets.values())
     except Exception as e:
         out["kis_query_error"] = type(e).__name__
+    try:
+        from bot import balance_health
+        out["balance_fail_24h"] = int(balance_health.summary()["count"])
+    except Exception:
+        out["balance_fail_24h"] = 0
     try:
         from bot import ledger
         fold = ledger._fold()

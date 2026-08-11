@@ -307,12 +307,20 @@ def _token(force: bool = False) -> str | None:
 from bot import kis_ratelimit as _rl
 
 _LIMITER = _rl.for_env(IS_MOCK)
+_LAST_GET_FAILURE: dict | None = None
+
+
+def last_get_failure() -> dict | None:
+    return None if _LAST_GET_FAILURE is None else dict(_LAST_GET_FAILURE)
 
 
 def _get(path: str, tr: str, params: dict) -> dict | None:
     """인증 GET. 401→토큰 1회 강제 재발급, EGW00201→짧은 백오프 1회 재시도. 실패 None."""
+    global _LAST_GET_FAILURE
+    _LAST_GET_FAILURE = None
     tok = _token()
     if not tok:
+        _LAST_GET_FAILURE = {"exception": "AuthUnavailable"}
         return None
     k, s = _cred()
     url = BASE_URL + path + "?" + urllib.parse.urlencode(params)
@@ -321,6 +329,7 @@ def _get(path: str, tr: str, params: dict) -> dict | None:
         # 여러 프로세스 합산 초당 한도가 정확히 유지된다.
         if not _LIMITER.acquire("data", timeout=10.0):
             print(f"[kis] GET {path} 유량 대기 초과 — 건너뜀")
+            _LAST_GET_FAILURE = {"exception": "RateLimitWaitTimeout", "rate_limit": True}
             return None
         headers = {"content-type": "application/json; charset=utf-8",
                    "authorization": f"Bearer {tok}",
@@ -344,6 +353,7 @@ def _get(path: str, tr: str, params: dict) -> dict | None:
                 d = None
         except Exception as ex:
             print(f"[kis] GET {path} 실패({type(ex).__name__})")
+            _LAST_GET_FAILURE = {"exception": type(ex).__name__, "http_status": 0}
             return None
         act = classify_error((d or {}).get("rt_cd"), (d or {}).get("msg_cd"),
                              http, is_order=False)
@@ -359,6 +369,10 @@ def _get(path: str, tr: str, params: dict) -> dict | None:
         print(f"[kis] GET {path} → {act} "
               f"(rt_cd={(d or {}).get('rt_cd')} msg_cd={(d or {}).get('msg_cd')}"
               f"{' · ' + m1 if m1 else ''})")           # msg1 노출(모의 미지원 판별용)
+        _LAST_GET_FAILURE = {"http_status": http,
+                             "rt_cd": (d or {}).get("rt_cd"),
+                             "msg_cd": (d or {}).get("msg_cd"),
+                             "rate_limit": (d or {}).get("msg_cd") == "EGW00201"}
         return None
     return None
 
