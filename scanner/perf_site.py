@@ -80,14 +80,46 @@ def _save_cache(entry: dict) -> None:
         pass
 
 
+DAYS_RETENTION_PER_MARKET = 400      # 서버(alpha.DAYS_RETENTION)와 정합
+
+
+def _merge_days(old_rows: list, new_rows: list) -> list:
+    """일별 행 누적 병합 — 발행은 최근 30일만 싣지만 사이트는 계속 쌓는다.
+
+    같은 (날짜, 시장) 행은 최신 발행이 이긴다(미확정→확정 소급 반영).
+    시장별 400행 초과분은 오래된 것부터 버린다(서버 보존 창과 동일).
+    """
+    by_key: dict[tuple, dict] = {}
+    for row in list(old_rows or []) + list(new_rows or []):
+        if not isinstance(row, dict):
+            continue
+        key = (str(row.get("d") or ""), str(row.get("mkt") or ""))
+        if key[0] and key[1]:
+            by_key[key] = row                     # 나중(=신규 발행) 행이 덮음
+    merged = sorted(by_key.values(),
+                    key=lambda r: (str(r.get("d")), str(r.get("mkt"))))
+    per_market: dict[str, list] = {}
+    for row in merged:
+        per_market.setdefault(str(row.get("mkt")), []).append(row)
+    keep = []
+    for rows in per_market.values():
+        keep.extend(rows[-DAYS_RETENTION_PER_MARKET:])
+    return sorted(keep, key=lambda r: (str(r.get("d")), str(r.get("mkt"))))
+
+
 def build(out_dir: str = "public") -> bool:
     """api/performance.json을 굽는다. 소스가 전혀 없으면 False(파일 미생성)."""
-    entry = fetch_latest()
-    if entry is not None:
+    cached = _load_cache()
+    fresh = fetch_latest()
+    if fresh is not None:
+        payload = dict(fresh["payload"])
+        payload["days"] = _merge_days(
+            (cached or {}).get("payload", {}).get("days"), payload.get("days"))
+        entry = {"payload": payload, "published_at": fresh["published_at"]}
         _save_cache(entry)
         source = "ntfy"
     else:
-        entry = _load_cache()
+        entry = cached
         source = "cache"
     if entry is None:
         print("perf_site: 스냅샷 소스 없음(ntfy 비어있음·캐시 없음) — 건너뜀")

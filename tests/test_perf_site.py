@@ -113,11 +113,47 @@ def test_no_secrets_in_output():
     print("[PASS] 출력 무시크릿(퍼센트만)")
 
 
+def test_days_accumulate_beyond_publish_window():
+    """발행(30일 창)이 잘라 보내도 사이트 캐시는 계속 누적 + 최신이 소급 덮음."""
+    tmp = _sandbox()
+    out = os.path.join(tmp, "public")
+    # 1차 빌드: 8/10(확정)·8/11(미확정)
+    with mock.patch.object(P.urllib.request, "urlopen",
+                           lambda url, timeout=0: _Resp(_ntfy_lines(_PAYLOAD))):
+        assert P.build(out_dir=out)
+    # 2차 빌드: 발행 창이 이동해 8/10이 빠지고 8/11(확정 소급)·8/12 신규
+    later = {"day": {"US": {"date": "2026-08-12", "series": [["22:30", 0.1, 0.1]]}},
+             "days": [
+                 {"d": "2026-08-11", "mkt": "US", "acct": 0.2, "idx": 0.1,
+                  "a": 0.3, "b": None, "quality": "ok", "indices": {"나스닥": 0.1}},
+                 {"d": "2026-08-12", "mkt": "US", "acct": 0.4, "idx": 0.2,
+                  "a": 0.5, "b": None, "quality": "ok", "indices": {"나스닥": 0.2}},
+             ]}
+    with mock.patch.object(P.urllib.request, "urlopen",
+                           lambda url, timeout=0: _Resp(_ntfy_lines(later))):
+        assert P.build(out_dir=out)
+    result = json.load(open(os.path.join(out, "api", "performance.json"),
+                            encoding="utf-8"))
+    dates = [r["date"] for r in result["days"]]
+    assert dates == ["2026-08-10", "2026-08-11", "2026-08-12"], dates  # 누적 유지
+    d11 = [r for r in result["days"] if r["date"] == "2026-08-11"][0]
+    assert d11["account"] == 0.2                   # 미확정→확정 소급 반영
+    # 시장별 400행 상한
+    many = [{"d": f"2000-01-{i:02d}", "mkt": "US", "acct": 0.0, "idx": 0.0,
+             "a": None, "b": None, "quality": "ok", "indices": {}}
+            for i in range(1, 31)]
+    merged = P._merge_days([dict(r, d=f"20{y:02d}-01-01") for y in range(30)
+                            for r in many[:20]], [])
+    assert len(merged) <= P.DAYS_RETENTION_PER_MARKET
+    print("[PASS] 일별 누적·소급 갱신·400행 상한")
+
+
 def main():
     test_build_from_ntfy()
     test_cache_fallback_when_ntfy_empty()
     test_no_source_writes_nothing()
     test_no_secrets_in_output()
+    test_days_accumulate_beyond_publish_window()
     print("\n공개 성과 스냅샷 굽기 검증 통과 — 앱 성과 탭 공개 사이트 작동.")
 
 
