@@ -2,7 +2,7 @@
 
 검토 브랜치: `codex/observability-safety`
 
-기준: `claude/happy-gauss-cwoq21@c51a085`
+기준: `claude/happy-gauss-cwoq21@baad2c3`
 범위: 배포 유예창 + 잔고 경보 위생/진단 + 제한적 L1 자가복구
 
 ## 판정 기준
@@ -26,8 +26,9 @@
 
 ### B. 잔고 경보 위생
 
-- `bot/balance_health.py`: 원인 계열별 첫 실패 즉시, 30분 묶음, 60분 1회 격상,
-  회복 1회. 발송 성공 뒤에만 래치한다.
+- `bot/balance_health.py`: 원인이 교대해도 잔고 실패 사건 하나를 유지하며 첫 실패
+  즉시, 30분 묶음, 60분 1회 격상, 회복 1회. 원인은 사건 내 통계로 보존하고
+  발송 성공 뒤에만 래치한다.
 - `bot/kis.py`의 조회 전용 `_get`이 HTTP/rt_cd/msg_cd/예외 타입/레이트리밋을
   무시크릿 원인으로 남긴다. 주문 POST·주문 판정에는 연결하지 않는다.
 - sentinel의 기존 캐시 감시·캐시 만료 시 `{}`·주문 직전 재조회 차단은 그대로다.
@@ -111,8 +112,8 @@
 
 ## 실행 증거
 
-- 신규 계약: `test_deploy_grace` 7/7, `test_balance_alert_hygiene` H1~H3 6/6 + H4 4/4,
-  `test_kill_self_heal` 7/7 — 종료코드 0.
+- 신규 계약: `test_deploy_grace` 7/7, `test_balance_alert_hygiene` H1~H3 7/7 + H4 4/4,
+  `test_kill_self_heal` 9/9 — 종료코드 0.
 - 핵심 회귀: `test_sentinel`, `test_ops_status`, `test_kis_telegram` — 종료코드 0.
 - H4 회귀: `test_sell_reject_reconcile`, `test_kis_ack_resolve`, `test_kis_boot`
   — 종료코드 0.
@@ -132,3 +133,15 @@ mutation/fault injection으로 반증해 달라. P0/P1이면 병합 차단. P2/P
 배포 운영 주의: 현재 설치된 autodeploy 기본 재시작 목록에는 watchdog이 없으므로,
 사용자 승인 배포 때 코드 fast-forward 뒤 `watchdog.service`를 별도로 1회 재시작해
 새 grace/self-heal 루프를 적재해야 한다. 이 브랜치는 서비스 상태를 바꾸지 않는다.
+
+## Claude 1차 판정(baad2c3) 반영
+
+- P1-1: 원인이 타임아웃/HTTP/레이트리밋으로 바뀌어도 하나의 잔고 실패 사건을
+  유지한다. 원인은 사건 내 `Counter`로 누적하고 알림에는 최다 원인과 원인 가짓수를
+  표시한다. 30초 간격 교대 원인 10회가 첫 경보 1건만 만드는 회귀 테스트를 추가했다.
+- P2-1: 재시작 뒤 `pending_notice` 전달 직전에 L0 상태의 `who`가 정확히
+  `self-heal`인지 확인한다. 운영자 하향이면 pending을 지우고 저널 로그만 남기며
+  자동복구 알림은 보내지 않는다.
+- P2-2: `self_heal_allowed`의 `who`·`why`는 완전일치만 허용한다. 접두·부분·앞뒤
+  공백·대소문자 변형을 모두 거부하는 회귀 테스트를 추가했다.
+- P3 3건은 비차단 선택사항이므로 부분 재검토 범위를 넓히지 않기 위해 변경하지 않았다.

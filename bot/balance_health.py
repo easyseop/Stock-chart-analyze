@@ -105,6 +105,12 @@ def reset_for_tests() -> None:
     _events.clear(); _incident = None
 
 
+def _incident_cause_summary(incident: dict) -> str:
+    counts = incident["causes"]
+    top_cause, top_count = counts.most_common(1)[0]
+    return f"최다 원인 {top_cause} {top_count}회 · 원인 {len(counts)}종"
+
+
 def _send(text: str) -> bool:
     try:
         from bot import notify
@@ -119,10 +125,14 @@ def record_failure(detail: object = None, *, now: float | None = None,
     stamp = time.time() if now is None else float(now)
     cause = cause_label(detail)
     _events.append((stamp, cause)); _prune(stamp); _write_status(stamp)
-    if _incident is None or _incident["cause"] != cause:
-        _incident = {"cause": cause, "first_at": stamp, "count": 0,
-                     "last_sent_at": None, "escalated": False}
-    inc = _incident; inc["count"] += 1
+    # HTTP/타임아웃/레이트리밋이 번갈아도 모두 하나의 "잔고 조회 실패"
+    # 사건이다. 원인 라벨 변경으로 억제창을 초기화하지 않고 사건 내 통계로만
+    # 보존한다.
+    if _incident is None:
+        _incident = {"first_at": stamp, "count": 0,
+                     "last_sent_at": None, "escalated": False,
+                     "causes": Counter()}
+    inc = _incident; inc["count"] += 1; inc["causes"][cause] += 1
     duration = max(0.0, stamp - inc["first_at"])
     escalation_due = duration >= ESCALATE_S and not inc["escalated"]
     first_due = inc["last_sent_at"] is None
@@ -130,12 +140,15 @@ def record_failure(detail: object = None, *, now: float | None = None,
                     and stamp - inc["last_sent_at"] >= _suppress_s())
     if not (first_due or periodic_due or escalation_due):
         return False
+    cause_summary = _incident_cause_summary(inc)
     if escalation_due:
-        text = f"🚨 KIS 잔고 조회 60분째 간헐 실패 — 누적 {inc['count']}회 · 원인 {cause}"
+        text = (f"🚨 KIS 잔고 조회 60분째 간헐 실패 — 누적 {inc['count']}회 · "
+                f"{cause_summary}")
     elif first_due:
-        text = f"🚨 KIS 잔고 조회 실패 — 원인 {cause} · fail-closed 감시 유지"
+        text = f"🚨 KIS 잔고 조회 실패 — {cause_summary} · fail-closed 감시 유지"
     else:
-        text = f"⚠️ KIS 잔고 조회 실패 지속 — 누적 {inc['count']}회 · 원인 {cause}"
+        text = (f"⚠️ KIS 잔고 조회 실패 지속 — 누적 {inc['count']}회 · "
+                f"{cause_summary}")
     delivered = _send(text) if sender is None else bool(sender(text))
     if not delivered:
         return False
@@ -153,7 +166,7 @@ def record_success(*, now: float | None = None, sender=None) -> bool:
     inc = _incident
     minutes = max(0, int(round((stamp - inc["first_at"]) / 60.0)))
     text = (f"✅ KIS 잔고 조회 회복 — 실패 누적 {inc['count']}회 · "
-            f"총 지속 {minutes}분 · 원인 {inc['cause']}")
+            f"총 지속 {minutes}분 · {_incident_cause_summary(inc)}")
     delivered = _send(text) if sender is None else bool(sender(text))
     if not delivered:
         return False

@@ -1882,3 +1882,6 @@ Claude 전면 재검토는 불필요하고 위 증거만 제출하면 된다. �
 - 금지선: Claude P0/P1=0 및 사용자 승인 전 merge/Oracle deploy 금지.
 - 추가 H4(c51a085): 대사 알림 접수시각·브로커/장부 정합·5분 내 체결/과거전표
   관계 설명 구현. H4 4/4 + SELL/ACK/boot 회귀 통과.
+- Claude 1차 판정(baad2c3) 반영: 잔고 실패 사건을 원인 교대와 무관하게 단일 유지,
+  pending 자동복구 알림은 `who=self-heal`일 때만 전달, self-heal 허용 문자열
+  완전일치 테스트 추가. 집중 테스트 H1~H3 7/7+H4 4/4, self-heal 9/9 통과.

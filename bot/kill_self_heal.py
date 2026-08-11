@@ -108,6 +108,16 @@ def cycle(*, heartbeat_age_s: float | None, now: float | None = None) -> dict:
     state, corrupted = _load(stamp)
     if corrupted or state is None: return {"action": "blocked", "why": "state_corrupt"}
     if state["pending_notice"] and kill.level() == 0:
+        lowered_by = str(kill.status().get("who") or "")
+        if lowered_by != "self-heal":
+            state["pending_notice"] = ""
+            saved = _save(state)
+            print("kill-self-heal: pending notice discarded — "
+                  f"L0 owner={lowered_by or 'unknown'}")
+            if not saved:
+                return {"action": "blocked", "why": "state_write"}
+            return {"action": "notice_discarded",
+                    "why": "l0_owner_not_self_heal"}
         if _delivered(state["pending_notice"]):
             state["pending_notice"] = ""; _save(state)
             return {"action": "notice_delivered"}

@@ -13,6 +13,14 @@ def test_recovery_once_and_new_incident():
     with mock.patch.object(balance_health,"_send",side_effect=lambda x: sent.append(x) or True):
         balance_health.record_failure(TimeoutError(),now=100); balance_health.record_failure(TimeoutError(),now=160); assert balance_health.record_success(now=700); assert not balance_health.record_success(now=701); balance_health.record_failure(TimeoutError(),now=800)
     assert len(sent)==3 and "2회" in sent[1] and "10분" in sent[1]
+def test_alternating_causes_remain_one_incident():
+    balance_health.reset_for_tests(); sent=[]
+    alternating=[TimeoutError(),{"http_status":500}]*5
+    with mock.patch.object(balance_health,"_send",side_effect=lambda x: sent.append(x) or True):
+        for idx,detail in enumerate(alternating): balance_health.record_failure(detail,now=idx*30)
+        assert len(sent)==1
+        balance_health.record_failure(TimeoutError(),now=1801)
+    assert len(sent)==2 and "원인 2종" in sent[-1] and "최다 원인" in sent[-1]
 def test_delivery_failure_does_not_latch():
     balance_health.reset_for_tests(); send=mock.Mock(side_effect=[False,True,False,True])
     with mock.patch.object(balance_health,"_send",send):
@@ -75,6 +83,6 @@ def test_h4_missing_balance_reuses_read_only_holdings_only():
     assert calls==[("US","NASD"),("US","NYSE"),("US","AMEX")] and "정합" in ctx["parity"]
 def main():
     with __import__('tempfile').TemporaryDirectory() as tmp, mock.patch.dict(os.environ,{"BALANCE_HEALTH_PATH":f"{tmp}/health.json"}):
-        for fn in (test_ten_failures_are_bundled_and_escalated,test_recovery_once_and_new_incident,test_delivery_failure_does_not_latch,test_cause_counter_and_diag,test_snapshot_total_time_budget_and_publishable_shape,test_sentinel_fail_closed_contract_is_unchanged,test_h4_submitted_time_and_matching_parity,test_h4_mismatch_is_critical_signal_and_unavailable_is_honest,test_h4_five_minute_opposite_events_explain_relationship,test_h4_missing_balance_reuses_read_only_holdings_only): fn()
-    print("balance alert hygiene H1-H3 6/6 + H4 4/4 PASS")
+        for fn in (test_ten_failures_are_bundled_and_escalated,test_recovery_once_and_new_incident,test_alternating_causes_remain_one_incident,test_delivery_failure_does_not_latch,test_cause_counter_and_diag,test_snapshot_total_time_budget_and_publishable_shape,test_sentinel_fail_closed_contract_is_unchanged,test_h4_submitted_time_and_matching_parity,test_h4_mismatch_is_critical_signal_and_unavailable_is_honest,test_h4_five_minute_opposite_events_explain_relationship,test_h4_missing_balance_reuses_read_only_holdings_only): fn()
+    print("balance alert hygiene H1-H3 7/7 + H4 4/4 PASS")
 if __name__=="__main__": main()

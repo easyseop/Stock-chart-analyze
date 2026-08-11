@@ -2,7 +2,9 @@ from __future__ import annotations
 import json, os, stat, tempfile
 from unittest import mock
 from bot import kill, kill_self_heal
-from bot.watchdog_policy import HEARTBEAT_EXHAUSTED_REASON, WATCHDOG_WHO
+from bot.watchdog_policy import (BALANCE_FAILURE_REASON,
+                                 HEARTBEAT_EXHAUSTED_REASON, WATCHDOG_WHO,
+                                 self_heal_allowed)
 def _env(tmp): return mock.patch.dict(os.environ,{"KILL_STATE_PATH":f"{tmp}/kill.json","KILL_LOG_PATH":f"{tmp}/kill.jsonl","SELF_HEAL_STATE_PATH":f"{tmp}/heal.json","SELF_HEAL_OBSERVE_S":"10","KILL_LEVEL":"0"})
 def _raise(): assert kill.raise_level(1,WATCHDOG_WHO,HEARTBEAT_EXHAUSTED_REASON)==1; return float(kill.status()["ts"])
 def test_normal_path_lowers_and_audits_self_heal():
@@ -40,7 +42,31 @@ def test_notification_failure_retries_after_lower():
         ts=_raise(); kill_self_heal.cycle(heartbeat_age_s=1,now=ts)
         with mock.patch.object(kill_self_heal,"_delivered",return_value=False): assert kill_self_heal.cycle(heartbeat_age_s=1,now=ts+11)=={"action":"recovered","notified":False}
         with mock.patch.object(kill_self_heal,"_delivered",return_value=True) as sent: assert kill_self_heal.cycle(heartbeat_age_s=1,now=ts+12)["action"]=="notice_delivered" and sent.call_count==1
+def test_pending_notice_is_discarded_after_manual_lower():
+    with tempfile.TemporaryDirectory() as tmp,_env(tmp),mock.patch("bot.notify.send",return_value=True),mock.patch.object(kill_self_heal,"_readiness_go",return_value=(True,"go")):
+        ts=_raise(); kill_self_heal.cycle(heartbeat_age_s=1,now=ts)
+        with mock.patch.object(kill,"lower_level",side_effect=RuntimeError("crash")):
+            assert kill_self_heal.cycle(heartbeat_age_s=1,now=ts+11)["action"]=="blocked"
+        assert json.load(open(f"{tmp}/heal.json",encoding="utf-8"))["pending_notice"]
+        assert kill.lower_level(0,ack="operator manual recovery")==0
+        with mock.patch.object(kill_self_heal,"_delivered",return_value=True) as sent:
+            out=kill_self_heal.cycle(heartbeat_age_s=1,now=ts+12)
+        assert out=={"action":"notice_discarded","why":"l0_owner_not_self_heal"} and sent.call_count==0
+        assert json.load(open(f"{tmp}/heal.json",encoding="utf-8"))["pending_notice"]==""
+def test_self_heal_allowlist_requires_exact_match():
+    assert self_heal_allowed(WATCHDOG_WHO,HEARTBEAT_EXHAUSTED_REASON)
+    assert self_heal_allowed(WATCHDOG_WHO,BALANCE_FAILURE_REASON)
+    variants=((WATCHDOG_WHO+"-extra",HEARTBEAT_EXHAUSTED_REASON),
+              (WATCHDOG_WHO[:4],HEARTBEAT_EXHAUSTED_REASON),
+              (" "+WATCHDOG_WHO,HEARTBEAT_EXHAUSTED_REASON),
+              (WATCHDOG_WHO+" ",HEARTBEAT_EXHAUSTED_REASON),
+              (WATCHDOG_WHO,HEARTBEAT_EXHAUSTED_REASON[:10]),
+              (WATCHDOG_WHO,HEARTBEAT_EXHAUSTED_REASON+" 추가"),
+              (WATCHDOG_WHO," "+HEARTBEAT_EXHAUSTED_REASON),
+              (WATCHDOG_WHO,HEARTBEAT_EXHAUSTED_REASON+" "),
+              (WATCHDOG_WHO,BALANCE_FAILURE_REASON.replace("KIS","kis")))
+    assert all(not self_heal_allowed(who,why) for who,why in variants)
 def main():
-    for fn in (test_normal_path_lowers_and_audits_self_heal,test_s1_operator_reason_and_l2_never_lower,test_s2_29_minutes_flap_and_restart_reset,test_s3_no_go_exception_and_l2_toctou_block,test_s4_once_per_kst_day_and_manual_alert,test_corrupt_state_fail_closed,test_notification_failure_retries_after_lower): fn()
-    print("kill self-heal 7/7 PASS")
+    for fn in (test_normal_path_lowers_and_audits_self_heal,test_s1_operator_reason_and_l2_never_lower,test_s2_29_minutes_flap_and_restart_reset,test_s3_no_go_exception_and_l2_toctou_block,test_s4_once_per_kst_day_and_manual_alert,test_corrupt_state_fail_closed,test_notification_failure_retries_after_lower,test_pending_notice_is_discarded_after_manual_lower,test_self_heal_allowlist_requires_exact_match): fn()
+    print("kill self-heal 9/9 PASS")
 if __name__=="__main__": main()
