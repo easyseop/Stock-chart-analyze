@@ -11,7 +11,11 @@ import os
 import sys
 import time
 
-DEFAULT_PATH = "/opt/stock/deploy_grace.json"
+# 기본 경로는 repo의 bot/ 디렉터리 — kill_switch.json과 같은 선례.
+#   /opt/stock은 배포 스크립트 계정(ubuntu)에 쓰기 불가라 마커 기록이 실패해
+#   자동배포 전체가 롤백되는 사고가 났다(2026-08-12 01:37 실측). bot/은
+#   배포 계정(git 작업)과 서비스 계정(kill·원장 기록) 모두 검증된 경로다.
+DEFAULT_PATH = os.path.join(os.path.dirname(__file__), "deploy_grace.json")
 DEFAULT_TTL_S = 300.0
 MAX_TTL_S = 600.0
 MAX_FUTURE_S = 60.0
