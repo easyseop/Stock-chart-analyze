@@ -1,7 +1,8 @@
 # Claude 적대 검토 요청 — 관측·감시 안전 3건 통합
 
-검토 브랜치: `codex/observability-safety`  
-기준: `claude/happy-gauss-cwoq21@f0599b2`  
+검토 브랜치: `codex/observability-safety`
+
+기준: `claude/happy-gauss-cwoq21@f0599b2`
 범위: 배포 유예창 + 잔고 경보 위생/진단 + 제한적 L1 자가복구
 
 ## 판정 기준
