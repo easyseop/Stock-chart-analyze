@@ -22,7 +22,8 @@ sys.path.insert(0, os.environ.get(
     "BOT_REPO_DIR", os.path.dirname(os.path.dirname(
         os.path.dirname(os.path.abspath(__file__))))))
 
-from bot import heartbeat, kill, notify  # noqa: E402
+from bot import deploy_grace, heartbeat, kill, kill_self_heal, notify  # noqa: E402
+from bot.watchdog_policy import HEARTBEAT_EXHAUSTED_REASON, WATCHDOG_WHO  # noqa: E402
 
 CHECK_SEC = 15
 RESTART_AFTER_S = 90.0
@@ -40,36 +41,49 @@ def _restart_sentinel() -> bool:
         return False
 
 
+def check_cycle(state: dict, *, now: float | None = None) -> None:
+    stamp = time.time() if now is None else float(now)
+    age = heartbeat.age_s()
+    sla = heartbeat.sla_status(age, has_positions=True)
+    grace = deploy_grace.active(now=stamp)
+    if grace and not state.get("grace"): print("watchdog: deploy grace 시작")
+    elif not grace and state.get("grace"): print("watchdog: deploy grace 종료")
+    state["grace"] = grace
+    if sla != heartbeat.OK:
+        if not state.get("alerted"):
+            notify.send(f"🚨 watchdog: 파수꾼 heartbeat "
+                        f"{'없음' if age is None else f'{age:.0f}s'} ({sla})", critical=True)
+            state["alerted"] = True
+        if grace:
+            print("watchdog: deploy grace 중 — heartbeat age "
+                  f"{'없음' if age is None else f'{age:.0f}s'} 무시")
+            return
+        if age is None or age > RESTART_AFTER_S:
+            restarts = [t for t in state.get("restarts", []) if stamp - t < RESTART_WINDOW_S]
+            if len(restarts) < MAX_RESTARTS:
+                ok = _restart_sentinel(); restarts.append(stamp)
+                notify.send(f"🔄 watchdog: {UNIT} 재기동 {'성공' if ok else '실패'} "
+                            f"({len(restarts)}/{MAX_RESTARTS})", critical=True)
+            elif sla == heartbeat.HARD_DISABLE:
+                kill.raise_level(1, WATCHDOG_WHO, HEARTBEAT_EXHAUSTED_REASON)
+            state["restarts"] = restarts
+    elif state.get("alerted"):
+        notify.send("✅ watchdog: 파수꾼 heartbeat 회복", critical=True)
+        state["alerted"] = False
+    try:
+        result = kill_self_heal.cycle(heartbeat_age_s=age, now=stamp)
+        if result.get("action") in ("recovered", "manual_alert"):
+            print(f"watchdog self-heal: {result}")
+    except Exception as exc:
+        print(f"[watchdog self-heal 오류] {type(exc).__name__}: {exc}")
+
+
 def main() -> None:
     print(f"watchdog 시작 — unit={UNIT} · 점검 {CHECK_SEC}s")
-    restarts: list[float] = []
-    alerted = False
+    state = {"restarts": [], "alerted": False, "grace": False}
     while True:
         try:
-            age = heartbeat.age_s()
-            sla = heartbeat.sla_status(age, has_positions=True)  # 보수적: 보유 가정
-            if sla != heartbeat.OK:
-                if not alerted:
-                    notify.send(f"🚨 watchdog: 파수꾼 heartbeat "
-                                f"{'없음' if age is None else f'{age:.0f}s'} "
-                                f"({sla})", critical=True)
-                    alerted = True
-                if (age is None or age > RESTART_AFTER_S):
-                    now = time.time()
-                    restarts = [t for t in restarts if now - t < RESTART_WINDOW_S]
-                    if len(restarts) < MAX_RESTARTS:
-                        ok = _restart_sentinel()
-                        restarts.append(now)
-                        notify.send(f"🔄 watchdog: {UNIT} 재기동 "
-                                    f"{'성공' if ok else '실패'} "
-                                    f"({len(restarts)}/{MAX_RESTARTS})",
-                                    critical=True)
-                    elif sla == heartbeat.HARD_DISABLE:
-                        kill.raise_level(1, "watchdog",
-                                         "파수꾼 120s+ 다운·재기동 소진 — 신규 금지")
-            elif alerted:
-                notify.send("✅ watchdog: 파수꾼 heartbeat 회복", critical=True)
-                alerted = False
+            check_cycle(state)
         except Exception as e:
             print(f"[watchdog 오류] {type(e).__name__}: {e}")
         time.sleep(CHECK_SEC)

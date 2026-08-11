@@ -151,9 +151,10 @@ def lower_level(lv: int, *, ack: str) -> int:
         return cur
     if int(os.environ.get("KILL_LEVEL", "0") or 0) > lv:
         raise PermissionError("환경변수 KILL_LEVEL이 더 높음 — env부터 내려야 함")
-    if not _write_file(lv, "operator", ack):
+    who = "self-heal" if ack.strip().startswith("self-heal:") else "operator"
+    if not _write_file(lv, who, ack):
         return cur
-    _log({"ev": "lower", "from": cur, "to": lv, "who": "operator", "ack": ack})
+    _log({"ev": "lower", "from": cur, "to": lv, "who": who, "ack": ack})
     return lv
 
 

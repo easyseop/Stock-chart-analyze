@@ -1866,3 +1866,17 @@ P2 후속 전체 검증은 Python `52/52`, Node `19/19`, compileall, JS syntax,
 ACK 경보 선잠금 회귀도 각각 대응 테스트가 exit 1로 실패해 KILLED됐다.
 Claude 전면 재검토는 불필요하고 위 증거만 제출하면 된다. 사용자 승인 전
 병합·Oracle 배포는 여전히 금지다.
+# 2026-08-11 — 관측·감시 안전 3건 통합 (Claude 검토 전, 미병합·미배포)
+
+- 작업 브랜치: `codex/observability-safety` (기준 `f0599b2`)
+- 구현:
+  - 배포 직전 0644 원자 TTL 마커 + watchdog 300초(최대600) grace.
+  - 잔고 실패 원인 카운터, 30분 묶음/60분 격상/회복 요약, `/진단`·ops 숫자 공유.
+  - ops KIS 4시장 조회 총 60초 예산.
+  - 완전일치 자동사유·30분 연속 heartbeat·broker readiness GO·KST 하루1회일 때만
+    L1→L0 self-heal. L2+, operator, 상태손상, readiness 변동은 전부 차단.
+- 안전 보강: watchdog 재시작 시 관찰 초기화, readiness 중 kill TOCTOU 재검사,
+  알림 실패 재시도, autodeploy 마커 실패 시 rollback.
+- 테스트: 신규 7+6+7 및 sentinel/ops/telegram 핵심 회귀/compileall/diff-check 통과.
+- 검토 요청: `docs/CLAUDE_REVIEW_OBSERVABILITY_SAFETY.md`.
+- 금지선: Claude P0/P1=0 및 사용자 승인 전 merge/Oracle deploy 금지.
