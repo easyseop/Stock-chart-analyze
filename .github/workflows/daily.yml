@@ -267,6 +267,12 @@ jobs:
         if: ${{ github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && github.event.inputs.update != 'none') }}
         run: timeout -k 30 720 python main.py --update-hourly 80 || true
 
+      # 앱 '성과' 탭용 공개 스냅샷(퍼센트만) — ntfy 최신분 또는 캐시 폴백.
+      #   개인서버(portfolio-web) 전용이던 api/performance.json을 공개 사이트에도
+      #   구워 오후 만료·404 문제를 해소(2026-08-12). 실패해도 빌드 무해.
+      - name: 공개 성과 스냅샷 굽기(best-effort)
+        run: timeout -k 10 60 python -m scanner.perf_site --out public || true
+
       - name: 스크리너 생성(캐시 전체 — 즉석조회 추가분 포함, 네트워크 0)
         env:
           BUILD_SHA: ${{ github.sha }}   # 같은 코드면 증분 렌더, 코드 바뀌면 전체 재렌더

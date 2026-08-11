@@ -66,6 +66,9 @@ jobs:
       - name: 스크리너 재생성(캐시 전체 — 추가분 포함)
         run: python main.py --cache --scan-cached --screener --screener-dir public
 
+      - name: 공개 성과 스냅샷 굽기(best-effort — daily와 동일)
+        run: timeout -k 10 60 python -m scanner.perf_site --out public || true
+
       - uses: actions/upload-pages-artifact@v3
         with:
           path: public
