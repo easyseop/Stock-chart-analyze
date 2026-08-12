@@ -1,10 +1,10 @@
 {
- "generated_at": "2026-08-13T03:30:37.116681+09:00",
+ "generated_at": "2026-08-13T03:46:04.527097+09:00",
  "updated": "2026-08-13",
  "start": 100000000,
- "cash": 41853929,
- "equity": 101785714,
- "ret_pct": 1.79,
+ "cash": 47773807,
+ "equity": 101810974,
+ "ret_pct": 1.81,
  "positions": [
   {
    "code": "MRSH",
@@ -12,14 +12,14 @@
    "ccy": "USD",
    "q": 36,
    "avg": 174.3075,
-   "price": 188.8999938964844,
+   "price": 188.88999938964844,
    "stop": 184.80249938964843,
    "target": 192.2575,
    "half_done": true,
    "opened": "2026-07-06",
-   "pl_krw": 744644,
+   "pl_krw": 744134,
    "pl_pct": 8.37,
-   "price_age_min": 6.8
+   "price_age_min": 6.9
   },
   {
    "code": "HMC",
@@ -27,14 +27,14 @@
    "ccy": "USD",
    "q": 2,
    "avg": 27.665,
-   "price": 31.309999465942383,
+   "price": 31.30500030517578,
    "stop": 29.60260064086914,
    "target": 30.5824,
    "half_done": true,
    "opened": "2026-07-09",
-   "pl_krw": 10333,
-   "pl_pct": 13.18,
-   "price_age_min": 10.1
+   "pl_krw": 10319,
+   "pl_pct": 13.16,
+   "price_age_min": 10.2
   },
   {
    "code": "J",
@@ -42,14 +42,14 @@
    "ccy": "USD",
    "q": 32,
    "avg": 126.585,
-   "price": 145.5,
+   "price": 145.58999633789062,
    "stop": 137.86490610351564,
    "target": 141.2316,
    "half_done": true,
    "opened": "2026-07-11",
-   "pl_krw": 857972,
-   "pl_pct": 14.94,
-   "price_age_min": 6.8
+   "pl_krw": 862054,
+   "pl_pct": 15.01,
+   "price_age_min": 6.9
   },
   {
    "code": "MAIN",
@@ -57,13 +57,13 @@
    "ccy": "USD",
    "q": 39,
    "avg": 53.96,
-   "price": 58.369998931884766,
+   "price": 58.52000045776367,
    "stop": 55.83619877929688,
    "target": 58.7184,
    "half_done": true,
    "opened": "2026-07-22",
-   "pl_krw": 243792,
-   "pl_pct": 8.17,
+   "pl_krw": 252085,
+   "pl_pct": 8.45,
    "price_age_min": 9.2
   },
   {
@@ -79,7 +79,7 @@
    "opened": "2026-07-27",
    "pl_krw": 215000,
    "pl_pct": 5.83,
-   "price_age_min": 6.8
+   "price_age_min": 6.9
   },
   {
    "code": "EQT",
@@ -87,29 +87,29 @@
    "ccy": "USD",
    "q": 121,
    "avg": 51.375,
-   "price": 54.005001068115234,
+   "price": 54.01499938964844,
    "stop": 51.375,
    "target": 57.1234,
    "half_done": true,
    "opened": "2026-07-29",
-   "pl_krw": 451085,
-   "pl_pct": 5.12,
-   "price_age_min": 6.8
+   "pl_krw": 452800,
+   "pl_pct": 5.14,
+   "price_age_min": 6.9
   },
   {
    "code": "MDT",
    "name": "Medtronic plc.",
    "ccy": "USD",
-   "q": 93,
+   "q": 47,
    "avg": 86.12,
-   "price": 90.72000122070312,
-   "stop": 81.6215,
+   "price": 90.79000091552734,
+   "stop": 86.12,
    "target": 95.117,
-   "half_done": false,
+   "half_done": true,
    "opened": "2026-07-30",
-   "pl_krw": 606398,
-   "pl_pct": 5.34,
-   "price_age_min": 6.8
+   "pl_krw": 311123,
+   "pl_pct": 5.42,
+   "price_age_min": 6.9
   },
   {
    "code": "AVY",
@@ -117,14 +117,14 @@
    "ccy": "USD",
    "q": 28,
    "avg": 169.73,
-   "price": 180.8699951171875,
+   "price": 180.77999877929688,
    "stop": 158.3847,
    "target": 192.4206,
    "half_done": false,
    "opened": "2026-08-03",
-   "pl_krw": 442140,
-   "pl_pct": 6.56,
-   "price_age_min": 6.8
+   "pl_krw": 438568,
+   "pl_pct": 6.51,
+   "price_age_min": 6.9
   },
   {
    "code": "DPZ",
@@ -132,14 +132,14 @@
    "ccy": "USD",
    "q": 10,
    "avg": 353.285,
-   "price": 352.7699890136719,
+   "price": 352.8599853515625,
    "stop": 328.6353,
    "target": 402.5845,
    "half_done": false,
    "opened": "2026-08-07",
-   "pl_krw": -7300,
-   "pl_pct": -0.15,
-   "price_age_min": 6.8
+   "pl_krw": -6024,
+   "pl_pct": -0.12,
+   "price_age_min": 6.9
   },
   {
    "code": "UFPI",
@@ -147,13 +147,13 @@
    "ccy": "USD",
    "q": 24,
    "avg": 90.485,
-   "price": 90.41999816894533,
+   "price": 90.55999755859376,
    "stop": 84.0446,
    "target": 103.3659,
    "half_done": false,
    "opened": "2026-08-11",
-   "pl_krw": -2211,
-   "pl_pct": -0.07,
+   "pl_krw": 2551,
+   "pl_pct": 0.08,
    "price_age_min": 9.5
   }
  ],
@@ -870,10 +870,23 @@
   },
   {
    "d": "2026-08-13",
-   "v": 101785714
+   "v": 101810974
   }
  ],
  "log": [
+  {
+   "d": "2026-08-13",
+   "type": "sell",
+   "code": "MDT",
+   "name": "Medtronic plc.",
+   "q": 46,
+   "price": 90.79,
+   "ccy": "USD",
+   "amt": 5919878,
+   "note": "+1R 절반 익절",
+   "pl": 304503,
+   "pl_pct": 5.4
+  },
   {
    "d": "2026-08-12",
    "type": "sell",
@@ -1495,19 +1508,6 @@
    "note": "즉시 분할 — 🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권38% · 체크6/6 · 손절폭5.3%",
    "stop": 26.2063,
    "target": 30.5824
-  },
-  {
-   "d": "2026-07-08",
-   "type": "buy",
-   "code": "CMG",
-   "name": "Chipotle Mexican Grill, Inc.",
-   "q": 1,
-   "price": 33.2,
-   "ccy": "USD",
-   "amt": 50269,
-   "note": "반반 1차 — 🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권18% · 체크4/6 · 손절폭7.0%",
-   "stop": 30.8676,
-   "target": 37.8648
   }
  ],
  "lane": "bulk",
