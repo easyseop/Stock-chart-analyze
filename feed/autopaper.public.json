@@ -1,10 +1,10 @@
 {
- "generated_at": "2026-08-12T13:53:45.943117+09:00",
+ "generated_at": "2026-08-12T14:14:46.463901+09:00",
  "updated": "2026-08-12",
  "start": 100000000,
  "cash": 41853929,
- "equity": 101984860,
- "ret_pct": 1.98,
+ "equity": 101989860,
+ "ret_pct": 1.99,
  "positions": [
   {
    "code": "MRSH",
@@ -34,7 +34,7 @@
    "opened": "2026-07-09",
    "pl_krw": 11396,
    "pl_pct": 14.59,
-   "price_age_min": 9.8
+   "price_age_min": 10.0
   },
   {
    "code": "J",
@@ -64,7 +64,7 @@
    "opened": "2026-07-22",
    "pl_krw": 279220,
    "pl_pct": 9.4,
-   "price_age_min": 10.2
+   "price_age_min": 10.4
   },
   {
    "code": "004370",
@@ -72,13 +72,13 @@
    "ccy": "KRW",
    "q": 10,
    "avg": 368500.0,
-   "price": 390000.0,
+   "price": 390500.0,
    "stop": 368500.0,
    "target": 420011.1858,
    "half_done": true,
    "opened": "2026-07-27",
-   "pl_krw": 215000,
-   "pl_pct": 5.83,
+   "pl_krw": 220000,
+   "pl_pct": 5.97,
    "price_age_min": 6.7
   },
   {
@@ -154,7 +154,7 @@
    "opened": "2026-08-11",
    "pl_krw": 79136,
    "pl_pct": 2.58,
-   "price_age_min": 9.0
+   "price_age_min": 9.1
   }
  ],
  "pending": [
@@ -866,7 +866,7 @@
   },
   {
    "d": "2026-08-12",
-   "v": 101984860
+   "v": 101989860
   }
  ],
  "log": [
