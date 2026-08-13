@@ -1,10 +1,10 @@
 {
- "generated_at": "2026-08-13T23:40:06.554493+09:00",
+ "generated_at": "2026-08-13T23:55:56.425932+09:00",
  "updated": "2026-08-13",
  "start": 100000000,
  "cash": 47773807,
- "equity": 101858024,
- "ret_pct": 1.86,
+ "equity": 101679727,
+ "ret_pct": 1.68,
  "positions": [
   {
    "code": "MRSH",
@@ -12,13 +12,13 @@
    "ccy": "USD",
    "q": 36,
    "avg": 174.3075,
-   "price": 189.3999938964844,
+   "price": 188.6999969482422,
    "stop": 184.80249938964843,
    "target": 192.2575,
    "half_done": true,
    "opened": "2026-07-06",
-   "pl_krw": 770159,
-   "pl_pct": 8.66,
+   "pl_krw": 734439,
+   "pl_pct": 8.26,
    "price_age_min": 7.5
   },
   {
@@ -27,13 +27,13 @@
    "ccy": "USD",
    "q": 2,
    "avg": 27.665,
-   "price": 31.18000030517578,
+   "price": 31.184999465942383,
    "stop": 29.60260064086914,
    "target": 30.5824,
    "half_done": true,
    "opened": "2026-07-09",
-   "pl_krw": 9965,
-   "pl_pct": 12.71,
+   "pl_krw": 9979,
+   "pl_pct": 12.72,
    "price_age_min": 10.0
   },
   {
@@ -42,14 +42,14 @@
    "ccy": "USD",
    "q": 32,
    "avg": 126.585,
-   "price": 144.11500549316406,
+   "price": 143.57000732421875,
    "stop": 137.86490610351564,
    "target": 141.2316,
    "half_done": true,
    "opened": "2026-07-11",
-   "pl_krw": 795150,
-   "pl_pct": 13.85,
-   "price_age_min": 7.4
+   "pl_krw": 770429,
+   "pl_pct": 13.42,
+   "price_age_min": 7.5
   },
   {
    "code": "MAIN",
@@ -57,14 +57,14 @@
    "ccy": "USD",
    "q": 39,
    "avg": 53.96,
-   "price": 59.09000015258789,
+   "price": 59.130001068115234,
    "stop": 55.9411983215332,
    "target": 58.7184,
    "half_done": true,
    "opened": "2026-07-22",
-   "pl_krw": 283595,
-   "pl_pct": 9.51,
-   "price_age_min": 9.4
+   "pl_krw": 285807,
+   "pl_pct": 9.58,
+   "price_age_min": 9.2
   },
   {
    "code": "004370",
@@ -79,7 +79,7 @@
    "opened": "2026-07-27",
    "pl_krw": 210000,
    "pl_pct": 5.7,
-   "price_age_min": 7.4
+   "price_age_min": 7.5
   },
   {
    "code": "EQT",
@@ -87,14 +87,14 @@
    "ccy": "USD",
    "q": 121,
    "avg": 51.375,
-   "price": 54.02999877929688,
+   "price": 53.93000030517578,
    "stop": 51.375,
    "target": 57.1234,
    "half_done": true,
    "opened": "2026-07-29",
-   "pl_krw": 455372,
-   "pl_pct": 5.17,
-   "price_age_min": 7.4
+   "pl_krw": 438221,
+   "pl_pct": 4.97,
+   "price_age_min": 7.5
   },
   {
    "code": "MDT",
@@ -102,14 +102,14 @@
    "ccy": "USD",
    "q": 47,
    "avg": 86.12,
-   "price": 91.33499908447266,
+   "price": 91.05999755859376,
    "stop": 86.12,
    "target": 95.117,
    "half_done": true,
    "opened": "2026-07-30",
-   "pl_krw": 347431,
-   "pl_pct": 6.06,
-   "price_age_min": 7.4
+   "pl_krw": 329110,
+   "pl_pct": 5.74,
+   "price_age_min": 7.5
   },
   {
    "code": "AVY",
@@ -117,13 +117,13 @@
    "ccy": "USD",
    "q": 28,
    "avg": 169.73,
-   "price": 179.85499572753906,
+   "price": 178.78500366210938,
    "stop": 158.3847,
    "target": 192.4206,
    "half_done": false,
    "opened": "2026-08-03",
-   "pl_krw": 401855,
-   "pl_pct": 5.97,
+   "pl_krw": 359388,
+   "pl_pct": 5.33,
    "price_age_min": 7.4
   },
   {
@@ -132,13 +132,13 @@
    "ccy": "USD",
    "q": 10,
    "avg": 353.285,
-   "price": 353.1050109863281,
+   "price": 350.4200134277344,
    "stop": 328.6353,
    "target": 402.5845,
    "half_done": false,
    "opened": "2026-08-07",
-   "pl_krw": -2551,
-   "pl_pct": -0.05,
+   "pl_krw": -40611,
+   "pl_pct": -0.81,
    "price_age_min": 7.4
   },
   {
@@ -147,14 +147,14 @@
    "ccy": "USD",
    "q": 24,
    "avg": 90.485,
-   "price": 92.20999908447266,
+   "price": 92.08999633789062,
    "stop": 84.0446,
    "target": 103.3659,
    "half_done": false,
    "opened": "2026-08-11",
-   "pl_krw": 58684,
-   "pl_pct": 1.91,
-   "price_age_min": 9.4
+   "pl_krw": 54601,
+   "pl_pct": 1.77,
+   "price_age_min": 9.5
   }
  ],
  "pending": [
@@ -870,7 +870,7 @@
   },
   {
    "d": "2026-08-13",
-   "v": 101862610
+   "v": 101679727
   }
  ],
  "log": [
@@ -1511,6 +1511,5 @@
   }
  ],
  "lane": "bulk",
- "data_stale": [],
- "lock_skipped": true
+ "data_stale": []
 }
