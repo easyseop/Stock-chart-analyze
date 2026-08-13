@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated_at": "2026-08-14T05:40:46+09:00",
+ "generated_at": "2026-08-14T05:55:39+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "shelf_debug": {
   "ok": 15,
@@ -1693,24 +1693,24 @@
    "group": "watch",
    "entry_kind": "now",
    "stage": 1,
-   "price": 200.1778,
-   "entry": 200.1778,
-   "stop": 184.9582,
-   "target": 230.6169,
+   "price": 200.57,
+   "entry": 200.57,
+   "stop": 185.1369,
+   "target": 231.4363,
    "shares_1pct": 6,
-   "range_pos": 0.1682,
+   "range_pos": 0.1706,
    "norm": 16.0,
    "bear_share": 0.25,
    "fresh": true,
-   "break_gap": -0.0176,
+   "break_gap": -0.0156,
    "earnings_d": 70,
    "tactic": {
-    "stop_pct": 7.6,
+    "stop_pct": 7.7,
     "pb_price": null,
     "pb_stop_pct": null,
     "mode": "half",
     "label": "⚖ 반반 진입",
-    "desc": "손절폭 7.6% — 절반만 현재가, 나머지는 눌림 확인 후 추가"
+    "desc": "손절폭 7.7% — 절반만 현재가, 나머지는 눌림 확인 후 추가"
    }
   },
   {
@@ -1954,8 +1954,8 @@
    "stage": 1,
    "price": 82.93,
    "entry": 84.45,
-   "stop": 80.782,
-   "target": 91.786,
+   "stop": 80.7906,
+   "target": 91.7688,
    "shares_1pct": 27,
    "range_pos": 0.4215,
    "norm": -6.6,
