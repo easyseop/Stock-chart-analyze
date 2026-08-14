@@ -316,6 +316,15 @@ def _set_get_failure(detail: dict | None) -> None:
     _LAST_GET_FAILURE.set(None if detail is None else dict(detail))
 
 
+def _drop_external_pagination_markers(data):
+    """브로커 응답이 내부 완전성 증거를 사칭하지 못하게 경계에서 제거한다."""
+    if isinstance(data, dict):
+        for key in tuple(data):
+            if str(key).startswith("_pagination"):
+                data.pop(key, None)
+    return data
+
+
 def last_get_failure() -> dict | None:
     detail = _LAST_GET_FAILURE.get()
     return None if detail is None else dict(detail)
@@ -363,6 +372,9 @@ def _get(path: str, tr: str, params: dict, *, tr_cont: str = "") -> dict | None:
             print(f"[kis] GET {path} 실패({type(ex).__name__})")
             _set_get_failure({"exception": type(ex).__name__, "http_status": 0})
             return None
+        # `_pagination_*`은 `_get_all_pages`만 생성하는 내부 완전성 증거다.
+        # 외부 응답에 같은 이름이 있어도 부재 증명 신뢰 경계를 넘지 못한다.
+        d = _drop_external_pagination_markers(d)
         act = classify_error((d or {}).get("rt_cd"), (d or {}).get("msg_cd"),
                              http, is_order=False)
         if act == ACT_OK:

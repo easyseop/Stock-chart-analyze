@@ -18,6 +18,14 @@
 
 ## 구현 요약
 
+### R0. Oracle mock 선실측
+
+- Oracle의 실제 buyloop 환경이 `KIS_ENV=mock`임을 확인하고 NASD 잔고를 읽기
+  전용으로 조회했다. 첫 페이지는 30행·NK=`WDAY`·헤더 M, 동일 키와
+  `tr_cont=N`을 사용한 두 번째 페이지는 1행·헤더 D로 정상 종료됐다.
+- KIS mock이 연속조회를 지원하므로 지시서 분기 A를 적용했다. 주문·취소·원장·
+  서비스·kill 변경은 0건이며 세부 증거는 지시서 §7에 기록했다.
+
 ### P1. 완전소진 페이지 루프
 
 - `bot.kis._get_all_pages()`가 첫 페이지를 빈 컨텍스트로 조회하고, 다음 페이지부터
@@ -50,28 +58,31 @@
 - 국내 holdings 병합도 명시적 미완 표시와 F/M을 거부한다. 조회 실패를 부재로
   바꾸거나 열린 SELL ACK를 자동 종결하는 새 경로는 없다.
 
-## 필수 8개 테스트
+## 필수 8개 + Claude P2 회귀 1개 테스트
 
-`tests/test_balance_pagination.py`는 아래 여덟 함수를 단독 실행한다.
+`tests/test_balance_pagination.py`는 아래 아홉 함수를 단독 실행한다.
 
 1. `test_two_pages_merge_and_next_header_contract`: 두 페이지 행/마지막 요약 병합,
    컨텍스트 제거, 다음 요청 파라미터와 실제 `tr_cont=N` 헤더.
-2. `test_middle_page_none_or_rt_failure_discards_everything`: 중간 `None`·`rt_cd=1`은
+2. `test_external_response_cannot_forge_pagination_completeness`: 브로커 응답에
+   `_pagination_*` 마커가 실려도 `_get` 경계에서 전부 제거되고 포화 15행은
+   `trusted_response_rows`가 계속 불신.
+3. `test_middle_page_none_or_rt_failure_discards_everything`: 중간 `None`·`rt_cd=1`은
    전체 `None`, 호출 2회, 구체 Pagination 라벨.
-3. `test_repeated_context_is_finite_and_untrusted`: 반복 키와 키 없는 F 헤더를 유한
+4. `test_repeated_context_is_finite_and_untrusted`: 반복 키와 키 없는 F 헤더를 유한
    호출 뒤 거부.
-4. `test_page_limit_discards_partial_rows`: 상한에서 다음 페이지가 남으면 거부하고,
+5. `test_page_limit_discards_partial_rows`: 상한에서 다음 페이지가 남으면 거부하고,
    상한의 마지막 페이지에서 소진되면 정상 병합.
-5. `test_single_page_keeps_data_and_calls_once`: 단일 페이지 1회 호출과 기존 데이터,
+6. `test_single_page_keeps_data_and_calls_once`: 단일 페이지 1회 호출과 기존 데이터,
    최초 요청의 낡은 컨텍스트는 HTTP 전에 거부.
-6. `test_holdings_and_positions_accept_exhausted_merge_and_label_drops`: 30행 완전 병합
+7. `test_holdings_and_positions_accept_exhausted_merge_and_label_drops`: 30행 완전 병합
    정상 처리, 미완/수량 오염의 비-unknown 라벨, 두 스레드 원인 격리.
-7. `test_trusted_rows_accept_only_proven_complete_merge`: 완전 30행 인정, 명시 미완·
+8. `test_trusted_rows_accept_only_proven_complete_merge`: 완전 30행 인정, 명시 미완·
    페이지 수 0·남은 키·마커 없는 포화 응답 거부.
-8. `test_all_balance_and_order_queries_use_page_helper`: 대상 7개 조회가 모두 헬퍼와
+9. `test_all_balance_and_order_queries_use_page_helper`: 대상 7개 조회가 모두 헬퍼와
    올바른 100/200 컨텍스트 계약을 사용.
 
-실행 결과: `KIS balance pagination 8/8 PASS`, 종료코드 0.
+실행 결과: `KIS balance pagination 9/9 PASS`, 종료코드 0.
 
 ## 뮤테이션 증거
 
@@ -84,8 +95,9 @@
 | M2 중간 `None`에서 누적 부분행 반환 | `test_middle_page_none_or_rt_failure_discards_everything`, `assert out is None`, exit 1 |
 | M3 반복 컨텍스트 가드 제거 | `test_repeated_context_is_finite_and_untrusted`, 3번째 호출 `StopIteration`, exit 1 |
 | M4 완전 병합도 15행 포화로 불신 | `test_trusted_rows_accept_only_proven_complete_merge`, 완전 30행 `None`, exit 1 |
+| M5 `_get` 외부 마커 제거 삭제 | `test_external_response_cannot_forge_pagination_completeness`, 외부 마커 잔존, exit 1 |
 
-원복 뒤 전용 8/8과 `git diff --check`를 다시 통과했다.
+원복 뒤 전용 9/9과 `git diff --check`를 다시 통과했다.
 
 ## 기존 회귀 증거
 

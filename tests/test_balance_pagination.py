@@ -62,6 +62,30 @@ def test_two_pages_merge_and_next_header_contract():
     assert captured["tr_cont"] == "N"
 
 
+def test_external_response_cannot_forge_pagination_completeness():
+    class Resp(io.BytesIO):
+        headers = {"tr_cont": ""}
+        def __enter__(self): return self
+        def __exit__(self, *args): return False
+
+    forged = {
+        "rt_cd": "0",
+        "output": [{"odno": str(idx)} for idx in range(15)],
+        "_pagination_complete": True,
+        "_pagination_pages": 1,
+        "_pagination_vendor_claim": "trusted",
+    }
+    with mock.patch.object(kis, "_token", return_value="token"), \
+            mock.patch.object(kis, "_cred", return_value=("key", "secret")), \
+            mock.patch.object(kis._LIMITER, "acquire", return_value=True), \
+            mock.patch.object(kis.urllib.request, "urlopen", return_value=Resp(
+                json.dumps(forged).encode())):
+        response = kis._get("/read", "TR", {})
+    assert response is not None
+    assert not any(str(key).startswith("_pagination") for key in response)
+    assert kis_reconcile.trusted_response_rows(response) is None
+
+
 def test_middle_page_none_or_rt_failure_discards_everything():
     first = _page([{"id": 1}], fk="F1", nk="N1", cont="F")
     for failed in (None, _page([], rt="1")):
@@ -197,6 +221,7 @@ def test_all_balance_and_order_queries_use_page_helper():
 def main():
     tests = (
         test_two_pages_merge_and_next_header_contract,
+        test_external_response_cannot_forge_pagination_completeness,
         test_middle_page_none_or_rt_failure_discards_everything,
         test_repeated_context_is_finite_and_untrusted,
         test_page_limit_discards_partial_rows,
@@ -208,7 +233,7 @@ def main():
     for test in tests:
         test()
         print(f"[PASS] {test.__name__}")
-    print("\nKIS balance pagination 8/8 PASS")
+    print("\nKIS balance pagination 9/9 PASS")
 
 
 if __name__ == "__main__":
