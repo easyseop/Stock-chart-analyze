@@ -87,3 +87,52 @@
 
 P1-1(R0 실측 + 미지원 시 한도 경보)과 P2-1(마커 신뢰 경계 + 회귀 1건)만
 제출하면 부분 재검토로 처리한다. 코드 전면 재검토는 불필요하다.
+
+---
+
+## 부분 재검토 추기 (2026-08-15) — **최종 승인**
+
+대상: PR #116 `codex/balance-pagination@018fe701`(대응 커밋 `e5a68ad2`).
+증분 diff는 `bot/kis.py` 12줄·테스트 27줄·문서로 국한 — 주문 POST·취소·kill·
+사이징·rollout·ledger·envelope 변경 **0건**(diff 실측).
+
+### P1-1 해소 — R0 실측 완료, 분기 A 확정
+
+문서 §7 기록을 확인했다: 1페이지 30행 · `ctx_area_nk200="WDAY"` ·
+응답 `tr_cont=M` · `msg_cd=20312000` → FK/NK를 그대로 싣고 요청 헤더
+`tr_cont=N`으로 2페이지 → HTTP 200 · `rt_cd=0` · 1행 · FK/NK 빈 값 ·
+`tr_cont=D` · `msg_cd=20310000`으로 정상 종료. **모의도 연속조회를 지원한다
+(분기 A).** 따라서 분기 B의 80% 한도 경보는 불필요하다는 결론에 동의한다.
+읽기 전용·주문/원장/kill/서비스 변경 0건 기록도 확인했다.
+
+**부수 확인(중요)**: 실측된 1페이지 한도는 **30행**이고 당시 NASD 보유는
+**31종목**이었다. 즉 8/14 밤의 `unknown` 잔고 실패는 가설이 아니라 **이미
+발생한 사건**이었다 — 30종목을 넘는 순간부터 잔고 조회가 상시 불신 처리되고
+있었고, 이 PR이 그 상태를 실제로 해소한다. 시한폭탄은 이미 터진 뒤였다.
+
+### P2-1 해소 — 신뢰 경계를 `_get`으로 고정
+
+검토자 프로브 재실행:
+- 브로커 응답에 `_pagination_complete=True`·`_pagination_pages=1`·
+  `_pagination_vendor_claim`을 실어도 `_get` 반환 키는
+  `['_tr_cont','output','rt_cd']` — **전량 제거 확인**.
+- HTTPError 본문 경로도 마커 유입 없음(None 반환).
+- 이전에 재현했던 "위조 마커 15행 → 완전 인정" 시나리오가 `_get` 경유 시
+  **거부(None)** 로 바뀜 — 거짓 부재 증명 경로 폐쇄.
+- 뮤테이션(제거 호출 삭제) → `test_balance_pagination` **exit 1 KILLED**.
+
+직접 dict를 만들어 넣으면 여전히 인정되지만, 그것은 브로커가 아닌 내부 코드
+경로이며 신뢰 경계를 `_get`(외부 데이터 유입점)에 두는 것이 옳다.
+
+### 회귀
+
+`test_balance_pagination` **9/9 PASS**, 인접 6모듈(test_sell_reject_reconcile·
+test_kis·test_l1_readiness·test_kis_boot·test_sentinel·test_ops_status) PASS,
+compileall·`git diff --check` 통과. `run_all`은 `test_ownership_baseline` 1건
+실패 — /tmp 워크트리 영속경로 단정에 걸리는 **알려진 환경 아티팩트**(코드 결함
+아님, 이전 검토들과 동일).
+
+**최종 판정: 승인 — P0 0 · P1 0 · P2 0 · 잔여 P3 2건(중복행 dedup, 페이지 간
+행 키 불일치 — 선택).** 병합·Oracle 배포는 사용자 승인 후.
+배포 시 확인 포인트: `/진단`의 잔고 실패에서 `unknown` 계열 소멸,
+NASD 30종목 초과 상태에서 잔고 조회 성공.
