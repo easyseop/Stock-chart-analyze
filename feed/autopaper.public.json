@@ -1,10 +1,10 @@
 {
- "generated_at": "2026-08-14T10:02:08.570849+09:00",
+ "generated_at": "2026-08-14T10:45:05.541399+09:00",
  "updated": "2026-08-14",
  "start": 100000000,
  "cash": 47773807,
- "equity": 101785905,
- "ret_pct": 1.79,
+ "equity": 101930905,
+ "ret_pct": 1.93,
  "positions": [
   {
    "code": "MRSH",
@@ -19,7 +19,7 @@
    "opened": "2026-07-06",
    "pl_krw": 733851,
    "pl_pct": 8.25,
-   "price_age_min": 7.2
+   "price_age_min": 7.1
   },
   {
    "code": "HMC",
@@ -34,7 +34,7 @@
    "opened": "2026-07-09",
    "pl_krw": 10021,
    "pl_pct": 12.78,
-   "price_age_min": 9.9
+   "price_age_min": 10.1
   },
   {
    "code": "J",
@@ -49,7 +49,7 @@
    "opened": "2026-07-11",
    "pl_krw": 785768,
    "pl_pct": 13.69,
-   "price_age_min": 7.2
+   "price_age_min": 7.1
   },
   {
    "code": "MAIN",
@@ -64,7 +64,7 @@
    "opened": "2026-07-22",
    "pl_krw": 291304,
    "pl_pct": 9.77,
-   "price_age_min": 9.1
+   "price_age_min": 9.3
   },
   {
    "code": "004370",
@@ -72,14 +72,14 @@
    "ccy": "KRW",
    "q": 10,
    "avg": 368500.0,
-   "price": 396500.0,
-   "stop": 368500.0,
+   "price": 411000.0,
+   "stop": 372366.6108,
    "target": 420011.1858,
    "half_done": true,
    "opened": "2026-07-27",
-   "pl_krw": 280000,
-   "pl_pct": 7.6,
-   "price_age_min": 7.2
+   "pl_krw": 425000,
+   "pl_pct": 11.53,
+   "price_age_min": 7.1
   },
   {
    "code": "EQT",
@@ -94,7 +94,7 @@
    "opened": "2026-07-29",
    "pl_krw": 463899,
    "pl_pct": 5.27,
-   "price_age_min": 7.2
+   "price_age_min": 7.1
   },
   {
    "code": "MDT",
@@ -109,7 +109,7 @@
    "opened": "2026-07-30",
    "pl_krw": 297101,
    "pl_pct": 5.18,
-   "price_age_min": 7.2
+   "price_age_min": 7.1
   },
   {
    "code": "AVY",
@@ -124,7 +124,7 @@
    "opened": "2026-08-03",
    "pl_krw": 407964,
    "pl_pct": 6.06,
-   "price_age_min": 7.2
+   "price_age_min": 7.1
   },
   {
    "code": "DPZ",
@@ -154,7 +154,7 @@
    "opened": "2026-08-11",
    "pl_krw": 26702,
    "pl_pct": 0.87,
-   "price_age_min": 9.4
+   "price_age_min": 9.5
   }
  ],
  "pending": [
@@ -874,7 +874,7 @@
   },
   {
    "d": "2026-08-14",
-   "v": 101785905
+   "v": 101930905
   }
  ],
  "log": [
