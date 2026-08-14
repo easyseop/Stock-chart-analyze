@@ -429,7 +429,10 @@ def test_mock_domestic_unfilled_query_contract():
          mock.patch.object(kis, "tr_id", return_value="VTTC8001R"), \
          mock.patch.object(kis.time, "strftime", return_value="20260806"), \
          mock.patch.object(kis, "_get", return_value=response) as get:
-        assert kis.domestic_unfilled_orders() is response
+        out = kis.domestic_unfilled_orders()
+        assert out["rt_cd"] == "0" and out["output1"] == []
+        assert out["_pagination_complete"] is True \
+            and out["_pagination_pages"] == 1
     path, tr, params = get.call_args.args
     assert path.endswith("/inquire-daily-ccld")
     assert tr == "VTTC8001R"
