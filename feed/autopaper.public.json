@@ -1,10 +1,10 @@
 {
- "generated_at": "2026-08-14T11:45:01.856975+09:00",
+ "generated_at": "2026-08-14T12:00:47.656979+09:00",
  "updated": "2026-08-14",
  "start": 100000000,
  "cash": 47773807,
- "equity": 102095905,
- "ret_pct": 2.1,
+ "equity": 102160905,
+ "ret_pct": 2.16,
  "positions": [
   {
    "code": "MRSH",
@@ -19,7 +19,7 @@
    "opened": "2026-07-06",
    "pl_krw": 733851,
    "pl_pct": 8.25,
-   "price_age_min": 7.5
+   "price_age_min": 7.6
   },
   {
    "code": "HMC",
@@ -72,13 +72,13 @@
    "ccy": "KRW",
    "q": 10,
    "avg": 368500.0,
-   "price": 427500.0,
-   "stop": 389366.6108,
+   "price": 434000.0,
+   "stop": 395366.6108,
    "target": 420011.1858,
    "half_done": true,
    "opened": "2026-07-27",
-   "pl_krw": 590000,
-   "pl_pct": 16.01,
+   "pl_krw": 655000,
+   "pl_pct": 17.77,
    "price_age_min": 7.5
   },
   {
@@ -154,7 +154,7 @@
    "opened": "2026-08-11",
    "pl_krw": 26702,
    "pl_pct": 0.87,
-   "price_age_min": 9.4
+   "price_age_min": 9.5
   }
  ],
  "pending": [
@@ -874,7 +874,7 @@
   },
   {
    "d": "2026-08-14",
-   "v": 102095905
+   "v": 102160905
   }
  ],
  "log": [
