@@ -485,6 +485,8 @@ def main() -> int:
             ops_status.maybe_publish()
             ops_status.maybe_remind_kill()   # L1+ 지속 리마인드(2026-08-10)
             ops_status.maybe_alert_stuck_acks()
+            from bot import trade_stats
+            trade_stats.maybe_publish()      # 공개 승률 요약(금액 제외)
         except Exception:
             pass
         try:

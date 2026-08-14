@@ -150,11 +150,103 @@ def build(out_dir: str = "public") -> bool:
     return True
 
 
+TRADES_CACHE_PATH = os.path.join("data_cache", "trade_stats.json")
+
+
+def _fetch_topic_latest(topic: str, title: str) -> dict | None:
+    """ntfy 토픽의 최신 지정 title 메시지 payload. 실패·부재는 None."""
+    try:
+        with urllib.request.urlopen(
+                f"https://ntfy.sh/{topic}/json?poll=1",
+                timeout=FETCH_TIMEOUT_S) as resp:
+            lines = resp.read().decode("utf-8", "replace").splitlines()
+    except Exception:
+        return None
+    latest = None
+    for line in lines:
+        try:
+            msg = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        if (msg.get("event") == "message" and msg.get("title") == title
+                and msg.get("message")):
+            latest = msg
+    if latest is None:
+        return None
+    try:
+        payload = json.loads(latest["message"])
+    except (KeyError, TypeError, ValueError, json.JSONDecodeError):
+        return None
+    return payload if isinstance(payload, dict) and payload.get("total") else None
+
+
+def build_trade_stats(out_dir: str = "public") -> bool:
+    """공개 승률 요약(api/trades_summary.json)을 굽는다.
+
+    서버가 발행한 payload는 이미 금액·수량·종목이 없다. 그래도 소비 측에서
+    한 번 더 화이트리스트로 걸러 실수로 민감 필드가 실려도 사이트로 나가지
+    않게 한다(경계 방어). ntfy가 비면 캐시 폴백 — 사이트 사본은 만료 없음.
+    """
+    from bot import settings
+    topic = os.environ.get("NTFY_TRADE_STATS_TOPIC",
+                           getattr(settings, "TRADE_STATS_TOPIC", ""))
+    payload = _fetch_topic_latest(topic, "trade-stats") if topic else None
+    source = "ntfy"
+    if payload is None:
+        try:
+            with open(TRADES_CACHE_PATH, encoding="utf-8") as fp:
+                payload = json.load(fp)
+            source = "cache"
+        except (OSError, UnicodeError, ValueError, json.JSONDecodeError):
+            payload = None
+    if not isinstance(payload, dict) or not payload.get("total"):
+        print("perf_site: 거래 성적 소스 없음 — 건너뜀")
+        return False
+
+    bucket_keys = {"closed", "decided", "wins", "losses", "win_rate",
+                   "avg_return_pct", "median_return_pct",
+                   "avg_win_pct", "avg_loss_pct"}
+
+    def clean(bucket) -> dict:
+        return ({k: v for k, v in bucket.items() if k in bucket_keys}
+                if isinstance(bucket, dict) else {})
+
+    safe = {
+        "version": 1,
+        "generated_at": payload.get("generated_at"),
+        "partial": bool(payload.get("partial")),
+        "source": f"actions-{source}",
+        "total": clean(payload.get("total")),
+        "by_sleeve": {k: clean(v) for k, v in
+                      (payload.get("by_sleeve") or {}).items() if k in ("A", "B")},
+        "by_month": {str(k)[:7]: clean(v) for k, v in
+                     (payload.get("by_month") or {}).items()},
+        "note": "확정 매도 체결 기준 · 금액·수량·종목 비공개",
+    }
+    try:
+        os.makedirs(os.path.dirname(TRADES_CACHE_PATH) or ".", exist_ok=True)
+        with open(TRADES_CACHE_PATH, "w", encoding="utf-8") as fp:
+            json.dump(payload, fp, ensure_ascii=False, separators=(",", ":"))
+    except OSError:
+        pass
+    api_dir = os.path.join(out_dir, "api")
+    os.makedirs(api_dir, exist_ok=True)
+    with open(os.path.join(api_dir, "trades_summary.json"), "w",
+              encoding="utf-8") as fp:
+        json.dump(safe, fp, ensure_ascii=False, separators=(",", ":"))
+    total = safe["total"]
+    print(f"perf_site: api/trades_summary.json 생성 (source={source}, "
+          f"{total.get('wins')}승 {total.get('losses')}패 · "
+          f"승률 {total.get('win_rate')})")
+    return True
+
+
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description="공개 사이트 성과 스냅샷 굽기")
     ap.add_argument("--out", default="public", help="사이트 출력 디렉터리")
     args = ap.parse_args(argv)
     build(args.out)
+    build_trade_stats(args.out)
     return 0        # best-effort — 실패해도 빌드를 깨지 않는다
 
 

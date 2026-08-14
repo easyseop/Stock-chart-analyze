@@ -24,6 +24,7 @@ const API = Object.freeze({
   chart: "../api/chart.json",
   quotes: "../api/quotes.json",
   performance: "../api/performance.json",
+  tradeStats: "../api/trades_summary.json",
   trades: "../api/trades.json",
   postExit: "../api/post-exit.json",
 });
@@ -197,6 +198,8 @@ async function loadData({ quiet = false } = {}) {
     try {
       state.performance = await fetchJSON(API.performance, 10000);
       state.performanceError = null;
+      try { state.tradeStats = await fetchJSON(API.tradeStats, 8000); }
+      catch (e) { state.tradeStats = state.tradeStats || null; }
     } catch (error) {
       state.performance = null;
       state.performanceError = error;
@@ -237,6 +240,8 @@ async function refreshPortfolio() {
   try {
     state.performance = await fetchJSON(API.performance, 10000);
     state.performanceError = null;
+    try { state.tradeStats = await fetchJSON(API.tradeStats, 8000); }
+    catch (e) { state.tradeStats = state.tradeStats || null; }
   } catch (error) {
     state.performanceError = error;
   }
@@ -1877,6 +1882,41 @@ function performanceValue(value) {
     ? formatPercent(Number(value), 2) : "—";
 }
 
+function tradeRecordMarkup() {
+  const stats = state.tradeStats;
+  const total = stats?.total;
+  if (!total || !Number.isFinite(Number(total.closed)) || Number(total.closed) < 1) {
+    return `<div class="performance-note">거래 성적은 첫 매도 체결이 확정되면 표시됩니다.</div>`;
+  }
+  const pct = (v) => (v === null || v === undefined || !Number.isFinite(Number(v)))
+    ? "—" : `${Number(v) >= 0 ? "+" : ""}${Number(v).toFixed(2)}%`;
+  const rate = (v) => (v === null || v === undefined || !Number.isFinite(Number(v)))
+    ? "—" : `${Number(v).toFixed(1)}%`;
+  const sleeve = (key) => {
+    const b = stats.by_sleeve?.[key];
+    if (!b || !Number(b.decided)) return "—";
+    return `${rate(b.win_rate)} (${b.wins}승 ${b.losses}패)`;
+  };
+  const partial = stats.partial
+    ? `<p class="chart-note">일부 구간은 원장 확정 전이라 집계에서 제외됩니다.</p>` : "";
+  return `
+    <div class="performance-grid performance-kis-grid">
+      <div class="performance-card"><small>승률 · 전체</small>
+        <strong class="${Number(total.win_rate) >= 50 ? "gain" : "loss"}">${rate(total.win_rate)}</strong>
+        <p>${total.wins}승 ${total.losses}패 · 청산 ${total.closed}건</p></div>
+      <div class="performance-card"><small>평균 수익률</small>
+        <strong class="${Number(total.avg_return_pct) >= 0 ? "gain" : "loss"}">${pct(total.avg_return_pct)}</strong>
+        <p>중앙값 ${pct(total.median_return_pct)}</p></div>
+      <div class="performance-card"><small>이길 때 · 질 때</small>
+        <strong>${pct(total.avg_win_pct)} / ${pct(total.avg_loss_pct)}</strong>
+        <p>평균 이익 대비 평균 손실</p></div>
+      <div class="performance-card"><small>전략별 승률</small>
+        <strong>A ${sleeve("A")}</strong>
+        <p>B ${sleeve("B")}</p></div>
+    </div>${partial}`;
+}
+
+
 function performanceInsights(rows, indexNames) {
   const latest = rows.at(-1) || {};
   const a = optionalNumber(latest.A);
@@ -2083,6 +2123,7 @@ function renderKisPerformance() {
         <div class="performance-card"><small>${escapeHTML(primary || "주 지수")} 대비</small><strong class="${optionalNumber(alphaValue) === null ? "" : optionalNumber(alphaValue) >= 0 ? "gain" : "loss"}">${performanceValue(alphaValue)}</strong><p>${keyNote(latest, `idx:${primary}`, "초과수익률(%p)", range)}</p></div>
         <div class="performance-card"><small>장 시작 보유 · 동일가중</small><strong class="${coverageComplete && finite(holdingsValue) >= 0 ? "gain" : coverageComplete ? "loss" : ""}">${performanceValue(holdingsValue)}</strong><p>${coverageDetail}</p></div>
       </div>
+      ${tradeRecordMarkup()}
       ${performanceInsights(rows, indexNames)}
       ${monthlyPerformanceMarkup(market, marketDoc)}
       ${strategyDefinitionMarkup({ compact: true })}` :

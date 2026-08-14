@@ -76,6 +76,9 @@ ALPHA_DASH_TOPIC = _os_shelf.environ.get("NTFY_ALPHA_TOPIC", "stock-alpha-c81f4e
 #   조회. kill 레벨·heartbeat 나이·시장별 조회 성공/실패·서비스 상태 같은 운영
 #   상태값만 담고 시크릿·계좌번호·금액은 담지 않는다(alpha 대시보드와 동일 원칙).
 OPS_STATUS_TOPIC = _os_shelf.environ.get("NTFY_OPS_TOPIC", "stock-ops-e7a41c92d5")
+# 거래 성적(승률) 공개 요약 발행 토픽 — 금액·수량·종목 없이 건수·비율만.
+TRADE_STATS_TOPIC = _os_shelf.environ.get(
+    "NTFY_TRADE_STATS_TOPIC", "stock-trades-9b3c15d7f2")
 # KIS 미러의 동시 보유 종목 수는 제한하지 않는다. A/B 총노출은 종목 수가 아니라
 # 각 슬리브 예산과 A+B 통합 운용한도, 실제 매수여력으로 제한한다.
 CONFIRMED_ONLY = True        # 확정봉 모드: 전 거래일 시그널에도 있던 종목만 매수
