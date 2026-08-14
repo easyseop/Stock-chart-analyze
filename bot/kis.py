@@ -28,6 +28,7 @@ KIS 특성(토스와 다른 점 — docs/kis/KIS_API_READINESS.md 근거):
 """
 from __future__ import annotations
 
+from contextvars import ContextVar
 import hashlib
 import json
 import os
@@ -307,20 +308,34 @@ def _token(force: bool = False) -> str | None:
 from bot import kis_ratelimit as _rl
 
 _LIMITER = _rl.for_env(IS_MOCK)
-_LAST_GET_FAILURE: dict | None = None
+_LAST_GET_FAILURE: ContextVar[dict | None] = ContextVar(
+    "kis_last_get_failure", default=None)
+
+
+def _set_get_failure(detail: dict | None) -> None:
+    _LAST_GET_FAILURE.set(None if detail is None else dict(detail))
+
+
+def _drop_external_pagination_markers(data):
+    """브로커 응답이 내부 완전성 증거를 사칭하지 못하게 경계에서 제거한다."""
+    if isinstance(data, dict):
+        for key in tuple(data):
+            if str(key).startswith("_pagination"):
+                data.pop(key, None)
+    return data
 
 
 def last_get_failure() -> dict | None:
-    return None if _LAST_GET_FAILURE is None else dict(_LAST_GET_FAILURE)
+    detail = _LAST_GET_FAILURE.get()
+    return None if detail is None else dict(detail)
 
 
-def _get(path: str, tr: str, params: dict) -> dict | None:
+def _get(path: str, tr: str, params: dict, *, tr_cont: str = "") -> dict | None:
     """인증 GET. 401→토큰 1회 강제 재발급, EGW00201→짧은 백오프 1회 재시도. 실패 None."""
-    global _LAST_GET_FAILURE
-    _LAST_GET_FAILURE = None
+    _set_get_failure(None)
     tok = _token()
     if not tok:
-        _LAST_GET_FAILURE = {"exception": "AuthUnavailable"}
+        _set_get_failure({"exception": "AuthUnavailable"})
         return None
     k, s = _cred()
     url = BASE_URL + path + "?" + urllib.parse.urlencode(params)
@@ -329,11 +344,13 @@ def _get(path: str, tr: str, params: dict) -> dict | None:
         # 여러 프로세스 합산 초당 한도가 정확히 유지된다.
         if not _LIMITER.acquire("data", timeout=10.0):
             print(f"[kis] GET {path} 유량 대기 초과 — 건너뜀")
-            _LAST_GET_FAILURE = {"exception": "RateLimitWaitTimeout", "rate_limit": True}
+            _set_get_failure({"exception": "RateLimitWaitTimeout",
+                              "rate_limit": True})
             return None
         headers = {"content-type": "application/json; charset=utf-8",
                    "authorization": f"Bearer {tok}",
-                   "appkey": k, "appsecret": s, "tr_id": tr, "custtype": "P"}
+                   "appkey": k, "appsecret": s, "tr_id": tr, "custtype": "P",
+                   "tr_cont": str(tr_cont or "").strip()}
         d, http = None, 200
         try:
             req = urllib.request.Request(url, headers=headers)
@@ -353,8 +370,11 @@ def _get(path: str, tr: str, params: dict) -> dict | None:
                 d = None
         except Exception as ex:
             print(f"[kis] GET {path} 실패({type(ex).__name__})")
-            _LAST_GET_FAILURE = {"exception": type(ex).__name__, "http_status": 0}
+            _set_get_failure({"exception": type(ex).__name__, "http_status": 0})
             return None
+        # `_pagination_*`은 `_get_all_pages`만 생성하는 내부 완전성 증거다.
+        # 외부 응답에 같은 이름이 있어도 부재 증명 신뢰 경계를 넘지 못한다.
+        d = _drop_external_pagination_markers(d)
         act = classify_error((d or {}).get("rt_cd"), (d or {}).get("msg_cd"),
                              http, is_order=False)
         if act == ACT_OK:
@@ -369,11 +389,109 @@ def _get(path: str, tr: str, params: dict) -> dict | None:
         print(f"[kis] GET {path} → {act} "
               f"(rt_cd={(d or {}).get('rt_cd')} msg_cd={(d or {}).get('msg_cd')}"
               f"{' · ' + m1 if m1 else ''})")           # msg1 노출(모의 미지원 판별용)
-        _LAST_GET_FAILURE = {"http_status": http,
-                             "rt_cd": (d or {}).get("rt_cd"),
-                             "msg_cd": (d or {}).get("msg_cd"),
-                             "rate_limit": (d or {}).get("msg_cd") == "EGW00201"}
+        _set_get_failure({"http_status": http,
+                          "rt_cd": (d or {}).get("rt_cd"),
+                          "msg_cd": (d or {}).get("msg_cd"),
+                          "rate_limit": (d or {}).get("msg_cd") == "EGW00201"})
         return None
+    return None
+
+
+def _max_pages() -> int:
+    try:
+        value = int(os.environ.get("KIS_MAX_PAGES", "20") or 20)
+    except (TypeError, ValueError):
+        value = 20
+    return value if value >= 1 else 20
+
+
+def _pagination_failure(reason: str, page: int) -> None:
+    _set_get_failure({"exception": reason, "page": int(page)})
+    print(f"[kis] 연속조회 불신({reason}, page={page}) — 부분 결과 폐기")
+
+
+def _get_all_pages(path: str, tr: str, params: dict, *, suffix: str,
+                   row_keys: tuple[str, ...]) -> dict | None:
+    """KIS 연속페이지를 끝까지 소진해 하나의 완전 응답으로 합친다.
+
+    한 페이지라도 실패하거나 형식·연속키가 불신이면 누적 행을 전부 폐기한다.
+    첫 요청은 빈 컨텍스트/헤더, 이후 요청은 직전 FK/NK와 ``tr_cont=N``을 쓴다.
+    """
+    if suffix not in {"100", "200"} or not row_keys:
+        raise ValueError("invalid pagination contract")
+    max_pages = _max_pages()
+    request_params = dict(params)
+    all_rows: list[dict] = []
+    merged: dict = {}
+    canonical_row_key = ""
+    seen_contexts: set[tuple[str, str]] = set()
+    fk_name, nk_name = f"CTX_AREA_FK{suffix}", f"CTX_AREA_NK{suffix}"
+    if str(request_params.get(fk_name) or "").strip() \
+            or str(request_params.get(nk_name) or "").strip():
+        _pagination_failure("PaginationInitialContextUntrusted", 0)
+        return None
+
+    for page_no in range(1, max_pages + 1):
+        response = (_get(path, tr, request_params) if page_no == 1 else
+                    _get(path, tr, request_params, tr_cont="N"))
+        if response is None:
+            if last_get_failure() is None:
+                _pagination_failure("PaginationPageUnavailable", page_no)
+            return None
+        if not isinstance(response, dict) or response.get("rt_cd") != "0":
+            _pagination_failure("PaginationResponseUntrusted", page_no)
+            return None
+        selected = next((key for key in row_keys if key in response), "")
+        rows = response.get(selected) if selected else None
+        if not isinstance(rows, list) or any(not isinstance(row, dict) for row in rows):
+            _pagination_failure("PaginationRowsUntrusted", page_no)
+            return None
+        if not canonical_row_key:
+            canonical_row_key = selected
+        all_rows.extend(rows)
+        page_values = dict(response)
+        for key in row_keys:
+            page_values.pop(key, None)
+        if "output2" not in page_values:
+            merged.pop("output2", None)
+        merged.update(page_values)             # output2/요약은 마지막 페이지 값
+
+        raw_fk = response.get(f"ctx_area_fk{suffix}", response.get(fk_name, ""))
+        raw_nk = response.get(f"ctx_area_nk{suffix}", response.get(nk_name, ""))
+        if not isinstance(raw_fk, (str, type(None))) \
+                or not isinstance(raw_nk, (str, type(None))):
+            _pagination_failure("PaginationContextUntrusted", page_no)
+            return None
+        fk, nk = str(raw_fk or "").strip(), str(raw_nk or "").strip()
+        header_cont = str(response.get("_tr_cont") or response.get("tr_cont")
+                          or "").strip().upper()
+        msg_cd = str(response.get("msg_cd") or "").strip()
+        has_next = bool(fk or nk) or header_cont in {"F", "M"} \
+            or msg_cd.endswith("12000")
+        if not has_next:
+            merged[canonical_row_key] = all_rows
+            for key in (fk_name, nk_name, fk_name.lower(), nk_name.lower(),
+                        "_tr_cont", "tr_cont"):
+                merged.pop(key, None)
+            merged["_pagination_complete"] = True
+            merged["_pagination_pages"] = page_no
+            return merged
+        if not (fk or nk):
+            _pagination_failure("PaginationContextMissing", page_no)
+            return None
+        context = (fk, nk)
+        if context in seen_contexts:
+            _pagination_failure("PaginationContextRepeated", page_no)
+            return None
+        seen_contexts.add(context)
+        if page_no >= max_pages:
+            _pagination_failure("PaginationPageLimit", page_no)
+            return None
+        request_params = dict(params)
+        request_params[fk_name] = fk
+        request_params[nk_name] = nk
+
+    _pagination_failure("PaginationPageLimit", max_pages)
     return None
 
 
@@ -382,10 +500,11 @@ def overseas_balance(excg: str = "NASD", currency: str = "USD") -> dict | None:
     acct = account()
     if not acct or not enabled():
         return None
-    return _get("/uapi/overseas-stock/v1/trading/inquire-balance",
-                tr_id("balance"),
-                {**acct, "OVRS_EXCG_CD": excg, "TR_CRCY_CD": currency,
-                 "CTX_AREA_FK200": "", "CTX_AREA_NK200": ""})
+    return _get_all_pages(
+        "/uapi/overseas-stock/v1/trading/inquire-balance", tr_id("balance"),
+        {**acct, "OVRS_EXCG_CD": excg, "TR_CRCY_CD": currency,
+         "CTX_AREA_FK200": "", "CTX_AREA_NK200": ""},
+        suffix="200", row_keys=("output1",))
 
 
 def open_orders(excg: str = "NASD") -> dict | None:
@@ -393,10 +512,11 @@ def open_orders(excg: str = "NASD") -> dict | None:
     acct = account()
     if not acct or not enabled():
         return None
-    return _get("/uapi/overseas-stock/v1/trading/inquire-nccs",
-                tr_id("nccs"),
-                {**acct, "OVRS_EXCG_CD": excg, "SORT_SQN": "DS",
-                 "CTX_AREA_FK200": "", "CTX_AREA_NK200": ""})
+    return _get_all_pages(
+        "/uapi/overseas-stock/v1/trading/inquire-nccs", tr_id("nccs"),
+        {**acct, "OVRS_EXCG_CD": excg, "SORT_SQN": "DS",
+         "CTX_AREA_FK200": "", "CTX_AREA_NK200": ""},
+        suffix="200", row_keys=("output",))
 
 
 def present_balance() -> dict | None:
@@ -518,14 +638,15 @@ def fills(excg: str = "NASD", start: str = "", end: str = "") -> dict | None:
         return None
     end = end or time.strftime("%Y%m%d")
     start = start or time.strftime("%Y%m%d", time.localtime(time.time() - 7 * 86400))
-    return _get("/uapi/overseas-stock/v1/trading/inquire-ccnl",
-                tr_id("ccnl"),
-                {**acct, "PDNO": "", "ORD_STRT_DT": start, "ORD_END_DT": end,
-                 "SLL_BUY_DVSN": "00", "CCLD_NCCS_DVSN": "00",
-                 "OVRS_EXCG_CD": excg, "SORT_SQN": "DS",
-                 # 빈 값이라도 필수(누락 시 OPSQ2001 INPUT_FIELD_NAME ORD_DT)
-                 "ORD_DT": "", "ORD_GNO_BRNO": "", "ODNO": "",
-                 "CTX_AREA_NK200": "", "CTX_AREA_FK200": ""})
+    return _get_all_pages(
+        "/uapi/overseas-stock/v1/trading/inquire-ccnl", tr_id("ccnl"),
+        {**acct, "PDNO": "", "ORD_STRT_DT": start, "ORD_END_DT": end,
+         "SLL_BUY_DVSN": "00", "CCLD_NCCS_DVSN": "00",
+         "OVRS_EXCG_CD": excg, "SORT_SQN": "DS",
+         # 빈 값이라도 필수(누락 시 OPSQ2001 INPUT_FIELD_NAME ORD_DT)
+         "ORD_DT": "", "ORD_GNO_BRNO": "", "ODNO": "",
+         "CTX_AREA_NK200": "", "CTX_AREA_FK200": ""},
+        suffix="200", row_keys=("output",))
 
 
 # ── 국내(KR) 조회 — 해외와 대칭. 필드·output 키는 모의 왕복 실측 전까지 [대조필요] ──
@@ -534,12 +655,14 @@ def domestic_balance() -> dict | None:
     acct = account()
     if not acct or not enabled():
         return None
-    return _get("/uapi/domestic-stock/v1/trading/inquire-balance",
-                tr_id("balance", market="KR"),
-                {**acct, "AFHR_FLPR_YN": "N", "OFL_YN": "",
-                 "INQR_DVSN": "02", "UNPR_DVSN": "01", "FUND_STTL_ICLD_YN": "N",
-                 "FNCG_AMT_AUTO_RDPT_YN": "N", "PRCS_DVSN": "00",
-                 "CTX_AREA_FK100": "", "CTX_AREA_NK100": ""})
+    return _get_all_pages(
+        "/uapi/domestic-stock/v1/trading/inquire-balance",
+        tr_id("balance", market="KR"),
+        {**acct, "AFHR_FLPR_YN": "N", "OFL_YN": "",
+         "INQR_DVSN": "02", "UNPR_DVSN": "01", "FUND_STTL_ICLD_YN": "N",
+         "FNCG_AMT_AUTO_RDPT_YN": "N", "PRCS_DVSN": "00",
+         "CTX_AREA_FK100": "", "CTX_AREA_NK100": ""},
+        suffix="100", row_keys=("output1",))
 
 
 def domestic_open_orders() -> dict | None:
@@ -547,10 +670,12 @@ def domestic_open_orders() -> dict | None:
     acct = account()
     if not acct or not enabled():
         return None
-    return _get("/uapi/domestic-stock/v1/trading/inquire-psbl-rvsecncl",
-                tr_id("nccs", market="KR"),
-                {**acct, "INQR_DVSN_1": "0", "INQR_DVSN_2": "0",
-                 "CTX_AREA_FK100": "", "CTX_AREA_NK100": ""})
+    return _get_all_pages(
+        "/uapi/domestic-stock/v1/trading/inquire-psbl-rvsecncl",
+        tr_id("nccs", market="KR"),
+        {**acct, "INQR_DVSN_1": "0", "INQR_DVSN_2": "0",
+         "CTX_AREA_FK100": "", "CTX_AREA_NK100": ""},
+        suffix="100", row_keys=("output1", "output"))
 
 
 def domestic_fills(start: str = "", end: str = "") -> dict | None:
@@ -561,13 +686,15 @@ def domestic_fills(start: str = "", end: str = "") -> dict | None:
         return None
     end = end or time.strftime("%Y%m%d")
     start = start or time.strftime("%Y%m%d", time.localtime(time.time() - 7 * 86400))
-    return _get("/uapi/domestic-stock/v1/trading/inquire-daily-ccld",
-                tr_id("ccnl", market="KR"),
-                {**acct, "INQR_STRT_DT": start, "INQR_END_DT": end,
-                 "SLL_BUY_DVSN_CD": "00", "INQR_DVSN": "00", "PDNO": "",
-                 "CCLD_DVSN": "00", "ORD_GNO_BRNO": "", "ODNO": "",
-                 "INQR_DVSN_3": "00", "INQR_DVSN_1": "",
-                 "CTX_AREA_FK100": "", "CTX_AREA_NK100": ""})
+    return _get_all_pages(
+        "/uapi/domestic-stock/v1/trading/inquire-daily-ccld",
+        tr_id("ccnl", market="KR"),
+        {**acct, "INQR_STRT_DT": start, "INQR_END_DT": end,
+         "SLL_BUY_DVSN_CD": "00", "INQR_DVSN": "00", "PDNO": "",
+         "CCLD_DVSN": "00", "ORD_GNO_BRNO": "", "ODNO": "",
+         "INQR_DVSN_3": "00", "INQR_DVSN_1": "",
+         "CTX_AREA_FK100": "", "CTX_AREA_NK100": ""},
+        suffix="100", row_keys=("output1", "output"))
 
 
 def domestic_unfilled_orders(start: str = "", end: str = "") -> dict | None:
@@ -583,13 +710,15 @@ def domestic_unfilled_orders(start: str = "", end: str = "") -> dict | None:
         return None
     end = end or time.strftime("%Y%m%d")
     start = start or end
-    return _get("/uapi/domestic-stock/v1/trading/inquire-daily-ccld",
-                tr_id("ccnl", market="KR"),
-                {**acct, "INQR_STRT_DT": start, "INQR_END_DT": end,
-                 "SLL_BUY_DVSN_CD": "00", "INQR_DVSN": "00", "PDNO": "",
-                 "CCLD_DVSN": "02", "ORD_GNO_BRNO": "", "ODNO": "",
-                 "INQR_DVSN_3": "00", "INQR_DVSN_1": "",
-                 "CTX_AREA_FK100": "", "CTX_AREA_NK100": ""})
+    return _get_all_pages(
+        "/uapi/domestic-stock/v1/trading/inquire-daily-ccld",
+        tr_id("ccnl", market="KR"),
+        {**acct, "INQR_STRT_DT": start, "INQR_END_DT": end,
+         "SLL_BUY_DVSN_CD": "00", "INQR_DVSN": "00", "PDNO": "",
+         "CCLD_DVSN": "02", "ORD_GNO_BRNO": "", "ODNO": "",
+         "INQR_DVSN_3": "00", "INQR_DVSN_1": "",
+         "CTX_AREA_FK100": "", "CTX_AREA_NK100": ""},
+        suffix="100", row_keys=("output1", "output"))
 
 
 def domestic_buying_power(symbol: str, price: float) -> float | None:
@@ -678,26 +807,39 @@ def us_excg_of(symbol: str) -> str:
     return "NASD"
 
 
+def _consumer_untrusted(reason: str) -> None:
+    """HTTP 성공 뒤 소비자 자체 검증에서 버린 이유를 스레드별로 남긴다."""
+    _set_get_failure({"exception": str(reason)})
+
+
 def holdings(market: str = "US", excg: str = "NASD") -> dict | None:
     """브로커 실보유 {symbol.upper(): qty} — 브로커-진실 대조용(매수루프·파수꾼).
     조회 실패/불완전(연속조회 남음)=None(신뢰 불가 → 호출부 보수 처리).
     국내 output1: pdno·hldg_qty / 해외 output1: ovrs_pdno·ovrs_cblc_qty."""
     d = domestic_balance() if market == "KR" else overseas_balance(excg=excg)
     if not d or d.get("rt_cd") != "0":
+        if last_get_failure() is None:
+            _consumer_untrusted("BalanceResponseUntrusted")
         return None
     # 다중페이지 미완 → 신뢰 불가. 국내=NK100, 해외=NK200 (감사 수정: 해외 키 누락 시
     #   여러 페이지 보유가 조용히 잘려 '미보유'로 오판 → 중복매수/보호 누락 위험).
     if str(d.get("ctx_area_nk100") or d.get("CTX_AREA_NK100")
            or d.get("ctx_area_nk200") or d.get("CTX_AREA_NK200") or "").strip():
+        _consumer_untrusted("BalancePaginationIncomplete")
+        return None
+    rows = d.get("output1")
+    if not isinstance(rows, list) or any(not isinstance(row, dict) for row in rows):
+        _consumer_untrusted("BalanceRowsUntrusted")
         return None
     out: dict[str, int] = {}
-    for r in (d.get("output1") or []):
+    for r in rows:
         sym = str(r.get("pdno") or r.get("ovrs_pdno") or "").upper()
         if not sym:
             continue
         try:
             q = int(float(r.get("hldg_qty") or r.get("ovrs_cblc_qty") or 0))
         except (TypeError, ValueError):
+            _consumer_untrusted("BalanceQuantityUntrusted")
             return None
         if q:
             out[sym] = out.get(sym, 0) + q
@@ -713,21 +855,30 @@ def sellable_holdings(market: str = "US", excg: str = "NASD") -> dict | None:
     """
     d = domestic_balance() if market == "KR" else overseas_balance(excg=excg)
     if not d or d.get("rt_cd") != "0":
+        if last_get_failure() is None:
+            _consumer_untrusted("SellableBalanceResponseUntrusted")
         return None
     if str(d.get("ctx_area_nk100") or d.get("CTX_AREA_NK100")
            or d.get("ctx_area_nk200") or d.get("CTX_AREA_NK200") or "").strip():
+        _consumer_untrusted("SellableBalancePaginationIncomplete")
+        return None
+    rows = d.get("output1")
+    if not isinstance(rows, list) or any(not isinstance(row, dict) for row in rows):
+        _consumer_untrusted("SellableBalanceRowsUntrusted")
         return None
     out: dict[str, int] = {}
-    for row in (d.get("output1") or []):
+    for row in rows:
         symbol = str(row.get("pdno") or row.get("ovrs_pdno") or "").upper()
         raw = row.get("ord_psbl_qty")
         if not symbol:
             continue
         if raw in (None, ""):
+            _consumer_untrusted("SellableQuantityMissing")
             return None                            # 총보유로 폴백하면 초과매도 위험
         try:
             qty = max(0, int(float(raw)))
         except (TypeError, ValueError):
+            _consumer_untrusted("SellableQuantityUntrusted")
             return None
         out[symbol] = out.get(symbol, 0) + qty
     return out
@@ -780,10 +931,18 @@ def positions_detail(market: str = "US", excg: str = "NASD") -> list[dict] | Non
     """
     d = domestic_balance() if market == "KR" else overseas_balance(excg=excg)
     if not d or d.get("rt_cd") != "0":
+        if last_get_failure() is None:
+            _consumer_untrusted("PositionsResponseUntrusted")
         return None
     if str(d.get("ctx_area_nk100") or d.get("ctx_area_nk200")
            or d.get("CTX_AREA_NK100") or d.get("CTX_AREA_NK200") or "").strip():
+        _consumer_untrusted("PositionsPaginationIncomplete")
         return None                               # 다중페이지 미완 → 신뢰 불가
+    output_rows = d.get("output1")
+    if not isinstance(output_rows, list) \
+            or any(not isinstance(row, dict) for row in output_rows):
+        _consumer_untrusted("PositionsRowsUntrusted")
+        return None
     ccy = "KRW" if market == "KR" else "USD"
 
     def pick(r: dict, *keys: str):
@@ -793,11 +952,16 @@ def positions_detail(market: str = "US", excg: str = "NASD") -> list[dict] | Non
         return None
 
     rows: list[dict] = []
-    for r in (d.get("output1") or []):
+    for r in output_rows:
         code = str(pick(r, "pdno", "ovrs_pdno") or "").upper()
         if not code:
             continue
-        qty = int(_f(pick(r, "hldg_qty", "ovrs_cblc_qty")))
+        raw_qty = pick(r, "hldg_qty", "ovrs_cblc_qty")
+        try:
+            qty = int(float(raw_qty))
+        except (TypeError, ValueError):
+            _consumer_untrusted("PositionsQuantityUntrusted")
+            return None
         if qty <= 0:                              # 잔량 0(정리된 종목) 제외
             continue
         avg = _f(pick(r, "pchs_avg_pric", "pchs_avg_unpr", "avg_unpr"))

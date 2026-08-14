@@ -51,6 +51,16 @@ def trusted_response_rows(response: dict | None, *, domestic: bool = False
     """
     if not isinstance(response, dict) or response.get("rt_cd") != "0":
         return None
+    pagination_complete = response.get("_pagination_complete")
+    if pagination_complete not in (None, True):
+        return None
+    if pagination_complete is True:
+        try:
+            pages = int(response.get("_pagination_pages") or 0)
+        except (TypeError, ValueError):
+            return None
+        if pages < 1:
+            return None
     suffix = "100" if domestic else "200"
     if str(response.get(f"ctx_area_nk{suffix}")
            or response.get(f"CTX_AREA_NK{suffix}") or "").strip():
@@ -74,7 +84,7 @@ def trusted_response_rows(response: dict | None, *, domestic: bool = False
     # 연속 신호가 누락된 구형 응답도 페이지 상한에 꽉 찼으면 완전성을
     # 증명할 수 없다. 자동 정산만 보류하는 fail-closed 조건이다.
     page_limit = 100 if domestic else 15
-    if len(rows) >= page_limit:
+    if len(rows) >= page_limit and pagination_complete is not True:
         return None
     msg1 = clean_broker_text(response.get("msg1"))
     return [{**row, "_response_msg_cd": msg_cd,
@@ -435,6 +445,11 @@ def _kr_holdings(balance: dict | None) -> tuple[dict | None, bool]:
         return None, False
     complete = not str(balance.get("ctx_area_nk100")
                        or balance.get("CTX_AREA_NK100") or "").strip()
+    if str(balance.get("_tr_cont") or balance.get("tr_cont") or "").strip().upper() \
+            in {"F", "M"}:
+        complete = False
+    if balance.get("_pagination_complete") is False:
+        complete = False
     hmap: dict[str, int] = {}
     for r in (balance.get("output1") or []):
         sym = str(r.get("pdno") or "").upper()

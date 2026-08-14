@@ -1885,3 +1885,38 @@ Claude 전면 재검토는 불필요하고 위 증거만 제출하면 된다. �
 - Claude 1차 판정(baad2c3) 반영: 잔고 실패 사건을 원인 교대와 무관하게 단일 유지,
   pending 자동복구 알림은 `who=self-heal`일 때만 전달, self-heal 허용 문자열
   완전일치 테스트 추가. 집중 테스트 H1~H3 7/7+H4 4/4, self-heal 9/9 통과.
+
+### 36. 2026-08-14 KIS 잔고·주문 연속페이지 완전성 구현(Claude 검토 전)
+
+실계좌 전환 선행조건인 `docs/CODEX_SPEC_BALANCE_PAGINATION.md`를 독립 브랜치
+`codex/balance-pagination`에서 구현했다. 기준은 기본 브랜치 `7ff6e9c4`, 핵심
+체크포인트는 `f12a047`이다. 아직 기본 브랜치 병합·Oracle 배포·운영 설정 변경은
+하지 않았다.
+
+- 해외 잔고·미체결·체결 및 국내 잔고·미체결/체결 총 7개 조회가 FK/NK와
+  `tr_cont=N`을 사용해 모든 페이지를 소진한다. 각 호출은 기존 공유 limiter를
+  통과한다.
+- 한 페이지라도 실패하거나 형식/키가 불신이면 누적행 전체를 폐기한다. 반복키,
+  키 없는 연속 신호, 기본 20페이지 상한도 모두 `None`이며 부분 반환은 없다.
+- 완전소진 응답만 내부 완전성 마커를 받는다. SELL 거절 부재증명은 완전 병합을
+  인정하지만 중도실패·상한·남은 연속신호·마커 없는 포화 응답은 계속 거부한다.
+- 잔고 소비자 자체 거부 사유를 비-unknown 라벨로 남기고 `ContextVar`로 스레드별
+  원인을 격리했다. 시크릿·계좌·심볼·응답 원문은 기록하지 않는다.
+- 전용 테스트 8/8, 인접 KIS·sentinel·boot·SELL 대사·readiness·ops·국내외 대사
+  회귀, compileall, diff check를 통과했다. 네 핵심 방어를 제거한 변이도 각각
+  종료코드 1로 잡혔다. Codex 번들 Python 전체 회귀도 **57/57 ALL PASS**다.
+
+Claude 적대 검토 자료는 `docs/CLAUDE_REVIEW_BALANCE_PAGINATION.md`다. 다음 순서는
+Draft PR CI 확인 → Claude P0/P1=0 판정 → 사용자 별도 승인 → 기본 브랜치 병합 →
+Oracle 장외 배포·실제 다중페이지 잔고/`/진단` 라벨 실측이다. 그 전에는 실계좌
+전환을 논의하지 않으며, 이 브랜치에서 주문·kill·사이징·live/mock 설정은 바꾸지 않았다.
+
+Claude 1차 판정 `c52998ba`는 P0 0·P1 1·P2 1·P3 2의 조건부 차단이었다.
+필수 P1/P2만 후속 반영했다. Oracle KIS mock NASD 잔고는 첫 페이지 30행·NK
+`WDAY`·헤더 M, `tr_cont=N` 두 번째 페이지 1행·헤더 D로 정상 종료되어 mock도
+연속조회를 지원하는 분기 A로 확정됐다. 지시서 §7에 실측을 추기했다. 외부 응답의
+`_pagination*` 키는 `_get` 수신 경계에서 전부 제거하고, 완전성 마커는 오직
+`_get_all_pages`가 소진 뒤 생성하게 했다. 외부 위조 회귀를 추가해 전용 테스트는
+9/9가 됐다. 부분 재검토 자료는
+`docs/CLAUDE_REVIEW_BALANCE_PAGINATION_P1_P2_RESPONSE.md`다. 선택 P3는 범위를
+넓히지 않기 위해 보류했고, 사용자 승인 전 병합·Oracle 코드 배포는 계속 금지다.
