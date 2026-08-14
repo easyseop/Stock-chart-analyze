@@ -18,6 +18,7 @@ import argparse
 import datetime
 import json
 import os
+import time
 import urllib.request
 
 CACHE_PATH = os.path.join("data_cache", "perf_snapshot.json")
@@ -55,6 +56,27 @@ def fetch_latest() -> dict | None:
     if not isinstance(payload, dict) or not payload.get("days"):
         return None
     return {"payload": payload, "published_at": published}
+
+
+SITE_BASE = os.environ.get(
+    "PERF_SITE_BASE", "https://easyseop.github.io/Stock-chart-analyze")
+
+
+def _fetch_published(name: str) -> dict | None:
+    """이미 배포된 사이트의 같은 JSON을 최후 폴백으로 읽는다.
+
+    ntfy(12시간 보관)와 Actions 캐시가 모두 비는 빌드에서 파일이 통째로
+    사라져 앱이 시뮬레이션 폴백 화면을 띄우던 문제(2026-08-15 실측)를 막는다.
+    한 번 배포된 성과·승률은 다음 발행 전까지 사이트에서 사라지지 않는다.
+    """
+    try:
+        with urllib.request.urlopen(
+                f"{SITE_BASE}/api/{name}?cb={int(time.time())}",
+                timeout=FETCH_TIMEOUT_S) as resp:
+            data = json.load(resp)
+        return data if isinstance(data, dict) else None
+    except Exception:
+        return None
 
 
 def _load_cache() -> dict | None:
@@ -122,7 +144,19 @@ def build(out_dir: str = "public") -> bool:
         entry = cached
         source = "cache"
     if entry is None:
-        print("perf_site: 스냅샷 소스 없음(ntfy 비어있음·캐시 없음) — 건너뜀")
+        published = _fetch_published("performance.json")
+        if isinstance(published, dict) and published.get("days"):
+            # 이미 앱 스키마이므로 변환 없이 그대로 재배포한다(사라짐 방지).
+            api_dir = os.path.join(out_dir, "api")
+            os.makedirs(api_dir, exist_ok=True)
+            published["source"] = "actions-republished"
+            with open(os.path.join(api_dir, "performance.json"), "w",
+                      encoding="utf-8") as fp:
+                json.dump(published, fp, ensure_ascii=False,
+                          separators=(",", ":"))
+            print("perf_site: 신규 소스 없음 — 배포본 재발행(데이터 유지)")
+            return True
+        print("perf_site: 스냅샷 소스 없음(ntfy·캐시·배포본 모두 없음) — 건너뜀")
         return False
 
     from bot import alpha
@@ -200,7 +234,10 @@ def build_trade_stats(out_dir: str = "public") -> bool:
         except (OSError, UnicodeError, ValueError, json.JSONDecodeError):
             payload = None
     if not isinstance(payload, dict) or not payload.get("total"):
-        print("perf_site: 거래 성적 소스 없음 — 건너뜀")
+        payload = _fetch_published("trades_summary.json")
+        source = "republished"
+    if not isinstance(payload, dict) or not payload.get("total"):
+        print("perf_site: 거래 성적 소스 없음(ntfy·캐시·배포본 모두 없음) — 건너뜀")
         return False
 
     bucket_keys = {"closed", "decided", "wins", "losses", "win_rate",
