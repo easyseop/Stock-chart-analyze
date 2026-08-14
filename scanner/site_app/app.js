@@ -2045,21 +2045,6 @@ function renderKisPerformance() {
       </div>
     </div>
     ${rows.length ? `
-      <div class="performance-grid performance-kis-grid">
-        <div class="performance-card"><small>봇 운용자산 TWR</small><strong class="${optionalNumber(latest.account) === null ? "" : optionalNumber(latest.account) >= 0 ? "gain" : "loss"}">${performanceValue(latest.account)}</strong><p>${
-          range !== "today" && latest.accountRangeComplete === false
-            ? `미확정 ${Number(latest.accountIncompleteDays || 0)}일 포함 · 기간 누적 비확정`
-            : optionalNumber(latest.account) === null
-              ? "데이터 이상 격리 중 · 수동 확인 필요"
-              : `${range === "today" ? basisLabel : "선택 기간"} 대비`}</p></div>
-        <div class="performance-card"><small>전략 A · 전환</small><strong>${performanceValue(latest.A)}</strong><p>${keyNote(latest, "A", "A 보유 종목 기준", range)}</p></div>
-        <div class="performance-card"><small>전략 B · 매물대</small><strong>${performanceValue(latest.B)}</strong><p>${keyNote(latest, "B", "B 보유 종목 기준", range)}</p></div>
-        <div class="performance-card"><small>${escapeHTML(primary || "주 지수")} 대비</small><strong class="${optionalNumber(alphaValue) === null ? "" : optionalNumber(alphaValue) >= 0 ? "gain" : "loss"}">${performanceValue(alphaValue)}</strong><p>${keyNote(latest, `idx:${primary}`, "초과수익률(%p)", range)}</p></div>
-        <div class="performance-card"><small>장 시작 보유 · 동일가중</small><strong class="${coverageComplete && finite(holdingsValue) >= 0 ? "gain" : coverageComplete ? "loss" : ""}">${performanceValue(holdingsValue)}</strong><p>${coverageDetail}</p></div>
-      </div>
-      ${performanceInsights(rows, indexNames)}
-      ${strategyDefinitionMarkup({ compact: true })}
-      ${monthlyPerformanceMarkup(market, marketDoc)}
       <div class="performance-chart-card">
         <div class="chart-head">
           <div><strong>${escapeHTML(marketDoc.label || market)} 시장 비교</strong><span>${escapeHTML(epochLabel ? `${epochLabel} · ${basisLabel}` : basisLabel)}에 계좌·지수를 함께 0%로 맞춰 비교</span></div>
@@ -2085,7 +2070,22 @@ function renderKisPerformance() {
           range === "all"
             ? ` <b>전체 = ${rows.length ? `${escapeHTML(rows[0].label)}부터 ` : ""}최근 ${marketDayCount >= 400 ? "400거래일 창" : `${marketDayCount}거래일`}</b>${marketDayCount >= 400 ? " — 창 밖 과거 이력은 서버 장기 원장(alpha_days)에 보존되며 화면 누적에는 포함되지 않습니다." : "."}`
             : ""}</p>
-      </div>` :
+      </div>
+      <div class="performance-grid performance-kis-grid">
+        <div class="performance-card"><small>봇 운용자산 TWR</small><strong class="${optionalNumber(latest.account) === null ? "" : optionalNumber(latest.account) >= 0 ? "gain" : "loss"}">${performanceValue(latest.account)}</strong><p>${
+          range !== "today" && latest.accountRangeComplete === false
+            ? `미확정 ${Number(latest.accountIncompleteDays || 0)}일 포함 · 기간 누적 비확정`
+            : optionalNumber(latest.account) === null
+              ? "데이터 이상 격리 중 · 수동 확인 필요"
+              : `${range === "today" ? basisLabel : "선택 기간"} 대비`}</p></div>
+        <div class="performance-card"><small>전략 A · 전환</small><strong>${performanceValue(latest.A)}</strong><p>${keyNote(latest, "A", "A 보유 종목 기준", range)}</p></div>
+        <div class="performance-card"><small>전략 B · 매물대</small><strong>${performanceValue(latest.B)}</strong><p>${keyNote(latest, "B", "B 보유 종목 기준", range)}</p></div>
+        <div class="performance-card"><small>${escapeHTML(primary || "주 지수")} 대비</small><strong class="${optionalNumber(alphaValue) === null ? "" : optionalNumber(alphaValue) >= 0 ? "gain" : "loss"}">${performanceValue(alphaValue)}</strong><p>${keyNote(latest, `idx:${primary}`, "초과수익률(%p)", range)}</p></div>
+        <div class="performance-card"><small>장 시작 보유 · 동일가중</small><strong class="${coverageComplete && finite(holdingsValue) >= 0 ? "gain" : coverageComplete ? "loss" : ""}">${performanceValue(holdingsValue)}</strong><p>${coverageDetail}</p></div>
+      </div>
+      ${performanceInsights(rows, indexNames)}
+      ${monthlyPerformanceMarkup(market, marketDoc)}
+      ${strategyDefinitionMarkup({ compact: true })}` :
       emptyState("지수 비교 데이터를 쌓는 중이에요",
         "장중 첫 수집이 완료되면 전략 A·B와 나스닥·S&P500·코스피·코스닥 차트가 자동으로 나타납니다.")}
   `;
