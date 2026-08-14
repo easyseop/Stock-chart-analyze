@@ -34,6 +34,16 @@ endpoint만 읽기 전용으로 직접 호출했다. 주문·취소·kill·원�
   15행 포화 응답이 SELL 부재증명에서 계속 `None`인지 단언한다.
 - 외부 마커 제거 호출을 삭제한 M5 변이는 위 테스트가 종료코드 1로 실패한다.
 
+## 검증 증거
+
+- `python3 -m tests.test_balance_pagination`: 9/9 PASS, 종료코드 0.
+- SELL 거절 대사·KIS 어댑터·L0 readiness 집중 회귀: 모두 종료코드 0.
+- Codex 번들 Python `python -m tests.run_all`: **57/57 ALL PASS**, 종료코드 0.
+- `python3 -m compileall -q bot tests`, `git diff --check`: 종료코드 0.
+- M5(외부 마커 제거 호출 삭제):
+  `test_external_response_cannot_forge_pagination_completeness`의
+  `assert not any(...startswith("_pagination"))`가 `AssertionError`, 종료코드 1.
+
 ## 재검토 요청
 
 P1-1과 P2-1만 부분 재검토해 P0/P1/P2 폐쇄 여부를 판정해 달라. 기본 브랜치 병합과
