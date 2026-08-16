@@ -1920,3 +1920,50 @@ Claude 1차 판정 `c52998ba`는 P0 0·P1 1·P2 1·P3 2의 조건부 차단이�
 9/9가 됐다. 부분 재검토 자료는
 `docs/CLAUDE_REVIEW_BALANCE_PAGINATION_P1_P2_RESPONSE.md`다. 선택 P3는 범위를
 넓히지 않기 위해 보류했고, 사용자 승인 전 병합·Oracle 코드 배포는 계속 금지다.
+
+### 37. 2026-08-17 자가복구 관찰 완화·판정 관측성·외부 킥 감사
+
+기본 브랜치 `670dcce`의 `docs/CODEX_SPEC_SELF_HEAL_TUNING.md`를 별도 브랜치
+`codex/self-heal-observability-kick-audit`에서 구현했다. 핵심 체크포인트는
+`069a5a2`, root watchdog과 bot 조회 서비스의 권한 경계 보완은 `4fbc7d6`이다.
+아직 기본 브랜치 병합·Oracle 배포·kill 하향은 하지 않았다.
+
+- heartbeat 60~90초 단발은 관찰을 유지하되 건강 기준시각을 갱신하지 않는다.
+  90초 초과, 60초 초과 연속 2회, 관찰창 내 단발 누적 5번째에는 즉시 리셋한다.
+  설정으로 90초/4회보다 느슨하게 만들 수 없으며 readiness·정확한 사유·KST
+  하루 1회·L2+ 금지·TOCTOU 재검사는 그대로다.
+- watchdog이 판정 변경 즉시/동일 판정 10분마다 action·why·관찰·남은 시간을
+  즉시 flush한다. P0/회복 알림은 각각 2표본 히스테리시스를 쓰지만 restart/L1
+  상향 조건은 바꾸지 않았다. 네 장기 Python 유닛을 unbuffered로 전환했다.
+- 핵심 상태는 0600을 유지하고, ops/telegram의 `bot` 사용자가 읽을 수 있는
+  무시크릿 0644 판정 파일을 별도 발행한다. ops `self_heal`과 L1 `/진단` 한 줄은
+  이 파일만 읽고 상태기계를 진행하지 않는다.
+- `scripts/kick_audit.py`가 `daily.yml` 최근 24시간을 완전 페이지 조회해 외부
+  workflow_dispatch와 GitHub schedule 생존을 감사한다. 실패/부분조회는 `None`이며
+  0건 경보로 오독하지 않는다. 기존 freshness-watchdog에만 붙였고, 새 cron이나
+  dispatch 경로는 없다. 이상 판정만 텔레그램으로 UTC 날짜·판정별 하루 1회다.
+
+최종 검증은 Python 독립 모듈 `60/60`, Node `19/19`, self-heal `14/14`,
+watchdog `4/4`, kick audit `8/8`, deploy grace `7/7`, compileall·JavaScript 문법·
+diff check가 모두 통과했다. 체크포인트 뒤 12개 안전 방어를 독립 제거한
+뮤테이션은 전부 대응 테스트 종료코드 1로 KILLED됐다. 상세 적대 검토 요청과
+실패 테스트명은 `docs/CLAUDE_REVIEW_SELF_HEAL_OBSERVABILITY_KICK_AUDIT.md`에 있다.
+
+다음 순서는 Draft PR CI → Claude P0/P1=0 판정 → 사용자 별도 승인 → 장외 병합·
+Oracle 배포다. 배포 시 autodeploy가 watchdog을 재시작하지 않으므로 유닛 설치 후
+`sudo systemctl restart watchdog`이 필수다. unbuffered 적용을 위해 sentinel,
+buyloop, telegram도 한 번 재시작하고 journal 타임스탬프 즉시성을 확인한다.
+
+원격 Draft PR은 `#117`이며 첫 push/PR CI 두 실행이 각각 48초·47초에 모두
+통과했다. 현재 남은 일은 Claude가 위 검토 문서의 반례를 독립 재현해 P0/P1=0을
+확인하는 것뿐이다. 그 판정과 사용자 승인이 오기 전 PR은 Draft·미병합 상태로
+유지하고 Oracle 서비스/환경/kill 레벨은 변경하지 않는다.
+
+Claude 최종 판정 문서는 `docs/CLAUDE_REVIEW_SELF_HEAL_KICK_AUDIT_VERDICT.md`이며
+승인(P0 0·P1 0·P2 1·P3 1)이다. 사용자 요청에 따라 P2-1만 `4f2110b`에서
+보완했다. reset age 유효 숫자를 `[60, 90]`으로 경계 클램프해 `30→60`,
+`9999→90`을 보장하고 조정 로그는 프로세스당 1회로 억제한다. 옛 30→90 결함을
+재주입한 뮤테이션은 신규 회귀가 종료코드 1로 잡았다. 전체 Python `60/60`도
+다시 통과했다. 부분 재검토 증거는
+`docs/CLAUDE_REVIEW_SELF_HEAL_KICK_AUDIT_P2_RESPONSE.md`다. 선택 P3는 범위를
+넓히지 않았고 병합·배포는 여전히 사용자 승인 후에만 한다.

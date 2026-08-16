@@ -310,6 +310,28 @@ curl -s "https://ntfy.sh/<TOPIC>/json?poll=1" | tail   # 최근 캐시 메시지
 `last_ledger`·`err_1h`). `down>0`이면 ntfy 알림도 high 우선순위로 뜬다.
 끄기: `sudo systemctl disable --now health-beacon.timer`.
 
+## watchdog 자가복구 판정·로그 확인
+
+- L1 자동복구는 heartbeat 60초 이하 관찰을 기본으로 한다. 60~90초 단발은
+  관찰을 유지하지만 연속 2회, 90초 초과 1회, 또는 관찰창 내 단발 초과 누적
+  5번째에는 관찰을 초기화한다. readiness GO·완전일치 사유·KST 하루 1회·
+  L2+ 금지는 그대로다.
+- watchdog은 판정(action/why/관찰/남은 시간)을 상태 변화 즉시, 동일 상태는
+  10분에 한 번 기록한다. `/진단`은 L1일 때 같은 판정을 표시한다.
+- 배포 시 autodeploy 기본 재시작 목록에 watchdog이 없으므로 유닛 파일을 설치한
+  뒤 watchdog을 별도로 한 번 재시작한다. 장외 수동 확인 절차:
+
+```bash
+sudo cp infra/server/{watchdog,sentinel,buyloop,telegram}.service /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl restart watchdog sentinel buyloop telegram
+sudo journalctl -u watchdog -f -o short-iso
+```
+
+마지막 명령에서 서로 다른 관찰 시각의 로그가 즉시 한 줄씩 나타나야 한다.
+같은 초에 과거 로그가 한꺼번에 몰리면 `PYTHONUNBUFFERED=1` 적용 여부를 다시
+확인한다. 이 확인만으로 L1을 만들거나 L0로 내리지는 않는다.
+
 ## 운영 규칙 (설계 04·REFLECTION 준수)
 - **단일 프로세스 원칙(I3)**: 파수꾼 1개만 KIS 토큰을 쓴다. 루프를 늘리면 반드시
   같은 `KIS_TOKEN_CACHE`(flock)를 공유 — 토큰 발급 1분1회 제한 때문.

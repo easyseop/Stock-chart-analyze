@@ -8,18 +8,66 @@ import os
 import time
 
 DEFAULT_STATE_PATH = "/var/lib/stock-watchdog/self_heal.json"
+DEFAULT_STATUS_PATH = "/var/lib/stock-watchdog/self_heal_status.json"
 DEFAULT_OBSERVE_S = 1800.0
 MAX_CONTINUITY_GAP_S = 60.0
+HEALTHY_AGE_S = 60.0
+DEFAULT_RESET_AGE_S = 90.0
+# A lone 60-90s excursion is tolerated, but an alternating chronic slowdown
+# must not accumulate enough wall time to authorize an automatic recovery.
+DEFAULT_MAX_SOFT_SAMPLES = 4
+_config_clamp_logged: set[tuple[str, str]] = set()
 
 
 def _path() -> str:
     return os.environ.get("SELF_HEAL_STATE_PATH", DEFAULT_STATE_PATH)
 
 
+def _status_path() -> str:
+    explicit = os.environ.get("SELF_HEAL_STATUS_PATH")
+    if explicit:
+        return explicit
+    state_path = _path()
+    if state_path != DEFAULT_STATE_PATH:
+        return state_path + ".status"
+    return DEFAULT_STATUS_PATH
+
+
 def _observe_s() -> float:
     try: value = float(os.environ.get("SELF_HEAL_OBSERVE_S", DEFAULT_OBSERVE_S))
     except (TypeError, ValueError): value = DEFAULT_OBSERVE_S
     return value if math.isfinite(value) and value >= 0 else DEFAULT_OBSERVE_S
+
+
+def _reset_age_s() -> float:
+    raw = os.environ.get("SELF_HEAL_RESET_AGE_S", DEFAULT_RESET_AGE_S)
+    try:
+        value = float(raw)
+    except (TypeError, ValueError):
+        _log_config_clamp("invalid", DEFAULT_RESET_AGE_S)
+        return DEFAULT_RESET_AGE_S
+    if not math.isfinite(value) or value < 0:
+        _log_config_clamp("nonfinite_or_negative", DEFAULT_RESET_AGE_S)
+        return DEFAULT_RESET_AGE_S
+    normalized = max(HEALTHY_AGE_S, min(value, DEFAULT_RESET_AGE_S))
+    if normalized != value:
+        _log_config_clamp(f"requested={value:g}", normalized)
+    return normalized
+
+
+def _log_config_clamp(reason: str, normalized: float) -> None:
+    key = (str(reason), f"{float(normalized):g}")
+    if key in _config_clamp_logged:
+        return
+    _config_clamp_logged.add(key)
+    print("kill-self-heal: SELF_HEAL_RESET_AGE_S "
+          f"{reason} — boundary={normalized:g}s", flush=True)
+
+
+def _max_soft_samples() -> int:
+    try: value = int(os.environ.get("SELF_HEAL_MAX_SOFT_SAMPLES", DEFAULT_MAX_SOFT_SAMPLES))
+    except (TypeError, ValueError): value = DEFAULT_MAX_SOFT_SAMPLES
+    return min(value, DEFAULT_MAX_SOFT_SAMPLES) if value >= 1 else DEFAULT_MAX_SOFT_SAMPLES
 
 
 def _day_kst(now: float) -> str:
@@ -30,11 +78,14 @@ def _day_kst(now: float) -> str:
 def _empty(day: str) -> dict:
     return {"v": 1, "day_kst": day, "used": False, "event": "",
             "healthy_since": 0.0, "last_healthy_at": 0.0,
+            "soft_over_streak": 0, "soft_over_total": 0,
             "repeat_alerted_event": "", "pending_notice": "",
-            "observer_pid": os.getpid()}
+            "observer_pid": os.getpid(), "last_action": "idle",
+            "last_why": "", "last_observed_s": 0.0,
+            "last_remaining_s": _observe_s()}
 
 
-def _load(now: float) -> tuple[dict | None, bool]:
+def _load(now: float, *, observe_pid: bool = True) -> tuple[dict | None, bool]:
     try:
         with open(_path(), encoding="utf-8") as fp: state = json.load(fp)
     except FileNotFoundError:
@@ -58,13 +109,30 @@ def _load(now: float) -> tuple[dict | None, bool]:
             state[key] = str(state[key])
     except (TypeError, ValueError):
         return None, True
+    # v1 files written by the previous release remain valid. New fields are
+    # optional on read and receive conservative defaults.
+    try:
+        state["soft_over_streak"] = int(state.get("soft_over_streak", 0))
+        state["soft_over_total"] = int(state.get("soft_over_total", 0))
+        state["last_observed_s"] = float(state.get("last_observed_s", 0.0))
+        state["last_remaining_s"] = float(state.get("last_remaining_s", _observe_s()))
+        if state["soft_over_streak"] < 0 or state["soft_over_total"] < 0:
+            return None, True
+        if not all(math.isfinite(state[key]) and state[key] >= 0
+                   for key in ("last_observed_s", "last_remaining_s")):
+            return None, True
+        state["last_action"] = str(state.get("last_action", "idle"))
+        state["last_why"] = str(state.get("last_why", ""))
+    except (TypeError, ValueError):
+        return None, True
     day = _day_kst(now)
     if state["day_kst"] != day:
         pending = state["pending_notice"]
         state = _empty(day); state["pending_notice"] = pending
-    elif state["observer_pid"] != os.getpid():
+    elif observe_pid and state["observer_pid"] != os.getpid():
         state["observer_pid"] = os.getpid()
         state["event"] = ""; state["healthy_since"] = 0.0; state["last_healthy_at"] = 0.0
+        state["soft_over_streak"] = 0; state["soft_over_total"] = 0
     return state, False
 
 
@@ -76,6 +144,27 @@ def _save(state: dict) -> bool:
             json.dump(state, fp, ensure_ascii=False, separators=(",", ":"))
             fp.flush(); os.fsync(fp.fileno())
         os.chmod(tmp, 0o600); os.replace(tmp, path); return True
+    except OSError:
+        try: os.unlink(tmp)
+        except OSError: pass
+        return False
+
+
+def _publish_status(result: dict, day: str) -> bool:
+    """Publish only the sanitized decision for unprivileged read-only consumers."""
+    path = _status_path(); parent = os.path.dirname(path) or "."; tmp = f"{path}.tmp.{os.getpid()}"
+    payload = {"v": 1, "day_kst": day,
+               "action": str(result.get("action") or "unknown"),
+               "why": str(result.get("why") or ""),
+               "observed_s": max(0.0, float(result.get("observed_s") or 0)),
+               "remaining_s": max(0.0, float(result.get("remaining_s") or 0)),
+               "used_today": bool(result.get("used_today"))}
+    try:
+        os.makedirs(parent, exist_ok=True)
+        with open(tmp, "w", encoding="utf-8") as fp:
+            json.dump(payload, fp, ensure_ascii=False, separators=(",", ":"))
+            fp.flush(); os.fsync(fp.fileno())
+        os.chmod(tmp, 0o644); os.replace(tmp, path); return True
     except OSError:
         try: os.unlink(tmp)
         except OSError: pass
@@ -101,79 +190,174 @@ def _readiness_go() -> tuple[bool, str]:
     return True, "scope=l0 blockers=0"
 
 
+def _result(action: str, why: str = "", *, observed_s: float = 0.0,
+            remaining_s: float | None = None, used_today: bool = False,
+            **extra) -> dict:
+    observed = max(0.0, float(observed_s))
+    remaining = max(0.0, _observe_s() - observed) if remaining_s is None else max(0.0, float(remaining_s))
+    out = {"action": str(action), "why": str(why),
+           "observed_s": observed, "remaining_s": remaining,
+           "used_today": bool(used_today)}
+    out.update(extra)
+    return out
+
+
+def _finish(state: dict, action: str, why: str = "", *,
+            observed_s: float = 0.0, remaining_s: float | None = None,
+            persist: bool = True, **extra) -> dict:
+    result = _result(action, why, observed_s=observed_s,
+                     remaining_s=remaining_s, used_today=state["used"], **extra)
+    state["last_action"] = result["action"]
+    state["last_why"] = result["why"]
+    state["last_observed_s"] = result["observed_s"]
+    state["last_remaining_s"] = result["remaining_s"]
+    if persist and not _save(state):
+        blocked = _result("blocked", "state_write", observed_s=observed_s,
+                          remaining_s=remaining_s, used_today=state["used"])
+        _publish_status(blocked, state["day_kst"])
+        return blocked
+    _publish_status(result, state["day_kst"])
+    return result
+
+
+def _clear_observation(state: dict) -> None:
+    state["healthy_since"] = 0.0
+    state["last_healthy_at"] = 0.0
+    state["soft_over_streak"] = 0
+    state["soft_over_total"] = 0
+
+
+def status(*, now: float | None = None) -> dict:
+    """Return the persisted decision only; never advances the state machine."""
+    stamp = time.time() if now is None else float(now)
+    try:
+        with open(_status_path(), encoding="utf-8") as fp: raw = json.load(fp)
+    except FileNotFoundError:
+        return _result("idle", "status_pending")
+    except (OSError, UnicodeError, json.JSONDecodeError):
+        return _result("blocked", "status_unreadable")
+    try:
+        if not isinstance(raw, dict) or int(raw.get("v") or 0) != 1:
+            raise ValueError("schema")
+        if str(raw.get("day_kst") or "") != _day_kst(stamp):
+            return _result("idle", "new_day")
+        action = str(raw["action"]); why = str(raw["why"])
+        observed = float(raw["observed_s"]); remaining = float(raw["remaining_s"])
+        used = raw["used_today"]
+        if not isinstance(used, bool) or not action or len(action) > 64 or len(why) > 200:
+            raise ValueError("schema")
+        if not all(math.isfinite(value) and value >= 0 for value in (observed, remaining)):
+            raise ValueError("schema")
+    except (KeyError, TypeError, ValueError):
+        return _result("blocked", "status_corrupt")
+    return _result(action, why, observed_s=observed,
+                   remaining_s=remaining, used_today=used)
+
+
 def cycle(*, heartbeat_age_s: float | None, now: float | None = None) -> dict:
     from bot import kill
     from bot.watchdog_policy import self_heal_allowed
     stamp = time.time() if now is None else float(now)
     state, corrupted = _load(stamp)
-    if corrupted or state is None: return {"action": "blocked", "why": "state_corrupt"}
+    if corrupted or state is None:
+        result = _result("blocked", "state_corrupt")
+        _publish_status(result, _day_kst(stamp))
+        return result
     if state["pending_notice"] and kill.level() == 0:
         lowered_by = str(kill.status().get("who") or "")
         if lowered_by != "self-heal":
             state["pending_notice"] = ""
-            saved = _save(state)
             print("kill-self-heal: pending notice discarded — "
-                  f"L0 owner={lowered_by or 'unknown'}")
-            if not saved:
-                return {"action": "blocked", "why": "state_write"}
-            return {"action": "notice_discarded",
-                    "why": "l0_owner_not_self_heal"}
+                  f"L0 owner={lowered_by or 'unknown'}", flush=True)
+            return _finish(state, "notice_discarded", "l0_owner_not_self_heal")
         if _delivered(state["pending_notice"]):
-            state["pending_notice"] = ""; _save(state)
-            return {"action": "notice_delivered"}
-        return {"action": "notice_retry"}
+            state["pending_notice"] = ""
+            return _finish(state, "notice_delivered", "pending_notice")
+        return _finish(state, "notice_retry", "notify_failed")
     status = kill.status(); level = kill.level()
     if level != 1 or int(status.get("level") or level) != 1:
-        return {"action": "ineligible", "why": f"level={level}"}
+        result = _result("ineligible", f"level={level}", used_today=state["used"])
+        _publish_status(result, state["day_kst"])
+        return result
     who, why = str(status.get("who") or ""), str(status.get("why") or "")
     if not self_heal_allowed(who, why):
-        return {"action": "ineligible", "why": "source_or_reason"}
+        return _finish(state, "ineligible", "source_or_reason")
     try: raised_at = float(status.get("ts") or 0)
-    except (TypeError, ValueError): return {"action": "ineligible", "why": "raise_ts"}
+    except (TypeError, ValueError): return _finish(state, "ineligible", "raise_ts")
     if not math.isfinite(raised_at) or raised_at <= 0 or raised_at > stamp:
-        return {"action": "ineligible", "why": "raise_ts"}
+        return _finish(state, "ineligible", "raise_ts")
     event = f"{raised_at:.6f}|{who}|{why}"
     if state["used"]:
         if state["repeat_alerted_event"] != event:
             msg = "🚨 kill-switch 반복 자동 상향 — 오늘 자동 복구 1회 소진, 수동 확인 필요"
             if _delivered(msg):
                 state["repeat_alerted_event"] = event; _save(state)
-                return {"action": "manual_alert"}
-        return {"action": "blocked", "why": "daily_limit"}
+                return _finish(state, "manual_alert", "daily_limit")
+        return _finish(state, "blocked", "daily_limit")
     try: age = float(heartbeat_age_s) if heartbeat_age_s is not None else math.inf
     except (TypeError, ValueError): age = math.inf
-    healthy = math.isfinite(age) and 0 <= age < 60.0
+    healthy = math.isfinite(age) and 0 <= age <= HEALTHY_AGE_S
+    soft = math.isfinite(age) and HEALTHY_AGE_S < age <= _reset_age_s()
     if state["event"] != event:
         state["event"] = event
-        state["healthy_since"] = stamp if healthy else 0.0
-        state["last_healthy_at"] = stamp if healthy else 0.0
-        _save(state); return {"action": "observing" if healthy else "reset"}
-    if not healthy:
-        state["healthy_since"] = 0.0; state["last_healthy_at"] = 0.0; _save(state)
-        return {"action": "reset"}
+        _clear_observation(state)
+        if not healthy:
+            return _finish(state, "reset", "soft_without_baseline" if soft else "heartbeat_hard")
+        state["healthy_since"] = stamp
+        state["last_healthy_at"] = stamp
+    elif not healthy:
+        if not soft:
+            _clear_observation(state)
+            return _finish(state, "reset", "heartbeat_hard")
+        if state["healthy_since"] <= 0:
+            _clear_observation(state)
+            return _finish(state, "reset", "soft_without_baseline")
+        state["soft_over_streak"] += 1
+        state["soft_over_total"] += 1
+        observed = stamp - max(raised_at, state["healthy_since"])
+        if state["soft_over_streak"] >= 2:
+            _clear_observation(state)
+            return _finish(state, "reset", "heartbeat_soft_consecutive")
+        if state["soft_over_total"] > _max_soft_samples():
+            _clear_observation(state)
+            return _finish(state, "reset", "heartbeat_soft_budget")
+        # A single soft sample neither advances nor resets the healthy anchor.
+        return _finish(state, "degraded", "heartbeat_soft_single", observed_s=observed)
     if state["last_healthy_at"] <= 0 or stamp - state["last_healthy_at"] > MAX_CONTINUITY_GAP_S:
         state["healthy_since"] = stamp
     state["last_healthy_at"] = stamp
+    state["soft_over_streak"] = 0
     if state["healthy_since"] <= 0: state["healthy_since"] = stamp
-    _save(state)
     observed = stamp - max(raised_at, state["healthy_since"])
-    if observed < _observe_s(): return {"action": "observing", "observed_s": observed}
+    if observed < _observe_s():
+        return _finish(state, "observing", "heartbeat_healthy", observed_s=observed)
+    # The observation must be durable before readiness can authorize a lower.
+    observed_result = _finish(state, "checking", "readiness", observed_s=observed)
+    if observed_result["action"] == "blocked": return observed_result
     try: go, summary = _readiness_go()
-    except Exception as exc: return {"action": "blocked", "why": f"readiness:{type(exc).__name__}"}
-    if not go: return {"action": "blocked", "why": summary}
+    except Exception as exc:
+        return _finish(state, "blocked", f"readiness:{type(exc).__name__}", observed_s=observed)
+    if not go: return _finish(state, "blocked", summary, observed_s=observed)
     latest = kill.status()
-    latest_event = f"{float(latest.get('ts') or 0):.6f}|{latest.get('who') or ''}|{latest.get('why') or ''}"
+    try: latest_event = f"{float(latest.get('ts') or 0):.6f}|{latest.get('who') or ''}|{latest.get('why') or ''}"
+    except (TypeError, ValueError): latest_event = ""
     if kill.level() != 1 or int(latest.get("level") or 0) != 1 or latest_event != event:
-        return {"action": "blocked", "why": "kill_changed_during_readiness"}
+        return _finish(state, "blocked", "kill_changed_during_readiness", observed_s=observed)
     notice = (f"✅ kill-switch 자동 L0 복구 — 원인: {why} · 연속 관찰 {int(observed)}초 · "
               f"readiness {summary}. 오늘 자동 복구 1회 소진, 재상향 시 수동 확인")
     state["used"] = True; state["pending_notice"] = notice
-    if not _save(state): return {"action": "blocked", "why": "state_write"}
+    if not _save(state):
+        blocked = _result("blocked", "state_write", observed_s=observed, used_today=True)
+        _publish_status(blocked, state["day_kst"])
+        return blocked
     ack = f"self-heal: {why} · observed={int(observed)}s · {summary}"
     try: lowered = kill.lower_level(0, ack=ack)
-    except Exception as exc: return {"action": "blocked", "why": f"lower:{type(exc).__name__}"}
-    if lowered != 0: return {"action": "blocked", "why": f"lowered={lowered}"}
+    except Exception as exc:
+        return _finish(state, "blocked", f"lower:{type(exc).__name__}", observed_s=observed)
+    if lowered != 0: return _finish(state, "blocked", f"lowered={lowered}", observed_s=observed)
     if _delivered(notice):
-        state["pending_notice"] = ""; _save(state)
-        return {"action": "recovered", "notified": True}
-    return {"action": "recovered", "notified": False}
+        state["pending_notice"] = ""
+        return _finish(state, "recovered", "readiness_go", observed_s=observed,
+                       remaining_s=0, notified=True)
+    return _finish(state, "recovered", "notify_failed", observed_s=observed,
+                   remaining_s=0, notified=False)

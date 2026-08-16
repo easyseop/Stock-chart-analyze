@@ -170,6 +170,20 @@ def snapshot() -> dict:
     except Exception as e:
         out["kill_level_error"] = type(e).__name__
     try:
+        from bot import kill_self_heal
+        healing = kill_self_heal.status()
+        out["self_heal"] = {
+            "action": str(healing.get("action") or "unknown"),
+            "why": str(healing.get("why") or ""),
+            "observed_s": round(float(healing.get("observed_s") or 0), 1),
+            "used_today": bool(healing.get("used_today")),
+        }
+    except Exception as e:
+        out["self_heal"] = {
+            "action": "unavailable", "why": type(e).__name__,
+            "observed_s": 0.0, "used_today": False,
+        }
+    try:
         from bot import heartbeat
         age = heartbeat.age_s()
         out["heartbeat_age_s"] = None if age is None else round(age, 1)
