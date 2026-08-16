@@ -80,6 +80,83 @@ Codex 요청서의 "더 엄격한 값만 허용" 서술과 실제 동작이 어�
 8·9 ✅(test_kick_audit 8/8 + M7·M8·M9 KILLED),
 10 ✅(dispatch 경로 없음·`continue-on-error`로 기존 자가치유 독립).
 
+---
+
+## 부분 재검토 — P2-1 수정 (2026-08-17, `4f2110b` / 문서 `f5043669`)
+
+### 판정: **P2-1 해소 — 신규 P0·P1·P2 0건**
+
+변경 범위는 `bot/kill_self_heal.py`(`_reset_age_s` + `_log_config_clamp`),
+`tests/test_kill_self_heal.py`, 문서 2건뿐이다(`git diff --stat` 실측).
+주문·kill·readiness·상향·재시작 경로 diff **0**.
+
+### 검토자 독립 프로브(16개 입력 실측)
+
+| 입력 | 반환 | 로그 |
+|---|---|---|
+| 미설정 | 90.0 | 0줄 |
+| `30` / `45` / `59.9` | **60.0** | 1줄 (`requested=… — boundary=60s`) |
+| `60` / `61` / `89` / `90` | 그대로 | 0줄(조정 없음 → 침묵) |
+| `90.1` / `9999` | **90.0** | 1줄 |
+| `0` | 60.0 | 1줄 |
+| `-5` / `nan` / `inf` | 90.0 | 1줄(`nonfinite_or_negative`) |
+| `abc` / 빈 문자열 | 90.0 | 1줄(`invalid` — 원문 미노출) |
+
+세 번 연속 호출해도 로그는 **1줄**(프로세스당 1회, `flush=True`). watchdog이
+15초마다 도는데도 로그 폭주가 없음을 실측했다. 지시서의 "더 엄격한 값만
+허용"이 이제 실제 동작과 일치한다.
+
+### 새로 생긴 위험은 없는가 — 경계 소멸 확인
+
+`SELF_HEAL_RESET_AGE_S=30`일 때 유효값이 60이 되어 소프트 구간
+(`60 < age ≤ reset_age`)이 **비어 버린다**. 이것이 완화 방향의 사고를 만들지
+확인했다:
+
+```
+age=59    healthy=True  soft=False  hard_reset=False
+age=60    healthy=True  soft=False  hard_reset=False
+age=60.5  healthy=False soft=False  hard_reset=True   ← 60 초과 즉시 리셋
+age=95    healthy=False soft=False  hard_reset=True
+```
+
+소프트 관용이 사라지고 **60초 초과 단발에도 즉시 리셋**된다 = 요청한 대로
+더 엄격해진다. 완화 방향 사고 없음. `MAX_SOFT_SAMPLES=9999 → 4` 상한도 유지.
+
+### 뮤테이션 검증 (커밋 후 주입, 3/3 KILLED)
+
+| 뮤턴트 | 결과 |
+|---|---|
+| M1 옛 동작 복원(범위 밖 → 기본 90) | **KILLED** exit=1 · AssertionError |
+| M2 1회성 로그 억제 제거 | **KILLED** exit=1 |
+| M3 상한 클램프 제거(`max(60, value)`만) | **KILLED** exit=1 |
+
+M3까지 죽는다는 것은 새 테스트가 "엄격 방향 허용"만이 아니라 **느슨화 차단도
+같이 지키고 있다**는 뜻이다. 검증 후 작업본 복구 확인(`git status` 청결).
+
+### 회귀 재실행 (7모듈 전부 PASS)
+
+```
+test_kill_self_heal              rc=0 | kill self-heal 14/14 PASS
+test_watchdog_observability      rc=0 | watchdog observability 4/4 PASS
+test_kick_audit                  rc=0 | kick audit 8/8 PASS
+test_deploy_grace                rc=0 | deploy grace 7/7 PASS
+test_ops_status                  rc=0 | 서버 자가진단 발행 검증 통과
+test_kis_telegram                rc=0 | 텔레그램 조회 봇 검증 통과
+test_killswitch                  rc=0 | ✅ 긴급 정지 전부 통과
+compileall(bot·infra·scripts·tests) OK
+```
+
+### 남은 P3 (비차단, 병합과 무관)
+
+1. 기존 P3(소프트 예산 소진 로그) — 사용자가 P2-1만 지정해 미반영. 유지.
+2. `-5 → 90`(기본값) vs `0 → 60`(엄격 클램프)로 처리 방향이 갈린다. 둘 다
+   안전한 값이라 결함은 아니지만, 음수도 `invalid`와 같은 취급이라는 점만
+   알고 있으면 된다.
+
+**최종: PR #117 = P0 0 · P1 0 · P2 0 · P3 2 — 병합 가능(사용자 승인 필요).**
+
+---
+
 ## 배포 주의(그대로 유효)
 
 autodeploy 재시작 목록에 watchdog이 없으므로 **장외에 `sudo systemctl restart
