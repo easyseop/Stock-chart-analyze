@@ -76,10 +76,20 @@ def test_state_write_failure_blocks_before_readiness_and_lower():
         assert out["action"]=="blocked" and out["why"]=="state_write"
         assert ready.call_count==0 and lower.call_count==0 and kill.level()==1
 
-def test_relaxation_env_cannot_weaken_safety_ceiling():
-    with mock.patch.dict(os.environ,{"SELF_HEAL_RESET_AGE_S":"9999","SELF_HEAL_MAX_SOFT_SAMPLES":"9999"}):
-        assert kill_self_heal._reset_age_s()==90.0
-        assert kill_self_heal._max_soft_samples()==4
+def test_reset_age_clamps_strict_and_loose_values_with_one_time_log():
+    kill_self_heal._config_clamp_logged.clear()
+    with mock.patch("builtins.print") as logged:
+        with mock.patch.dict(os.environ,{"SELF_HEAL_RESET_AGE_S":"30"}):
+            assert kill_self_heal._reset_age_s()==60.0
+            assert kill_self_heal._reset_age_s()==60.0
+        with mock.patch.dict(os.environ,{"SELF_HEAL_RESET_AGE_S":"9999","SELF_HEAL_MAX_SOFT_SAMPLES":"9999"}):
+            assert kill_self_heal._reset_age_s()==90.0
+            assert kill_self_heal._reset_age_s()==90.0
+            assert kill_self_heal._max_soft_samples()==4
+    assert logged.call_count==2
+    lines="\n".join(str(call) for call in logged.call_args_list)
+    assert "requested=30" in lines and "boundary=60" in lines
+    assert "requested=9999" in lines and "boundary=90" in lines
 def test_notification_failure_retries_after_lower():
     with tempfile.TemporaryDirectory() as tmp,_env(tmp),mock.patch("bot.notify.send",return_value=True),mock.patch.object(kill_self_heal,"_readiness_go",return_value=(True,"go")):
         ts=_raise(); kill_self_heal.cycle(heartbeat_age_s=1,now=ts)
@@ -111,6 +121,6 @@ def test_self_heal_allowlist_requires_exact_match():
               (WATCHDOG_WHO,BALANCE_FAILURE_REASON.replace("KIS","kis")))
     assert all(not self_heal_allowed(who,why) for who,why in variants)
 def main():
-    for fn in (test_normal_path_lowers_and_audits_self_heal,test_s1_operator_reason_and_l2_never_lower,test_s2_29_minutes_flap_and_restart_reset,test_t1_single_soft_sample_preserves_window_and_recovers,test_t1_hard_age_resets_immediately,test_t1_chronic_alternating_soft_samples_never_recovers,test_s3_no_go_exception_and_l2_toctou_block,test_s4_once_per_kst_day_and_manual_alert,test_corrupt_state_fail_closed,test_state_write_failure_blocks_before_readiness_and_lower,test_relaxation_env_cannot_weaken_safety_ceiling,test_notification_failure_retries_after_lower,test_pending_notice_is_discarded_after_manual_lower,test_self_heal_allowlist_requires_exact_match): fn()
+    for fn in (test_normal_path_lowers_and_audits_self_heal,test_s1_operator_reason_and_l2_never_lower,test_s2_29_minutes_flap_and_restart_reset,test_t1_single_soft_sample_preserves_window_and_recovers,test_t1_hard_age_resets_immediately,test_t1_chronic_alternating_soft_samples_never_recovers,test_s3_no_go_exception_and_l2_toctou_block,test_s4_once_per_kst_day_and_manual_alert,test_corrupt_state_fail_closed,test_state_write_failure_blocks_before_readiness_and_lower,test_reset_age_clamps_strict_and_loose_values_with_one_time_log,test_notification_failure_retries_after_lower,test_pending_notice_is_discarded_after_manual_lower,test_self_heal_allowlist_requires_exact_match): fn()
     print("kill self-heal 14/14 PASS")
 if __name__=="__main__": main()

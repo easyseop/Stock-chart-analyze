@@ -16,6 +16,7 @@ DEFAULT_RESET_AGE_S = 90.0
 # A lone 60-90s excursion is tolerated, but an alternating chronic slowdown
 # must not accumulate enough wall time to authorize an automatic recovery.
 DEFAULT_MAX_SOFT_SAMPLES = 4
+_config_clamp_logged: set[tuple[str, str]] = set()
 
 
 def _path() -> str:
@@ -39,10 +40,28 @@ def _observe_s() -> float:
 
 
 def _reset_age_s() -> float:
-    try: value = float(os.environ.get("SELF_HEAL_RESET_AGE_S", DEFAULT_RESET_AGE_S))
-    except (TypeError, ValueError): value = DEFAULT_RESET_AGE_S
-    return min(value, DEFAULT_RESET_AGE_S) \
-        if math.isfinite(value) and value > HEALTHY_AGE_S else DEFAULT_RESET_AGE_S
+    raw = os.environ.get("SELF_HEAL_RESET_AGE_S", DEFAULT_RESET_AGE_S)
+    try:
+        value = float(raw)
+    except (TypeError, ValueError):
+        _log_config_clamp("invalid", DEFAULT_RESET_AGE_S)
+        return DEFAULT_RESET_AGE_S
+    if not math.isfinite(value) or value < 0:
+        _log_config_clamp("nonfinite_or_negative", DEFAULT_RESET_AGE_S)
+        return DEFAULT_RESET_AGE_S
+    normalized = max(HEALTHY_AGE_S, min(value, DEFAULT_RESET_AGE_S))
+    if normalized != value:
+        _log_config_clamp(f"requested={value:g}", normalized)
+    return normalized
+
+
+def _log_config_clamp(reason: str, normalized: float) -> None:
+    key = (str(reason), f"{float(normalized):g}")
+    if key in _config_clamp_logged:
+        return
+    _config_clamp_logged.add(key)
+    print("kill-self-heal: SELF_HEAL_RESET_AGE_S "
+          f"{reason} — boundary={normalized:g}s", flush=True)
 
 
 def _max_soft_samples() -> int:
