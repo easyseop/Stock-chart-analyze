@@ -270,6 +270,42 @@ sudo systemctl daemon-reload
 sudo systemctl restart buyloop.service
 ```
 
+`watchdog.service`도 같은 함정을 밟는다. **단순 `source`는 파일 안에서 `export`가
+붙은 줄만 자식 파이썬에 넘긴다.** Oracle의 `/home/ubuntu/kis.env`는 혼합 형식이라
+`KIS_*`(export 있음)는 넘어가고 `TELEGRAM_BOT_TOKEN`·`TELEGRAM_CHAT_ID`(export 없음)는
+넘어가지 않았다 — watchdog의 P0 경보가 전부 `[드라이런 — TELEGRAM_BOT_TOKEN/CHAT_ID
+미설정]`으로 저널에만 찍히고 폰에는 한 번도 오지 않았다(실측 2026-08-17).
+**경보 채널이 죽으면 그 사실을 알릴 채널도 같이 죽으므로** 스스로 드러나지 않는다.
+
+```bash
+sudo install -d -m 755 /etc/systemd/system/watchdog.service.d
+sudo install -m 644 infra/server/watchdog.oracle-ubuntu.conf \
+  /etc/systemd/system/watchdog.service.d/oracle-ubuntu.conf
+sudo systemctl daemon-reload && sudo systemctl restart watchdog.service
+# 부팅 첫 줄에서 채널 구성이 보인다(값은 안 찍힘):
+journalctl -u watchdog -n 5 -o short-iso | grep "알림 채널"
+#   watchdog: 알림 채널 telegram=OK · ntfy=미설정(이중화 없음)
+```
+
+`telegram=미설정`이 보이면 **그 프로세스의 P0 경보는 도달하지 않는다.** 다른
+유닛도 같은 방식으로 점검한다 — 구성은 유닛마다 다르다.
+
+### P0 이중화(ntfy) 켜기 — 선택
+
+`critical=True` 경보는 `NTFY_TOPIC`이 설정된 프로세스에서만 ntfy로도 나간다.
+미설정이면 **텔레그램 단일 채널**이라 텔레그램이 죽으면 P0가 통째로 유실된다.
+ntfy 토픽은 인증이 없어 이름을 아는 사람은 누구나 읽으므로, 기본 발행 본문은
+**분류만 실은 고정 문구**다(`🚨 P0 경보(trade) — 상세는 텔레그램·/진단에서 확인`).
+종목·수량·금액은 공개 토픽에 나가지 않는다.
+
+```bash
+# 추측 어려운 값으로. export를 붙이거나 drop-in이 set -a를 쓰는지 확인할 것.
+echo 'export NTFY_TOPIC=stock-p0-<랜덤12자>' | sudo tee -a /home/ubuntu/kis.env
+sudo systemctl restart watchdog sentinel buyloop telegram
+```
+
+상세까지 공개 토픽에 실으려면 `NTFY_P0_DETAIL=1`을 명시적으로 켠다(노출 감수).
+
 종료코드 `0`은 선택한 scope의 차단 게이트가 통과해 운영자 승인 검토가 가능하다는
 뜻일 뿐이다. 실제 L1 하향은 사용자 별도 승인과 사유가 포함된
 `python -m bot.kill 0 --lower ...` 절차가 여전히 필요하다. 하나라도 불명확하면

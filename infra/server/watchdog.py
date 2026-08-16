@@ -110,8 +110,27 @@ def check_cycle(state: dict, *, now: float | None = None) -> None:
         print(f"[watchdog self-heal 오류] {type(exc).__name__}: {exc}", flush=True)
 
 
+def _log_alert_channels() -> None:
+    """부팅 첫 줄에 알림 채널 구성을 남긴다 — 조용한 드라이런 재발 방지.
+
+    실측(2026-08-17): watchdog 유닛만 `set -a` 없이 kis.env를 source해
+    텔레그램 자격증명이 파이썬에 주입되지 않았고, P0 경보가 전부
+    `[드라이런]`으로 저널에만 찍혔다. 경보 채널이 죽으면 그 사실을 알릴
+    채널도 같이 죽으므로, 부팅 로그에 드러내는 것이 유일한 조기 발견 수단이다."""
+    try:
+        st = notify.channel_status()
+    except Exception as exc:      # 진단용 부가 로그가 감시를 막으면 안 된다
+        print(f"[watchdog 알림채널 확인 실패] {type(exc).__name__}: {exc}",
+              flush=True)
+        return
+    tg = "OK" if st.get("telegram") else "미설정 ⚠️ P0 경보가 도달하지 않음"
+    nt = "OK" if st.get("ntfy") else "미설정(이중화 없음)"
+    print(f"watchdog: 알림 채널 telegram={tg} · ntfy={nt}", flush=True)
+
+
 def main() -> None:
     print(f"watchdog 시작 — unit={UNIT} · 점검 {CHECK_SEC}s", flush=True)
+    _log_alert_channels()
     state = {"restarts": [], "alerted": False, "grace": False,
              "bad_samples": 0, "good_samples": 0,
              "self_heal_log_signature": (), "self_heal_log_at": 0.0}

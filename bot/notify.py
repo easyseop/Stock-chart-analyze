@@ -76,6 +76,41 @@ def _category(text: str, category: str | None = None) -> str:
     return "ops"
 
 
+def channel_status() -> dict:
+    """이 프로세스의 알림 채널 구성 상태(값은 절대 노출 안 함).
+
+    구성은 **프로세스마다 다르다** — 유닛이 kis.env를 어떻게 읽느냐에 달렸고,
+    실측(2026-08-17)에서 watchdog만 `set -a` 없이 source해 텔레그램 자격증명이
+    주입되지 않았다. 그 결과 P0 경보가 조용히 드라이런으로 흘렀고 몇 달간
+    아무도 몰랐다. 각 프로세스가 스스로 확인해 로그·진단에 드러내라고 둔다."""
+    _ensure_env()
+    return {
+        "telegram": bool(os.environ.get("TELEGRAM_BOT_TOKEN")
+                         and os.environ.get("TELEGRAM_CHAT_ID")),
+        "ntfy": bool(os.environ.get("NTFY_TOPIC")),
+    }
+
+
+_P0_CATEGORIES = ("trade", "advice", "report", "query", "ops")
+
+
+def _p0_ntfy_body(text: str, category: str | None = None) -> str:
+    """공개 ntfy 토픽에 실을 P0 본문 — 기본은 '사고가 났다'만 알린다.
+
+    ntfy 토픽은 인증이 없어 이름을 아는 사람은 누구나 읽는다. 그래서 기존
+    3개 토픽(alpha·ops·trade-stats)은 처음부터 퍼센트·건수만 싣는다. 반면
+    P0 본문에는 종목·수량·금액이 섞인다(kis_exits·kis_buyloop·kis_accounting).
+    이중화를 켜려고 그 원칙을 깨지 않도록, 기본값은 **분류만** 실은 고정 문구다.
+    상세가 필요하면 `NTFY_P0_DETAIL=1`로 명시적으로 켠다(토픽 노출 감수).
+    분류는 닫힌 집합으로 한정해 호출부가 넘긴 자유 문자열이 새지 않게 한다."""
+    if os.environ.get("NTFY_P0_DETAIL", "0").strip().lower() in (
+            "1", "true", "on", "yes"):
+        return text
+    cat = _category(text, category)
+    return (f"🚨 P0 경보({cat if cat in _P0_CATEGORIES else 'other'}) — "
+            "상세는 텔레그램·/진단에서 확인")
+
+
 def _allowed(text: str, *, critical: bool = False,
              category: str | None = None) -> bool:
     """NOTIFY_MODE에 따라 알림 허용 여부를 결정한다.
@@ -134,7 +169,9 @@ def send(text: str, *, critical: bool = False, category: str | None = None) -> b
               f"category={_category(text, category)}")
         return True                              # 호출부가 같은 알림을 재시도하지 않게 소비 처리
     if critical:
-        _ntfy(text)          # NTFY_TOPIC 설정 시에만 발행(미설정=무동작·무네트워크)
+        # NTFY_TOPIC 설정 시에만 발행(미설정=무동작·무네트워크).
+        # 본문은 기본적으로 분류만 — 공개 토픽에 종목·금액을 싣지 않는다.
+        _ntfy(_p0_ntfy_body(text, category))
     token = os.environ.get("TELEGRAM_BOT_TOKEN")
     chat_id = os.environ.get("TELEGRAM_CHAT_ID")
     return _tg_call("sendMessage", {

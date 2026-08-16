@@ -6,6 +6,9 @@
   4) 한글·이모지 본문 안전 — HTTP 헤더(latin-1)로 안 새고 본문은 UTF-8
   5) ntfy 실패해도 send()는 예외 없이 반환(빌드 안 죽임)
   6) 테스트에서는 서버의 kis.env 자격증명 폴백을 읽지 않음
+  7) 공개 ntfy 토픽 본문에는 종목·수량·금액이 실리지 않음(기본 분류만)
+  8) NTFY_P0_DETAIL=1 옵트인에서만 상세 발행
+  9) channel_status()가 자격증명 부재를 값 노출 없이 보고
 
 실행: python -m tests.test_notify
 """
@@ -75,11 +78,80 @@ def test_critical_with_topic_posts_ntfy():
     assert seen["url"].endswith("/stockbot-p0-xyz"), seen["url"]
     assert seen["method"] == "POST"
     # 본문은 UTF-8로 한글·이모지 보존
-    assert "파수꾼".encode("utf-8") in seen["body"]
+    assert "P0 경보".encode("utf-8") in seen["body"]
     # 헤더(Title/Priority/Tags)는 ASCII만 — latin-1 인코딩 크래시 방지
     for h in ("title", "priority", "tags"):
         seen["headers"][h].encode("ascii")   # 예외 안 나야 함
     print("[PASS] critical=True + 토픽 설정 → ntfy POST(본문 UTF-8·헤더 ASCII)")
+
+
+def test_public_ntfy_body_hides_symbols_and_amounts_by_default():
+    """공개 토픽(인증 없음)에 종목·수량·금액이 실리면 안 된다 — 기본 비공개."""
+    _clean_env()
+    os.environ["NTFY_TOPIC"] = "stockbot-p0-xyz"
+    from bot import notify
+    bodies = []
+    with mock.patch("urllib.request.urlopen",
+                    lambda req, timeout=None: bodies.append(req.data.decode())
+                    or _Resp()):
+        notify.send("🛡️ 파수꾼 매도 — 삼성전자 10주 · 하드 손절 1,240,000원",
+                    critical=True)
+        notify.send("🚨 watchdog: 파수꾼 heartbeat 95s (p0)", critical=True)
+    joined = "\n".join(bodies)
+    for banned in ("삼성전자", "10주", "1,240,000", "95s", "heartbeat"):
+        assert banned not in joined, banned
+    assert bodies[0].startswith("🚨 P0 경보(trade)"), bodies[0]
+    assert bodies[1].startswith("🚨 P0 경보(ops)"), bodies[1]
+    # 텔레그램 쪽은 상세를 그대로 받는다(축약은 공개 토픽에만 적용).
+    os.environ["TELEGRAM_BOT_TOKEN"] = "token"
+    os.environ["TELEGRAM_CHAT_ID"] = "chat"
+    sent = []
+    with mock.patch.object(notify, "_ntfy"), \
+            mock.patch.object(notify, "_tg_call",
+                              lambda m, p: sent.append(p["text"]) or True):
+        notify.send("🛡️ 파수꾼 매도 — 삼성전자 10주", critical=True)
+    assert "삼성전자" in sent[0]
+    # 분류는 호출부가 넘기는 자유 문자열이다 — 닫힌 집합 밖은 'other'로 접는다.
+    _clean_env()
+    os.environ["NTFY_TOPIC"] = "stockbot-p0-xyz"
+    leaked = []
+    with mock.patch("urllib.request.urlopen",
+                    lambda req, timeout=None: leaked.append(req.data.decode())
+                    or _Resp()):
+        notify.send("무언가", critical=True, category="계좌12345-01 · AAPL")
+    assert leaked[0] == "🚨 P0 경보(other) — 상세는 텔레그램·/진단에서 확인", leaked[0]
+    print("[PASS] 공개 ntfy는 분류만 · 텔레그램은 상세 그대로 · 분류 화이트리스트")
+
+
+def test_ntfy_detail_opt_in_publishes_full_text():
+    """운영자가 명시적으로 켜면(NTFY_P0_DETAIL=1) 상세를 그대로 싣는다."""
+    _clean_env()
+    os.environ["NTFY_TOPIC"] = "stockbot-p0-xyz"
+    os.environ["NTFY_P0_DETAIL"] = "1"
+    from bot import notify
+    bodies = []
+    with mock.patch("urllib.request.urlopen",
+                    lambda req, timeout=None: bodies.append(req.data.decode())
+                    or _Resp()):
+        notify.send("🛡️ 파수꾼 매도 — 삼성전자 10주", critical=True)
+    assert "삼성전자" in bodies[0]
+    os.environ.pop("NTFY_P0_DETAIL")
+    print("[PASS] NTFY_P0_DETAIL=1 → 상세 발행(명시적 옵트인)")
+
+
+def test_channel_status_reports_missing_credentials_without_leaking():
+    """유닛이 자격증명을 안 넘겨준 프로세스가 스스로 알아챌 수단."""
+    _clean_env()
+    from bot import notify
+    assert notify.channel_status() == {"telegram": False, "ntfy": False}
+    os.environ["TELEGRAM_BOT_TOKEN"] = "SECRET777"
+    assert notify.channel_status()["telegram"] is False   # CHAT_ID 없으면 미완성
+    os.environ["TELEGRAM_CHAT_ID"] = "chat"
+    os.environ["NTFY_TOPIC"] = "t"
+    st = notify.channel_status()
+    assert st == {"telegram": True, "ntfy": True}
+    assert "SECRET777" not in repr(st)                    # 값은 절대 안 실림
+    print("[PASS] channel_status — 구성 여부만, 값 노출 0")
 
 
 def test_korean_title_would_not_crash():
@@ -140,6 +212,9 @@ if __name__ == "__main__":
     test_noncritical_never_calls_ntfy()
     test_critical_unset_topic_no_network()
     test_critical_with_topic_posts_ntfy()
+    test_public_ntfy_body_hides_symbols_and_amounts_by_default()
+    test_ntfy_detail_opt_in_publishes_full_text()
+    test_channel_status_reports_missing_credentials_without_leaking()
     test_korean_title_would_not_crash()
     test_ntfy_failure_does_not_raise()
     test_trade_only_filters_noise_but_keeps_trade_query_and_critical()
