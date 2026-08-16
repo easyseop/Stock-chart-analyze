@@ -8,6 +8,7 @@ import os
 import time
 
 DEFAULT_STATE_PATH = "/var/lib/stock-watchdog/self_heal.json"
+DEFAULT_STATUS_PATH = "/var/lib/stock-watchdog/self_heal_status.json"
 DEFAULT_OBSERVE_S = 1800.0
 MAX_CONTINUITY_GAP_S = 60.0
 HEALTHY_AGE_S = 60.0
@@ -21,6 +22,16 @@ def _path() -> str:
     return os.environ.get("SELF_HEAL_STATE_PATH", DEFAULT_STATE_PATH)
 
 
+def _status_path() -> str:
+    explicit = os.environ.get("SELF_HEAL_STATUS_PATH")
+    if explicit:
+        return explicit
+    state_path = _path()
+    if state_path != DEFAULT_STATE_PATH:
+        return state_path + ".status"
+    return DEFAULT_STATUS_PATH
+
+
 def _observe_s() -> float:
     try: value = float(os.environ.get("SELF_HEAL_OBSERVE_S", DEFAULT_OBSERVE_S))
     except (TypeError, ValueError): value = DEFAULT_OBSERVE_S
@@ -30,13 +41,14 @@ def _observe_s() -> float:
 def _reset_age_s() -> float:
     try: value = float(os.environ.get("SELF_HEAL_RESET_AGE_S", DEFAULT_RESET_AGE_S))
     except (TypeError, ValueError): value = DEFAULT_RESET_AGE_S
-    return value if math.isfinite(value) and value > HEALTHY_AGE_S else DEFAULT_RESET_AGE_S
+    return min(value, DEFAULT_RESET_AGE_S) \
+        if math.isfinite(value) and value > HEALTHY_AGE_S else DEFAULT_RESET_AGE_S
 
 
 def _max_soft_samples() -> int:
     try: value = int(os.environ.get("SELF_HEAL_MAX_SOFT_SAMPLES", DEFAULT_MAX_SOFT_SAMPLES))
     except (TypeError, ValueError): value = DEFAULT_MAX_SOFT_SAMPLES
-    return value if value >= 1 else DEFAULT_MAX_SOFT_SAMPLES
+    return min(value, DEFAULT_MAX_SOFT_SAMPLES) if value >= 1 else DEFAULT_MAX_SOFT_SAMPLES
 
 
 def _day_kst(now: float) -> str:
@@ -119,6 +131,27 @@ def _save(state: dict) -> bool:
         return False
 
 
+def _publish_status(result: dict, day: str) -> bool:
+    """Publish only the sanitized decision for unprivileged read-only consumers."""
+    path = _status_path(); parent = os.path.dirname(path) or "."; tmp = f"{path}.tmp.{os.getpid()}"
+    payload = {"v": 1, "day_kst": day,
+               "action": str(result.get("action") or "unknown"),
+               "why": str(result.get("why") or ""),
+               "observed_s": max(0.0, float(result.get("observed_s") or 0)),
+               "remaining_s": max(0.0, float(result.get("remaining_s") or 0)),
+               "used_today": bool(result.get("used_today"))}
+    try:
+        os.makedirs(parent, exist_ok=True)
+        with open(tmp, "w", encoding="utf-8") as fp:
+            json.dump(payload, fp, ensure_ascii=False, separators=(",", ":"))
+            fp.flush(); os.fsync(fp.fileno())
+        os.chmod(tmp, 0o644); os.replace(tmp, path); return True
+    except OSError:
+        try: os.unlink(tmp)
+        except OSError: pass
+        return False
+
+
 def _delivered(text: str) -> bool:
     from bot import notify
     try: return bool(notify.send(text, critical=True, category="trade"))
@@ -160,8 +193,11 @@ def _finish(state: dict, action: str, why: str = "", *,
     state["last_observed_s"] = result["observed_s"]
     state["last_remaining_s"] = result["remaining_s"]
     if persist and not _save(state):
-        return _result("blocked", "state_write", observed_s=observed_s,
-                       remaining_s=remaining_s, used_today=state["used"])
+        blocked = _result("blocked", "state_write", observed_s=observed_s,
+                          remaining_s=remaining_s, used_today=state["used"])
+        _publish_status(blocked, state["day_kst"])
+        return blocked
+    _publish_status(result, state["day_kst"])
     return result
 
 
@@ -175,13 +211,28 @@ def _clear_observation(state: dict) -> None:
 def status(*, now: float | None = None) -> dict:
     """Return the persisted decision only; never advances the state machine."""
     stamp = time.time() if now is None else float(now)
-    state, corrupted = _load(stamp, observe_pid=False)
-    if corrupted or state is None:
-        return _result("blocked", "state_corrupt")
-    return _result(state["last_action"], state["last_why"],
-                   observed_s=state["last_observed_s"],
-                   remaining_s=state["last_remaining_s"],
-                   used_today=state["used"])
+    try:
+        with open(_status_path(), encoding="utf-8") as fp: raw = json.load(fp)
+    except FileNotFoundError:
+        return _result("idle", "status_pending")
+    except (OSError, UnicodeError, json.JSONDecodeError):
+        return _result("blocked", "status_unreadable")
+    try:
+        if not isinstance(raw, dict) or int(raw.get("v") or 0) != 1:
+            raise ValueError("schema")
+        if str(raw.get("day_kst") or "") != _day_kst(stamp):
+            return _result("idle", "new_day")
+        action = str(raw["action"]); why = str(raw["why"])
+        observed = float(raw["observed_s"]); remaining = float(raw["remaining_s"])
+        used = raw["used_today"]
+        if not isinstance(used, bool) or not action or len(action) > 64 or len(why) > 200:
+            raise ValueError("schema")
+        if not all(math.isfinite(value) and value >= 0 for value in (observed, remaining)):
+            raise ValueError("schema")
+    except (KeyError, TypeError, ValueError):
+        return _result("blocked", "status_corrupt")
+    return _result(action, why, observed_s=observed,
+                   remaining_s=remaining, used_today=used)
 
 
 def cycle(*, heartbeat_age_s: float | None, now: float | None = None) -> dict:
@@ -189,7 +240,10 @@ def cycle(*, heartbeat_age_s: float | None, now: float | None = None) -> dict:
     from bot.watchdog_policy import self_heal_allowed
     stamp = time.time() if now is None else float(now)
     state, corrupted = _load(stamp)
-    if corrupted or state is None: return _result("blocked", "state_corrupt")
+    if corrupted or state is None:
+        result = _result("blocked", "state_corrupt")
+        _publish_status(result, _day_kst(stamp))
+        return result
     if state["pending_notice"] and kill.level() == 0:
         lowered_by = str(kill.status().get("who") or "")
         if lowered_by != "self-heal":
@@ -203,7 +257,9 @@ def cycle(*, heartbeat_age_s: float | None, now: float | None = None) -> dict:
         return _finish(state, "notice_retry", "notify_failed")
     status = kill.status(); level = kill.level()
     if level != 1 or int(status.get("level") or level) != 1:
-        return _result("ineligible", f"level={level}", used_today=state["used"])
+        result = _result("ineligible", f"level={level}", used_today=state["used"])
+        _publish_status(result, state["day_kst"])
+        return result
     who, why = str(status.get("who") or ""), str(status.get("why") or "")
     if not self_heal_allowed(who, why):
         return _finish(state, "ineligible", "source_or_reason")
@@ -271,7 +327,10 @@ def cycle(*, heartbeat_age_s: float | None, now: float | None = None) -> dict:
     notice = (f"✅ kill-switch 자동 L0 복구 — 원인: {why} · 연속 관찰 {int(observed)}초 · "
               f"readiness {summary}. 오늘 자동 복구 1회 소진, 재상향 시 수동 확인")
     state["used"] = True; state["pending_notice"] = notice
-    if not _save(state): return _result("blocked", "state_write", observed_s=observed, used_today=True)
+    if not _save(state):
+        blocked = _result("blocked", "state_write", observed_s=observed, used_today=True)
+        _publish_status(blocked, state["day_kst"])
+        return blocked
     ack = f"self-heal: {why} · observed={int(observed)}s · {summary}"
     try: lowered = kill.lower_level(0, ack=ack)
     except Exception as exc:

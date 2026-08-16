@@ -9,7 +9,7 @@ def _env(tmp): return mock.patch.dict(os.environ,{"KILL_STATE_PATH":f"{tmp}/kill
 def _raise(): assert kill.raise_level(1,WATCHDOG_WHO,HEARTBEAT_EXHAUSTED_REASON)==1; return float(kill.status()["ts"])
 def test_normal_path_lowers_and_audits_self_heal():
     with tempfile.TemporaryDirectory() as tmp,_env(tmp),mock.patch("bot.notify.send",return_value=True),mock.patch.object(kill_self_heal,"_readiness_go",return_value=(True,"scope=l0 blockers=0")):
-        ts=_raise(); assert kill_self_heal.cycle(heartbeat_age_s=1,now=ts)["action"]=="observing"; assert stat.S_IMODE(os.stat(f"{tmp}/heal.json").st_mode)==0o600; assert kill_self_heal.cycle(heartbeat_age_s=1,now=ts+11)["action"]=="recovered"; assert kill.level()==0 and kill.status()["who"]=="self-heal" and '"who": "self-heal"' in open(f"{tmp}/kill.jsonl",encoding="utf-8").read()
+        ts=_raise(); assert kill_self_heal.cycle(heartbeat_age_s=1,now=ts)["action"]=="observing"; assert stat.S_IMODE(os.stat(f"{tmp}/heal.json").st_mode)==0o600; assert stat.S_IMODE(os.stat(f"{tmp}/heal.json.status").st_mode)==0o644; public=json.load(open(f"{tmp}/heal.json.status",encoding="utf-8")); assert set(public)=={"v","day_kst","action","why","observed_s","remaining_s","used_today"}; assert kill_self_heal.status(now=ts)["action"]=="observing"; assert kill_self_heal.cycle(heartbeat_age_s=1,now=ts+11)["action"]=="recovered"; assert kill.level()==0 and kill.status()["who"]=="self-heal" and '"who": "self-heal"' in open(f"{tmp}/kill.jsonl",encoding="utf-8").read()
 def test_s1_operator_reason_and_l2_never_lower():
     with tempfile.TemporaryDirectory() as tmp,_env(tmp),mock.patch("bot.notify.send",return_value=True):
         for lv,who,why in ((1,"operator",HEARTBEAT_EXHAUSTED_REASON),(1,WATCHDOG_WHO,"other"),(2,WATCHDOG_WHO,HEARTBEAT_EXHAUSTED_REASON)):
@@ -67,6 +67,19 @@ def test_s4_once_per_kst_day_and_manual_alert():
 def test_corrupt_state_fail_closed():
     with tempfile.TemporaryDirectory() as tmp,_env(tmp),mock.patch("bot.notify.send",return_value=True):
         _raise(); open(f"{tmp}/heal.json","w").write("{bad"); assert kill_self_heal.cycle(heartbeat_age_s=1)["why"]=="state_corrupt" and kill.level()==1
+
+def test_state_write_failure_blocks_before_readiness_and_lower():
+    with tempfile.TemporaryDirectory() as tmp,_env(tmp),mock.patch("bot.notify.send",return_value=True):
+        ts=_raise(); kill_self_heal.cycle(heartbeat_age_s=1,now=ts)
+        with mock.patch.object(kill_self_heal,"_save",return_value=False),mock.patch.object(kill_self_heal,"_readiness_go",return_value=(True,"go")) as ready,mock.patch.object(kill,"lower_level") as lower:
+            out=kill_self_heal.cycle(heartbeat_age_s=1,now=ts+11)
+        assert out["action"]=="blocked" and out["why"]=="state_write"
+        assert ready.call_count==0 and lower.call_count==0 and kill.level()==1
+
+def test_relaxation_env_cannot_weaken_safety_ceiling():
+    with mock.patch.dict(os.environ,{"SELF_HEAL_RESET_AGE_S":"9999","SELF_HEAL_MAX_SOFT_SAMPLES":"9999"}):
+        assert kill_self_heal._reset_age_s()==90.0
+        assert kill_self_heal._max_soft_samples()==4
 def test_notification_failure_retries_after_lower():
     with tempfile.TemporaryDirectory() as tmp,_env(tmp),mock.patch("bot.notify.send",return_value=True),mock.patch.object(kill_self_heal,"_readiness_go",return_value=(True,"go")):
         ts=_raise(); kill_self_heal.cycle(heartbeat_age_s=1,now=ts)
@@ -98,6 +111,6 @@ def test_self_heal_allowlist_requires_exact_match():
               (WATCHDOG_WHO,BALANCE_FAILURE_REASON.replace("KIS","kis")))
     assert all(not self_heal_allowed(who,why) for who,why in variants)
 def main():
-    for fn in (test_normal_path_lowers_and_audits_self_heal,test_s1_operator_reason_and_l2_never_lower,test_s2_29_minutes_flap_and_restart_reset,test_t1_single_soft_sample_preserves_window_and_recovers,test_t1_hard_age_resets_immediately,test_t1_chronic_alternating_soft_samples_never_recovers,test_s3_no_go_exception_and_l2_toctou_block,test_s4_once_per_kst_day_and_manual_alert,test_corrupt_state_fail_closed,test_notification_failure_retries_after_lower,test_pending_notice_is_discarded_after_manual_lower,test_self_heal_allowlist_requires_exact_match): fn()
-    print("kill self-heal 12/12 PASS")
+    for fn in (test_normal_path_lowers_and_audits_self_heal,test_s1_operator_reason_and_l2_never_lower,test_s2_29_minutes_flap_and_restart_reset,test_t1_single_soft_sample_preserves_window_and_recovers,test_t1_hard_age_resets_immediately,test_t1_chronic_alternating_soft_samples_never_recovers,test_s3_no_go_exception_and_l2_toctou_block,test_s4_once_per_kst_day_and_manual_alert,test_corrupt_state_fail_closed,test_state_write_failure_blocks_before_readiness_and_lower,test_relaxation_env_cannot_weaken_safety_ceiling,test_notification_failure_retries_after_lower,test_pending_notice_is_discarded_after_manual_lower,test_self_heal_allowlist_requires_exact_match): fn()
+    print("kill self-heal 14/14 PASS")
 if __name__=="__main__": main()
