@@ -1958,3 +1958,12 @@ buyloop, telegram도 한 번 재시작하고 journal 타임스탬프 즉시성�
 통과했다. 현재 남은 일은 Claude가 위 검토 문서의 반례를 독립 재현해 P0/P1=0을
 확인하는 것뿐이다. 그 판정과 사용자 승인이 오기 전 PR은 Draft·미병합 상태로
 유지하고 Oracle 서비스/환경/kill 레벨은 변경하지 않는다.
+
+Claude 최종 판정 문서는 `docs/CLAUDE_REVIEW_SELF_HEAL_KICK_AUDIT_VERDICT.md`이며
+승인(P0 0·P1 0·P2 1·P3 1)이다. 사용자 요청에 따라 P2-1만 `4f2110b`에서
+보완했다. reset age 유효 숫자를 `[60, 90]`으로 경계 클램프해 `30→60`,
+`9999→90`을 보장하고 조정 로그는 프로세스당 1회로 억제한다. 옛 30→90 결함을
+재주입한 뮤테이션은 신규 회귀가 종료코드 1로 잡았다. 전체 Python `60/60`도
+다시 통과했다. 부분 재검토 증거는
+`docs/CLAUDE_REVIEW_SELF_HEAL_KICK_AUDIT_P2_RESPONSE.md`다. 선택 P3는 범위를
+넓히지 않았고 병합·배포는 여전히 사용자 승인 후에만 한다.
