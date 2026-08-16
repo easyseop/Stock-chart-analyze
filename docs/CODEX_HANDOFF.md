@@ -1953,3 +1953,8 @@ diff check가 모두 통과했다. 체크포인트 뒤 12개 안전 방어를 �
 Oracle 배포다. 배포 시 autodeploy가 watchdog을 재시작하지 않으므로 유닛 설치 후
 `sudo systemctl restart watchdog`이 필수다. unbuffered 적용을 위해 sentinel,
 buyloop, telegram도 한 번 재시작하고 journal 타임스탬프 즉시성을 확인한다.
+
+원격 Draft PR은 `#117`이며 첫 push/PR CI 두 실행이 각각 48초·47초에 모두
+통과했다. 현재 남은 일은 Claude가 위 검토 문서의 반례를 독립 재현해 P0/P1=0을
+확인하는 것뿐이다. 그 판정과 사용자 승인이 오기 전 PR은 Draft·미병합 상태로
+유지하고 Oracle 서비스/환경/kill 레벨은 변경하지 않는다.
