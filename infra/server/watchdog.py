@@ -29,6 +29,8 @@ CHECK_SEC = 15
 RESTART_AFTER_S = 90.0
 MAX_RESTARTS = 3
 RESTART_WINDOW_S = 600.0
+ALERT_CONFIRM_SAMPLES = 2
+SELF_HEAL_LOG_INTERVAL_S = 600.0
 UNIT = os.environ.get("SENTINEL_UNIT", "sentinel.service")
 
 
@@ -41,22 +43,56 @@ def _restart_sentinel() -> bool:
         return False
 
 
+def _update_alert_hysteresis(state: dict, sla: str, age: float | None) -> None:
+    """Debounce notifications only; restart and kill decisions stay immediate."""
+    if sla != heartbeat.OK:
+        state["bad_samples"] = int(state.get("bad_samples", 0)) + 1
+        state["good_samples"] = 0
+        if state["bad_samples"] >= ALERT_CONFIRM_SAMPLES and not state.get("alerted"):
+            delivered = notify.send(
+                f"🚨 watchdog: 파수꾼 heartbeat "
+                f"{'없음' if age is None else f'{age:.0f}s'} ({sla})", critical=True)
+            if delivered is not False:
+                state["alerted"] = True
+        return
+    state["good_samples"] = int(state.get("good_samples", 0)) + 1
+    state["bad_samples"] = 0
+    if state.get("alerted") and state["good_samples"] >= ALERT_CONFIRM_SAMPLES:
+        delivered = notify.send("✅ watchdog: 파수꾼 heartbeat 회복", critical=True)
+        if delivered is not False:
+            state["alerted"] = False
+
+
+def _log_self_heal(state: dict, result: dict, stamp: float) -> bool:
+    signature = (str(result.get("action") or ""), str(result.get("why") or ""))
+    changed = signature != tuple(state.get("self_heal_log_signature", ()))
+    periodic = stamp - float(state.get("self_heal_log_at") or 0) >= SELF_HEAL_LOG_INTERVAL_S
+    if not changed and not periodic:
+        return False
+    observed = max(0.0, float(result.get("observed_s") or 0))
+    remaining = max(0.0, float(result.get("remaining_s") or 0))
+    print("watchdog self-heal: "
+          f"action={signature[0] or '-'} why={signature[1] or '-'} "
+          f"observed={observed:.0f}s remaining={remaining:.0f}s "
+          f"used_today={bool(result.get('used_today'))}", flush=True)
+    state["self_heal_log_signature"] = signature
+    state["self_heal_log_at"] = stamp
+    return True
+
+
 def check_cycle(state: dict, *, now: float | None = None) -> None:
     stamp = time.time() if now is None else float(now)
     age = heartbeat.age_s()
     sla = heartbeat.sla_status(age, has_positions=True)
     grace = deploy_grace.active(now=stamp)
-    if grace and not state.get("grace"): print("watchdog: deploy grace 시작")
-    elif not grace and state.get("grace"): print("watchdog: deploy grace 종료")
+    if grace and not state.get("grace"): print("watchdog: deploy grace 시작", flush=True)
+    elif not grace and state.get("grace"): print("watchdog: deploy grace 종료", flush=True)
     state["grace"] = grace
+    _update_alert_hysteresis(state, sla, age)
     if sla != heartbeat.OK:
-        if not state.get("alerted"):
-            notify.send(f"🚨 watchdog: 파수꾼 heartbeat "
-                        f"{'없음' if age is None else f'{age:.0f}s'} ({sla})", critical=True)
-            state["alerted"] = True
         if grace:
             print("watchdog: deploy grace 중 — heartbeat age "
-                  f"{'없음' if age is None else f'{age:.0f}s'} 무시")
+                  f"{'없음' if age is None else f'{age:.0f}s'} 무시", flush=True)
             return
         if age is None or age > RESTART_AFTER_S:
             restarts = [t for t in state.get("restarts", []) if stamp - t < RESTART_WINDOW_S]
@@ -67,25 +103,23 @@ def check_cycle(state: dict, *, now: float | None = None) -> None:
             elif sla == heartbeat.HARD_DISABLE:
                 kill.raise_level(1, WATCHDOG_WHO, HEARTBEAT_EXHAUSTED_REASON)
             state["restarts"] = restarts
-    elif state.get("alerted"):
-        notify.send("✅ watchdog: 파수꾼 heartbeat 회복", critical=True)
-        state["alerted"] = False
     try:
         result = kill_self_heal.cycle(heartbeat_age_s=age, now=stamp)
-        if result.get("action") in ("recovered", "manual_alert"):
-            print(f"watchdog self-heal: {result}")
+        _log_self_heal(state, result, stamp)
     except Exception as exc:
-        print(f"[watchdog self-heal 오류] {type(exc).__name__}: {exc}")
+        print(f"[watchdog self-heal 오류] {type(exc).__name__}: {exc}", flush=True)
 
 
 def main() -> None:
-    print(f"watchdog 시작 — unit={UNIT} · 점검 {CHECK_SEC}s")
-    state = {"restarts": [], "alerted": False, "grace": False}
+    print(f"watchdog 시작 — unit={UNIT} · 점검 {CHECK_SEC}s", flush=True)
+    state = {"restarts": [], "alerted": False, "grace": False,
+             "bad_samples": 0, "good_samples": 0,
+             "self_heal_log_signature": (), "self_heal_log_at": 0.0}
     while True:
         try:
             check_cycle(state)
         except Exception as e:
-            print(f"[watchdog 오류] {type(e).__name__}: {e}")
+            print(f"[watchdog 오류] {type(e).__name__}: {e}", flush=True)
         time.sleep(CHECK_SEC)
 
 

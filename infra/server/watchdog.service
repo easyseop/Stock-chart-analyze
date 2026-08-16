@@ -9,6 +9,7 @@ Type=simple
 User=root
 WorkingDirectory=/opt/stock/Stock-chart-analyze
 EnvironmentFile=/etc/stock/kis.env
+Environment=PYTHONUNBUFFERED=1
 Environment=SENTINEL_UNIT=sentinel.service
 Environment=BOT_REPO_DIR=/opt/stock/Stock-chart-analyze
 ExecStart=/usr/bin/python3 infra/server/watchdog.py

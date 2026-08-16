@@ -18,6 +18,7 @@ on:
 
 permissions:
   actions: write        # daily.yml 재실행 트리거용
+  contents: read        # kick_audit.py checkout
 
 concurrency:
   group: watchdog
@@ -28,6 +29,34 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
+      - uses: actions/checkout@v4
+
+      - name: 외부 킥 감사 래치 복원
+        id: kick_cache
+        uses: actions/cache/restore@v4
+        with:
+          path: .kick-audit
+          key: kick-audit-v1-${{ github.run_id }}
+          restore-keys: |
+            kick-audit-v1-
+
+      - name: 외부 킥·GitHub 크론 24시간 감사
+        id: kick_audit
+        continue-on-error: true
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          KICK_AUDIT_STATE_PATH: .kick-audit/state.json
+        run: python3 scripts/kick_audit.py
+
+      - name: 외부 킥 감사 래치 저장
+        if: always() && steps.kick_audit.outputs.state_changed == 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: .kick-audit
+          key: kick-audit-v1-${{ github.run_id }}
+
       - name: 라이브 신선도 확인 → 오래되면 재배포 + 텔레그램 경고
         env:
           GH_TOKEN: ${{ github.token }}

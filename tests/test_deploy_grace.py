@@ -32,7 +32,7 @@ def test_autodeploy_marker_is_immediately_before_restart():
     assert marker in text and text.index(marker)<text.index(restart) and "systemctl" not in text[text.index(marker)+len(marker):text.index(restart)]
 def test_existing_recovery_alert_unchanged():
     state={"restarts":[],"alerted":True,"grace":True}; sent=[]
-    with mock.patch.object(deploy_grace,"active",return_value=True), mock.patch.object(heartbeat,"age_s",return_value=5.), mock.patch.object(heartbeat,"sla_status",return_value=heartbeat.OK), mock.patch.object(watchdog.notify,"send",side_effect=lambda text,**kw: sent.append(text) or True), mock.patch.object(watchdog.kill_self_heal,"cycle",return_value={"action":"ineligible"}): watchdog.check_cycle(state,now=1000)
+    with mock.patch.object(deploy_grace,"active",return_value=True), mock.patch.object(heartbeat,"age_s",return_value=5.), mock.patch.object(heartbeat,"sla_status",return_value=heartbeat.OK), mock.patch.object(watchdog.notify,"send",side_effect=lambda text,**kw: sent.append(text) or True), mock.patch.object(watchdog.kill_self_heal,"cycle",return_value={"action":"ineligible"}): watchdog.check_cycle(state,now=1000); assert not sent; watchdog.check_cycle(state,now=1015)
     assert any("회복" in x for x in sent) and state["alerted"] is False
 def main():
     for fn in (test_grace_blocks_restart_and_l1,test_expired_marker_triggers_existing_restart,test_invalid_future_nonfinite_fail_closed,test_ttl_clamped_to_600,test_expiry_immediately_escalates_without_countdown_reset,test_autodeploy_marker_is_immediately_before_restart,test_existing_recovery_alert_unchanged): fn()

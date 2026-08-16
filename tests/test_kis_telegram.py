@@ -99,9 +99,14 @@ def test_diag_is_read_only_and_reports_failures():
     """/진단 — SSH 없이 서버 건강 실측. 조회 실패도 예외 없이 표시(읽기전용)."""
     from unittest import mock
     import subprocess
+    from bot import kill, kill_self_heal
     _install(kr=[_KR], us=[_US])
     with mock.patch.object(subprocess, "run",
                            side_effect=RuntimeError("no systemd")), \
+            mock.patch.object(kill, "level", return_value=1), \
+            mock.patch.object(kill_self_heal, "status", return_value={
+                "action": "blocked", "why": "readiness:TimeoutError",
+                "observed_s": 900, "used_today": False}), \
             mock.patch.dict("os.environ", {"KIS_ENV": "mock",
                                            "TRADE_STAGE": "mirror"}):
         text = kt.handle("/진단")
@@ -110,6 +115,7 @@ def test_diag_is_read_only_and_reports_failures():
     assert "KIS_ENV=mock" in text and "STAGE=mirror" in text
     assert "주문" in text                                  # 원장 요약 존재
     assert "대사:" in text and "연속 실패" in text
+    assert "자가복구: 관찰 15.0분" in text and "readiness:TimeoutError" in text
     # 전 시장 조회 실패 — 예외 없이 실패 표기 + 손절 차단 경고.
     _install(fail=True)
     with mock.patch.object(subprocess, "run",

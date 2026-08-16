@@ -303,6 +303,7 @@ def _diag_text() -> str:
     L = ["🩺 <b>서버 자가진단</b> (읽기 전용)", ""]
 
     # 1) kill-switch — 신규매수 허용 수준
+    lv = None
     try:
         from bot import kill
         lv = kill.level()
@@ -322,6 +323,19 @@ def _diag_text() -> str:
                     f"{age:.0f}초 전 {'✅' if age <= 60 else '⚠️ 지연'}"))
     except Exception as e:
         L.append(f"파수꾼 heartbeat: 확인 실패({type(e).__name__})")
+
+    # 자동 복구 판정은 L1일 때만 표시한다. 상태 읽기만 하며 cycle을 돌리지 않는다.
+    if lv == 1:
+        try:
+            from bot import kill_self_heal
+            healing = kill_self_heal.status()
+            observed_min = max(0.0, float(healing.get("observed_s") or 0)) / 60
+            why = str(healing.get("why") or "-")
+            why = why.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+            L.append(f"자가복구: 관찰 {observed_min:.1f}분 · "
+                     f"{healing.get('action') or 'unknown'} · 사유 {why}")
+        except Exception as e:
+            L.append(f"자가복구: 확인 실패({type(e).__name__})")
 
     # 3) KIS 잔고 조회 — 시장별 실측(경보 래치와 무관한 현재 시점 프로브)
     try:

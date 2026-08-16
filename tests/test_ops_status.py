@@ -45,6 +45,7 @@ def test_snapshot_shape_and_no_secrets():
     assert snap["kis_positions_query"]["NASD"] == 1
     assert snap["kis_query_ok"] is True
     assert snap["positions_feed_age_min"] == 12.0
+    assert set(snap["self_heal"]) == {"action", "why", "observed_s", "used_today"}
     assert snap["flags"]["kis_env"] == "mock"
     assert snap["flags"]["stage"] == "mirror"
     # 시크릿·계좌번호·토큰이 직렬화 어디에도 없어야 한다.
@@ -52,6 +53,21 @@ def test_snapshot_shape_and_no_secrets():
     for secret in ("SECRETKEY123", "SECRET456", "50009999", "TGTOKEN789"):
         assert secret not in text, secret
     print("[PASS] 스냅샷 구조 + 시크릿·계좌번호 0")
+
+
+def test_self_heal_snapshot_is_persisted_read_only_decision():
+    from bot import kill_self_heal
+    patches = _quiet_probes()
+    with mock.patch.object(kill_self_heal, "status", return_value={
+            "action": "blocked", "why": "readiness:TimeoutError",
+            "observed_s": 1801.2, "used_today": False}), \
+            patches[0], patches[1], patches[2]:
+        snap = ops_status.snapshot()
+    assert snap["self_heal"] == {
+        "action": "blocked", "why": "readiness:TimeoutError",
+        "observed_s": 1801.2, "used_today": False,
+    }
+    print("[PASS] self-heal 판정·readiness 예외가 읽기전용 스냅샷에 노출")
 
 
 def test_query_failure_is_reported_not_raised():
@@ -221,6 +237,7 @@ def test_stuck_ack_alert_latches_only_after_delivery():
 
 def main():
     test_snapshot_shape_and_no_secrets()
+    test_self_heal_snapshot_is_persisted_read_only_decision()
     test_query_failure_is_reported_not_raised()
     test_publish_posts_to_ops_topic_and_failure_is_harmless()
     test_maybe_publish_respects_interval()
