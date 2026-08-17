@@ -1,10 +1,10 @@
 {
- "generated_at": "2026-08-18T01:41:17.467986+09:00",
+ "generated_at": "2026-08-18T01:56:33.359997+09:00",
  "updated": "2026-08-18",
  "start": 100000000,
  "cash": 47773807,
- "equity": 101199700,
- "ret_pct": 1.2,
+ "equity": 101179800,
+ "ret_pct": 1.18,
  "positions": [
   {
    "code": "MRSH",
@@ -12,14 +12,14 @@
    "ccy": "USD",
    "q": 36,
    "avg": 174.3075,
-   "price": 185.625,
+   "price": 185.44000244140625,
    "stop": 184.80249938964843,
    "target": 192.2575,
    "half_done": true,
    "opened": "2026-07-06",
-   "pl_krw": 575377,
-   "pl_pct": 6.49,
-   "price_age_min": 0.5
+   "pl_krw": 565972,
+   "pl_pct": 6.39,
+   "price_age_min": 5.4
   },
   {
    "code": "HMC",
@@ -27,14 +27,14 @@
    "ccy": "USD",
    "q": 2,
    "avg": 27.665,
-   "price": 31.940000534057617,
+   "price": 31.92200088500977,
    "stop": 29.762100762939454,
    "target": 30.5824,
    "half_done": true,
    "opened": "2026-07-09",
-   "pl_krw": 12074,
-   "pl_pct": 15.45,
-   "price_age_min": 0.5
+   "pl_krw": 12024,
+   "pl_pct": 15.39,
+   "price_age_min": 5.4
   },
   {
    "code": "J",
@@ -42,14 +42,14 @@
    "ccy": "USD",
    "q": 32,
    "avg": 126.585,
-   "price": 144.3249969482422,
+   "price": 144.17999267578125,
    "stop": 137.86490610351564,
    "target": 141.2316,
    "half_done": true,
    "opened": "2026-07-11",
-   "pl_krw": 801683,
-   "pl_pct": 14.01,
-   "price_age_min": 0.5
+   "pl_krw": 795130,
+   "pl_pct": 13.9,
+   "price_age_min": 5.4
   },
   {
    "code": "MAIN",
@@ -57,14 +57,14 @@
    "ccy": "USD",
    "q": 39,
    "avg": 53.96,
-   "price": 58.68999862670898,
+   "price": 58.650001525878906,
    "stop": 55.9411983215332,
    "target": 58.7184,
    "half_done": true,
    "opened": "2026-07-22",
-   "pl_krw": 260510,
-   "pl_pct": 8.77,
-   "price_age_min": 0.4
+   "pl_krw": 258307,
+   "pl_pct": 8.69,
+   "price_age_min": 7.2
   },
   {
    "code": "004370",
@@ -79,7 +79,7 @@
    "opened": "2026-07-27",
    "pl_krw": 690000,
    "pl_pct": 18.72,
-   "price_age_min": 0.4
+   "price_age_min": 5.4
   },
   {
    "code": "EQT",
@@ -87,14 +87,14 @@
    "ccy": "USD",
    "q": 121,
    "avg": 51.375,
-   "price": 52.47999954223633,
+   "price": 52.52000045776367,
    "stop": 51.375,
    "target": 57.1234,
    "half_done": true,
    "opened": "2026-07-29",
-   "pl_krw": 188819,
-   "pl_pct": 2.15,
-   "price_age_min": 0.4
+   "pl_krw": 195655,
+   "pl_pct": 2.23,
+   "price_age_min": 5.4
   },
   {
    "code": "MDT",
@@ -102,14 +102,14 @@
    "ccy": "USD",
    "q": 47,
    "avg": 86.12,
-   "price": 91.08000183105467,
+   "price": 91.05999755859376,
    "stop": 86.12,
    "target": 95.117,
    "half_done": true,
    "opened": "2026-07-30",
-   "pl_krw": 329215,
-   "pl_pct": 5.76,
-   "price_age_min": 0.4
+   "pl_krw": 327887,
+   "pl_pct": 5.74,
+   "price_age_min": 5.4
   },
   {
    "code": "AVY",
@@ -117,14 +117,14 @@
    "ccy": "USD",
    "q": 28,
    "avg": 169.73,
-   "price": 176.5800018310547,
+   "price": 176.69500732421875,
    "stop": 158.3847,
    "target": 192.4206,
    "half_done": false,
    "opened": "2026-08-03",
-   "pl_krw": 270862,
-   "pl_pct": 4.04,
-   "price_age_min": 0.4
+   "pl_krw": 275409,
+   "pl_pct": 4.1,
+   "price_age_min": 5.4
   },
   {
    "code": "DPZ",
@@ -132,14 +132,14 @@
    "ccy": "USD",
    "q": 10,
    "avg": 353.285,
-   "price": 339.4100036621094,
+   "price": 338.739990234375,
    "stop": 328.6353,
    "target": 402.5845,
    "half_done": false,
    "opened": "2026-08-07",
-   "pl_krw": -195944,
-   "pl_pct": -3.93,
-   "price_age_min": 0.4
+   "pl_krw": -205406,
+   "pl_pct": -4.12,
+   "price_age_min": 5.3
   },
   {
    "code": "UFPI",
@@ -147,14 +147,14 @@
    "ccy": "USD",
    "q": 24,
    "avg": 90.485,
-   "price": 87.93990325927734,
+   "price": 87.87259674072266,
    "stop": 84.0446,
    "target": 103.3659,
    "half_done": false,
    "opened": "2026-08-11",
-   "pl_krw": -86261,
-   "pl_pct": -2.81,
-   "price_age_min": 0.4
+   "pl_krw": -88542,
+   "pl_pct": -2.89,
+   "price_age_min": 5.3
   }
  ],
  "pending": [
@@ -890,7 +890,7 @@
   },
   {
    "d": "2026-08-18",
-   "v": 101199700
+   "v": 101179800
   }
  ],
  "log": [
@@ -1530,6 +1530,6 @@
    "target": 30.5824
   }
  ],
- "lane": "fast",
+ "lane": "bulk",
  "data_stale": []
 }
