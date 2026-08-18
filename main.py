@@ -270,7 +270,10 @@ def main():
         from scanner import cache, universe
         code = args.add.strip().upper()
         try:
-            d = cache.update(code)
+            # 즉석수집은 항상 전체 이력을 받는다 — 증분만 하면 처음에 짧게
+            #   담긴 캐시가 계속 짧다(실측: 한 달치만 보임). B(매물대)는 2년
+            #   이력을 요구하므로 짧은 캐시는 신호 자체가 안 난다.
+            d = cache.update(code, full=True)
             # 실제 종목명 best-effort 조회 → 이름으로 검색 가능하게(즉석조회 종목)
             nm = universe.resolve_name(code)
             # 유니버스(git 추적)에도 영구 등록 → 캐시 리셋에도 안 사라짐

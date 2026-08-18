@@ -46,9 +46,24 @@ def save(code: str, df: pd.DataFrame) -> None:
     df.to_csv(_path(code))   # .gz 확장자 → pandas가 자동 압축
 
 
-def update(code: str) -> pd.DataFrame:
-    """캐시 있으면 마지막 날짜 이후만 받아 병합, 없으면 전체 백필. 전체 일봉 반환."""
+def update(code: str, full: bool = False) -> pd.DataFrame:
+    """캐시 있으면 마지막 날짜 이후만 받아 병합, 없으면 전체 백필. 전체 일봉 반환.
+
+    ``full=True``면 캐시가 있어도 `config.FETCH_START`부터 다시 받아 **병합**한다.
+    증분 갱신만 반복하면 처음에 짧게 담긴 캐시가 영영 짧은 채로 남는다(실측:
+    즉석수집 종목이 한 달치만 보였다). 덮어쓰지 않고 병합하므로 소스가 더 이상
+    주지 않는 과거 구간도 보존된다. 수집 실패 시 기존 캐시를 그대로 돌려준다.
+    """
     cached = load(code)
+    if full and cached is not None and len(cached):
+        try:
+            fresh = datamod.fetch_daily(code)          # FETCH_START부터 전체
+        except Exception:
+            return cached
+        merged = pd.concat([cached, fresh])
+        merged = merged[~merged.index.duplicated(keep="last")].sort_index()
+        save(code, merged)
+        return merged
     if cached is None or len(cached) == 0:
         df = datamod.fetch_daily(code)          # 1회 전체 백필
         save(code, df)

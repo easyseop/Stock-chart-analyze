@@ -172,11 +172,20 @@ def _shelf_signal(d, sup: dict, volume: dict, range_pos: float) -> dict:
     poc = float(sup.get("long_poc") or 0)
     vah = float(lng.get("vah") or 0)
     overhead = float((sup.get("pnl") or {}).get("overhead") or 1.0)
+    # 섀도 태그(L3 — 판정에 쓰지 않는다). 9월 리뷰에서 실제 성과와 대조해
+    #   "장기 급등 뒤 눌림"과 "평균 보유자가 이미 이익인 매물대"를 걸러야 할지
+    #   결정하기 위한 측정값이다. 표본 9건으로 게이트를 켜면 노이즈 추종이 된다.
+    holder_pnl = float((sup.get("pnl") or {}).get("pnl") or 0.0)
+    px_now = float(d["Close"].iloc[-1])
+    run252 = (px_now / float(d["Close"].iloc[-252]) - 1) if len(d) >= 252 else None
     context = {
         "poc": round(poc, 4) if poc > 0 else None,
         "val": round(val, 4) if val > 0 else None,
         "vah": round(vah, 4) if vah > 0 else None,
         "overhead": round(overhead, 3),
+        "history_bars": len(d),
+        "holder_pnl": round(holder_pnl, 4),
+        "runup252": None if run252 is None else round(run252, 4),
     }
     if not (price > 0 and val > 0 and vah > val):
         return {"ok": False, "watch": False,
@@ -184,6 +193,17 @@ def _shelf_signal(d, sup: dict, volume: dict, range_pos: float) -> dict:
     if range_pos > config.SHELF_LOW_ZONE:
         return {"ok": False, "watch": False,
                 "reason": f"저점권 아님(범위 {range_pos*100:.0f}%)", **context}
+    # 하한(L1): 범위 최하단은 지지가 아니라 추락 중이다. 상한만 있고 하한이 없어
+    #   WLFC(범위 0.02·6개월 −72%)가 "저점권"으로 통과했다(실측 2026-08-18).
+    if range_pos < config.SHELF_MIN_RANGE_POS:
+        return {"ok": False, "watch": False,
+                "reason": f"추락 중(범위 {range_pos*100:.0f}%)", **context}
+    # 이력(L2): 매물대는 누적 거래 이력이 있어야 성립한다. 짧으면 `min(len(d), 252)`
+    #   때문에 상장 이후 전 구간이 조용히 "52주 범위"가 된다.
+    if len(d) < config.SHELF_MIN_HISTORY_BARS:
+        return {"ok": False, "watch": False,
+                "reason": f"이력 부족({len(d)}봉 < {config.SHELF_MIN_HISTORY_BARS})",
+                **context}
     if not (val <= price <= vah):
         return {"ok": False, "watch": False,
                 "reason": "밸류영역 밖(지지대 아님)", **context}

@@ -31,8 +31,13 @@ def test_kis_shelf_contract_matches_scanner_config():
 
 
 def _df(lows, today_low, today_close, today_high, vol_bars=None):
-    """마지막 봉=오늘. 20봉 이상 구성(신저가 판정용)."""
-    n = max(len(lows), 22)
+    """마지막 봉=오늘. 이력 하한(SHELF_MIN_HISTORY_BARS)을 만족하도록 채운다.
+
+    2026-08-18에 B에 최소 상장 기간 게이트가 생겼다(상장 1.5년 종목이 실제
+    매수 신호로 나온 실측 대응). 이 파일은 반등 판정 로직을 검증하는 것이
+    목적이므로, 앞쪽을 평탄하게 채워 이력 게이트를 통과시킨 뒤 나머지를 본다.
+    """
+    n = max(len(lows), config.SHELF_MIN_HISTORY_BARS + 2)
     lows = ([lows[0]] * (n - len(lows))) + lows
     close = [l + 1.0 for l in lows]
     high = [l + 1.5 for l in lows]

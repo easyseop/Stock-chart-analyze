@@ -545,7 +545,11 @@ def _signals_json(results: list[dict]) -> str:
             "bear_share": round(gates.consensus_bear(r), 3),
             "shelf": {"poc": sh.get("poc"), "val": sh.get("val"),
                       "vah": sh.get("vah"), "rr": sh.get("rr"),
-                      "overhead": sh.get("overhead")},
+                      "overhead": sh.get("overhead"),
+                      # 섀도 태그(판정 미사용) — 9월 리뷰에서 성과와 대조한다.
+                      "history_bars": sh.get("history_bars"),
+                      "holder_pnl": sh.get("holder_pnl"),
+                      "runup252": sh.get("runup252")},
             "fresh": True,          # 반등 확인 신호는 당일 신선(늦은 미러 방지는 ±허용가로)
             "break_gap": None,
             "earnings_d": earnings.days_until(r["code"]),
@@ -588,6 +592,9 @@ def _signals_json(results: list[dict]) -> str:
                 "poc": sh.get("poc"), "val": sh.get("val"),
                 "vah": sh.get("vah"), "rr": sh.get("rr"),
                 "overhead": sh.get("overhead"), "reason": sh.get("reason"),
+                "history_bars": sh.get("history_bars"),
+                "holder_pnl": sh.get("holder_pnl"),
+                "runup252": sh.get("runup252"),
                 "checks": checks,
             },
             "fresh": False,
