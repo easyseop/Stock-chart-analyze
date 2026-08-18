@@ -251,21 +251,51 @@ def snapshot() -> dict:
     return out
 
 
+_publish_ok: bool | None = None      # 마지막 발행 성공 여부(전환 시에만 로그)
+
+
+def _log_publish(ok: bool, detail: str = "") -> None:
+    """발행 성공/실패 **전환**만 로그로 남긴다.
+
+    이 스냅샷은 SSH 없는 원격 진단의 유일한 창구다. 그런데 실패가 조용히
+    False만 반환해서, 발행이 멈춰도 아무도 몰랐다(실측 2026-08-18: ntfy 12시간
+    창에 0건인데 서비스·로그 어디에도 흔적 없음). 매 주기 찍으면 소음이므로
+    상태가 바뀔 때만 남긴다. 토픽 값은 추측 불가 문자열이라 로그에 싣지 않는다.
+    """
+    global _publish_ok
+    if _publish_ok is ok:
+        return
+    _publish_ok = ok
+    if ok:
+        print("ops-status: 발행 재개", flush=True)
+    else:
+        print(f"ops-status: 발행 실패 — 원격 진단 스냅샷이 갱신되지 않음"
+              f"{(' · ' + detail) if detail else ''}", flush=True)
+
+
 def publish(snap: dict | None = None) -> bool:
     """스냅샷을 ntfy 토픽에 발행. 실패는 False(무해 — 다음 주기 재시도)."""
     from bot import settings
+    topic = str(getattr(settings, "OPS_STATUS_TOPIC", "") or "")
+    if not topic:
+        _log_publish(False, "OPS_STATUS_TOPIC 미설정")
+        return False
     try:
         body = json.dumps(snap if snap is not None else snapshot(),
                           ensure_ascii=False,
                           separators=(",", ":")).encode("utf-8")
         req = urllib.request.Request(
-            "https://ntfy.sh/" + settings.OPS_STATUS_TOPIC, data=body,
+            "https://ntfy.sh/" + topic, data=body,
             method="POST", headers={"Title": "ops-status", "Priority": "min",
                                     "Content-Type": "application/json"})
-        with urllib.request.urlopen(req, timeout=10):
-            pass
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            if int(getattr(resp, "status", 200) or 200) >= 300:
+                _log_publish(False, f"HTTP {resp.status}")
+                return False
+        _log_publish(True)
         return True
-    except Exception:
+    except Exception as exc:
+        _log_publish(False, type(exc).__name__)
         return False
 
 

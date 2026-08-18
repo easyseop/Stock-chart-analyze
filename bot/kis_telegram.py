@@ -474,6 +474,9 @@ def _reply(text: str) -> None:
         print(f"[전송 오류] {e}", flush=True)
 
 
+_periodic_fail_seen: dict[str, bool] = {}
+
+
 def main() -> int:
     import argparse
     ap = argparse.ArgumentParser(description="KIS 모의계좌 텔레그램 조회 봇(읽기전용)")
@@ -501,8 +504,13 @@ def main() -> int:
             ops_status.maybe_alert_stuck_acks()
             from bot import trade_stats
             trade_stats.maybe_publish()      # 공개 승률 요약(금액 제외)
-        except Exception:
-            pass
+        except Exception as exc:
+            # 조용히 삼키면 주기 발행이 통째로 멈춰도 아무도 모른다(실측
+            #   2026-08-18). 같은 예외는 1회만 남겨 30초 루프를 소음으로
+            #   채우지 않는다.
+            if _periodic_fail_seen.get(type(exc).__name__) is None:
+                _periodic_fail_seen[type(exc).__name__] = True
+                print(f"[주기 발행 오류] {type(exc).__name__}: {exc}", flush=True)
         try:
             res = _tg("getUpdates", {"offset": offset, "timeout": 30}, timeout=40)
         except Exception as e:

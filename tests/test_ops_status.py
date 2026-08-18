@@ -235,11 +235,41 @@ def test_stuck_ack_alert_latches_only_after_delivery():
     print("[PASS] ACK/회복 경보 전송 실패는 미래 재시도·성공 뒤에만 래치")
 
 
+def test_publish_failure_logs_transition_only():
+    """발행 실패가 조용히 사라지지 않게 — 전환 시 1회만 로그(30초 루프 소음 금지)."""
+    from unittest import mock as _m
+    ops_status._publish_ok = None
+    def boom(*a, **k):
+        raise OSError("network down")
+    with _m.patch.object(ops_status.urllib.request, "urlopen", boom), \
+            _m.patch("builtins.print") as p:
+        assert ops_status.publish({"v": 1}) is False
+        assert ops_status.publish({"v": 1}) is False   # 같은 상태 → 추가 로그 없음
+    assert p.call_count == 1, p.call_args_list
+    line = str(p.call_args_list[0])
+    assert "발행 실패" in line and "OSError" in line
+    from bot import settings as _st
+    assert _st.OPS_STATUS_TOPIC not in line       # 토픽 값 미노출
+
+    class _Resp:
+        status = 200
+        def __enter__(self): return self
+        def __exit__(self, *a): return False
+    with _m.patch.object(ops_status.urllib.request, "urlopen",
+                         lambda *a, **k: _Resp()), _m.patch("builtins.print") as p2:
+        assert ops_status.publish({"v": 1}) is True
+        assert ops_status.publish({"v": 1}) is True
+    assert p2.call_count == 1 and "재개" in str(p2.call_args_list[0])
+    ops_status._publish_ok = None
+    print("[PASS] 발행 실패/재개 전환만 로그 · 토픽 값 미노출")
+
+
 def main():
     test_snapshot_shape_and_no_secrets()
     test_self_heal_snapshot_is_persisted_read_only_decision()
     test_query_failure_is_reported_not_raised()
     test_publish_posts_to_ops_topic_and_failure_is_harmless()
+    test_publish_failure_logs_transition_only()
     test_maybe_publish_respects_interval()
     test_read_only_no_order_paths()
     test_kill_remind_cycle()
