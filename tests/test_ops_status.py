@@ -264,12 +264,33 @@ def test_publish_failure_logs_transition_only():
     print("[PASS] 발행 실패/재개 전환만 로그 · 토픽 값 미노출")
 
 
+def test_publish_failure_detail_includes_http_status_and_body():
+    """`HTTPError`만으로는 429인지 413인지 몰라 진단이 막혔다(실측 2026-08-18)."""
+    import io as _io, urllib.error as _ue
+    from unittest import mock as _m
+    ops_status._publish_ok = None
+    err = _ue.HTTPError("https://ntfy.sh/t", 429, "Too Many Requests", {},
+                        _io.BytesIO(b'{"code":42908,"error":"daily message quota reached"}'))
+    def boom(*a, **k):
+        raise err
+    with _m.patch.object(ops_status.urllib.request, "urlopen", boom), \
+            _m.patch("builtins.print") as p:
+        assert ops_status.publish({"v": 1}) is False
+    line = str(p.call_args_list[0])
+    assert "429" in line and "quota" in line and "payload=" in line, line
+    from bot import settings as _st
+    assert _st.OPS_STATUS_TOPIC not in line
+    ops_status._publish_ok = None
+    print("[PASS] 실패 로그에 HTTP 상태·본문·페이로드 크기 포함")
+
+
 def main():
     test_snapshot_shape_and_no_secrets()
     test_self_heal_snapshot_is_persisted_read_only_decision()
     test_query_failure_is_reported_not_raised()
     test_publish_posts_to_ops_topic_and_failure_is_harmless()
     test_publish_failure_logs_transition_only()
+    test_publish_failure_detail_includes_http_status_and_body()
     test_maybe_publish_respects_interval()
     test_read_only_no_order_paths()
     test_kill_remind_cycle()

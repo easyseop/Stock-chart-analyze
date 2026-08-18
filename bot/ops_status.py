@@ -254,6 +254,28 @@ def snapshot() -> dict:
 _publish_ok: bool | None = None      # 마지막 발행 성공 여부(전환 시에만 로그)
 
 
+def _exc_detail(exc: BaseException, size: int = 0) -> str:
+    """실패 사유를 한 줄로 — 타입만으로는 부족했다(실측 2026-08-18: `HTTPError`만
+    남아 429인지 413인지 알 수 없었다). HTTP 상태·본문 앞부분·페이로드 크기를
+    함께 남긴다. 토픽·시크릿은 싣지 않는다."""
+    name = type(exc).__name__
+    code = getattr(exc, "code", None)
+    parts = [name if code is None else f"{name} {code}"]
+    reason = getattr(exc, "reason", None)
+    if code is not None:
+        try:
+            body = exc.read(200).decode("utf-8", "replace")   # type: ignore[attr-defined]
+        except Exception:
+            body = ""
+        if body:
+            parts.append(body.replace("\n", " ")[:160])
+    elif reason:
+        parts.append(str(reason)[:80])
+    if size:
+        parts.append(f"payload={size}B")
+    return " · ".join(parts)
+
+
 def _log_publish(ok: bool, detail: str = "") -> None:
     """발행 성공/실패 **전환**만 로그로 남긴다.
 
@@ -280,6 +302,7 @@ def publish(snap: dict | None = None) -> bool:
     if not topic:
         _log_publish(False, "OPS_STATUS_TOPIC 미설정")
         return False
+    body = b""
     try:
         body = json.dumps(snap if snap is not None else snapshot(),
                           ensure_ascii=False,
@@ -295,7 +318,7 @@ def publish(snap: dict | None = None) -> bool:
         _log_publish(True)
         return True
     except Exception as exc:
-        _log_publish(False, type(exc).__name__)
+        _log_publish(False, _exc_detail(exc, len(body)))
         return False
 
 
