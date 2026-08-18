@@ -277,7 +277,8 @@ def test_publish_failure_detail_includes_http_status_and_body():
             _m.patch("builtins.print") as p:
         assert ops_status.publish({"v": 1}) is False
     line = str(p.call_args_list[0])
-    assert "429" in line and "quota" in line and "payload=" in line, line
+    # 느슨한 `"429" in line`은 본문의 42908에도 걸린다 — 타입+코드 형태로 단언.
+    assert "HTTPError 429" in line and "quota" in line and "payload=" in line, line
     from bot import settings as _st
     assert _st.OPS_STATUS_TOPIC not in line
     ops_status._publish_ok = None
