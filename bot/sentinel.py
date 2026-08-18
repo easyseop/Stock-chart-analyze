@@ -490,8 +490,23 @@ def _reconcile_open(broker) -> None:
                     f"(체결 {r['filled']} · 잔여 {r['residual']})", critical=True)
 
 
+_HB_EVERY_N = max(1, int(os.environ.get("SENTINEL_HEARTBEAT_EVERY_N", "5") or 5))
+
+
+def _beat(state: dict, **extra) -> None:
+    """생존 신호 기록 — 실패해도 파수꾼은 계속 돈다(기존 계약 유지)."""
+    try:
+        from bot import heartbeat
+        heartbeat.write({"broker": state.get("_broker_name", ""),
+                         "positions": len(state.get("positions", {})),
+                         **extra})
+    except Exception:
+        pass
+
+
 def check_once(broker, state: dict) -> None:
     """한 사이클: 피드 → 장중 보유 종목 시세 → 하드/소프트 손절 판단."""
+    state["_broker_name"] = getattr(broker, "name", "")
     _reconcile_open(broker)                    # 먼저 UNKNOWN 대사(잠금 해제 기회)
     positions, age = _fetch_positions()
     stale = age is not None and age > FEED_STALE_MIN                 # 보호모드 진입(정적손절)
@@ -592,7 +607,16 @@ def check_once(broker, state: dict) -> None:
     sent = _load_sent()
     active_chases = (_advance_us_chases(held, sent)
                      if LIVE and isinstance(broker, _KisBroker) else set())
-    for code, p in held.items():
+    for scanned, (code, p) in enumerate(held.items()):
+        # 생존 신호는 루프 **안에서도** 남긴다. 예전에는 사이클이 끝난 뒤에만
+        #   기록해서, heartbeat 나이 = 사이클 소요 + sleep이 됐다. 모의 유량은
+        #   data-plane 1회/초(2/s − order 예약 1)라 보유 54종목이면 종목별 시세
+        #   조회만으로 사이클이 50초를 넘고, heartbeat가 60초 경계를 상시 왕복해
+        #   오인 P0·L1이 반복됐다(실측 2026-08-18: 62~86초). 보유가 늘수록 악화된다.
+        #   스레드가 아니라 루프 안에서 찍으므로 '전진 중'이라는 원래 의미는 유지된다
+        #   — 루프가 멈추면 heartbeat도 그 자리에서 멈춘다.
+        if scanned and scanned % _HB_EVERY_N == 0:
+            _beat(state, scanned=scanned, total=len(held))
         if code in active_chases:
             continue                              # chase가 이 종목의 유일한 매도 주체
         if not _market_open(p.get("ccy", "USD")):
@@ -804,12 +828,7 @@ def main() -> None:
             check_once(broker, state)
         except Exception as e:                     # 파수꾼은 죽지 않는다
             print(f"[오류] {type(e).__name__}: {e}")
-        try:                                       # 생존성 SLA(R4) — 매 사이클 기록
-            from bot import heartbeat
-            heartbeat.write({"broker": broker.name,
-                             "positions": len(state.get("positions", {}))})
-        except Exception:
-            pass
+        _beat(state, cycle="end")                  # 생존성 SLA(R4) — 매 사이클 기록
         if args.once:
             break
         # 장외엔 60초 간격으로만 깨어나 확인(호출 0)
