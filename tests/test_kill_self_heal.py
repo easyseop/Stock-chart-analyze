@@ -120,7 +120,22 @@ def test_self_heal_allowlist_requires_exact_match():
               (WATCHDOG_WHO,HEARTBEAT_EXHAUSTED_REASON+" "),
               (WATCHDOG_WHO,BALANCE_FAILURE_REASON.replace("KIS","kis")))
     assert all(not self_heal_allowed(who,why) for who,why in variants)
+def test_readiness_exception_records_path_and_errno():
+    import bot.kill_self_heal as K
+    exc = PermissionError(13, "Permission denied", "/tmp/stock-kis-rate-mock.json")
+    why = K._readiness_why(exc)
+    assert why == "readiness:PermissionError:13:/tmp/stock-kis-rate-mock.json", why
+    # OSError가 아닌 예외의 메시지는 값이 섞일 수 있어 싣지 않는다.
+    assert K._readiness_why(ValueError("appkey=SECRET777")) == "readiness:ValueError"
+    with tempfile.TemporaryDirectory() as tmp,_env(tmp),mock.patch("bot.notify.send",return_value=True):
+        ts=_raise()
+        with mock.patch.object(K,"_readiness_go",side_effect=exc):
+            assert K.cycle(heartbeat_age_s=1,now=ts)["action"]=="observing"
+            out=K.cycle(heartbeat_age_s=1,now=ts+11)
+        assert out["action"]=="blocked" and "stock-kis-rate-mock.json" in out["why"], out
+        assert kill.level()==1
+    print("[PASS] readiness 예외에 경로·errno 보존(시크릿 없음) · 하향 0")
 def main():
-    for fn in (test_normal_path_lowers_and_audits_self_heal,test_s1_operator_reason_and_l2_never_lower,test_s2_29_minutes_flap_and_restart_reset,test_t1_single_soft_sample_preserves_window_and_recovers,test_t1_hard_age_resets_immediately,test_t1_chronic_alternating_soft_samples_never_recovers,test_s3_no_go_exception_and_l2_toctou_block,test_s4_once_per_kst_day_and_manual_alert,test_corrupt_state_fail_closed,test_state_write_failure_blocks_before_readiness_and_lower,test_reset_age_clamps_strict_and_loose_values_with_one_time_log,test_notification_failure_retries_after_lower,test_pending_notice_is_discarded_after_manual_lower,test_self_heal_allowlist_requires_exact_match): fn()
-    print("kill self-heal 14/14 PASS")
+    for fn in (test_normal_path_lowers_and_audits_self_heal,test_s1_operator_reason_and_l2_never_lower,test_s2_29_minutes_flap_and_restart_reset,test_t1_single_soft_sample_preserves_window_and_recovers,test_t1_hard_age_resets_immediately,test_t1_chronic_alternating_soft_samples_never_recovers,test_s3_no_go_exception_and_l2_toctou_block,test_s4_once_per_kst_day_and_manual_alert,test_corrupt_state_fail_closed,test_state_write_failure_blocks_before_readiness_and_lower,test_reset_age_clamps_strict_and_loose_values_with_one_time_log,test_notification_failure_retries_after_lower,test_pending_notice_is_discarded_after_manual_lower,test_self_heal_allowlist_requires_exact_match,test_readiness_exception_records_path_and_errno): fn()
+    print("kill self-heal 15/15 PASS")
 if __name__=="__main__": main()

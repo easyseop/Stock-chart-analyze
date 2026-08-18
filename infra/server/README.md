@@ -290,6 +290,28 @@ journalctl -u watchdog -n 5 -o short-iso | grep "알림 채널"
 `telegram=미설정`이 보이면 **그 프로세스의 P0 경보는 도달하지 않는다.** 다른
 유닛도 같은 방식으로 점검한다 — 구성은 유닛마다 다르다.
 
+### 실행 유저가 갈리면 공용 상태 파일이 막힌다
+
+KIS 유량 리미터는 호스트 전 프로세스가 공유하는 상태 파일을 쓴다(기본
+`/tmp/stock-kis-rate-<env>.json`). **파수꾼·매수루프는 ubuntu, watchdog은 root**로
+도는 배치에서는 리눅스 `fs.protected_regular` 때문에 sticky·world-writable
+디렉터리(`/tmp`)의 **남의 소유 파일에 대한 `O_CREAT` 열기가 root에게도 EACCES**로
+막힌다. 그래서 watchdog의 readiness가 매번 `PermissionError`로 죽고 자가복구가
+12시간 넘게 멈췄다(실측 2026-08-18).
+
+코드는 이제 ① 파일이 있으면 `O_CREAT` 없이 열고 ② 그래도 못 열면 프로세스 지역
+한도로 강등한다(예외 전파 금지). 강등되면 저널에 1회 남는다:
+
+```
+[kis-ratelimit] 공용 상태 파일 사용 불가 — 프로세스 지역 한도로 강등: ...
+```
+
+이 줄이 보이면 **한도가 프로세스별로 갈려 계좌 합산 한도를 넘을 수 있다.**
+근본 해결은 유저를 통일하는 것이다 — watchdog이 root여야 할 이유는
+`systemctl restart` 하나뿐이므로 sudoers drop-in으로 대체하고 다른 봇과 같은
+계정으로 내리는 쪽을 권한다. 임시로는 `KIS_RATE_STATE_PATH`를 `/tmp` 밖의
+공용 쓰기 가능 경로로 지정한다.
+
 ### P0 이중화(ntfy) 켜기 — 선택
 
 `critical=True` 경보는 `NTFY_TOPIC`이 설정된 프로세스에서만 ntfy로도 나간다.

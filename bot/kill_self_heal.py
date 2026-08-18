@@ -190,6 +190,22 @@ def _readiness_go() -> tuple[bool, str]:
     return True, "scope=l0 blockers=0"
 
 
+def _readiness_why(exc: BaseException) -> str:
+    """readiness 예외를 '어디서 막혔는지'까지 담아 한 줄로 만든다.
+
+    예외 타입만 남기면(구버전) `readiness:PermissionError`밖에 안 보여서 원인
+    파일을 찾는 데 왕복 진단이 필요했다(실측 2026-08-18: /tmp 유량 상태 파일
+    권한 문제로 자가복구가 12시간 정지). 경로·errno는 시크릿이 아니므로 남기고,
+    그 밖의 예외 메시지는 값이 섞일 수 있어 싣지 않는다.
+    """
+    name = type(exc).__name__
+    filename = getattr(exc, "filename", None)
+    errno = getattr(exc, "errno", None)
+    if isinstance(exc, OSError) and filename:
+        return f"readiness:{name}:{errno}:{str(filename)[:120]}"
+    return f"readiness:{name}"
+
+
 def _result(action: str, why: str = "", *, observed_s: float = 0.0,
             remaining_s: float | None = None, used_today: bool = False,
             **extra) -> dict:
@@ -336,7 +352,7 @@ def cycle(*, heartbeat_age_s: float | None, now: float | None = None) -> dict:
     if observed_result["action"] == "blocked": return observed_result
     try: go, summary = _readiness_go()
     except Exception as exc:
-        return _finish(state, "blocked", f"readiness:{type(exc).__name__}", observed_s=observed)
+        return _finish(state, "blocked", _readiness_why(exc), observed_s=observed)
     if not go: return _finish(state, "blocked", summary, observed_s=observed)
     latest = kill.status()
     try: latest_event = f"{float(latest.get('ts') or 0):.6f}|{latest.get('who') or ''}|{latest.get('why') or ''}"

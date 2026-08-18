@@ -42,6 +42,7 @@ class SecondBucket:
         self.shared_path = shared_path
         self._calls: deque[float] = deque()      # 최근 호출 시각들
         self._lock = threading.Lock()
+        self._degraded = False                   # 공용 파일 → 지역 버킷 강등 여부
 
     def _prune(self, now: float) -> None:
         while self._calls and now - self._calls[0] >= 1.0:
@@ -53,8 +54,33 @@ class SecondBucket:
 
     def try_acquire(self, plane: str = "data", now: float | None = None) -> bool:
         """비차단 획득. True면 즉시 호출 가능(호출로 카운트됨)."""
-        if self.shared_path:
+        if self.shared_path and not self._degraded:
             return self._try_shared(plane, now)
+        return self._try_local(plane, now)
+
+    def _open_shared(self, path: str) -> int:
+        """공용 상태 파일을 연다. 이미 있으면 O_CREAT 없이 여는 것을 먼저 시도한다.
+
+        왜(실측 2026-08-18): 이 파일은 `/tmp`에 있고 봇 프로세스마다 실행 유저가
+        다를 수 있다(파수꾼·매수루프=ubuntu, watchdog=root). 리눅스
+        `fs.protected_regular`는 sticky·world-writable 디렉터리에서 **남의 소유
+        파일에 대한 O_CREAT 열기를 root에게도 EACCES로 막는다.** 그래서 watchdog의
+        readiness가 매번 PermissionError로 죽었고 자가복구가 12시간 넘게 멈췄다.
+        파일이 이미 있으면 O_CREAT가 애초에 필요 없으므로 그 경로를 먼저 쓴다.
+        """
+        try:
+            return os.open(path, os.O_RDWR)
+        except FileNotFoundError:
+            pass
+        fd = os.open(path, os.O_RDWR | os.O_CREAT, 0o600)
+        try:                      # 우리가 만든 파일만 조인다(남의 파일 chmod 금지)
+            os.fchmod(fd, 0o600)
+        except OSError:
+            pass
+        return fd
+
+    def _try_local(self, plane: str, now: float | None) -> bool:
+        """프로세스 지역 슬라이딩 윈도우 — 공용 파일을 못 쓸 때의 강등 경로."""
         now = time.monotonic() if now is None else now
         with self._lock:
             self._prune(now)
@@ -63,18 +89,34 @@ class SecondBucket:
                 return True
             return False
 
+    def _degrade_to_local(self, path: str, exc: OSError) -> None:
+        """강등을 프로세스당 1회 로그로 남긴다 — 조용한 강등은 만들지 않는다."""
+        if self._degraded:
+            return
+        self._degraded = True
+        print(f"[kis-ratelimit] 공용 상태 파일 사용 불가 — 프로세스 지역 한도로 "
+              f"강등: {type(exc).__name__} {path}", flush=True)
+
     def _try_shared(self, plane: str, now: float | None) -> bool:
         """flock 아래 공용 윈도우를 읽고 한 슬롯을 원자적으로 예약한다.
 
         상태가 손상되면 호출을 허용하지 않는다. 손상 상태를 0건으로 간주하면 여러
         프로세스가 동시에 fail-open 되어 KIS 계좌 한도를 넘길 수 있기 때문이다.
+
+        공용 파일 자체를 **열 수 없으면**(유저가 갈린 배치의 권한 문제) 프로세스
+        지역 버킷으로 강등한다. 여기서 fail-closed로 예외를 던지면 호출부가
+        통째로 죽어(실측: 자가복구 영구 중단) 한도 초과보다 큰 사고가 난다.
+        강등해도 한도는 프로세스별로 여전히 걸리므로 무제한 fail-open이 아니다.
         """
         path = str(self.shared_path)
-        os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
+        try:
+            os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
+            fd = self._open_shared(path)
+        except OSError as exc:
+            self._degrade_to_local(path, exc)
+            return self._try_local(plane, now)
         with self._lock:
-            fd = os.open(path, os.O_RDWR | os.O_CREAT, 0o600)
             try:
-                os.chmod(path, 0o600)
                 fcntl.flock(fd, fcntl.LOCK_EX)
                 # 대기 전에 wall clock을 잡으면, 먼저 잠금을 얻은 프로세스의 기록이
                 # '미래 시각'처럼 보여 필터에서 빠지는 수백µs 경합 창이 생긴다.
@@ -123,7 +165,7 @@ class SecondBucket:
             time.sleep(min(max(wait, 0.02), deadline - now if deadline > now else 0.02))
 
     def used(self, now: float | None = None) -> int:
-        if self.shared_path:
+        if self.shared_path and not self._degraded:
             stamp = time.time() if now is None else now
             path = str(self.shared_path)
             try:
