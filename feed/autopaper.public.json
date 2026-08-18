@@ -1,10 +1,10 @@
 {
- "generated_at": "2026-08-18T22:13:30.740918+09:00",
+ "generated_at": "2026-08-18T22:31:14.141968+09:00",
  "updated": "2026-08-18",
  "start": 100000000,
  "cash": 47773807,
- "equity": 100907306,
- "ret_pct": 0.91,
+ "equity": 101279346,
+ "ret_pct": 1.28,
  "positions": [
   {
    "code": "MRSH",
@@ -12,14 +12,14 @@
    "ccy": "USD",
    "q": 36,
    "avg": 174.3075,
-   "price": 184.2100067138672,
+   "price": 186.71499633789065,
    "stop": 184.80249938964843,
    "target": 192.2575,
    "half_done": true,
    "opened": "2026-07-06",
-   "pl_krw": 503439,
-   "pl_pct": 5.68,
-   "price_age_min": 5.5
+   "pl_krw": 630792,
+   "pl_pct": 7.12,
+   "price_age_min": 0.5
   },
   {
    "code": "HMC",
@@ -27,14 +27,14 @@
    "ccy": "USD",
    "q": 2,
    "avg": 27.665,
-   "price": 31.89999961853028,
-   "stop": 29.762100762939454,
+   "price": 32.029998779296875,
+   "stop": 29.842098779296876,
    "target": 30.5824,
    "half_done": true,
    "opened": "2026-07-09",
-   "pl_krw": 11961,
-   "pl_pct": 15.31,
-   "price_age_min": 5.5
+   "pl_krw": 12329,
+   "pl_pct": 15.78,
+   "price_age_min": 0.5
   },
   {
    "code": "J",
@@ -49,7 +49,7 @@
    "opened": "2026-07-11",
    "pl_krw": 770276,
    "pl_pct": 13.47,
-   "price_age_min": 5.5
+   "price_age_min": 0.4
   },
   {
    "code": "MAIN",
@@ -57,14 +57,14 @@
    "ccy": "USD",
    "q": 39,
    "avg": 53.96,
-   "price": 58.150001525878906,
+   "price": 58.28499984741211,
    "stop": 55.9411983215332,
    "target": 58.7184,
    "half_done": true,
    "opened": "2026-07-22",
-   "pl_krw": 230769,
-   "pl_pct": 7.77,
-   "price_age_min": 7.7
+   "pl_krw": 238205,
+   "pl_pct": 8.02,
+   "price_age_min": 0.4
   },
   {
    "code": "004370",
@@ -79,7 +79,7 @@
    "opened": "2026-07-27",
    "pl_krw": 515000,
    "pl_pct": 13.98,
-   "price_age_min": 5.5
+   "price_age_min": 0.4
   },
   {
    "code": "EQT",
@@ -87,14 +87,14 @@
    "ccy": "USD",
    "q": 121,
    "avg": 51.375,
-   "price": 53.0099983215332,
+   "price": 53.63999938964844,
    "stop": 51.375,
    "target": 57.1234,
    "half_done": true,
    "opened": "2026-07-29",
-   "pl_krw": 279384,
-   "pl_pct": 3.18,
-   "price_age_min": 5.5
+   "pl_krw": 387037,
+   "pl_pct": 4.41,
+   "price_age_min": 0.4
   },
   {
    "code": "MDT",
@@ -102,14 +102,14 @@
    "ccy": "USD",
    "q": 47,
    "avg": 86.12,
-   "price": 90.5999984741211,
+   "price": 91.98999786376952,
    "stop": 86.12,
    "target": 95.117,
    "half_done": true,
    "opened": "2026-07-30",
-   "pl_krw": 297355,
-   "pl_pct": 5.2,
-   "price_age_min": 5.4
+   "pl_krw": 389614,
+   "pl_pct": 6.82,
+   "price_age_min": 0.4
   },
   {
    "code": "AVY",
@@ -117,14 +117,14 @@
    "ccy": "USD",
    "q": 28,
    "avg": 169.73,
-   "price": 176.6199951171875,
+   "price": 177.10000610351562,
    "stop": 158.3847,
    "target": 192.4206,
    "half_done": false,
    "opened": "2026-08-03",
-   "pl_krw": 272443,
-   "pl_pct": 4.06,
-   "price_age_min": 5.4
+   "pl_krw": 291424,
+   "pl_pct": 4.34,
+   "price_age_min": 0.4
   },
   {
    "code": "DPZ",
@@ -132,14 +132,14 @@
    "ccy": "USD",
    "q": 10,
    "avg": 353.285,
-   "price": 335.4200134277344,
+   "price": 337.3900146484375,
    "stop": 328.6353,
    "target": 402.5845,
    "half_done": false,
    "opened": "2026-08-07",
-   "pl_krw": -252291,
-   "pl_pct": -5.06,
-   "price_age_min": 5.4
+   "pl_krw": -224471,
+   "pl_pct": -4.5,
+   "price_age_min": 0.4
   },
   {
    "code": "UFPI",
@@ -147,14 +147,14 @@
    "ccy": "USD",
    "q": 24,
    "avg": 90.485,
-   "price": 88.29000091552734,
+   "price": 88.0,
    "stop": 84.0446,
    "target": 103.3659,
    "half_done": false,
    "opened": "2026-08-11",
-   "pl_krw": -74395,
-   "pl_pct": -2.43,
-   "price_age_min": 5.4
+   "pl_krw": -84224,
+   "pl_pct": -2.75,
+   "price_age_min": 0.4
   }
  ],
  "pending": [
@@ -890,7 +890,7 @@
   },
   {
    "d": "2026-08-18",
-   "v": 100907306
+   "v": 101279346
   }
  ],
  "log": [
@@ -1530,6 +1530,6 @@
    "target": 30.5824
   }
  ],
- "lane": "bulk",
+ "lane": "fast",
  "data_stale": []
 }
