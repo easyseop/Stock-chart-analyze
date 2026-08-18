@@ -1,19 +1,19 @@
 {
  "version": 1,
- "generated_at": "2026-08-18T23:26:27+09:00",
+ "generated_at": "2026-08-18T23:44:21+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "shelf_debug": {
-  "ok": 9,
-  "watch": 204,
+  "ok": 7,
+  "watch": 190,
   "reasons": {
-   "밸류영역 밖(지지대 아님)": 1022,
+   "밸류영역 밖(지지대 아님)": 315,
+   "추락 중(범위 1%)": 162,
    "매물대 정보 없음": 139,
-   "반등 미확인(터치·상단마감·거래량)": 130,
-   "반등 미확인(상단마감·거래량)": 83,
-   "저점권 아님(범위 91%)": 71,
-   "저점권 아님(범위 92%)": 65,
-   "저점권 아님(범위 87%)": 65,
-   "저점권 아님(범위 93%)": 64
+   "추락 중(범위 0%)": 123,
+   "반등 미확인(터치·상단마감·거래량)": 116,
+   "추락 중(범위 3%)": 110,
+   "추락 중(범위 2%)": 107,
+   "추락 중(범위 4%)": 89
   }
  },
  "signals": [
@@ -634,34 +634,6 @@
    }
   },
   {
-   "id": "RHLD-2026-08-18-shelf",
-   "code": "RHLD",
-   "name": "Resolute Holdings Management",
-   "ccy": "USD",
-   "group": "shelf",
-   "entry_kind": "shelf",
-   "stage": 0,
-   "price": 136.86,
-   "entry": 136.86,
-   "stop": 126.567,
-   "target": 187.1394,
-   "shares_1pct": 0,
-   "range_pos": 0.4515,
-   "norm": 30.2,
-   "bear_share": 0.125,
-   "shelf": {
-    "poc": 134.3156,
-    "val": 111.6769,
-    "vah": 187.1394,
-    "rr": 4.88,
-    "overhead": 0.537
-   },
-   "fresh": true,
-   "break_gap": null,
-   "earnings_d": -12,
-   "tactic": "full"
-  },
-  {
    "id": "443060-2026-08-18-shelf",
    "code": "443060",
    "name": "HD현대마린솔루션",
@@ -682,7 +654,10 @@
     "val": 182187.5,
     "vah": 235937.5,
     "rr": 2.27,
-    "overhead": 0.497
+    "overhead": 0.497,
+    "history_bars": 553,
+    "holder_pnl": -0.0312,
+    "runup252": 0.0382
    },
    "fresh": true,
    "break_gap": null,
@@ -710,7 +685,10 @@
     "val": 234375.0,
     "vah": 413125.0,
     "rr": 3.37,
-    "overhead": 0.55
+    "overhead": 0.55,
+    "history_bars": 1473,
+    "holder_pnl": -0.0691,
+    "runup252": 0.4636
    },
    "fresh": true,
    "break_gap": null,
@@ -740,6 +718,9 @@
     "rr": 2.51,
     "overhead": 0.514,
     "reason": "반등 미확인(거래량)",
+    "history_bars": 1916,
+    "holder_pnl": -0.0225,
+    "runup252": -0.1121,
     "checks": {
      "터치": true,
      "회복": true,
@@ -776,6 +757,9 @@
     "rr": 5.77,
     "overhead": 0.517,
     "reason": "반등 미확인(거래량)",
+    "history_bars": 1917,
+    "holder_pnl": -0.0678,
+    "runup252": -0.2245,
     "checks": {
      "터치": true,
      "회복": true,
@@ -787,42 +771,6 @@
    "fresh": false,
    "break_gap": null,
    "earnings_d": 36,
-   "tactic": "watch"
-  },
-  {
-   "id": "TIC-2026-08-18-shelf-watch",
-   "code": "TIC",
-   "name": "TIC Solutions, Inc.",
-   "ccy": "USD",
-   "group": "shelf_watch",
-   "entry_kind": "shelf_watch",
-   "stage": 0,
-   "price": 9.61,
-   "entry": 9.61,
-   "stop": 9.2022,
-   "target": 10.8308,
-   "shares_1pct": 0,
-   "range_pos": 0.3786,
-   "norm": 26.2,
-   "bear_share": 0.25,
-   "shelf": {
-    "poc": 9.7578,
-    "val": 6.8965,
-    "vah": 10.8308,
-    "rr": 2.99,
-    "overhead": 0.527,
-    "reason": "반등 미확인(거래량)",
-    "checks": {
-     "터치": true,
-     "회복": true,
-     "상단마감": true,
-     "거래량": false,
-     "신저가아님": true
-    }
-   },
-   "fresh": false,
-   "break_gap": null,
-   "earnings_d": -12,
    "tactic": "watch"
   },
   {
@@ -848,6 +796,9 @@
     "rr": 7.92,
     "overhead": 0.503,
     "reason": "반등 미확인(거래량)",
+    "history_bars": 1917,
+    "holder_pnl": -0.0564,
+    "runup252": -0.1962,
     "checks": {
      "터치": true,
      "회복": true,
@@ -884,6 +835,9 @@
     "rr": 2.43,
     "overhead": 0.525,
     "reason": "반등 미확인(거래량)",
+    "history_bars": 1917,
+    "holder_pnl": -0.0277,
+    "runup252": -0.1877,
     "checks": {
      "터치": true,
      "회복": true,
@@ -895,6 +849,45 @@
    "fresh": false,
    "break_gap": null,
    "earnings_d": 72,
+   "tactic": "watch"
+  },
+  {
+   "id": "IT-2026-08-18-shelf-watch",
+   "code": "IT",
+   "name": "Gartner, Inc.",
+   "ccy": "USD",
+   "group": "shelf_watch",
+   "entry_kind": "shelf_watch",
+   "stage": 0,
+   "price": 179.19,
+   "entry": 179.19,
+   "stop": 169.197,
+   "target": 233.4,
+   "shares_1pct": 0,
+   "range_pos": 0.388,
+   "norm": 18.0,
+   "bear_share": 0.25,
+   "shelf": {
+    "poc": 156.7,
+    "val": 127.2,
+    "vah": 233.4,
+    "rr": 5.42,
+    "overhead": 0.422,
+    "reason": "반등 미확인(터치)",
+    "history_bars": 1916,
+    "holder_pnl": -0.0469,
+    "runup252": -0.2493,
+    "checks": {
+     "터치": false,
+     "회복": true,
+     "상단마감": true,
+     "거래량": true,
+     "신저가아님": true
+    }
+   },
+   "fresh": false,
+   "break_gap": null,
+   "earnings_d": 77,
    "tactic": "watch"
   },
   {
@@ -920,6 +913,9 @@
     "rr": 7.29,
     "overhead": 0.541,
     "reason": "반등 미확인(거래량)",
+    "history_bars": 1741,
+    "holder_pnl": -0.1441,
+    "runup252": -0.3715,
     "checks": {
      "터치": true,
      "회복": true,
@@ -956,6 +952,9 @@
     "rr": 3.15,
     "overhead": 0.534,
     "reason": "반등 미확인(거래량)",
+    "history_bars": 1917,
+    "holder_pnl": -0.0407,
+    "runup252": -0.0871,
     "checks": {
      "터치": true,
      "회복": true,
@@ -992,6 +991,9 @@
     "rr": 4.27,
     "overhead": 0.532,
     "reason": "반등 미확인(거래량)",
+    "history_bars": 1828,
+    "holder_pnl": -0.0616,
+    "runup252": -0.1957,
     "checks": {
      "터치": true,
      "회복": true,
@@ -1028,6 +1030,9 @@
     "rr": 1.88,
     "overhead": 0.527,
     "reason": "반등 미확인(거래량)",
+    "history_bars": 1917,
+    "holder_pnl": -0.0221,
+    "runup252": -0.126,
     "checks": {
      "터치": true,
      "회복": true,
@@ -1064,6 +1069,9 @@
     "rr": 3.72,
     "overhead": 0.479,
     "reason": "반등 미확인(거래량)",
+    "history_bars": 1917,
+    "holder_pnl": -0.0937,
+    "runup252": 0.0221,
     "checks": {
      "터치": true,
      "회복": true,
@@ -1100,6 +1108,9 @@
     "rr": 2.74,
     "overhead": 0.464,
     "reason": "반등 미확인(거래량)",
+    "history_bars": 1916,
+    "holder_pnl": -0.0157,
+    "runup252": -0.212,
     "checks": {
      "터치": true,
      "회복": true,
@@ -1136,6 +1147,9 @@
     "rr": 2.9,
     "overhead": 0.535,
     "reason": "반등 미확인(거래량)",
+    "history_bars": 1916,
+    "holder_pnl": -0.033,
+    "runup252": 0.0897,
     "checks": {
      "터치": true,
      "회복": true,
@@ -1172,6 +1186,9 @@
     "rr": 2.63,
     "overhead": 0.489,
     "reason": "반등 미확인(거래량)",
+    "history_bars": 1916,
+    "holder_pnl": -0.0599,
+    "runup252": -0.4792,
     "checks": {
      "터치": true,
      "회복": true,
@@ -1208,6 +1225,9 @@
     "rr": 2.72,
     "overhead": 0.51,
     "reason": "반등 미확인(거래량)",
+    "history_bars": 1917,
+    "holder_pnl": -0.0415,
+    "runup252": 0.132,
     "checks": {
      "터치": true,
      "회복": true,
@@ -1244,6 +1264,9 @@
     "rr": 8.53,
     "overhead": 0.488,
     "reason": "반등 미확인(거래량)",
+    "history_bars": 1916,
+    "holder_pnl": 0.0049,
+    "runup252": 0.6224,
     "checks": {
      "터치": true,
      "회복": true,
@@ -1280,6 +1303,9 @@
     "rr": 3.62,
     "overhead": 0.383,
     "reason": "반등 미확인(상단마감)",
+    "history_bars": 1812,
+    "holder_pnl": 0.0731,
+    "runup252": 2.035,
     "checks": {
      "터치": true,
      "회복": true,

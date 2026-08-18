@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-08-18T23:26:18.567742+09:00",
+ "generated_at": "2026-08-18T23:44:15.183444+09:00",
  "updated": "2026-08-18",
  "start": 100000000,
  "cash": 47773807,
@@ -19,7 +19,7 @@
    "opened": "2026-07-06",
    "pl_krw": 682648,
    "pl_pct": 7.7,
-   "price_age_min": 19.9
+   "price_age_min": 37.9
   },
   {
    "code": "HMC",
@@ -34,7 +34,7 @@
    "opened": "2026-07-09",
    "pl_krw": 12766,
    "pl_pct": 16.34,
-   "price_age_min": 19.9
+   "price_age_min": 37.9
   },
   {
    "code": "J",
@@ -49,7 +49,7 @@
    "opened": "2026-07-11",
    "pl_krw": 783381,
    "pl_pct": 13.69,
-   "price_age_min": 19.9
+   "price_age_min": 37.9
   },
   {
    "code": "MAIN",
@@ -64,7 +64,7 @@
    "opened": "2026-07-22",
    "pl_krw": 241784,
    "pl_pct": 8.14,
-   "price_age_min": 22.2
+   "price_age_min": 40.1
   },
   {
    "code": "004370",
@@ -79,7 +79,7 @@
    "opened": "2026-07-27",
    "pl_krw": 515000,
    "pl_pct": 13.98,
-   "price_age_min": 19.9
+   "price_age_min": 37.9
   },
   {
    "code": "EQT",
@@ -94,7 +94,7 @@
    "opened": "2026-07-29",
    "pl_krw": 375076,
    "pl_pct": 4.27,
-   "price_age_min": 19.9
+   "price_age_min": 37.9
   },
   {
    "code": "MDT",
@@ -109,7 +109,7 @@
    "opened": "2026-07-30",
    "pl_krw": 431430,
    "pl_pct": 7.55,
-   "price_age_min": 19.9
+   "price_age_min": 37.9
   },
   {
    "code": "AVY",
@@ -124,7 +124,7 @@
    "opened": "2026-08-03",
    "pl_krw": 294587,
    "pl_pct": 4.39,
-   "price_age_min": 19.9
+   "price_age_min": 37.9
   },
   {
    "code": "DPZ",
@@ -139,7 +139,7 @@
    "opened": "2026-08-07",
    "pl_krw": -180057,
    "pl_pct": -3.61,
-   "price_age_min": 19.9
+   "price_age_min": 37.8
   },
   {
    "code": "UFPI",
@@ -154,7 +154,7 @@
    "opened": "2026-08-11",
    "pl_krw": -129976,
    "pl_pct": -4.24,
-   "price_age_min": 19.9
+   "price_age_min": 37.8
   }
  ],
  "pending": [
@@ -1531,5 +1531,15 @@
   }
  ],
  "lane": "bulk",
- "data_stale": []
+ "data_stale": [
+  "MRSH",
+  "HMC",
+  "J",
+  "MAIN",
+  "EQT",
+  "MDT",
+  "AVY",
+  "DPZ",
+  "UFPI"
+ ]
 }
