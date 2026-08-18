@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated_at": "2026-08-18T13:21:11+09:00",
+ "generated_at": "2026-08-18T13:28:41+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "shelf_debug": {
   "ok": 16,
@@ -8,12 +8,12 @@
   "reasons": {
    "밸류영역 밖(지지대 아님)": 1021,
    "매물대 정보 없음": 137,
-   "반등 미확인(터치·상단마감·거래량)": 134,
+   "반등 미확인(터치·상단마감·거래량)": 133,
    "반등 미확인(상단마감·거래량)": 87,
    "저점권 아님(범위 92%)": 67,
    "저점권 아님(범위 93%)": 65,
    "저점권 아님(범위 91%)": 65,
-   "저점권 아님(범위 90%)": 64
+   "저점권 아님(범위 90%)": 63
   }
  },
  "signals": [
@@ -389,24 +389,24 @@
    "group": "now",
    "entry_kind": "now",
    "stage": 3,
-   "price": 85400.0,
-   "entry": 85400.0,
-   "stop": 77510.0308,
-   "target": 101179.9384,
+   "price": 85200.0,
+   "entry": 85200.0,
+   "stop": 77295.7451,
+   "target": 101008.5098,
    "shares_1pct": 12,
-   "range_pos": 0.1744,
+   "range_pos": 0.1716,
    "norm": -18.9,
    "bear_share": 0.25,
    "fresh": true,
-   "break_gap": 0.0215,
+   "break_gap": 0.0191,
    "earnings_d": null,
    "tactic": {
-    "stop_pct": 9.2,
+    "stop_pct": 9.3,
     "pb_price": null,
     "pb_stop_pct": null,
     "mode": "pullback",
     "label": "⏳ 눌림 지정가만",
-    "desc": "지금 추격 금지(손절폭 9.2%) — 받칠 지지에 눌릴 때까지 대기"
+    "desc": "지금 추격 금지(손절폭 9.3%) — 받칠 지지에 눌릴 때까지 대기"
    }
   },
   {
@@ -697,24 +697,24 @@
    "group": "now",
    "entry_kind": "now",
    "stage": 3,
-   "price": 272500.0,
-   "entry": 272500.0,
-   "stop": 243165.7034,
-   "target": 331168.5932,
+   "price": 273000.0,
+   "entry": 273000.0,
+   "stop": 243665.7034,
+   "target": 331668.5932,
    "shares_1pct": 3,
-   "range_pos": 0.2272,
+   "range_pos": 0.2295,
    "norm": -37.7,
    "bear_share": 0.375,
    "fresh": false,
-   "break_gap": 0.3105,
+   "break_gap": 0.3129,
    "earnings_d": null,
    "tactic": {
-    "stop_pct": 10.8,
+    "stop_pct": 10.7,
     "pb_price": 271333.3333,
-    "pb_stop_pct": 10.4,
+    "pb_stop_pct": 10.2,
     "mode": "pullback",
     "label": "⏳ 눌림 지정가만",
-    "desc": "지금 추격 금지(손절폭 10.8% · 돌파후 진행) — <b>271,333원 눌림 지정가만</b>. 눌리면 손절폭 10.4%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
+    "desc": "지금 추격 금지(손절폭 10.7% · 돌파후 진행) — <b>271,333원 눌림 지정가만</b>. 눌리면 손절폭 10.2%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
    }
   },
   {
@@ -1019,42 +1019,6 @@
    "fresh": false,
    "break_gap": null,
    "earnings_d": -12,
-   "tactic": "watch"
-  },
-  {
-   "id": "CRM-2026-08-18-shelf-watch",
-   "code": "CRM",
-   "name": "Salesforce, Inc.",
-   "ccy": "USD",
-   "group": "shelf_watch",
-   "entry_kind": "shelf_watch",
-   "stage": 0,
-   "price": 190.97,
-   "entry": 190.97,
-   "stop": 186.1118,
-   "target": 230.7381,
-   "shares_1pct": 0,
-   "range_pos": 0.3636,
-   "norm": 18.9,
-   "bear_share": 0.125,
-   "shelf": {
-    "poc": 184.6919,
-    "val": 148.8781,
-    "vah": 230.7381,
-    "rr": 8.19,
-    "overhead": 0.494,
-    "reason": "반등 미확인(상단마감)",
-    "checks": {
-     "터치": true,
-     "회복": true,
-     "상단마감": false,
-     "거래량": true,
-     "신저가아님": true
-    }
-   },
-   "fresh": false,
-   "break_gap": null,
-   "earnings_d": 8,
    "tactic": "watch"
   },
   {
@@ -1490,6 +1454,42 @@
    "tactic": "watch"
   },
   {
+   "id": "443060-2026-08-18-shelf-watch",
+   "code": "443060",
+   "name": "HD현대마린솔루션",
+   "ccy": "KRW",
+   "group": "shelf_watch",
+   "entry_kind": "shelf_watch",
+   "stage": 0,
+   "price": 204500.0,
+   "entry": 204500.0,
+   "stop": 189924.0,
+   "target": 235937.5,
+   "shares_1pct": 0,
+   "range_pos": 0.3605,
+   "norm": -20.8,
+   "bear_share": 0.25,
+   "shelf": {
+    "poc": 187562.5,
+    "val": 182187.5,
+    "vah": 235937.5,
+    "rr": 2.16,
+    "overhead": 0.497,
+    "reason": "반등 미확인(거래량)",
+    "checks": {
+     "터치": true,
+     "회복": true,
+     "상단마감": true,
+     "거래량": false,
+     "신저가아님": true
+    }
+   },
+   "fresh": false,
+   "break_gap": null,
+   "earnings_d": null,
+   "tactic": "watch"
+  },
+  {
    "id": "NCNO-2026-08-18-watch",
    "code": "NCNO",
    "name": "nCino, Inc.",
@@ -1662,34 +1662,6 @@
     "mode": "pullback",
     "label": "⏳ 눌림 지정가만",
     "desc": "지금 추격 금지(손절폭 12.2% · 단기 이격) — <b>$83.80 눌림 지정가만</b>. 눌리면 손절폭 3.2%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
-   }
-  },
-  {
-   "id": "035250-2026-08-18-watch",
-   "code": "035250",
-   "name": "강원랜드",
-   "ccy": "KRW",
-   "group": "watch",
-   "entry_kind": "now",
-   "stage": 2,
-   "price": 14400.0,
-   "entry": 14400.0,
-   "stop": 13674.4075,
-   "target": 15851.1849,
-   "shares_1pct": 137,
-   "range_pos": 0.0847,
-   "norm": -11.3,
-   "bear_share": 0.25,
-   "fresh": true,
-   "break_gap": 0.0052,
-   "earnings_d": null,
-   "tactic": {
-    "stop_pct": 5.0,
-    "pb_price": 14062.5,
-    "pb_stop_pct": 2.8,
-    "mode": "full",
-    "label": "⚡ 즉시 분할",
-    "desc": "손절폭 5.0%로 타이트 — 현재가에서 1~2회 분할 매수. 기다리는 이득보다 놓치는 비용이 큼"
    }
   },
   {
@@ -2351,24 +2323,24 @@
    "group": "watch",
    "entry_kind": "now",
    "stage": 1,
-   "price": 1536000.0,
-   "entry": 1536000.0,
-   "stop": 1409277.955,
-   "target": 1789444.0901,
+   "price": 1533000.0,
+   "entry": 1533000.0,
+   "stop": 1406277.955,
+   "target": 1786444.0901,
    "shares_1pct": 0,
-   "range_pos": 0.4058,
+   "range_pos": 0.4018,
    "norm": 5.7,
    "bear_share": 0.125,
    "fresh": true,
-   "break_gap": 0.0037,
+   "break_gap": 0.0018,
    "earnings_d": null,
    "tactic": {
     "stop_pct": 8.3,
     "pb_price": 1502172.3958,
-    "pb_stop_pct": 6.2,
+    "pb_stop_pct": 6.4,
     "mode": "pullback",
     "label": "⏳ 눌림 지정가만",
-    "desc": "지금 추격 금지(손절폭 8.3%) — <b>1,502,172원 눌림 지정가만</b>. 눌리면 손절폭 6.2%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
+    "desc": "지금 추격 금지(손절폭 8.3%) — <b>1,502,172원 눌림 지정가만</b>. 눌리면 손절폭 6.4%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
    }
   },
   {
@@ -2505,6 +2477,34 @@
    }
   },
   {
+   "id": "035250-2026-08-18-watch",
+   "code": "035250",
+   "name": "강원랜드",
+   "ccy": "KRW",
+   "group": "watch",
+   "entry_kind": "now",
+   "stage": 1,
+   "price": 14390.0,
+   "entry": 14390.0,
+   "stop": 13660.1218,
+   "target": 15849.7564,
+   "shares_1pct": 137,
+   "range_pos": 0.0829,
+   "norm": -9.4,
+   "bear_share": 0.25,
+   "fresh": true,
+   "break_gap": 0.0045,
+   "earnings_d": null,
+   "tactic": {
+    "stop_pct": 5.1,
+    "pb_price": 14062.5,
+    "pb_stop_pct": 2.9,
+    "mode": "full",
+    "label": "⚡ 즉시 분할",
+    "desc": "손절폭 5.1%로 타이트 — 현재가에서 1~2회 분할 매수. 기다리는 이득보다 놓치는 비용이 큼"
+   }
+  },
+  {
    "id": "MCD-2026-08-18-watch",
    "code": "MCD",
    "name": "McDonald's Corporation",
@@ -2617,24 +2617,24 @@
    "group": "watch",
    "entry_kind": "now",
    "stage": 1,
-   "price": 21825.0,
-   "entry": 21825.0,
-   "stop": 20132.4393,
-   "target": 25210.1215,
+   "price": 21850.0,
+   "entry": 21850.0,
+   "stop": 20157.4393,
+   "target": 25235.1215,
    "shares_1pct": 59,
-   "range_pos": 0.2613,
+   "range_pos": 0.2637,
    "norm": -18.9,
    "bear_share": 0.375,
    "fresh": true,
-   "break_gap": -0.0151,
+   "break_gap": -0.014,
    "earnings_d": null,
    "tactic": {
-    "stop_pct": 7.8,
+    "stop_pct": 7.7,
     "pb_price": 21482.395,
-    "pb_stop_pct": 6.3,
+    "pb_stop_pct": 6.2,
     "mode": "half",
     "label": "⚖ 반반 진입",
-    "desc": "손절폭 7.8% — 절반은 현재가, 절반은 눌림 21,482원 지정가(거기선 손절폭 6.3%)"
+    "desc": "손절폭 7.7% — 절반은 현재가, 절반은 눌림 21,482원 지정가(거기선 손절폭 6.2%)"
    }
   },
   {
@@ -3086,16 +3086,16 @@
    "group": "watch",
    "entry_kind": "pullback",
    "stage": 3,
-   "price": 1136000.0,
+   "price": 1135000.0,
    "entry": 1113052.0,
    "stop": 965375.09,
    "target": 1408405.82,
    "shares_1pct": 0,
-   "range_pos": 0.4048,
+   "range_pos": 0.4037,
    "norm": -18.9,
    "bear_share": 0.25,
    "fresh": false,
-   "break_gap": 0.0723,
+   "break_gap": 0.0713,
    "earnings_d": null,
    "tactic": null
   },
