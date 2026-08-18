@@ -71,7 +71,10 @@ def test_shadow_tags_present_but_not_gating():
     d = _frame(800)
     hot = analyze._shelf_signal(d, _supply(pnl=0.80), _VOL, range_pos=0.35)
     cold = analyze._shelf_signal(d, _supply(pnl=-0.40), _VOL, range_pos=0.35)
-    assert hot["holder_pnl"] == 0.80 and cold["holder_pnl"] == -0.40
+    assert hot["profile_pnl_proxy"] == 0.80 and cold["profile_pnl_proxy"] == -0.40
+    # 이름 계약: 실보유자 손익처럼 읽히는 옛 키는 더 이상 없다(외부검토 P2).
+    assert "holder_pnl" not in hot
+    assert hot["profile_method"] == "ohlcv-uniform-approx"
     assert hot.get("reason") == cold.get("reason"), (hot, cold)   # 판정 동일
     assert "runup252" in hot and "history_bars" in hot
     print("[PASS] 섀도 태그 기록 · 판정에는 미반영")

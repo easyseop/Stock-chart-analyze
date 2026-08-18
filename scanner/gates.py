@@ -39,6 +39,15 @@ def exclusion_reasons(r: dict) -> list[str]:
     if (rs_rel >= config.BLOWOFF_RATIO
             or ext.get("ma120_stretch", 0) >= config.BLOWOFF_RATIO):
         reasons.append("이미 폭등")
+    # 이력 게이트(2026-08-19 외부검토 P1) — 52주 범위·장기선이 요구하는 봉수가
+    #   없으면 range_pos가 '상장 이후 전 구간'으로 조용히 축소 계산된다(실측:
+    #   상장 1.5년 RHLD가 급등 이력만으로 '저점권' 매수신호). **후보에서만**
+    #   제외한다 — 수집·캐시·화면 노출은 그대로다. bars 키가 없는 구형 행은
+    #   집계 경로가 다르므로 오탐 제외를 피하기 위해 판정하지 않는다.
+    bars = r.get("bars")
+    if (isinstance(bars, int) and not isinstance(bars, bool)
+            and bars < config.NEWHIGH_LOOKBACK):
+        reasons.append(f"이력 부족({bars}봉 — 52주 범위 산정 불가)")
     return reasons
 
 
@@ -170,6 +179,32 @@ def classify(r: dict) -> dict:
         return {"group": "watch", "reasons": []}
 
     return {"group": None, "reasons": ["전환 후보 아님(정배열-only 등)"]}
+
+
+def a_gate_failures(r: dict) -> list[str] | None:
+    """A('now') 게이트별 **독립** 판정 — 실패한 게이트 키 목록. 전제 미충족은 None.
+
+    classify()는 첫 실패에서 조기 반환하므로 사유 개수로 '단일 게이트 탈락'을
+    판정할 수 없다(실측: rp·runup 둘 다 걸린 후보도 사유 1개). ablation 기록
+    (2026-08-19 외부검토 — 게이트 기여도 측정)은 이 함수를 쓴다. 판정·주문
+    경로는 classify 그대로다 — 이 함수는 관측 전용.
+    """
+    if exclusion_reasons(r):
+        return None
+    th = plan.thesis(r)
+    if not (th.get("now") and r.get("transition_stage", 0) >= 3):
+        return None
+    fails = []
+    if r.get("range_pos", 0.5) > config.LOW_ZONE_NOW:
+        fails.append("rp")
+    if (r.get("ext") or {}).get("runup63", 0) >= config.RECENT_RUNUP_MAX:
+        fails.append("runup")
+    if (config.CONSENSUS_VETO_ACTIVE
+            and consensus_bear(r) >= config.CONSENSUS_BEAR_VETO):
+        fails.append("consensus")
+    if _stop_pct(r) >= config.MAX_STOP_NOW:
+        fails.append("stop")
+    return fails
 
 
 # ── 자가검증(불변식) — 빌드 때 실행, 위반 시 배포 차단 ────────────────

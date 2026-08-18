@@ -37,6 +37,7 @@ import re
 import sys
 import time
 
+from bot import risk_budget  # noqa: F401  (총위험 게이트)
 from bot import envelope, kis, kis_buy, kis_orders, kis_pending, kis_positions, settings
 
 _US_EXCGS = ("NASD", "NYSE", "AMEX")   # 보유 병합용 — NYSE/AMEX 보유 누락 방지
@@ -383,6 +384,18 @@ def _shelf_cands(signals: list[dict]) -> list[dict]:
             and "entry" in s and "stop" in s]
 
 
+_risk_gate_state: dict[str, bool | None] = {}
+
+
+def _log_risk_gate(sleeve: str, ok: bool, why: str) -> None:
+    """총위험 게이트 전환만 로그 — 차단이 지속돼도 60초 루프를 소음으로 안 채운다."""
+    if _risk_gate_state.get(sleeve) is ok:
+        return
+    _risk_gate_state[sleeve] = ok
+    label = "해제" if ok else "차단"
+    print(f"[{sleeve}] 총위험 게이트 {label} — {why}", flush=True)
+
+
 def run_once(signals: list[dict], *, fx: float | None = None,
              excg_of: dict | None = None, reason: str = "미러진입",  # legacy 표시명 —
              # 원장 키/멱등성과 무관(표시·알림용). rename은 별도 cleanup PR.
@@ -444,6 +457,16 @@ def run_once(signals: list[dict], *, fx: float | None = None,
                             "why": "잔고 조회실패/불완전 — skip"})
         return results
     held, held_cost, reservations, sold_today, held_sleeves = st
+    # 계좌 단위 총 open risk 상한(2026-08-19 외부검토 P0) — 거래당 1%가 아니라
+    #   '동시 손절 시 합산 손실'을 제한한다. 초과·계량불가·원장실패 전부 차단.
+    #   매도 보호(파수꾼)와는 무관 — 신규 매수만 막는다.
+    risk_ok, risk_why, risk_snap = risk_budget.gate(fx)
+    _log_risk_gate(sleeve, risk_ok, risk_why)
+    if not risk_ok:
+        for vc in cand:
+            results.append({"code": vc.code, "gate": "portfolio_risk",
+                            "why": risk_why})
+        return results
     #   슬리브별 파티션 — A/B가 서로의 종목 수·투입원가를 세지 않게(예산 잠식 방지).
     n_open, open_cost = _partition(
         held_cost, reservations, sleeve, held_sleeves)

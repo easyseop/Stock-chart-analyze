@@ -476,14 +476,15 @@ def build(results: list[dict], frames_map: dict[str, dict],
     os.makedirs(os.path.join(out_dir, "api"), exist_ok=True)
     with open(os.path.join(out_dir, "api", "signals.json"), "w",
               encoding="utf-8") as fp:
-        fp.write(_signals_json(results))       # 자동매매용 기계 판독 시그널(JSON)
+        fp.write(_signals_json(results, frames_map))   # 자동매매용 기계 판독 시그널(JSON)
     # 새 UI는 기존 산출물과 API 계약을 건드리지 않고 /app 아래에만 추가한다.
     from scanner import siteapp
     siteapp.publish(out_dir)
     return out_dir
 
 
-def _signals_json(results: list[dict]) -> str:
+def _signals_json(results: list[dict],
+                  frames_map: dict[str, dict] | None = None) -> str:
     """자동매매 봇용 시그널 API — 추천을 기계가 읽는 JSON으로.
 
     토스/증권사 API 연동 시 실행 봇이 이 파일을 폴링해 주문 판단에 쓴다.
@@ -548,7 +549,7 @@ def _signals_json(results: list[dict]) -> str:
                       "overhead": sh.get("overhead"),
                       # 섀도 태그(판정 미사용) — 9월 리뷰에서 성과와 대조한다.
                       "history_bars": sh.get("history_bars"),
-                      "holder_pnl": sh.get("holder_pnl"),
+                      "profile_pnl_proxy": sh.get("profile_pnl_proxy"),
                       "runup252": sh.get("runup252")},
             "fresh": True,          # 반등 확인 신호는 당일 신선(늦은 미러 방지는 ±허용가로)
             "break_gap": None,
@@ -593,7 +594,7 @@ def _signals_json(results: list[dict]) -> str:
                 "vah": sh.get("vah"), "rr": sh.get("rr"),
                 "overhead": sh.get("overhead"), "reason": sh.get("reason"),
                 "history_bars": sh.get("history_bars"),
-                "holder_pnl": sh.get("holder_pnl"),
+                "profile_pnl_proxy": sh.get("profile_pnl_proxy"),
                 "runup252": sh.get("runup252"),
                 "checks": checks,
             },
@@ -602,7 +603,83 @@ def _signals_json(results: list[dict]) -> str:
             "earnings_d": earnings.days_until(r["code"]),
             "tactic": "watch",
         })
-    sigs.sort(key=lambda s: (s["group"], not s["fresh"], -s["stage"], -s["norm"]))
+    # ── 섀도 신호(무주문·관측 전용, 2026-08-19 외부검토 P1) ────────────────
+    #   B/B′ 비교와 A 게이트 기여도 측정을 위해 기록만 한다. 매수루프는
+    #   group=="now"/"shelf"만 소비하므로 아래 그룹은 구조적으로 주문 불가.
+    #   ① B1은 별도 스트림이 아니라 기존 shelf 신호의 trend_above_200 태그로
+    #      재구성한다(같은 후보에 태그만 다르면 중복 발행이 낭비).
+    by_code = {r["code"]: r for r in results}
+    for row in sigs:
+        if row.get("group") in ("shelf", "shelf_watch"):
+            code_r = by_code.get(row["code"]) or {}
+            ma200_r = (code_r.get("ext") or {}).get("ma200")
+            price_r = (code_r.get("sr") or {}).get("price")
+            row["trend_above_200"] = (bool(price_r > ma200_r)
+                                      if (price_r and ma200_r) else None)
+    #   ② B2 — 추세 눌림목(별도 전략 계열): 200일선 위 + 상승 기울기 +
+    #      50일선 근처 되돌림 + 반등 확인(상단마감·거래량). 진입/손절/목표는
+    #      B와 같은 구조(반등저점 −2% / 2R)로 맞춰 비교 가능성을 확보한다.
+    b2 = []
+    for r in results:
+        if gates.exclusion_reasons(r):
+            continue
+        ext_r = r.get("ext") or {}
+        price_r = (r.get("sr") or {}).get("price") or 0
+        ma50_r, ma200_r = ext_r.get("ma50"), ext_r.get("ma200")
+        slope_r = ext_r.get("ma200_slope")
+        sh_r = r.get("shelf") or {}
+        checks_r = sh_r.get("checks") or {}
+        if not (price_r and ma50_r and ma200_r and slope_r is not None):
+            continue
+        if not (price_r > ma200_r and slope_r > 0):
+            continue
+        if abs(price_r / ma50_r - 1) > 0.05:       # 50일선 ±5% 밖 = 눌림 아님
+            continue
+        if not (checks_r.get("상단마감") and checks_r.get("거래량")):
+            continue                                # 반등 확인은 B와 동일 기준
+        frame = (frames_map or {}).get(r["code"]) or {}
+        d_r = frame.get("D")                      # frames_from_daily 키는 대문자
+        if d_r is None or len(d_r) < 25:
+            continue
+        recent_low = float(d_r["Low"].iloc[-3:].min())
+        stop_r = recent_low * (1 - config.SHELF_STOP_BUF)
+        if price_r <= stop_r:
+            continue
+        b2.append({
+            "id": f'{r["code"]}-{day}-b2-shadow',
+            "code": r["code"], "name": r.get("name") or r["code"],
+            "ccy": r.get("ccy", "USD"), "group": "shelf_shadow_b2",
+            "shadow": True, "orderable": False,
+            "entry": round(float(price_r), 4), "stop": round(stop_r, 4),
+            "target": round(price_r + 2 * (price_r - stop_r), 4),
+            "stage": int(r.get("transition_stage", 0) or 0),
+            "norm": round(float(r.get("norm", 0)), 1),
+            "range_pos": round(float(r.get("range_pos", 0.5)), 4),
+            "runup252": (r.get("shelf") or {}).get("runup252"),
+            "fresh": False, "tactic": "shadow",
+        })
+    b2.sort(key=lambda x: -x["norm"])
+    sigs.extend(b2[:10])
+    #   ③ A ablation — 정확히 게이트 하나에서만 떨어진 후보를 게이트명과 함께
+    #      기록한다. 9월 리뷰에서 '그 게이트가 없었으면 어떤 매매가 생겼고
+    #      어떤 성과였나'를 되돌려 계산하는 원료. 판정·주문에는 무관.
+    ablation = []
+    for r in results:
+        fails = gates.a_gate_failures(r)     # 독립 판정 — classify 조기반환 무관
+        if not fails or len(fails) != 1:
+            continue                          # 0개=통과 · 2개+=단일변수 아님
+        gate_key = fails[0]
+        if gate_key not in ("rp", "runup", "consensus"):
+            continue                          # stop 게이트는 실험 대상 아님(안전 사이징)
+        ablation.append({
+            "code": r["code"], "gate": gate_key,
+            "range_pos": round(float(r.get("range_pos", 0.5)), 4),
+            "runup63": round(float((r.get("ext") or {}).get("runup63", 0)), 4),
+            "stage": int(r.get("transition_stage", 0) or 0),
+            "price": (r.get("sr") or {}).get("price"),
+        })
+    ablation.sort(key=lambda x: -x["stage"])
+    sigs.sort(key=lambda s: (s["group"], not s.get("fresh"), -s["stage"], -s["norm"]))
     # 매물대(B) 진단 — 왜 shelf 신호가 적은지 사유별 집계(0건 원인 규명용).
     from collections import Counter
     shelf_reasons = Counter((r.get("shelf") or {}).get("reason", "?")
@@ -612,6 +689,7 @@ def _signals_json(results: list[dict]) -> str:
         "version": 1,
         "generated_at": now.strftime("%Y-%m-%dT%H:%M:%S+09:00"),   # KST
         "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
+        "a_ablation": ablation[:20],
         "shelf_debug": {"ok": shelf_ok,
                         "watch": len(shelf_watch),
                         "reasons": dict(shelf_reasons.most_common(8))},

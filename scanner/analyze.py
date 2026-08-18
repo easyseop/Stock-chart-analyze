@@ -56,6 +56,14 @@ def analyze(frames: dict[str, pd.DataFrame], meta: dict, bench=None) -> dict:
     # 최근 3개월(63거래일) 상승폭 — '이미 많이 올랐나'(고점 추격) 판정용
     price63 = float(d["Close"].iloc[-63]) if len(d) >= 63 else price
     runup63 = (price / price63 - 1) if price63 else 0.0
+    # 50/200일선 + 200일선 기울기 — B2(추세 눌림) 섀도·추세 태그용.
+    #   이력이 모자라면 None(조용한 축소 계산 금지 — 2026-08-19 외부검토 P1).
+    ma50 = (float(d["Close"].iloc[-50:].mean()) if len(d) >= 50 else None)
+    ma200 = (float(d["Close"].iloc[-200:].mean()) if len(d) >= 200 else None)
+    ma200_prev = (float(d["Close"].iloc[-220:-20].mean())
+                  if len(d) >= 220 else None)
+    ma200_slope = ((ma200 / ma200_prev - 1)
+                   if ma200 and ma200_prev else None)
     # 52주 범위 내 위치(0=최저점, 1=최고점) — '저점권' 게이트용(사용자: 저점에서 잡기)
     lb = min(len(d), config.NEWHIGH_LOOKBACK)
     lo52 = float(d["Low"].iloc[-lb:].min())
@@ -147,7 +155,9 @@ def analyze(frames: dict[str, pd.DataFrame], meta: dict, bench=None) -> dict:
         "verdict": verdict_txt, "entry": entry, "entry_kind": entry_kind,
         "vetoed": vetoed, "terms": terms,
         "ext": {"ma20_stretch": stretch, "runup10": runup10,
-                "ma120_stretch": stretch_lt, "runup63": runup63},
+                "ma120_stretch": stretch_lt, "runup63": runup63,
+                "ma50": ma50, "ma200": ma200, "ma200_slope": ma200_slope},
+        "bars": len(d),
         "turnover": turnover, "range_pos": range_pos, "break_gap": break_gap,
         "day_chg": day_chg,
         "trend_oneline": trend_oneline, "chase": chase, "chase_note": chase_note,
@@ -175,17 +185,34 @@ def _shelf_signal(d, sup: dict, volume: dict, range_pos: float) -> dict:
     # 섀도 태그(L3 — 판정에 쓰지 않는다). 9월 리뷰에서 실제 성과와 대조해
     #   "장기 급등 뒤 눌림"과 "평균 보유자가 이미 이익인 매물대"를 걸러야 할지
     #   결정하기 위한 측정값이다. 표본 9건으로 게이트를 켜면 노이즈 추종이 된다.
-    holder_pnl = float((sup.get("pnl") or {}).get("pnl") or 0.0)
+    # 이름 주의(2026-08-19 외부검토): 이 값은 '실제 보유자 평균 손익'이 아니다.
+    #   누가 아직 보유 중인지·얼마에 샀는지는 일봉으로 알 수 없다. 선택 구간의
+    #   거래량 가중 가격 분포 대비 현재가 위치일 뿐이므로 proxy로 부른다.
+    profile_pnl_proxy = float((sup.get("pnl") or {}).get("pnl") or 0.0)
     px_now = float(d["Close"].iloc[-1])
     run252 = (px_now / float(d["Close"].iloc[-252]) - 1) if len(d) >= 252 else None
+    # 프로파일 해상도 — 하루 거래량을 [저가,고가]에 균등 배분한 근사(supply.py)
+    #   이므로 bin 폭보다 정밀한 판정을 걸면 안 된다. 소비자가 스스로 판단할 수
+    #   있게 bin 폭(현재가 대비 %)을 신호에 싣는다.
+    try:
+        raw_edges = (sup.get("long") or {}).get("edges")
+        if raw_edges is not None and len(raw_edges) >= 2 and px_now > 0:
+            bin_pct = float((raw_edges[-1] - raw_edges[0])
+                            / (len(raw_edges) - 1) / px_now * 100)
+        else:
+            bin_pct = None
+    except Exception:
+        bin_pct = None
     context = {
         "poc": round(poc, 4) if poc > 0 else None,
         "val": round(val, 4) if val > 0 else None,
         "vah": round(vah, 4) if vah > 0 else None,
         "overhead": round(overhead, 3),
         "history_bars": len(d),
-        "holder_pnl": round(holder_pnl, 4),
+        "profile_pnl_proxy": round(profile_pnl_proxy, 4),
         "runup252": None if run252 is None else round(run252, 4),
+        "profile_method": "ohlcv-uniform-approx",   # 실체결 분포 아님(일봉 근사)
+        "profile_bin_pct": None if bin_pct is None else round(bin_pct, 2),
     }
     if not (price > 0 and val > 0 and vah > val):
         return {"ok": False, "watch": False,
