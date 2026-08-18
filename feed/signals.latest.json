@@ -1,7 +1,169 @@
 {
  "version": 1,
- "generated_at": "2026-08-19T01:07:48+09:00",
+ "generated_at": "2026-08-19T01:17:50+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
+ "a_ablation": [
+  {
+   "code": "ALKT",
+   "gate": "rp",
+   "range_pos": 0.4895,
+   "runup63": 0.2112,
+   "stage": 3,
+   "price": 20.299999237060547
+  },
+  {
+   "code": "APG",
+   "gate": "rp",
+   "range_pos": 0.6154,
+   "runup63": 0.06,
+   "stage": 3,
+   "price": 43.61000061035156
+  },
+  {
+   "code": "BAM",
+   "gate": "rp",
+   "range_pos": 0.4659,
+   "runup63": 0.1,
+   "stage": 3,
+   "price": 51.68999862670898
+  },
+  {
+   "code": "BVN",
+   "gate": "rp",
+   "range_pos": 0.5729,
+   "runup63": 0.0129,
+   "stage": 3,
+   "price": 33.292701721191406
+  },
+  {
+   "code": "BWA",
+   "gate": "rp",
+   "range_pos": 0.7266,
+   "runup63": 0.118,
+   "stage": 3,
+   "price": 68.34500122070312
+  },
+  {
+   "code": "BX",
+   "gate": "rp",
+   "range_pos": 0.433,
+   "runup63": 0.2252,
+   "stage": 3,
+   "price": 139.99000549316406
+  },
+  {
+   "code": "CELC",
+   "gate": "rp",
+   "range_pos": 0.4566,
+   "runup63": -0.2891,
+   "stage": 3,
+   "price": 93.09500122070312
+  },
+  {
+   "code": "DNN",
+   "gate": "rp",
+   "range_pos": 0.4728,
+   "runup63": -0.0269,
+   "stage": 3,
+   "price": 3.075000047683716
+  },
+  {
+   "code": "DOW",
+   "gate": "rp",
+   "range_pos": 0.4817,
+   "runup63": -0.1709,
+   "stage": 3,
+   "price": 31.290000915527344
+  },
+  {
+   "code": "DY",
+   "gate": "rp",
+   "range_pos": 0.5626,
+   "runup63": 0.0175,
+   "stage": 3,
+   "price": 420.6000061035156
+  },
+  {
+   "code": "EME",
+   "gate": "rp",
+   "range_pos": 0.6732,
+   "runup63": -0.0338,
+   "stage": 3,
+   "price": 825.489990234375
+  },
+  {
+   "code": "ETN",
+   "gate": "rp",
+   "range_pos": 0.7171,
+   "runup63": 0.159,
+   "stage": 3,
+   "price": 431.0199890136719
+  },
+  {
+   "code": "FIX",
+   "gate": "rp",
+   "range_pos": 0.7725,
+   "runup63": -0.0406,
+   "stage": 3,
+   "price": 1751.4150390625
+  },
+  {
+   "code": "GILD",
+   "gate": "rp",
+   "range_pos": 0.7122,
+   "runup63": 0.0976,
+   "stage": 3,
+   "price": 143.235107421875
+  },
+  {
+   "code": "HAL",
+   "gate": "rp",
+   "range_pos": 0.6195,
+   "runup63": -0.1876,
+   "stage": 3,
+   "price": 34.915000915527344
+  },
+  {
+   "code": "HBM",
+   "gate": "rp",
+   "range_pos": 0.7308,
+   "runup63": 0.101,
+   "stage": 3,
+   "price": 26.3799991607666
+  },
+  {
+   "code": "KGC",
+   "gate": "rp",
+   "range_pos": 0.4186,
+   "runup63": -0.0082,
+   "stage": 3,
+   "price": 27.21500015258789
+  },
+  {
+   "code": "MAIN",
+   "gate": "rp",
+   "range_pos": 0.5044,
+   "runup63": 0.1523,
+   "stage": 3,
+   "price": 58.22499847412109
+  },
+  {
+   "code": "RGLD",
+   "gate": "rp",
+   "range_pos": 0.4667,
+   "runup63": 0.0585,
+   "stage": 3,
+   "price": 231.72999572753903
+  },
+  {
+   "code": "SA",
+   "gate": "rp",
+   "range_pos": 0.619,
+   "runup63": 0.1186,
+   "stage": 3,
+   "price": 30.88500022888184
+  }
+ ],
  "shelf_debug": {
   "ok": 7,
   "watch": 193,
@@ -656,13 +818,14 @@
     "rr": 2.27,
     "overhead": 0.497,
     "history_bars": 553,
-    "holder_pnl": -0.0312,
+    "profile_pnl_proxy": -0.0312,
     "runup252": 0.0382
    },
    "fresh": true,
    "break_gap": null,
    "earnings_d": null,
-   "tactic": "full"
+   "tactic": "full",
+   "trend_above_200": true
   },
   {
    "id": "357780-2026-08-19-shelf",
@@ -687,13 +850,32 @@
     "rr": 3.37,
     "overhead": 0.55,
     "history_bars": 1473,
-    "holder_pnl": -0.0691,
+    "profile_pnl_proxy": -0.0691,
     "runup252": 0.4636
    },
    "fresh": true,
    "break_gap": null,
    "earnings_d": null,
-   "tactic": "full"
+   "tactic": "full",
+   "trend_above_200": false
+  },
+  {
+   "id": "ECL-2026-08-19-b2-shadow",
+   "code": "ECL",
+   "name": "Ecolab Inc.",
+   "ccy": "USD",
+   "group": "shelf_shadow_b2",
+   "shadow": true,
+   "orderable": false,
+   "entry": 275.84,
+   "stop": 267.8634,
+   "target": 291.7932,
+   "stage": 0,
+   "norm": 34.0,
+   "range_pos": 0.4944,
+   "runup252": -0.0178,
+   "fresh": false,
+   "tactic": "shadow"
   },
   {
    "id": "EPAC-2026-08-19-shelf-watch",
@@ -719,7 +901,7 @@
     "overhead": 0.514,
     "reason": "반등 미확인(거래량)",
     "history_bars": 1916,
-    "holder_pnl": -0.0225,
+    "profile_pnl_proxy": -0.0225,
     "runup252": -0.1121,
     "checks": {
      "터치": true,
@@ -732,7 +914,8 @@
    "fresh": false,
    "break_gap": null,
    "earnings_d": 57,
-   "tactic": "watch"
+   "tactic": "watch",
+   "trend_above_200": false
   },
   {
    "id": "GIS-2026-08-19-shelf-watch",
@@ -758,7 +941,7 @@
     "overhead": 0.517,
     "reason": "반등 미확인(거래량)",
     "history_bars": 1917,
-    "holder_pnl": -0.0677,
+    "profile_pnl_proxy": -0.0677,
     "runup252": -0.2245,
     "checks": {
      "터치": true,
@@ -771,7 +954,8 @@
    "fresh": false,
    "break_gap": null,
    "earnings_d": 36,
-   "tactic": "watch"
+   "tactic": "watch",
+   "trend_above_200": false
   },
   {
    "id": "UPBD-2026-08-19-shelf-watch",
@@ -797,7 +981,7 @@
     "overhead": 0.525,
     "reason": "반등 미확인(거래량)",
     "history_bars": 1917,
-    "holder_pnl": -0.0277,
+    "profile_pnl_proxy": -0.0277,
     "runup252": -0.1877,
     "checks": {
      "터치": true,
@@ -810,7 +994,8 @@
    "fresh": false,
    "break_gap": null,
    "earnings_d": 72,
-   "tactic": "watch"
+   "tactic": "watch",
+   "trend_above_200": true
   },
   {
    "id": "CRM-2026-08-19-shelf-watch",
@@ -836,7 +1021,7 @@
     "overhead": 0.491,
     "reason": "반등 미확인(거래량)",
     "history_bars": 1917,
-    "holder_pnl": -0.041,
+    "profile_pnl_proxy": -0.041,
     "runup252": -0.2036,
     "checks": {
      "터치": true,
@@ -849,7 +1034,8 @@
    "fresh": false,
    "break_gap": null,
    "earnings_d": 8,
-   "tactic": "watch"
+   "tactic": "watch",
+   "trend_above_200": false
   },
   {
    "id": "IT-2026-08-19-shelf-watch",
@@ -875,7 +1061,7 @@
     "overhead": 0.422,
     "reason": "반등 미확인(터치)",
     "history_bars": 1916,
-    "holder_pnl": -0.0469,
+    "profile_pnl_proxy": -0.0469,
     "runup252": -0.2493,
     "checks": {
      "터치": false,
@@ -888,7 +1074,8 @@
    "fresh": false,
    "break_gap": null,
    "earnings_d": 77,
-   "tactic": "watch"
+   "tactic": "watch",
+   "trend_above_200": false
   },
   {
    "id": "HIMS-2026-08-19-shelf-watch",
@@ -914,7 +1101,7 @@
     "overhead": 0.541,
     "reason": "반등 미확인(거래량)",
     "history_bars": 1741,
-    "holder_pnl": -0.1441,
+    "profile_pnl_proxy": -0.1441,
     "runup252": -0.3715,
     "checks": {
      "터치": true,
@@ -927,7 +1114,8 @@
    "fresh": false,
    "break_gap": null,
    "earnings_d": -8,
-   "tactic": "watch"
+   "tactic": "watch",
+   "trend_above_200": false
   },
   {
    "id": "UBER-2026-08-19-shelf-watch",
@@ -953,7 +1141,7 @@
     "overhead": 0.532,
     "reason": "반등 미확인(거래량)",
     "history_bars": 1828,
-    "holder_pnl": -0.0616,
+    "profile_pnl_proxy": -0.0616,
     "runup252": -0.1957,
     "checks": {
      "터치": true,
@@ -966,7 +1154,8 @@
    "fresh": false,
    "break_gap": null,
    "earnings_d": null,
-   "tactic": "watch"
+   "tactic": "watch",
+   "trend_above_200": false
   },
   {
    "id": "GNTX-2026-08-19-shelf-watch",
@@ -992,7 +1181,7 @@
     "overhead": 0.527,
     "reason": "반등 미확인(거래량)",
     "history_bars": 1917,
-    "holder_pnl": -0.0209,
+    "profile_pnl_proxy": -0.0209,
     "runup252": -0.1249,
     "checks": {
      "터치": true,
@@ -1005,7 +1194,8 @@
    "fresh": false,
    "break_gap": null,
    "earnings_d": 66,
-   "tactic": "watch"
+   "tactic": "watch",
+   "trend_above_200": true
   },
   {
    "id": "AQST-2026-08-19-shelf-watch",
@@ -1031,7 +1221,7 @@
     "overhead": 0.479,
     "reason": "반등 미확인(거래량)",
     "history_bars": 1917,
-    "holder_pnl": -0.0937,
+    "profile_pnl_proxy": -0.0937,
     "runup252": 0.0221,
     "checks": {
      "터치": true,
@@ -1044,7 +1234,8 @@
    "fresh": false,
    "break_gap": null,
    "earnings_d": 78,
-   "tactic": "watch"
+   "tactic": "watch",
+   "trend_above_200": false
   },
   {
    "id": "DEI-2026-08-19-shelf-watch",
@@ -1070,7 +1261,7 @@
     "overhead": 0.464,
     "reason": "반등 미확인(거래량)",
     "history_bars": 1916,
-    "holder_pnl": -0.0157,
+    "profile_pnl_proxy": -0.0157,
     "runup252": -0.212,
     "checks": {
      "터치": true,
@@ -1083,7 +1274,8 @@
    "fresh": false,
    "break_gap": null,
    "earnings_d": 77,
-   "tactic": "watch"
+   "tactic": "watch",
+   "trend_above_200": true
   },
   {
    "id": "STEP-2026-08-19-shelf-watch",
@@ -1109,7 +1301,7 @@
     "overhead": 0.55,
     "reason": "반등 미확인(거래량)",
     "history_bars": 1487,
-    "holder_pnl": -0.0852,
+    "profile_pnl_proxy": -0.0852,
     "runup252": -0.1882,
     "checks": {
      "터치": true,
@@ -1122,7 +1314,8 @@
    "fresh": false,
    "break_gap": null,
    "earnings_d": -12,
-   "tactic": "watch"
+   "tactic": "watch",
+   "trend_above_200": false
   },
   {
    "id": "TRN-2026-08-19-shelf-watch",
@@ -1148,7 +1341,7 @@
     "overhead": 0.535,
     "reason": "반등 미확인(거래량)",
     "history_bars": 1916,
-    "holder_pnl": -0.033,
+    "profile_pnl_proxy": -0.033,
     "runup252": 0.0897,
     "checks": {
      "터치": true,
@@ -1161,7 +1354,8 @@
    "fresh": false,
    "break_gap": null,
    "earnings_d": 72,
-   "tactic": "watch"
+   "tactic": "watch",
+   "trend_above_200": false
   },
   {
    "id": "LRN-2026-08-19-shelf-watch",
@@ -1187,7 +1381,7 @@
     "overhead": 0.489,
     "reason": "반등 미확인(거래량)",
     "history_bars": 1916,
-    "holder_pnl": -0.0599,
+    "profile_pnl_proxy": -0.0599,
     "runup252": -0.4792,
     "checks": {
      "터치": true,
@@ -1200,7 +1394,8 @@
    "fresh": false,
    "break_gap": null,
    "earnings_d": 70,
-   "tactic": "watch"
+   "tactic": "watch",
+   "trend_above_200": true
   },
   {
    "id": "WLFC-2026-08-19-shelf-watch",
@@ -1226,7 +1421,7 @@
     "overhead": 0.51,
     "reason": "반등 미확인(거래량)",
     "history_bars": 1917,
-    "holder_pnl": -0.0415,
+    "profile_pnl_proxy": -0.0415,
     "runup252": 0.132,
     "checks": {
      "터치": true,
@@ -1239,7 +1434,8 @@
    "fresh": false,
    "break_gap": null,
    "earnings_d": 77,
-   "tactic": "watch"
+   "tactic": "watch",
+   "trend_above_200": false
   },
   {
    "id": "PLAB-2026-08-19-shelf-watch",
@@ -1265,7 +1461,7 @@
     "overhead": 0.488,
     "reason": "반등 미확인(거래량)",
     "history_bars": 1916,
-    "holder_pnl": 0.0049,
+    "profile_pnl_proxy": 0.0049,
     "runup252": 0.6224,
     "checks": {
      "터치": true,
@@ -1278,7 +1474,8 @@
    "fresh": false,
    "break_gap": null,
    "earnings_d": 8,
-   "tactic": "watch"
+   "tactic": "watch",
+   "trend_above_200": false
   },
   {
    "id": "307950-2026-08-19-shelf-watch",
@@ -1304,7 +1501,7 @@
     "overhead": 0.383,
     "reason": "반등 미확인(상단마감)",
     "history_bars": 1812,
-    "holder_pnl": 0.0731,
+    "profile_pnl_proxy": 0.0731,
     "runup252": 2.035,
     "checks": {
      "터치": true,
@@ -1317,7 +1514,8 @@
    "fresh": false,
    "break_gap": null,
    "earnings_d": null,
-   "tactic": "watch"
+   "tactic": "watch",
+   "trend_above_200": true
   },
   {
    "id": "GEHC-2026-08-19-watch",
@@ -2237,27 +2435,6 @@
    "tactic": null
   },
   {
-   "id": "AEM-2026-08-19-watch",
-   "code": "AEM",
-   "name": "Agnico Eagle Mines Limited",
-   "ccy": "USD",
-   "group": "watch",
-   "entry_kind": "pullback",
-   "stage": 3,
-   "price": 186.835,
-   "entry": 179.1306,
-   "stop": 165.9772,
-   "target": 205.4372,
-   "shares_1pct": 7,
-   "range_pos": 0.4536,
-   "norm": 29.5,
-   "bear_share": 0.25,
-   "fresh": false,
-   "break_gap": 0.3221,
-   "earnings_d": 71,
-   "tactic": null
-  },
-  {
    "id": "CRVL-2026-08-19-watch",
    "code": "CRVL",
    "name": "CorVel Corp.",
@@ -2276,6 +2453,27 @@
    "fresh": false,
    "break_gap": 0.0597,
    "earnings_d": null,
+   "tactic": null
+  },
+  {
+   "id": "AEM-2026-08-19-watch",
+   "code": "AEM",
+   "name": "Agnico Eagle Mines Limited",
+   "ccy": "USD",
+   "group": "watch",
+   "entry_kind": "pullback",
+   "stage": 3,
+   "price": 186.835,
+   "entry": 179.1306,
+   "stop": 165.9772,
+   "target": 205.4372,
+   "shares_1pct": 7,
+   "range_pos": 0.4536,
+   "norm": 19.7,
+   "bear_share": 0.25,
+   "fresh": false,
+   "break_gap": 0.3221,
+   "earnings_d": 71,
    "tactic": null
   },
   {
