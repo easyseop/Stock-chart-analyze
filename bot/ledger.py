@@ -417,6 +417,14 @@ def on_result(key: str, state: str, filled_qty: int = 0, *,
     _append(ev)
 
 
+def mark_unknown(key: str, filled_qty: int = 0, *,
+                 reason: str = "manual_review") -> None:
+    """모순 전표를 UNKNOWN+LOW로 잠가 재주문과 중복 P0를 함께 막는다."""
+    on_result(key, "unknown", filled_qty, open_order=True)
+    _append({"ev": "confidence", "key": key, "confidence": CONF_LOW,
+             "reason": str(reason or "manual_review")})
+
+
 def reconcile(key: str, actual_filled: int, *, fill_price: float | None = None,
               fill_price_source: str = "", open_order: bool = False) -> dict:
     """UNKNOWN/부분 주문을 브로커 실측 체결량으로 확정하고 잠금 해제.
@@ -691,6 +699,20 @@ def reconcile_from_candidates(key: str, candidates: list,
         return {"state": cur.get("state", "unknown"), "filled": seen,
                 "residual": max(0, intended - seen), "confidence": CONF_LOW,
                 "fill_price": cand.get("price"), "open": True}
+    if len(candidates) == 1 and int(candidates[0].get("filled", 0) or 0) <= 0:
+        # ccnl은 실제 체결 직후에도 잠시 0체결 행을 노출할 수 있다. 잔고
+        # 교차검증이 없는 UNKNOWN 대사에서는 절대 종결하지 않고 잠금을 유지한다.
+        cand = candidates[0]
+        seen = max(int(cur.get("filled", 0)), 0)
+        already_low = (
+            cur.get("state") == "unknown"
+            and cur.get("confidence") == CONF_LOW)
+        if not already_low:
+            mark_unknown(key, seen, reason="closed_zero_fill_unconfirmed")
+        return {"state": "unknown", "filled": seen,
+                "residual": max(0, intended - seen), "confidence": CONF_LOW,
+                "fill_price": cand.get("price"), "open": True,
+                "already_low": already_low}
     if len(candidates) == 1:
         cand = candidates[0]
         filled = max(0, int(cand.get("filled", 0) or 0))

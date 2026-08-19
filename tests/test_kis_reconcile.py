@@ -60,8 +60,8 @@ def test_order_number_leading_zero_is_same_identity():
     print("[PASS] KIS ODNO 선행 0 차이는 같은 주문으로 병합")
 
 
-def test_bound_ack_matches_broker_order_without_leading_zeroes():
-    """원장 ODNO가 0-padding돼도 KIS 체결행의 같은 숫자 주문을 찾아 닫는다."""
+def test_bound_ack_zero_fill_never_closes_without_balance_proof():
+    """0-padding ODNO가 같아도 0체결 행만으로 ACK를 종결하면 안 된다."""
     with tempfile.TemporaryDirectory() as tmp:
         _fresh(tmp)
         L.record_submit("tap:half#1", "TAP", 40, "절반 익절",
@@ -75,10 +75,10 @@ def test_bound_ack_matches_broker_order_without_leading_zeroes():
         }]
         with mock.patch("bot.kis_accounting.sync_fill", return_value={}):
             result = R.resolve_acks_from_rows(rows)
-        assert len(result) == 1 and result[0]["state"] == "rejected"
-        assert L.state_of("tap:half#1")["state"] == "rejected"
-        assert L.open_order_count("TAP", side="SELL") == 0
-    print("[PASS] 0-padding ODNO ACK가 동일 브로커 주문행으로 대사·종결")
+        assert result == []
+        assert L.state_of("tap:half#1")["state"] == "ack"
+        assert L.open_order_count("TAP", side="SELL") == 1
+    print("[PASS] 0-padding ODNO가 같아도 0체결 행 단독 종결 금지")
 
 
 def test_high_fully_filled_found_in_ccnl_only():
@@ -175,7 +175,7 @@ def test_time_window_filter():
 def main():
     test_normalize_merge()
     test_order_number_leading_zero_is_same_identity()
-    test_bound_ack_matches_broker_order_without_leading_zeroes()
+    test_bound_ack_zero_fill_never_closes_without_balance_proof()
     test_high_fully_filled_found_in_ccnl_only()
     test_low_twin_orders_same_second()
     test_known_odno_excluded()
