@@ -2014,3 +2014,23 @@ shadow 1종의 독립 mutation은 모두 대응 테스트 exit 1로 KILLED됐다
 Draft PR CI → Claude P0/P1=0 → 사용자 병합/장외 배포 승인 → L1 유지 코드 배포 →
 CVNA 표 재승인·새 plan/exact SHA/신규 백업으로 apply다. 이 단계들은 서로 별도
 승인이다.
+
+#### Claude 승인 및 P2-1 회귀 테스트 보완(2026-08-20)
+
+Claude 판정문은 기본 브랜치 `d88fcb9`의
+`docs/CLAUDE_REVIEW_CVNA_RECOVERY_VERDICT.md`다. 독립 프로브와 뮤테이션 결과
+`P0 0 · P1 0 · P2 1 · P3 2`로 승인했으며, 병합·Oracle 코드 배포·CVNA apply를
+서로 분리해 가능 판정했다. Oracle 배포는 L1 유지·열린 주문 0, apply는 런북 전제와
+사용자 별도 승인이 필요하다.
+
+사용자가 병합 전 P2-1만 반영하도록 지시해 `5202fb7`에서
+`test_accounting_recovery_pending_holds_budget_until_completion`을 추가했다.
+rejected 주문의 평시 예약 0 → recovery pending 중 6,641,190.384원 예약 부활·
+1원 후속 BUY 차단 → recovery complete 뒤 예약 0·후속 BUY 허용을 한 테스트에서
+검증한다. pending 분기를 단독 제거한 뮤테이션은 `AssertionError: (0.0, {})`,
+exit 1로 KILLED됐고 원상복구 뒤 통과했다.
+
+최종 회귀는 Python 69/69 모듈, Node 19/19, compileall, diff check가 모두
+통과했다. 상세 증거는 `docs/CLAUDE_REVIEW_CVNA_RECOVERY_P2_RESPONSE.md`다.
+현재 병합 준비만 완료했으며 기본 브랜치 병합·Oracle 배포·CVNA 운영 원장 apply는
+하지 않았다. 다음 동작은 사용자 병합 승인 후에만 진행한다.
