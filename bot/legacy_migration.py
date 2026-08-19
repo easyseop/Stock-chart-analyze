@@ -38,6 +38,12 @@ from bot import (
 PLAN_VERSION = 2
 PLAN_MAX_AGE_S = 300
 REQUIRED_STOPPED_UNITS = ("sentinel.service", "buyloop.service")
+# /etc/systemd/system에 실파일로 설치된 유닛은 /run의 runtime mask보다
+# 우선하므로 mask가 실효가 없을 수 있다. 그 배치에서는 주문 유닛을 disabled로
+# 만들고 아래의 알려진 자동 재기동 주체까지 모두 inactive여야 한다.
+GUARDIAN_UNITS = (
+    "watchdog.service", "autodeploy.timer", "autodeploy.service",
+)
 
 
 class MigrationRefused(RuntimeError):
@@ -521,12 +527,6 @@ def _verify_entry(entry: dict) -> None:
             raise MigrationRefused(f"{symbol} SELL 체결/회계 최종 검증 실패")
 
 
-# sentinel/buyloop을 되살릴 수 있는 유일한 자동 주체들. 이들이 전부 inactive면
-# mask 없이도 "아무도 재기동 못 함"이 성립한다(watchdog이 sentinel restart를,
-# autodeploy가 재시작 목록을 수행하는 유일한 경로 — infra/server 실배치 기준).
-GUARDIAN_UNITS = ("watchdog.service", "autodeploy.service", "autodeploy.timer")
-
-
 def _unit_active_state(unit: str) -> str | None:
     """is-active 출력. 조회 실패는 None(호출부가 fail-closed로 다룬다)."""
     try:
@@ -540,29 +540,24 @@ def _unit_active_state(unit: str) -> str | None:
 
 
 def _guardians_stopped() -> tuple[bool, str]:
-    """부활 주체 전원 정지 증명 — active/activating이거나 조회 실패면 실패."""
+    """부활 주체 전원 정지 증명 — 정확한 inactive 외에는 모두 실패."""
     for unit in GUARDIAN_UNITS:
         state = _unit_active_state(unit)
         if state is None:
             return False, f"{unit} 상태 조회 실패"
-        if state in ("active", "activating", "reloading"):
-            return False, f"{unit}={state}"
+        if state != "inactive":
+            return False, f"{unit}={state or 'unknown'}"
     return True, "ok"
 
 
 def _services_quiesced() -> tuple[bool, str]:
     """systemd와 수동 주문 프로세스가 모두 멈췄는지 확인한다.
 
-    정지 증명은 유닛마다 두 갈래 중 하나면 된다(2026-08-20 운영 결함 수정):
-      ① mask 증명 — is-enabled ∈ {masked, masked-runtime}. 단, 유닛 실파일이
-        /etc/systemd/system에 있으면 `mask --runtime`(/run)이 우선순위에 가려
-        무효가 되므로 이 배치에선 ①에 도달할 수 없다(실측).
-      ② 부활 주체 정지 증명 — sentinel/buyloop을 재기동하는 유일한 자동 주체
-        (watchdog·autodeploy)가 전부 inactive. 이때 mask 없이도 "정지됐고
-        아무도 되살릴 수 없다"는 원래 의도가 성립한다.
-    is-active=inactive·수동 프로세스 0·heartbeat 노후 요구는 불변.
+    /etc 실파일이 runtime mask를 가리는 배치는 두 주문 유닛을 disabled로 만들고,
+    알려진 자동 재기동 주체까지 정확히 inactive여야 한다. 유효한 mask가 확인되는
+    배치는 기존 계약을 유지한다. 어느 경로든 주문 유닛 자체는 inactive여야 한다.
     """
-    guardians_ok, guardians_why = _guardians_stopped()
+    disabled_fallback = False
     for unit in REQUIRED_STOPPED_UNITS:
         state = _unit_active_state(unit)
         if state is None:
@@ -577,10 +572,25 @@ def _services_quiesced() -> tuple[bool, str]:
         except (OSError, subprocess.SubprocessError) as exc:
             return False, f"{unit} mask 조회 실패({type(exc).__name__})"
         mask_state = str(enabled.stdout or "").strip()
-        if mask_state not in ("masked", "masked-runtime") and not guardians_ok:
+        if mask_state in ("masked", "masked-runtime"):
+            continue
+        if mask_state == "disabled":
+            disabled_fallback = True
+            continue
+        # `mask --runtime`이 성공했다고 출력돼도 /etc 실파일에 가려지면
+        # is-enabled는 enabled로 남는다. 그 상태는 절대로 quiesced가 아니다.
+        return False, (
+            f"{unit}={mask_state or 'unknown'} "
+            "(유효한 mask 또는 disable 필요; /etc 실파일이면 disable 사용)"
+        )
+
+    if disabled_fallback:
+        guardians_ok, guardians_why = _guardians_stopped()
+        if not guardians_ok:
             return False, (
-                f"{unit}={mask_state or 'unknown'} — mask 불가 배치면 "
-                f"재기동 주체까지 정지 필요({guardians_why})")
+                "disabled 대체 계약은 모든 자동 재기동 주체가 정확히 "
+                f"inactive여야 함({guardians_why})"
+            )
     try:
         manual = subprocess.run(
             ["pgrep", "-f", r"bot\.(sentinel|kis_buyloop)"],

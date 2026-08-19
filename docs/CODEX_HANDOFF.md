@@ -2093,3 +2093,38 @@ KILLED됐다. 최종 검증은 accounting recovery 11/11, trade history 4/4, Pyt
 현재는 테스트와 검토 자료만 원격 PR에 반영할 단계다. 사용자 병합 승인 전에는
 Draft 해제·기본 브랜치 병합을 하지 않으며, 병합 이후에도 Oracle 배포와 CVNA 운영
 원장 apply는 각각 별도 승인·장외 새 5분 plan/exact SHA 절차 없이는 하지 않는다.
+
+### 40. 2026-08-20 CVNA apply quiesce `/etc` 실파일 P1 수정
+
+기본 브랜치 `0280649`의 운영 결함 보고를 기준으로 새 브랜치
+`codex/cvna-quiesce-real-unit-fix`를 만들었다. 운영 apply에서 확인된 문제는
+Oracle의 sentinel/buyloop 유닛이 `/etc/systemd/system` 실파일이라 `/run`에 만든
+runtime mask가 가려졌고, `is-enabled`가 계속 enabled여서 기존 quiesce 게이트에
+도달할 수 없다는 것이다. 이 발견 뒤 CVNA apply 재시도는 중단했다.
+
+공용 `_services_quiesced()`는 기존 유효 mask 경로를 유지하면서 실파일 배치의
+대체 계약을 추가했다. 두 주문 유닛이 inactive+disabled이고 watchdog.service,
+autodeploy.timer, autodeploy.service가 전부 inactive인 경우만 인정한다. 하나라도
+enabled/active이거나 조회 실패면 거부한다. 수동 프로세스 0, heartbeat stale,
+apply 전·백업 후 재검사도 그대로다. 핵심 구현은 `b05c6bc`, 테스트 강화는
+`679a7aa`, `144afee`, `03e3abb`다.
+
+신규 테스트가 `/etc 실파일 + 무효 runtime mask`, 달성 가능한 disabled 계약,
+active watchdog 거부를 재현한다. enabled를 안전 상태로 받는 뮤테이션과 watchdog
+active 검사를 제거한 뮤테이션은 각각 대응 assertion에서 종료코드 1로 KILLED됐다.
+원상복구 뒤 legacy migration 10/10, accounting recovery 11/11, Python 전체
+69/69 모듈, Node 19/19, compileall, diff check가 통과했다.
+
+Oracle 런북도 runtime mask 대신 재기동 주체 선제 stop → 주문 유닛 stop+disable →
+상태/pgrep/heartbeat 증명 → apply → enable/start 복구 순서로 바꿨다. 상세 검토
+자료는 `docs/CLAUDE_REVIEW_CVNA_QUIESCE_REAL_UNIT_FIX.md`다.
+
+작업 중 기본 브랜치에 Claude의 선행 구현 `ef544da`가 들어와 `e8eb71b`에서
+통합했다. 역방향 검토 결과 선행 구현은 guardian이 deactivating·failed·unknown·
+빈 상태여도 통과하는 반례와 주문 유닛 enabled 유지가 있었다. 최종본은 guardian
+상태를 exact inactive로 제한하고 disabled까지 요구한다. 선행 조건문을 되살린
+뮤테이션은 `AssertionError: ('deactivating', 'ok')`, exit 1로 KILLED됐다.
+
+원격 Draft PR은 `#119`다. 운영 서비스·env·kill·원장에 쓴 값은 0건이다. 다음
+순서는 PR CI → Claude P0/P1=0 재검토 → 사용자 병합 승인 → Oracle 코드 배포 →
+장외 새 5분 plan/exact SHA 별도 승인 → apply다. 단계는 합치지 않는다.

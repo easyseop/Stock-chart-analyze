@@ -224,3 +224,21 @@ autodeploy.timer)가 전부 inactive(activating/reloading도 가동으로 취급
 **Codex 역방향 적대 검토 요청**: 이 두 갈래 증명으로 "정지됐고 아무도 재기동
 못 함" 의도가 깨지는 배치·경합이 있는지 반증하라(예: 제3의 재기동 주체,
 cron, systemd Path/Socket 활성화 등).
+
+### → Codex 역방향 검토 보강
+
+Claude 구현은 guardian 상태를 `active|activating|reloading`일 때만 거부해
+`deactivating`, `failed`, `unknown`, 빈 출력을 안전으로 받는 반례가 있었다.
+특히 deactivating autodeploy oneshot은 아직 sentinel/buyloop restart를 수행할 수
+있어 quiesce 증명이 아니다. 또한 원 수정 요구의 더 강한 예시대로 `/etc` 실파일
+대체 경로는 주문 유닛 자체도 `disabled`여야 재부팅 자동기동을 막는다.
+
+통합 수정은 다음 두 갈래만 인정한다.
+
+1. 주문 유닛 `inactive` + 유효한 `masked|masked-runtime`
+2. 주문 유닛 `inactive+disabled` + guardian 3종이 **정확히** `inactive`
+
+그 외 상태·빈 출력·조회 예외는 전부 fail-closed다. runtime mask 무효, 혼합
+masked+disabled, guardian 각 active와 7개 비inactive 상태, 조회 실패를 회귀
+테스트로 고정했다. 운영 런북도 guardian 선제 stop → 주문 유닛 stop+disable →
+증명 → apply → enable/start 복구 순서로 바꿨다.

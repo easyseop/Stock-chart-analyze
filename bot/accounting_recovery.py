@@ -1,7 +1,8 @@
 """브로커 체결은 존재하지만 회계가 유실된 BUY의 forensic plan/apply 복구.
 
 주문을 전혀 내지 않는다. plan과 apply 모두 KIS 체결·잔고를 새로 읽고, apply는
-서비스 runtime mask·stale heartbeat·SHA 승인·미존재 백업 디렉터리를 요구한다.
+서비스의 유효한 mask 또는 disable+재기동주체 정지, stale heartbeat, SHA 승인,
+미존재 백업 디렉터리를 요구한다.
 append-only 세 원장은 공통 event_id로 멱등 복구하므로 중간 크래시 뒤 새 백업
 디렉터리로 같은 plan을 재실행할 수 있다.
 """
