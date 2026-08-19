@@ -1,8 +1,11 @@
 # CVNA zero-fill 오판·회계 복구·수동귀속·총위험 적대 검토 결과
 
-작성: Codex, 2026-08-19  
-브랜치: `codex/riskcap-cvna-recovery`  
-기준: `a09c8b2`  
+작성: Codex, 2026-08-19
+
+브랜치: `codex/riskcap-cvna-recovery`
+
+기준: `a09c8b2`
+
 상태: **코드·테스트 완료, 미병합·미배포·Oracle 원장 미적용**
 
 ## 1. 결론
@@ -179,4 +182,3 @@ KST 자정 근처 실행 시 30분 자가복구 단위시험이 날짜 롤오버
 4. 사용자가 CVNA 74주 표와 exact cost를 다시 승인한 뒤 plan을 새로 만든다.
 5. exact SHA·신규 backup-dir로 apply하고 세 원장/KIS 수량·원가·보호선을 대조한다.
 6. 서비스를 정상 복구하되 L1/L0 변경은 별도 readiness와 승인으로 처리한다.
-

@@ -1,7 +1,9 @@
 # Claude 적대 재검토 요청 — CVNA zero-fill·forensic 회계 복구·총위험 원자 게이트
 
-검토 대상: `codex/riskcap-cvna-recovery`  
-기준: `a09c8b2`  
+검토 대상: `codex/riskcap-cvna-recovery`
+
+기준: `a09c8b2`
+
 구현 설명/증거: `docs/CODEX_REVIEW_CVNA_ZERO_FILL_ACCOUNTING_RECOVERY.md`
 
 ## 판정 규칙
@@ -79,4 +81,3 @@
 - 전체 Python 69모듈, Node 19, compileall, diff-check 결과.
 - 최종 결론을 `병합 가능/차단`, `Oracle 코드 배포 가능/차단`,
   `CVNA apply 가능/차단`으로 **서로 분리**해 판정.
-
