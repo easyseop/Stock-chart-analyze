@@ -154,6 +154,21 @@ curl -fsS http://127.0.0.1:8888/api/portfolio.json \
 Environment=AUTODEPLOY_SERVICES=sentinel buyloop telegram portfolio-web
 ```
 
+### 회계 복구 apply 전 주문 서비스 quiesce
+
+이 README 설치법처럼 유닛이 `/etc/systemd/system/*.service` 실파일이면
+`systemctl mask --runtime sentinel buyloop`는 성공처럼 보여도 `/run` 마스크가
+가려져 `is-enabled`가 계속 `enabled`일 수 있다. 이 상태에서는 forensic apply를
+실행하지 않는다.
+
+장외 회계 복구 때는 `watchdog.service`, `autodeploy.timer`,
+`autodeploy.service`를 먼저 stop하고, sentinel/buyloop를 stop한 뒤 임시
+`disable`한다. 도구는 두 주문 유닛이 `inactive+disabled`, 세 자동 재기동 주체가
+전부 `inactive`, 수동 주문 프로세스 0, heartbeat stale인 경우에만 대체 계약을
+인정한다. apply 성공·실패와 무관하게 끝나면 sentinel/buyloop를 다시
+`enable --now`하고 watchdog·autodeploy.timer를 복구한다. 전체 명령과 확인 순서는
+`docs/CVNA_PARTIAL_EXIT_FORENSICS_2026-08-20.md`의 quiesce 런북을 따른다.
+
 ## 모의 봇 켜기 — 최소 순서 (Stage 1.5)
 1. `kis.env` 채우고 `chmod 600` → `kis_arm.py`로 무장(baseline 캡처).
 2. **매도만 먼저**: `sentinel`+`watchdog` 기동. 손절 dry-run→실측 확인.

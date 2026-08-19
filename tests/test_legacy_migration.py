@@ -696,7 +696,7 @@ def test_services_quiesced_requires_every_unit_inactive():
             M.subprocess, "run",
             side_effect=[_proc("inactive"), _proc("enabled")]):
         ok, why = M._services_quiesced()
-    assert ok is False and "mask --runtime" in why
+    assert ok is False and "유효한 mask 또는 disable" in why
 
     with mock.patch.object(
             M.subprocess, "run",
@@ -729,6 +729,59 @@ def test_services_quiesced_requires_every_unit_inactive():
     print("[PASS] inactive+mask·수동프로세스0·heartbeat stale만 apply 허용")
 
 
+def test_services_quiesced_accepts_disabled_etc_units_only_with_restarters_down():
+    """/etc 실파일이 /run mask를 가리는 배치도 안전한 대체 계약으로 정지한다."""
+    def _proc(state: str, returncode: int = 0):
+        return mock.Mock(stdout=state + "\n", returncode=returncode)
+
+    # Oracle 실측 재현: mask --runtime 뒤에도 /etc 실파일이 우선해
+    # `is-enabled`가 enabled다. 조용한 성공 출력을 신뢰하지 않고 거부한다.
+    with mock.patch.object(
+            M.subprocess, "run",
+            side_effect=[_proc("inactive"), _proc("enabled")]):
+        ok, why = M._services_quiesced()
+    assert ok is False and "/etc 실파일이면 disable" in why
+
+    # 실제로 달성 가능한 대체 계약: 두 주문 유닛 inactive+disabled,
+    # watchdog/autodeploy timer+service inactive, 수동 프로세스 0, heartbeat stale.
+    with mock.patch.object(M.heartbeat, "age_s",
+                           return_value=M.heartbeat.AGE_HARD_S + 1), \
+         mock.patch.object(
+             M.subprocess, "run",
+             side_effect=[
+                 _proc("inactive"), _proc("disabled"),
+                 _proc("inactive"), _proc("disabled"),
+                 _proc("inactive"),  # watchdog.service
+                 _proc("inactive"),  # autodeploy.timer
+                 _proc("inactive"),  # autodeploy.service
+                 _proc("", returncode=1),  # pgrep
+             ]) as run:
+        assert M._services_quiesced() == (True, "ok")
+        assert [call.args[0] for call in run.call_args_list] == [
+            ["systemctl", "is-active", "sentinel.service"],
+            ["systemctl", "is-enabled", "sentinel.service"],
+            ["systemctl", "is-active", "buyloop.service"],
+            ["systemctl", "is-enabled", "buyloop.service"],
+            ["systemctl", "is-active", "watchdog.service"],
+            ["systemctl", "is-active", "autodeploy.timer"],
+            ["systemctl", "is-active", "autodeploy.service"],
+            ["pgrep", "-f", r"bot\.(sentinel|kis_buyloop)"],
+        ]
+
+    # disabled만으로는 부족하다. watchdog이나 자동배포가 하나라도 살아 있으면
+    # workers를 다시 시작할 수 있으므로 fail-closed다.
+    with mock.patch.object(
+            M.subprocess, "run",
+            side_effect=[
+                _proc("inactive"), _proc("disabled"),
+                _proc("inactive"), _proc("disabled"),
+                _proc("active"),
+            ]):
+        ok, why = M._services_quiesced()
+    assert ok is False and "watchdog.service=active" in why
+    print("[PASS] /etc 실파일 배치는 disable+재기동주체 전부 inactive로만 허용")
+
+
 def main():
     test_plan_is_read_only_and_apply_reconstructs_all_three_shapes()
     test_crash_before_buy_accounted_is_resumable_and_reservation_stays()
@@ -739,6 +792,7 @@ def main():
     test_fail_closed_on_qty_overflow_snapshot_change_and_running_services()
     test_migration_import_graph_has_no_order_plane()
     test_services_quiesced_requires_every_unit_inactive()
+    test_services_quiesced_accepts_disabled_etc_units_only_with_restarters_down()
     print("\nlegacy migration 검증 통과.")
 
 

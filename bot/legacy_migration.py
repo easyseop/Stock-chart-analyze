@@ -38,6 +38,12 @@ from bot import (
 PLAN_VERSION = 2
 PLAN_MAX_AGE_S = 300
 REQUIRED_STOPPED_UNITS = ("sentinel.service", "buyloop.service")
+# /etc/systemd/system에 실파일로 설치된 유닛은 /run의 runtime mask보다
+# 우선하므로 mask가 실효가 없을 수 있다. 그 배치에서는 주문 유닛을 disabled로
+# 만들고 아래의 알려진 자동 재기동 주체까지 모두 inactive여야 한다.
+QUIESCE_RESTART_UNITS = (
+    "watchdog.service", "autodeploy.timer", "autodeploy.service",
+)
 
 
 class MigrationRefused(RuntimeError):
@@ -523,6 +529,7 @@ def _verify_entry(entry: dict) -> None:
 
 def _services_quiesced() -> tuple[bool, str]:
     """systemd와 수동 주문 프로세스가 모두 멈췄는지 확인한다."""
+    disabled_fallback = False
     for unit in REQUIRED_STOPPED_UNITS:
         try:
             proc = subprocess.run(
@@ -542,10 +549,35 @@ def _services_quiesced() -> tuple[bool, str]:
         except (OSError, subprocess.SubprocessError) as exc:
             return False, f"{unit} mask 조회 실패({type(exc).__name__})"
         mask_state = str(enabled.stdout or "").strip()
-        if mask_state not in ("masked", "masked-runtime"):
-            return False, (
-                f"{unit}={mask_state or 'unknown'} "
-                "(systemctl mask --runtime 필요)")
+        if mask_state in ("masked", "masked-runtime"):
+            continue
+        if mask_state == "disabled":
+            disabled_fallback = True
+            continue
+        # `mask --runtime`이 성공했다고 출력돼도 /etc 실파일에 가려지면
+        # is-enabled는 enabled로 남는다. 그 상태는 절대로 quiesced가 아니다.
+        return False, (
+            f"{unit}={mask_state or 'unknown'} "
+            "(유효한 mask 또는 disable 필요; /etc 실파일이면 disable 사용)"
+        )
+
+    if disabled_fallback:
+        for unit in QUIESCE_RESTART_UNITS:
+            try:
+                proc = subprocess.run(
+                    ["systemctl", "is-active", unit],
+                    check=False, capture_output=True, text=True, timeout=3,
+                )
+            except (OSError, subprocess.SubprocessError) as exc:
+                return False, (
+                    f"{unit} 상태 조회 실패({type(exc).__name__})"
+                )
+            state = str(proc.stdout or "").strip()
+            if state != "inactive":
+                return False, (
+                    f"{unit}={state or 'unknown'} "
+                    "(disabled 대체 계약은 모든 자동 재기동 주체 inactive 필요)"
+                )
     try:
         manual = subprocess.run(
             ["pgrep", "-f", r"bot\.(sentinel|kis_buyloop)"],

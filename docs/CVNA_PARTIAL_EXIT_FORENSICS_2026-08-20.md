@@ -120,7 +120,8 @@ costbook add/close는 **0건**이다. 테스트는 apply 전후 costbook 파일�
 
 - 주문 모듈 import·주문 전송: 0
 - 5분 plan + canonical SHA256 + exact operator ack
-- sentinel/buyloop 정지·runtime mask·heartbeat stale·수동 프로세스 0
+- sentinel/buyloop 정지·유효한 mask 또는 아래 disable 대체 계약·heartbeat
+  stale·수동 프로세스 0
 - apply 전·백업 후 KIS BUY/SELL/잔고 재조회
 - 주문/포지션/costbook 절대경로 일치
 - 미존재 전용 백업 디렉터리
@@ -150,10 +151,48 @@ costbook add/close는 **0건**이다. 테스트는 apply 전후 costbook 파일�
 1. Claude 적대 검토에서 P0/P1=0 확인
 2. 사용자 병합 승인
 3. Oracle 코드 배포(L1·mock·기존 설정 유지)
-4. 장외에 서비스 정지·mask 후 새 5분 v2 plan 생성
+4. 장외에 아래 런북으로 서비스를 quiesce한 뒤 새 5분 v2 plan 생성
 5. BUY/SELL/잔고/costbook 표를 사람이 다시 확인
 6. exact SHA ack에 대한 사용자 별도 apply 승인
 7. apply 후 KIS 37 = kpos 37 = costbook 37, stop/half_done, 거래이력 검증
 8. 서비스 복구
 
 그 전에는 옛 74주 전용 plan 또는 새 v2 plan을 운영 원장에 apply하지 않는다.
+
+### Oracle `/etc` 실파일 유닛용 quiesce 런북
+
+Oracle의 `sentinel.service`·`buyloop.service`는 `/etc/systemd/system` 실파일이라
+`mask --runtime`이 `/run`에 만든 마스크보다 우선한다. 이 배치에서는 runtime
+mask를 사용하지 않고 자동 재기동 주체를 먼저 멈춘 뒤 주문 유닛을 disable한다.
+
+```bash
+# 1) 새 배포·watchdog 재기동 경로부터 차단
+sudo systemctl stop autodeploy.timer autodeploy.service watchdog.service
+
+# 2) 주문 프로세스를 멈추고 재부팅 자동기동도 임시 차단
+sudo systemctl stop sentinel.service buyloop.service
+sudo systemctl disable sentinel.service buyloop.service
+
+# 3) 도구와 사람이 같은 계약을 확인
+systemctl is-active sentinel.service buyloop.service \
+  watchdog.service autodeploy.timer autodeploy.service
+systemctl is-enabled sentinel.service buyloop.service
+pgrep -af 'bot\.(sentinel|kis_buyloop)' || true
+```
+
+모든 `is-active` 결과가 `inactive`, 두 `is-enabled` 결과가 `disabled`, 수동
+프로세스가 0이고 sentinel heartbeat가 120초보다 오래된 뒤에만 새 plan/apply를
+진행한다. 하나라도 다르면 apply하지 않는다.
+
+apply가 성공하거나 중단된 뒤에는 아래 순서로 원래 상시 운영을 복구한다.
+
+```bash
+sudo systemctl enable sentinel.service buyloop.service
+sudo systemctl start sentinel.service buyloop.service
+sudo systemctl start watchdog.service autodeploy.timer
+systemctl is-active sentinel.service buyloop.service watchdog.service \
+  autodeploy.timer
+```
+
+서비스 복구 뒤 heartbeat·보호 SELL·buyloop 게이트를 확인한다. apply 실패 여부와
+관계없이 자동 재기동 주체를 다시 켜는 단계까지가 한 런북이다.
