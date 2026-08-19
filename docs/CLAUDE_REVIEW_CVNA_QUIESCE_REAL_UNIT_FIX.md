@@ -2,9 +2,10 @@
 
 - 작성일: 2026-08-20 KST
 - 기준 브랜치: `claude/happy-gauss-cwoq21`
-- 기준 커밋: `0280649`
+- 최초 결함 보고: `0280649`
+- Claude 선행 구현/역검토 기준: `ef544da`
 - 검토 브랜치: `codex/cvna-quiesce-real-unit-fix`
-- 구현·테스트 head: `03e3abb` (본 문서 커밋은 후속)
+- 통합·역검토 head: `e8eb71b` (본 문서 갱신은 후속)
 - 운영 원장 apply: **미실행**
 - Oracle 서비스·env·kill 변경: **0건**
 
@@ -25,6 +26,19 @@ Oracle의 `sentinel.service`·`buyloop.service`는
 - `infra/server/README.md`
 
 주문·회계 mutation 경로는 바꾸지 않았고 공용 quiesce 증명과 런북만 수정했다.
+
+### Claude 선행 구현 역방향 검토 결과
+
+작업 중 기본 브랜치에 Claude 구현 `ef544da`가 먼저 들어왔다. 이 구현은
+guardian 상태가 `active|activating|reloading`인 경우만 거부해 `deactivating`,
+`failed`, `unknown`, 빈 출력을 안전으로 인정했다. 뮤테이션이 아니라 해당
+커밋 원문에서 `deactivating → (True, "ok")`를 재현했다. deactivating
+autodeploy oneshot은 아직 restart를 수행할 수 있으므로 정지 증명이 아니다.
+
+또한 guardian만 inactive면 주문 유닛이 계속 enabled여도 허용했다. 최종 통합은
+원 지시서의 더 강한 예시대로 주문 유닛 `disabled`까지 요구해 재부팅 자동기동도
+차단했다. Claude의 guardian 3종 식별·helper와 테스트 아이디어는 통합하되, 상태
+판정과 런북은 아래 엄격 계약으로 교체했다.
 
 ## 2. 새 quiesce 계약
 
@@ -105,6 +119,23 @@ exit 1
 ```
 
 두 뮤테이션은 독립적으로 KILLED됐고, 복원 후 전체 회귀를 재실행했다.
+
+### M3 — Claude 선행 구현의 guardian 상태 부분집합 거부 복원
+
+```diff
+- if state != "inactive":
++ if state in ("active", "activating", "reloading"):
+```
+
+결과:
+
+```text
+test_services_quiesced_requires_every_unit_inactive
+AssertionError: ('deactivating', 'ok')
+exit 1
+```
+
+따라서 deactivating·failed·unknown·빈 상태를 정확히 거부하는 테스트가 실효적이다.
 
 ## 5. 최종 검증
 
