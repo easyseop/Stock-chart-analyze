@@ -26,7 +26,7 @@ import os
 from dataclasses import dataclass
 
 from bot import (costbook, daily_loss, envelope, heartbeat, kill, kis, kis_boot,
-                 kis_orders, ledger, ownership, rollout, settings)
+                 kis_orders, ledger, ownership, risk_budget, rollout, settings)
 
 
 @dataclass
@@ -318,12 +318,13 @@ def execute_entry(pos_key: str, symbol: str, *, price_usd: float,
     reservation_qty = (min(planned_qty, max(0, int(qty_cap)))
                        if qty_cap is not None else planned_qty)
     meta = {
+        **(order_meta or {}),
         "pos_key": pos_key, "sleeve": sleeve, "fx": fx,
         "ccy": "KRW" if market == "KR" else "USD",
         # half는 1차+후속 계획 전체를 첫 submit부터 예약한다. 후속 plan은 parent가
         # 열려 있는 동안 원장 합산에서 제외되고, parent 종료 뒤 예약을 이어받는다.
         "reservation_cost_krw": reservation_qty * limit * fx,
-        **(order_meta or {}),
+        "reservation_risk_krw": reservation_qty * per_share_risk_usd * fx,
     }
     # 잔고 대사 직후 KIS holdings 반영이 늦을 수 있으므로, 체결회계 원장과
     # 브로커 보유원가 중 큰 값을 최종 held 바닥으로 사용한다. 이미 반영된 값은
@@ -337,6 +338,8 @@ def execute_entry(pos_key: str, symbol: str, *, price_usd: float,
         "budget_sleeve_held_krw": max(
             float(held_cost_krw), accounted_sleeve),
         "budget_sleeve_limit_krw": seed,
+        "budget_risk_limit_krw": (
+            envelope.operating_total_krw() * risk_budget.max_fraction()),
     })
     res = kis_orders.place_buy(pos_key, symbol, send_qty, limit,
                                excg=excg, reason=reason, market=market,

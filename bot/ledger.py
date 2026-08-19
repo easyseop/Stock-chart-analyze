@@ -27,6 +27,7 @@ from contextlib import contextmanager
 import fcntl
 import hashlib
 import json
+import math
 import os
 import threading
 import time
@@ -154,7 +155,8 @@ def _fold_unlocked() -> tuple[dict, list[int]]:
                               "name", "opened", "tactic", "pending", "parent_key",
                               "chase", "ref_price", "reason",
                               "legacy_migrated_order", "legacy_hldg_before",
-                              "reservation_cost_krw",
+                              "reservation_cost_krw", "reservation_risk_krw",
+                              "budget_risk_limit_krw",
                               "budget_total_held_krw", "budget_total_limit_krw",
                               "budget_sleeve_held_krw", "budget_sleeve_limit_krw"):
                         if f in meta and meta.get(f) is not None:
@@ -236,6 +238,17 @@ def _buy_reservation_costs(fold: dict, exclude_key: str | None = None
         accounted = max(0, int(cur.get("accounted") or 0))
         unaccounted = max(0, filled - accounted)
         terminal_handoff = state in _TERMINAL
+        if cur.get("accounting_recovery_pending"):
+            try:
+                cost = float(cur.get("reservation_cost_krw") or 0)
+            except (TypeError, ValueError):
+                return None
+            if cost <= 0:
+                return None
+            sleeve = str(cur.get("sleeve") or "A").upper()
+            total += cost
+            by_sleeve[sleeve] = by_sleeve.get(sleeve, 0.0) + cost
+            continue
         if terminal_handoff and unaccounted <= 0:
             continue
         if state == "partial" and cur.get("open") is False and unaccounted <= 0:
@@ -276,6 +289,73 @@ def _buy_reservation_costs(fold: dict, exclude_key: str | None = None
         total += cost
         by_sleeve[sleeve] = by_sleeve.get(sleeve, 0.0) + cost
     return total, by_sleeve
+
+
+def _buy_reservation_risks(fold: dict, exclude_key: str | None = None
+                           ) -> float | None:
+    """열린 BUY·계획·미회계 체결의 최악 손절위험(KRW)을 합산한다."""
+    total = 0.0
+    for key, cur in fold.items():
+        if key == exclude_key or str(cur.get("side") or "").upper() != "BUY":
+            continue
+        try:
+            state = str(cur.get("state") or "")
+            filled = max(0, int(cur.get("filled") or 0))
+            accounted = max(0, int(cur.get("accounted") or 0))
+        except (TypeError, ValueError, OverflowError):
+            return None
+        unaccounted = max(0, filled - accounted)
+        terminal_handoff = state in _TERMINAL
+        if terminal_handoff and unaccounted <= 0:
+            continue
+        if state == "partial" and cur.get("open") is False and unaccounted <= 0:
+            continue
+        parent_key = str(cur.get("parent_key") or "")
+        parent = fold.get(parent_key) if parent_key else None
+        if state == "planned" and parent:
+            try:
+                parent_risk = float(parent.get("reservation_risk_krw") or 0)
+            except (TypeError, ValueError, OverflowError):
+                return None
+            if (str(parent.get("state") or "") not in _TERMINAL
+                    and not (parent.get("state") == "partial"
+                             and parent.get("open") is False)
+                    and parent_risk > 0):
+                continue
+        try:
+            explicit = float(cur.get("reservation_risk_krw") or 0)
+            intended = max(1, int(cur.get("intended") or 0))
+            if explicit > 0:
+                risk = (explicit * min(unaccounted, intended) / intended
+                        if terminal_handoff or (
+                            state == "partial" and cur.get("open") is False)
+                        else explicit)
+            else:
+                qty = (unaccounted if terminal_handoff or (
+                    state == "partial" and cur.get("open") is False)
+                    else max(0, intended - filled))
+                price = float(cur.get("price") or cur.get("limit") or 0)
+                stop = float(cur.get("stop") or 0)
+                fx = float(cur.get("fx") or (
+                    1.0 if cur.get("market") == "KR" else 0))
+                if qty > 0 and (
+                        not all(math.isfinite(v) for v in (price, stop, fx))
+                        or price <= stop or stop <= 0 or fx <= 0):
+                    return None
+                risk = qty * max(0.0, price - stop) * fx
+        except (TypeError, ValueError, OverflowError):
+            return None
+        if not math.isfinite(risk) or risk < 0:
+            return None
+        total += risk
+    return total
+
+
+def buy_reservation_risk_total() -> float | None:
+    """현재 모든 BUY 예약위험. 손상·계량불가는 None(fail-closed)."""
+    with _file_lock(False):
+        fold, corrupt = _fold_unlocked()
+        return None if corrupt else _buy_reservation_risks(fold)
 
 
 def try_record_submit(key: str, symbol: str, qty: int, reason: str = "",
@@ -330,6 +410,19 @@ def try_record_submit(key: str, symbol: str, qty: int, reason: str = "",
                         and float(sleeve_held or 0)
                         + reserved_by_sleeve.get(sleeve, 0.0) + order_cost
                         > float(sleeve_limit) + 1e-6):
+                    return False
+            risk_limit = m.get("budget_risk_limit_krw")
+            if risk_limit is not None:
+                from bot import risk_budget
+                order_risk = float(m.get("reservation_risk_krw") or 0)
+                limit_risk = float(risk_limit)
+                fx = float(m.get("fx") or 0)
+                durable = risk_budget.current_open_risk(fx)
+                reserved = _buy_reservation_risks(fold, exclude_key=key)
+                if (durable is None or reserved is None or order_risk <= 0
+                        or limit_risk <= 0
+                        or durable + reserved + order_risk
+                        >= limit_risk - 1e-6):
                     return False
         except (TypeError, ValueError):
             return False
@@ -415,6 +508,14 @@ def on_result(key: str, state: str, filled_qty: int = 0, *,
     if open_order is not None:
         ev["open"] = bool(open_order)
     _append(ev)
+
+
+def mark_unknown(key: str, filled_qty: int = 0, *,
+                 reason: str = "manual_review") -> None:
+    """모순 전표를 UNKNOWN+LOW로 잠가 재주문과 중복 P0를 함께 막는다."""
+    on_result(key, "unknown", filled_qty, open_order=True)
+    _append({"ev": "confidence", "key": key, "confidence": CONF_LOW,
+             "reason": str(reason or "manual_review")})
 
 
 def reconcile(key: str, actual_filled: int, *, fill_price: float | None = None,
@@ -691,6 +792,20 @@ def reconcile_from_candidates(key: str, candidates: list,
         return {"state": cur.get("state", "unknown"), "filled": seen,
                 "residual": max(0, intended - seen), "confidence": CONF_LOW,
                 "fill_price": cand.get("price"), "open": True}
+    if len(candidates) == 1 and int(candidates[0].get("filled", 0) or 0) <= 0:
+        # ccnl은 실제 체결 직후에도 잠시 0체결 행을 노출할 수 있다. 잔고
+        # 교차검증이 없는 UNKNOWN 대사에서는 절대 종결하지 않고 잠금을 유지한다.
+        cand = candidates[0]
+        seen = max(int(cur.get("filled", 0)), 0)
+        already_low = (
+            cur.get("state") == "unknown"
+            and cur.get("confidence") == CONF_LOW)
+        if not already_low:
+            mark_unknown(key, seen, reason="closed_zero_fill_unconfirmed")
+        return {"state": "unknown", "filled": seen,
+                "residual": max(0, intended - seen), "confidence": CONF_LOW,
+                "fill_price": cand.get("price"), "open": True,
+                "already_low": already_low}
     if len(candidates) == 1:
         cand = candidates[0]
         filled = max(0, int(cand.get("filled", 0) or 0))

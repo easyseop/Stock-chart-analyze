@@ -240,7 +240,12 @@ def normalize_domestic_rows(nccs: dict | None, ccnl: dict | None) -> list[dict]:
 
 
 def resolve_acks_from_rows(rows: list[dict]) -> list[dict]:
-    """ODNO가 결속된 ack/partial 주문을 실제 체결행으로 갱신하고 즉시 회계한다."""
+    """ODNO가 결속된 ack/partial의 양수 체결만 즉시 회계한다.
+
+    KIS mock ccnl은 실제 체결 직후에도 잠시 filled=0 행을 노출한다
+    (2026-08-18 CVNA 74주 실측). 0주 행은 여기서 절대 종결하지 않고,
+    10분 유예와 완전한 잔고 교차 증명 경로로만 넘긴다.
+    """
     from bot import kis_accounting
     results = []
     by_odno: dict[str, list[dict]] = {}
@@ -275,21 +280,7 @@ def resolve_acks_from_rows(rows: list[dict]) -> list[dict]:
                  "residual": max(0, intended - filled), "fill_price": price,
                  "open": opened}
         elif not opened:
-            r = ledger.reconcile(o["key"], 0, open_order=False)
-            msg_cd = clean_broker_text(row.get("msg_cd"))
-            msg1 = clean_broker_text(row.get("msg1"))
-            status = clean_broker_text(row.get("broker_status"))
-            broker_reason = (clean_broker_text(row.get("broker_reason"))
-                             or status or "사유 미상(브로커 종결 행)")
-            ledger.record_reconcile_meta(
-                o["key"], reason="broker-closed-zero-fill",
-                meta={"source": str(row.get("src") or "broker"),
-                      "msg_cd": msg_cd, "msg1": msg1,
-                      "msg_source": clean_broker_text(row.get("msg_source")),
-                      "broker_reason": broker_reason,
-                      "side": side, "intended": intended})
-            r.update({"broker_reason": broker_reason,
-                      "reason": "broker-closed-zero-fill"})
+            continue
         else:
             continue
         acct = kis_accounting.sync_fill(
@@ -301,8 +292,28 @@ def resolve_acks_from_rows(rows: list[dict]) -> list[dict]:
     return results
 
 
-REJECT_ABSENCE_MIN_S = int(
-    os.environ.get("REJECT_ABSENCE_MIN_S", "600") or 600)
+REJECT_ABSENCE_MIN_S = max(
+    600, int(os.environ.get("REJECT_ABSENCE_MIN_S", "600") or 600))
+
+
+def _closed_zero_fill_row(rows: list[dict], odno: str) -> dict | None:
+    """ODNO의 명시적 0체결 행이 단 하나일 때만 반환한다."""
+    matches = [
+        row for row in rows
+        if order_no_key(row.get("odno") or row.get("ODNO")) == odno
+    ]
+    if len(matches) != 1:
+        return None
+    row = matches[0]
+    quantity_keys = ("ft_ccld_qty", "tot_ccld_qty", "ccld_qty")
+    present = next((key for key in quantity_keys if key in row), None)
+    if present is None:
+        return None
+    try:
+        qty = float(row.get(present))
+    except (TypeError, ValueError):
+        return None
+    return row if qty == 0 else None
 
 
 def resolve_acks_by_absence(evidence_by_key: dict[str, dict],
@@ -365,7 +376,12 @@ def resolve_acks_by_absence(evidence_by_key: dict[str, dict],
             return any(order_no_key(row.get("odno") or row.get("ODNO")) == odno
                        for row in rows)
 
-        if has_order(nccs_rows) or has_order(ccnl_rows):
+        # 미체결에 ODNO가 있으면 주문은 아직 살아 있다. ccnl의 명시적 0체결
+        # 행은 mock에서 체결 직후 잠시 보일 수 있으므로, 10분 유예와 완전한
+        # 잔고 불변을 함께 증명할 때만 종결 근거로 쓴다.
+        zero_fill_row = _closed_zero_fill_row(ccnl_rows, odno)
+        ccnl_has_order = has_order(ccnl_rows)
+        if has_order(nccs_rows) or (ccnl_has_order and zero_fill_row is None):
             continue
         try:
             before = int(float(before_raw))
@@ -383,21 +399,42 @@ def resolve_acks_by_absence(evidence_by_key: dict[str, dict],
             contradictions.append({
                 "key": key, "symbol": symbol, "side": side,
                 "intended": intended, "hldg_before": before,
-                "hldg_now": current, "reason": "absence-balance-contradiction",
+                "hldg_now": current,
+                "source": ("zero-fill-balance-proof"
+                           if zero_fill_row is not None else "absence-proof"),
+                "reason": "absence-balance-contradiction",
             })
             continue
         result = ledger.reconcile(key, 0, open_order=False)
+        via = "zero-fill-balance-proof" if zero_fill_row is not None \
+            else "absence-proof"
+        row_msg_cd = clean_broker_text(
+            (zero_fill_row or {}).get("msg_cd")
+            or (zero_fill_row or {}).get("rjct_rson")
+            or (zero_fill_row or {}).get("_response_msg_cd"))
+        row_msg1 = clean_broker_text(
+            (zero_fill_row or {}).get("msg1")
+            or (zero_fill_row or {}).get("rjct_rson_name")
+            or (zero_fill_row or {}).get("_response_msg1"))
+        broker_reason = (
+            clean_broker_text(
+                (zero_fill_row or {}).get("rjct_rson_name")
+                or (zero_fill_row or {}).get("prcs_stat_name"))
+            or ("사유 미상(0체결+잔고 증명)" if zero_fill_row is not None
+                else "사유 미상(부재 증명)"))
         ledger.record_reconcile_meta(
-            key, reason="absence-proof",
-            meta={"source": "absence-proof", "nccs_count": len(nccs_rows),
-                  "ccnl_count": len(ccnl_rows), "odno_absent": True,
+            key, reason=via,
+            meta={"source": via, "nccs_count": len(nccs_rows),
+                  "ccnl_count": len(ccnl_rows),
+                  "odno_absent": zero_fill_row is None,
                   "hldg_before": before,
                   "hldg_now": current, "side": side,
                   "intended": intended,
-                  "broker_reason": "사유 미상(부재 증명)"})
+                  "msg_cd": row_msg_cd, "msg1": row_msg1,
+                  "broker_reason": broker_reason})
         resolved.append({"key": key, "symbol": symbol, "side": side,
-                         "market": order.get("market"), "via": "absence-proof",
-                         "broker_reason": "사유 미상(부재 증명)",
+                         "market": order.get("market"), "via": via,
+                         "broker_reason": broker_reason,
                          **result})
     return resolved, contradictions
 

@@ -15,7 +15,9 @@ fail-closed 계약:
     고아는 이 게이트가 보지 못한다. scripts/kis_orphan_audit.py가 그 짝이다).
   · 원장 읽기 실패도 차단(조회 실패 ≠ 위험 0).
 
-한계(문서화): 접수됐지만 미체결인 주문의 예약 위험은 아직 세지 않는다.
+미체결·계획·미회계 체결은 주문 원장의 ``reservation_risk_krw``와 보수적
+역산값으로 함께 센다. 최종 제출은 ledger flock 안에서 현재 포지션+기존 예약+
+새 주문 projected risk를 다시 합쳐 같은 사이클·다중 프로세스 우회도 막는다.
 분모는 envelope.operating_total_krw()(A+B 시드 합) — 예산 게이트와 같은 축.
 """
 from __future__ import annotations
@@ -56,6 +58,9 @@ def open_risk(positions: dict, fx: float) -> dict:
 
     반환 {"defined_krw", "rows": [{code, risk_krw}], "unknown": [codes]}.
     """
+    if not isinstance(positions, dict):
+        return {"defined_krw": 0.0, "rows": [], "unknown": ["*"]}
+    fx_value = _num(fx)
     defined = 0.0
     rows: list[dict] = []
     unknown: list[str] = []
@@ -67,9 +72,11 @@ def open_risk(positions: dict, fx: float) -> dict:
             unknown.append(str(code)); continue
         try:
             qty = int(qty)
-        except (TypeError, ValueError):
+        except (TypeError, ValueError, OverflowError):
             unknown.append(str(code)); continue
-        if qty <= 0:
+        if qty < 0 or float(row.get("qty")) != qty:
+            unknown.append(str(code)); continue
+        if qty == 0:
             continue                       # 청산 중/빈 행 — 위험 없음
         entry = _num(row.get("entry"))
         stop = _num(row.get("stop"))
@@ -83,7 +90,9 @@ def open_risk(positions: dict, fx: float) -> dict:
         per_share = max(0.0, entry - stop)
         risk = per_share * qty
         if ccy == "USD":
-            risk *= fx
+            if fx_value is None:
+                unknown.append(str(code)); continue
+            risk *= fx_value
         defined += risk
         if risk > 0:
             rows.append({"code": str(code), "risk_krw": round(risk, 2)})
@@ -91,9 +100,21 @@ def open_risk(positions: dict, fx: float) -> dict:
     return {"defined_krw": round(defined, 2), "rows": rows, "unknown": unknown}
 
 
+def current_open_risk(fx: float) -> float | None:
+    """원장 포지션 위험만. 원장 손상·계량불가는 None."""
+    from bot import kis_positions
+    try:
+        snapshot = open_risk(kis_positions.load(), fx)
+    except Exception:
+        return None
+    if snapshot["unknown"]:
+        return None
+    return float(snapshot["defined_krw"])
+
+
 def gate(fx: float) -> tuple[bool, str, dict]:
     """신규 매수 허용 여부. (ok, why, snapshot). 실패는 전부 차단 방향."""
-    from bot import envelope, kis_positions
+    from bot import envelope, kis_positions, ledger
     try:
         positions = kis_positions.load()
     except Exception as exc:
@@ -103,20 +124,29 @@ def gate(fx: float) -> tuple[bool, str, dict]:
         return (False,
                 f"위험 계량 불가 포지션 {len(snap['unknown'])}건"
                 f"({','.join(snap['unknown'][:5])}) — 신규 매수 차단", snap)
-    seed = float(envelope.operating_total_krw() or 0)
-    if seed <= 0:
+    reserved = ledger.buy_reservation_risk_total()
+    if reserved is None:
+        return False, "BUY 예약위험 계량 불가 — 신규 매수 차단", snap
+    snap["reserved_krw"] = round(float(reserved), 2)
+    snap["total_krw"] = round(float(snap["defined_krw"]) + float(reserved), 2)
+    try:
+        seed = float(envelope.operating_total_krw() or 0)
+    except (TypeError, ValueError, OverflowError):
+        seed = 0.0
+    if not math.isfinite(seed) or seed <= 0:
         # 시드 자체의 검증은 execute_entry 사이징 소관(미설정=수량 0)이다.
         # 여기서는 비율만 판정한다 — 위험이 0이면 분모 없이도 비율은 0이므로
         # 허용하고, 위험이 있는데 분모가 없으면 계산 불가로 차단한다.
-        if snap["defined_krw"] <= 0:
+        if snap["total_krw"] <= 0:
             return True, "총 open risk 0 — 게이트 통과", snap
         return False, "시드 불명(operating_total<=0)인데 open risk 존재 — 차단", snap
-    frac = snap["defined_krw"] / seed
+    frac = snap["total_krw"] / seed
     cap = max_fraction()
     snap.update({"seed_krw": round(seed, 2), "fraction": round(frac, 4),
                  "cap": cap})
     if frac >= cap:
         return (False,
                 f"총 open risk {frac * 100:.1f}% ≥ 상한 {cap * 100:.0f}%"
-                f" ({snap['defined_krw']:,.0f}/{seed:,.0f}원)", snap)
+                f" ({snap['total_krw']:,.0f}/{seed:,.0f}원; "
+                f"미체결예약 {snap['reserved_krw']:,.0f}원)", snap)
     return True, f"총 open risk {frac * 100:.1f}% < {cap * 100:.0f}%", snap

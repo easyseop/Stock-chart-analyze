@@ -120,7 +120,8 @@ def test_fill_notifications_use_explicit_trade_category():
             {"symbol": "UFPI", "side": "BUY", "state": "rejected",
              "filled": 0, "residual": 14},
         ]
-        with mock.patch.object(B.ledger, "open_orders", side_effect=[aged, []]), \
+        with mock.patch.object(B.ledger, "open_orders",
+                               side_effect=[aged, [], []]), \
              mock.patch.object(B.kis, "open_orders",
                                return_value={"rt_cd": "0", "output": []}), \
              mock.patch.object(B.kis, "fills",
@@ -154,7 +155,8 @@ def test_full_sell_order_does_not_close_remaining_position():
         resolved = [{
             "symbol": "CAG", "side": "SELL", "filled": 5, "residual": 0,
         }]
-        with mock.patch.object(B.ledger, "open_orders", side_effect=[aged, []]), \
+        with mock.patch.object(B.ledger, "open_orders",
+                               side_effect=[aged, [], []]), \
              mock.patch.object(B.kis, "open_orders",
                                return_value={"rt_cd": "0", "output": []}), \
              mock.patch.object(B.kis, "fills",

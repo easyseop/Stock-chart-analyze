@@ -199,18 +199,125 @@ def test_closed_row_reason_is_sanitized_and_bounded():
     with tempfile.TemporaryDirectory() as tmp:
         _paths(tmp)
         order = _ack()
-        rows = [{"odno": "38291", "pdno": "TAP", "side": "SELL",
-                 "ord_qty": 80, "filled": 0, "price": 0,
-                 "src": "ccnl", "open": False,
-                 "msg_cd": "20310000\x00", "msg1": "X\n" + "a" * 300,
-                 "broker_status": ""}]
-        with mock.patch("bot.kis_accounting.sync_fill", return_value={"ok": True}):
-            rs = R.resolve_acks_from_rows(rows)
+        raw = {"odno": "38291", "pdno": "TAP",
+               "sll_buy_dvsn_cd": "01", "ft_ord_qty": "80",
+               "ft_ccld_qty": "0", "nccs_qty": "80",
+               "_response_msg_cd": "20310000\x00",
+               "_response_msg1": "X\n" + "a" * 300}
+        rs, contradictions = R.resolve_acks_by_absence(
+            _proof(order, ccnl=[raw]))
+        assert contradictions == []
         assert len(rs) == 1 and rs[0]["state"] == "rejected"
         meta = L.state_of(order["key"])["reconcile_meta"]
         assert len(meta["msg1"]) == 200 and "\n" not in meta["msg1"]
         assert meta["msg_cd"] == "20310000"
-    print("[PASS] 브로커 종결행 msg_cd/msg1 저장·제어문자 제거·200자 상한")
+        assert meta["source"] == "zero-fill-balance-proof"
+    print("[PASS] 10분+0체결+잔고불변 증명 뒤 메시지 정규화·종결")
+
+
+def test_cvna_delayed_ccnl_zero_then_positive_fill_never_rejects():
+    """실사고: 98초 0주 행 뒤 같은 ODNO가 74주 체결로 갱신된다."""
+    with tempfile.TemporaryDirectory() as tmp:
+        _paths(tmp)
+        order = _ack(key="kb:CVNA:CVNA-2026-08-18-now", symbol="CVNA",
+                     side="BUY", qty=74, before=0, age_s=98,
+                     odno="0000040445")
+        zero = [{"odno": "40445", "pdno": "CVNA", "side": "BUY",
+                 "ord_qty": 74, "filled": 0, "price": 65.0332,
+                 "src": "ccnl", "open": False}]
+        with mock.patch("bot.kis_accounting.sync_fill") as sync:
+            assert R.resolve_acks_from_rows(zero) == []
+            assert L.state_of(order["key"])["state"] == "ack"
+            assert sync.call_count == 0
+
+            filled = [{**zero[0], "filled": 74, "price": 65.03}]
+            sync.return_value = {"ok": True, "delta": 74}
+            rs = R.resolve_acks_from_rows(filled)
+        assert len(rs) == 1 and rs[0]["state"] == "filled"
+        assert L.state_of(order["key"])["state"] == "filled"
+        assert sync.call_count == 1
+    print("[PASS] CVNA 지연 주입: 0주 행 보류 → 74주 행 체결·회계")
+
+
+def _run_cvna_boot(*, held: int, age_s: float = 601):
+    order = _ack(key="kb:CVNA:CVNA-2026-08-18-now", symbol="CVNA",
+                 side="BUY", qty=74, before=0, age_s=age_s,
+                 odno="0000040445")
+    empty = {"rt_cd": "0", "output": []}
+    zero = {"rt_cd": "0", "output": [{
+        "odno": "40445", "pdno": "CVNA", "sll_buy_dvsn_cd": "02",
+        "ft_ord_qty": "74", "ft_ccld_qty": "0", "nccs_qty": "0",
+        "ord_tmd": "223038",
+    }]}
+
+    def fills(excg="NASD", start="", end=""):
+        return zero if excg == "NYSE" else empty
+
+    sent = []
+    with mock.patch.object(B.kis, "market_of_symbol", return_value="US"), \
+            mock.patch.object(B.kis, "open_orders", return_value=empty), \
+            mock.patch.object(B.kis, "fills", side_effect=fills), \
+            mock.patch.object(B.kis, "holdings",
+                              side_effect=lambda market, excg=None: {"CVNA": held}), \
+            mock.patch.object(B.kis, "enabled", return_value=False), \
+            mock.patch("bot.kis_accounting.sync_fill",
+                       return_value={"ok": True, "delta": held}), \
+            mock.patch.object(B, "_notify",
+                              side_effect=lambda text, **kw: sent.append((text, kw))):
+        rs = B._resolve_acks()
+    return order, rs, sent
+
+
+def test_cvna_balance_fill_precedes_zero_fill_rejection():
+    """10분이 지나도 정확한 +74 잔고가 있으면 거절보다 체결 회계가 먼저다."""
+    with tempfile.TemporaryDirectory() as tmp:
+        _paths(tmp)
+        order, rs, sent = _run_cvna_boot(held=74)
+        assert len(rs) == 1 and rs[0]["state"] == "filled"
+        assert L.state_of(order["key"])["state"] == "filled"
+        assert not any("거절 종결" in text for text, _ in sent)
+    print("[PASS] CVNA 잔고 +74 교차검증이 0체결 행보다 우선")
+
+
+def test_cvna_ambiguous_balance_becomes_unknown_and_alerts_once():
+    """0체결 전표인데 잔고가 부분 증가하면 자동 귀속·종결 모두 금지한다."""
+    with tempfile.TemporaryDirectory() as tmp:
+        _paths(tmp)
+        order, rs, sent = _run_cvna_boot(held=20)
+        assert rs == []
+        state = L.state_of(order["key"])
+        assert state["state"] == "unknown" and state["open"] is True
+        alerts = [text for text, kw in sent
+                  if "UNKNOWN 잠금" in text and kw.get("critical") is True]
+        assert len(alerts) == 1
+        with mock.patch.object(B, "_notify",
+                               side_effect=lambda text, **kw: sent.append((text, kw))):
+            assert B._resolve_acks() == []
+        assert len([text for text, _ in sent if "UNKNOWN 잠금" in text]) == 1
+    print("[PASS] CVNA 잔고 부분증가 → UNKNOWN 잠금·P0 1회")
+
+
+def test_true_zero_fill_requires_ten_minutes_and_unchanged_balance():
+    row = {"odno": "40445", "pdno": "CVNA", "sll_buy_dvsn_cd": "02",
+           "ft_ord_qty": "74", "ft_ccld_qty": "0", "nccs_qty": "0"}
+    with tempfile.TemporaryDirectory() as tmp:
+        _paths(tmp)
+        young = _ack(key="kb:CVNA:young", symbol="CVNA", side="BUY",
+                     qty=74, before=0, age_s=599, odno="0000040445")
+        rs, contradictions = R.resolve_acks_by_absence(
+            _proof(young, ccnl=[row], holdings={"CVNA": 0}))
+        assert rs == contradictions == []
+        assert L.state_of(young["key"])["state"] == "ack"
+    with tempfile.TemporaryDirectory() as tmp:
+        _paths(tmp)
+        old = _ack(key="kb:CVNA:old", symbol="CVNA", side="BUY",
+                   qty=74, before=0, age_s=601, odno="0000040445")
+        rs, contradictions = R.resolve_acks_by_absence(
+            _proof(old, ccnl=[row], holdings={"CVNA": 0}))
+        assert contradictions == [] and len(rs) == 1
+        assert rs[0]["via"] == "zero-fill-balance-proof"
+        assert L.state_of(old["key"])["state"] == "rejected"
+    print("[PASS] 진짜 0체결은 599초 보류·601초+잔고불변에서만 종결")
 
 
 def test_boot_tap_path_notifies_once_and_contradiction_does_not_fall_through():
@@ -247,11 +354,11 @@ def test_boot_tap_path_notifies_once_and_contradiction_does_not_fall_through():
                 mock.patch.object(B, "_notify",
                                   side_effect=lambda text, **kw: sent.append(text)):
             assert B._resolve_acks() == []
-            assert L.state_of(order["key"])["state"] == "ack"
+            assert L.state_of(order["key"])["state"] == "unknown"
             assert len([x for x in sent if "대사 모순" in x]) == 1
             assert B._resolve_acks() == []
             assert len([x for x in sent if "대사 모순" in x]) == 1
-    print("[PASS] 부재증명 SELL 경보 1회 · 잔고모순은 종결/잔고대사 모두 차단")
+    print("[PASS] 부재증명 SELL 경보 1회 · 잔고모순은 UNKNOWN 잠금·중복경보 0")
 
 
 def test_us_absence_scans_all_exchanges_and_keeps_live_order():
@@ -416,6 +523,10 @@ def main():
     test_order_presence_partial_and_balance_contradiction_hold()
     test_absence_reject_requires_single_symbol_inflight()
     test_closed_row_reason_is_sanitized_and_bounded()
+    test_cvna_delayed_ccnl_zero_then_positive_fill_never_rejects()
+    test_cvna_balance_fill_precedes_zero_fill_rejection()
+    test_cvna_ambiguous_balance_becomes_unknown_and_alerts_once()
+    test_true_zero_fill_requires_ten_minutes_and_unchanged_balance()
     test_boot_tap_path_notifies_once_and_contradiction_does_not_fall_through()
     test_us_absence_scans_all_exchanges_and_keeps_live_order()
     test_kr_mock_fallback_and_live_prohibition()

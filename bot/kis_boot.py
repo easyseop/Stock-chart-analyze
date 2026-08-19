@@ -271,7 +271,12 @@ def _format_reconcile_notice(result: dict, context: dict) -> tuple[str, bool] | 
         if result.get("state") != "rejected":
             return None
         side_name = "매도" if result.get("side") == "SELL" else "매수"
-        via = "부재 증명" if result.get("via") == "absence-proof" else "브로커 종결 행"
+        if result.get("via") == "absence-proof":
+            via = "부재 증명"
+        elif result.get("via") == "zero-fill-balance-proof":
+            via = "0체결+잔고 증명"
+        else:
+            via = "브로커 종결 행"
         qty = int(result.get("residual") or result.get("intended") or 0)
         reason = str(result.get("broker_reason") or "사유 미상")
         suffix = " · 보호는 유지" if result.get("side") == "SELL" else ""
@@ -396,7 +401,8 @@ def _resolve_acks() -> list[dict]:
                 "holdings": None,
             }
 
-        # 1순위: ODNO 행. 0주 종결도 여기서 즉시 rejected로 닫힌.
+        # 1순위: ODNO의 양수 체결행. 0주 행은 KIS mock 반영 지연일 수 있어
+        # 여기서 종결하지 않는다(CVNA 74주 회계 유실 재발 방지).
         rs = kis_reconcile.resolve_acks_from_rows(fill_rows)
 
         # 잔고는 주문조회 두 종류 다음에 읽는다. US 3거래소 중 하나라도
@@ -444,32 +450,40 @@ def _resolve_acks() -> list[dict]:
             if proof is not None:
                 proof["holdings"] = hmaps.get("KR" if _is_kr(order) else "US")
 
-        absence_rs, contradictions = kis_reconcile.resolve_acks_by_absence(
-            proofs, now_ts=now, orders=current_open)
-        rs += absence_rs
-        contradiction_keys = {str(r.get("key") or "") for r in contradictions}
-        for item in contradictions:
-            previous = ledger.state_of(item["key"]) or {}
-            if previous.get("reconcile_reason") == "absence-balance-contradiction":
-                continue
-            ledger.record_reconcile_meta(
-                item["key"], reason="absence-balance-contradiction",
-                meta={"source": "absence-proof", "hldg_before": item["hldg_before"],
-                      "hldg_now": item["hldg_now"], "side": item["side"],
-                      "intended": item["intended"]})
-            _notify(f"🚨 주문 대사 모순 — {item['symbol']} "
-                    f"잔고 {item['hldg_before']}→{item['hldg_now']} 변했는데 "
-                    "미체결·체결내역에 ODNO 없음; 자동 정산 금지",
-                    critical=True, category="trade")
-
+        # 2순위: 완전한 잔고 snapshot의 정확한 delta. ccnl이 잠시 0주여도
+        # 잔고가 intended만큼 증가했다면 체결·회계를 먼저 확정한다.
         remaining_keys = {
             str(o.get("key") or "") for o in aged
             if o.get("state") in ("submitted", "ack")
-            and str(o.get("key") or "") not in contradiction_keys
         }
         if remaining_keys:
             rs += kis_reconcile.resolve_acks_by_balance(
                 hmaps, fill_prices=fill_prices, only_keys=remaining_keys)
+
+        # 3순위: 10분 이상 지난 주문만 부재 또는 명시적 0체결 행과 잔고
+        # 불변을 함께 증명해 종결한다. 잔고가 변했는데 귀속이 모호하면 UNKNOWN
+        # 잠금으로 승격하고 P0를 1회 알린다.
+        current_open = ledger.open_orders()
+        absence_rs, contradictions = kis_reconcile.resolve_acks_by_absence(
+            proofs, now_ts=now, orders=current_open)
+        rs += absence_rs
+        for item in contradictions:
+            previous = ledger.state_of(item["key"]) or {}
+            if previous.get("reconcile_reason") == "absence-balance-contradiction":
+                continue
+            ledger.mark_unknown(
+                item["key"], int(previous.get("filled") or 0),
+                reason="absence-balance-contradiction")
+            ledger.record_reconcile_meta(
+                item["key"], reason="absence-balance-contradiction",
+                meta={"source": item.get("source") or "absence-proof",
+                      "hldg_before": item["hldg_before"],
+                      "hldg_now": item["hldg_now"], "side": item["side"],
+                      "intended": item["intended"]})
+            _notify(f"🚨 주문 대사 모순 — {item['symbol']} "
+                    f"잔고 {item['hldg_before']}→{item['hldg_now']} 변했는데 "
+                    "0체결/부재 전표와 모순; UNKNOWN 잠금·자동 정산 금지",
+                    critical=True, category="trade")
 
         notice_context = _reconcile_notice_context(
             rs, initial_open, hmaps, now=now) if rs else {}

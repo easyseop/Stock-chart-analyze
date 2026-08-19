@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import time
 
 # baseline·동결 모두 **영속 경로**(모듈 옆) 기본 — /tmp 기본이면 재부팅/청소 시 파일이
@@ -39,12 +40,21 @@ def _fpath() -> str:
 
 def _atomic_write(path: str, obj) -> bool:
     tmp = f"{path}.{os.getpid()}.tmp"
+    parent = os.path.dirname(path) or "."
     try:
-        with open(tmp, "w", encoding="utf-8") as f:
+        os.makedirs(parent, mode=0o700, exist_ok=True)
+        fd = os.open(tmp, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+        with os.fdopen(fd, "w", encoding="utf-8") as f:
             json.dump(obj, f, ensure_ascii=False)
             f.flush()
             os.fsync(f.fileno())
         os.replace(tmp, path)
+        os.chmod(path, 0o600)
+        dfd = os.open(parent, os.O_RDONLY)
+        try:
+            os.fsync(dfd)
+        finally:
+            os.close(dfd)
         return True
     except Exception:
         try:
@@ -90,6 +100,32 @@ def baseline() -> set[str] | None:
     if d is None:
         return None
     return {s.upper() for s in d.get("symbols", [])}
+
+
+def adopt_manual_position(symbol: str) -> bool:
+    """사람이 확정한 수동 보유를 기존 baseline에 원자적으로 추가한다.
+
+    baseline이 없거나 손상된 상태에서 새 파일을 만들어 매수 울타리를 축소하지
+    않는다. 반환값은 이번 호출이 새 심볼을 추가했는지 여부다.
+    """
+    code = str(symbol or "").strip().upper()
+    if not re.fullmatch(r"[A-Z0-9.-]{1,20}", code):
+        raise ValueError("수동 보유 심볼 형식 오류")
+    raw = _load(_bpath())
+    if not isinstance(raw, dict) or not isinstance(raw.get("symbols"), list) \
+            or any(not isinstance(item, str) or not item.strip()
+                   for item in raw.get("symbols", [])):
+        raise RuntimeError("baseline 미캡처/손상 — 수동 보유 이관 거부")
+    existing = {item.strip().upper() for item in raw["symbols"]}
+    if code in existing:
+        return False
+    updated = sorted(existing | {code})
+    if not _atomic_write(_bpath(), {"symbols": updated, "ts": time.time()}):
+        raise OSError("baseline 원자 저장 실패")
+    verified = baseline()
+    if verified is None or code not in verified:
+        raise OSError("baseline 저장 후 검증 실패")
+    return True
 
 
 def buy_denied(symbol: str) -> tuple[bool, str]:

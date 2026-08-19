@@ -1967,3 +1967,70 @@ Claude 최종 판정 문서는 `docs/CLAUDE_REVIEW_SELF_HEAL_KICK_AUDIT_VERDICT.
 다시 통과했다. 부분 재검토 증거는
 `docs/CLAUDE_REVIEW_SELF_HEAL_KICK_AUDIT_P2_RESPONSE.md`다. 선택 P3는 범위를
 넓히지 않았고 병합·배포는 여전히 사용자 승인 후에만 한다.
+
+### 38. 2026-08-19 CVNA zero-fill 오판 종결·forensic 회계 복구·T1 적대 보강
+
+기본 브랜치 `a09c8b2`에서 별도 브랜치 `codex/riskcap-cvna-recovery`를 만들었다.
+핵심 커밋은 `ccfef49`, `aeef86f`, `d0097c0`, `a322474`다. 아직 기본 브랜치
+병합·Oracle 코드 배포·운영 원장 apply·kill/env 변경을 하지 않았다.
+
+Oracle 읽기 전용 원장과 KIS 체결/잔고를 대조해 CVNA 사고 원인을 확정했다.
+`kb:CVNA:CVNA-2026-08-18-now`, ODNO `0000040445`는 2026-08-18 22:30:37
+pullback 74주 주문이다. ACK 98초 뒤 ccnl의 닫힌 0체결 행을 믿고 rejected로
+종결했지만 실제로는 74주가 $65.03에 체결됐다. 이 오판이 6.64M 예약을 풀어
+추가 매수를 허용하고 CVNA costbook 회계를 유실시킨 단일 뿌리였다.
+
+T2a는 BUY zero-fill 직접 종결을 제거하고 최소 600초 유예와 완전 잔고 교차증명을
+추가했다. +74는 체결을 우선 회계하고, 부분/초과/불신은 UNKNOWN+P0로 잠근다.
+잔고 불변과 유예 경과가 모두 증명된 경우만 zero-fill rejected가 된다. SELL
+거절 부재증명 R1~R5는 유지했다.
+
+T2b는 주문을 내지 않는 `bot.accounting_recovery plan/apply`를 추가했다. KIS
+체결·잔고 fresh 재확인, 5분 plan, exact SHA ack, 절대 원장경로, 서비스 quiesce,
+백업 전후 재게이트를 요구한다. 공통 event ID로 exact cost **6,640,863원**과
+CVNA 74주 절대수량·기존 stop 60.48을 append-only 복구하며 중간 크래시 재실행도
+중복되지 않는다. 현재는 코드와 임시원장 테스트만 완료했고 실제 Oracle apply는
+하지 않았다. SEED A 37M은 유지한다.
+
+T2c는 미래 수동매수를 위한 `scripts/kis_arm.py --adopt SYMBOL REASON`을 추가했다.
+baseline 추가·검증 뒤에만 봇 보호원장을 close하고, 실패 시 보호를 유지한다.
+costbook·freeze·SEED·kill은 바꾸지 않는다. CVNA에는 쓰지 않는다.
+
+T1 적대 검토에서는 기존 총위험 구현이 active BUY 예약과 동일 사이클 주문을
+합산하지 않는 P1을 발견했다. 수정 후 final submit이 ledger flock 안에서
+`현재 kpos 위험 + 기존 BUY 예약 + 신규 주문 위험`을 원자 재계산하며 cap 경계도
+차단한다. 호출자가 보호 meta를 덮을 수 없고 비유한/불명 입력은 fail-closed다.
+B1/B2의 NaN/inf 관측 승격도 막았다. 현재 Codex 자체 최종 판정은 P0/P1=0이며
+Claude 재검토를 기다린다.
+
+검증은 Python 전체 **69/69 모듈**, Node 계산 **19/19**, compileall,
+`git diff --check`가 통과했다. T2a 4종, T2b 2종, T2c 2종, T1 3종,
+shadow 1종의 독립 mutation은 모두 대응 테스트 exit 1로 KILLED됐다. KST 자정
+직전 30분 자가복구 테스트가 날짜 롤오버에 걸리는 기존 flaky도 테스트 날짜 고정으로
+정리했으며 실제 일자 리셋 계약은 그대로다.
+
+상세 결과는 `docs/CODEX_REVIEW_CVNA_ZERO_FILL_ACCOUNTING_RECOVERY.md`, Claude
+전달문은 `docs/CLAUDE_REVIEW_CVNA_ZERO_FILL_ACCOUNTING_RECOVERY.md`다. 다음 순서는
+Draft PR CI → Claude P0/P1=0 → 사용자 병합/장외 배포 승인 → L1 유지 코드 배포 →
+CVNA 표 재승인·새 plan/exact SHA/신규 백업으로 apply다. 이 단계들은 서로 별도
+승인이다.
+
+#### Claude 승인 및 P2-1 회귀 테스트 보완(2026-08-20)
+
+Claude 판정문은 기본 브랜치 `d88fcb9`의
+`docs/CLAUDE_REVIEW_CVNA_RECOVERY_VERDICT.md`다. 독립 프로브와 뮤테이션 결과
+`P0 0 · P1 0 · P2 1 · P3 2`로 승인했으며, 병합·Oracle 코드 배포·CVNA apply를
+서로 분리해 가능 판정했다. Oracle 배포는 L1 유지·열린 주문 0, apply는 런북 전제와
+사용자 별도 승인이 필요하다.
+
+사용자가 병합 전 P2-1만 반영하도록 지시해 `5202fb7`에서
+`test_accounting_recovery_pending_holds_budget_until_completion`을 추가했다.
+rejected 주문의 평시 예약 0 → recovery pending 중 6,641,190.384원 예약 부활·
+1원 후속 BUY 차단 → recovery complete 뒤 예약 0·후속 BUY 허용을 한 테스트에서
+검증한다. pending 분기를 단독 제거한 뮤테이션은 `AssertionError: (0.0, {})`,
+exit 1로 KILLED됐고 원상복구 뒤 통과했다.
+
+최종 회귀는 Python 69/69 모듈, Node 19/19, compileall, diff check가 모두
+통과했다. 상세 증거는 `docs/CLAUDE_REVIEW_CVNA_RECOVERY_P2_RESPONSE.md`다.
+현재 병합 준비만 완료했으며 기본 브랜치 병합·Oracle 배포·CVNA 운영 원장 apply는
+하지 않았다. 다음 동작은 사용자 병합 승인 후에만 진행한다.

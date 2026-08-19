@@ -20,7 +20,10 @@ def test_s2_29_minutes_flap_and_restart_reset():
         p=f"{tmp}/heal.json"; st=json.load(open(p,encoding="utf-8")); st["observer_pid"]=-1; json.dump(st,open(p,"w",encoding="utf-8")); assert kill_self_heal.cycle(heartbeat_age_s=1,now=ts+4000)["action"]=="observing" and kill.level()==1
 
 def test_t1_single_soft_sample_preserves_window_and_recovers():
-    with tempfile.TemporaryDirectory() as tmp,_env(tmp),mock.patch("bot.notify.send",return_value=True),mock.patch.object(kill_self_heal,"_readiness_go",return_value=(True,"go")),mock.patch.dict(os.environ,{"SELF_HEAL_OBSERVE_S":"1800"}):
+    # KST 자정 직전에 실행돼도 이 단위 테스트의 30분 관찰창이 날짜
+    # 롤오버로 초기화되지 않도록 일자 경계를 고정한다. 일자 리셋 자체는
+    # 별도 하루 1회 테스트가 담당한다.
+    with tempfile.TemporaryDirectory() as tmp,_env(tmp),mock.patch("bot.notify.send",return_value=True),mock.patch.object(kill_self_heal,"_readiness_go",return_value=(True,"go")),mock.patch.object(kill_self_heal,"_day_kst",return_value="2099-01-01"),mock.patch.dict(os.environ,{"SELF_HEAL_OBSERVE_S":"1800"}):
         ts=_raise()
         assert kill_self_heal.cycle(heartbeat_age_s=1,now=ts)["action"]=="observing"
         for offset in range(45, 901, 45):

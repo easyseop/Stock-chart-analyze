@@ -60,8 +60,8 @@ def test_order_number_leading_zero_is_same_identity():
     print("[PASS] KIS ODNO 선행 0 차이는 같은 주문으로 병합")
 
 
-def test_bound_ack_matches_broker_order_without_leading_zeroes():
-    """원장 ODNO가 0-padding돼도 KIS 체결행의 같은 숫자 주문을 찾아 닫는다."""
+def test_bound_ack_zero_fill_never_closes_without_balance_proof():
+    """0-padding ODNO가 같아도 0체결 행만으로 ACK를 종결하면 안 된다."""
     with tempfile.TemporaryDirectory() as tmp:
         _fresh(tmp)
         L.record_submit("tap:half#1", "TAP", 40, "절반 익절",
@@ -75,10 +75,10 @@ def test_bound_ack_matches_broker_order_without_leading_zeroes():
         }]
         with mock.patch("bot.kis_accounting.sync_fill", return_value={}):
             result = R.resolve_acks_from_rows(rows)
-        assert len(result) == 1 and result[0]["state"] == "rejected"
-        assert L.state_of("tap:half#1")["state"] == "rejected"
-        assert L.open_order_count("TAP", side="SELL") == 0
-    print("[PASS] 0-padding ODNO ACK가 동일 브로커 주문행으로 대사·종결")
+        assert result == []
+        assert L.state_of("tap:half#1")["state"] == "ack"
+        assert L.open_order_count("TAP", side="SELL") == 1
+    print("[PASS] 0-padding ODNO가 같아도 0체결 행 단독 종결 금지")
 
 
 def test_high_fully_filled_found_in_ccnl_only():
@@ -102,6 +102,27 @@ def test_high_fully_filled_found_in_ccnl_only():
         assert not L.is_locked("AAPL")            # 해제
         assert L.odno_of("p1#1") == "2001"        # 늦은 ODNO 결속
     print("[PASS] HIGH: 완전체결(nccs 부재)을 ccnl 유일후보로 확정·해제·ODNO 결속")
+
+
+def test_unknown_closed_zero_fill_candidate_stays_low():
+    """UNKNOWN도 ccnl 0주 행만으로 rejected HIGH가 되면 안 된다."""
+    with tempfile.TemporaryDirectory() as tmp:
+        _fresh(tmp)
+        L.record_submit("cvna:lost", "CVNA", 74, "pullback",
+                        meta={"side": "BUY", "market": "US"})
+        L.bind_broker_order("cvna:lost", "0000040445", ord_tmd="223038")
+        L.on_result("cvna:lost", "unknown", 0)
+        res = R.reconcile_unknowns(
+            _nccs([]),
+            _ccnl([{"odno": "40445", "pdno": "CVNA",
+                    "ft_ord_qty": "74", "ft_ccld_qty": "0",
+                    "sll_buy_dvsn_cd_name": "매수", "ord_tmd": "223038"}]))
+        assert len(res) == 1
+        assert res[0]["confidence"] == L.CONF_LOW
+        assert res[0]["state"] == "unknown" and res[0]["open"] is True
+        assert L.state_of("cvna:lost")["state"] == "unknown"
+        assert L.is_locked("CVNA")
+    print("[PASS] UNKNOWN+ccln 0주 단일후보도 LOW 잠금 유지")
 
 
 def test_low_twin_orders_same_second():
@@ -175,8 +196,9 @@ def test_time_window_filter():
 def main():
     test_normalize_merge()
     test_order_number_leading_zero_is_same_identity()
-    test_bound_ack_matches_broker_order_without_leading_zeroes()
+    test_bound_ack_zero_fill_never_closes_without_balance_proof()
     test_high_fully_filled_found_in_ccnl_only()
+    test_unknown_closed_zero_fill_candidate_stays_low()
     test_low_twin_orders_same_second()
     test_known_odno_excluded()
     test_time_window_filter()

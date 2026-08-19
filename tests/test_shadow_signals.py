@@ -95,6 +95,23 @@ def test_b2_requires_every_condition():
     print("[PASS] B2: 조건 하나라도 빠지면 신호 없음(5반례)")
 
 
+def test_b2_and_b1_reject_nonfinite_observation_inputs():
+    frames = {"TST": {"D": _frame()}}
+    bad = _result(ma50=float("nan"), ma200=90.0, slope=0.05,
+                  checks={"상단마감": True, "거래량": True})
+    payload = json.loads(screener._signals_json([bad], frames))
+    assert not [s for s in payload["signals"]
+                if s["group"] == "shelf_shadow_b2"]
+    shelf = _result(ma50=99.0, ma200=float("inf"), slope=0.05)
+    shelf["shelf"] = {"ok": True, "entry": 100, "stop": 95,
+                      "target": 110, "rr": 2, "checks": {}}
+    payload2 = json.loads(screener._signals_json([shelf], frames))
+    rows = [s for s in payload2["signals"] if s["group"] == "shelf"]
+    assert rows and rows[0]["trend_above_200"] is None
+    assert "NaN" not in json.dumps(payload, allow_nan=False)
+    print("[PASS] B1/B2 NaN·inf 관측값은 false 신호/비표준 JSON으로 승격 안 됨")
+
+
 def test_a_ablation_single_gate_only():
     rows = [
         _result("RP", range_pos=0.70),                      # 저점권만 탈락
@@ -142,6 +159,7 @@ def test_b1_tag_present_on_shelf_rows():
 def main():
     test_b2_shadow_shape_and_isolation()
     test_b2_requires_every_condition()
+    test_b2_and_b1_reject_nonfinite_observation_inputs()
     test_a_ablation_single_gate_only()
     test_short_history_excluded_from_a_but_kept_in_results()
     test_b1_tag_present_on_shelf_rows()

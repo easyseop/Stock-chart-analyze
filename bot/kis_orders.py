@@ -193,6 +193,7 @@ def place_order(key: str, symbol: str, side: str, qty: int, price: float,
     allowed_meta = {"pos_key", "sleeve", "fx", "ccy", "stop", "target",
                     "name", "opened", "tactic", "pending", "parent_key",
                     "chase", "ref_price", "reservation_cost_krw",
+                    "reservation_risk_krw", "budget_risk_limit_krw",
                     "budget_total_held_krw", "budget_total_limit_krw",
                     "budget_sleeve_held_krw", "budget_sleeve_limit_krw"}
     for mk, mv in (order_meta or {}).items():

@@ -7,6 +7,7 @@
 from __future__ import annotations
 
 import html
+import math
 import os
 import sys
 
@@ -608,14 +609,28 @@ def _signals_json(results: list[dict],
     #   group=="now"/"shelf"만 소비하므로 아래 그룹은 구조적으로 주문 불가.
     #   ① B1은 별도 스트림이 아니라 기존 shelf 신호의 trend_above_200 태그로
     #      재구성한다(같은 후보에 태그만 다르면 중복 발행이 낭비).
+    def finite_number(value, *, positive: bool = False):
+        if isinstance(value, bool):
+            return None
+        try:
+            number = float(value)
+        except (TypeError, ValueError, OverflowError):
+            return None
+        if not math.isfinite(number) or (positive and number <= 0):
+            return None
+        return number
+
     by_code = {r["code"]: r for r in results}
     for row in sigs:
         if row.get("group") in ("shelf", "shelf_watch"):
             code_r = by_code.get(row["code"]) or {}
-            ma200_r = (code_r.get("ext") or {}).get("ma200")
-            price_r = (code_r.get("sr") or {}).get("price")
-            row["trend_above_200"] = (bool(price_r > ma200_r)
-                                      if (price_r and ma200_r) else None)
+            ma200_r = finite_number(
+                (code_r.get("ext") or {}).get("ma200"), positive=True)
+            price_r = finite_number(
+                (code_r.get("sr") or {}).get("price"), positive=True)
+            row["trend_above_200"] = (
+                bool(price_r > ma200_r)
+                if price_r is not None and ma200_r is not None else None)
     #   ② B2 — 추세 눌림목(별도 전략 계열): 200일선 위 + 상승 기울기 +
     #      50일선 근처 되돌림 + 반등 확인(상단마감·거래량). 진입/손절/목표는
     #      B와 같은 구조(반등저점 −2% / 2R)로 맞춰 비교 가능성을 확보한다.
@@ -624,12 +639,13 @@ def _signals_json(results: list[dict],
         if gates.exclusion_reasons(r):
             continue
         ext_r = r.get("ext") or {}
-        price_r = (r.get("sr") or {}).get("price") or 0
-        ma50_r, ma200_r = ext_r.get("ma50"), ext_r.get("ma200")
-        slope_r = ext_r.get("ma200_slope")
+        price_r = finite_number((r.get("sr") or {}).get("price"), positive=True)
+        ma50_r = finite_number(ext_r.get("ma50"), positive=True)
+        ma200_r = finite_number(ext_r.get("ma200"), positive=True)
+        slope_r = finite_number(ext_r.get("ma200_slope"))
         sh_r = r.get("shelf") or {}
         checks_r = sh_r.get("checks") or {}
-        if not (price_r and ma50_r and ma200_r and slope_r is not None):
+        if any(value is None for value in (price_r, ma50_r, ma200_r, slope_r)):
             continue
         if not (price_r > ma200_r and slope_r > 0):
             continue
@@ -641,7 +657,9 @@ def _signals_json(results: list[dict],
         d_r = frame.get("D")                      # frames_from_daily 키는 대문자
         if d_r is None or len(d_r) < 25:
             continue
-        recent_low = float(d_r["Low"].iloc[-3:].min())
+        recent_low = finite_number(d_r["Low"].iloc[-3:].min(), positive=True)
+        if recent_low is None:
+            continue
         stop_r = recent_low * (1 - config.SHELF_STOP_BUF)
         if price_r <= stop_r:
             continue
@@ -793,8 +811,6 @@ _REPO = "easyseop/Stock-chart-analyze"
 
 def _trigger_page() -> str:
     return _tmpl("lookup.html").replace("__REPO__", _REPO)
-
-
 
 
 
