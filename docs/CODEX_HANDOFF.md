@@ -2067,3 +2067,7 @@ KILLED됐다. Claude 요청서는
 배포를 하지 않는다. 병합·배포가 끝나도 장외 새 5분 v2 plan 표와 exact SHA를
 사용자가 별도로 승인하기 전에는 운영 원장 apply를 하지 않는다. L0/L1, mock/live,
 SEED, freeze, fallback, stall 설정은 이 작업에서 건드리지 않았다.
+
+원격 Draft PR은 `#118`이며 head `147c99d`까지 push했다. push/PR 두 CI 실행은
+각각 54초·53초에 모두 통과했다. 다음 동작은 Claude가 위 검토 요청의 반례를
+재현해 P0/P1=0을 확인하는 것이며, 그 전에는 Draft를 유지한다.
