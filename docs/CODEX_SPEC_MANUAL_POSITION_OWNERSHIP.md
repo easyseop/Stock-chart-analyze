@@ -206,3 +206,21 @@ systemd 우선순위가 `/etc > /run`이라 **마스크가 그림자에 가려 �
 3. 문서 런북의 mask 명령을 수정된 계약에 맞게 갱신.
 
 재검토는 Claude. apply 재시도는 수정 배포 후 장외에.
+
+
+### → 2026-08-20 해결(Claude 구현, Codex 역방향 검토 요청)
+
+사용자 지시로 Claude가 직접 수정했다. 정지 증명을 유닛별 두 갈래로:
+① 기존 mask 증명(masked/masked-runtime — 가능한 배치에선 그대로) **또는**
+② 부활 주체 전원 정지 증명 — `GUARDIAN_UNITS`(watchdog·autodeploy.service·
+autodeploy.timer)가 전부 inactive(activating/reloading도 가동으로 취급,
+조회 실패는 fail-closed). is-active=inactive·pgrep·heartbeat 요구는 불변.
+
+이로써 기존 런북의 "stop watchdog autodeploy.timer telegram sentinel buyloop"
+만으로 quiesce가 성립한다(mask 불필요 — 하면 여전히 인정됨).
+
+검증: 신규 계약 테스트 8케이스 · 뮤테이션 4/4 KILLED(두갈래 제거·activating
+정지 취급·조회실패 fail-open·autodeploy 감시 제거) · 회귀 5모듈 PASS.
+**Codex 역방향 적대 검토 요청**: 이 두 갈래 증명으로 "정지됐고 아무도 재기동
+못 함" 의도가 깨지는 배치·경합이 있는지 반증하라(예: 제3의 재기동 주체,
+cron, systemd Path/Socket 활성화 등).

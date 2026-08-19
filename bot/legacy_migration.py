@@ -521,17 +521,52 @@ def _verify_entry(entry: dict) -> None:
             raise MigrationRefused(f"{symbol} SELL 체결/회계 최종 검증 실패")
 
 
+# sentinel/buyloop을 되살릴 수 있는 유일한 자동 주체들. 이들이 전부 inactive면
+# mask 없이도 "아무도 재기동 못 함"이 성립한다(watchdog이 sentinel restart를,
+# autodeploy가 재시작 목록을 수행하는 유일한 경로 — infra/server 실배치 기준).
+GUARDIAN_UNITS = ("watchdog.service", "autodeploy.service", "autodeploy.timer")
+
+
+def _unit_active_state(unit: str) -> str | None:
+    """is-active 출력. 조회 실패는 None(호출부가 fail-closed로 다룬다)."""
+    try:
+        proc = subprocess.run(
+            ["systemctl", "is-active", unit],
+            check=False, capture_output=True, text=True, timeout=3,
+        )
+    except (OSError, subprocess.SubprocessError):
+        return None
+    return str(proc.stdout or "").strip()
+
+
+def _guardians_stopped() -> tuple[bool, str]:
+    """부활 주체 전원 정지 증명 — active/activating이거나 조회 실패면 실패."""
+    for unit in GUARDIAN_UNITS:
+        state = _unit_active_state(unit)
+        if state is None:
+            return False, f"{unit} 상태 조회 실패"
+        if state in ("active", "activating", "reloading"):
+            return False, f"{unit}={state}"
+    return True, "ok"
+
+
 def _services_quiesced() -> tuple[bool, str]:
-    """systemd와 수동 주문 프로세스가 모두 멈췄는지 확인한다."""
+    """systemd와 수동 주문 프로세스가 모두 멈췄는지 확인한다.
+
+    정지 증명은 유닛마다 두 갈래 중 하나면 된다(2026-08-20 운영 결함 수정):
+      ① mask 증명 — is-enabled ∈ {masked, masked-runtime}. 단, 유닛 실파일이
+        /etc/systemd/system에 있으면 `mask --runtime`(/run)이 우선순위에 가려
+        무효가 되므로 이 배치에선 ①에 도달할 수 없다(실측).
+      ② 부활 주체 정지 증명 — sentinel/buyloop을 재기동하는 유일한 자동 주체
+        (watchdog·autodeploy)가 전부 inactive. 이때 mask 없이도 "정지됐고
+        아무도 되살릴 수 없다"는 원래 의도가 성립한다.
+    is-active=inactive·수동 프로세스 0·heartbeat 노후 요구는 불변.
+    """
+    guardians_ok, guardians_why = _guardians_stopped()
     for unit in REQUIRED_STOPPED_UNITS:
-        try:
-            proc = subprocess.run(
-                ["systemctl", "is-active", unit],
-                check=False, capture_output=True, text=True, timeout=3,
-            )
-        except (OSError, subprocess.SubprocessError) as exc:
-            return False, f"{unit} 상태 조회 실패({type(exc).__name__})"
-        state = str(proc.stdout or "").strip()
+        state = _unit_active_state(unit)
+        if state is None:
+            return False, f"{unit} 상태 조회 실패"
         if state != "inactive":
             return False, f"{unit}={state or 'unknown'} (inactive 필요)"
         try:
@@ -542,10 +577,10 @@ def _services_quiesced() -> tuple[bool, str]:
         except (OSError, subprocess.SubprocessError) as exc:
             return False, f"{unit} mask 조회 실패({type(exc).__name__})"
         mask_state = str(enabled.stdout or "").strip()
-        if mask_state not in ("masked", "masked-runtime"):
+        if mask_state not in ("masked", "masked-runtime") and not guardians_ok:
             return False, (
-                f"{unit}={mask_state or 'unknown'} "
-                "(systemctl mask --runtime 필요)")
+                f"{unit}={mask_state or 'unknown'} — mask 불가 배치면 "
+                f"재기동 주체까지 정지 필요({guardians_why})")
     try:
         manual = subprocess.run(
             ["pgrep", "-f", r"bot\.(sentinel|kis_buyloop)"],
