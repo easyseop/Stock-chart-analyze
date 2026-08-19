@@ -174,3 +174,35 @@ T1 판정문 + T2 구현·테스트·뮤테이션 증거 → Claude 적대 재�
 5. 안전 계약(주문 0·plan/apply·SHA·서비스 정지·백업·멱등)은 기존 그대로.
 6. 서두를 필요 없음: 잔여 37주는 본전 래칫이라 하방 0. 성과 미확정이
    길어지는 것뿐이다. 정확성이 속도보다 우선.
+
+---
+
+## ⚠️ 2026-08-20 02:0x 운영 결함 — quiesce 게이트가 실서버에서 도달 불가 (P1)
+
+v2 apply 실행 시도에서 발견. plan 3회 거부는 전부 정상 방어였으나(ODNO 미국
+거래일 20260819로 해결·SHA 만료), 마지막 거부는 **도구 결함**이다:
+
+```
+why: 주문 서비스 미정지: sentinel.service=enabled (systemctl mask --runtime 필요)
+실측: sudo systemctl mask --runtime sentinel buyloop  → 조용히 성공
+      systemctl is-enabled sentinel buyloop           → enabled / enabled
+```
+
+원인: 이 서버의 유닛은 `/etc/systemd/system/*.service` **실파일**이다(README
+설치 절차). `mask --runtime`은 `/run/systemd/system/`에 심볼릭을 만들지만
+systemd 우선순위가 `/etc > /run`이라 **마스크가 그림자에 가려 무효**가 된다.
+`_services_quiesced()`가 요구하는 `masked|masked-runtime`은 이 배치에서
+`systemctl mask --runtime`으로 도달할 수 없다. 테스트는 systemctl을 모킹해
+이 배치 특성을 보지 못했다.
+
+### 수정 요구
+
+1. 정지 검증을 실배치에서 달성 가능한 계약으로: 예 —
+   `is-active=inactive` + (`masked*` **또는** `disabled`+`watchdog inactive`
+   증명) 또는 `/run` 마스크의 실효성을 systemd 우선순위까지 확인하는 검사.
+   어느 쪽이든 "정지됐고, 다른 무엇도 되살릴 수 없다"는 원래 의도를 지킬 것
+   (watchdog이 sentinel을 재기동하는 유일한 주체임을 활용해도 좋다).
+2. 테스트에 "유닛이 /etc 실파일 + /run 마스크 무효" 배치 재현 1건.
+3. 문서 런북의 mask 명령을 수정된 계약에 맞게 갱신.
+
+재검토는 Claude. apply 재시도는 수정 배포 후 장외에.
