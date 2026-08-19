@@ -2071,3 +2071,25 @@ SEED, freeze, fallback, stall 설정은 이 작업에서 건드리지 않았다.
 원격 Draft PR은 `#118`이며 head `147c99d`까지 push했다. push/PR 두 CI 실행은
 각각 54초·53초에 모두 통과했다. 다음 동작은 Claude가 위 검토 요청의 반례를
 재현해 P0/P1=0을 확인하는 것이며, 그 전에는 Draft를 유지한다.
+
+#### Claude 승인 후 P2/P3 테스트 공백 보완(2026-08-20)
+
+Claude 최종 판정은 P0 0·P1 0으로 병합 승인 가능이며, P2-1 한 건과 P3 두 건은
+구현 결함이 아니라 회귀 테스트 공백으로 분류됐다. 사용자 요청에 따라 커밋
+`23f8d12`에서 세 공백을 모두 닫았다.
+
+- `test_partial_exit_plan_rejects_sell_filled_but_unaccounted`: SELL filled=37이어도
+  최종 accounted=0이면 plan 생성 전 무변조 거부한다.
+- `test_partial_exit_plan_rejects_exact_one_won_rounding_delta`: durable 원가와 정확히
+  1.0원 차이면 `< 1원` 계약 밖이므로 거부한다.
+- `test_partial_exit_apply_rechecks_broker_again_after_backup`: 첫 37주 증명 뒤 백업을
+  만들고 두 번째 조회에서 36주가 되면 세 원장 mutation 없이 거부한다.
+
+세 방어를 각각 제거·완화한 독립 뮤테이션은 신규 assertion에서 모두 종료코드 1로
+KILLED됐다. 최종 검증은 accounting recovery 11/11, trade history 4/4, Python
+전체 69/69 모듈, Node 19/19, compileall, diff check가 모두 통과했다. 상세 증거는
+`docs/CLAUDE_REVIEW_CVNA_PARTIAL_EXIT_P2_P3_RESPONSE.md`에 있다.
+
+현재는 테스트와 검토 자료만 원격 PR에 반영할 단계다. 사용자 병합 승인 전에는
+Draft 해제·기본 브랜치 병합을 하지 않으며, 병합 이후에도 Oracle 배포와 CVNA 운영
+원장 apply는 각각 별도 승인·장외 새 5분 plan/exact SHA 절차 없이는 하지 않는다.
