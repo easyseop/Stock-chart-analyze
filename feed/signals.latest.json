@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated_at": "2026-08-20T00:34:30+09:00",
+ "generated_at": "2026-08-20T00:49:04+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "a_ablation": [
   {
@@ -1577,6 +1577,27 @@
    "tactic": null
   },
   {
+   "id": "OGS-2026-08-20-watch",
+   "code": "OGS",
+   "name": "ONE Gas, Inc.",
+   "ccy": "USD",
+   "group": "watch",
+   "entry_kind": "breakout",
+   "stage": 2,
+   "price": 81.495,
+   "entry": 82.14,
+   "stop": 78.831,
+   "target": 88.7581,
+   "shares_1pct": 30,
+   "range_pos": 0.4467,
+   "norm": 5.7,
+   "bear_share": 0.125,
+   "fresh": true,
+   "break_gap": 0.0149,
+   "earnings_d": 75,
+   "tactic": null
+  },
+  {
    "id": "ORC-2026-08-20-watch",
    "code": "ORC",
    "name": "Orchid Island Capital, Inc.",
@@ -1686,27 +1707,6 @@
    "fresh": true,
    "break_gap": 0.0558,
    "earnings_d": null,
-   "tactic": null
-  },
-  {
-   "id": "OGS-2026-08-20-watch",
-   "code": "OGS",
-   "name": "ONE Gas, Inc.",
-   "ccy": "USD",
-   "group": "watch",
-   "entry_kind": "breakout",
-   "stage": 2,
-   "price": 81.495,
-   "entry": 82.14,
-   "stop": 78.831,
-   "target": 88.7581,
-   "shares_1pct": 30,
-   "range_pos": 0.4467,
-   "norm": -3.8,
-   "bear_share": 0.25,
-   "fresh": true,
-   "break_gap": 0.0149,
-   "earnings_d": 75,
    "tactic": null
   },
   {
