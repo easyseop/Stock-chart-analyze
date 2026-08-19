@@ -41,7 +41,7 @@ REQUIRED_STOPPED_UNITS = ("sentinel.service", "buyloop.service")
 # /etc/systemd/system에 실파일로 설치된 유닛은 /run의 runtime mask보다
 # 우선하므로 mask가 실효가 없을 수 있다. 그 배치에서는 주문 유닛을 disabled로
 # 만들고 아래의 알려진 자동 재기동 주체까지 모두 inactive여야 한다.
-QUIESCE_RESTART_UNITS = (
+GUARDIAN_UNITS = (
     "watchdog.service", "autodeploy.timer", "autodeploy.service",
 )
 
@@ -527,18 +527,41 @@ def _verify_entry(entry: dict) -> None:
             raise MigrationRefused(f"{symbol} SELL 체결/회계 최종 검증 실패")
 
 
+def _unit_active_state(unit: str) -> str | None:
+    """is-active 출력. 조회 실패는 None(호출부가 fail-closed로 다룬다)."""
+    try:
+        proc = subprocess.run(
+            ["systemctl", "is-active", unit],
+            check=False, capture_output=True, text=True, timeout=3,
+        )
+    except (OSError, subprocess.SubprocessError):
+        return None
+    return str(proc.stdout or "").strip()
+
+
+def _guardians_stopped() -> tuple[bool, str]:
+    """부활 주체 전원 정지 증명 — 정확한 inactive 외에는 모두 실패."""
+    for unit in GUARDIAN_UNITS:
+        state = _unit_active_state(unit)
+        if state is None:
+            return False, f"{unit} 상태 조회 실패"
+        if state != "inactive":
+            return False, f"{unit}={state or 'unknown'}"
+    return True, "ok"
+
+
 def _services_quiesced() -> tuple[bool, str]:
-    """systemd와 수동 주문 프로세스가 모두 멈췄는지 확인한다."""
+    """systemd와 수동 주문 프로세스가 모두 멈췄는지 확인한다.
+
+    /etc 실파일이 runtime mask를 가리는 배치는 두 주문 유닛을 disabled로 만들고,
+    알려진 자동 재기동 주체까지 정확히 inactive여야 한다. 유효한 mask가 확인되는
+    배치는 기존 계약을 유지한다. 어느 경로든 주문 유닛 자체는 inactive여야 한다.
+    """
     disabled_fallback = False
     for unit in REQUIRED_STOPPED_UNITS:
-        try:
-            proc = subprocess.run(
-                ["systemctl", "is-active", unit],
-                check=False, capture_output=True, text=True, timeout=3,
-            )
-        except (OSError, subprocess.SubprocessError) as exc:
-            return False, f"{unit} 상태 조회 실패({type(exc).__name__})"
-        state = str(proc.stdout or "").strip()
+        state = _unit_active_state(unit)
+        if state is None:
+            return False, f"{unit} 상태 조회 실패"
         if state != "inactive":
             return False, f"{unit}={state or 'unknown'} (inactive 필요)"
         try:
@@ -562,22 +585,12 @@ def _services_quiesced() -> tuple[bool, str]:
         )
 
     if disabled_fallback:
-        for unit in QUIESCE_RESTART_UNITS:
-            try:
-                proc = subprocess.run(
-                    ["systemctl", "is-active", unit],
-                    check=False, capture_output=True, text=True, timeout=3,
-                )
-            except (OSError, subprocess.SubprocessError) as exc:
-                return False, (
-                    f"{unit} 상태 조회 실패({type(exc).__name__})"
-                )
-            state = str(proc.stdout or "").strip()
-            if state != "inactive":
-                return False, (
-                    f"{unit}={state or 'unknown'} "
-                    "(disabled 대체 계약은 모든 자동 재기동 주체 inactive 필요)"
-                )
+        guardians_ok, guardians_why = _guardians_stopped()
+        if not guardians_ok:
+            return False, (
+                "disabled 대체 계약은 모든 자동 재기동 주체가 정확히 "
+                f"inactive여야 함({guardians_why})"
+            )
     try:
         manual = subprocess.run(
             ["pgrep", "-f", r"bot\.(sentinel|kis_buyloop)"],

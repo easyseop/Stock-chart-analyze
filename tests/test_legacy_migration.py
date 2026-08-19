@@ -666,69 +666,96 @@ def test_migration_import_graph_has_no_order_plane():
 
 
 def test_services_quiesced_requires_every_unit_inactive():
-    def _proc(state: str, returncode: int = 0):
-        return mock.Mock(stdout=state + "\n", returncode=returncode)
+    """정지 증명 두 갈래 — 유효 mask 또는 disabled+부활주체 전원 정지.
 
-    with mock.patch.object(M.heartbeat, "age_s",
-                           return_value=M.heartbeat.AGE_HARD_S + 1), \
-         mock.patch.object(
-             M.subprocess, "run",
-             side_effect=[
-                 _proc("inactive"), _proc("masked-runtime"),
-                 _proc("inactive"), _proc("masked"),
-                 _proc("", returncode=1),
-             ]) as run:
+    실측 결함: /etc 실파일 유닛에는 `mask --runtime`이 우선순위에 가려 무효라
+    masked-runtime에 도달할 수 없었다. 유닛별 mask가 없으면 주문 유닛 disabled와
+    guardian 전원 exact-inactive를 함께 요구한다. is-active·pgrep·heartbeat는 불변.
+    """
+    def fake_run_factory(active_map, enabled_map, pgrep_rc=1):
+        def fake_run(cmd, **kw):
+            if cmd[0] == "pgrep":
+                return mock.Mock(stdout="", returncode=pgrep_rc)
+            sub, unit = cmd[1], cmd[2]
+            if sub == "is-active":
+                return mock.Mock(stdout=active_map.get(unit, "inactive") + "\n",
+                                 returncode=0)
+            return mock.Mock(stdout=enabled_map.get(unit, "disabled") + "\n",
+                             returncode=0)
+        return fake_run
+
+    hb = mock.patch.object(M.heartbeat, "age_s",
+                           return_value=M.heartbeat.AGE_HARD_S + 1)
+    # ① mask 증명 — guardian이 살아 있어도 masked면 통과(기존 동작 유지).
+    with hb, mock.patch.object(M.subprocess, "run", fake_run_factory(
+            {"watchdog.service": "active"},
+            {"sentinel.service": "masked-runtime", "buyloop.service": "masked"})):
         assert M._services_quiesced() == (True, "ok")
-        assert [call.args[0][1] for call in run.call_args_list] == [
-            "is-active", "is-enabled", "is-active", "is-enabled", "-f",
-        ]
-
-    with mock.patch.object(
-            M.subprocess, "run",
-            side_effect=[
-                _proc("inactive"), _proc("masked"),
-                _proc("active"),
-            ]):
+    # ② /etc 실파일 배치 — 주문 유닛 disabled + guardian exact inactive면 통과.
+    with hb, mock.patch.object(M.subprocess, "run",
+                               fake_run_factory({}, {})):
+        assert M._services_quiesced() == (True, "ok")
+    # masked+disabled 혼합도 disabled 경로가 있으므로 guardian 증명을 요구한다.
+    with hb, mock.patch.object(M.subprocess, "run", fake_run_factory(
+            {}, {"sentinel.service": "masked", "buyloop.service": "disabled"})):
+        assert M._services_quiesced() == (True, "ok")
+    # guardian 하나라도 살아 있으면(=재기동 가능) disabled 상태는 거부.
+    for guard in ("watchdog.service", "autodeploy.service", "autodeploy.timer"):
+        with hb, mock.patch.object(M.subprocess, "run", fake_run_factory(
+                {guard: "active"}, {})):
+            ok, why = M._services_quiesced()
+        assert ok is False and guard in why, (guard, why)
+    # exact inactive 외 상태는 모두 거부한다. 특히 Claude 선행 구현이 받았던
+    # deactivating/failed/unknown/빈 출력도 fail-closed다.
+    for state in ("active", "activating", "reloading", "deactivating",
+                  "failed", "unknown", ""):
+        with hb, mock.patch.object(M.subprocess, "run", fake_run_factory(
+                {"autodeploy.timer": state}, {})):
+            ok, why = M._services_quiesced()
+        assert ok is False and "autodeploy.timer" in why, (state, why)
+    # 주문 유닛 자체가 active면 어느 갈래로도 통과 불가.
+    with hb, mock.patch.object(M.subprocess, "run", fake_run_factory(
+            {"buyloop.service": "active"}, {})):
         ok, why = M._services_quiesced()
     assert ok is False and "buyloop.service=active" in why
-
-    with mock.patch.object(
-            M.subprocess, "run",
-            side_effect=[
-                _proc("inactive"), _proc("enabled"),
-                _proc("inactive"), _proc("enabled"),
-                _proc("inactive"), _proc("inactive"), _proc("inactive"),
-                _proc("", returncode=1),
-            ]):
-        ok, why = M._services_quiesced()
-    assert ok is False and "유효한 mask 또는 disable" in why
-
-    with mock.patch.object(
-            M.subprocess, "run",
-            side_effect=subprocess.TimeoutExpired("systemctl", 3)):
+    # guardian 조회 실패는 fail-closed — mask 없으면 거부.
+    def broken_guardian(cmd, **kw):
+        if cmd[0] == "pgrep":
+            return mock.Mock(stdout="", returncode=1)
+        if cmd[1] == "is-active" and cmd[2] == "watchdog.service":
+            raise OSError("query down")
+        sub = cmd[1]
+        return mock.Mock(stdout=("inactive" if sub == "is-active"
+                                 else "disabled") + "\n", returncode=0)
+    with hb, mock.patch.object(M.subprocess, "run", broken_guardian):
         ok, why = M._services_quiesced()
     assert ok is False and "상태 조회 실패" in why
 
-    with mock.patch.object(M.heartbeat, "age_s",
-                           return_value=M.heartbeat.AGE_HARD_S + 1), \
-         mock.patch.object(
-             M.subprocess, "run",
-             side_effect=[
-                 _proc("inactive"), _proc("masked"),
-                 _proc("inactive"), _proc("masked"),
-                 _proc("1234"),
-             ]):
+    # 주문 유닛 is-enabled 조회 자체가 실패하면 mask/disabled를 발명하지 않는다.
+    def broken_enabled(cmd, **kw):
+        if cmd[0] == "pgrep":
+            return mock.Mock(stdout="", returncode=1)
+        if cmd[1] == "is-enabled":
+            raise subprocess.TimeoutExpired("systemctl", 3)
+        return mock.Mock(stdout="inactive\n", returncode=0)
+    with hb, mock.patch.object(M.subprocess, "run", broken_enabled):
         ok, why = M._services_quiesced()
+    assert ok is False and "mask 조회 실패" in why
+    # 수동 프로세스 발견 시 거부(기존 계약 유지).
+    with hb, mock.patch.object(M.subprocess, "run", fake_run_factory(
+            {}, {}, pgrep_rc=0)):
+        fake = fake_run_factory({}, {}, pgrep_rc=0)
+        def with_pid(cmd, **kw):
+            r = fake(cmd, **kw)
+            if cmd[0] == "pgrep":
+                return mock.Mock(stdout="1234\n", returncode=0)
+            return r
+        with mock.patch.object(M.subprocess, "run", with_pid):
+            ok, why = M._services_quiesced()
     assert ok is False and "systemd 밖" in why
-
     with mock.patch.object(M.heartbeat, "age_s", return_value=10.0), \
-         mock.patch.object(
-             M.subprocess, "run",
-             side_effect=[
-                 _proc("inactive"), _proc("masked"),
-                 _proc("inactive"), _proc("masked"),
-                 _proc("", returncode=1),
-             ]):
+         mock.patch.object(M.subprocess, "run", fake_run_factory(
+             {}, {"sentinel.service": "masked", "buyloop.service": "masked"})):
         ok, why = M._services_quiesced()
     assert ok is False and "heartbeat가 아직 신선함" in why
     print("[PASS] inactive+mask·수동프로세스0·heartbeat stale만 apply 허용")
