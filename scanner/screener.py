@@ -814,4 +814,3 @@ def _trigger_page() -> str:
 
 
 
-
