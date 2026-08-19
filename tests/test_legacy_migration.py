@@ -694,7 +694,12 @@ def test_services_quiesced_requires_every_unit_inactive():
 
     with mock.patch.object(
             M.subprocess, "run",
-            side_effect=[_proc("inactive"), _proc("enabled")]):
+            side_effect=[
+                _proc("inactive"), _proc("enabled"),
+                _proc("inactive"), _proc("enabled"),
+                _proc("inactive"), _proc("inactive"), _proc("inactive"),
+                _proc("", returncode=1),
+            ]):
         ok, why = M._services_quiesced()
     assert ok is False and "유효한 mask 또는 disable" in why
 
