@@ -236,6 +236,17 @@ def _buy_reservation_costs(fold: dict, exclude_key: str | None = None
         accounted = max(0, int(cur.get("accounted") or 0))
         unaccounted = max(0, filled - accounted)
         terminal_handoff = state in _TERMINAL
+        if cur.get("accounting_recovery_pending"):
+            try:
+                cost = float(cur.get("reservation_cost_krw") or 0)
+            except (TypeError, ValueError):
+                return None
+            if cost <= 0:
+                return None
+            sleeve = str(cur.get("sleeve") or "A").upper()
+            total += cost
+            by_sleeve[sleeve] = by_sleeve.get(sleeve, 0.0) + cost
+            continue
         if terminal_handoff and unaccounted <= 0:
             continue
         if state == "partial" and cur.get("open") is False and unaccounted <= 0:

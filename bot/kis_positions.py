@@ -123,9 +123,30 @@ def migrate_legacy(code: str, *, qty: int, entry: float, stop: float,
     })
 
 
-def close(code: str) -> None:
+def repair_buy_fill(code: str, *, qty: int, entry: float, stop: float,
+                    stop0: float, ccy: str, pos_key: str, name: str = "",
+                    opened: str = "", sleeve: str = "A",
+                    target: float | None = None, event_id: str) -> None:
+    """이미 보호 중인 유실 BUY를 더하지 않고 절대수량·정체성으로 교정한다."""
+    if not str(event_id or "").strip():
+        raise ValueError("accounting repair requires event_id")
+    if int(qty) <= 0 or float(entry) <= 0 or float(stop) <= 0 \
+            or float(stop0) <= 0 or not str(pos_key or "").strip():
+        raise ValueError("invalid accounting repair position")
+    _append({
+        "ev": "accounting_repair", "code": str(code).upper(),
+        "qty": int(qty), "entry": float(entry), "stop": float(stop),
+        "stop0": float(stop0), "ccy": str(ccy), "pos_key": str(pos_key),
+        "name": str(name), "opened": str(opened),
+        "sleeve": str(sleeve).upper(), "target": target,
+        "accounting_repaired": True, "event_id": str(event_id),
+    })
+
+
+def close(code: str, *, event_id: str = "", reason: str = "") -> None:
     """전량 청산 확정 시 기록(더는 보호 불필요 — 폴드에서 제거)."""
-    _append({"ev": "close", "code": str(code).upper()})
+    _append({"ev": "close", "code": str(code).upper(),
+             "event_id": str(event_id or ""), "reason": str(reason or "")})
 
 
 def raise_stop(code: str, stop: float) -> None:
@@ -198,7 +219,7 @@ def load() -> dict:
                                 (old_px * old_q + px * q) / (old_q + q)
                                 if old_q + q > 0 else px)
                             cur["qty"] = old_q + q
-                    elif ev.get("ev") == "legacy_migrate":
+                    elif ev.get("ev") in ("legacy_migrate", "accounting_repair"):
                         q = max(0, int(ev.get("qty") or 0))
                         entry = float(ev.get("entry") or 0)
                         stop = float(ev.get("stop") or 0)
@@ -213,8 +234,11 @@ def load() -> dict:
                             "sleeve": ev.get("sleeve", "A"),
                             "target": ev.get("target"),
                             "pos_key": ev.get("pos_key", ""),
-                            "legacy_migrated": True,
                         }
+                        if ev.get("ev") == "legacy_migrate":
+                            st[code]["legacy_migrated"] = True
+                        else:
+                            st[code]["accounting_repaired"] = True
                     elif ev.get("ev") == "sell_fill" and code in st:
                         st[code]["qty"] = max(
                             0, int(st[code].get("qty") or 0)

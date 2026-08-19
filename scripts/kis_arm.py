@@ -21,20 +21,52 @@ import time
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from bot import kis, ownership  # noqa: E402
+from bot import kis, kis_positions, ownership  # noqa: E402
 
 EXCGS = ("NASD", "NYSE", "AMEX")
 
 
-def main() -> int:
+def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description="IS2 baseline 캡처(읽기 전용)")
-    ap.add_argument("--show", action="store_true", help="현재 baseline만 표시")
-    args = ap.parse_args()
+    modes = ap.add_mutually_exclusive_group()
+    modes.add_argument("--show", action="store_true", help="현재 baseline만 표시")
+    modes.add_argument(
+        "--adopt", nargs=2, metavar=("SYMBOL", "REASON"),
+        help="사람이 확정한 수동 보유를 baseline으로 이관(주문·동결 변경 없음)",
+    )
+    args = ap.parse_args(argv)
 
     if args.show:
         b = ownership.baseline()
         print("baseline: " + ("미캡처(매수 전면 거부 상태)" if b is None
                               else (", ".join(sorted(b)) or "(빈 목록 — 깨끗한 계좌)")))
+        return 0
+
+    if args.adopt:
+        symbol, reason = args.adopt
+        code = str(symbol or "").strip().upper()
+        try:
+            added = ownership.adopt_manual_position(code)
+        except (OSError, RuntimeError, ValueError) as exc:
+            print(f"✗ 수동 보유 이관 거부 — {exc}")
+            return 2
+        # 안전 순서: baseline 추가·재검증이 성공한 뒤에만 봇 보호원장에서 제거한다.
+        # baseline이 이미 있더라도 이전 close 실패를 복구할 수 있도록 현재 행을 본다.
+        if code in (kis_positions.load() or {}):
+            try:
+                kis_positions.close(
+                    code, event_id=f"manual-adopt:{code}", reason=reason)
+            except Exception as exc:
+                print(f"✗ baseline에는 반영됐으나 보호원장 close 실패 — 재실행 필요: "
+                      f"{type(exc).__name__}")
+                return 2
+        if code not in (ownership.baseline() or set()) \
+                or code in (kis_positions.load() or {}):
+            print("✗ 수동 보유 이관 사후 검증 실패")
+            return 2
+        action = "추가" if added else "기존 항목 재확인"
+        print(f"✓ 수동 보유 이관 완료 — {code} baseline {action} · "
+              "봇 보호원장 제외 · 동결 상태 유지")
         return 0
 
     if not (kis.enabled() and kis.account()):

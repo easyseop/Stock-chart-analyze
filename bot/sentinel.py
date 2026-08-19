@@ -555,13 +555,19 @@ def check_once(broker, state: dict) -> None:
                 bh = {}                           # 절대 공개 feed 수량으로 폴백하지 않음
                 state["_broker_holdings_failed"] = True
         if bh is not None:
-            from bot import kis_positions
+            from bot import kis_positions, ownership
             kpos = kis_positions.load()
+            user_baseline = ownership.baseline()
+            # baseline 손상/미캡처(None)는 매수에는 fail-closed지만, 파수꾼이
+            # 전 보유 보호를 포기하면 더 위험하다. 정상 집합으로 증명된 때만 제외.
+            user_symbols = user_baseline if isinstance(user_baseline, set) else set()
             held, unprot, provisional = {}, set(), set()
             for code, qty in bh.items():
                 code = str(code).upper()
                 if int(qty) <= 0:
                     continue
+                if code in user_symbols:
+                    continue                       # 사람 소유: 자동 감시·매도 금지
                 # 손절선 소스 — feed(트레일링)와 로컬 진입/래칫 기록 중 **높은 쪽**.
                 #   (코덱스 P1 반영: 같은 티커라도 feed의 낮은 손절선이 KIS에서
                 #    이미 올린 본전/트레일 래칫을 덮어 보호가 후퇴하던 충돌 제거.)

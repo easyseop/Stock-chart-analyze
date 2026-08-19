@@ -22,6 +22,7 @@ from __future__ import annotations
 from contextlib import contextmanager
 import fcntl
 import json
+import math
 import os
 import threading
 import time
@@ -215,6 +216,39 @@ def add_lot(pos_key: str, symbol: str, qty: int, fill_price: float,
              "commission_krw": float(commission_krw), "sleeve": sleeve,
              "event_id": str(event_id or "")})
     return cost
+
+
+def add_recovery_lot(pos_key: str, symbol: str, qty: int, fill_price: float,
+                     *, fx: float, cost_krw: float, sleeve: str = "A",
+                     event_id: str) -> float:
+    """브로커 정산액이 확인된 유실 BUY를 정확한 원화원가로 1회 복구한다.
+
+    일반 체결은 ``add_lot``의 가격×환율 계산을 사용한다. 이 함수는 CVNA처럼
+    브로커 정산 원화가 1원 단위로 따로 확정된 forensic 복구에서만 사용한다.
+    """
+    code = str(symbol or "").strip().upper()
+    identity = str(pos_key or "").strip()
+    eid = str(event_id or "").strip()
+    q = int(qty)
+    px = float(fill_price)
+    rate = float(fx)
+    exact = float(cost_krw)
+    if (not code or not identity or not eid or q <= 0
+            or not all(math.isfinite(v) and v > 0 for v in (px, rate, exact))):
+        raise ValueError("invalid recovery lot")
+    previous = _fold().get("event_results", {}).get(eid)
+    if previous is not None:
+        prior = float(previous.get("cost_krw") or 0)
+        if abs(prior - exact) > 1e-6:
+            raise ValueError("recovery event_id collision")
+        return prior
+    _append({
+        "ev": "add", "key": identity, "symbol": code, "qty": q,
+        "cost_krw": exact, "fill_price": px, "fx": rate,
+        "commission_krw": 0.0, "sleeve": str(sleeve or "A").upper(),
+        "event_id": eid, "recovery": "broker-settlement-exact",
+    })
+    return exact
 
 
 def close_lot(pos_key: str, qty: int, proceeds_krw: float,

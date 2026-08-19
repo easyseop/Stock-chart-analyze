@@ -72,6 +72,8 @@ def audit() -> dict:
     for code, b in sorted(broker.items()):
         if int(b["qty"]) <= 0:
             continue
+        if code in baseline:
+            continue                              # 사람이 확정한 보유는 고아가 아님
         row = ledger.get(code)
         entry = {"code": code, "market": b["market"], "broker_qty": b["qty"],
                  "avg": b["avg"], "price": b["price"],

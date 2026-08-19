@@ -167,6 +167,10 @@ def _sync_fill_locked(key: str, *, filled_qty: int | None = None,
     cur = fold.get(key)
     if not cur:
         return {"ok": False, "delta": 0, "why": "원장 주문 없음"}
+    if cur.get("accounting_recovery_pending") \
+            and not cur.get("accounting_recovery_complete"):
+        return {"ok": False, "delta": 0,
+                "why": "forensic 회계 복구 진행 중 — 일반 sync 금지"}
     target = int(cur.get("filled", 0) if filled_qty is None else filled_qty)
     accounted = int(cur.get("accounted", 0) or 0)
     delta = max(0, target - accounted)
