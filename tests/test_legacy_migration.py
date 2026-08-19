@@ -738,7 +738,14 @@ def test_services_quiesced_accepts_disabled_etc_units_only_with_restarters_down(
     # `is-enabled`가 enabled다. 조용한 성공 출력을 신뢰하지 않고 거부한다.
     with mock.patch.object(
             M.subprocess, "run",
-            side_effect=[_proc("inactive"), _proc("enabled")]):
+            side_effect=[
+                _proc("inactive"), _proc("enabled"),
+                # 잘못된 구현이 enabled를 disabled처럼 받더라도 이후 증명을
+                # 모두 통과시켜 아래 거부 assertion 자체가 잡도록 한다.
+                _proc("inactive"), _proc("enabled"),
+                _proc("inactive"), _proc("inactive"), _proc("inactive"),
+                _proc("", returncode=1),
+            ]):
         ok, why = M._services_quiesced()
     assert ok is False and "/etc 실파일이면 disable" in why
 
