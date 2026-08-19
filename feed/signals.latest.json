@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated_at": "2026-08-19T22:54:54+09:00",
+ "generated_at": "2026-08-19T22:58:49+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "a_ablation": [
   {
@@ -914,46 +914,6 @@
    "trend_above_200": false
   },
   {
-   "id": "TRN-2026-08-19-shelf-watch",
-   "code": "TRN",
-   "name": "Trinity Industries, Inc.",
-   "ccy": "USD",
-   "group": "shelf_watch",
-   "entry_kind": "shelf_watch",
-   "stage": 0,
-   "price": 29.79,
-   "entry": 29.79,
-   "stop": 28.6552,
-   "target": 34.0756,
-   "shares_1pct": 0,
-   "range_pos": 0.3712,
-   "norm": 9.8,
-   "bear_share": 0.125,
-   "shelf": {
-    "poc": 27.8652,
-    "val": 26.736,
-    "vah": 34.0756,
-    "rr": 3.78,
-    "overhead": 0.538,
-    "reason": "반등 미확인(거래량)",
-    "history_bars": 1918,
-    "profile_pnl_proxy": -0.036,
-    "runup252": 0.0594,
-    "checks": {
-     "터치": true,
-     "회복": true,
-     "상단마감": true,
-     "거래량": false,
-     "신저가아님": true
-    }
-   },
-   "fresh": false,
-   "break_gap": null,
-   "earnings_d": 71,
-   "tactic": "watch",
-   "trend_above_200": false
-  },
-  {
    "id": "UI-2026-08-19-shelf-watch",
    "code": "UI",
    "name": "Ubiquiti Inc.",
@@ -1030,6 +990,46 @@
    "fresh": false,
    "break_gap": null,
    "earnings_d": -13,
+   "tactic": "watch",
+   "trend_above_200": false
+  },
+  {
+   "id": "TRN-2026-08-19-shelf-watch",
+   "code": "TRN",
+   "name": "Trinity Industries, Inc.",
+   "ccy": "USD",
+   "group": "shelf_watch",
+   "entry_kind": "shelf_watch",
+   "stage": 0,
+   "price": 29.79,
+   "entry": 29.79,
+   "stop": 28.6552,
+   "target": 34.0756,
+   "shares_1pct": 0,
+   "range_pos": 0.3712,
+   "norm": 0.0,
+   "bear_share": 0.125,
+   "shelf": {
+    "poc": 27.8652,
+    "val": 26.736,
+    "vah": 34.0756,
+    "rr": 3.78,
+    "overhead": 0.538,
+    "reason": "반등 미확인(거래량)",
+    "history_bars": 1918,
+    "profile_pnl_proxy": -0.036,
+    "runup252": 0.0594,
+    "checks": {
+     "터치": true,
+     "회복": true,
+     "상단마감": true,
+     "거래량": false,
+     "신저가아님": true
+    }
+   },
+   "fresh": false,
+   "break_gap": null,
+   "earnings_d": 71,
    "tactic": "watch",
    "trend_above_200": false
   },
@@ -1454,27 +1454,6 @@
    "tactic": null
   },
   {
-   "id": "OGS-2026-08-19-watch",
-   "code": "OGS",
-   "name": "ONE Gas, Inc.",
-   "ccy": "USD",
-   "group": "watch",
-   "entry_kind": "breakout",
-   "stage": 2,
-   "price": 81.39,
-   "entry": 82.14,
-   "stop": 78.9502,
-   "target": 88.5195,
-   "shares_1pct": 31,
-   "range_pos": 0.4404,
-   "norm": 5.7,
-   "bear_share": 0.125,
-   "fresh": true,
-   "break_gap": 0.0136,
-   "earnings_d": 75,
-   "tactic": null
-  },
-  {
    "id": "SPOT-2026-08-19-watch",
    "code": "SPOT",
    "name": "Spotify Technology S.A.",
@@ -1493,6 +1472,27 @@
    "fresh": true,
    "break_gap": 0.0165,
    "earnings_d": 76,
+   "tactic": null
+  },
+  {
+   "id": "OGS-2026-08-19-watch",
+   "code": "OGS",
+   "name": "ONE Gas, Inc.",
+   "ccy": "USD",
+   "group": "watch",
+   "entry_kind": "breakout",
+   "stage": 2,
+   "price": 81.39,
+   "entry": 82.14,
+   "stop": 78.9502,
+   "target": 88.5195,
+   "shares_1pct": 31,
+   "range_pos": 0.4404,
+   "norm": -3.8,
+   "bear_share": 0.25,
+   "fresh": true,
+   "break_gap": 0.0136,
+   "earnings_d": 75,
    "tactic": null
   },
   {
