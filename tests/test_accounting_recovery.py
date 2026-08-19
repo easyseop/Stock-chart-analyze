@@ -12,9 +12,13 @@ from bot import costbook as C
 from bot import kis_positions as P
 from bot import ledger as L
 from bot import ownership as O
+from bot import trade_history as H
 
 KEY = "kb:CVNA:CVNA-2026-08-18-now"
 ODNO = "0000040445"
+SELL_KEY = "xe:CVNA:half:#1"
+SELL_ODNO = "0000041614"
+LEGACY_POS_KEY = "legacy:A:CVNA:?"
 
 
 def _env(stack: ExitStack, tmp: str) -> None:
@@ -53,6 +57,75 @@ def _ccnl(*_args, **_kwargs):
 
 def _positions(*_args, **_kwargs):
     return [{"code": "CVNA", "qty": 74, "avg": 65.03}]
+
+
+def _ccnl_partial(*_args, **_kwargs):
+    return {"rt_cd": "0", "output": [
+        {
+            "odno": ODNO, "pdno": "CVNA", "sll_buy_dvsn_cd": "02",
+            "ft_ord_qty": "74", "ft_ccld_qty": "74",
+            "ft_ccld_unpr3": "65.03", "ord_tmd": "223038",
+        },
+        {
+            "odno": SELL_ODNO, "pdno": "CVNA",
+            "sll_buy_dvsn_cd": "01", "ft_ord_qty": "37",
+            "ft_ccld_qty": "37", "ft_ccld_unpr3": "69.51",
+            "ord_tmd": "001300",
+        },
+    ]}
+
+
+def _positions_partial(*_args, **_kwargs):
+    return [{"code": "CVNA", "qty": 37, "avg": 65.03}]
+
+
+def _partial_exit_state() -> None:
+    L.record_submit(SELL_KEY, "CVNA", 37, "half", meta={
+        "side": "SELL", "market": "US", "excg": "NYSE",
+        "price": 69.51, "hldg_before": 74, "pos_key": LEGACY_POS_KEY,
+        "sleeve": "A", "fx": 1380.0, "ccy": "USD",
+    })
+    L.bind_broker_order(SELL_KEY, SELL_ODNO)
+    L.on_result(SELL_KEY, "ack", 0, open_order=True)
+    L.reconcile(SELL_KEY, 37, fill_price=69.51,
+                fill_price_source="ccnl", open_order=False)
+    L.record_reconcile_meta(
+        SELL_KEY, reason="ccnl-filled",
+        meta={"source": "ccnl", "side": "SELL", "intended": 37})
+    sell_event = f"fill:{SELL_KEY}:SELL:37"
+    C.add_lot(LEGACY_POS_KEY, "CVNA", 74, 65.03, fx=1380,
+              sleeve="A", event_id=sell_event + ":legacy")
+    C.close_lot(LEGACY_POS_KEY, 37, 69.51 * 37 * 1380,
+                sleeve="A", day_kst="2026-08-20", event_id=sell_event)
+    P.apply_sell_fill("CVNA", qty=37, price=69.51,
+                      pos_key=LEGACY_POS_KEY, event_id=sell_event)
+    P.mark_half_done("CVNA", event_id="half:CVNA:2026-08-20")
+    P.raise_stop("CVNA", 65.03)
+    L._append({"ev": "accounted", "key": SELL_KEY, "accounted": 37})
+
+
+def _partial_plan(now: float = 1000.0):
+    with mock.patch.object(R.kis, "fills", side_effect=_ccnl_partial), \
+            mock.patch.object(R.kis, "positions_detail",
+                              side_effect=_positions_partial):
+        return R.build_partial_exit_plan(
+            order_key=KEY, odno=ODNO, sell_order_key=SELL_KEY,
+            sell_odno=SELL_ODNO, symbol="CVNA", qty=74,
+            fill_price=65.03, sell_qty=37, sell_fill_price=69.51,
+            fx=1380, cost_krw=6640863, trade_date="20260818",
+            sell_trade_date="20260820", sell_day_kst="2026-08-20",
+            now=now)
+
+
+def _apply_partial(plan: dict, backup: str, *, now: float = 1001.0):
+    with mock.patch.object(R.kis, "fills", side_effect=_ccnl_partial), \
+            mock.patch.object(R.kis, "positions_detail",
+                              side_effect=_positions_partial), \
+            mock.patch.object(R.legacy_migration, "_services_quiesced",
+                              return_value=(True, "ok")):
+        return R.apply_plan(
+            plan, ack=f"APPLY {plan['plan_sha256']}", services_stopped=True,
+            backup_dir=backup, now=now)
 
 
 def _plan(now: float = 1000.0):
@@ -198,11 +271,161 @@ def test_accounting_recovery_pending_holds_budget_until_completion():
     print("[PASS] recovery pending 동안 예약 유지 · 완료 뒤 해제")
 
 
+def test_partial_exit_recovery_adopts_existing_economics_without_double_count():
+    with tempfile.TemporaryDirectory() as tmp, ExitStack() as stack:
+        _env(stack, tmp)
+        _partial_exit_state()
+        plan = _partial_plan()
+        economic = plan["economic_accounting"]
+        assert plan["final_qty"] == 37
+        assert economic["mode"] == "preexisting-legacy-seed-close"
+        assert abs(economic["seed_cost_krw"] - 6640863.6) < 1e-6
+        assert round(economic["remaining_cost_krw"]) == 3320432
+        assert round(economic["realized_pnl_krw"]) == 228749
+        costbook_before = open(C._path(), "rb").read()
+
+        result = _apply_partial(plan, os.path.join(tmp, "backup-partial"))
+        assert result["ok"] and result["orders_sent"] == 0
+        assert result["costbook_mutations"] == 0
+        assert open(C._path(), "rb").read() == costbook_before
+        buy = L.state_of(KEY)
+        sell = L.state_of(SELL_KEY)
+        assert buy["state"] == "filled" and buy["accounted"] == 74
+        assert buy["accounting_recovery_complete"] is True
+        assert sell["state"] == "filled" and sell["accounted"] == 37
+        pos = P.load()["CVNA"]
+        assert pos["qty"] == 37 and pos["pos_key"] == LEGACY_POS_KEY
+        assert pos["half_done"] is True and pos["stop"] == 65.03
+        assert pos["recovered_buy_qty"] == 74
+        assert pos["recovered_sell_qty"] == 37
+        lot = C._fold()["lots"][LEGACY_POS_KEY]
+        assert lot["qty"] == 37 and round(lot["cost_krw"]) == 3320432
+        history = H.snapshot()
+        cvna = [row for row in history["trades"] if row["code"] == "CVNA"]
+        assert [(row["side"], row["qty"]) for row in cvna] == [
+            ("sell", 37), ("buy", 74)]
+        assert all(row["verified"] is True for row in cvna)
+        assert history["partial"] is False
+
+        before_retry = {
+            path: open(path, "rb").read()
+            for path in (L.LEDGER_PATH, P.PATH, C._path())
+        }
+        again = _apply_partial(
+            plan, os.path.join(tmp, "unused-backup"), now=1002)
+        assert again["already_applied"] is True
+        assert before_retry == {
+            path: open(path, "rb").read()
+            for path in (L.LEDGER_PATH, P.PATH, C._path())
+        }
+    print("[PASS] 기존 74→37 경제장부 무변조 · BUY/잔여 정체성만 멱등 복구")
+
+
+def test_partial_exit_plan_rejects_missing_or_distorted_sell_accounting():
+    with tempfile.TemporaryDirectory() as tmp, ExitStack() as stack:
+        _env(stack, tmp)
+        _partial_exit_state()
+        with open(C._path(), "a", encoding="utf-8") as fp:
+            fp.write('{"ev":"close","key":"other","qty":1,'
+                     '"event_id":"fill:xe:CVNA:half:#1:SELL:37"}\n')
+        try:
+            _partial_plan()
+            raise AssertionError("중복 SELL event_id를 plan이 신뢰")
+        except R.RecoveryRefused as exc:
+            assert "중복" in str(exc)
+
+    with tempfile.TemporaryDirectory() as tmp, ExitStack() as stack:
+        _env(stack, tmp)
+        _partial_exit_state()
+        rows = []
+        with open(C._path(), encoding="utf-8") as fp:
+            for line in fp:
+                event = json.loads(line)
+                if event.get("ev") == "close":
+                    event["realized_pnl_krw"] += 1
+                rows.append(event)
+        with open(C._path(), "w", encoding="utf-8") as fp:
+            for event in rows:
+                fp.write(json.dumps(event) + "\n")
+        try:
+            _partial_plan()
+            raise AssertionError("왜곡된 SELL 손익을 plan이 신뢰")
+        except R.RecoveryRefused as exc:
+            assert "SELL 회계" in str(exc)
+    print("[PASS] 부분매도 원문 event 중복·손익 왜곡은 plan 생성 전 거부")
+
+
+def test_partial_exit_recovery_crash_retry_preserves_sell_and_costbook():
+    with tempfile.TemporaryDirectory() as tmp, ExitStack() as stack:
+        _env(stack, tmp)
+        _partial_exit_state()
+        plan = _partial_plan()
+        costbook_before = open(C._path(), "rb").read()
+        with mock.patch.object(P, "repair_buy_fill", side_effect=OSError("crash")), \
+                mock.patch.object(R.kis, "fills", side_effect=_ccnl_partial), \
+                mock.patch.object(R.kis, "positions_detail",
+                                  side_effect=_positions_partial), \
+                mock.patch.object(R.legacy_migration, "_services_quiesced",
+                                  return_value=(True, "ok")):
+            try:
+                R.apply_plan(
+                    plan, ack=f"APPLY {plan['plan_sha256']}",
+                    services_stopped=True,
+                    backup_dir=os.path.join(tmp, "backup-crash-partial"),
+                    now=1001)
+                raise AssertionError("crash injection did not fire")
+            except OSError:
+                pass
+        assert open(C._path(), "rb").read() == costbook_before
+        assert L.state_of(SELL_KEY)["accounted"] == 37
+        result = _apply_partial(
+            plan, os.path.join(tmp, "backup-retry-partial"), now=1002)
+        assert result["ok"] and P.load()["CVNA"]["qty"] == 37
+        assert C.open_qty("CVNA") == 37
+        assert open(C._path(), "rb").read() == costbook_before
+    print("[PASS] 잔여 포지션 교정 직전 크래시도 SELL·costbook 무변조 재시도")
+
+
+def test_partial_exit_apply_rechecks_final_broker_quantity():
+    with tempfile.TemporaryDirectory() as tmp, ExitStack() as stack:
+        _env(stack, tmp)
+        _partial_exit_state()
+        plan = _partial_plan()
+        before = {
+            path: open(path, "rb").read()
+            for path in (L.LEDGER_PATH, P.PATH, C._path())
+        }
+        changed = lambda *_a, **_k: [
+            {"code": "CVNA", "qty": 36, "avg": 65.03}]
+        with mock.patch.object(R.kis, "fills", side_effect=_ccnl_partial), \
+                mock.patch.object(R.kis, "positions_detail", side_effect=changed), \
+                mock.patch.object(R.legacy_migration, "_services_quiesced",
+                                  return_value=(True, "ok")):
+            try:
+                R.apply_plan(
+                    plan, ack=f"APPLY {plan['plan_sha256']}",
+                    services_stopped=True,
+                    backup_dir=os.path.join(tmp, "must-not-exist"), now=1001)
+                raise AssertionError("plan 뒤 잔고 변화를 apply가 무시")
+            except R.RecoveryRefused:
+                pass
+        assert before == {
+            path: open(path, "rb").read()
+            for path in (L.LEDGER_PATH, P.PATH, C._path())
+        }
+        assert not os.path.exists(os.path.join(tmp, "must-not-exist"))
+    print("[PASS] plan 이후 37주 잔고 변화는 백업·mutation 전 fail-closed")
+
+
 def main():
     test_exact_cost_and_absolute_position_are_idempotent()
     test_crash_after_costbook_recovers_without_duplicate_lot_or_qty()
     test_plan_requires_fresh_exact_broker_truth_and_unowned_symbol()
     test_accounting_recovery_pending_holds_budget_until_completion()
+    test_partial_exit_recovery_adopts_existing_economics_without_double_count()
+    test_partial_exit_plan_rejects_missing_or_distorted_sell_accounting()
+    test_partial_exit_recovery_crash_retry_preserves_sell_and_costbook()
+    test_partial_exit_apply_rechecks_final_broker_quantity()
     print("\n모든 forensic 회계 복구 테스트 통과.")
 
 

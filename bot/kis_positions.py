@@ -126,19 +126,35 @@ def migrate_legacy(code: str, *, qty: int, entry: float, stop: float,
 def repair_buy_fill(code: str, *, qty: int, entry: float, stop: float,
                     stop0: float, ccy: str, pos_key: str, name: str = "",
                     opened: str = "", sleeve: str = "A",
-                    target: float | None = None, event_id: str) -> None:
+                    target: float | None = None, half_done: bool = False,
+                    recovered_buy_qty: int | None = None,
+                    recovered_sell_qty: int | None = None,
+                    economic_seed_event_id: str = "",
+                    economic_sell_event_id: str = "",
+                    event_id: str) -> None:
     """이미 보호 중인 유실 BUY를 더하지 않고 절대수량·정체성으로 교정한다."""
     if not str(event_id or "").strip():
         raise ValueError("accounting repair requires event_id")
     if int(qty) <= 0 or float(entry) <= 0 or float(stop) <= 0 \
             or float(stop0) <= 0 or not str(pos_key or "").strip():
         raise ValueError("invalid accounting repair position")
+    buy_qty = int(recovered_buy_qty or qty)
+    sell_qty = int(recovered_sell_qty or 0)
+    if buy_qty <= 0 or sell_qty < 0 or buy_qty - sell_qty != int(qty):
+        raise ValueError("invalid accounting repair scenario quantities")
+    if sell_qty > 0 and (not str(economic_seed_event_id or "").strip()
+                         or not str(economic_sell_event_id or "").strip()):
+        raise ValueError("partial repair requires economic event evidence")
     _append({
         "ev": "accounting_repair", "code": str(code).upper(),
         "qty": int(qty), "entry": float(entry), "stop": float(stop),
         "stop0": float(stop0), "ccy": str(ccy), "pos_key": str(pos_key),
         "name": str(name), "opened": str(opened),
         "sleeve": str(sleeve).upper(), "target": target,
+        "half_done": bool(half_done),
+        "recovered_buy_qty": buy_qty, "recovered_sell_qty": sell_qty,
+        "economic_seed_event_id": str(economic_seed_event_id or ""),
+        "economic_sell_event_id": str(economic_sell_event_id or ""),
         "accounting_repaired": True, "event_id": str(event_id),
     })
 
@@ -239,6 +255,16 @@ def load() -> dict:
                             st[code]["legacy_migrated"] = True
                         else:
                             st[code]["accounting_repaired"] = True
+                            if ev.get("half_done") is True:
+                                st[code]["half_done"] = True
+                            st[code]["recovered_buy_qty"] = int(
+                                ev.get("recovered_buy_qty") or q)
+                            st[code]["recovered_sell_qty"] = int(
+                                ev.get("recovered_sell_qty") or 0)
+                            st[code]["economic_seed_event_id"] = str(
+                                ev.get("economic_seed_event_id") or "")
+                            st[code]["economic_sell_event_id"] = str(
+                                ev.get("economic_sell_event_id") or "")
                     elif ev.get("ev") == "sell_fill" and code in st:
                         st[code]["qty"] = max(
                             0, int(st[code].get("qty") or 0)
