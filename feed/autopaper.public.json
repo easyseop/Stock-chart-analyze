@@ -1,8 +1,8 @@
 {
- "generated_at": "2026-08-19T22:46:18.342535+09:00",
+ "generated_at": "2026-08-19T22:54:40.555623+09:00",
  "updated": "2026-08-19",
  "start": 100000000,
- "cash": 40300807,
+ "cash": 43895346,
  "equity": 102046754,
  "ret_pct": 2.05,
  "positions": [
@@ -19,7 +19,7 @@
    "opened": "2026-07-06",
    "pl_krw": 745653,
    "pl_pct": 8.42,
-   "price_age_min": 0.5
+   "price_age_min": 8.9
   },
   {
    "code": "HMC",
@@ -34,7 +34,7 @@
    "opened": "2026-07-09",
    "pl_krw": 11420,
    "pl_pct": 14.62,
-   "price_age_min": 0.5
+   "price_age_min": 8.9
   },
   {
    "code": "J",
@@ -49,7 +49,7 @@
    "opened": "2026-07-11",
    "pl_krw": 731131,
    "pl_pct": 12.79,
-   "price_age_min": 0.5
+   "price_age_min": 8.9
   },
   {
    "code": "MAIN",
@@ -64,7 +64,7 @@
    "opened": "2026-07-22",
    "pl_krw": 247196,
    "pl_pct": 8.32,
-   "price_age_min": 0.5
+   "price_age_min": 8.8
   },
   {
    "code": "004370",
@@ -79,7 +79,7 @@
    "opened": "2026-07-27",
    "pl_krw": 640000,
    "pl_pct": 17.37,
-   "price_age_min": 0.5
+   "price_age_min": 8.8
   },
   {
    "code": "EQT",
@@ -94,7 +94,7 @@
    "opened": "2026-07-29",
    "pl_krw": 386784,
    "pl_pct": 4.41,
-   "price_age_min": 0.5
+   "price_age_min": 8.8
   },
   {
    "code": "MDT",
@@ -109,22 +109,22 @@
    "opened": "2026-07-30",
    "pl_krw": 494956,
    "pl_pct": 8.66,
-   "price_age_min": 0.5
+   "price_age_min": 8.8
   },
   {
    "code": "AVY",
    "name": "Avery Dennison Corporation",
    "ccy": "USD",
-   "q": 28,
+   "q": 14,
    "avg": 169.73,
    "price": 181.8800048828125,
-   "stop": 158.3847,
+   "stop": 169.73,
    "target": 192.4206,
-   "half_done": false,
+   "half_done": true,
    "opened": "2026-08-03",
-   "pl_krw": 480247,
+   "pl_krw": 240123,
    "pl_pct": 7.16,
-   "price_age_min": 0.4
+   "price_age_min": 8.8
   },
   {
    "code": "DPZ",
@@ -139,7 +139,7 @@
    "opened": "2026-08-07",
    "pl_krw": -216901,
    "pl_pct": -4.35,
-   "price_age_min": 0.4
+   "price_age_min": 8.8
   },
   {
    "code": "UFPI",
@@ -154,7 +154,7 @@
    "opened": "2026-08-11",
    "pl_krw": -20836,
    "pl_pct": -0.68,
-   "price_age_min": 0.4
+   "price_age_min": 8.8
   },
   {
    "code": "036460",
@@ -169,7 +169,7 @@
    "opened": "2026-08-19",
    "pl_krw": 212000,
    "pl_pct": 2.84,
-   "price_age_min": 0.4
+   "price_age_min": 8.8
   }
  ],
  "pending": [
@@ -915,6 +915,19 @@
  "log": [
   {
    "d": "2026-08-19",
+   "type": "sell",
+   "code": "AVY",
+   "name": "Avery Dennison Corporation",
+   "q": 14,
+   "price": 181.88,
+   "ccy": "USD",
+   "amt": 3594538,
+   "note": "+1R 절반 익절",
+   "pl": 240123,
+   "pl_pct": 7.2
+  },
+  {
+   "d": "2026-08-19",
    "type": "buy",
    "code": "036460",
    "name": "한국가스공사",
@@ -1536,19 +1549,8 @@
    "note": "반반 1차 — 🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권27% · 체크4/6 · 손절폭7.6%",
    "stop": 12.3253,
    "target": 15.3544
-  },
-  {
-   "d": "2026-07-09",
-   "type": "order",
-   "code": "LSPD",
-   "name": "Lightspeed Commerce Inc. Subordinate Votin",
-   "q": 28,
-   "price": 10.02,
-   "ccy": "USD",
-   "amt": 423340,
-   "note": "눌림 지정가 주문(추격 금지) — 🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권34% · 체크6/6 · 손절폭8.1%"
   }
  ],
- "lane": "fast",
+ "lane": "bulk",
  "data_stale": []
 }
