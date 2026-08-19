@@ -104,7 +104,7 @@ def _partial_exit_state() -> None:
     L._append({"ev": "accounted", "key": SELL_KEY, "accounted": 37})
 
 
-def _partial_plan(now: float = 1000.0):
+def _partial_plan(now: float = 1000.0, *, cost_krw: float = 6640863):
     with mock.patch.object(R.kis, "fills", side_effect=_ccnl_partial), \
             mock.patch.object(R.kis, "positions_detail",
                               side_effect=_positions_partial):
@@ -112,7 +112,7 @@ def _partial_plan(now: float = 1000.0):
             order_key=KEY, odno=ODNO, sell_order_key=SELL_KEY,
             sell_odno=SELL_ODNO, symbol="CVNA", qty=74,
             fill_price=65.03, sell_qty=37, sell_fill_price=69.51,
-            fx=1380, cost_krw=6640863, trade_date="20260818",
+            fx=1380, cost_krw=cost_krw, trade_date="20260818",
             sell_trade_date="20260820", sell_day_kst="2026-08-20",
             now=now)
 
@@ -417,6 +417,83 @@ def test_partial_exit_apply_rechecks_final_broker_quantity():
     print("[PASS] plan 이후 37주 잔고 변화는 백업·mutation 전 fail-closed")
 
 
+def test_partial_exit_plan_rejects_sell_filled_but_unaccounted():
+    """SELL close가 있어도 ledger handoff 미완이면 BUY 복구를 시작하지 않는다."""
+    with tempfile.TemporaryDirectory() as tmp, ExitStack() as stack:
+        _env(stack, tmp)
+        _partial_exit_state()
+        L._append({"ev": "accounted", "key": SELL_KEY, "accounted": 0})
+        before = {
+            path: open(path, "rb").read()
+            for path in (L.LEDGER_PATH, P.PATH, C._path())
+        }
+        try:
+            _partial_plan()
+            raise AssertionError("SELL accounted=0인데 복구 plan 생성")
+        except R.RecoveryRefused as exc:
+            assert "SELL 체결/회계" in str(exc)
+        assert before == {
+            path: open(path, "rb").read()
+            for path in (L.LEDGER_PATH, P.PATH, C._path())
+        }
+    print("[PASS] SELL filled=37/accounted=0은 plan 생성 전 무변조 거부")
+
+
+def test_partial_exit_plan_rejects_exact_one_won_rounding_delta():
+    """운영자 정수 표기 허용은 |durable-requested| < 1원으로 고정한다."""
+    with tempfile.TemporaryDirectory() as tmp, ExitStack() as stack:
+        _env(stack, tmp)
+        _partial_exit_state()
+        durable = 65.03 * 74 * 1380
+        try:
+            _partial_plan(cost_krw=durable - 1.0)
+            raise AssertionError("원가 차이 정확히 1원인데 plan 생성")
+        except R.RecoveryRefused as exc:
+            assert "legacy BUY seed" in str(exc)
+    print("[PASS] durable 원가 차이 Δ=1.0원 경계는 plan 거부")
+
+
+def test_partial_exit_apply_rechecks_broker_again_after_backup():
+    """첫 조회 뒤 움직인 잔고를 백업 후 두 번째 fresh 조회가 잡아야 한다."""
+    with tempfile.TemporaryDirectory() as tmp, ExitStack() as stack:
+        _env(stack, tmp)
+        _partial_exit_state()
+        plan = _partial_plan()
+        before = {
+            path: open(path, "rb").read()
+            for path in (L.LEDGER_PATH, P.PATH, C._path())
+        }
+        position_calls = 0
+
+        def changed_after_first_proof(*_args, **_kwargs):
+            nonlocal position_calls
+            position_calls += 1
+            qty = 37 if position_calls <= len(R.US_EXCGS) else 36
+            return [{"code": "CVNA", "qty": qty, "avg": 65.03}]
+
+        backup = os.path.join(tmp, "backup-before-second-proof")
+        with mock.patch.object(R.kis, "fills", side_effect=_ccnl_partial), \
+                mock.patch.object(
+                    R.kis, "positions_detail",
+                    side_effect=changed_after_first_proof), \
+                mock.patch.object(R.legacy_migration, "_services_quiesced",
+                                  return_value=(True, "ok")):
+            try:
+                R.apply_plan(
+                    plan, ack=f"APPLY {plan['plan_sha256']}",
+                    services_stopped=True, backup_dir=backup, now=1001)
+                raise AssertionError("백업 뒤 잔고 변경을 2차 조회가 놓침")
+            except R.RecoveryRefused as exc:
+                assert "KIS 잔고 불일치" in str(exc)
+        assert position_calls > len(R.US_EXCGS)  # 1차 통과 뒤 2차 진입 증명
+        assert os.path.isfile(os.path.join(backup, "manifest.json"))
+        assert before == {
+            path: open(path, "rb").read()
+            for path in (L.LEDGER_PATH, P.PATH, C._path())
+        }
+    print("[PASS] 1차 37주→백업 후 36주는 2차 fresh 조회에서 무변조 거부")
+
+
 def main():
     test_exact_cost_and_absolute_position_are_idempotent()
     test_crash_after_costbook_recovers_without_duplicate_lot_or_qty()
@@ -426,6 +503,9 @@ def main():
     test_partial_exit_plan_rejects_missing_or_distorted_sell_accounting()
     test_partial_exit_recovery_crash_retry_preserves_sell_and_costbook()
     test_partial_exit_apply_rechecks_final_broker_quantity()
+    test_partial_exit_plan_rejects_sell_filled_but_unaccounted()
+    test_partial_exit_plan_rejects_exact_one_won_rounding_delta()
+    test_partial_exit_apply_rechecks_broker_again_after_backup()
     print("\n모든 forensic 회계 복구 테스트 통과.")
 
 
