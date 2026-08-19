@@ -2119,6 +2119,6 @@ Oracle 런북도 runtime mask 대신 재기동 주체 선제 stop → 주문 유
 상태/pgrep/heartbeat 증명 → apply → enable/start 복구 순서로 바꿨다. 상세 검토
 자료는 `docs/CLAUDE_REVIEW_CVNA_QUIESCE_REAL_UNIT_FIX.md`다.
 
-현재 변경은 로컬 검증 단계이며 운영 서비스·env·kill·원장에 쓴 값은 0건이다.
-다음 순서는 원격 Draft PR → Claude P0/P1=0 재검토 → 사용자 병합 승인 → Oracle
-코드 배포 → 장외 새 5분 plan/exact SHA 별도 승인 → apply다. 단계는 합치지 않는다.
+원격 Draft PR은 `#119`다. 운영 서비스·env·kill·원장에 쓴 값은 0건이다. 다음
+순서는 PR CI → Claude P0/P1=0 재검토 → 사용자 병합 승인 → Oracle 코드 배포 →
+장외 새 5분 plan/exact SHA 별도 승인 → apply다. 단계는 합치지 않는다.
