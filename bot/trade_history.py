@@ -148,6 +148,93 @@ def _lot_for(lots: dict[str, dict], pos_key: str, code: str) -> tuple[str, dict]
     return matches[-1] if len(matches) == 1 else None
 
 
+def _recovered_partial_buy_row(
+        repair: dict, add_by_event: dict[str, dict],
+        close_by_event: dict[str, dict], order_map: dict[str, dict],
+        sell_rows: dict[str, dict]) -> dict | None:
+    """2건 forensic 복구가 독립 증명될 때만 누락 BUY를 확정 이력으로 만든다."""
+    code = str(repair.get("code") or "").upper()
+    pos_key = str(repair.get("pos_key") or "")
+    buy_event_id = str(repair.get("event_id") or "")
+    seed_event_id = str(repair.get("economic_seed_event_id") or "")
+    sell_event_id = str(repair.get("economic_sell_event_id") or "")
+    try:
+        final_qty = int(repair.get("qty") or 0)
+        buy_qty = int(repair.get("recovered_buy_qty") or 0)
+        sell_qty = int(repair.get("recovered_sell_qty") or 0)
+        entry = float(repair.get("entry") or 0)
+    except (TypeError, ValueError, OverflowError):
+        return None
+    seed = add_by_event.get(seed_event_id) or {}
+    close = close_by_event.get(sell_event_id) or {}
+    buy_order = order_map.get(_order_key(buy_event_id, "BUY"), {})
+    sell_order = order_map.get(_order_key(sell_event_id, "SELL"), {})
+    sell_row = sell_rows.get(sell_event_id)
+    seed_cost = _number(seed.get("cost_krw"))
+    cost_closed = _number(close.get("cost_closed_krw"))
+    realized = _number(close.get("realized_pnl_krw"))
+    if (not code or not pos_key or final_qty <= 0 or buy_qty <= 0
+            or sell_qty <= 0 or buy_qty - sell_qty != final_qty
+            or entry <= 0 or seed.get("ev") != "add"
+            or close.get("ev") != "close"
+            or str(seed.get("key") or "") != pos_key
+            or str(close.get("key") or "") != pos_key
+            or str(seed.get("symbol") or "").upper() != code
+            or int(seed.get("qty") or 0) != buy_qty
+            or int(close.get("qty") or 0) != sell_qty
+            or abs(float(seed.get("fill_price") or 0) - entry) > 0.005
+            or seed_cost is None or seed_cost <= 0
+            or cost_closed is None or cost_closed <= 0 or realized is None
+            or str(buy_order.get("side") or "").upper() != "BUY"
+            or str(buy_order.get("state") or "") != "filled"
+            or int(buy_order.get("filled") or 0) != buy_qty
+            or int(buy_order.get("accounted") or 0) != buy_qty
+            or buy_order.get("accounting_recovery_complete") is not True
+            or str(sell_order.get("side") or "").upper() != "SELL"
+            or str(sell_order.get("state") or "") != "filled"
+            or int(sell_order.get("filled") or 0) != sell_qty
+            or int(sell_order.get("accounted") or 0) != sell_qty
+            or sell_row is None):
+        return None
+    # 기존 SELL 행은 legacy open 때문에 보수적으로 unverified였다. BUY·SELL·
+    # 두 costbook 이벤트의 완전한 연결이 확인된 경우에만 확정으로 승격한다.
+    sell_row["verified"] = True
+    sell_row["price_estimated"] = False
+    ccy = str(repair.get("ccy") or "USD").upper()
+    sleeve = str(repair.get("sleeve") or "A").upper()
+    timestamp = buy_order.get("submitted_at") or repair.get("ts")
+    price_source = str(
+        buy_order.get("fill_price_source") or "broker-recovery-delayed-ccnl")
+    return {
+        "side": "buy",
+        "executed_at": _iso_kst(timestamp),
+        "day": str(_iso_kst(timestamp)[:10] if timestamp else ""),
+        "code": code,
+        "name": str(repair.get("name") or buy_order.get("name") or code),
+        "market": "KR" if ccy == "KRW" else "US",
+        "ccy": ccy,
+        "sleeve": "B" if sleeve == "B" else "A",
+        "reason": str(buy_order.get("reason") or "매수 체결 복구"),
+        "reason_kind": "entry",
+        "qty": buy_qty,
+        "fill_price": round(entry, 6),
+        "entry_price": round(entry, 6),
+        "exit_price": None,
+        "amount_native": round(entry * buy_qty, 6),
+        "amount_krw": round(seed_cost, 2),
+        "average_price_after": round(entry, 6),
+        "position_qty_after": buy_qty,
+        "price_pnl": None,
+        "realized_pnl_krw": None,
+        "return_pct": None,
+        "remaining_qty": buy_qty,
+        "partial_exit": False,
+        "fill_price_source": price_source,
+        "price_estimated": False,
+        "verified": True,
+    }
+
+
 def _trade_rows(position_events: list[dict], cost_events: list[dict],
                 orders: list[dict]) -> tuple[list[dict], int]:
     order_map = {str(row.get("key") or ""): row for row in orders}
@@ -165,6 +252,7 @@ def _trade_rows(position_events: list[dict], cost_events: list[dict],
     active_by_code: dict[str, str] = {}
     seen_events: set[str] = set()
     trades: list[dict] = []
+    sell_rows: dict[str, dict] = {}
     incomplete = 0
     confirmed_pos_keys = {
         str(event.get("pos_key") or "")
@@ -398,6 +486,8 @@ def _trade_rows(position_events: list[dict], cost_events: list[dict],
                 and cost_closed is not None and pnl_krw is not None
                 and not price_estimated),
         })
+        if event_id:
+            sell_rows[event_id] = trades[-1]
         ratio = qty / before_qty
         lot["native_cost"] = max(
             0.0, float(lot.get("native_cost") or 0) * (1 - ratio))
@@ -406,6 +496,22 @@ def _trade_rows(position_events: list[dict], cost_events: list[dict],
             lots.pop(actual_key, None)
             if active_by_code.get(code) == actual_key:
                 active_by_code.pop(code, None)
+
+    seen_repairs: set[str] = set()
+    for repair in position_events:
+        if repair.get("ev") != "accounting_repair" \
+                or int(_number(repair.get("recovered_sell_qty")) or 0) <= 0:
+            continue
+        repair_id = str(repair.get("event_id") or "")
+        if not repair_id or repair_id in seen_repairs:
+            continue
+        seen_repairs.add(repair_id)
+        row = _recovered_partial_buy_row(
+            repair, add_by_event, close_by_event, order_map, sell_rows)
+        if row is None:
+            incomplete += 1
+            continue
+        trades.append(row)
 
     trades.sort(key=lambda row: row.get("executed_at") or "", reverse=True)
     return trades, incomplete

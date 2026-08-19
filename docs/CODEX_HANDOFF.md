@@ -2034,3 +2034,62 @@ exit 1로 KILLED됐고 원상복구 뒤 통과했다.
 통과했다. 상세 증거는 `docs/CLAUDE_REVIEW_CVNA_RECOVERY_P2_RESPONSE.md`다.
 현재 병합 준비만 완료했으며 기본 브랜치 병합·Oracle 배포·CVNA 운영 원장 apply는
 하지 않았다. 다음 동작은 사용자 병합 승인 후에만 진행한다.
+
+### 39. 2026-08-20 CVNA 절반익절 이후 2건 forensic 복구 재설계
+
+기본 브랜치 `a5ced2f`의 2026-08-20 재정의를 읽고, 기존 74주 BUY 전용 plan을
+폐기했다. Oracle에서 읽기 전용으로 주문·포지션·costbook 원문과 KIS fresh
+체결/잔고를 다시 대조했다. BUY `0000040445`는 74주 @65.03, SELL
+`0000041614`는 37주 @69.51, 현재 잔고와 보호원장은 37주다.
+
+핵심 조사 결과는 현금 부풀림도 SELL fail-closed도 아니었다. SELL 회계가 기존
+legacy 보호 경로를 사용해 74주 원가 6,640,863.6원을 먼저 시딩하고 37주를
+정상 close했다. 현재 잔여 원가 3,320,431.8원, 실현손익 +228,748.8원으로
+경제 장부는 이미 맞다. 남은 문제는 BUY 원장이 rejected/0/0이고 보호 포지션
+pos_key가 비어 거래이력의 BUY가 누락된 정체성 단절이다. 상세 원문과 산식은
+`docs/CVNA_PARTIAL_EXIT_FORENSICS_2026-08-20.md`에 기록했다.
+
+새 브랜치 `codex/cvna-partial-exit-recovery`, 핵심 체크포인트 `5c7cb79`에서
+`bot.accounting_recovery plan-partial-exit` v2를 추가했다. BUY 74, SELL 37,
+현재 37, SELL accounted, legacy add/close 원문, 열린 lot 37, half_done·본전
+래칫을 하나의 SHA plan으로 증명한다. apply는 costbook을 0건 수정하고 BUY 원장을
+filled/accounted 74로 복구하며 보호 포지션은 절대 잔여 37주와 기존 stop·half를
+유지한다. 거래이력도 네 durable 증거가 모두 있을 때만 BUY 74와 SELL 37을
+verified로 연결한다.
+
+focused 8/8, 거래이력 4/4, Python 전체 69/69, Node 19/19, compileall,
+diff check가 통과했다. 체크포인트 뒤 costbook 재기입, half_done 제거, fresh 잔고
+재검사 제거, SELL verified 연결 제거 뮤테이션 4종은 모두 대응 테스트 exit 1로
+KILLED됐다. Claude 요청서는
+`docs/CLAUDE_REVIEW_CVNA_PARTIAL_EXIT_RECOVERY.md`다.
+
+금지선은 유지한다. Claude P0/P1=0 및 사용자 병합 승인 전 기본 브랜치 병합·Oracle
+배포를 하지 않는다. 병합·배포가 끝나도 장외 새 5분 v2 plan 표와 exact SHA를
+사용자가 별도로 승인하기 전에는 운영 원장 apply를 하지 않는다. L0/L1, mock/live,
+SEED, freeze, fallback, stall 설정은 이 작업에서 건드리지 않았다.
+
+원격 Draft PR은 `#118`이며 head `147c99d`까지 push했다. push/PR 두 CI 실행은
+각각 54초·53초에 모두 통과했다. 다음 동작은 Claude가 위 검토 요청의 반례를
+재현해 P0/P1=0을 확인하는 것이며, 그 전에는 Draft를 유지한다.
+
+#### Claude 승인 후 P2/P3 테스트 공백 보완(2026-08-20)
+
+Claude 최종 판정은 P0 0·P1 0으로 병합 승인 가능이며, P2-1 한 건과 P3 두 건은
+구현 결함이 아니라 회귀 테스트 공백으로 분류됐다. 사용자 요청에 따라 커밋
+`23f8d12`에서 세 공백을 모두 닫았다.
+
+- `test_partial_exit_plan_rejects_sell_filled_but_unaccounted`: SELL filled=37이어도
+  최종 accounted=0이면 plan 생성 전 무변조 거부한다.
+- `test_partial_exit_plan_rejects_exact_one_won_rounding_delta`: durable 원가와 정확히
+  1.0원 차이면 `< 1원` 계약 밖이므로 거부한다.
+- `test_partial_exit_apply_rechecks_broker_again_after_backup`: 첫 37주 증명 뒤 백업을
+  만들고 두 번째 조회에서 36주가 되면 세 원장 mutation 없이 거부한다.
+
+세 방어를 각각 제거·완화한 독립 뮤테이션은 신규 assertion에서 모두 종료코드 1로
+KILLED됐다. 최종 검증은 accounting recovery 11/11, trade history 4/4, Python
+전체 69/69 모듈, Node 19/19, compileall, diff check가 모두 통과했다. 상세 증거는
+`docs/CLAUDE_REVIEW_CVNA_PARTIAL_EXIT_P2_P3_RESPONSE.md`에 있다.
+
+현재는 테스트와 검토 자료만 원격 PR에 반영할 단계다. 사용자 병합 승인 전에는
+Draft 해제·기본 브랜치 병합을 하지 않으며, 병합 이후에도 Oracle 배포와 CVNA 운영
+원장 apply는 각각 별도 승인·장외 새 5분 plan/exact SHA 절차 없이는 하지 않는다.
