@@ -27,6 +27,7 @@ from contextlib import contextmanager
 import fcntl
 import hashlib
 import json
+import math
 import os
 import threading
 import time
@@ -154,7 +155,8 @@ def _fold_unlocked() -> tuple[dict, list[int]]:
                               "name", "opened", "tactic", "pending", "parent_key",
                               "chase", "ref_price", "reason",
                               "legacy_migrated_order", "legacy_hldg_before",
-                              "reservation_cost_krw",
+                              "reservation_cost_krw", "reservation_risk_krw",
+                              "budget_risk_limit_krw",
                               "budget_total_held_krw", "budget_total_limit_krw",
                               "budget_sleeve_held_krw", "budget_sleeve_limit_krw"):
                         if f in meta and meta.get(f) is not None:
@@ -289,6 +291,73 @@ def _buy_reservation_costs(fold: dict, exclude_key: str | None = None
     return total, by_sleeve
 
 
+def _buy_reservation_risks(fold: dict, exclude_key: str | None = None
+                           ) -> float | None:
+    """열린 BUY·계획·미회계 체결의 최악 손절위험(KRW)을 합산한다."""
+    total = 0.0
+    for key, cur in fold.items():
+        if key == exclude_key or str(cur.get("side") or "").upper() != "BUY":
+            continue
+        try:
+            state = str(cur.get("state") or "")
+            filled = max(0, int(cur.get("filled") or 0))
+            accounted = max(0, int(cur.get("accounted") or 0))
+        except (TypeError, ValueError, OverflowError):
+            return None
+        unaccounted = max(0, filled - accounted)
+        terminal_handoff = state in _TERMINAL
+        if terminal_handoff and unaccounted <= 0:
+            continue
+        if state == "partial" and cur.get("open") is False and unaccounted <= 0:
+            continue
+        parent_key = str(cur.get("parent_key") or "")
+        parent = fold.get(parent_key) if parent_key else None
+        if state == "planned" and parent:
+            try:
+                parent_risk = float(parent.get("reservation_risk_krw") or 0)
+            except (TypeError, ValueError, OverflowError):
+                return None
+            if (str(parent.get("state") or "") not in _TERMINAL
+                    and not (parent.get("state") == "partial"
+                             and parent.get("open") is False)
+                    and parent_risk > 0):
+                continue
+        try:
+            explicit = float(cur.get("reservation_risk_krw") or 0)
+            intended = max(1, int(cur.get("intended") or 0))
+            if explicit > 0:
+                risk = (explicit * min(unaccounted, intended) / intended
+                        if terminal_handoff or (
+                            state == "partial" and cur.get("open") is False)
+                        else explicit)
+            else:
+                qty = (unaccounted if terminal_handoff or (
+                    state == "partial" and cur.get("open") is False)
+                    else max(0, intended - filled))
+                price = float(cur.get("price") or cur.get("limit") or 0)
+                stop = float(cur.get("stop") or 0)
+                fx = float(cur.get("fx") or (
+                    1.0 if cur.get("market") == "KR" else 0))
+                if qty > 0 and (
+                        not all(math.isfinite(v) for v in (price, stop, fx))
+                        or price <= stop or stop <= 0 or fx <= 0):
+                    return None
+                risk = qty * max(0.0, price - stop) * fx
+        except (TypeError, ValueError, OverflowError):
+            return None
+        if not math.isfinite(risk) or risk < 0:
+            return None
+        total += risk
+    return total
+
+
+def buy_reservation_risk_total() -> float | None:
+    """현재 모든 BUY 예약위험. 손상·계량불가는 None(fail-closed)."""
+    with _file_lock(False):
+        fold, corrupt = _fold_unlocked()
+        return None if corrupt else _buy_reservation_risks(fold)
+
+
 def try_record_submit(key: str, symbol: str, qty: int, reason: str = "",
                       meta: dict | None = None, *,
                       min_interval_s: float = 60.0,
@@ -341,6 +410,19 @@ def try_record_submit(key: str, symbol: str, qty: int, reason: str = "",
                         and float(sleeve_held or 0)
                         + reserved_by_sleeve.get(sleeve, 0.0) + order_cost
                         > float(sleeve_limit) + 1e-6):
+                    return False
+            risk_limit = m.get("budget_risk_limit_krw")
+            if risk_limit is not None:
+                from bot import risk_budget
+                order_risk = float(m.get("reservation_risk_krw") or 0)
+                limit_risk = float(risk_limit)
+                fx = float(m.get("fx") or 0)
+                durable = risk_budget.current_open_risk(fx)
+                reserved = _buy_reservation_risks(fold, exclude_key=key)
+                if (durable is None or reserved is None or order_risk <= 0
+                        or limit_risk <= 0
+                        or durable + reserved + order_risk
+                        >= limit_risk - 1e-6):
                     return False
         except (TypeError, ValueError):
             return False

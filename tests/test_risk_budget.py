@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import os
 import sys
+import tempfile
 from unittest import mock
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -63,6 +64,7 @@ def test_unquantifiable_rows_flagged():
 def _gate(positions, seed=1_000_000.0, env=None):
     with mock.patch("bot.kis_positions.load", lambda: positions), \
             mock.patch("bot.envelope.operating_total_krw", lambda: seed), \
+            mock.patch("bot.ledger.buy_reservation_risk_total", return_value=0.0), \
             mock.patch.dict(os.environ, env or {}, clear=False):
         return R.gate(FX)
 
@@ -95,6 +97,48 @@ def test_gate_fail_closed_paths():
     ok5, _, _ = _gate({})                          # 정상 시드 + 빈 원장 → 허용
     assert ok5 is True
     print("[PASS] 무보호·원장실패 차단 · 시드0은 위험 유무로 갈림")
+
+
+def test_invalid_fx_fractional_qty_and_reserved_risk_fail_closed():
+    out = R.open_risk({"USD": _pos(100, 90, 1)}, float("nan"))
+    assert out["unknown"] == ["USD"]
+    out2 = R.open_risk({"BROKEN": _pos(100, 90, 1.5)}, FX)
+    assert out2["unknown"] == ["BROKEN"]
+    positions = {"HELD": _pos(100, 95, 10)}       # 50,000
+    with mock.patch("bot.kis_positions.load", return_value=positions), \
+            mock.patch("bot.envelope.operating_total_krw", return_value=1_000_000), \
+            mock.patch("bot.ledger.buy_reservation_risk_total", return_value=50_000):
+        ok, why, snap = R.gate(FX)
+    assert ok is False and snap["total_krw"] == 100_000
+    assert snap["reserved_krw"] == 50_000 and "미체결예약" in why
+    with mock.patch("bot.kis_positions.load", return_value={}), \
+            mock.patch("bot.envelope.operating_total_krw", return_value=1_000_000), \
+            mock.patch("bot.ledger.buy_reservation_risk_total", return_value=None):
+        assert R.gate(FX)[0] is False
+    print("[PASS] NaN환율·분수수량·예약위험 누락은 fail-closed")
+
+
+def test_atomic_projected_risk_blocks_second_same_cycle_order():
+    from bot import ledger as L
+    with tempfile.TemporaryDirectory() as tmp, \
+            mock.patch.object(L, "LEDGER_PATH", os.path.join(tmp, "orders.jsonl")), \
+            mock.patch.object(R, "current_open_risk", return_value=80.0):
+        def meta(risk):
+            return {"side": "BUY", "market": "US", "price": 100,
+                    "stop": 90, "fx": 1, "sleeve": "A",
+                    "reservation_risk_krw": risk,
+                    "budget_risk_limit_krw": 100}
+        assert L.try_record_submit("one", "AAA", 1, meta=meta(10), now=1000)
+        assert L.buy_reservation_risk_total() == 10
+        # 현재 80 + 첫 예약 10 + 둘째 예약 10 = cap 100(경계 차단).
+        assert not L.try_record_submit("two", "BBB", 1, meta=meta(10), now=1000)
+        assert L.state_of("two") is None
+        # 명시 예약값 없는 구버전 행도 stop이 NaN이면 0위험으로 세탁하지 않는다.
+        L.record_submit("bad", "BAD", 1, meta={
+            "side": "BUY", "market": "US", "price": 100,
+            "stop": float("nan"), "fx": 1})
+        assert L.buy_reservation_risk_total() is None
+    print("[PASS] 같은 사이클/프로세스 경합도 projected risk 원자 게이트 차단")
 
 
 def test_cap_env_clamps():
@@ -134,6 +178,8 @@ def main():
     test_unquantifiable_rows_flagged()
     test_gate_cap_boundary()
     test_gate_fail_closed_paths()
+    test_invalid_fx_fractional_qty_and_reserved_risk_fail_closed()
+    test_atomic_projected_risk_blocks_second_same_cycle_order()
     test_cap_env_clamps()
     test_buyloop_blocks_all_candidates_when_over_cap()
     print("\n총 open risk 상한 검증 통과 — 합산 제한·fail-closed·buyloop 차단.")
