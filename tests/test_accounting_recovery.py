@@ -152,10 +152,57 @@ def test_plan_requires_fresh_exact_broker_truth_and_unowned_symbol():
     print("[PASS] 조회 실패≠체결 · baseline 심볼은 forensic 복구 거부")
 
 
+def test_accounting_recovery_pending_holds_budget_until_completion():
+    """rejected 주문도 forensic apply 중에는 원래 예약액을 계속 잠근다."""
+    with tempfile.TemporaryDirectory() as tmp, ExitStack() as stack:
+        _env(stack, tmp)
+        before = L._buy_reservation_costs(L._fold())
+        assert before == (0.0, {}), before
+
+        L._append({
+            "ev": "migration_meta", "key": KEY,
+            "meta": {
+                "accounting_recovery_pending": True,
+                "accounting_recovery_complete": False,
+            },
+        })
+        during = L._buy_reservation_costs(L._fold())
+        assert during == (6641190.384, {"A": 6641190.384}), during
+
+        # pending 예약이 살아 있는 동안 1원짜리 후속 BUY도 같은 총한도에서
+        # 전송 전 차단되어야 한다. 이 단언이 pending 분기 제거 mutation을 잡는다.
+        candidate = {
+            "side": "BUY", "market": "KR", "sleeve": "A",
+            "price": 1, "fx": 1, "reservation_cost_krw": 1,
+            "budget_total_held_krw": 0,
+            "budget_total_limit_krw": 6641190.384,
+            "budget_sleeve_held_krw": 0,
+            "budget_sleeve_limit_krw": 6641190.384,
+        }
+        assert not L.try_record_submit(
+            "recovery:blocked", "NEXT", 1, meta=candidate,
+            min_interval_s=0)
+
+        L._append({
+            "ev": "migration_meta", "key": KEY,
+            "meta": {
+                "accounting_recovery_pending": False,
+                "accounting_recovery_complete": True,
+            },
+        })
+        after = L._buy_reservation_costs(L._fold())
+        assert after == (0.0, {}), after
+        assert L.try_record_submit(
+            "recovery:released", "NEXT", 1, meta=candidate,
+            min_interval_s=0)
+    print("[PASS] recovery pending 동안 예약 유지 · 완료 뒤 해제")
+
+
 def main():
     test_exact_cost_and_absolute_position_are_idempotent()
     test_crash_after_costbook_recovers_without_duplicate_lot_or_qty()
     test_plan_requires_fresh_exact_broker_truth_and_unowned_symbol()
+    test_accounting_recovery_pending_holds_budget_until_completion()
     print("\n모든 forensic 회계 복구 테스트 통과.")
 
 
