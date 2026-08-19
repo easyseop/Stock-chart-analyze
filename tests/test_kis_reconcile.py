@@ -104,6 +104,27 @@ def test_high_fully_filled_found_in_ccnl_only():
     print("[PASS] HIGH: 완전체결(nccs 부재)을 ccnl 유일후보로 확정·해제·ODNO 결속")
 
 
+def test_unknown_closed_zero_fill_candidate_stays_low():
+    """UNKNOWN도 ccnl 0주 행만으로 rejected HIGH가 되면 안 된다."""
+    with tempfile.TemporaryDirectory() as tmp:
+        _fresh(tmp)
+        L.record_submit("cvna:lost", "CVNA", 74, "pullback",
+                        meta={"side": "BUY", "market": "US"})
+        L.bind_broker_order("cvna:lost", "0000040445", ord_tmd="223038")
+        L.on_result("cvna:lost", "unknown", 0)
+        res = R.reconcile_unknowns(
+            _nccs([]),
+            _ccnl([{"odno": "40445", "pdno": "CVNA",
+                    "ft_ord_qty": "74", "ft_ccld_qty": "0",
+                    "sll_buy_dvsn_cd_name": "매수", "ord_tmd": "223038"}]))
+        assert len(res) == 1
+        assert res[0]["confidence"] == L.CONF_LOW
+        assert res[0]["state"] == "unknown" and res[0]["open"] is True
+        assert L.state_of("cvna:lost")["state"] == "unknown"
+        assert L.is_locked("CVNA")
+    print("[PASS] UNKNOWN+ccln 0주 단일후보도 LOW 잠금 유지")
+
+
 def test_low_twin_orders_same_second():
     """시나리오(리뷰 A6-1·B5): 같은 종목·같은 수량·같은 시각 주문 2건 중 하나가
     UNKNOWN → 후보 2개 → LOW → 잠금 유지(자동 재주문 금지)."""
@@ -177,6 +198,7 @@ def main():
     test_order_number_leading_zero_is_same_identity()
     test_bound_ack_zero_fill_never_closes_without_balance_proof()
     test_high_fully_filled_found_in_ccnl_only()
+    test_unknown_closed_zero_fill_candidate_stays_low()
     test_low_twin_orders_same_second()
     test_known_odno_excluded()
     test_time_window_filter()
