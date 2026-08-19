@@ -98,7 +98,7 @@ fail-closed다.
 결과:
 
 ```text
-test_services_quiesced_requires_every_unit_inactive
+test_services_quiesced_accepts_disabled_etc_units_only_with_restarters_down
 AssertionError
 exit 1
 ```
@@ -113,8 +113,8 @@ exit 1
 결과:
 
 ```text
-test_services_quiesced_accepts_disabled_etc_units_only_with_restarters_down
-AssertionError: assert ok is False and "watchdog.service=active" in why
+test_services_quiesced_requires_every_unit_inactive
+AssertionError: ('watchdog.service', 'ok')
 exit 1
 ```
 
