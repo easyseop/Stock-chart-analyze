@@ -788,6 +788,10 @@ def test_services_quiesced_accepts_disabled_etc_units_only_with_restarters_down(
                 _proc("inactive"), _proc("disabled"),
                 _proc("inactive"), _proc("disabled"),
                 _proc("active"),
+                # watchdog active 검사를 잘못 제거해도 나머지 경로를 끝까지
+                # 통과시켜 아래 assertion이 해당 방어를 직접 잡게 한다.
+                _proc("inactive"), _proc("inactive"),
+                _proc("", returncode=1),
             ]):
         ok, why = M._services_quiesced()
     assert ok is False and "watchdog.service=active" in why
