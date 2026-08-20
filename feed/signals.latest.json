@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated_at": "2026-08-21T05:27:50+09:00",
+ "generated_at": "2026-08-21T06:06:02+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "a_ablation": [
   {
@@ -1619,24 +1619,24 @@
    "group": "watch",
    "entry_kind": "now",
    "stage": 2,
-   "price": 71.55,
-   "entry": 71.55,
-   "stop": 63.4302,
-   "target": 87.7895,
+   "price": 71.52,
+   "entry": 71.52,
+   "stop": 63.4002,
+   "target": 87.7595,
    "shares_1pct": 12,
-   "range_pos": 0.3981,
+   "range_pos": 0.3974,
    "norm": 4.7,
    "bear_share": 0.25,
    "fresh": true,
-   "break_gap": 0.0584,
+   "break_gap": 0.058,
    "earnings_d": 69,
    "tactic": {
-    "stop_pct": 11.3,
+    "stop_pct": 11.4,
     "pb_price": 65.0332,
     "pb_stop_pct": 2.5,
     "mode": "pullback",
     "label": "⏳ 눌림 지정가만",
-    "desc": "지금 추격 금지(손절폭 11.3% · 단기 이격) — <b>$65.03 눌림 지정가만</b>. 눌리면 손절폭 2.5%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
+    "desc": "지금 추격 금지(손절폭 11.4% · 단기 이격) — <b>$65.03 눌림 지정가만</b>. 눌리면 손절폭 2.5%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
    }
   },
   {
@@ -2613,16 +2613,16 @@
    "group": "watch",
    "entry_kind": "breakout",
    "stage": 3,
-   "price": 16.28,
+   "price": 16.27,
    "entry": 16.42,
    "stop": 15.4728,
    "target": 18.3144,
    "shares_1pct": 105,
-   "range_pos": 0.4814,
+   "range_pos": 0.4801,
    "norm": 22.6,
    "bear_share": 0.25,
    "fresh": false,
-   "break_gap": 0.0816,
+   "break_gap": 0.0809,
    "earnings_d": 41,
    "tactic": null
   },
