@@ -2093,3 +2093,59 @@ KILLED됐다. 최종 검증은 accounting recovery 11/11, trade history 4/4, Pyt
 현재는 테스트와 검토 자료만 원격 PR에 반영할 단계다. 사용자 병합 승인 전에는
 Draft 해제·기본 브랜치 병합을 하지 않으며, 병합 이후에도 Oracle 배포와 CVNA 운영
 원장 apply는 각각 별도 승인·장외 새 5분 plan/exact SHA 절차 없이는 하지 않는다.
+
+### 40. 2026-08-21 quiesce P1 재검증 + KIS 장애 오귀속 제거
+
+기본 브랜치 `b5b5135`의 quiesce 역수정은 재검증을 통과했다. guardian 대체 경로는
+sentinel/buyloop의 정확한 `disabled`와 watchdog/autodeploy의 정확한 `inactive`를
+동시에 요구한다. 따라서 `multi-user.target` 재부팅 부활 링크와
+`deactivating`·`failed`·`unknown` transient 상태가 정지 증명을 통과하지 않는다.
+기존 masked 경로도 유지되며 `tests.test_legacy_migration`, compileall, diff check가
+통과했다. Codex 판정은 P0/P1=0이다. 어제 CVNA apply는 재부팅이 없어 영향이 없다.
+
+별도 clean worktree `/private/tmp/stock-kis-outage-v2.Qr9Ik3`, 브랜치
+`codex/kis-outage-classification-v2`에서 KIS 장애 분류 지시서를 구현했다. 구현
+커밋은 `a5d2acea`, 강화 커밋은 `a248d578`이다.
+
+- 기존 balance health 원자 상태에 최근 실패 연속수·시각·원인을 기록한다. 최근
+  5분 3회 이상만 KIS outage로 분류하며 손상·노후·타입오염은 기존 watchdog
+  재시작/HEARTBEAT 경로로 돌아간다.
+- outage에서는 sentinel 재시작 예산을 태우지 않고 hard-disable 시 기존
+  `BALANCE_FAILURE_REASON`으로 L1 상향한다. 분류 근거는 무시크릿 로그/알림에 남긴다.
+- 자가복구 일일 상한을 BALANCE 2회, HEARTBEAT 1회로 분리했다. 30분 관찰,
+  readiness, L2+, operator, 완전일치 사유, 손상 fail-closed는 그대로다. 구버전
+  `used=true`는 모든 당일 예산 소진으로 보수 이관한다.
+- timeout 뒤 KIS 읽기 호출만 15→5초로 줄이고 성공 1회 뒤 15초로 복원한다.
+  holdings/quote 직전 heartbeat를 기록하지만 스레드는 추가하지 않았다.
+
+최종 검증은 Python 전체 70/70 모듈, Node 계산 19/19, 신규 7/7, 기존 self-heal
+15/15, 경보 위생 H1-H3 7/7+H4 4/4, watchdog observability 4/4, compileall,
+실제 app.js 문법 검사, diff check가 모두 통과했다. 구현 체크포인트 뒤 독립 mutation
+8종(분류 제거·사유별 한도 완화·timeout 복원 제거·직전 heartbeat 제거·단발 outage
+허용·stale 상한 제거 등)은 모두 해당 테스트 종료코드 1로 KILLED됐다.
+
+Claude 전달문은 `docs/CLAUDE_REVIEW_KIS_OUTAGE_CLASSIFICATION.md`다. 현재 로컬 검토
+준비만 완료했고 원격 push·PR·병합·Oracle 배포·kill/env 변경은 하지 않았다. 다음
+순서는 Claude P0/P1=0 판정 → 사용자 원격/병합/배포 승인이다. 배포 후 실제 KIS
+burst에서 `재시작 0 → BALANCE L1 → 30분 뒤 자동 L0 → 복구 알림 1건`을 실측해야
+운영 완료다.
+
+#### Claude 승인 및 P3 회귀 공백 보완(2026-08-21)
+
+Claude 판정은 기본 브랜치 `dafffe2c`의
+`docs/CLAUDE_REVIEW_KIS_OUTAGE_VERDICT.md`이며 **P0 0 · P1 0 · P2 0 · P3 3**으로
+병합 가능 승인됐다. quiesce 반증 3문과 KIS outage 반증 9문은 모두 HOLDS였고,
+독립 Python 70모듈도 통과했다.
+
+사용자 요청에 따라 비차단 P3 세 건도 커밋 `21ef7617`에서 운영 코드 변경 없이
+회귀 테스트로 고정했다. 원인 문자열 charset 오염 거부, 301초 단절·성공 이후 실패
+연속수 리셋, heartbeat 95초/P0에서는 L1 금지하고 121초/hard-disable에서만 BALANCE
+L1을 올리는 계약이다.
+
+테스트 커밋 뒤 Claude가 생존시킨 X1·X4·X5를 독립 재주입했고, 각각 신규 테스트의
+정확한 assertion에서 종료코드 1로 KILLED됐다. 원복 후 신규 집중 테스트 10/10,
+Python 전체 70/70, Node 19/19, app.js 문법 검사, compileall, diff check가 모두
+통과했다. 상세 증거는 `docs/CLAUDE_REVIEW_KIS_OUTAGE_P3_RESPONSE.md`다.
+
+기본 브랜치 병합·Oracle 배포·kill 하향·env 변경은 아직 하지 않았다. 다음 단계는
+검토 브랜치 원격 반영 뒤 사용자 별도 병합 승인이다.

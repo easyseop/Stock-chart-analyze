@@ -22,8 +22,10 @@ sys.path.insert(0, os.environ.get(
     "BOT_REPO_DIR", os.path.dirname(os.path.dirname(
         os.path.dirname(os.path.abspath(__file__))))))
 
-from bot import deploy_grace, heartbeat, kill, kill_self_heal, notify  # noqa: E402
-from bot.watchdog_policy import HEARTBEAT_EXHAUSTED_REASON, WATCHDOG_WHO  # noqa: E402
+from bot import (balance_health, deploy_grace, heartbeat, kill,  # noqa: E402
+                 kill_self_heal, notify)
+from bot.watchdog_policy import (BALANCE_FAILURE_REASON,  # noqa: E402
+                                 HEARTBEAT_EXHAUSTED_REASON, WATCHDOG_WHO)
 
 CHECK_SEC = 15
 RESTART_AFTER_S = 90.0
@@ -71,13 +73,47 @@ def _log_self_heal(state: dict, result: dict, stamp: float) -> bool:
         return False
     observed = max(0.0, float(result.get("observed_s") or 0))
     remaining = max(0.0, float(result.get("remaining_s") or 0))
+    outage = state.get("kis_outage_context")
+    outage_text = ""
+    if isinstance(outage, dict):
+        outage_text = (f" outage_cause={outage.get('last_cause') or '-'}"
+                       f" outage_consecutive={int(outage.get('consecutive') or 0)}")
     print("watchdog self-heal: "
           f"action={signature[0] or '-'} why={signature[1] or '-'} "
           f"observed={observed:.0f}s remaining={remaining:.0f}s "
-          f"used_today={bool(result.get('used_today'))}", flush=True)
+          f"used_today={bool(result.get('used_today'))}{outage_text}", flush=True)
     state["self_heal_log_signature"] = signature
     state["self_heal_log_at"] = stamp
     return True
+
+
+def _recent_kis_outage(stamp: float) -> dict | None:
+    """Return trusted persisted balance-failure evidence or ``None``.
+
+    Sentinel owns KIS calls and watchdog is a separate process, therefore
+    ``kis.last_get_failure()`` cannot cross this boundary.  The existing
+    balance-health status file is the only reused observation channel.
+    Missing/corrupt/negative evidence preserves the legacy restart path.
+    """
+    try:
+        evidence = balance_health.outage_evidence(now=stamp)
+    except Exception:
+        return None
+    if not isinstance(evidence, dict) or evidence.get("outage") is not True:
+        return None
+    try:
+        consecutive = int(evidence["consecutive"])
+        age_s = float(evidence["last_failure_age_s"])
+        cause = str(evidence["last_cause"])
+    except (KeyError, TypeError, ValueError):
+        return None
+    if consecutive < balance_health.OUTAGE_MIN_FAILURES \
+            or not (0 <= age_s <= balance_health.OUTAGE_WINDOW_S) \
+            or not cause or len(cause) > 120 \
+            or not all(ch.isalnum() or ch in "_:.-" for ch in cause):
+        return None
+    return {"consecutive": consecutive, "last_failure_age_s": age_s,
+            "last_cause": cause}
 
 
 def check_cycle(state: dict, *, now: float | None = None) -> None:
@@ -85,6 +121,8 @@ def check_cycle(state: dict, *, now: float | None = None) -> None:
     age = heartbeat.age_s()
     sla = heartbeat.sla_status(age, has_positions=True)
     grace = deploy_grace.active(now=stamp)
+    if sla == heartbeat.OK and kill.level() == 0:
+        state.pop("kis_outage_context", None)
     if grace and not state.get("grace"): print("watchdog: deploy grace 시작", flush=True)
     elif not grace and state.get("grace"): print("watchdog: deploy grace 종료", flush=True)
     state["grace"] = grace
@@ -96,7 +134,26 @@ def check_cycle(state: dict, *, now: float | None = None) -> None:
             return
         if age is None or age > RESTART_AFTER_S:
             restarts = [t for t in state.get("restarts", []) if stamp - t < RESTART_WINDOW_S]
-            if len(restarts) < MAX_RESTARTS:
+            outage = _recent_kis_outage(stamp)
+            if outage is not None:
+                state["kis_outage_context"] = outage
+                print("watchdog: KIS 장애 분류 — sentinel 재기동 생략 · "
+                      f"cause={outage['last_cause']} "
+                      f"consecutive={outage['consecutive']} "
+                      f"last_failure_age={outage['last_failure_age_s']:.0f}s",
+                      flush=True)
+                if sla == heartbeat.HARD_DISABLE:
+                    before = kill.level()
+                    raised = kill.raise_level(
+                        1, WATCHDOG_WHO, BALANCE_FAILURE_REASON)
+                    if before < 1 <= raised:
+                        notify.send(
+                            "🚨 watchdog: KIS 장애로 L1 상향 — "
+                            f"최근 {outage['consecutive']}회 연속 실패 · "
+                            f"최근 원인 {outage['last_cause']} · "
+                            "sentinel 재기동은 생략",
+                            critical=True)
+            elif len(restarts) < MAX_RESTARTS:
                 ok = _restart_sentinel(); restarts.append(stamp)
                 notify.send(f"🔄 watchdog: {UNIT} 재기동 {'성공' if ok else '실패'} "
                             f"({len(restarts)}/{MAX_RESTARTS})", critical=True)

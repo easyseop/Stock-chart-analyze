@@ -10,8 +10,11 @@ import time
 DEFAULT_SUPPRESS_S = 1800.0
 ESCALATE_S = 3600.0
 WINDOW_S = 86400.0
+OUTAGE_WINDOW_S = 300.0
+OUTAGE_MIN_FAILURES = 3
 _events: deque[tuple[float, str]] = deque()
 _incident: dict | None = None
+_outage_state: dict | None = None
 
 
 def _status_path() -> str:
@@ -65,8 +68,64 @@ def _local_summary(stamp: float) -> dict:
             "since_process_start": True}
 
 
+def _empty_outage_state() -> dict:
+    return {"consecutive_failures": 0, "last_failure_at": 0.0,
+            "last_success_at": 0.0, "last_cause": ""}
+
+
+def _load_outage_state(stamp: float) -> dict:
+    """Load the process-independent consecutive-failure evidence.
+
+    The watchdog is a different process from sentinel, so ContextVar/in-memory
+    KIS failures cannot classify an outage.  This reuses the existing
+    balance-health status file; missing/corrupt legacy fields start a new
+    streak instead of inventing evidence.
+    """
+    global _outage_state
+    if _outage_state is not None:
+        return _outage_state
+    state = _empty_outage_state()
+    try:
+        with open(_status_path(), encoding="utf-8") as fp:
+            raw = json.load(fp)
+        raw_consecutive = raw["consecutive_failures"]
+        if isinstance(raw_consecutive, bool) or not isinstance(raw_consecutive, int):
+            raise ValueError("count")
+        consecutive = raw_consecutive
+        for key in ("last_failure_at", "last_success_at"):
+            value = raw.get(key, 0.0)
+            if isinstance(value, bool) or not isinstance(value, (int, float)):
+                raise ValueError("time")
+        last_failure = float(raw["last_failure_at"])
+        last_success = float(raw.get("last_success_at") or 0.0)
+        cause = str(raw["last_cause"])
+        if consecutive < 0 or not cause or len(cause) > 120:
+            raise ValueError("schema")
+        if not all(math.isfinite(value) and value >= 0
+                   for value in (last_failure, last_success)):
+            raise ValueError("time")
+        if (last_success >= last_failure
+                or stamp < last_failure
+                or stamp - last_failure > OUTAGE_WINDOW_S):
+            consecutive = 0
+        state = {"consecutive_failures": consecutive,
+                 "last_failure_at": last_failure,
+                 "last_success_at": last_success,
+                 "last_cause": cause}
+    except (OSError, UnicodeError, KeyError, TypeError, ValueError,
+            json.JSONDecodeError):
+        pass
+    _outage_state = state
+    return state
+
+
 def _write_status(stamp: float) -> None:
-    data = {**_local_summary(stamp), "updated_at": stamp}
+    outage = _outage_state or _empty_outage_state()
+    data = {**_local_summary(stamp), "updated_at": stamp,
+            "consecutive_failures": int(outage["consecutive_failures"]),
+            "last_failure_at": float(outage["last_failure_at"]),
+            "last_success_at": float(outage["last_success_at"]),
+            "last_cause": str(outage["last_cause"])}
     path = _status_path()
     tmp = f"{path}.tmp.{os.getpid()}"
     try:
@@ -100,9 +159,59 @@ def summary(*, now: float | None = None) -> dict:
         return local
 
 
+def outage_evidence(*, now: float | None = None,
+                    window_s: float = OUTAGE_WINDOW_S,
+                    min_failures: int = OUTAGE_MIN_FAILURES) -> dict | None:
+    """Read-only watchdog classifier evidence; unavailable is never outage.
+
+    ``None`` means the evidence source is missing/corrupt/untrusted.  A valid
+    result always includes ``outage`` so callers can distinguish a healthy
+    negative from an unavailable classifier and preserve the legacy restart
+    path on classifier failure.
+    """
+    stamp = time.time() if now is None else float(now)
+    try:
+        window = float(window_s)
+        threshold = int(min_failures)
+        if not math.isfinite(stamp) or not math.isfinite(window) \
+                or window <= 0 or threshold < 1:
+            return None
+        with open(_status_path(), encoding="utf-8") as fp:
+            raw = json.load(fp)
+        raw_consecutive = raw["consecutive_failures"]
+        if isinstance(raw_consecutive, bool) or not isinstance(raw_consecutive, int):
+            return None
+        consecutive = raw_consecutive
+        for key in ("last_failure_at", "last_success_at", "updated_at"):
+            value = raw.get(key, 0.0)
+            if isinstance(value, bool) or not isinstance(value, (int, float)):
+                return None
+        last_failure = float(raw["last_failure_at"])
+        last_success = float(raw.get("last_success_at") or 0.0)
+        cause = str(raw["last_cause"])
+        updated = float(raw["updated_at"])
+        if consecutive < 0 or not cause or len(cause) > 120:
+            return None
+        if not all(math.isfinite(value) and value >= 0 for value in (
+                last_failure, last_success, updated)):
+            return None
+        if (updated > stamp + 60 or last_failure > stamp + 60
+                or updated + 1 < last_failure or stamp - updated > window):
+            return None
+        age = max(0.0, stamp - last_failure)
+        outage = (consecutive >= threshold and age <= window
+                  and last_success < last_failure)
+        return {"outage": outage, "consecutive": consecutive,
+                "last_cause": cause, "last_failure_age_s": age,
+                "window_s": window, "min_failures": threshold}
+    except (OSError, UnicodeError, KeyError, TypeError, ValueError,
+            json.JSONDecodeError):
+        return None
+
+
 def reset_for_tests() -> None:
-    global _incident
-    _events.clear(); _incident = None
+    global _incident, _outage_state
+    _events.clear(); _incident = None; _outage_state = None
 
 
 def _incident_cause_summary(incident: dict) -> str:
@@ -124,6 +233,15 @@ def record_failure(detail: object = None, *, now: float | None = None,
     global _incident
     stamp = time.time() if now is None else float(now)
     cause = cause_label(detail)
+    outage = _load_outage_state(stamp)
+    previous = float(outage.get("last_failure_at") or 0.0)
+    if (previous <= 0 or stamp < previous
+            or stamp - previous > OUTAGE_WINDOW_S
+            or float(outage.get("last_success_at") or 0.0) >= previous):
+        outage["consecutive_failures"] = 0
+    outage["consecutive_failures"] = int(outage["consecutive_failures"]) + 1
+    outage["last_failure_at"] = stamp
+    outage["last_cause"] = cause
     _events.append((stamp, cause)); _prune(stamp); _write_status(stamp)
     # HTTP/타임아웃/레이트리밋이 번갈아도 모두 하나의 "잔고 조회 실패"
     # 사건이다. 원인 라벨 변경으로 억제창을 초기화하지 않고 사건 내 통계로만
@@ -160,9 +278,13 @@ def record_failure(detail: object = None, *, now: float | None = None,
 
 def record_success(*, now: float | None = None, sender=None) -> bool:
     global _incident
+    stamp = time.time() if now is None else float(now)
+    outage = _load_outage_state(stamp)
+    outage["consecutive_failures"] = 0
+    outage["last_success_at"] = stamp
+    _write_status(stamp)
     if _incident is None:
         return False
-    stamp = time.time() if now is None else float(now)
     inc = _incident
     minutes = max(0, int(round((stamp - inc["first_at"]) / 60.0)))
     text = (f"✅ KIS 잔고 조회 회복 — 실패 누적 {inc['count']}회 · "

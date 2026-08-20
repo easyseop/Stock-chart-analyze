@@ -7,6 +7,9 @@ import math
 import os
 import time
 
+from bot.watchdog_policy import (BALANCE_FAILURE_REASON,
+                                 HEARTBEAT_EXHAUSTED_REASON)
+
 DEFAULT_STATE_PATH = "/var/lib/stock-watchdog/self_heal.json"
 DEFAULT_STATUS_PATH = "/var/lib/stock-watchdog/self_heal_status.json"
 DEFAULT_OBSERVE_S = 1800.0
@@ -17,6 +20,10 @@ DEFAULT_RESET_AGE_S = 90.0
 # must not accumulate enough wall time to authorize an automatic recovery.
 DEFAULT_MAX_SOFT_SAMPLES = 4
 _config_clamp_logged: set[tuple[str, str]] = set()
+_DAILY_LIMITS = {
+    BALANCE_FAILURE_REASON: 2,
+    HEARTBEAT_EXHAUSTED_REASON: 1,
+}
 
 
 def _path() -> str:
@@ -77,6 +84,7 @@ def _day_kst(now: float) -> str:
 
 def _empty(day: str) -> dict:
     return {"v": 1, "day_kst": day, "used": False, "event": "",
+            "used_by_reason": {reason: 0 for reason in _DAILY_LIMITS},
             "healthy_since": 0.0, "last_healthy_at": 0.0,
             "soft_over_streak": 0, "soft_over_total": 0,
             "repeat_alerted_event": "", "pending_notice": "",
@@ -109,6 +117,31 @@ def _load(now: float, *, observe_pid: bool = True) -> tuple[dict | None, bool]:
             state[key] = str(state[key])
     except (TypeError, ValueError):
         return None, True
+    raw_counts = state.get("used_by_reason")
+    if raw_counts is None:
+        # Legacy v1 stored one reason-agnostic boolean.  If already used, seed
+        # every reason at its limit so a deployment cannot silently grant more
+        # automatic lowers on the same KST day.
+        state["used_by_reason"] = {
+            reason: (limit if state["used"] else 0)
+            for reason, limit in _DAILY_LIMITS.items()}
+    else:
+        if not isinstance(raw_counts, dict) or set(raw_counts) != set(_DAILY_LIMITS):
+            return None, True
+        normalized = {}
+        try:
+            for reason, limit in _DAILY_LIMITS.items():
+                raw_value = raw_counts[reason]
+                if isinstance(raw_value, bool) or not isinstance(raw_value, int):
+                    return None, True
+                value = raw_value
+                if value < 0 or value > limit:
+                    return None, True
+                normalized[reason] = value
+        except (TypeError, ValueError):
+            return None, True
+        state["used_by_reason"] = normalized
+        state["used"] = any(value > 0 for value in normalized.values())
     # v1 files written by the previous release remain valid. New fields are
     # optional on read and receive conservative defaults.
     try:
@@ -298,14 +331,17 @@ def cycle(*, heartbeat_age_s: float | None, now: float | None = None) -> dict:
     who, why = str(status.get("who") or ""), str(status.get("why") or "")
     if not self_heal_allowed(who, why):
         return _finish(state, "ineligible", "source_or_reason")
+    daily_limit = _DAILY_LIMITS[why]
+    used_count = int(state["used_by_reason"][why])
     try: raised_at = float(status.get("ts") or 0)
     except (TypeError, ValueError): return _finish(state, "ineligible", "raise_ts")
     if not math.isfinite(raised_at) or raised_at <= 0 or raised_at > stamp:
         return _finish(state, "ineligible", "raise_ts")
     event = f"{raised_at:.6f}|{who}|{why}"
-    if state["used"]:
+    if used_count >= daily_limit:
         if state["repeat_alerted_event"] != event:
-            msg = "🚨 kill-switch 반복 자동 상향 — 오늘 자동 복구 1회 소진, 수동 확인 필요"
+            msg = ("🚨 kill-switch 반복 자동 상향 — 오늘 원인별 자동 복구 "
+                   f"{used_count}/{daily_limit}회 소진, 수동 확인 필요")
             if _delivered(msg):
                 state["repeat_alerted_event"] = event; _save(state)
                 return _finish(state, "manual_alert", "daily_limit")
@@ -359,9 +395,14 @@ def cycle(*, heartbeat_age_s: float | None, now: float | None = None) -> dict:
     except (TypeError, ValueError): latest_event = ""
     if kill.level() != 1 or int(latest.get("level") or 0) != 1 or latest_event != event:
         return _finish(state, "blocked", "kill_changed_during_readiness", observed_s=observed)
+    next_count = used_count + 1
     notice = (f"✅ kill-switch 자동 L0 복구 — 원인: {why} · 연속 관찰 {int(observed)}초 · "
-              f"readiness {summary}. 오늘 자동 복구 1회 소진, 재상향 시 수동 확인")
-    state["used"] = True; state["pending_notice"] = notice
+              f"readiness {summary}. 오늘 원인별 자동 복구 "
+              f"{next_count}/{daily_limit}회 사용"
+              + (", 재상향 시 수동 확인" if next_count >= daily_limit else ""))
+    state["used_by_reason"][why] = next_count
+    state["used"] = True
+    state["pending_notice"] = notice
     if not _save(state):
         blocked = _result("blocked", "state_write", observed_s=observed, used_today=True)
         _publish_status(blocked, state["day_kst"])

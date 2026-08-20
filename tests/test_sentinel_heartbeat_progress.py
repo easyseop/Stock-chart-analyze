@@ -46,6 +46,19 @@ def test_beat_is_in_loop_not_background_thread():
     print("[PASS] 루프 내 기록 — 별도 스레드로 생존 위장 없음")
 
 
+def test_beat_precedes_each_blocking_kis_read():
+    """잔고·종목시세 I/O 직전에만 전진 heartbeat가 있어야 한다."""
+    src = open(sentinel.__file__, encoding="utf-8").read()
+    holdings_beat = src.index('_beat(state, phase="before_holdings")')
+    holdings_call = src.index("bh = broker.holdings()", holdings_beat)
+    quote_beat = src.index('phase="before_quote"')
+    quote_call = src.index("px = broker.quote(", quote_beat)
+    assert holdings_beat < holdings_call and quote_beat < quote_call
+    for banned in ("Thread(target=_beat", "threading.Timer", "daemon=True"):
+        assert banned not in src, banned
+    print("[PASS] 잔고·종목시세 블로킹 직전 heartbeat · 백그라운드 스레드 0")
+
+
 def test_beat_failure_does_not_raise():
     with mock.patch("bot.heartbeat.write", side_effect=OSError("disk full")):
         sentinel._beat({"positions": {}})          # 예외가 새면 실패
@@ -65,6 +78,7 @@ def test_beat_carries_broker_and_position_count():
 def main():
     test_beat_written_during_symbol_loop()
     test_beat_is_in_loop_not_background_thread()
+    test_beat_precedes_each_blocking_kis_read()
     test_beat_failure_does_not_raise()
     test_beat_carries_broker_and_position_count()
     print("\n파수꾼 생존 신호 검증 통과 — 루프 중 갱신·전진 의미 유지·실패 무해.")
