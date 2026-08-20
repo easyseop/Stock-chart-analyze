@@ -531,6 +531,10 @@ def check_once(broker, state: dict) -> None:
     held = feed
     is_kis_truth = str(getattr(broker, "name", "")).lower() == "kis"
     if hasattr(broker, "holdings"):
+        # KIS 잔고는 블로킹 I/O다. 호출 직전에만 전진 증거를 남겨 타임아웃
+        # 버스트가 직전 sleep과 합쳐져 heartbeat 120s로 증폭되지 않게 한다.
+        # 별도 스레드는 쓰지 않으므로 호출 자체가 멈추면 heartbeat도 멈춘다.
+        _beat(state, phase="before_holdings")
         bh = broker.holdings()
         used_cached_holdings = False
         if bh is not None and is_kis_truth:
@@ -676,6 +680,9 @@ def check_once(broker, state: dict) -> None:
         # 이미 끝난 것으로 오인되므로 절대 디스크 멱등키로 승격하지 않는다.
         if not LIVE and key in state.setdefault("_dry_run_seen", set()):
             continue
+        # 종목별 현재가도 블로킹 호출 직전에 heartbeat를 남긴다. 성공했다고
+        # 미리 기록하는 것이 아니라 "다음 I/O까지 루프가 전진했다"는 증거다.
+        _beat(state, scanned=scanned, total=len(held), phase="before_quote")
         px = broker.quote(code, p.get("ccy", "USD"))
         if px is None:
             continue

@@ -51,6 +51,7 @@ BASE_URL = os.environ.get(
 _TOKEN_SKEW = 600            # 만료 이 초 전이면 선제 재발급
 _TOKEN_FAIL_COOLDOWN = 65    # 발급 실패 시 재시도 금지(1분1회 제한 대비 여유)
 _HTTP_TIMEOUT = 15
+_OUTAGE_HTTP_TIMEOUT = 5
 
 # 모듈 전역 토큰 캐시(빠른 경로) + 프로세스 내 락. 다중 프로세스는 파일 락으로 직렬화.
 _TOK: dict = {"tok": None, "exp": 0.0, "fail_until": 0.0, "keyhash": None}
@@ -310,6 +311,8 @@ from bot import kis_ratelimit as _rl
 _LIMITER = _rl.for_env(IS_MOCK)
 _LAST_GET_FAILURE: ContextVar[dict | None] = ContextVar(
     "kis_last_get_failure", default=None)
+_GET_TIMEOUT_BACKOFF: ContextVar[bool] = ContextVar(
+    "kis_get_timeout_backoff", default=False)
 
 
 def _set_get_failure(detail: dict | None) -> None:
@@ -328,6 +331,19 @@ def _drop_external_pagination_markers(data):
 def last_get_failure() -> dict | None:
     detail = _LAST_GET_FAILURE.get()
     return None if detail is None else dict(detail)
+
+
+def _get_timeout_s() -> int:
+    """Shorten only data-plane calls after a timeout; one success restores 15s."""
+    return _OUTAGE_HTTP_TIMEOUT if _GET_TIMEOUT_BACKOFF.get() else _HTTP_TIMEOUT
+
+
+def _is_timeout_exception(exc: BaseException) -> bool:
+    if isinstance(exc, TimeoutError):
+        return True
+    if isinstance(exc, urllib.error.URLError):
+        return isinstance(getattr(exc, "reason", None), TimeoutError)
+    return False
 
 
 def _get(path: str, tr: str, params: dict, *, tr_cont: str = "") -> dict | None:
@@ -354,7 +370,7 @@ def _get(path: str, tr: str, params: dict, *, tr_cont: str = "") -> dict | None:
         d, http = None, 200
         try:
             req = urllib.request.Request(url, headers=headers)
-            with urllib.request.urlopen(req, timeout=_HTTP_TIMEOUT) as resp:
+            with urllib.request.urlopen(req, timeout=_get_timeout_s()) as resp:
                 d = json.load(resp)
                 # 연속조회 여부는 본문 ctx_area_nk*뿐 아니라 응답 헤더
                 # tr_cont(F/M)로도 전달된다. 이 값을 버리면 절단된 첫 페이지를
@@ -370,6 +386,8 @@ def _get(path: str, tr: str, params: dict, *, tr_cont: str = "") -> dict | None:
                 d = None
         except Exception as ex:
             print(f"[kis] GET {path} 실패({type(ex).__name__})")
+            if _is_timeout_exception(ex):
+                _GET_TIMEOUT_BACKOFF.set(True)
             _set_get_failure({"exception": type(ex).__name__, "http_status": 0})
             return None
         # `_pagination_*`은 `_get_all_pages`만 생성하는 내부 완전성 증거다.
@@ -378,6 +396,7 @@ def _get(path: str, tr: str, params: dict, *, tr_cont: str = "") -> dict | None:
         act = classify_error((d or {}).get("rt_cd"), (d or {}).get("msg_cd"),
                              http, is_order=False)
         if act == ACT_OK:
+            _GET_TIMEOUT_BACKOFF.set(False)
             return d
         if act == ACT_REFRESH and attempt == 0:
             tok = _token(force=True) or tok
