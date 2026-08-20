@@ -2129,3 +2129,23 @@ Claude 전달문은 `docs/CLAUDE_REVIEW_KIS_OUTAGE_CLASSIFICATION.md`다. 현재
 순서는 Claude P0/P1=0 판정 → 사용자 원격/병합/배포 승인이다. 배포 후 실제 KIS
 burst에서 `재시작 0 → BALANCE L1 → 30분 뒤 자동 L0 → 복구 알림 1건`을 실측해야
 운영 완료다.
+
+#### Claude 승인 및 P3 회귀 공백 보완(2026-08-21)
+
+Claude 판정은 기본 브랜치 `dafffe2c`의
+`docs/CLAUDE_REVIEW_KIS_OUTAGE_VERDICT.md`이며 **P0 0 · P1 0 · P2 0 · P3 3**으로
+병합 가능 승인됐다. quiesce 반증 3문과 KIS outage 반증 9문은 모두 HOLDS였고,
+독립 Python 70모듈도 통과했다.
+
+사용자 요청에 따라 비차단 P3 세 건도 커밋 `21ef7617`에서 운영 코드 변경 없이
+회귀 테스트로 고정했다. 원인 문자열 charset 오염 거부, 301초 단절·성공 이후 실패
+연속수 리셋, heartbeat 95초/P0에서는 L1 금지하고 121초/hard-disable에서만 BALANCE
+L1을 올리는 계약이다.
+
+테스트 커밋 뒤 Claude가 생존시킨 X1·X4·X5를 독립 재주입했고, 각각 신규 테스트의
+정확한 assertion에서 종료코드 1로 KILLED됐다. 원복 후 신규 집중 테스트 10/10,
+Python 전체 70/70, Node 19/19, app.js 문법 검사, compileall, diff check가 모두
+통과했다. 상세 증거는 `docs/CLAUDE_REVIEW_KIS_OUTAGE_P3_RESPONSE.md`다.
+
+기본 브랜치 병합·Oracle 배포·kill 하향·env 변경은 아직 하지 않았다. 다음 단계는
+검토 브랜치 원격 반영 뒤 사용자 별도 병합 승인이다.
