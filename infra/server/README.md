@@ -394,6 +394,19 @@ ops 스냅샷만 **변화 감지 발행**이다: kill 레벨·self-heal 판정 �
 간격을 다시 줄이려면 `tests/test_publish_budget.py`의 예산 산술이 같이 깨지므로
 한도를 넘기는 변경은 테스트가 막는다.
 
+alpha·ops·trade_stats는 파이썬 상수라 **자동배포로 즉시 반영**된다. 비콘만
+systemd 유닛이고 autodeploy 재시작 목록에도 없어 **수동 1회**가 필요하다:
+```bash
+sudo mkdir -p /etc/systemd/system/health-beacon.timer.d
+sudo install -m 644 infra/server/health-beacon.oracle-ubuntu.conf \
+  /etc/systemd/system/health-beacon.timer.d/oracle-ubuntu.conf
+sudo systemctl daemon-reload && sudo systemctl restart health-beacon.timer
+systemctl show health-beacon.timer -p TimersMonotonic   # 60min 확인
+```
+드롭인이 `OnUnitActiveSec=`을 **빈 값으로 먼저 리셋**하는 이유는 그 지시어가
+누적 목록이기 때문이다 — 리셋 없이 60min만 추가하면 기존 5min과 공존해
+타이머가 계속 5분마다 발화한다(늘린 줄 알고 안 늘어나는 함정).
+
 ## watchdog 자가복구 판정·로그 확인
 
 - L1 자동복구는 heartbeat 60초 이하 관찰을 기본으로 한다. 60~90초 단발은
