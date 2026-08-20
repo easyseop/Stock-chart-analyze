@@ -107,7 +107,8 @@ def _recent_kis_outage(stamp: float) -> dict | None:
         cause = str(evidence["last_cause"])
     except (KeyError, TypeError, ValueError):
         return None
-    if consecutive < balance_health.OUTAGE_MIN_FAILURES or age_s < 0 \
+    if consecutive < balance_health.OUTAGE_MIN_FAILURES \
+            or not (0 <= age_s <= balance_health.OUTAGE_WINDOW_S) \
             or not cause or len(cause) > 120 \
             or not all(ch.isalnum() or ch in "_:.-" for ch in cause):
         return None
@@ -149,7 +150,7 @@ def check_cycle(state: dict, *, now: float | None = None) -> None:
                         notify.send(
                             "🚨 watchdog: KIS 장애로 L1 상향 — "
                             f"최근 {outage['consecutive']}회 연속 실패 · "
-                            f"최다/최근 원인 {outage['last_cause']} · "
+                            f"최근 원인 {outage['last_cause']} · "
                             "sentinel 재기동은 생략",
                             critical=True)
             elif len(restarts) < MAX_RESTARTS:

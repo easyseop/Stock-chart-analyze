@@ -88,7 +88,14 @@ def _load_outage_state(stamp: float) -> dict:
     try:
         with open(_status_path(), encoding="utf-8") as fp:
             raw = json.load(fp)
-        consecutive = int(raw["consecutive_failures"])
+        raw_consecutive = raw["consecutive_failures"]
+        if isinstance(raw_consecutive, bool) or not isinstance(raw_consecutive, int):
+            raise ValueError("count")
+        consecutive = raw_consecutive
+        for key in ("last_failure_at", "last_success_at"):
+            value = raw.get(key, 0.0)
+            if isinstance(value, bool) or not isinstance(value, (int, float)):
+                raise ValueError("time")
         last_failure = float(raw["last_failure_at"])
         last_success = float(raw.get("last_success_at") or 0.0)
         cause = str(raw["last_cause"])
@@ -171,7 +178,14 @@ def outage_evidence(*, now: float | None = None,
             return None
         with open(_status_path(), encoding="utf-8") as fp:
             raw = json.load(fp)
-        consecutive = int(raw["consecutive_failures"])
+        raw_consecutive = raw["consecutive_failures"]
+        if isinstance(raw_consecutive, bool) or not isinstance(raw_consecutive, int):
+            return None
+        consecutive = raw_consecutive
+        for key in ("last_failure_at", "last_success_at", "updated_at"):
+            value = raw.get(key, 0.0)
+            if isinstance(value, bool) or not isinstance(value, (int, float)):
+                return None
         last_failure = float(raw["last_failure_at"])
         last_success = float(raw.get("last_success_at") or 0.0)
         cause = str(raw["last_cause"])
@@ -181,7 +195,8 @@ def outage_evidence(*, now: float | None = None,
         if not all(math.isfinite(value) and value >= 0 for value in (
                 last_failure, last_success, updated)):
             return None
-        if updated > stamp + 60 or last_failure > stamp + 60:
+        if (updated > stamp + 60 or last_failure > stamp + 60
+                or updated + 1 < last_failure or stamp - updated > window):
             return None
         age = max(0.0, stamp - last_failure)
         outage = (consecutive >= threshold and age <= window

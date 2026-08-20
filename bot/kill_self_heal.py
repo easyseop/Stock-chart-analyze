@@ -131,7 +131,10 @@ def _load(now: float, *, observe_pid: bool = True) -> tuple[dict | None, bool]:
         normalized = {}
         try:
             for reason, limit in _DAILY_LIMITS.items():
-                value = int(raw_counts[reason])
+                raw_value = raw_counts[reason]
+                if isinstance(raw_value, bool) or not isinstance(raw_value, int):
+                    return None, True
+                value = raw_value
                 if value < 0 or value > limit:
                     return None, True
                 normalized[reason] = value
