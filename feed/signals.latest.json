@@ -1,15 +1,15 @@
 {
  "version": 1,
- "generated_at": "2026-08-20T15:22:52+09:00",
+ "generated_at": "2026-08-20T15:33:41+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "a_ablation": [
   {
    "code": "207940",
    "gate": "rp",
-   "range_pos": 0.4625,
-   "runup63": 0.181,
+   "range_pos": 0.4532,
+   "runup63": 0.1758,
    "stage": 3,
-   "price": 1579000.0
+   "price": 1572000.0
   },
   {
    "code": "ALKT",
@@ -164,8 +164,8 @@
    "추락 중(범위 1%)": 161,
    "매물대 정보 없음": 139,
    "추락 중(범위 2%)": 109,
-   "추락 중(범위 4%)": 101,
-   "추락 중(범위 3%)": 95,
+   "추락 중(범위 4%)": 103,
+   "추락 중(범위 3%)": 94,
    "추락 중(범위 0%)": 94,
    "추락 중(범위 8%)": 81
   }
@@ -235,24 +235,24 @@
    "group": "now",
    "entry_kind": "now",
    "stage": 3,
-   "price": 14340.0,
-   "entry": 14340.0,
-   "stop": 13645.2435,
-   "target": 15729.513,
+   "price": 14320.0,
+   "entry": 14320.0,
+   "stop": 13625.2435,
+   "target": 15709.513,
    "shares_1pct": 143,
-   "range_pos": 0.0741,
+   "range_pos": 0.0705,
    "norm": -0.0,
    "bear_share": 0.375,
    "fresh": true,
-   "break_gap": 0.0074,
+   "break_gap": 0.006,
    "earnings_d": null,
    "tactic": {
-    "stop_pct": 4.8,
+    "stop_pct": 4.9,
     "pb_price": 14062.5,
-    "pb_stop_pct": 3.0,
+    "pb_stop_pct": 3.1,
     "mode": "full",
     "label": "⚡ 즉시 분할",
-    "desc": "손절폭 4.8%로 타이트 — 현재가에서 1~2회 분할 매수. 기다리는 이득보다 놓치는 비용이 큼"
+    "desc": "손절폭 4.9%로 타이트 — 현재가에서 1~2회 분할 매수. 기다리는 이득보다 놓치는 비용이 큼"
    }
   },
   {
@@ -281,6 +281,34 @@
     "mode": "pullback",
     "label": "⏳ 눌림 지정가만",
     "desc": "지금 추격 금지(손절폭 9.1%) — <b>$150.75 눌림 지정가만</b>. 눌리면 손절폭 2.3%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
+   }
+  },
+  {
+   "id": "010140-2026-08-20-now",
+   "code": "010140",
+   "name": "삼성중공업",
+   "ccy": "KRW",
+   "group": "now",
+   "entry_kind": "now",
+   "stage": 3,
+   "price": 20750.0,
+   "entry": 20750.0,
+   "stop": 18433.6294,
+   "target": 25382.7412,
+   "shares_1pct": 43,
+   "range_pos": 0.1482,
+   "norm": -47.2,
+   "bear_share": 0.5,
+   "fresh": true,
+   "break_gap": 0.0484,
+   "earnings_d": null,
+   "tactic": {
+    "stop_pct": 11.2,
+    "pb_price": 20690.0,
+    "pb_stop_pct": 10.9,
+    "mode": "pullback",
+    "label": "⏳ 눌림 지정가만",
+    "desc": "지금 추격 금지(손절폭 11.2%) — <b>20,690원 눌림 지정가만</b>. 눌리면 손절폭 10.9%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
    }
   },
   {
@@ -571,16 +599,16 @@
    "group": "now",
    "entry_kind": "now",
    "stage": 3,
-   "price": 265500.0,
-   "entry": 265500.0,
-   "stop": 236014.9615,
-   "target": 324470.0771,
+   "price": 264500.0,
+   "entry": 264500.0,
+   "stop": 235014.9615,
+   "target": 323470.0771,
    "shares_1pct": 3,
-   "range_pos": 0.1944,
+   "range_pos": 0.1897,
    "norm": -37.7,
    "bear_share": 0.375,
    "fresh": false,
-   "break_gap": 0.3256,
+   "break_gap": 0.3206,
    "earnings_d": null,
    "tactic": {
     "stop_pct": 11.1,
@@ -589,34 +617,6 @@
     "mode": "pullback",
     "label": "⏳ 눌림 지정가만",
     "desc": "지금 추격 금지(손절폭 11.1% · 돌파후 진행) — 받칠 지지에 눌릴 때까지 대기"
-   }
-  },
-  {
-   "id": "010140-2026-08-20-now",
-   "code": "010140",
-   "name": "삼성중공업",
-   "ccy": "KRW",
-   "group": "now",
-   "entry_kind": "now",
-   "stage": 3,
-   "price": 20800.0,
-   "entry": 20800.0,
-   "stop": 18483.6294,
-   "target": 25432.7412,
-   "shares_1pct": 43,
-   "range_pos": 0.1511,
-   "norm": -47.2,
-   "bear_share": 0.5,
-   "fresh": false,
-   "break_gap": 0.051,
-   "earnings_d": null,
-   "tactic": {
-    "stop_pct": 11.1,
-    "pb_price": 20690.0,
-    "pb_stop_pct": 10.7,
-    "mode": "pullback",
-    "label": "⏳ 눌림 지정가만",
-    "desc": "지금 추격 금지(손절폭 11.1% · 돌파후 진행) — <b>20,690원 눌림 지정가만</b>. 눌리면 손절폭 10.7%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
    }
   },
   {
@@ -3758,27 +3758,6 @@
    "tactic": null
   },
   {
-   "id": "012450-2026-08-20-watch",
-   "code": "012450",
-   "name": "한화에어로스페이스",
-   "ccy": "KRW",
-   "group": "watch",
-   "entry_kind": "pullback",
-   "stage": 3,
-   "price": 1176000.0,
-   "entry": 1113052.0,
-   "stop": 960259.1541,
-   "target": 1418637.6917,
-   "shares_1pct": 0,
-   "range_pos": 0.4507,
-   "norm": -3.8,
-   "bear_share": 0.375,
-   "fresh": false,
-   "break_gap": 0.1232,
-   "earnings_d": null,
-   "tactic": null
-  },
-  {
    "id": "MP-2026-08-20-watch",
    "code": "MP",
    "name": "MP Materials Corp.",
@@ -3821,6 +3800,27 @@
    "tactic": null
   },
   {
+   "id": "012450-2026-08-20-watch",
+   "code": "012450",
+   "name": "한화에어로스페이스",
+   "ccy": "KRW",
+   "group": "watch",
+   "entry_kind": "pullback",
+   "stage": 3,
+   "price": 1169000.0,
+   "entry": 1113052.0,
+   "stop": 960259.1541,
+   "target": 1418637.6917,
+   "shares_1pct": 0,
+   "range_pos": 0.4427,
+   "norm": -13.2,
+   "bear_share": 0.375,
+   "fresh": false,
+   "break_gap": 0.1165,
+   "earnings_d": null,
+   "tactic": null
+  },
+  {
    "id": "CELC-2026-08-20-watch",
    "code": "CELC",
    "name": "Celcuity Inc.",
@@ -3849,16 +3849,16 @@
    "group": "watch",
    "entry_kind": "pullback",
    "stage": 3,
-   "price": 475500.0,
+   "price": 473500.0,
    "entry": 450183.3333,
    "stop": 394923.7742,
    "target": 560702.4517,
    "shares_1pct": 1,
-   "range_pos": 0.3919,
-   "norm": -18.9,
-   "bear_share": 0.25,
+   "range_pos": 0.3862,
+   "norm": -28.3,
+   "bear_share": 0.375,
    "fresh": false,
-   "break_gap": 0.3787,
+   "break_gap": 0.3729,
    "earnings_d": null,
    "tactic": null
   }
