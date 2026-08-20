@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated_at": "2026-08-21T06:22:51+09:00",
+ "generated_at": "2026-08-21T07:00:55+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "a_ablation": [
   {
@@ -127,7 +127,7 @@
    "추락 중(범위 4%)": 106,
    "반등 미확인(터치·상단마감·거래량)": 98,
    "추락 중(범위 3%)": 97,
-   "추락 중(범위 0%)": 95
+   "추락 중(범위 0%)": 96
   }
  },
  "signals": [
@@ -447,24 +447,24 @@
    "group": "now",
    "entry_kind": "now",
    "stage": 3,
-   "price": 10670.0,
-   "entry": 10670.0,
-   "stop": 9410.8022,
-   "target": 13188.3956,
-   "shares_1pct": 79,
-   "range_pos": 0.2876,
-   "norm": -4.7,
+   "price": 10710.0,
+   "entry": 10710.0,
+   "stop": 9460.7449,
+   "target": 13208.5102,
+   "shares_1pct": 80,
+   "range_pos": 0.2908,
+   "norm": 4.7,
    "bear_share": 0.25,
    "fresh": false,
-   "break_gap": 0.227,
+   "break_gap": 0.2449,
    "earnings_d": null,
    "tactic": {
-    "stop_pct": 11.8,
+    "stop_pct": 11.7,
     "pb_price": null,
     "pb_stop_pct": null,
     "mode": "pullback",
     "label": "⏳ 눌림 지정가만",
-    "desc": "지금 추격 금지(손절폭 11.8% · 돌파후 진행) — 받칠 지지에 눌릴 때까지 대기"
+    "desc": "지금 추격 금지(손절폭 11.7% · 돌파후 진행) — 받칠 지지에 눌릴 때까지 대기"
    }
   },
   {
