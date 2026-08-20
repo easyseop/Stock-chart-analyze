@@ -1,15 +1,15 @@
 {
  "version": 1,
- "generated_at": "2026-08-20T15:33:41+09:00",
+ "generated_at": "2026-08-20T16:15:35+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "a_ablation": [
   {
    "code": "207940",
    "gate": "rp",
-   "range_pos": 0.4532,
-   "runup63": 0.1758,
+   "range_pos": 0.4559,
+   "runup63": 0.1773,
    "stage": 3,
-   "price": 1572000.0
+   "price": 1574000.0
   },
   {
    "code": "ALKT",
@@ -167,7 +167,7 @@
    "추락 중(범위 4%)": 103,
    "추락 중(범위 3%)": 94,
    "추락 중(범위 0%)": 94,
-   "추락 중(범위 8%)": 81
+   "추락 중(범위 9%)": 81
   }
  },
  "signals": [
@@ -281,34 +281,6 @@
     "mode": "pullback",
     "label": "⏳ 눌림 지정가만",
     "desc": "지금 추격 금지(손절폭 9.1%) — <b>$150.75 눌림 지정가만</b>. 눌리면 손절폭 2.3%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
-   }
-  },
-  {
-   "id": "010140-2026-08-20-now",
-   "code": "010140",
-   "name": "삼성중공업",
-   "ccy": "KRW",
-   "group": "now",
-   "entry_kind": "now",
-   "stage": 3,
-   "price": 20750.0,
-   "entry": 20750.0,
-   "stop": 18433.6294,
-   "target": 25382.7412,
-   "shares_1pct": 43,
-   "range_pos": 0.1482,
-   "norm": -47.2,
-   "bear_share": 0.5,
-   "fresh": true,
-   "break_gap": 0.0484,
-   "earnings_d": null,
-   "tactic": {
-    "stop_pct": 11.2,
-    "pb_price": 20690.0,
-    "pb_stop_pct": 10.9,
-    "mode": "pullback",
-    "label": "⏳ 눌림 지정가만",
-    "desc": "지금 추격 금지(손절폭 11.2%) — <b>20,690원 눌림 지정가만</b>. 눌리면 손절폭 10.9%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
    }
   },
   {
@@ -599,24 +571,52 @@
    "group": "now",
    "entry_kind": "now",
    "stage": 3,
-   "price": 264500.0,
-   "entry": 264500.0,
-   "stop": 235014.9615,
-   "target": 323470.0771,
+   "price": 264000.0,
+   "entry": 264000.0,
+   "stop": 234443.5329,
+   "target": 323112.9342,
    "shares_1pct": 3,
-   "range_pos": 0.1897,
+   "range_pos": 0.1874,
    "norm": -37.7,
    "bear_share": 0.375,
    "fresh": false,
-   "break_gap": 0.3206,
+   "break_gap": 0.3181,
    "earnings_d": null,
    "tactic": {
-    "stop_pct": 11.1,
+    "stop_pct": 11.2,
     "pb_price": null,
     "pb_stop_pct": null,
     "mode": "pullback",
     "label": "⏳ 눌림 지정가만",
-    "desc": "지금 추격 금지(손절폭 11.1% · 돌파후 진행) — 받칠 지지에 눌릴 때까지 대기"
+    "desc": "지금 추격 금지(손절폭 11.2% · 돌파후 진행) — 받칠 지지에 눌릴 때까지 대기"
+   }
+  },
+  {
+   "id": "010140-2026-08-20-now",
+   "code": "010140",
+   "name": "삼성중공업",
+   "ccy": "KRW",
+   "group": "now",
+   "entry_kind": "now",
+   "stage": 3,
+   "price": 20800.0,
+   "entry": 20800.0,
+   "stop": 18483.6294,
+   "target": 25432.7412,
+   "shares_1pct": 43,
+   "range_pos": 0.1511,
+   "norm": -47.2,
+   "bear_share": 0.5,
+   "fresh": false,
+   "break_gap": 0.051,
+   "earnings_d": null,
+   "tactic": {
+    "stop_pct": 11.1,
+    "pb_price": 20690.0,
+    "pb_stop_pct": 10.7,
+    "mode": "pullback",
+    "label": "⏳ 눌림 지정가만",
+    "desc": "지금 추격 금지(손절폭 11.1% · 돌파후 진행) — <b>20,690원 눌림 지정가만</b>. 눌리면 손절폭 10.7%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
    }
   },
   {
@@ -3807,16 +3807,16 @@
    "group": "watch",
    "entry_kind": "pullback",
    "stage": 3,
-   "price": 1169000.0,
+   "price": 1167000.0,
    "entry": 1113052.0,
    "stop": 960259.1541,
    "target": 1418637.6917,
    "shares_1pct": 0,
-   "range_pos": 0.4427,
+   "range_pos": 0.4404,
    "norm": -13.2,
    "bear_share": 0.375,
    "fresh": false,
-   "break_gap": 0.1165,
+   "break_gap": 0.1146,
    "earnings_d": null,
    "tactic": null
   },
@@ -3849,16 +3849,16 @@
    "group": "watch",
    "entry_kind": "pullback",
    "stage": 3,
-   "price": 473500.0,
+   "price": 474500.0,
    "entry": 450183.3333,
    "stop": 394923.7742,
    "target": 560702.4517,
    "shares_1pct": 1,
-   "range_pos": 0.3862,
+   "range_pos": 0.389,
    "norm": -28.3,
    "bear_share": 0.375,
    "fresh": false,
-   "break_gap": 0.3729,
+   "break_gap": 0.3758,
    "earnings_d": null,
    "tactic": null
   }
