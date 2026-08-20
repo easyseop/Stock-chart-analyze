@@ -69,6 +69,93 @@ def test_kis_outage_skips_restart_and_raises_balance_reason():
     assert "outage_cause=exception:TimeoutError" in output.getvalue()
 
 
+def test_watchdog_rejects_untrusted_outage_cause_charset():
+    unsafe = {"outage": True, "consecutive": 4,
+              "last_cause": "AAPL 74주 $65 <script>",
+              "last_failure_age_s": 8.0}
+    with mock.patch.object(watchdog.balance_health, "outage_evidence",
+                           return_value=unsafe):
+        assert watchdog._recent_kis_outage(1000.0) is None
+
+    safe = {**unsafe, "last_cause": "exception:TimeoutError"}
+    with mock.patch.object(watchdog.balance_health, "outage_evidence",
+                           return_value=safe):
+        assert watchdog._recent_kis_outage(1000.0) == {
+            "consecutive": 4, "last_failure_age_s": 8.0,
+            "last_cause": "exception:TimeoutError"}
+
+
+def test_outage_failure_streak_resets_after_gap_and_success():
+    with tempfile.TemporaryDirectory() as tmp, mock.patch.dict(
+            os.environ, {"BALANCE_HEALTH_PATH": f"{tmp}/health.json"}):
+        balance_health.reset_for_tests()
+        with mock.patch.object(balance_health, "_send", return_value=True):
+            for stamp in (100.0, 110.0, 120.0):
+                balance_health.record_failure(TimeoutError(), now=stamp)
+            assert balance_health.outage_evidence(now=121.0)["consecutive"] == 3
+
+            # Five-minute continuity is strict: 301 seconds starts a new streak.
+            balance_health.record_failure(
+                TimeoutError(), now=120.0 + balance_health.OUTAGE_WINDOW_S + 1)
+            after_gap = balance_health.outage_evidence(
+                now=122.0 + balance_health.OUTAGE_WINDOW_S)
+            assert after_gap["consecutive"] == 1
+            assert after_gap["outage"] is False
+
+            balance_health.record_failure(
+                TimeoutError(), now=123.0 + balance_health.OUTAGE_WINDOW_S)
+            balance_health.record_success(now=124.0 + balance_health.OUTAGE_WINDOW_S)
+            balance_health.record_failure(
+                TimeoutError(), now=125.0 + balance_health.OUTAGE_WINDOW_S)
+            after_success = balance_health.outage_evidence(
+                now=126.0 + balance_health.OUTAGE_WINDOW_S)
+            assert after_success["consecutive"] == 1
+            assert after_success["outage"] is False
+
+
+def test_outage_l1_waits_for_hard_disable_boundary():
+    evidence = {"outage": True, "consecutive": 4,
+                "last_cause": "exception:TimeoutError",
+                "last_failure_age_s": 8.0}
+
+    # At 95 seconds outage classification suppresses futile restarts, but the
+    # P0 window must not be promoted early to L1.
+    state = _watchdog_state()
+    with mock.patch.object(watchdog.heartbeat, "age_s", return_value=95.0), \
+         mock.patch.object(watchdog.heartbeat, "sla_status",
+                           return_value=heartbeat.P0), \
+         mock.patch.object(watchdog.deploy_grace, "active", return_value=False), \
+         mock.patch.object(watchdog.balance_health, "outage_evidence",
+                           return_value=evidence), \
+         mock.patch.object(watchdog, "_restart_sentinel") as restart, \
+         mock.patch.object(watchdog.kill, "level", return_value=0), \
+         mock.patch.object(watchdog.kill, "raise_level", return_value=1) as raised, \
+         mock.patch.object(watchdog.kill_self_heal, "cycle",
+                           return_value={"action": "ineligible"}), \
+         mock.patch.object(watchdog.notify, "send", return_value=True):
+        watchdog.check_cycle(state, now=1000.0)
+    restart.assert_not_called()
+    raised.assert_not_called()
+
+    # Only the existing >120s hard-disable SLA may raise BALANCE L1.
+    state = _watchdog_state()
+    with mock.patch.object(watchdog.heartbeat, "age_s", return_value=121.0), \
+         mock.patch.object(watchdog.heartbeat, "sla_status",
+                           return_value=heartbeat.HARD_DISABLE), \
+         mock.patch.object(watchdog.deploy_grace, "active", return_value=False), \
+         mock.patch.object(watchdog.balance_health, "outage_evidence",
+                           return_value=evidence), \
+         mock.patch.object(watchdog, "_restart_sentinel") as restart, \
+         mock.patch.object(watchdog.kill, "level", return_value=0), \
+         mock.patch.object(watchdog.kill, "raise_level", return_value=1) as raised, \
+         mock.patch.object(watchdog.kill_self_heal, "cycle",
+                           return_value={"action": "ineligible"}), \
+         mock.patch.object(watchdog.notify, "send", return_value=True):
+        watchdog.check_cycle(state, now=1000.0)
+    restart.assert_not_called()
+    raised.assert_called_once_with(1, WATCHDOG_WHO, BALANCE_FAILURE_REASON)
+
+
 def test_missing_or_negative_classifier_preserves_legacy_watchdog_path():
     # Missing/corrupt classifier evidence is not an outage: restart budget and
     # HEARTBEAT reason remain unchanged.
@@ -283,6 +370,9 @@ def main():
     tests = (
         test_balance_failure_evidence_is_persisted_and_success_resets_it,
         test_kis_outage_skips_restart_and_raises_balance_reason,
+        test_watchdog_rejects_untrusted_outage_cause_charset,
+        test_outage_failure_streak_resets_after_gap_and_success,
+        test_outage_l1_waits_for_hard_disable_boundary,
         test_missing_or_negative_classifier_preserves_legacy_watchdog_path,
         test_corrupt_balance_evidence_is_unavailable_not_zero_or_outage,
         test_get_timeout_uses_five_seconds_until_one_success_restores_fifteen,
