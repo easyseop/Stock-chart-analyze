@@ -540,12 +540,16 @@ def _unit_active_state(unit: str) -> str | None:
 
 
 def _guardians_stopped() -> tuple[bool, str]:
-    """부활 주체 전원 정지 증명 — active/activating이거나 조회 실패면 실패."""
+    """부활 주체 전원 정지 증명 — 정확히 inactive만 인정(Codex 역검토 P1 반영).
+
+    deactivating(종료 진행 중)은 아직 실행 흔적이 남아 경합할 수 있고,
+    failed/unknown은 상태를 신뢰할 수 없다. 전부 거부(fail-closed).
+    """
     for unit in GUARDIAN_UNITS:
         state = _unit_active_state(unit)
         if state is None:
             return False, f"{unit} 상태 조회 실패"
-        if state in ("active", "activating", "reloading"):
+        if state != "inactive":
             return False, f"{unit}={state}"
     return True, "ok"
 
@@ -577,10 +581,21 @@ def _services_quiesced() -> tuple[bool, str]:
         except (OSError, subprocess.SubprocessError) as exc:
             return False, f"{unit} mask 조회 실패({type(exc).__name__})"
         mask_state = str(enabled.stdout or "").strip()
-        if mask_state not in ("masked", "masked-runtime") and not guardians_ok:
+        if mask_state in ("masked", "masked-runtime"):
+            continue                     # mask 증명 — 부팅 포함 어떤 시작도 불가
+        # guardian 경로(Codex 역검토 P1 반영): watchdog·autodeploy 정지만으로는
+        #   부족하다 — 유닛이 enabled면 **서버 재부팅 시 multi-user.target이
+        #   되살린다**(제3의 재기동 주체, 실배치 실측). guardian 경로는
+        #   disabled까지 요구해 부팅 자동시작 링크 자체를 끊었음을 증명한다.
+        if not guardians_ok:
+            return False, (
+                f"{unit}={mask_state or 'unknown'} — 재기동 주체 정지 필요"
+                f"({guardians_why})")
+        if mask_state != "disabled":
             return False, (
                 f"{unit}={mask_state or 'unknown'} — mask 불가 배치면 "
-                f"재기동 주체까지 정지 필요({guardians_why})")
+                "`systemctl disable --now`로 부팅 자동시작까지 끊어야 함"
+                "(재부팅 시 multi-user.target이 재기동)")
     try:
         manual = subprocess.run(
             ["pgrep", "-f", r"bot\.(sentinel|kis_buyloop)"],

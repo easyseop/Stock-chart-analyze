@@ -691,24 +691,31 @@ def test_services_quiesced_requires_every_unit_inactive():
             {"watchdog.service": "active"},
             {"sentinel.service": "masked-runtime", "buyloop.service": "masked"})):
         assert M._services_quiesced() == (True, "ok")
-    # ② guardian 정지 증명 — /etc 실파일 배치(enabled 고정)에서도 통과.
+    # ② guardian 정지 증명 — mask 불가 배치는 **disabled**(부팅 링크 절단)까지
+    #    요구한다(Codex 역검토 P1: enabled면 재부팅 시 multi-user.target이 재기동).
+    disabled_units = {"sentinel.service": "disabled", "buyloop.service": "disabled"}
     with hb, mock.patch.object(M.subprocess, "run",
-                               fake_run_factory({}, {})):
+                               fake_run_factory({}, dict(disabled_units))):
         assert M._services_quiesced() == (True, "ok")
+    # P1 반례 고정: enabled + guardian 전원 inactive → 거부.
+    with hb, mock.patch.object(M.subprocess, "run", fake_run_factory({}, {})):
+        ok, why = M._services_quiesced()
+    assert ok is False and "disable --now" in why, why
     # guardian 하나라도 살아 있으면(=재기동 가능) enabled 상태는 거부.
     for guard in ("watchdog.service", "autodeploy.service", "autodeploy.timer"):
         with hb, mock.patch.object(M.subprocess, "run", fake_run_factory(
-                {guard: "active"}, {})):
+                {guard: "active"}, dict(disabled_units))):
             ok, why = M._services_quiesced()
         assert ok is False and guard in why, (guard, why)
-    # activating(재기동 진행 중)도 살아 있는 것으로 본다.
-    with hb, mock.patch.object(M.subprocess, "run", fake_run_factory(
-            {"autodeploy.timer": "activating"}, {})):
-        ok, why = M._services_quiesced()
-    assert ok is False and "activating" in why
+    # inactive 외 전 상태 거부 — deactivating(종료 경합)·failed·unknown 포함.
+    for bad in ("activating", "deactivating", "failed", "unknown"):
+        with hb, mock.patch.object(M.subprocess, "run", fake_run_factory(
+                {"autodeploy.timer": bad}, dict(disabled_units))):
+            ok, why = M._services_quiesced()
+        assert ok is False and bad in why, (bad, why)
     # 주문 유닛 자체가 active면 어느 갈래로도 통과 불가.
     with hb, mock.patch.object(M.subprocess, "run", fake_run_factory(
-            {"buyloop.service": "active"}, {})):
+            {"buyloop.service": "active"}, dict(disabled_units))):
         ok, why = M._services_quiesced()
     assert ok is False and "buyloop.service=active" in why
     # guardian 조회 실패는 fail-closed — mask 없으면 거부.
@@ -719,14 +726,14 @@ def test_services_quiesced_requires_every_unit_inactive():
             raise OSError("query down")
         sub = cmd[1]
         return mock.Mock(stdout=("inactive" if sub == "is-active"
-                                 else "enabled") + "\n", returncode=0)
+                                 else "disabled") + "\n", returncode=0)
     with hb, mock.patch.object(M.subprocess, "run", broken_guardian):
         ok, why = M._services_quiesced()
     assert ok is False and "정지 필요" in why
     # 수동 프로세스 발견 시 거부(기존 계약 유지).
     with hb, mock.patch.object(M.subprocess, "run", fake_run_factory(
-            {}, {}, pgrep_rc=0)):
-        fake = fake_run_factory({}, {}, pgrep_rc=0)
+            {}, dict(disabled_units), pgrep_rc=0)):
+        fake = fake_run_factory({}, dict(disabled_units), pgrep_rc=0)
         def with_pid(cmd, **kw):
             r = fake(cmd, **kw)
             if cmd[0] == "pgrep":

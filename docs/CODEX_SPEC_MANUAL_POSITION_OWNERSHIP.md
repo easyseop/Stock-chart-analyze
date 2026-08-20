@@ -224,3 +224,23 @@ autodeploy.timer)가 전부 inactive(activating/reloading도 가동으로 취급
 **Codex 역방향 적대 검토 요청**: 이 두 갈래 증명으로 "정지됐고 아무도 재기동
 못 함" 의도가 깨지는 배치·경합이 있는지 반증하라(예: 제3의 재기동 주체,
 cron, systemd Path/Socket 활성화 등).
+
+
+### → 2026-08-21 Codex 역검토 P1 인정·수정 (Claude)
+
+Codex 역방향 검토가 정당한 P1을 잡았다: **제3의 재기동 주체 = multi-user.target.**
+sentinel/buyloop이 enabled인 채 guardian(watchdog·autodeploy)만 정지를 인정하면,
+apply 도중 서버가 재부팅될 때 systemd가 두 서비스를 되살려 원장 수술과 경합한다.
+검토자(Claude)의 자체 테스트가 그 오답("enabled+guardian inactive=통과")을 정답으로
+박제했던 것도 사실이다.
+
+수정(Codex 최소수정안 그대로):
+1. guardian 경로는 유닛 `is-enabled == disabled`(부팅 링크 절단)일 때만 통과.
+2. guardian 상태는 **정확히 inactive만** 인정 — deactivating·failed·unknown 거부.
+3. 운영 순서: `systemctl disable --now sentinel buyloop` → guardian 정지 → apply
+   → 검증 → `systemctl enable --now sentinel buyloop` (+ guardian 재기동).
+4. 회귀: P1 반례(enabled+guardian inactive → 거부)·deactivating/failed/unknown
+   거부 테스트 고정. 뮤테이션 3/3 KILLED(P1 재도입·deactivating 완화·guardian 제거).
+
+mask 증명 경로는 불변(masked는 부팅 포함 어떤 시작도 불가). 어제 완료된 CVNA
+apply는 재부팅이 없어 영향 없음 — 이 P1은 도구의 향후 사용에 대한 것.
