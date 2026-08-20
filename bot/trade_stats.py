@@ -21,7 +21,10 @@ import time
 import urllib.request
 
 PUBLISH_INTERVAL_S = int(
-    os.environ.get("TRADE_STATS_INTERVAL_S", "900") or 900)      # 기본 15분
+    os.environ.get("TRADE_STATS_INTERVAL_S", "3600") or 3600)    # 기본 60분
+# 사이트는 15분마다 최신 1건만 읽고 승률은 매도 확정 때만 바뀐다 — 더 잦은
+# 발행은 ntfy 무료 한도(일 250건)만 태운다(2026-08-21 429 실측).
+# 하루 체결이 한 자릿수라 60분이어도 통계가 뒤처지는 시간은 사실상 없다.
 _last_publish = 0.0
 
 

@@ -324,18 +324,61 @@ def publish(snap: dict | None = None) -> bool:
 
 # 텔레그램 봇 루프가 호출하는 주기 발행기(프로세스 내 상태만 사용).
 _last_publish = 0.0
+_last_digest = ""
 PUBLISH_INTERVAL_S = int(
-    os.environ.get("OPS_STATUS_INTERVAL_S", "600") or 600)   # 기본 10분
+    os.environ.get("OPS_STATUS_INTERVAL_S", "600") or 600)   # 변화 시 최소 간격
+IDLE_INTERVAL_S = int(
+    os.environ.get("OPS_STATUS_IDLE_INTERVAL_S", "1800") or 1800)   # 무변화 상한
+
+
+_VOLATILE_KEYS = ("generated_at", "updated_at", "age_s", "observed_s",
+                  "last_success_min", "heartbeat_age_s")
+
+
+def _digest(snap: dict) -> str:
+    """시각·나이처럼 매번 변하는 값을 뺀 '상태' 지문.
+
+    이 값들을 포함하면 모든 스냅샷이 '변화'로 잡혀 억제가 무의미해진다.
+    """
+    def strip(node):
+        if isinstance(node, dict):
+            return {k: strip(v) for k, v in sorted(node.items())
+                    if k not in _VOLATILE_KEYS}
+        if isinstance(node, list):
+            return [strip(v) for v in node]
+        return node
+    try:
+        return json.dumps(strip(snap), ensure_ascii=False, sort_keys=True,
+                          separators=(",", ":"))
+    except (TypeError, ValueError):
+        return ""
 
 
 def maybe_publish() -> bool:
-    """마지막 발행 후 간격이 지났으면 발행. 호출 비용이 없도록 시간부터 확인."""
-    global _last_publish
+    """상태가 바뀌면 즉시(최소 간격 후), 무변화면 IDLE 간격으로만 발행한다.
+
+    왜(2026-08-21): ntfy 무료 한도(일 250건)를 전 발행처 합계가 3배 초과해
+    오후부터 429로 조용히 실패했다. 이 스냅샷은 SSH 없는 원격 진단의 유일한
+    창구이므로, 낭비되는 '무변화 반복'만 줄이고 **사고 시에는 오히려 더 빨리**
+    발행한다(상태 변화 = 즉시). 지문 계산 실패는 기존 주기 동작으로 강등한다.
+    """
+    global _last_publish, _last_digest
     now = time.time()
-    if now - _last_publish < max(60, PUBLISH_INTERVAL_S):    # 최소 1분 하한
+    elapsed = now - _last_publish
+    if elapsed < max(60, PUBLISH_INTERVAL_S):    # 최소 1분 하한
+        return False
+    try:
+        snap = snapshot()
+    except Exception:
+        _last_publish = now
+        return publish()                          # 스냅샷 실패도 기존대로 시도
+    digest = _digest(snap)
+    changed = bool(digest) and digest != _last_digest
+    if not changed and elapsed < max(PUBLISH_INTERVAL_S, IDLE_INTERVAL_S):
         return False
     _last_publish = now                    # 실패해도 갱신 — 실패 폭주 방지
-    return publish()
+    _last_digest = digest
+    return publish(snap)
 
 
 # ── kill L1+ 지속 리마인드(사용자 요청 2026-08-10) ─────────────────────────

@@ -304,7 +304,7 @@ def rebase_after_accounting_migration(
     _save(payload)
     # 공개 perf 캐시에도 빈 epoch를 즉시 발행해 이전 -17%가 다음 5분 틱까지
     # 남지 않게 한다. publish_dash는 네트워크 실패를 자체적으로 흡수한다.
-    publish_dash(payload)
+    publish_dash(payload, force=True)   # 리베이스는 즉시 반영(하루 1회)
     return {
         "ok": True, "rebased": True, "already_applied": False,
         "epoch_id": identity,
@@ -745,10 +745,23 @@ def chart_url(series: list, idx_name: str, title: str) -> str:
             + urllib.parse.quote(json.dumps(cfg, separators=(",", ":"))))
 
 
-def publish_dash(st: dict) -> None:
+PUBLISH_MIN_INTERVAL_S = int(
+    os.environ.get("ALPHA_PUBLISH_INTERVAL_S", "900") or 900)   # 기본 15분
+_last_dash_publish = 0.0
+
+
+def publish_dash(st: dict, *, force: bool = False) -> None:
     """대시보드용 컴팩트 상태를 ntfy 토픽에 발행 — 웹 perf.html이 조회.
 
     퍼센트만(금액·수량·계좌 없음). 4KB 한도 안: 세션 시리즈 40점·일별 30일."""
+    # 소비자(사이트 빌드)는 15분마다 ntfy 최신 1건만 읽는다 — 그보다 잦은
+    #   발행은 전부 버려지면서 무료 한도만 태운다(2026-08-21 429 실측).
+    #   마감 요약 등 반드시 실어야 하는 발행은 force=True로 우회한다.
+    global _last_dash_publish
+    now_ts = time.time()
+    if not force and now_ts - _last_dash_publish < max(60, PUBLISH_MIN_INTERVAL_S):
+        return
+    _last_dash_publish = now_ts
     try:
         day = {}
         for mkt, d in (st.get("day") or {}).items():
@@ -904,7 +917,7 @@ def _tick_locked(now: datetime.datetime | None = None) -> None:
                 day["closed"] = True
                 _close_alert(st, mkt, day)
                 _save(st)
-                publish_dash(st)               # 마감 요약도 대시보드에 반영
+                publish_dash(st, force=True)   # 마감 요약은 하루 1회 — 스로틀 우회
             elif day and day.get("close_alert_pending"):
                 _deliver_close_alert(st, mkt, day)   # 실패 알림 재시도(P2-4)
             continue

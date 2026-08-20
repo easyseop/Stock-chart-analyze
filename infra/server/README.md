@@ -348,8 +348,9 @@ sudo systemctl daemon-reload && sudo systemctl enable --now autodeploy.timer
 env를 바꾼 경우엔 여전히 수동 `systemctl restart` 1회 필요.
 
 ## 헬스 비콘 (원격 세션에서 서버 상태 확인용)
-격리된 원격(웹) 세션은 이 서버에 SSH가 안 된다. 비콘이 5분마다 봇 가동상태를
+격리된 원격(웹) 세션은 이 서버에 SSH가 안 된다. 비콘이 60분마다 봇 가동상태를
 ntfy 토픽에 올려두면, 원격에서 그 토픽을 HTTPS로 읽어 상태를 확인할 수 있다.
+(더 촘촘한 원격 진단은 ops 스냅샷 쪽이 담당한다 — 아래 "발행 예산" 참고.)
 **민감정보(잔고·보유수량) 발행 안 함** — 운영 헬스만(가동여부·마지막 원장
 이벤트·에러수). ntfy 토픽은 이름을 알면 읽히니 **추측 어려운 문자열**로.
 ```bash
@@ -367,6 +368,31 @@ curl -s "https://ntfy.sh/<TOPIC>/json?poll=1" | tail   # 최근 캐시 메시지
 각 메시지의 `message` 필드가 헬스 JSON(`units`·`down`·`ledger_lines`·
 `last_ledger`·`err_1h`). `down>0`이면 ntfy 알림도 high 우선순위로 뜬다.
 끄기: `sudo systemctl disable --now health-beacon.timer`.
+
+### 발행 예산 (ntfy 무료 한도)
+ntfy 무료 티어는 **토픽이 아니라 발신 IP 기준**으로 하루 ~250건이다. 서버의
+모든 발행처가 같은 지갑을 쓰므로 P0 손절 경보도 여기에 포함된다.
+
+실측(2026-08-21): 비콘 288 + alpha 대시 ~156 + ops 스냅샷 144 + trade_stats 96
+≈ 684건/일 → 오후부터 전부 429로 **조용히** 실패했고, SSH 없는 원격 진단의
+유일한 창구인 ops 스냅샷이 죽었다. 소비자(사이트 빌드)는 15분마다 최신 1건만
+읽으므로 그보다 잦은 발행은 애초에 전부 버려지는 낭비였다.
+
+| 발행처 | 간격 | 하루 상한 | 설정 |
+|---|---|---|---|
+| health beacon | 60분 | 24 | `health-beacon.timer` |
+| alpha 대시보드 | 15분(장중만) | 96 | `ALPHA_PUBLISH_INTERVAL_S` |
+| ops 스냅샷 | 변화 시 10분 · 무변화 30분 | 48 | `OPS_STATUS_INTERVAL_S` · `OPS_STATUS_IDLE_INTERVAL_S` |
+| trade_stats | 60분 | 24 | `TRADE_STATS_INTERVAL_S` |
+| **정기 합계** | | **192** | P0 경보·수동 `/진단` 몫 ~58건 예비 |
+
+ops 스냅샷만 **변화 감지 발행**이다: kill 레벨·self-heal 판정 등이 바뀌면
+최소 간격(10분) 직후 즉시 올라가고, 무변화면 30분까지 억제한다. 시각·나이처럼
+매번 달라지는 필드는 '변화'로 치지 않는다(`bot/ops_status.py:_VOLATILE_KEYS`).
+사고 때는 오히려 기존보다 빨라지고 평시에만 조용해진다.
+
+간격을 다시 줄이려면 `tests/test_publish_budget.py`의 예산 산술이 같이 깨지므로
+한도를 넘기는 변경은 테스트가 막는다.
 
 ## watchdog 자가복구 판정·로그 확인
 

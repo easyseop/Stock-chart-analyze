@@ -1,10 +1,14 @@
-# 헬스 비콘 타이머 — 5분마다 서버 상태를 ntfy에 발행.
+# 헬스 비콘 타이머 — 60분마다 서버 상태를 ntfy에 발행.
+#   ※ 원래 5분이었다. ntfy 무료 한도는 발신 IP당 하루 ~250건이고 전 발행처
+#     합계가 800건을 넘어 오후부터 429로 조용히 실패했다(실측 2026-08-21).
+#     비콘은 ops 스냅샷(30분)과 내용이 겹치는 이중 신호라, 예산을 P0 경보와
+#     ops 스냅샷에 몰아주고 비콘은 가장 길게 잡는다.
 [Unit]
-Description=run stock health beacon every 5 minutes
+Description=run stock health beacon every 60 minutes
 
 [Timer]
 OnBootSec=1min
-OnUnitActiveSec=5min
+OnUnitActiveSec=60min
 
 [Install]
 WantedBy=timers.target
