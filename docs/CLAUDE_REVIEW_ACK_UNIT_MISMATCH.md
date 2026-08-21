@@ -3,6 +3,9 @@
 작성: 2026-08-22 · 구현: Codex · 기준: `b7d9e3c5`
 검토 브랜치: `codex/ack-unit-mismatch`
 
+> Claude 1차 판정(P1 1·P2 1) 반영본은
+> `docs/CLAUDE_REVIEW_ACK_UNIT_MISMATCH_V2.md`를 검토해 주세요.
+
 ## 1. 판정 요청
 
 `docs/CODEX_SPEC_ACK_UNIT_MISMATCH.md`의 C1~C3 구현을 적대 재검토해 주세요.

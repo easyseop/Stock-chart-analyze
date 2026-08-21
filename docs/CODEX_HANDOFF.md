@@ -2185,3 +2185,34 @@ safe clamp·응답 기록·식별자 redaction·operator ack)을 각각 제거�
 내부키 비노출을 고정했다. 상세 Claude 검토 요청은
 `docs/CLAUDE_REVIEW_ACK_UNIT_MISMATCH.md`다. 다음 순서는 `/진단` payload 승인 여부
 확정(완료) → commit/push → Claude P0/P1=0 → 사용자 별도 병합/배포 승인이다.
+
+### 42. 2026-08-22 ACK P1/P2 부분 재검토 수정
+
+Claude의 `8398e839` 판정은 P0 0·P1 1·P2 1이었다. P1은 총보유를 알 수 없는
+상태에서 접수된 보호 SELL이 미체결·행 부재로 끝나면 자동 3경로와 운영자 CLI
+모두 해소하지 못해, 열린 SELL 때문에 해당 종목 보호가 영구 스킵되는 흡수
+상태였다. P2는 8자리 숫자 KIS msg_cd가 `/진단`과 종결 사유에서 계좌형 숫자로
+오인돼 마스킹되는 문제였다.
+
+수정 코드 커밋 `3e07c2d2`는 before=None의 자동 대사를 전혀 완화하지 않고,
+운영자 CLI에서만 `SELL+submitted/ack+0체결+10분+전 거래소 nccs/ccnl 완전 부재+
+fresh 총보유 성공+단일주문+armed+baseline 배제+명시 ack`를 모두 만족할 때
+0체결 거절 종결을 허용한다. intent/result 감사 이벤트에
+`before_unknown=true`를 남기며 회계 함수는 호출하지 않고 terminal 뒤에만 동결을
+해제한다. 조회 실패·ODNO 행 존재·partial·다중 주문은 계속 거부한다.
+
+한 잔고 응답에서 시장 전체 `total`은 완전-아니면-전무를 유지하고, 발주 기록
+전용 `symbol_total`만 대상 행 단위로 분리했다. 다른 심볼 행이 손상돼도 정상
+대상 종목은 hldg_before 숫자를 기록하지만 `holdings()`는 계속 None이라 자동
+대사가 부분 map을 부재=0으로 오인하지 않는다. safe_qty는 sellable 기준 그대로다.
+
+숫자 msg_cd는 code 필드에서만 보존하고 msg1·last_status는 계속 계좌/긴 숫자를
+마스킹한다. `/진단`과 종결 사유에서 `40570000`은 보이지만 같은 줄의
+`account=12345678`은 보이지 않는 회귀를 추가했다. 비차단 P3도 함께 보완해 armed,
+terminal-only unfreeze, broker observation dedup을 테스트로 고정하고 CLI 출력의
+key/filled를 제거했으며 빈 reconcile meta key를 거부한다.
+
+최종 검증은 Python 73/73, Node 19/19, compileall, app.js 문법, diff check가
+통과했다. 신규 방어 5종을 제거한 mutation은 모두 해당 테스트 rc=1로 KILLED됐다.
+부분 재검토 문서는 `docs/CLAUDE_REVIEW_ACK_UNIT_MISMATCH_V2.md`다. 기본 브랜치
+병합·Oracle 배포·운영 CLI apply는 아직 하지 않았다.
