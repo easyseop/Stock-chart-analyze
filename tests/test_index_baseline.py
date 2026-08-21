@@ -28,6 +28,7 @@ from unittest import mock
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from bot import alpha                                    # noqa: E402
+from bot import settings                                 # noqa: E402
 from scripts import alpha_repair_index as repair         # noqa: E402
 
 DAY = 86400
@@ -202,6 +203,40 @@ def test_repair_labels_backfill_separately():
     print("[PASS] 결측 보강은 '정정'과 분리 집계")
 
 
+def test_repair_refuses_during_market_hours():
+    """alpha 상태 파일에는 락이 없다 — 장중 read-modify-write는 표본을 날린다."""
+    saved = []
+    with mock.patch.object(settings, "market_open", lambda ccy: True), \
+            mock.patch.object(alpha, "_save", lambda st: saved.append(st)):
+        rc = repair.main(["--apply"])
+    assert rc == 3, rc
+    assert saved == [], "장중인데 저장이 일어났다"
+    print("[PASS] 장중 --apply 거부 — 파수꾼 저장과 충돌 방지")
+
+
+def test_repair_aborts_when_state_changed_underneath():
+    """읽은 뒤 남이 저장했으면 덮어쓰지 않는다(낙관적 동시성)."""
+    calls = {"n": 0}
+    row = {"d": "2026-08-21", "mkt": "KR", "basis": "previous_close",
+           "acct": -1.65, "idx": 7.12,
+           "indices": {"코스피": 7.12}, "daily_indices": {"코스피": 7.12}}
+
+    def racing_load():
+        calls["n"] += 1
+        return {"updated_at": f"T{calls['n']}", "days": [dict(row)]}
+
+    saved = []
+    with mock.patch.object(settings, "market_open", lambda ccy: False), \
+            mock.patch.object(alpha, "_load", racing_load), \
+            mock.patch.object(alpha, "_save", lambda st: saved.append(st)), \
+            mock.patch.object(repair, "_bars_by_symbol",
+                              lambda syms, rng: _bars_map()):
+        rc = repair.main(["--apply"])
+    assert rc == 4, rc
+    assert saved == [], "경합을 감지했는데 저장이 일어났다"
+    print("[PASS] 읽은 뒤 변경 감지 → 저장 중단(덮어쓰기 방지)")
+
+
 def main():
     test_previous_close_comes_from_dated_bars()
     test_stale_chart_previous_close_is_ignored()
@@ -214,6 +249,8 @@ def main():
     test_repair_skips_first_sample_rows()
     test_repair_fixes_corruption_without_touching_returns()
     test_repair_labels_backfill_separately()
+    test_repair_refuses_during_market_hours()
+    test_repair_aborts_when_state_changed_underneath()
     print("\n지수 기준선 검증 통과 — 날짜 검증·이상치 차단·소급 정정 안전.")
 
 

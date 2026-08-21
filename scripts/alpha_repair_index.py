@@ -38,7 +38,7 @@ import time
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from bot import alpha  # noqa: E402
+from bot import alpha, settings  # noqa: E402
 
 TOLERANCE_PP = 0.01          # 이 이하 차이는 반올림 잡음 — 정정하지 않는다
 REPAIR_LEDGER = os.environ.get(
@@ -140,9 +140,23 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--mkt", choices=("US", "KR"), help="시장 한정(기본 전체)")
     ap.add_argument("--range", default="2y", help="야후 일봉 조회 범위(기본 2y)")
     ap.add_argument("--apply", action="store_true", help="실제 저장(기본 미리보기)")
+    ap.add_argument("--force", action="store_true",
+                    help="장중에도 강행(권장하지 않음)")
     args = ap.parse_args(argv)
 
+    # 장중 금지. alpha._save()는 원자적이지만 **락이 없다** — 파수꾼이 5분마다
+    #   같은 파일에 read-modify-write 하므로, 장중에 이 스크립트가 끼어들면
+    #   마지막 저장이 이기면서 그 사이 세션 표본이 통째로 날아갈 수 있다.
+    if args.apply and not args.force:
+        live = [ccy for ccy in ("KRW", "USD") if settings.market_open(ccy)]
+        if live:
+            print(f"✗ 장중({'·'.join(live)})에는 정정하지 않습니다 — "
+                  "alpha 상태 파일에 락이 없어 파수꾼 저장과 충돌합니다.\n"
+                  "  장 마감 후 다시 실행하세요(정말 필요하면 --force).")
+            return 3
+
     st = alpha._load()
+    fingerprint = st.get("updated_at")
     days = st.get("days") or []
     targets = [r for r in days
                if not args.mkt or str(r.get("mkt")) == args.mkt]
@@ -193,6 +207,12 @@ def main(argv: list[str] | None = None) -> int:
     if not args.apply:
         print("\n미리보기입니다. 실제로 저장하려면 --apply 를 붙이세요.")
         return 0
+
+    # 낙관적 동시성 — 읽은 뒤 누가 썼으면 덮어쓰지 않는다.
+    if alpha._load().get("updated_at") != fingerprint:
+        print("✗ 읽은 뒤 상태 파일이 바뀌었습니다(다른 프로세스가 저장). "
+              "변경 없이 중단 — 다시 실행하세요.")
+        return 4
 
     path = alpha.STATE_PATH
     backup = f"{path}.bak-{time.strftime('%Y%m%d-%H%M%S')}"
