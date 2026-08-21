@@ -1,10 +1,10 @@
 {
- "generated_at": "2026-08-21T22:31:26.829909+09:00",
+ "generated_at": "2026-08-21T22:42:01.331663+09:00",
  "updated": "2026-08-21",
  "start": 100000000,
- "cash": 43895346,
- "equity": 101505768,
- "ret_pct": 1.51,
+ "cash": 36050121,
+ "equity": 101461165,
+ "ret_pct": 1.46,
  "positions": [
   {
    "code": "MRSH",
@@ -12,14 +12,14 @@
    "ccy": "USD",
    "q": 36,
    "avg": 174.3075,
-   "price": 190.02999877929688,
+   "price": 189.8699951171875,
    "stop": 184.80249938964843,
    "target": 192.2575,
    "half_done": true,
    "opened": "2026-07-06",
-   "pl_krw": 788254,
-   "pl_pct": 9.02,
-   "price_age_min": 0.5
+   "pl_krw": 780232,
+   "pl_pct": 8.93,
+   "price_age_min": 5.6
   },
   {
    "code": "HMC",
@@ -27,14 +27,14 @@
    "ccy": "USD",
    "q": 2,
    "avg": 27.665,
-   "price": 33.130001068115234,
-   "stop": 30.942101068115235,
+   "price": 33.209999084472656,
+   "stop": 31.022099084472657,
    "target": 30.5824,
    "half_done": true,
    "opened": "2026-07-09",
-   "pl_krw": 15222,
-   "pl_pct": 19.75,
-   "price_age_min": 0.5
+   "pl_krw": 15444,
+   "pl_pct": 20.04,
+   "price_age_min": 5.6
   },
   {
    "code": "J",
@@ -42,14 +42,14 @@
    "ccy": "USD",
    "q": 32,
    "avg": 126.585,
-   "price": 147.74000549316406,
+   "price": 148.36500549316406,
    "stop": 137.92989328613282,
    "target": 141.2316,
    "half_done": true,
    "opened": "2026-07-11",
-   "pl_krw": 942769,
-   "pl_pct": 16.71,
-   "price_age_min": 0.5
+   "pl_krw": 970622,
+   "pl_pct": 17.21,
+   "price_age_min": 5.6
   },
   {
    "code": "MAIN",
@@ -57,14 +57,14 @@
    "ccy": "USD",
    "q": 39,
    "avg": 53.96,
-   "price": 58.7599983215332,
+   "price": 58.59000015258789,
    "stop": 55.9411983215332,
    "target": 58.7184,
    "half_done": true,
    "opened": "2026-07-22",
-   "pl_krw": 260704,
-   "pl_pct": 8.9,
-   "price_age_min": 0.5
+   "pl_krw": 251471,
+   "pl_pct": 8.58,
+   "price_age_min": 5.9
   },
   {
    "code": "004370",
@@ -79,7 +79,7 @@
    "opened": "2026-07-27",
    "pl_krw": 640000,
    "pl_pct": 17.37,
-   "price_age_min": 0.5
+   "price_age_min": 5.6
   },
   {
    "code": "EQT",
@@ -87,14 +87,14 @@
    "ccy": "USD",
    "q": 121,
    "avg": 51.375,
-   "price": 54.150001525878906,
+   "price": 54.060001373291016,
    "stop": 51.375,
    "target": 57.1234,
    "half_done": true,
    "opened": "2026-07-29",
-   "pl_krw": 467617,
-   "pl_pct": 5.4,
-   "price_age_min": 0.5
+   "pl_krw": 452451,
+   "pl_pct": 5.23,
+   "price_age_min": 5.6
   },
   {
    "code": "MDT",
@@ -102,14 +102,14 @@
    "ccy": "USD",
    "q": 47,
    "avg": 86.12,
-   "price": 91.91999816894533,
+   "price": 92.3499984741211,
    "stop": 87.73240335693359,
    "target": 95.117,
    "half_done": true,
    "opened": "2026-07-30",
-   "pl_krw": 379636,
-   "pl_pct": 6.73,
-   "price_age_min": 0.5
+   "pl_krw": 407782,
+   "pl_pct": 7.23,
+   "price_age_min": 5.5
   },
   {
    "code": "AVY",
@@ -117,14 +117,14 @@
    "ccy": "USD",
    "q": 14,
    "avg": 169.73,
-   "price": 182.8300018310547,
+   "price": 181.8300018310547,
    "stop": 169.73,
    "target": 192.4206,
    "half_done": true,
    "opened": "2026-08-03",
-   "pl_krw": 255412,
-   "pl_pct": 7.72,
-   "price_age_min": 0.5
+   "pl_krw": 235915,
+   "pl_pct": 7.13,
+   "price_age_min": 5.5
   },
   {
    "code": "DPZ",
@@ -132,14 +132,14 @@
    "ccy": "USD",
    "q": 10,
    "avg": 353.285,
-   "price": 334.8699951171875,
+   "price": 333.0299987792969,
    "stop": 328.6353,
    "target": 402.5845,
    "half_done": false,
    "opened": "2026-08-07",
-   "pl_krw": -256457,
-   "pl_pct": -5.21,
-   "price_age_min": 0.5
+   "pl_krw": -282081,
+   "pl_pct": -5.73,
+   "price_age_min": 5.5
   },
   {
    "code": "UFPI",
@@ -154,7 +154,7 @@
    "opened": "2026-08-11",
    "pl_krw": -61332,
    "pl_pct": -2.03,
-   "price_age_min": 0.5
+   "price_age_min": 5.5
   },
   {
    "code": "036460",
@@ -169,37 +169,25 @@
    "opened": "2026-08-19",
    "pl_krw": 84800,
    "pl_pct": 1.13,
-   "price_age_min": 0.5
-  }
- ],
- "pending": [
+   "price_age_min": 5.5
+  },
   {
    "code": "FND",
    "name": "Floor & Decor Holdings, Inc.",
    "ccy": "USD",
-   "limit": 54.6923,
+   "q": 103,
+   "avg": 54.6923,
+   "price": 54.52999877929688,
    "stop": 54.2692,
    "target": 71.5365,
-   "q": 103,
-   "created": "2026-08-10",
-   "atr": 2.8779,
-   "plan": {
-    "entry": 60.025,
-    "stop": 54.2692,
-    "target": 71.5365,
-    "pb": 54.6923,
-    "tactic": "pullback"
-   },
-   "ctx": {
-    "mode": "pullback",
-    "fresh": true,
-    "stage": 3,
-    "rp": 35,
-    "rec": 6,
-    "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권35% · 체크6/6 · 손절폭9.6%"
-   },
-   "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권35% · 체크6/6 · 손절폭9.6%"
-  },
+   "half_done": false,
+   "opened": "2026-08-21",
+   "pl_krw": -23281,
+   "pl_pct": -0.3,
+   "price_age_min": 5.5
+  }
+ ],
+ "pending": [
   {
    "code": "036460",
    "name": "한국가스공사",
@@ -917,10 +905,23 @@
   },
   {
    "d": "2026-08-21",
-   "v": 101505768
+   "v": 101461165
   }
  ],
  "log": [
+  {
+   "d": "2026-08-21",
+   "type": "buy",
+   "code": "FND",
+   "name": "Floor & Decor Holdings, Inc.",
+   "q": 103,
+   "price": 54.6923,
+   "ccy": "USD",
+   "amt": 7845225,
+   "note": "눌림 지정가 체결 — 🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권35% · 체크6/6 · 손절폭9.6%",
+   "stop": 54.2692,
+   "target": 71.5365
+  },
   {
    "d": "2026-08-19",
    "type": "sell",
@@ -1544,21 +1545,8 @@
    "note": "눌림 지정가 체결 — 🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권34% · 체크6/6 · 손절폭8.1%",
    "stop": 9.2434,
    "target": 11.6783
-  },
-  {
-   "d": "2026-07-09",
-   "type": "buy",
-   "code": "NU",
-   "name": "Nu Holdings Ltd.",
-   "q": 1,
-   "price": 13.335,
-   "ccy": "USD",
-   "amt": 20121,
-   "note": "반반 1차 — 🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권27% · 체크4/6 · 손절폭7.6%",
-   "stop": 12.3253,
-   "target": 15.3544
   }
  ],
- "lane": "fast",
+ "lane": "bulk",
  "data_stale": []
 }
