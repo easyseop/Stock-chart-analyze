@@ -467,22 +467,29 @@ def resolve_acks_by_absence(evidence_by_key: dict[str, dict],
         result = ledger.reconcile(key, 0, open_order=False)
         via = "zero-fill-balance-proof" if zero_fill_row is not None \
             else "absence-proof"
-        row_msg_cd = clean_broker_text(
+        row_msg_cd = ledger.sanitize_broker_text(
             (zero_fill_row or {}).get("msg_cd")
             or (zero_fill_row or {}).get("rjct_rson")
-            or (zero_fill_row or {}).get("_response_msg_cd"))
-        row_msg1 = clean_broker_text(
+            or (zero_fill_row or {}).get("_response_msg_cd"), code=True)
+        row_msg1 = ledger.sanitize_broker_text(
             (zero_fill_row or {}).get("msg1")
             or (zero_fill_row or {}).get("rjct_rson_name")
             or (zero_fill_row or {}).get("_response_msg1"))
         previous_meta = order.get("reconcile_meta") or {}
-        last_detail = clean_broker_text(
-            previous_meta.get("last_status") or previous_meta.get("last_msg1")
-            or previous_meta.get("last_msg_cd"))
-        submit_detail = clean_broker_text(
-            previous_meta.get("submit_msg1") or previous_meta.get("submit_msg_cd"))
-        broker_reason = ledger.sanitize_broker_text(
-            clean_broker_text(
+        last_code = ledger.sanitize_broker_text(
+            previous_meta.get("last_msg_cd"), limit=40, code=True)
+        last_message = ledger.sanitize_broker_text(
+            previous_meta.get("last_msg1") or previous_meta.get("last_status"))
+        last_detail = " ".join(x for x in (last_code, last_message) if x)
+        submit_code = ledger.sanitize_broker_text(
+            previous_meta.get("submit_msg_cd"), limit=40, code=True)
+        submit_message = ledger.sanitize_broker_text(
+            previous_meta.get("submit_msg1"))
+        submit_detail = " ".join(x for x in (submit_code, submit_message) if x)
+        # 코드와 본문을 따로 정화한 뒤 합친다. 합친 문자열을 code=False로 다시
+        # 정화하면 8자리 숫자 KIS msg_cd까지 계좌번호로 오인해 가려진다.
+        broker_reason = (
+            ledger.sanitize_broker_text(
                 (zero_fill_row or {}).get("rjct_rson_name")
                 or (zero_fill_row or {}).get("prcs_stat_name"))
             or (f"사유 미상(마지막 관측: {last_detail})" if last_detail else "")

@@ -53,7 +53,8 @@ def test_c1_sell_uses_total_for_baseline_and_sellable_for_clamp():
              mock.patch("bot.kis.market_of_symbol", return_value="US"), \
              mock.patch("bot.kis.us_excg_of", return_value="NYSE"), \
              mock.patch("bot.kis.holding_quantities", return_value={
-                 "total": {"INGR": 11}, "sellable": {"INGR": 6}}), \
+                 "total": {"INGR": 11}, "sellable": {"INGR": 6},
+                 "symbol_total": 11}), \
              mock.patch("bot.kis_orders.place_sell",
                         return_value={"act": "ack"}) as place:
             out = br.place_sell("INGR", 8, "익절", "sell:ingr#1")
@@ -66,7 +67,8 @@ def test_c1_sell_uses_total_for_baseline_and_sellable_for_clamp():
              mock.patch("bot.kis.market_of_symbol", return_value="US"), \
              mock.patch("bot.kis.us_excg_of", return_value="NYSE"), \
              mock.patch("bot.kis.holding_quantities", return_value={
-                 "total": None, "sellable": {"INGR": 6}}), \
+                 "total": None, "sellable": {"INGR": 6},
+                 "symbol_total": None}), \
              mock.patch("bot.kis_orders.place_sell",
                         return_value={"act": "ack"}) as place2:
             assert br.place_sell("INGR", 5, "손절", "sell:ingr#2")["state"] == "ack"
@@ -76,11 +78,25 @@ def test_c1_sell_uses_total_for_baseline_and_sellable_for_clamp():
              mock.patch("bot.kis.market_of_symbol", return_value="US"), \
              mock.patch("bot.kis.us_excg_of", return_value="NYSE"), \
              mock.patch("bot.kis.holding_quantities", return_value={
-                 "total": {"INGR": 11}, "sellable": None}), \
+                 "total": {"INGR": 11}, "sellable": None,
+                 "symbol_total": 11}), \
              mock.patch("bot.kis_orders.place_sell") as blocked:
             assert br.place_sell("INGR", 5, "손절", "sell:ingr#3")["state"] \
                 == "rejected"
         assert not blocked.called
+
+        # 다른 행 하나의 total이 손상돼 시장 map은 None이어도, 정상 INGR 행의
+        # 단일심볼 total은 발주 hldg_before에 기록한다.
+        with mock.patch.object(S, "LIVE", True), \
+             mock.patch("bot.kis.market_of_symbol", return_value="US"), \
+             mock.patch("bot.kis.us_excg_of", return_value="NYSE"), \
+             mock.patch("bot.kis.holding_quantities", return_value={
+                 "total": None, "sellable": {"INGR": 6, "BROKEN": 2},
+                 "symbol_total": 11}), \
+             mock.patch("bot.kis_orders.place_sell",
+                        return_value={"act": "ack"}) as isolated:
+            assert br.place_sell("INGR", 5, "손절", "sell:ingr#4")["state"] == "ack"
+        assert isolated.call_args.kwargs["hldg_before"] == 11
     print("[PASS] C1 총보유 11/매도가능 6: before=11·전송≤6·부분실패 단위 격리")
 
 
@@ -251,6 +267,167 @@ def test_operator_cli_query_failure_no_write_and_exact_apply():
     print("[PASS] C2 CLI 조회실패 쓰기0·fresh exact apply·감사 append·terminal 동결해제")
 
 
+def test_r1_before_unknown_operator_absence_only():
+    """before=None은 자동 3경로 정지, 운영자 fresh 부재 증명만 종결한다."""
+    with tempfile.TemporaryDirectory() as tmp:
+        L, O, R, _S, _KO = _setup(tmp)
+        from scripts import kis_ack_resolve as CLI
+        importlib.reload(CLI)
+        CLI.ledger.LEDGER_PATH = L.LEDGER_PATH
+        _ack(L, "sell:unknown-before", "AMD", before=None, odno="91001")
+        O.freeze("AMD", "before unknown")
+
+        # 자동 direct/balance/absence는 모두 계속 보류한다.
+        assert R.resolve_acks_from_rows([]) == []
+        assert R.resolve_acks_by_balance(
+            {"US": {"AMD": 11}}, complete_snapshot=True) == []
+        proof = {"sell:unknown-before": {
+            "nccs_rows": [], "ccnl_rows": [], "holdings": {"AMD": 11}}}
+        assert R.resolve_acks_by_absence(
+            proof, orders=L.open_orders())[0] == []
+
+        evidence = {"market": "US", "nccs": [], "ccnl": [],
+                    "holdings": {"AMD": 11}, "rows": []}
+        with mock.patch.object(CLI, "_read_market", return_value=evidence):
+            plan = CLI.collect_plan("sell:unknown-before")
+        assert plan["kind"] == "absence-reject" and plan["before_unknown"] is True
+        safe = CLI.safe_plan(plan)
+        assert "key" not in safe and "filled" not in safe
+
+        with mock.patch.object(CLI, "_read_market", return_value=evidence), \
+             mock.patch("bot.kis_accounting.sync_fill") as accounting:
+            result = CLI.apply_plan(
+                "sell:unknown-before", ack="완전 부재와 fresh 잔고 확인")
+        assert result["result"] == "rejected" and result["unfrozen"]
+        assert not accounting.called
+        events = [json.loads(line) for line in open(L.LEDGER_PATH, encoding="utf-8")]
+        audit = [event for event in events if event.get("ev") == "operator_action"]
+        assert len(audit) == 2
+        assert all(event["evidence"]["before_unknown"] is True for event in audit)
+    print("[PASS] R1-a before=None: 자동3경로 0·운영자 부재종결·감사 true·회계0")
+
+
+def test_r1_before_unknown_refuses_untrusted_or_present_evidence():
+    with tempfile.TemporaryDirectory() as tmp:
+        L, O, _R, _S, _KO = _setup(tmp)
+        from scripts import kis_ack_resolve as CLI
+        importlib.reload(CLI)
+        CLI.ledger.LEDGER_PATH = L.LEDGER_PATH
+        _ack(L, "sell:unknown-refuse", "AMD", before=None, odno="92001")
+        O.freeze("AMD", "before unknown")
+        ledger_before = open(L.LEDGER_PATH, "rb").read()
+        freeze_before = open(os.environ["SYMBOL_FREEZE_PATH"], "rb").read()
+        with mock.patch.object(CLI, "_read_market",
+                               side_effect=RuntimeError("balance untrusted")):
+            try:
+                CLI.apply_plan("sell:unknown-refuse", ack="조회 확인")
+                raise AssertionError("untrusted evidence must fail")
+            except RuntimeError:
+                pass
+        assert open(L.LEDGER_PATH, "rb").read() == ledger_before
+        assert open(os.environ["SYMBOL_FREEZE_PATH"], "rb").read() == freeze_before
+
+        zero_row = _row("AMD", odno="92001", filled=0, opened=False)
+        present = {"market": "US", "nccs": [],
+                   "ccnl": [{"odno": "92001"}], "holdings": {"AMD": 11},
+                   "rows": [zero_row]}
+        with mock.patch.object(CLI, "_read_market", return_value=present):
+            assert CLI.collect_plan("sell:unknown-refuse")["kind"] == "hold"
+
+        _ack(L, "sell:partial-before", "PARTIAL0", qty=5, before=None,
+             odno="92002")
+        L.on_result("sell:partial-before", "partial", 1, open_order=True)
+        partial_absent = {"market": "US", "nccs": [], "ccnl": [],
+                          "holdings": {"PARTIAL0": 4}, "rows": []}
+        with mock.patch.object(CLI, "_read_market", return_value=partial_absent):
+            assert CLI.collect_plan("sell:partial-before")["kind"] == "hold"
+
+        _ack(L, "sell:multi-before-1", "MULTI0", before=None, odno="92003")
+        _ack(L, "sell:multi-before-2", "MULTI0", before=None, odno="92004")
+        try:
+            CLI.collect_plan("sell:multi-before-1")
+            raise AssertionError("same-symbol multi order must fail")
+        except RuntimeError:
+            pass
+    print("[PASS] R1-a before=None: 조회불신/ccnl/partial/다중주문은 종결 거부")
+
+
+def test_r2_numeric_msg_code_visible_but_account_stays_redacted():
+    with tempfile.TemporaryDirectory() as tmp:
+        L, _O, R, _S, _KO = _setup(tmp)
+        from bot import kis_telegram
+        _ack(L, "buy:numeric-code", "OMCL", before=0, odno="93001", side="BUY")
+        L.record_reconcile_meta(
+            "buy:numeric-code", reason="broker-observation",
+            meta={"last_msg_cd": "40570000",
+                  "last_msg1": "주문가능금액 부족 account=12345678"})
+        state = {"key": "buy:numeric-code", **L.state_of("buy:numeric-code")}
+        line = kis_telegram._diag_order_details({"buy:numeric-code": state})[0]
+        assert "40570000" in line and "12345678" not in line
+        proof = {"buy:numeric-code": {
+            "nccs_rows": [], "ccnl_rows": [], "holdings": {"OMCL": 0}}}
+        resolved, _ = R.resolve_acks_by_absence(proof, orders=L.open_orders())
+        assert "40570000" in resolved[0]["broker_reason"]
+        assert "12345678" not in resolved[0]["broker_reason"]
+
+        _ack(L, "buy:submit-code", "OMC2", before=0, odno="93002", side="BUY")
+        L.record_reconcile_meta(
+            "buy:submit-code", reason="order-response",
+            meta={"submit_msg_cd": "40910000",
+                  "submit_msg1": "접수 거절 account=87654321"})
+        proof2 = {"buy:submit-code": {
+            "nccs_rows": [], "ccnl_rows": [], "holdings": {"OMC2": 0}}}
+        resolved2, _ = R.resolve_acks_by_absence(
+            proof2, orders=L.open_orders("OMC2"))
+        assert "40910000" in resolved2[0]["broker_reason"]
+        assert "87654321" not in resolved2[0]["broker_reason"]
+    print("[PASS] R2 숫자 msg_cd 진단/종결 보존·같은 줄 계좌번호 마스킹")
+
+
+def test_p3_armed_terminal_and_observation_contracts():
+    with tempfile.TemporaryDirectory() as tmp:
+        L, O, R, _S, _KO = _setup(tmp)
+        # baseline 미무장은 exact ODNO도 확정하지 않는다.
+        os.unlink(os.environ["USER_BASELINE_PATH"])
+        _ack(L, "sell:unarmed", "UNARMED", odno="94001")
+        with mock.patch("bot.kis_accounting.sync_fill") as sync:
+            assert R.resolve_acks_from_rows(
+                [_row("UNARMED", odno="94001")]) == []
+        assert not sync.called
+
+    with tempfile.TemporaryDirectory() as tmp:
+        L, O, R, _S, _KO = _setup(tmp)
+        from scripts import kis_ack_resolve as CLI
+        importlib.reload(CLI)
+        CLI.ledger.LEDGER_PATH = L.LEDGER_PATH
+        _ack(L, "sell:partial", "PARTIAL", qty=5, odno="95001")
+        O.freeze("PARTIAL", "manual review")
+        partial_row = _row("PARTIAL", odno="95001", filled=2, opened=True)
+        evidence = {"market": "US", "nccs": [], "ccnl": [],
+                    "holdings": {"PARTIAL": 9}, "rows": [partial_row]}
+        with mock.patch.object(CLI, "_read_market", return_value=evidence), \
+             mock.patch("bot.kis_accounting.sync_fill", return_value={"ok": True}):
+            result = CLI.apply_plan("sell:partial", ack="부분체결 확인")
+        assert result["result"] == "partial" and not result["unfrozen"]
+        assert O.is_frozen("PARTIAL")
+
+        order = L.open_orders("PARTIAL")[0]
+        row = _row("PARTIAL", odno="95001", filled=2, opened=True,
+                   status="부분체결 대기")
+        R._record_broker_observation(order, row)
+        once = open(L.LEDGER_PATH, "rb").read()
+        refreshed = L.open_orders("PARTIAL")[0]
+        R._record_broker_observation(refreshed, row)
+        assert open(L.LEDGER_PATH, "rb").read() == once
+
+        try:
+            L.record_reconcile_meta("", reason="bad", meta={"source": "bad"})
+            raise AssertionError("empty key must fail")
+        except ValueError:
+            pass
+    print("[PASS] P3 armed·terminal-only unfreeze·관측 dedup·빈 key 거부")
+
+
 def main():
     test_c1_sell_uses_total_for_baseline_and_sellable_for_clamp()
     test_c1_balance_table_no_fill_then_full_fill()
@@ -259,6 +436,10 @@ def main():
     test_c2_unknown_frozen_exact_bound_odno_only()
     test_c3_response_last_status_and_secret_redaction()
     test_operator_cli_query_failure_no_write_and_exact_apply()
+    test_r1_before_unknown_operator_absence_only()
+    test_r1_before_unknown_refuses_untrusted_or_present_evidence()
+    test_r2_numeric_msg_code_visible_but_account_stays_redacted()
+    test_p3_armed_terminal_and_observation_contracts()
     print("\nACK 단위 불일치/동결 자기잠금/거절 사유 회귀 통과.")
 
 

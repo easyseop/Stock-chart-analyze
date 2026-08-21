@@ -831,13 +831,19 @@ def _consumer_untrusted(reason: str) -> None:
     _set_get_failure({"exception": str(reason)})
 
 
-def holding_quantities(market: str = "US", excg: str = "NASD") -> dict | None:
+def holding_quantities(market: str = "US", excg: str = "NASD", *,
+                       symbol: str | None = None) -> dict | None:
     """한 잔고 응답에서 총보유와 매도가능을 서로 다른 단위로 파싱한다.
 
     반환은 ``{"total": map|None, "sellable": map|None}``. HTTP/페이지/행 구조가
     불신이면 전체 ``None``이다. 한 수량 필드만 손상된 경우에는 다른 map을 살려
     보호 매도 핫패스를 유지하되, 손상된 단위를 다른 단위로 추측하지 않는다.
     두 map은 반드시 같은 완전한 페이지 집합에서 만들어진다.
+
+    ``symbol``을 주면 같은 응답에서 그 행만 따로 검증한 ``symbol_total``도
+    반환한다. 이는 발주 당시 hldg_before 기록 전용이며, 시장 전체 ``total``은
+    다른 한 행이라도 손상되면 계속 None이다. 완전 스냅샷 소비자가 부분 map을
+    부재=0으로 오인하지 않게 두 계약을 섞지 않는다.
     """
     d = domestic_balance() if market == "KR" else overseas_balance(excg=excg)
     if not d or d.get("rt_cd") != "0":
@@ -858,9 +864,12 @@ def holding_quantities(market: str = "US", excg: str = "NASD") -> dict | None:
     sellable: dict[str, int] = {}
     total_ok = True
     sellable_ok = True
+    target = str(symbol or "").upper()
+    target_total = 0
+    target_total_ok = True
     for row in rows:
-        symbol = str(row.get("pdno") or row.get("ovrs_pdno") or "").upper()
-        if not symbol:
+        row_symbol = str(row.get("pdno") or row.get("ovrs_pdno") or "").upper()
+        if not row_symbol:
             continue
         total_raw = row.get("hldg_qty")
         if total_raw in (None, ""):
@@ -871,9 +880,13 @@ def holding_quantities(market: str = "US", excg: str = "NASD") -> dict | None:
             qty = int(float(total_raw))
         except (TypeError, ValueError):
             total_ok = False
+            if target and row_symbol == target:
+                target_total_ok = False
         else:
             if qty:
-                total[symbol] = total.get(symbol, 0) + qty
+                total[row_symbol] = total.get(row_symbol, 0) + qty
+            if target and row_symbol == target:
+                target_total += qty
 
         sellable_raw = row.get("ord_psbl_qty")
         try:
@@ -883,13 +896,16 @@ def holding_quantities(market: str = "US", excg: str = "NASD") -> dict | None:
         except (TypeError, ValueError):
             sellable_ok = False
         else:
-            sellable[symbol] = sellable.get(symbol, 0) + qty
+            sellable[row_symbol] = sellable.get(row_symbol, 0) + qty
     if not total_ok:
         _consumer_untrusted("BalanceQuantityUntrusted")
     if not sellable_ok:
         _consumer_untrusted("SellableQuantityUntrusted")
-    return {"total": total if total_ok else None,
-            "sellable": sellable if sellable_ok else None}
+    result = {"total": total if total_ok else None,
+              "sellable": sellable if sellable_ok else None}
+    if target:
+        result["symbol_total"] = target_total if target_total_ok else None
+    return result
 
 
 def holdings(market: str = "US", excg: str = "NASD") -> dict | None:

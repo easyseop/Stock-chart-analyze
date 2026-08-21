@@ -312,7 +312,8 @@ def main() -> int:
              mock.patch("bot.kis.market_of_symbol", return_value="US"), \
              mock.patch("bot.kis.us_excg_of", return_value="NYSE"), \
              mock.patch("bot.kis.holding_quantities", return_value={
-                 "total": {"ALK": 8}, "sellable": {"ALK": 3}}), \
+                 "total": {"ALK": 8}, "sellable": {"ALK": 3},
+                 "symbol_total": 8}), \
              mock.patch("bot.kis_positions.load", return_value={}), \
              mock.patch("bot.kis_orders.place_sell",
                         return_value={"act": "ack"}) as place:

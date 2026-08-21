@@ -202,7 +202,8 @@ def test_sentinel_kr_uses_market():
     br.quote = lambda code, ccy: 70_000.0
     with mock.patch.object(S, "LIVE", True), \
          mock.patch("bot.kis.holding_quantities", return_value={
-             "total": {"005930": 2}, "sellable": {"005930": 2}}), \
+             "total": {"005930": 2}, "sellable": {"005930": 2},
+             "symbol_total": 2}), \
          mock.patch("bot.kis_orders.place_sell",
                     return_value={"ok": True, "act": "ack"}) as ps:
         br.place_sell("005930", 2, "손절", "k#1")
@@ -211,7 +212,8 @@ def test_sentinel_kr_uses_market():
     # 미국은 order_type 미지정(지정가)
     with mock.patch.object(S, "LIVE", True), \
          mock.patch("bot.kis.holding_quantities", return_value={
-             "total": {"AAPL": 2}, "sellable": {"AAPL": 2}}), \
+             "total": {"AAPL": 2}, "sellable": {"AAPL": 2},
+             "symbol_total": 2}), \
          mock.patch("bot.kis_orders.place_sell",
                     return_value={"ok": True, "act": "ack"}) as ps2:
         br.place_sell("AAPL", 2, "손절", "k#2")

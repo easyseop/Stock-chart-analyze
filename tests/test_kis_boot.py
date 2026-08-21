@@ -190,7 +190,8 @@ def test_sentinel_kis_place_sell_mapping():
             with mock.patch.object(sn, "LIVE", True), \
                  mock.patch.object(br, "quote", return_value=100.0), \
                  mock.patch("bot.kis.holding_quantities", return_value={
-                     "total": {"AAPL": 3}, "sellable": {"AAPL": 3}}), \
+                     "total": {"AAPL": 3}, "sellable": {"AAPL": 3},
+                     "symbol_total": 3}), \
                  mock.patch("bot.kis_orders.place_sell",
                             return_value={"ok": act == "ack", "act": act,
                                           "key": "k", "odno": "1"}):
@@ -200,7 +201,8 @@ def test_sentinel_kis_place_sell_mapping():
         with mock.patch.object(sn, "LIVE", True), \
              mock.patch.object(br, "quote", return_value=None), \
              mock.patch("bot.kis.holding_quantities", return_value={
-                 "total": {"AAPL": 3}, "sellable": {"AAPL": 3}}):
+                 "total": {"AAPL": 3}, "sellable": {"AAPL": 3},
+                 "symbol_total": 3}):
             r = br.place_sell("AAPL", 3, "손절", "k#2")
         assert r["state"] == "rejected"
         with mock.patch.object(sn, "LIVE", False), \
@@ -213,7 +215,8 @@ def test_sentinel_kis_place_sell_mapping():
         with mock.patch.object(sn, "LIVE", True), \
              mock.patch.object(br, "quote", return_value=100.0), \
              mock.patch("bot.kis.holding_quantities", return_value={
-                 "total": {"AAPL": 5}, "sellable": {"AAPL": 5}}), \
+                 "total": {"AAPL": 5}, "sellable": {"AAPL": 5},
+                 "symbol_total": 5}), \
              mock.patch("bot.kis_orders.place_sell",
                         return_value={"ok": True, "act": "ack",
                                       "key": "half", "odno": "1"}) as place:

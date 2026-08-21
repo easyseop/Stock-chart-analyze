@@ -19,7 +19,8 @@ def test_operational_chase_dependencies():
          mock.patch("bot.kis.us_excg_of", return_value="NASD"), \
          mock.patch("bot.kis.last_price", return_value=99.0), \
          mock.patch("bot.kis.holding_quantities", return_value={
-             "total": {"AAPL": 10}, "sellable": {"AAPL": 10}}), \
+             "total": {"AAPL": 10}, "sellable": {"AAPL": 10},
+             "symbol_total": 10}), \
          mock.patch("bot.kis.open_orders", return_value={"rt_cd": "0", "output": []}), \
          mock.patch("bot.kis.fills", side_effect=lambda **_: fills[0]):
         os.environ["USER_BASELINE_PATH"] = os.path.join(tmp, "baseline.json")

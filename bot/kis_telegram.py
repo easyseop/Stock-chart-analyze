@@ -56,7 +56,8 @@ def _diag_order_details(fold: dict, *, limit: int = 3) -> list[str]:
         for code_key, text_key in (
                 ("last_msg_cd", "last_msg1"),
                 ("submit_msg_cd", "submit_msg1")):
-            code = ledger.sanitize_broker_text(meta.get(code_key), limit=40)
+            code = ledger.sanitize_broker_text(
+                meta.get(code_key), limit=40, code=True)
             message = ledger.sanitize_broker_text(meta.get(text_key), limit=120)
             if code or message:
                 parts = [x for x in (code, message) if x]

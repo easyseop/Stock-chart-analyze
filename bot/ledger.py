@@ -593,11 +593,15 @@ def record_reconcile_meta(key: str, *, reason: str, meta: dict) -> None:
     whitelist에 해당하는 브로커 판정 정보만 기록할 수 있어 계좌번호·토큰·주문
     내부키가 meta로 흘러드는 것을 막는다.
     """
+    clean_key = str(key or "").strip()
+    if not clean_key:
+        raise ValueError("reconcile meta key required")
     allowed = {
         "source", "msg_cd", "msg1", "msg_source", "broker_reason",
         "nccs_count", "ccnl_count", "odno_absent", "hldg_before", "hldg_now",
         "side", "intended", "submit_msg_cd", "submit_msg1",
         "last_msg_cd", "last_msg1", "last_status", "last_source",
+        "before_unknown",
     }
     def safe_value(value):
         if not isinstance(value, str):
@@ -612,7 +616,7 @@ def record_reconcile_meta(key: str, *, reason: str, meta: dict) -> None:
             continue
         clean[name] = (sanitize_broker_text(value, code=True)
                        if name.endswith("msg_cd") else safe_value(value))
-    _append({"ev": "reconcile_meta", "key": str(key),
+    _append({"ev": "reconcile_meta", "key": clean_key,
              "reason": str(reason or "")[:80], "meta": clean})
 
 
@@ -621,7 +625,8 @@ def record_operator_action(key: str, *, action: str, ack: str,
     """운영자 강제 대사/동결해제의 최소 감사 흔적(시크릿·ODNO 저장 금지)."""
     if not str(ack or "").strip():
         raise PermissionError("operator ack required")
-    allowed = {"symbol", "side", "market", "kind", "filled", "state"}
+    allowed = {"symbol", "side", "market", "kind", "filled", "state",
+               "before_unknown"}
     clean = {str(k): (sanitize_broker_text(v) if isinstance(v, str) else v)
              for k, v in (evidence or {}).items() if str(k) in allowed}
     _append({"ev": "operator_action", "key": str(key),

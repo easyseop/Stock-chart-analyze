@@ -2,7 +2,9 @@
 """동결/ACK 주문의 운영자 승인 대사 — 조회 전용 plan, 증거 기반 apply.
 
 원장만 임의로 닫는 도구가 아니다. 매 실행마다 KIS 미체결·체결·총보유를 새로
-읽고, exact ODNO 양수 체결 또는 10분+ 완전 부재·잔고불변만 처리한다.
+읽고, exact ODNO 양수 체결 또는 10분+ 완전 부재를 처리한다. hldg_before가
+있으면 잔고불변까지 자동 검증하고, None인 보호 SELL은 운영자 ack가 그 비교를
+명시적으로 대신한다. 자동 대사 경로는 before=None을 계속 보류한다.
 조회 실패/부분 페이지/소유 경계 불명은 파일을 한 바이트도 바꾸지 않는다.
 """
 from __future__ import annotations
@@ -117,6 +119,7 @@ def collect_plan(key: str, *, now_ts: float | None = None) -> dict:
     age_s = max(0.0, now_ts - float(order.get("submitted_at") or 0))
     kind = "hold"
     filled = 0
+    before_unknown = False
     reason = "직접/부재 증거 불충분"
     if len(exact) == 1 and int(exact[0].get("filled") or 0) > 0:
         kind = "terminal-direct-unfreeze" if terminal_review else "direct-fill"
@@ -133,16 +136,28 @@ def collect_plan(key: str, *, now_ts: float | None = None) -> dict:
             current = int(evidence["holdings"].get(symbol, 0))
         except (TypeError, ValueError):
             before, current = None, None
-        if (not n_has and not c_has and before is not None and current == before
+        state = str(order.get("state") or "")
+        filled_so_far = int(order.get("filled") or 0)
+        known_unchanged = before is not None and current == before
+        operator_unknown_sell = (side == "SELL" and before_raw is None
+                                 and current is not None)
+        if (not n_has and not c_has
+                and state in ("submitted", "ack") and filled_so_far == 0
+                and (known_unchanged or operator_unknown_sell)
                 and age_s >= max(kis_reconcile.REJECT_ABSENCE_MIN_S,
                                  kis_reconcile.ACK_AGE_MIN_S)):
             kind = "absence-reject"
-            reason = "완전 미체결/체결 부재 + 총보유 불변 + 10분 유예"
+            before_unknown = operator_unknown_sell
+            reason = ("완전 미체결/체결 부재 + fresh 총보유 확인 + "
+                      "운영자 before 미상 승인 + 10분 유예"
+                      if before_unknown else
+                      "완전 미체결/체결 부재 + 총보유 불변 + 10분 유예")
 
     return {
         "key": str(key), "symbol": symbol, "side": side,
         "market": evidence["market"], "state": str(order.get("state") or ""),
         "kind": kind, "resolvable": kind != "hold", "filled": filled,
+        "before_unknown": before_unknown,
         "exact_odno_matches": len(exact), "open_count": counts.get(symbol, 0),
         "frozen": ownership.is_frozen(symbol), "reason": reason,
         "_rows": rows,  # apply 내부 전용; 출력 전에 제거
@@ -150,8 +165,10 @@ def collect_plan(key: str, *, now_ts: float | None = None) -> dict:
 
 
 def safe_plan(plan: dict) -> dict:
-    """화면 출력용 — ODNO·계좌·가격·원장 내부 메타가 없다."""
-    return {key: value for key, value in plan.items() if not key.startswith("_")}
+    """화면 출력용 — ODNO·계좌·가격·수량·원장키가 없다."""
+    hidden = {"key", "filled"}
+    return {key: value for key, value in plan.items()
+            if not key.startswith("_") and key not in hidden}
 
 
 def apply_plan(key: str, *, ack: str) -> dict:
@@ -163,7 +180,8 @@ def apply_plan(key: str, *, ack: str) -> dict:
         raise RuntimeError("현재 증거로 자동/운영자 확정 불가")
     evidence = {"symbol": plan["symbol"], "side": plan["side"],
                 "market": plan["market"], "kind": plan["kind"],
-                "filled": int(plan.get("filled") or 0), "state": "intent"}
+                "filled": int(plan.get("filled") or 0), "state": "intent",
+                "before_unknown": bool(plan.get("before_unknown"))}
     # 실제 상태 전이보다 먼저 운영자 승인 의도를 durable하게 남겨, 그 사이
     # 프로세스가 죽어도 누가 어떤 fresh 증거로 시도했는지 사라지지 않게 한다.
     ledger.record_operator_action(
@@ -186,7 +204,11 @@ def apply_plan(key: str, *, ack: str) -> dict:
         ledger.record_reconcile_meta(
             str(key), reason="operator-absence-proof",
             meta={"source": "operator-absence-proof",
-                  "broker_reason": "운영자 확인: 완전 부재+총보유 불변"})
+                  "before_unknown": bool(plan.get("before_unknown")),
+                  "broker_reason": (
+                      "운영자 확인: 완전 부재+fresh 총보유 확인(before 미상)"
+                      if plan.get("before_unknown") else
+                      "운영자 확인: 완전 부재+총보유 불변")})
     else:                                          # pragma: no cover - 위 gate 방어
         raise RuntimeError("unsupported plan kind")
 
@@ -196,7 +218,8 @@ def apply_plan(key: str, *, ack: str) -> dict:
         evidence={"symbol": plan["symbol"], "side": plan["side"],
                   "market": plan["market"], "kind": plan["kind"],
                   "filled": int(result.get("filled") or 0),
-                  "state": str(result.get("state") or "")})
+                  "state": str(result.get("state") or ""),
+                  "before_unknown": bool(plan.get("before_unknown"))})
     if terminal and ownership.is_frozen(plan["symbol"]):
         ownership.unfreeze(plan["symbol"], ack=ack)
     return {**safe_plan(plan), "result": str(result.get("state") or ""),
