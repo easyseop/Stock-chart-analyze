@@ -1,15 +1,15 @@
 {
  "version": 1,
- "generated_at": "2026-08-21T11:07:09+09:00",
+ "generated_at": "2026-08-21T11:34:46+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "a_ablation": [
   {
    "code": "207940",
    "gate": "rp",
-   "range_pos": 0.4005,
-   "runup63": 0.0982,
+   "range_pos": 0.4058,
+   "runup63": 0.1011,
    "stage": 3,
-   "price": 1532000.0
+   "price": 1536000.0
   },
   {
    "code": "ALKT",
@@ -118,16 +118,16 @@
  ],
  "shelf_debug": {
   "ok": 4,
-  "watch": 205,
+  "watch": 202,
   "reasons": {
    "밸류영역 밖(지지대 아님)": 331,
    "추락 중(범위 1%)": 172,
    "매물대 정보 없음": 138,
    "추락 중(범위 2%)": 122,
    "추락 중(범위 0%)": 114,
-   "반등 미확인(터치·상단마감·거래량)": 104,
-   "추락 중(범위 3%)": 95,
-   "추락 중(범위 4%)": 95
+   "반등 미확인(터치·상단마감·거래량)": 101,
+   "추락 중(범위 4%)": 95,
+   "추락 중(범위 3%)": 95
   }
  },
  "signals": [
@@ -157,6 +157,34 @@
     "mode": "full",
     "label": "⚡ 즉시 분할",
     "desc": "손절폭 4.5%로 타이트 — 현재가에서 1~2회 분할 매수. 기다리는 이득보다 놓치는 비용이 큼"
+   }
+  },
+  {
+   "id": "035250-2026-08-21-now",
+   "code": "035250",
+   "name": "강원랜드",
+   "ccy": "KRW",
+   "group": "now",
+   "entry_kind": "now",
+   "stage": 3,
+   "price": 14270.0,
+   "entry": 14270.0,
+   "stop": 13602.0118,
+   "target": 15605.9763,
+   "shares_1pct": 149,
+   "range_pos": 0.0617,
+   "norm": 9.4,
+   "bear_share": 0.375,
+   "fresh": true,
+   "break_gap": 0.0057,
+   "earnings_d": null,
+   "tactic": {
+    "stop_pct": 4.7,
+    "pb_price": 14062.5,
+    "pb_stop_pct": 3.3,
+    "mode": "full",
+    "label": "⚡ 즉시 분할",
+    "desc": "손절폭 4.7%로 타이트 — 현재가에서 1~2회 분할 매수. 기다리는 이득보다 놓치는 비용이 큼"
    }
   },
   {
@@ -279,24 +307,24 @@
    "group": "now",
    "entry_kind": "now",
    "stage": 3,
-   "price": 20050.0,
-   "entry": 20050.0,
-   "stop": 17784.7987,
-   "target": 24580.4026,
+   "price": 20100.0,
+   "entry": 20100.0,
+   "stop": 17834.7987,
+   "target": 24630.4026,
    "shares_1pct": 44,
-   "range_pos": 0.1074,
+   "range_pos": 0.1103,
    "norm": -43.4,
    "bear_share": 0.5,
    "fresh": true,
-   "break_gap": 0.0248,
+   "break_gap": 0.0273,
    "earnings_d": null,
    "tactic": {
     "stop_pct": 11.3,
     "pb_price": 18440.0,
-    "pb_stop_pct": 3.6,
+    "pb_stop_pct": 3.3,
     "mode": "pullback",
     "label": "⏳ 눌림 지정가만",
-    "desc": "지금 추격 금지(손절폭 11.3%) — <b>18,440원 눌림 지정가만</b>. 눌리면 손절폭 3.6%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
+    "desc": "지금 추격 금지(손절폭 11.3%) — <b>18,440원 눌림 지정가만</b>. 눌리면 손절폭 3.3%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
    }
   },
   {
@@ -2269,6 +2297,34 @@
    }
   },
   {
+   "id": "011200-2026-08-21-watch",
+   "code": "011200",
+   "name": "HMM",
+   "ccy": "KRW",
+   "group": "watch",
+   "entry_kind": "now",
+   "stage": 1,
+   "price": 21175.0,
+   "entry": 21175.0,
+   "stop": 19323.5715,
+   "target": 24877.857,
+   "shares_1pct": 54,
+   "range_pos": 0.4638,
+   "norm": 6.6,
+   "bear_share": 0.125,
+   "fresh": true,
+   "break_gap": -0.0173,
+   "earnings_d": null,
+   "tactic": {
+    "stop_pct": 8.7,
+    "pb_price": 19651.088,
+    "pb_stop_pct": 1.7,
+    "mode": "pullback",
+    "label": "⏳ 눌림 지정가만",
+    "desc": "지금 추격 금지(손절폭 8.7%) — <b>19,651원 눌림 지정가만</b>. 눌리면 손절폭 1.7%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
+   }
+  },
+  {
    "id": "LKQ-2026-08-21-watch",
    "code": "LKQ",
    "name": "LKQ Corporation",
@@ -2570,31 +2626,31 @@
    }
   },
   {
-   "id": "035250-2026-08-21-watch",
-   "code": "035250",
-   "name": "강원랜드",
+   "id": "024110-2026-08-21-watch",
+   "code": "024110",
+   "name": "기업은행",
    "ccy": "KRW",
    "group": "watch",
    "entry_kind": "now",
    "stage": 1,
-   "price": 14220.0,
-   "entry": 14220.0,
-   "stop": 13552.0118,
-   "target": 15555.9763,
-   "shares_1pct": 149,
-   "range_pos": 0.0529,
+   "price": 19940.0,
+   "entry": 19940.0,
+   "stop": 18840.8442,
+   "target": 22138.3116,
+   "shares_1pct": 90,
+   "range_pos": 0.1175,
    "norm": -9.4,
    "bear_share": 0.375,
    "fresh": true,
-   "break_gap": 0.0022,
+   "break_gap": -0.0196,
    "earnings_d": null,
    "tactic": {
-    "stop_pct": 4.7,
-    "pb_price": 14062.5,
-    "pb_stop_pct": 3.6,
+    "stop_pct": 5.5,
+    "pb_price": 19855.0,
+    "pb_stop_pct": 5.1,
     "mode": "full",
     "label": "⚡ 즉시 분할",
-    "desc": "손절폭 4.7%로 타이트 — 현재가에서 1~2회 분할 매수. 기다리는 이득보다 놓치는 비용이 큼"
+    "desc": "손절폭 5.5%로 타이트 — 현재가에서 1~2회 분할 매수. 기다리는 이득보다 놓치는 비용이 큼"
    }
   },
   {
@@ -2745,24 +2801,24 @@
    "group": "watch",
    "entry_kind": "now",
    "stage": 1,
-   "price": 90900.0,
-   "entry": 90900.0,
-   "stop": 79491.0315,
-   "target": 113717.937,
+   "price": 91300.0,
+   "entry": 91300.0,
+   "stop": 79891.0315,
+   "target": 114117.937,
    "shares_1pct": 8,
-   "range_pos": 0.2628,
+   "range_pos": 0.2669,
    "norm": -50.0,
    "bear_share": 0.5,
    "fresh": true,
-   "break_gap": -0.0072,
+   "break_gap": -0.0029,
    "earnings_d": null,
    "tactic": {
-    "stop_pct": 12.6,
+    "stop_pct": 12.5,
     "pb_price": 83066.6667,
-    "pb_stop_pct": 4.3,
+    "pb_stop_pct": 3.8,
     "mode": "pullback",
     "label": "⏳ 눌림 지정가만",
-    "desc": "지금 추격 금지(손절폭 12.6%) — <b>83,067원 눌림 지정가만</b>. 눌리면 손절폭 4.3%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
+    "desc": "지금 추격 금지(손절폭 12.5%) — <b>83,067원 눌림 지정가만</b>. 눌리면 손절폭 3.8%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
    }
   },
   {
@@ -3081,6 +3137,27 @@
    "tactic": null
   },
   {
+   "id": "002380-2026-08-21-watch",
+   "code": "002380",
+   "name": "KCC",
+   "ccy": "KRW",
+   "group": "watch",
+   "entry_kind": "pullback",
+   "stage": 3,
+   "price": 490000.0,
+   "entry": 470558.5,
+   "stop": 415031.7665,
+   "target": 581611.967,
+   "shares_1pct": 1,
+   "range_pos": 0.4326,
+   "norm": -13.2,
+   "bear_share": 0.375,
+   "fresh": false,
+   "break_gap": 0.4421,
+   "earnings_d": null,
+   "tactic": null
+  },
+  {
    "id": "USAS-2026-08-21-watch",
    "code": "USAS",
    "name": "Americas Gold and Silver Corporation Commo",
@@ -3099,27 +3176,6 @@
    "fresh": false,
    "break_gap": 0.3077,
    "earnings_d": -10,
-   "tactic": null
-  },
-  {
-   "id": "002380-2026-08-21-watch",
-   "code": "002380",
-   "name": "KCC",
-   "ccy": "KRW",
-   "group": "watch",
-   "entry_kind": "breakout",
-   "stage": 3,
-   "price": 489000.0,
-   "entry": 489500.0,
-   "stop": 433973.2665,
-   "target": 600553.467,
-   "shares_1pct": 1,
-   "range_pos": 0.4298,
-   "norm": -22.6,
-   "bear_share": 0.5,
-   "fresh": false,
-   "break_gap": 0.4392,
-   "earnings_d": null,
    "tactic": null
   }
  ]
