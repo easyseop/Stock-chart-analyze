@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated_at": "2026-08-22T06:24:30+09:00",
+ "generated_at": "2026-08-22T07:00:39+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "a_ablation": [
   {
@@ -134,14 +134,14 @@
  ],
  "shelf_debug": {
   "ok": 4,
-  "watch": 206,
+  "watch": 207,
   "reasons": {
    "밸류영역 밖(지지대 아님)": 330,
    "추락 중(범위 1%)": 175,
    "매물대 정보 없음": 138,
    "추락 중(범위 2%)": 114,
    "추락 중(범위 0%)": 112,
-   "반등 미확인(터치·상단마감·거래량)": 96,
+   "반등 미확인(터치·상단마감·거래량)": 97,
    "추락 중(범위 4%)": 96,
    "추락 중(범위 3%)": 95
   }
@@ -624,6 +624,34 @@
    }
   },
   {
+   "id": "003380-2026-08-22-now",
+   "code": "003380",
+   "name": "하림지주",
+   "ccy": "KRW",
+   "group": "now",
+   "entry_kind": "now",
+   "stage": 3,
+   "price": 10580.0,
+   "entry": 10580.0,
+   "stop": 9349.9774,
+   "target": 13040.0452,
+   "shares_1pct": 81,
+   "range_pos": 0.2805,
+   "norm": 4.7,
+   "bear_share": 0.25,
+   "fresh": false,
+   "break_gap": 0.2433,
+   "earnings_d": null,
+   "tactic": {
+    "stop_pct": 11.6,
+    "pb_price": null,
+    "pb_stop_pct": null,
+    "mode": "pullback",
+    "label": "⏳ 눌림 지정가만",
+    "desc": "지금 추격 금지(손절폭 11.6% · 돌파후 진행) — 받칠 지지에 눌릴 때까지 대기"
+   }
+  },
+  {
    "id": "LEN-2026-08-22-now",
    "code": "LEN",
    "name": "Lennar Corporation",
@@ -649,34 +677,6 @@
     "mode": "pullback",
     "label": "⏳ 눌림 지정가만",
     "desc": "지금 추격 금지(손절폭 6.5% · 돌파후 진행) — <b>$82.28 눌림 지정가만</b>. 눌리면 손절폭 1.1%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
-   }
-  },
-  {
-   "id": "003380-2026-08-22-now",
-   "code": "003380",
-   "name": "하림지주",
-   "ccy": "KRW",
-   "group": "now",
-   "entry_kind": "now",
-   "stage": 3,
-   "price": 10710.0,
-   "entry": 10710.0,
-   "stop": 9460.7449,
-   "target": 13208.5102,
-   "shares_1pct": 80,
-   "range_pos": 0.2908,
-   "norm": -4.7,
-   "bear_share": 0.25,
-   "fresh": false,
-   "break_gap": 0.2449,
-   "earnings_d": null,
-   "tactic": {
-    "stop_pct": 11.7,
-    "pb_price": null,
-    "pb_stop_pct": null,
-    "mode": "pullback",
-    "label": "⏳ 눌림 지정가만",
-    "desc": "지금 추격 금지(손절폭 11.7% · 돌파후 진행) — 받칠 지지에 눌릴 때까지 대기"
    }
   },
   {
@@ -2033,8 +2033,8 @@
    "stage": 1,
    "price": 78.83,
    "entry": 78.83,
-   "stop": 75.3701,
-   "target": 85.7499,
+   "stop": 75.3693,
+   "target": 85.7513,
    "shares_1pct": 28,
    "range_pos": 0.2853,
    "norm": 17.0,
@@ -2397,8 +2397,8 @@
    "stage": 3,
    "price": 14.25,
    "entry": 12.759,
-   "stop": 11.5151,
-   "target": 15.247,
+   "stop": 11.5147,
+   "target": 15.2477,
    "shares_1pct": 80,
    "range_pos": 0.3264,
    "norm": 55.7,
@@ -2565,8 +2565,8 @@
    "stage": 3,
    "price": 39.97,
    "entry": 40.1,
-   "stop": 37.8843,
-   "target": 44.5314,
+   "stop": 37.8836,
+   "target": 44.5328,
    "shares_1pct": 45,
    "range_pos": 0.4198,
    "norm": 22.6,
