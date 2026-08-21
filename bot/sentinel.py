@@ -189,12 +189,17 @@ class _KisBroker(_PaperBroker):
         excg = "KRX" if market == "KR" else kis.us_excg_of(code)
         # 주문 직전 잔고를 다시 읽는다. 사이클 시작 잔고나 공개 feed 수량으로 주문하면
         # 그 사이 수동매도·부분체결과 경합해 초과매도할 수 있다.
-        fresh = (kis.sellable_holdings("KR") if market == "KR"
-                 else kis.sellable_holdings("US", excg=excg))
+        quantities = (kis.holding_quantities("KR") if market == "KR"
+                      else kis.holding_quantities("US", excg=excg))
+        fresh = None if quantities is None else quantities.get("sellable")
         if fresh is None:
             return {"state": "rejected", "filled": 0, "qty": 0,
                     "why": "주문 직전 KIS 잔고 조회 실패"}
-        fresh_qty = max(0, int(fresh.get(str(code).upper(), 0)))
+        symbol = str(code).upper()
+        fresh_qty = max(0, int(fresh.get(symbol, 0)))
+        totals = quantities.get("total")
+        hldg_before = (None if totals is None
+                       else max(0, int(totals.get(symbol, 0))))
         safe_qty = min(max(0, int(qty)), fresh_qty)
         if safe_qty <= 0:
             return {"state": "rejected", "filled": 0, "qty": 0,
@@ -219,7 +224,7 @@ class _KisBroker(_PaperBroker):
             #   미국과 달리 연속장 시장가가 있어 미체결 방치 위험을 없앤다.
             r = kis_orders.place_sell(key, code, safe_qty, px, reason=reason,
                                       market=market, order_type="market",
-                                      hldg_before=fresh_qty, order_meta=order_meta,
+                                      hldg_before=hldg_before, order_meta=order_meta,
                                       min_interval_s=0)
         else:
             # 미국주는 시장가 부재 → 마켓터블 지정가(급락 시 chase가 보완).
@@ -228,7 +233,7 @@ class _KisBroker(_PaperBroker):
             limit = kis_orders.marketable_limit_price(px, "SELL", market=market)
             r = kis_orders.place_sell(key, code, safe_qty, limit, reason=reason,
                                       market=market, excg=excg,
-                                      hldg_before=fresh_qty, order_meta=order_meta,
+                                      hldg_before=hldg_before, order_meta=order_meta,
                                       min_interval_s=0)
         act = r.get("act")
         if act == "ack":                     # 접수됨(in-flight) — 체결은 대사가 확정
@@ -319,7 +324,8 @@ def _new_us_chase(code: str, qty: int, ref_price: float, pos_key: str,
         if not LIVE:
             return {"ok": False, "act": "dry_run", "qty": int(amount),
                     "why": "SENTINEL_LIVE != 1"}
-        h = kis.sellable_holdings("US", excg=excg)
+        quantities = kis.holding_quantities("US", excg=excg)
+        h = None if quantities is None else quantities.get("sellable")
         if h is None:
             return {"ok": False, "act": "blocked", "why": "잔고 조회실패"}
         safe_qty = min(int(amount), max(0, int(h.get(symbol, 0))))
@@ -327,7 +333,9 @@ def _new_us_chase(code: str, qty: int, ref_price: float, pos_key: str,
             return {"ok": False, "act": "blocked", "why": "매도가능 보유 0"}
         r = kis_orders.place_sell(
             key, symbol, safe_qty, price, reason="미국주 손절 chase",
-            market="US", excg=excg, hldg_before=safe_qty,
+            market="US", excg=excg,
+            hldg_before=(None if quantities.get("total") is None else
+                         max(0, int(quantities["total"].get(symbol, 0)))),
             order_meta=order_meta)
         r["qty"] = safe_qty
         return r

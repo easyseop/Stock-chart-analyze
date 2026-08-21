@@ -12,6 +12,7 @@
 from __future__ import annotations
 
 import importlib
+import json
 import os
 import sys
 import tempfile
@@ -28,7 +29,13 @@ def _setup(tmp):
     os.environ.update({"KIS_ENV": "mock", "KIS_MOCK_APPKEY": "k",
                        "KIS_MOCK_APPSECRET": "s", "KIS_MOCK_CANO": "50001234",
                        "KIS_TOKEN_CACHE": os.path.join(tmp, "tok.json"),
-                       "KIS_ORDERS_ENABLED": "1"})
+                       "KIS_ORDERS_ENABLED": "1",
+                       "USER_BASELINE_PATH": os.path.join(tmp, "baseline.json"),
+                       "SYMBOL_FREEZE_PATH": os.path.join(tmp, "freeze.json")})
+    with open(os.environ["USER_BASELINE_PATH"], "w", encoding="utf-8") as fp:
+        json.dump({"symbols": []}, fp)
+    with open(os.environ["SYMBOL_FREEZE_PATH"], "w", encoding="utf-8") as fp:
+        json.dump({}, fp)
     import bot.kis as kis
     import bot.ledger as L
     import bot.kis_reconcile as R
@@ -182,7 +189,8 @@ def test_sentinel_kis_place_sell_mapping():
                           ("blocked", "rejected")):
             with mock.patch.object(sn, "LIVE", True), \
                  mock.patch.object(br, "quote", return_value=100.0), \
-                 mock.patch("bot.kis.sellable_holdings", return_value={"AAPL": 3}), \
+                 mock.patch("bot.kis.holding_quantities", return_value={
+                     "total": {"AAPL": 3}, "sellable": {"AAPL": 3}}), \
                  mock.patch("bot.kis_orders.place_sell",
                             return_value={"ok": act == "ack", "act": act,
                                           "key": "k", "odno": "1"}):
@@ -191,11 +199,12 @@ def test_sentinel_kis_place_sell_mapping():
         # 시세 없으면 발주 보류(rejected)
         with mock.patch.object(sn, "LIVE", True), \
              mock.patch.object(br, "quote", return_value=None), \
-             mock.patch("bot.kis.sellable_holdings", return_value={"AAPL": 3}):
+             mock.patch("bot.kis.holding_quantities", return_value={
+                 "total": {"AAPL": 3}, "sellable": {"AAPL": 3}}):
             r = br.place_sell("AAPL", 3, "손절", "k#2")
         assert r["state"] == "rejected"
         with mock.patch.object(sn, "LIVE", False), \
-             mock.patch("bot.kis.sellable_holdings") as balance, \
+             mock.patch("bot.kis.holding_quantities") as balance, \
              mock.patch("bot.kis_orders.place_sell") as place:
             r = br.place_sell("AAPL", 3, "손절", "k#dry")
         assert r["state"] == "dry_run" and not balance.called and not place.called
@@ -203,7 +212,8 @@ def test_sentinel_kis_place_sell_mapping():
         assert not hasattr(br, "place_buy") and not hasattr(br, "buy")
         with mock.patch.object(sn, "LIVE", True), \
              mock.patch.object(br, "quote", return_value=100.0), \
-             mock.patch("bot.kis.sellable_holdings", return_value={"AAPL": 5}), \
+             mock.patch("bot.kis.holding_quantities", return_value={
+                 "total": {"AAPL": 5}, "sellable": {"AAPL": 5}}), \
              mock.patch("bot.kis_orders.place_sell",
                         return_value={"ok": True, "act": "ack",
                                       "key": "half", "odno": "1"}) as place:

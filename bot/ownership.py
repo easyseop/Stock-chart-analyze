@@ -158,7 +158,8 @@ def unfreeze(symbol: str, *, ack: str) -> None:
         raise PermissionError("동결 해제에는 operator ack 필요")
     d = _load(_fpath()) or {}
     d.pop(symbol.upper(), None)
-    _atomic_write(_fpath(), d)
+    if not _atomic_write(_fpath(), d) or is_frozen(symbol):
+        raise OSError("동결 해제 원자 저장/검증 실패")
 
 
 def is_frozen(symbol: str) -> bool:

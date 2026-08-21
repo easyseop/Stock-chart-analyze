@@ -29,6 +29,7 @@ import hashlib
 import json
 import math
 import os
+import re
 import threading
 import time
 
@@ -171,7 +172,18 @@ def _fold_unlocked() -> tuple[dict, list[int]]:
                     cur["reconcile_reason"] = str(ev.get("reason") or "")
                     meta = ev.get("meta") or {}
                     if isinstance(meta, dict):
-                        cur["reconcile_meta"] = dict(meta)
+                        # 주문응답과 이후 브로커 관측은 서로 다른 시점의 증거다.
+                        # 최신 이벤트가 앞선 필드를 지우지 않게 append-only merge.
+                        merged = dict(cur.get("reconcile_meta") or {})
+                        merged.update(meta)
+                        cur["reconcile_meta"] = merged
+                elif ev.get("ev") == "operator_action":
+                    cur["last_operator_action"] = {
+                        "action": str(ev.get("action") or ""),
+                        "ack": str(ev.get("ack") or ""),
+                        "evidence": dict(ev.get("evidence") or {}),
+                        "ts": ev.get("ts"),
+                    }
     except FileNotFoundError:
         pass
     except (OSError, UnicodeError):
@@ -542,6 +554,38 @@ def reconcile(key: str, actual_filled: int, *, fill_price: float | None = None,
             "fill_price": fill_price, "open": bool(open_order)}
 
 
+_BROKER_SECRET_PAIR_RE = re.compile(
+    r"(?i)\b(app(?:key|secret)|access[_ -]?token|authorization|cano|account)"
+    r"\s*[:=]\s*[^\s,;]+")
+_BEARER_RE = re.compile(r"(?i)\bBearer\s+[^\s,;]+")
+_LONG_NUMBER_RE = re.compile(r"(?<!\d)\d{8,}(?!\d)")
+
+
+def sanitize_broker_text(value, *, limit: int = 200,
+                         code: bool = False) -> str:
+    """브로커 자유문자열에서 자격증명·계좌/긴 식별자를 제거한다.
+
+    ``msg_cd``처럼 숫자 코드 자체가 진단 근거인 필드는 ``code=True``로 긴 숫자
+    마스킹만 생략한다. 환경에 실제로 주입된 비밀값도 로그로 나오기 전에 치환한다.
+    """
+    text = "".join(ch if ch >= " " and ch != "\x7f" else " "
+                   for ch in str(value or ""))
+    text = " ".join(text.split())
+    text = _BEARER_RE.sub("Bearer [REDACTED]", text)
+    text = _BROKER_SECRET_PAIR_RE.sub(lambda m: m.group(1) + "=[REDACTED]", text)
+    for name, secret in os.environ.items():
+        upper = name.upper()
+        if (len(secret or "") >= 4
+                and (upper.startswith("KIS_") or upper in {
+                    "TELEGRAM_BOT_TOKEN", "GITHUB_TOKEN"})
+                and any(tag in upper for tag in (
+                    "KEY", "SECRET", "TOKEN", "CANO", "ACCOUNT"))):
+            text = text.replace(str(secret), "[REDACTED]")
+    if not code:
+        text = _LONG_NUMBER_RE.sub("[REDACTED]", text)
+    return text[:max(0, int(limit))]
+
+
 def record_reconcile_meta(key: str, *, reason: str, meta: dict) -> None:
     """대사 판정 근거를 주문 상태 전이와 분리해 append-only로 보존한다.
 
@@ -552,19 +596,37 @@ def record_reconcile_meta(key: str, *, reason: str, meta: dict) -> None:
     allowed = {
         "source", "msg_cd", "msg1", "msg_source", "broker_reason",
         "nccs_count", "ccnl_count", "odno_absent", "hldg_before", "hldg_now",
-        "side", "intended",
+        "side", "intended", "submit_msg_cd", "submit_msg1",
+        "last_msg_cd", "last_msg1", "last_status", "last_source",
     }
     def safe_value(value):
         if not isinstance(value, str):
             return value
-        text = "".join(ch if ch >= " " and ch != "\x7f" else " "
-                       for ch in value)
-        return " ".join(text.split())[:200]
+        return sanitize_broker_text(
+            value, code=False)
 
-    clean = {str(k): safe_value(v) for k, v in (meta or {}).items()
-             if str(k) in allowed and v is not None}
+    clean = {}
+    for key_name, value in (meta or {}).items():
+        name = str(key_name)
+        if name not in allowed or value is None:
+            continue
+        clean[name] = (sanitize_broker_text(value, code=True)
+                       if name.endswith("msg_cd") else safe_value(value))
     _append({"ev": "reconcile_meta", "key": str(key),
              "reason": str(reason or "")[:80], "meta": clean})
+
+
+def record_operator_action(key: str, *, action: str, ack: str,
+                           evidence: dict | None = None) -> None:
+    """운영자 강제 대사/동결해제의 최소 감사 흔적(시크릿·ODNO 저장 금지)."""
+    if not str(ack or "").strip():
+        raise PermissionError("operator ack required")
+    allowed = {"symbol", "side", "market", "kind", "filled", "state"}
+    clean = {str(k): (sanitize_broker_text(v) if isinstance(v, str) else v)
+             for k, v in (evidence or {}).items() if str(k) in allowed}
+    _append({"ev": "operator_action", "key": str(key),
+             "action": sanitize_broker_text(action, limit=80),
+             "ack": sanitize_broker_text(ack, limit=120), "evidence": clean})
 
 
 def record_plan(key: str, symbol: str, qty: int, *, meta: dict) -> None:

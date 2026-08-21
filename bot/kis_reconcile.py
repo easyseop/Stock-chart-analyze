@@ -239,7 +239,67 @@ def normalize_domestic_rows(nccs: dict | None, ccnl: dict | None) -> list[dict]:
     return list(out.values())
 
 
-def resolve_acks_from_rows(rows: list[dict]) -> list[dict]:
+_BROKER_INFLIGHT = {"submitted", "ack", "partial", "cancel_pending", "unknown"}
+
+
+def _broker_inflight_counts(orders: list[dict]) -> dict[str, int]:
+    """실제 브로커에 도달했을 수 있는 non-terminal 주문 수(계획 leg 제외)."""
+    counts: dict[str, int] = {}
+    for order in orders:
+        if order.get("state") not in _BROKER_INFLIGHT:
+            continue
+        if order.get("state") == "partial" and order.get("open") is False:
+            continue
+        symbol = str(order.get("symbol") or "").upper()
+        if symbol:
+            counts[symbol] = counts.get(symbol, 0) + 1
+    return counts
+
+
+def _direct_evidence_allowed(order: dict, symbol: str,
+                             open_count: dict[str, int]) -> bool:
+    """ODNO 직접 증거의 소유 경계.
+
+    동결은 잔고 추론만 막는 close-only 표식이므로 여기서는 보지 않는다. 대신
+    baseline 미무장/사용자 기보유 및 같은 심볼 다중 주문은 그대로 막는다.
+    이관 도구가 3중 증명한 봇-owned legacy SELL만 기존 예외를 유지한다.
+    """
+    if open_count.get(symbol, 0) != 1:
+        return False
+    base = ownership.baseline()
+    if base is None:
+        return False
+    if symbol not in base:
+        return True
+    try:
+        before = int(order.get("legacy_hldg_before")
+                     if order.get("legacy_hldg_before") is not None
+                     else order.get("hldg_before"))
+    except (TypeError, ValueError):
+        return False
+    return _verified_migrated_baseline_sell(order, symbol, before)
+
+
+def _record_broker_observation(order: dict, row: dict) -> None:
+    """ODNO exact 행의 마지막 상태만 저장(같은 값 반복 append 방지)."""
+    meta = {
+        "last_msg_cd": row.get("msg_cd"),
+        "last_msg1": row.get("msg1"),
+        "last_status": row.get("broker_status"),
+        "last_source": row.get("src"),
+    }
+    clean = {k: v for k, v in meta.items() if v not in (None, "")}
+    if not clean:
+        return
+    prior = order.get("reconcile_meta") or {}
+    if all(str(prior.get(k) or "") == str(v) for k, v in clean.items()):
+        return
+    ledger.record_reconcile_meta(
+        str(order.get("key") or ""), reason="broker-observation", meta=clean)
+
+
+def resolve_acks_from_rows(rows: list[dict],
+                           only_keys: set[str] | None = None) -> list[dict]:
     """ODNO가 결속된 ack/partial의 양수 체결만 즉시 회계한다.
 
     KIS mock ccnl은 실제 체결 직후에도 잠시 filled=0 행을 노출한다
@@ -252,7 +312,11 @@ def resolve_acks_from_rows(rows: list[dict]) -> list[dict]:
     for row in rows:
         if row.get("odno"):
             by_odno.setdefault(order_no_key(row["odno"]), []).append(row)
-    for o in ledger.open_orders():
+    open_orders = ledger.open_orders()
+    open_count = _broker_inflight_counts(open_orders)
+    for o in open_orders:
+        if only_keys is not None and str(o.get("key") or "") not in only_keys:
+            continue
         if o.get("state") not in ("submitted", "ack", "partial", "cancel_pending"):
             continue
         odno = order_no_key(o.get("odno"))
@@ -264,6 +328,9 @@ def resolve_acks_from_rows(rows: list[dict]) -> list[dict]:
         if not odno or len(matches) != 1:
             continue                              # 모호하면 잔고 대사로도 자동 귀속하지 않음
         row = matches[0]
+        _record_broker_observation(o, row)
+        if not _direct_evidence_allowed(o, symbol, open_count):
+            continue
         intended = int(o.get("intended") or 0)
         filled = min(intended, max(0, int(row.get("filled") or 0)))
         price = float(row.get("price") or 0) or None
@@ -332,15 +399,7 @@ def resolve_acks_by_absence(evidence_by_key: dict[str, dict],
 
     now_ts = _time.time() if now_ts is None else float(now_ts)
     open_orders = ledger.open_orders() if orders is None else list(orders)
-    open_count: dict[str, int] = {}
-    broker_inflight = {"submitted", "ack", "partial", "cancel_pending", "unknown"}
-    for row in open_orders:
-        if row.get("state") not in broker_inflight:
-            continue
-        if row.get("state") == "partial" and row.get("open") is False:
-            continue
-        symbol = str(row.get("symbol") or "").upper()
-        open_count[symbol] = open_count.get(symbol, 0) + 1
+    open_count = _broker_inflight_counts(open_orders)
 
     resolved: list[dict] = []
     contradictions: list[dict] = []
@@ -416,10 +475,18 @@ def resolve_acks_by_absence(evidence_by_key: dict[str, dict],
             (zero_fill_row or {}).get("msg1")
             or (zero_fill_row or {}).get("rjct_rson_name")
             or (zero_fill_row or {}).get("_response_msg1"))
-        broker_reason = (
+        previous_meta = order.get("reconcile_meta") or {}
+        last_detail = clean_broker_text(
+            previous_meta.get("last_status") or previous_meta.get("last_msg1")
+            or previous_meta.get("last_msg_cd"))
+        submit_detail = clean_broker_text(
+            previous_meta.get("submit_msg1") or previous_meta.get("submit_msg_cd"))
+        broker_reason = ledger.sanitize_broker_text(
             clean_broker_text(
                 (zero_fill_row or {}).get("rjct_rson_name")
                 or (zero_fill_row or {}).get("prcs_stat_name"))
+            or (f"사유 미상(마지막 관측: {last_detail})" if last_detail else "")
+            or (f"사유 미상(접수 응답: {submit_detail})" if submit_detail else "")
             or ("사유 미상(0체결+잔고 증명)" if zero_fill_row is not None
                 else "사유 미상(부재 증명)"))
         ledger.record_reconcile_meta(
@@ -675,18 +742,8 @@ def resolve_acks_by_balance(hmaps: dict[str, dict | None],
         return []
     now_ts = _t.time() if now_ts is None else float(now_ts)
     fold_open = ledger.open_orders()
-    open_count: dict[str, int] = {}
-    broker_inflight = {"submitted", "ack", "partial", "cancel_pending", "unknown"}
-    for o in fold_open:
-        # half 전술의 2차 ``planned`` leg는 아직 브로커 주문이 아니므로 1차 ACK의
-        # 잔고 delta 귀속을 모호하게 만들지 않는다. 실제 브로커 in-flight 2건은
-        # 계속 open_count=2로 남아 자동대사를 보류한다.
-        if o.get("state") not in broker_inflight:
-            continue
-        if o.get("state") == "partial" and o.get("open") is False:
-            continue
-        s = str(o.get("symbol") or "").upper()
-        open_count[s] = open_count.get(s, 0) + 1
+    # half 전술의 ``planned`` leg는 제외하고 실제 브로커 in-flight만 센다.
+    open_count = _broker_inflight_counts(fold_open)
 
     results: list[dict] = []
     base = ownership.baseline()
@@ -771,6 +828,7 @@ def reconcile_unknowns(nccs: dict | None, ccnl: dict | None,
     from bot import kis, kis_accounting
     rows = normalize_rows(nccs, ccnl)
     fold_open = ledger.open_orders()
+    open_count = _broker_inflight_counts(fold_open)
     # 이미 결속된 ODNO들 — 다른 UNKNOWN의 후보에서 제외(교차 오귀속 방지)
     known = {order_no_key(o.get("odno")) for o in fold_open if o.get("odno")}
     results = []
@@ -785,7 +843,21 @@ def reconcile_unknowns(nccs: dict | None, ccnl: dict | None,
         cands = candidates_for(o, rows,
                                known_odnos=known - {order_no_key(o.get("odno"))},
                                window_s=window_s)
-        r = ledger.reconcile_from_candidates(key, cands,
+        symbol = str(o.get("symbol") or "").upper()
+        bound = order_no_key(o.get("odno"))
+        if (bound and len(cands) == 1
+                and order_no_key(cands[0].get("odno")) == bound):
+            _record_broker_observation(o, cands[0])
+        direct = (bool(bound) and len(cands) == 1
+                  and order_no_key(cands[0].get("odno")) == bound
+                  and _direct_evidence_allowed(o, symbol, open_count))
+        # 동결은 ODNO가 이미 결속된 단일 직접 증거에만 예외. 합성 후보·잔고
+        # 추론은 계속 보류한다. baseline/미무장/다중 주문도 같은 gate에서 막힌다.
+        effective = cands if direct else (
+            cands if (not ownership.is_frozen(symbol)
+                      and _direct_evidence_allowed(o, symbol, open_count))
+            else [])
+        r = ledger.reconcile_from_candidates(key, effective,
                                              intended=o.get("intended"))
         # 단일 후보에 ODNO가 있으면 (LOW라도) 결속 — 추적/취소 핸들 확보. 초과매도
         #   방지는 잠금이 담당(감사 수정 #6: 살아있는 주문은 확정 안 하고 잠금 유지).
@@ -793,10 +865,10 @@ def reconcile_unknowns(nccs: dict | None, ccnl: dict | None,
         if len(cands) == 1 and cands[0].get("odno"):
             ledger.bind_broker_order(key, cands[0]["odno"],
                                      ord_tmd=cands[0].get("ord_tmd", ""))
-        if len(cands) == 1 and int(r.get("filled") or 0) > 0:
+        if len(effective) == 1 and int(r.get("filled") or 0) > 0:
             r["accounting"] = kis_accounting.sync_fill(
                 key, filled_qty=int(r["filled"]), fill_price=r.get("fill_price"),
                 fill_price_source=str(cands[0].get("src") or "broker"))
         results.append({"key": key, "symbol": o.get("symbol"),
-                        "candidates": len(cands), **r})
+                        "candidates": len(effective), **r})
     return results

@@ -129,6 +129,49 @@ def test_diag_is_read_only_and_reports_failures():
     print("[PASS] /진단: 시장별 실측·실패 표기·읽기전용")
 
 
+def test_diag_shows_only_three_sanitized_broker_details():
+    """외부 `/진단`은 최소 상태만 표시하고 내부 식별자·비밀은 숨긴다."""
+    from unittest import mock
+    import subprocess
+    from bot import ledger
+
+    fold = {}
+    for idx, (symbol, state, side) in enumerate((
+            ("A<ONE", "unknown", "SELL"),
+            ("BETA", "ack", "BUY"),
+            ("CHARLIE", "partial", "SELL"),
+            ("DONT_SHOW", "submitted", "BUY"))):
+        fold[f"private-ledger-key-{idx}"] = {
+            "symbol": symbol, "state": state, "side": side,
+            "submitted_at": {} if idx == 0 else idx,
+            "reconcile_meta": {
+                "last_msg_cd": f"APBK00{idx}",
+                "last_msg1": ("대기 account=12345678 order 87654321 "
+                              "Bearer TOPSECRET <check>"),
+            },
+        }
+    fold["private-closed-key"] = {
+        "symbol": "CLOSED", "state": "partial", "open": False,
+        "side": "SELL", "reconcile_meta": {"last_status": "종결"},
+    }
+    with mock.patch.object(ledger, "_fold", return_value=fold), \
+            mock.patch.object(subprocess, "run",
+                              side_effect=RuntimeError("no systemd")), \
+            mock.patch.dict("os.environ", {
+                "KIS_ENV": "mock", "TRADE_STAGE": "mirror",
+                "KIS_MOCK_APPSECRET": "TOPSECRET",
+            }):
+        text = kt._diag_text()
+    assert "주문 대사 상세(최대 3건)" in text
+    assert "A&lt;ONE SELL" in text and "BETA BUY" in text
+    assert "CHARLIE SELL" in text and "DONT_SHOW" not in text
+    assert "CLOSED" not in text
+    assert "TOPSECRET" not in text and "12345678" not in text
+    assert "87654321" not in text and "private-ledger-key" not in text
+    assert "&lt;check&gt;" in text and "<check>" not in text
+    print("[PASS] /진단 ACK 상세: 최대 3건·HTML/시크릿/내부식별자 비노출")
+
+
 def test_collect_dispatches_lookup_only():
     """/수집 — 형식 검증 통과 시 lookup.yml 디스패치 1회, 그 외 네트워크 0."""
     from unittest import mock
@@ -188,6 +231,7 @@ def main():
     test_routing_and_help()
     test_not_held_and_query_fail()
     test_diag_is_read_only_and_reports_failures()
+    test_diag_shows_only_three_sanitized_broker_details()
     test_collect_dispatches_lookup_only()
     test_collect_rejects_bad_input_without_network()
     print("\n텔레그램 조회 봇 검증 통과 — 읽기전용 요약/상세/보안/실패 처리.")

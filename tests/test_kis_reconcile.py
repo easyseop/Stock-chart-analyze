@@ -12,6 +12,7 @@
 from __future__ import annotations
 
 import os
+import json
 import sys
 import tempfile
 from unittest import mock
@@ -24,6 +25,12 @@ from bot import kis_reconcile as R
 
 def _fresh(tmp):
     L.LEDGER_PATH = os.path.join(tmp, "order_ledger.jsonl")
+    os.environ["USER_BASELINE_PATH"] = os.path.join(tmp, "baseline.json")
+    os.environ["SYMBOL_FREEZE_PATH"] = os.path.join(tmp, "freeze.json")
+    with open(os.environ["USER_BASELINE_PATH"], "w", encoding="utf-8") as fp:
+        json.dump({"symbols": []}, fp)
+    with open(os.environ["SYMBOL_FREEZE_PATH"], "w", encoding="utf-8") as fp:
+        json.dump({}, fp)
 
 
 def _nccs(rows):
@@ -166,9 +173,9 @@ def test_known_odno_excluded():
                     "ord_tmd": "150002"}]),
             _ccnl([]))
         rb = [r for r in res if r["key"] == "pb#1"][0]
-        # 4002는 아직 미체결(nccs 잔량>0)이라 LOW 잠금 유지(초과매도 방지, 감사 #6).
-        # 단일 후보이므로 ODNO는 결속(늦은 회수용) — 잠금만 유지.
-        assert rb["confidence"] == L.CONF_LOW and rb["candidates"] == 1
+        # 단일 후보의 ODNO는 추적용으로 결속하되, 같은 심볼 broker in-flight가
+        # 두 건이라 자동 확정 후보는 0건으로 낮춘다(C2 다중주문 gate).
+        assert rb["confidence"] == L.CONF_LOW and rb["candidates"] == 0
         assert L.odno_of("pb#1") == "4002"        # 4001(기결속)이 아닌 4002로
     print("[PASS] 교차 오귀속 방지: 기결속 ODNO 제외 → 남는 행으로 결속(LOW 잠금)")
 

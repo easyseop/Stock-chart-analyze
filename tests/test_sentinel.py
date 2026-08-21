@@ -311,13 +311,14 @@ def main() -> int:
         with mock.patch.object(sn, "LIVE", True), \
              mock.patch("bot.kis.market_of_symbol", return_value="US"), \
              mock.patch("bot.kis.us_excg_of", return_value="NYSE"), \
-             mock.patch("bot.kis.sellable_holdings", return_value={"ALK": 3}), \
+             mock.patch("bot.kis.holding_quantities", return_value={
+                 "total": {"ALK": 8}, "sellable": {"ALK": 3}}), \
              mock.patch("bot.kis_positions.load", return_value={}), \
              mock.patch("bot.kis_orders.place_sell",
                         return_value={"act": "ack"}) as place:
             out = kb.place_sell("ALK", 8, "손절", "sell:alk#1")
         sent_qty = place.call_args.args[2]
-        if sent_qty != 3 or place.call_args.kwargs["hldg_before"] != 3:
+        if sent_qty != 3 or place.call_args.kwargs["hldg_before"] != 8:
             fails.append(f"주문 직전 잔고 clamp 실패: qty={sent_qty}")
         elif out.get("qty") != 3:
             fails.append(f"실제 전송 수량 반환 누락: {out}")
@@ -327,7 +328,7 @@ def main() -> int:
         with mock.patch.object(sn, "LIVE", True), \
              mock.patch("bot.kis.market_of_symbol", return_value="US"), \
              mock.patch("bot.kis.us_excg_of", return_value="NYSE"), \
-             mock.patch("bot.kis.sellable_holdings", return_value=None), \
+             mock.patch("bot.kis.holding_quantities", return_value=None), \
              mock.patch("bot.kis_orders.place_sell") as blocked_place:
             blocked = kb.place_sell("ALK", 8, "손절", "sell:alk#2")
         if blocked["state"] != "rejected" or blocked_place.called:

@@ -115,6 +115,33 @@ def test_sellable_holdings_never_guesses_total():
     print("[PASS] 주문 직전 수량=ord_psbl_qty, 필드 누락 시 총보유 추측 금지")
 
 
+def test_holding_quantities_share_one_trusted_response():
+    kis = _reload()
+    balance = {"rt_cd": "0", "output1": [{
+        "ovrs_pdno": "ALK", "ovrs_cblc_qty": "8", "ord_psbl_qty": "3"}]}
+    with mock.patch.object(kis, "overseas_balance", return_value=balance) as get:
+        assert kis.holding_quantities("US", excg="NYSE") == {
+            "total": {"ALK": 8}, "sellable": {"ALK": 3}}
+        assert get.call_count == 1
+
+    # 한 단위의 필드만 손상되면 다른 단위는 살리되 서로 추측하지 않는다.
+    missing_total = {"rt_cd": "0", "output1": [{
+        "ovrs_pdno": "ALK", "ord_psbl_qty": "3"}]}
+    with mock.patch.object(kis, "overseas_balance", return_value=missing_total):
+        assert kis.holding_quantities("US", excg="NYSE") == {
+            "total": None, "sellable": {"ALK": 3}}
+    missing_sellable = {"rt_cd": "0", "output1": [{
+        "ovrs_pdno": "ALK", "ovrs_cblc_qty": "8"}]}
+    with mock.patch.object(kis, "overseas_balance", return_value=missing_sellable):
+        assert kis.holding_quantities("US", excg="NYSE") == {
+            "total": {"ALK": 8}, "sellable": None}
+
+    incomplete = dict(balance, ctx_area_nk200="NEXT")
+    with mock.patch.object(kis, "overseas_balance", return_value=incomplete):
+        assert kis.holding_quantities("US", excg="NYSE") is None
+    print("[PASS] 총보유/매도가능 동일 응답 1회 파싱·부분 손상 단위 격리")
+
+
 def test_get_retry_acquires_each_http_slot():
     kis = _reload(key="k", sec="s")
     state = {"n": 0}
@@ -150,6 +177,7 @@ def main():
     test_classify_error()
     test_no_order_path_present()
     test_sellable_holdings_never_guesses_total()
+    test_holding_quantities_share_one_trusted_response()
     test_get_retry_acquires_each_http_slot()
     print("\n모든 KIS 어댑터 테스트 통과.")
 

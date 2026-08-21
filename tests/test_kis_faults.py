@@ -40,7 +40,13 @@ def _setup(tmp):
     os.environ.update({"KIS_ENV": "mock", "KIS_MOCK_APPKEY": "k",
                        "KIS_MOCK_APPSECRET": "s", "KIS_MOCK_CANO": "50001234",
                        "KIS_TOKEN_CACHE": os.path.join(tmp, "tok.json"),
-                       "KIS_ORDERS_ENABLED": "1"})
+                       "KIS_ORDERS_ENABLED": "1",
+                       "USER_BASELINE_PATH": os.path.join(tmp, "baseline.json"),
+                       "SYMBOL_FREEZE_PATH": os.path.join(tmp, "freeze.json")})
+    with open(os.environ["USER_BASELINE_PATH"], "w", encoding="utf-8") as fp:
+        json.dump({"symbols": []}, fp)
+    with open(os.environ["SYMBOL_FREEZE_PATH"], "w", encoding="utf-8") as fp:
+        json.dump({}, fp)
     import bot.kis as kis
     import bot.ledger as L
     import bot.kis_orders as KO

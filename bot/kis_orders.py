@@ -48,6 +48,17 @@ _PATHS = {
 _LIMITER: kis_ratelimit.SecondBucket = kis._LIMITER
 
 
+def _record_broker_response(key: str, response: dict | None, *, source: str) -> None:
+    """주문/취소 응답의 안전한 진단 필드만 append-only 원장에 남긴다."""
+    if not isinstance(response, dict):
+        return
+    ledger.record_reconcile_meta(
+        key, reason=source,
+        meta={"source": source,
+              "submit_msg_cd": response.get("msg_cd"),
+              "submit_msg1": response.get("msg1")})
+
+
 def orders_allowed() -> tuple[bool, str]:
     """전송 허용 여부와 사유. live는 어떤 플래그로도 안 열린다(Stage 2 전)."""
     if not kis.IS_MOCK:
@@ -155,8 +166,9 @@ def place_order(key: str, symbol: str, side: str, qty: int, price: float,
     market: None이면 심볼로 자동 판별(국내 6자리 숫자=KR, 그 외=US).
     order_type: 'limit'(기본) | 'market'. **시장가는 국내(KR)만** — 미국주는 연속장
          시장가가 없어 요청 시 차단(fail-closed). 국내 손절 체결 보장용(사용자 정책 2026-07-13).
-    hldg_before: 주문 직전 보유수량(호출부가 아는 브로커-진실 값). 원장 meta에 남겨
-         ack(접수)→체결 확정의 잔고-delta 대사 기준으로 쓴다(없으면 자동확정 불가).
+    hldg_before: 주문 직전 **총보유** 수량(매도가능 수량과 다른 단위). 원장 meta에
+         남겨 ack(접수)→체결 확정의 총보유 delta 기준으로 쓴다. 총보유가 불신이면
+         None으로 두며 보호매도의 매도가능 clamp와 섞지 않는다.
     """
     side = side.upper()
     market = market or kis.market_of_symbol(symbol)
@@ -217,6 +229,7 @@ def place_order(key: str, symbol: str, side: str, qty: int, price: float,
             return {"ok": False, "act": "rate_limited", "key": key,
                     "why": "order-plane 유량 슬롯 없음(5s)"}
         d, http = _post(_PATHS[market]["order"], tr, body)
+        _record_broker_response(key, d, source="order-response")
         act = kis.classify_error((d or {}).get("rt_cd"), (d or {}).get("msg_cd"),
                                  http, is_order=True)
         if act == kis.ACT_OK:
@@ -246,8 +259,9 @@ def place_order(key: str, symbol: str, side: str, qty: int, price: float,
                     "why": "401 지속(토큰 재발급 후에도) — 인증 확인 필요"}
         if act in (kis.ACT_REJECT, kis.ACT_AUTH_FATAL):
             ledger.on_result(key, "rejected", 0)
-            mc = (d or {}).get("msg_cd") or http
-            m1 = str((d or {}).get("msg1") or "").strip()
+            mc = ledger.sanitize_broker_text(
+                (d or {}).get("msg_cd") or http, code=True)
+            m1 = ledger.sanitize_broker_text((d or {}).get("msg1"))
             return {"ok": False, "act": act, "key": key,
                     "why": f"{mc}: {m1}" if m1 else str(mc)}
         # UNKNOWN — 종목 잠금, kis_reconcile로만 해소(재주문 절대 금지)
@@ -306,6 +320,7 @@ def cancel_order(key: str, symbol: str, odno: str, qty: int,
                 "why": "order-plane 유량 슬롯 없음(5s)"}
     d, http = _post(_PATHS[market]["cancel"], kis.tr_id("rvsecncl", market=market),
                     body)
+    _record_broker_response(key, d, source="cancel-response")
     act = kis.classify_error((d or {}).get("rt_cd"), (d or {}).get("msg_cd"),
                              http, is_order=True)
     if act == kis.ACT_OK:
