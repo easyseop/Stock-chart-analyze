@@ -469,7 +469,9 @@ def _resolve_acks() -> list[dict]:
         rs += absence_rs
         for item in contradictions:
             previous = ledger.state_of(item["key"]) or {}
-            if previous.get("reconcile_reason") == "absence-balance-contradiction":
+            if (previous.get("reconcile_reason") == "absence-balance-contradiction"
+                    or (previous.get("reconcile_meta") or {}).get("source")
+                    == "absence-balance-contradiction"):
                 continue
             ledger.mark_unknown(
                 item["key"], int(previous.get("filled") or 0),

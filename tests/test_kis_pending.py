@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import datetime
+import json
 import os
 import sys
 import tempfile
@@ -14,6 +15,12 @@ from bot import kis_buy, kis_pending as P, ledger as L
 
 def _with_ledger(fn):
     with tempfile.TemporaryDirectory() as tmp:
+        os.environ["USER_BASELINE_PATH"] = os.path.join(tmp, "baseline.json")
+        os.environ["SYMBOL_FREEZE_PATH"] = os.path.join(tmp, "freeze.json")
+        with open(os.environ["USER_BASELINE_PATH"], "w", encoding="utf-8") as fp:
+            json.dump({"symbols": []}, fp)
+        with open(os.environ["SYMBOL_FREEZE_PATH"], "w", encoding="utf-8") as fp:
+            json.dump({}, fp)
         with mock.patch.object(L, "LEDGER_PATH", os.path.join(tmp, "orders.jsonl")):
             fn()
 

@@ -20,6 +20,7 @@
 """
 from __future__ import annotations
 
+import html
 import json
 import os
 import re
@@ -30,6 +31,59 @@ import urllib.request
 _API = "https://api.telegram.org/bot{token}/{method}"
 # US 잔고는 거래소별 조회 → 세 시장 병합(종목이 어디 상장인지 신호에 없음).
 _US_EXCGS = ("NASD", "NYSE", "AMEX")
+
+
+def _diag_order_details(fold: dict, *, limit: int = 3) -> list[str]:
+    """열린 주문의 정화된 브로커 상태만 `/진단`용으로 반환한다.
+
+    내부 원장키·ODNO·계좌·가격·수량은 출력하지 않는다. 원장에 이미 정화된
+    필드라도 외부 전송 직전에 다시 sanitize하고 HTML escape해 방어를 겹친다.
+    """
+    from bot import ledger
+
+    priority = {"unknown": 0, "ack": 1, "partial": 2, "submitted": 3}
+    candidates = []
+    for cur in (fold or {}).values():
+        state = str(cur.get("state") or "").lower()
+        if state not in priority:
+            continue
+        if state == "partial" and cur.get("open") is False:
+            continue
+        meta = cur.get("reconcile_meta") or {}
+        if not isinstance(meta, dict):
+            continue
+        parts = []
+        for code_key, text_key in (
+                ("last_msg_cd", "last_msg1"),
+                ("submit_msg_cd", "submit_msg1")):
+            code = ledger.sanitize_broker_text(
+                meta.get(code_key), limit=40, code=True)
+            message = ledger.sanitize_broker_text(meta.get(text_key), limit=120)
+            if code or message:
+                parts = [x for x in (code, message) if x]
+                break
+        if not parts:
+            fallback = meta.get("broker_reason") or meta.get("last_status")
+            detail = ledger.sanitize_broker_text(fallback, limit=140)
+        else:
+            detail = " ".join(parts)
+        if not detail:
+            continue
+        symbol = ledger.sanitize_broker_text(cur.get("symbol"), limit=16)
+        side = str(cur.get("side") or "").upper()
+        if side not in ("BUY", "SELL"):
+            side = "ORDER"
+        if not symbol:
+            symbol = "UNKNOWN"
+        try:
+            submitted_at = float(cur.get("submitted_at") or 0)
+        except (TypeError, ValueError):
+            submitted_at = 0.0
+        line = (f"  · {html.escape(symbol)} {side} · "
+                f"{html.escape(detail)}")
+        candidates.append((priority[state], submitted_at, line))
+    candidates.sort(key=lambda x: (x[0], x[1]))
+    return [row[2] for row in candidates[:max(0, int(limit))]]
 
 
 # ── 텔레그램 저수준 ────────────────────────────────────────────────────────
@@ -373,6 +427,10 @@ def _diag_text() -> str:
         unk = sum(1 for c in fold.values() if c.get("state") == "unknown")
         L.append(f"원장: 열린 주문 {open_n} · UNKNOWN {unk} "
                  + ("✅" if unk == 0 else "🚨 UNKNOWN 수동 확인 필요"))
+        details = _diag_order_details(fold)
+        if details:
+            L.append("주문 대사 상세(최대 3건):")
+            L.extend(details)
     except Exception as e:
         L.append(f"원장: 확인 실패({type(e).__name__})")
 

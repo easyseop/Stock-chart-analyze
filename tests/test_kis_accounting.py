@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import os
+import json
 import sys
 import tempfile
 from unittest import mock
@@ -18,11 +19,21 @@ def _meta(side="BUY", sleeve="A"):
             "target": 130.0, "name": "Apple", "opened": "2026-07-24"}
 
 
+def _arm(tmp: str) -> None:
+    os.environ["USER_BASELINE_PATH"] = os.path.join(tmp, "baseline.json")
+    os.environ["SYMBOL_FREEZE_PATH"] = os.path.join(tmp, "freeze.json")
+    with open(os.environ["USER_BASELINE_PATH"], "w", encoding="utf-8") as fp:
+        json.dump({"symbols": []}, fp)
+    with open(os.environ["SYMBOL_FREEZE_PATH"], "w", encoding="utf-8") as fp:
+        json.dump({}, fp)
+
+
 def test_partial_fill_then_final_and_sell():
     with tempfile.TemporaryDirectory() as tmp, \
          mock.patch.object(L, "LEDGER_PATH", os.path.join(tmp, "orders.jsonl")), \
          mock.patch.object(P, "PATH", os.path.join(tmp, "positions.jsonl")), \
          mock.patch.dict(os.environ, {"COSTBOOK_PATH": os.path.join(tmp, "cost.jsonl")}):
+        _arm(tmp)
         L.record_submit("buy:1", "AAPL", 10, meta=_meta())
         L.bind_broker_order("buy:1", "OD1")
         L.on_result("buy:1", "ack", 0)
@@ -80,6 +91,7 @@ def test_unknown_reconcile_recovers_accounting():
          mock.patch.object(L, "LEDGER_PATH", os.path.join(tmp, "orders.jsonl")), \
          mock.patch.object(P, "PATH", os.path.join(tmp, "positions.jsonl")), \
          mock.patch.dict(os.environ, {"COSTBOOK_PATH": os.path.join(tmp, "cost.jsonl")}):
+        _arm(tmp)
         L.record_submit("lost", "AAPL", 3, meta=_meta())
         L.bind_broker_order("lost", "ODX", ord_tmd="101500")
         L.on_result("lost", "unknown", 0)

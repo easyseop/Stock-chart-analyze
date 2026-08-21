@@ -831,10 +831,20 @@ def _consumer_untrusted(reason: str) -> None:
     _set_get_failure({"exception": str(reason)})
 
 
-def holdings(market: str = "US", excg: str = "NASD") -> dict | None:
-    """브로커 실보유 {symbol.upper(): qty} — 브로커-진실 대조용(매수루프·파수꾼).
-    조회 실패/불완전(연속조회 남음)=None(신뢰 불가 → 호출부 보수 처리).
-    국내 output1: pdno·hldg_qty / 해외 output1: ovrs_pdno·ovrs_cblc_qty."""
+def holding_quantities(market: str = "US", excg: str = "NASD", *,
+                       symbol: str | None = None) -> dict | None:
+    """한 잔고 응답에서 총보유와 매도가능을 서로 다른 단위로 파싱한다.
+
+    반환은 ``{"total": map|None, "sellable": map|None}``. HTTP/페이지/행 구조가
+    불신이면 전체 ``None``이다. 한 수량 필드만 손상된 경우에는 다른 map을 살려
+    보호 매도 핫패스를 유지하되, 손상된 단위를 다른 단위로 추측하지 않는다.
+    두 map은 반드시 같은 완전한 페이지 집합에서 만들어진다.
+
+    ``symbol``을 주면 같은 응답에서 그 행만 따로 검증한 ``symbol_total``도
+    반환한다. 이는 발주 당시 hldg_before 기록 전용이며, 시장 전체 ``total``은
+    다른 한 행이라도 손상되면 계속 None이다. 완전 스냅샷 소비자가 부분 map을
+    부재=0으로 오인하지 않게 두 계약을 섞지 않는다.
+    """
     d = domestic_balance() if market == "KR" else overseas_balance(excg=excg)
     if not d or d.get("rt_cd") != "0":
         if last_get_failure() is None:
@@ -850,19 +860,58 @@ def holdings(market: str = "US", excg: str = "NASD") -> dict | None:
     if not isinstance(rows, list) or any(not isinstance(row, dict) for row in rows):
         _consumer_untrusted("BalanceRowsUntrusted")
         return None
-    out: dict[str, int] = {}
-    for r in rows:
-        sym = str(r.get("pdno") or r.get("ovrs_pdno") or "").upper()
-        if not sym:
+    total: dict[str, int] = {}
+    sellable: dict[str, int] = {}
+    total_ok = True
+    sellable_ok = True
+    target = str(symbol or "").upper()
+    target_total = 0
+    target_total_ok = True
+    for row in rows:
+        row_symbol = str(row.get("pdno") or row.get("ovrs_pdno") or "").upper()
+        if not row_symbol:
             continue
+        total_raw = row.get("hldg_qty")
+        if total_raw in (None, ""):
+            total_raw = row.get("ovrs_cblc_qty")
         try:
-            q = int(float(r.get("hldg_qty") or r.get("ovrs_cblc_qty") or 0))
+            if total_raw in (None, ""):
+                raise ValueError("missing total")
+            qty = int(float(total_raw))
         except (TypeError, ValueError):
-            _consumer_untrusted("BalanceQuantityUntrusted")
-            return None
-        if q:
-            out[sym] = out.get(sym, 0) + q
-    return out
+            total_ok = False
+            if target and row_symbol == target:
+                target_total_ok = False
+        else:
+            if qty:
+                total[row_symbol] = total.get(row_symbol, 0) + qty
+            if target and row_symbol == target:
+                target_total += qty
+
+        sellable_raw = row.get("ord_psbl_qty")
+        try:
+            if sellable_raw in (None, ""):
+                raise ValueError("missing sellable")
+            qty = max(0, int(float(sellable_raw)))
+        except (TypeError, ValueError):
+            sellable_ok = False
+        else:
+            sellable[row_symbol] = sellable.get(row_symbol, 0) + qty
+    if not total_ok:
+        _consumer_untrusted("BalanceQuantityUntrusted")
+    if not sellable_ok:
+        _consumer_untrusted("SellableQuantityUntrusted")
+    result = {"total": total if total_ok else None,
+              "sellable": sellable if sellable_ok else None}
+    if target:
+        result["symbol_total"] = target_total if target_total_ok else None
+    return result
+
+
+def holdings(market: str = "US", excg: str = "NASD") -> dict | None:
+    """브로커 총보유 {symbol: qty}. 실패를 매도가능으로 대체하지 않는다."""
+    quantities = holding_quantities(market, excg=excg)
+    return None if quantities is None else quantities["total"]
 
 
 def sellable_holdings(market: str = "US", excg: str = "NASD") -> dict | None:
@@ -872,35 +921,8 @@ def sellable_holdings(market: str = "US", excg: str = "NASD") -> dict | None:
     다를 수 있다. 보호 매도 핫패스는 이 값을 사용하며, 필드가 없거나 응답이
     불완전하면 총보유로 추측하지 않고 None으로 실패시킨다.
     """
-    d = domestic_balance() if market == "KR" else overseas_balance(excg=excg)
-    if not d or d.get("rt_cd") != "0":
-        if last_get_failure() is None:
-            _consumer_untrusted("SellableBalanceResponseUntrusted")
-        return None
-    if str(d.get("ctx_area_nk100") or d.get("CTX_AREA_NK100")
-           or d.get("ctx_area_nk200") or d.get("CTX_AREA_NK200") or "").strip():
-        _consumer_untrusted("SellableBalancePaginationIncomplete")
-        return None
-    rows = d.get("output1")
-    if not isinstance(rows, list) or any(not isinstance(row, dict) for row in rows):
-        _consumer_untrusted("SellableBalanceRowsUntrusted")
-        return None
-    out: dict[str, int] = {}
-    for row in rows:
-        symbol = str(row.get("pdno") or row.get("ovrs_pdno") or "").upper()
-        raw = row.get("ord_psbl_qty")
-        if not symbol:
-            continue
-        if raw in (None, ""):
-            _consumer_untrusted("SellableQuantityMissing")
-            return None                            # 총보유로 폴백하면 초과매도 위험
-        try:
-            qty = max(0, int(float(raw)))
-        except (TypeError, ValueError):
-            _consumer_untrusted("SellableQuantityUntrusted")
-            return None
-        out[symbol] = out.get(symbol, 0) + qty
-    return out
+    quantities = holding_quantities(market, excg=excg)
+    return None if quantities is None else quantities["sellable"]
 
 
 def last_price(symbol: str, *, market: str = "US", excg: str = "NASD") -> float | None:

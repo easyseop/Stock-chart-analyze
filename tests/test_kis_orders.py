@@ -80,7 +80,7 @@ def _fake_urlopen(script):
     return fake
 
 
-_OK_ORDER = {"rt_cd": "0", "msg_cd": "APBK0013",
+_OK_ORDER = {"rt_cd": "0", "msg_cd": "APBK0013", "msg1": "주문 접수 완료",
              "output": {"ODNO": "0001569157", "KRX_FWDG_ORD_ORGNO": "06010",
                         "ORD_TMD": "142233"}}
 _RATE = ("http", 500, {"rt_cd": "1", "msg_cd": "EGW00201",
@@ -109,6 +109,8 @@ def test_success_binds_odno():
         st = L.state_of("p1#1")
         assert st["state"] == "ack" and st["odno"] == "0001569157"
         assert st["ord_tmd"] == "142233" and st["side"] == "SELL"
+        assert st["reconcile_meta"]["submit_msg_cd"] == "APBK0013"
+        assert st["reconcile_meta"]["submit_msg1"] == "주문 접수 완료"
         assert not L.is_locked("AAPL")               # ack는 잠금 아님(in-flight)
         assert L.open_order_count("AAPL") == 1       # 동시주문은 차단됨
     print("[PASS] 성공: ODNO/ORD_TMD 결속·ack·in-flight 1건")
