@@ -365,13 +365,25 @@ jobs:
       #    빨간불이 되어 배포 사고를 바로 알 수 있음)
       - name: 라이브 스모크체크
         run: |
-          sleep 15
           URL="${{ steps.deploy.outputs.page_url }}"
-          curl -sf "${URL}?cb=${{ github.run_id }}" -o /tmp/live.html
-          # 리디자인 후 홈의 안정적 마커로 검증(옛 '마지막 갱신/클로드라면'은 더보기로 이동/삭제됨)
-          grep -q "전환 스크리너" /tmp/live.html
-          grep -q 'id="rowsrc"' /tmp/live.html
-          echo "라이브 정상: $URL"
+          # 재시도 필수. 배포 직후에는 Pages 엣지 전파가 안 끝나 404·503이
+          #   잠깐 뜬다. 단발 curl은 그 순간에 걸리면 배포가 멀쩡한데도
+          #   빨간불을 내고 "웹 배포 실패" 오탐 알림을 쏜다(실측 2026-08-21
+          #   run 32480996685 — deploy-pages 성공, 이 단계만 실패, 사이트는
+          #   그 시점에도 200이었다). 7.6MB 페이지라 전파가 더 느리다.
+          for attempt in 1 2 3 4; do
+            sleep $(( attempt * 15 ))
+            if curl -sf --max-time 60 \
+                 "${URL}?cb=${{ github.run_id }}-${attempt}" -o /tmp/live.html \
+               && grep -q "전환 스크리너" /tmp/live.html \
+               && grep -q 'id="rowsrc"' /tmp/live.html; then
+              echo "라이브 정상: $URL (시도 ${attempt}회)"
+              exit 0
+            fi
+            echo "스모크체크 시도 ${attempt} 실패 — 재시도"
+          done
+          echo "::error::4회 재시도에도 라이브 확인 실패: $URL"
+          exit 1
 
       # 배포 실패(재시도 포함) 시 텔레그램 알림 — 매매는 빌드에서 이미 완결됐고
       #   웹만 낡는 상황임을 사용자에게 알린다(사이트가 멈춘 걸로 오해 방지).

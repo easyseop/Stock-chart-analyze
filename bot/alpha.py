@@ -50,23 +50,103 @@ _US_EXCGS = ("NASD", "NYSE", "AMEX")
 
 
 # ── 데이터 수집 ────────────────────────────────────────────────
-def _yahoo_quote(sym: str) -> dict | None:
-    """지수 현재 레벨+전일 종가(야후 v8). 실패=None."""
+# 지수 하루 등락의 상식 범위. 넘으면 숫자로 확정하지 않고 미확정(None)으로 둔다.
+#   서킷브레이커급 폭락일에는 정당한 값도 걸릴 수 있지만, 그 경우 '미확정'은
+#   보수적으로 안전한 실패다 — 반대로 오염된 기준선이 만든 +7%는 조용히
+#   통계 분모로 들어가 되돌릴 수 없다(실측 2026-08-21).
+IDX_DAILY_SANE_PCT = 15.0
+
+
+def _sane_idx_pct(value: float | None, *, name: str = "") -> float | None:
+    """비상식적 지수 등락률을 미확정으로 접는다. 정상값은 그대로 통과."""
+    if value is None:
+        return None
+    try:
+        pct = float(value)
+    except (TypeError, ValueError):
+        return None
+    if not math.isfinite(pct) or abs(pct) > IDX_DAILY_SANE_PCT:
+        print(f"[alpha] 지수 등락 이상치 — {name or '?'} {value} "
+              f"(±{IDX_DAILY_SANE_PCT}% 초과) → 미확정 처리", flush=True)
+        return None
+    return pct
+
+
+def _yahoo_chart(sym: str, rng: str) -> tuple[dict, list[tuple[str, float]]] | None:
+    """(meta, 일봉) 동시 반환. 실패=None(빈 결과와 구분 — 실패≠부재)."""
     url = ("https://query1.finance.yahoo.com/v8/finance/chart/"
-           + urllib.parse.quote(sym) + "?range=1d&interval=5m")
+           + urllib.parse.quote(sym) + f"?range={rng}&interval=1d")
     req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
     try:
-        with urllib.request.urlopen(req, timeout=10) as r:
-            m = json.load(r)["chart"]["result"][0]["meta"]
-        current = m.get("regularMarketPrice")
-        previous = (m.get("regularMarketPreviousClose")
-                    or m.get("chartPreviousClose"))
-        if not current:
-            return None
-        return {"current": float(current),
-                "previous_close": float(previous) if previous else None}
+        with urllib.request.urlopen(req, timeout=15) as r:
+            res = json.load(r)["chart"]["result"][0]
+        meta = res["meta"] or {}
+        offset = int(meta.get("gmtoffset") or 0)
+        stamps = res.get("timestamp") or []
+        closes = res["indicators"]["quote"][0]["close"]
     except Exception:
         return None
+    bars: list[tuple[str, float]] = []
+    for stamp, close in zip(stamps, closes):
+        if close is None:
+            continue                        # 휴장·결측 봉은 '없는 날'이다
+        try:
+            local = (datetime.datetime.utcfromtimestamp(int(stamp))
+                     + datetime.timedelta(seconds=offset)).date()
+            value = float(close)
+        except (TypeError, ValueError, OSError, OverflowError):
+            continue
+        if value > 0 and math.isfinite(value):
+            bars.append((local.isoformat(), value))
+    bars.sort(key=lambda row: row[0])
+    return meta, bars
+
+
+def yahoo_daily_bars(sym: str, *, rng: str = "1mo") -> list[tuple[str, float]] | None:
+    """거래소 현지 날짜가 붙은 일봉 종가 목록. 실패=None(빈 목록과 구분).
+
+    반환: ``[("2026-08-20", 6852.58), ("2026-08-21", 6912.95)]`` — 날짜 오름차순.
+    """
+    chart = _yahoo_chart(sym, rng)
+    return None if chart is None else chart[1]
+
+
+def _yahoo_quote(sym: str) -> dict | None:
+    """지수 현재 레벨 + **날짜가 검증된** 직전 거래일 종가. 실패=None.
+
+    왜 일봉을 쓰나(2026-08-21 실측): 예전엔 meta의
+    ``regularMarketPreviousClose or chartPreviousClose``를 썼다. 그런데
+    ``regularMarketPreviousClose``는 코스피·코스닥·나스닥 **전부 None**이라
+    폴백이 예비 경로가 아니라 상시 경로였고, ``chartPreviousClose``는 직전
+    *거래일* 종가를 보장하지 않는다(같은 시각 코스닥이 08-20 종가 840.89 대신
+    08-19의 824.46을 반환). 기준선은 세션 시작 때 한 번 고정되므로 아침에 하루
+    밀린 값을 잡으면 그날 지수 등락이 통째로 오염된다 — 코스피 실제 +0.88%가
+    +7.12%로 발행됐다. 일봉에는 타임스탬프가 붙어 있어 '오늘 이전 마지막
+    거래일'을 **검증해서** 고를 수 있다.
+    """
+    chart = _yahoo_chart(sym, "1mo")
+    if chart is None:
+        return None
+    meta, bars = chart
+    if len(bars) < 2:
+        return None
+    session_date, session_close = bars[-1]
+    prev_date, prev_close = bars[-2]
+    if prev_date >= session_date:
+        return None                         # 날짜 역전·중복 — 기준선 신뢰 불가
+    # 장중에는 meta의 실시간가가 마지막 일봉보다 최신일 수 있다. 다만 그 값이
+    #   마지막 봉과 크게 어긋나면(다른 세션을 가리키면) 봉 쪽을 믿는다.
+    current = session_close
+    live = meta.get("regularMarketPrice")
+    try:
+        live = float(live)
+    except (TypeError, ValueError):
+        live = None
+    if live and math.isfinite(live) and live > 0 \
+            and abs(live - session_close) <= session_close * 0.25:
+        current = live
+    return {"current": current, "previous_close": prev_close,
+            "previous_close_date": prev_date, "session_date": session_date}
 
 
 def _yahoo_last(sym: str) -> float | None:
@@ -650,7 +730,19 @@ def session_update(st: dict, mkt: str, agg: dict, idx: dict,
                     continue
             else:                               # 첫표본 기준 — 그 틱이 0% 기준
                 day["idx0"][name] = v0 = v
-        ipct[name] = (v / v0 - 1) * 100.0
+        elif carry_basis:
+            # 기준선 자가정정. idx0은 세션 시작 때 한 번 고정되므로, 아침에
+            #   하루 밀린 종가를 잡으면 장 마감까지 그 오염이 유지된다(실측
+            #   2026-08-21 — 코스피 실제 +0.88%가 +7.12%로 발행). 이제
+            #   idx_previous_close는 날짜가 검증된 값이므로, 고정된 기준선이
+            #   그것과 어긋나면 **검증된 쪽을 채택**한다. 정상일에는 두 값이
+            #   같아 아무 일도 일어나지 않는다.
+            verified = (idx_previous_close or {}).get(name)
+            if verified and abs(verified - v0) > max(1e-9, v0 * 1e-6):
+                print(f"[alpha] 지수 기준선 정정 — {name} {v0} → {verified} "
+                      f"({mkt} {today})", flush=True)
+                day["idx0"][name] = v0 = verified
+        ipct[name] = _sane_idx_pct((v / v0 - 1) * 100.0, name=name)
     # 미확정(None)은 0으로 낮춰 표시하지 않는다 — 숫자로 보이는 순간 확정된다.
     # 지수 자리는 **주 지수 전용**: 주 지수가 결측이면 None을 기록한다. 다른
     #   지수를 대신 넣으면 화면·마감·일별 행이 그 값을 주 지수 이름으로 부른다
@@ -668,8 +760,9 @@ def session_update(st: dict, mkt: str, agg: dict, idx: dict,
         # 전일종가가 없는 지수는 **명시적 None** — 키를 빼면 소비자가 세션
         #   기준값으로 폴백해 기준이 다른 값을 일간 수익률로 쓴다(Codex V4 P1-2).
         daily_indices = {
-            name: ((value / (idx_previous_close or {}).get(name) - 1) * 100
-                   if (idx_previous_close or {}).get(name) else None)
+            name: _sane_idx_pct(
+                (value / (idx_previous_close or {}).get(name) - 1) * 100
+                if (idx_previous_close or {}).get(name) else None, name=name)
             for name, value in idx.items()
         }
     rnd = lambda v: None if v is None else round(v, 4)
