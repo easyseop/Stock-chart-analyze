@@ -1,16 +1,8 @@
 {
  "version": 1,
- "generated_at": "2026-08-21T11:34:46+09:00",
+ "generated_at": "2026-08-21T11:51:15+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "a_ablation": [
-  {
-   "code": "207940",
-   "gate": "rp",
-   "range_pos": 0.4058,
-   "runup63": 0.1011,
-   "stage": 3,
-   "price": 1536000.0
-  },
   {
    "code": "ALKT",
    "gate": "rp",
@@ -160,34 +152,6 @@
    }
   },
   {
-   "id": "035250-2026-08-21-now",
-   "code": "035250",
-   "name": "강원랜드",
-   "ccy": "KRW",
-   "group": "now",
-   "entry_kind": "now",
-   "stage": 3,
-   "price": 14270.0,
-   "entry": 14270.0,
-   "stop": 13602.0118,
-   "target": 15605.9763,
-   "shares_1pct": 149,
-   "range_pos": 0.0617,
-   "norm": 9.4,
-   "bear_share": 0.375,
-   "fresh": true,
-   "break_gap": 0.0057,
-   "earnings_d": null,
-   "tactic": {
-    "stop_pct": 4.7,
-    "pb_price": 14062.5,
-    "pb_stop_pct": 3.3,
-    "mode": "full",
-    "label": "⚡ 즉시 분할",
-    "desc": "손절폭 4.7%로 타이트 — 현재가에서 1~2회 분할 매수. 기다리는 이득보다 놓치는 비용이 큼"
-   }
-  },
-  {
    "id": "GNTX-2026-08-21-now",
    "code": "GNTX",
    "name": "Gentex Corporation",
@@ -213,6 +177,34 @@
     "mode": "full",
     "label": "⚡ 즉시 분할",
     "desc": "손절폭 4.9%로 타이트 — 현재가에서 1~2회 분할 매수. 기다리는 이득보다 놓치는 비용이 큼"
+   }
+  },
+  {
+   "id": "207940-2026-08-21-now",
+   "code": "207940",
+   "name": "삼성바이오로직스",
+   "ccy": "KRW",
+   "group": "now",
+   "entry_kind": "now",
+   "stage": 3,
+   "price": 1531000.0,
+   "entry": 1531000.0,
+   "stop": 1402711.2489,
+   "target": 1787577.5021,
+   "shares_1pct": 0,
+   "range_pos": 0.3992,
+   "norm": 5.7,
+   "bear_share": 0.125,
+   "fresh": true,
+   "break_gap": 0.0068,
+   "earnings_d": null,
+   "tactic": {
+    "stop_pct": 8.4,
+    "pb_price": 1502172.3958,
+    "pb_stop_pct": 6.6,
+    "mode": "pullback",
+    "label": "⏳ 눌림 지정가만",
+    "desc": "지금 추격 금지(손절폭 8.4%) — <b>1,502,172원 눌림 지정가만</b>. 눌리면 손절폭 6.6%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
    }
   },
   {
@@ -307,24 +299,24 @@
    "group": "now",
    "entry_kind": "now",
    "stage": 3,
-   "price": 20100.0,
-   "entry": 20100.0,
-   "stop": 17834.7987,
-   "target": 24630.4026,
+   "price": 20150.0,
+   "entry": 20150.0,
+   "stop": 17884.7987,
+   "target": 24680.4026,
    "shares_1pct": 44,
-   "range_pos": 0.1103,
+   "range_pos": 0.1132,
    "norm": -43.4,
    "bear_share": 0.5,
    "fresh": true,
-   "break_gap": 0.0273,
+   "break_gap": 0.0299,
    "earnings_d": null,
    "tactic": {
-    "stop_pct": 11.3,
+    "stop_pct": 11.2,
     "pb_price": 18440.0,
-    "pb_stop_pct": 3.3,
+    "pb_stop_pct": 3.0,
     "mode": "pullback",
     "label": "⏳ 눌림 지정가만",
-    "desc": "지금 추격 금지(손절폭 11.3%) — <b>18,440원 눌림 지정가만</b>. 눌리면 손절폭 3.3%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
+    "desc": "지금 추격 금지(손절폭 11.2%) — <b>18,440원 눌림 지정가만</b>. 눌리면 손절폭 3.0%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
    }
   },
   {
@@ -2304,24 +2296,24 @@
    "group": "watch",
    "entry_kind": "now",
    "stage": 1,
-   "price": 21175.0,
-   "entry": 21175.0,
-   "stop": 19323.5715,
-   "target": 24877.857,
+   "price": 21200.0,
+   "entry": 21200.0,
+   "stop": 19348.5715,
+   "target": 24902.857,
    "shares_1pct": 54,
-   "range_pos": 0.4638,
+   "range_pos": 0.4673,
    "norm": 6.6,
    "bear_share": 0.125,
    "fresh": true,
-   "break_gap": -0.0173,
+   "break_gap": -0.0161,
    "earnings_d": null,
    "tactic": {
     "stop_pct": 8.7,
     "pb_price": 19651.088,
-    "pb_stop_pct": 1.7,
+    "pb_stop_pct": 1.5,
     "mode": "pullback",
     "label": "⏳ 눌림 지정가만",
-    "desc": "지금 추격 금지(손절폭 8.7%) — <b>19,651원 눌림 지정가만</b>. 눌리면 손절폭 1.7%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
+    "desc": "지금 추격 금지(손절폭 8.7%) — <b>19,651원 눌림 지정가만</b>. 눌리면 손절폭 1.5%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
    }
   },
   {
@@ -2651,6 +2643,34 @@
     "mode": "full",
     "label": "⚡ 즉시 분할",
     "desc": "손절폭 5.5%로 타이트 — 현재가에서 1~2회 분할 매수. 기다리는 이득보다 놓치는 비용이 큼"
+   }
+  },
+  {
+   "id": "035250-2026-08-21-watch",
+   "code": "035250",
+   "name": "강원랜드",
+   "ccy": "KRW",
+   "group": "watch",
+   "entry_kind": "now",
+   "stage": 1,
+   "price": 14240.0,
+   "entry": 14240.0,
+   "stop": 13572.0118,
+   "target": 15575.9763,
+   "shares_1pct": 149,
+   "range_pos": 0.0564,
+   "norm": -9.4,
+   "bear_share": 0.375,
+   "fresh": true,
+   "break_gap": 0.0036,
+   "earnings_d": null,
+   "tactic": {
+    "stop_pct": 4.7,
+    "pb_price": 14062.5,
+    "pb_stop_pct": 3.5,
+    "mode": "full",
+    "label": "⚡ 즉시 분할",
+    "desc": "손절폭 4.7%로 타이트 — 현재가에서 1~2회 분할 매수. 기다리는 이득보다 놓치는 비용이 큼"
    }
   },
   {
@@ -3144,16 +3164,16 @@
    "group": "watch",
    "entry_kind": "pullback",
    "stage": 3,
-   "price": 490000.0,
+   "price": 492500.0,
    "entry": 470558.5,
    "stop": 415031.7665,
    "target": 581611.967,
    "shares_1pct": 1,
-   "range_pos": 0.4326,
+   "range_pos": 0.4396,
    "norm": -13.2,
    "bear_share": 0.375,
    "fresh": false,
-   "break_gap": 0.4421,
+   "break_gap": 0.4495,
    "earnings_d": null,
    "tactic": null
   },
