@@ -38,8 +38,8 @@ def _ack(ledger, key: str, symbol: str, *, qty: int = 5, before=11,
 
 
 def _row(symbol: str, *, odno: str = "12345", filled: int = 5,
-         opened: bool = False, status: str = "") -> dict:
-    return {"odno": odno, "pdno": symbol, "side": "SELL", "ord_qty": 5,
+         opened: bool = False, status: str = "", side: str = "SELL") -> dict:
+    return {"odno": odno, "pdno": symbol, "side": side, "ord_qty": 5,
             "filled": filled, "price": 101.0, "src": "ccnl",
             "open": opened, "broker_status": status}
 
@@ -429,18 +429,20 @@ def test_p3_armed_terminal_and_observation_contracts():
 
 
 def _zero_fill_evidence(symbol: str, odno: str, *, current: int,
-                        duplicates: int = 1, nccs: bool = False) -> dict:
+                        duplicates: int = 1, nccs: bool = False,
+                        side: str = "SELL") -> dict:
     raw = {
         "odno": odno, "pdno": symbol, "ft_ord_qty": "5",
         "ft_ccld_qty": "0", "ft_ccld_unpr3": "0",
-        "sll_buy_dvsn_cd_name": "매도", "prcs_stat_name": "",
+        "sll_buy_dvsn_cd_name": "매수" if side == "BUY" else "매도",
+        "prcs_stat_name": "",
     }
     return {
         "market": "US",
         "nccs": [dict(raw, nccs_qty="5")] if nccs else [],
         "ccnl": [dict(raw) for _ in range(duplicates)],
         "holdings": {symbol: current},
-        "rows": [_row(symbol, odno=odno, filled=0, opened=False)],
+        "rows": [_row(symbol, odno=odno, filled=0, opened=False, side=side)],
     }
 
 
@@ -610,10 +612,12 @@ def test_operator_zero_fill_branch_is_sell_only():
         CLI.ledger.LEDGER_PATH = L.LEDGER_PATH
         _ack(L, "buy:zero-fill-mutation", "BUY0", before=0,
              odno="99001", age_s=601, side="BUY")
-        evidence = _zero_fill_evidence("BUY0", "99001", current=0)
+        evidence = _zero_fill_evidence(
+            "BUY0", "99001", current=0, side="BUY")
         with mock.patch.object(CLI, "_read_market", return_value=evidence):
             plan = CLI.collect_plan("buy:zero-fill-mutation")
         assert plan["side"] == "BUY"
+        assert plan["exact_odno_matches"] == 1
         assert plan["kind"] == "hold" and not plan["resolvable"]
         assert not plan["zero_fill_proof"]
     print("[PASS] G2 BUY+단일0체결행은 operator-zero-fill 불가")

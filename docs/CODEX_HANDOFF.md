@@ -2288,3 +2288,32 @@ diff check가 모두 통과했다. 상세 부분 재검토 요청은
 주문·kill·동결 경로는 수정하지 않았다.
 
 기본 브랜치 병합·Oracle 배포·운영 CLI apply·kill/env 변경은 하지 않았다.
+
+### 45. 2026-08-23 ACK/F4 남은 P3 테스트 공백 3건 보강
+
+기본 브랜치 `1fd042d0`에서 clean worktree `/private/tmp/stock-ack-p3`와
+`codex/ack-p3-test-gaps` 브랜치를 만들었다. 이번 범위는 선행 Claude 판정의
+P3 테스트 공백 H1·H2·H3뿐이며, `bot/`·`scripts/` 운영 코드 diff는 0이다.
+
+H1은 ACK 테스트 helper `_row()`와 `_zero_fill_evidence()`에 기본 `SELL`인
+side 인자를 추가했다. BUY zero-fill 회귀만 행까지 `BUY`로 맞추고
+`exact_odno_matches == 1`을 함께 단언한다. 이로써 ODNO/side 필터에서 먼저
+제외되던 공허한 `hold`가 아니라 실제 operator-zero-fill SELL 제한을 검증한다.
+
+H2는 갭이 해소되지 않은 채 서명만 `11:1:0`에서 `11:3:0`으로 바뀌면 래치
+카운터가 새 서명 `count=1`로 교체되고 알림은 0건인 것을 파일 내용으로 확인한다.
+같은 새 서명을 한 번 더 관찰해야 알림 1건이 난다. 기존 해소 테스트의 항목 삭제와
+서명 변경 리셋을 구분했다.
+
+H3는 KRW·USD 시장이 모두 닫힌 경우 정상 반환 spy를 사용해
+`kis_positions.load`와 `audit_sellable_gaps`가 각각 0회임을 단언한다. 예외를
+주입하지 않아 내부 예외 격리로 우연히 통과할 수 없다.
+
+세 방어 제거 mutation은 개별 주입마다 운영 파일 diff rc=1, py_compile rc=0,
+대응 전용 테스트 rc=1을 확인하고 역패치했다. 세 mutation 동시 주입에서도 세
+전용 테스트가 각각 별도 rc=1이었고, 원복 후 `git diff --quiet -- bot scripts`는
+rc=0이었다. 최종 검증은 Python 전체 74/74, Node 19/19, compileall, app.js 문법,
+diff check가 통과했다. 상세 검토 요청은
+`docs/CLAUDE_REVIEW_ACK_P3_TEST_GAPS.md`다.
+
+기본 브랜치 병합·Oracle 배포·운영 CLI apply·kill/env 변경은 하지 않았다.

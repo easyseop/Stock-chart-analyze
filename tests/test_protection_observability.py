@@ -212,6 +212,31 @@ def test_f4_requires_persistent_gap_and_resets_transient_counter():
     print("[PASS] G3 갭 1회 침묵·2회 경보·해소 리셋·재시작 영속")
 
 
+def test_f4_signature_change_resets_counter_before_accumulating():
+    """H2: 해소가 아닌 갭 서명 변경도 새 관찰 1회차로 다시 센다."""
+    with tempfile.TemporaryDirectory() as tmp:
+        _ledger, watch = _setup(tmp)
+        held = {"INGR": {"q": 11}}
+        gap_a = {"total": {"INGR": 11}, "sellable": {"INGR": 1},
+                 "open_sell": {"INGR": 0}}
+        gap_b = {"total": {"INGR": 11}, "sellable": {"INGR": 3},
+                 "open_sell": {"INGR": 0}}
+        with mock.patch("bot.notify.send", return_value=True) as send:
+            assert not watch.audit_sellable_gaps(
+                held, scope_markets={"US"}, snapshot=gap_a)
+            assert not watch.audit_sellable_gaps(
+                held, scope_markets={"US"}, snapshot=gap_b)
+            state = json.load(open(os.environ["PROTECTION_ALERT_LATCH_PATH"],
+                                   encoding="utf-8"))
+            changed = state["sellable_gap_counts"]["INGR"]
+            assert changed == {"signature": "11:3:0", "count": 1}
+            assert send.call_count == 0
+            assert watch.audit_sellable_gaps(
+                held, scope_markets={"US"}, snapshot=gap_b)
+        assert send.call_count == 1
+    print("[PASS] H2 갭 서명 변경은 count=1 리셋·같은 서명 2회차만 경보")
+
+
 def test_f4_counter_preserves_closed_market_and_retries_delivery_or_write_failure():
     with tempfile.TemporaryDirectory() as tmp:
         _ledger, watch = _setup(tmp)
@@ -295,6 +320,21 @@ def test_f4_runs_only_in_ops_loop_and_sentinel_keeps_f3():
     print("[PASS] G1 sentinel F4/KIS spy 0·F3 1회·ops 주기 F4 1회")
 
 
+def test_f4_closed_markets_do_not_call_audit():
+    """H3: 양 시장 장외에는 F4 함수 자체를 호출하지 않는다."""
+    from bot import ops_status, protection_observability as watch
+
+    ops_status._last_sellable_gap_audit_at = 0.0
+    with mock.patch("bot.settings.market_open", return_value=False), \
+         mock.patch("bot.kis_positions.load", return_value={}) as load, \
+         mock.patch.object(watch, "audit_sellable_gaps",
+                           return_value=False) as audit:
+        assert not ops_status.maybe_audit_sellable_gaps(now=3000)
+    assert load.call_count == 0
+    assert audit.call_count == 0
+    print("[PASS] H3 양 시장 닫힘이면 원장/F4 감사 호출 0회")
+
+
 def test_read_only_wiring_preserves_protection_skip_and_public_ntfy_contract():
     from bot import kis_telegram, notify, ops_status, protection_observability as watch, sentinel
     src = inspect.getsource(watch)
@@ -332,8 +372,10 @@ def main():
     test_f4_gap_formula_latch_failure_and_recovery()
     test_f4_collects_complete_pages_and_partial_sell_remaining()
     test_f4_requires_persistent_gap_and_resets_transient_counter()
+    test_f4_signature_change_resets_counter_before_accumulating()
     test_f4_counter_preserves_closed_market_and_retries_delivery_or_write_failure()
     test_f4_runs_only_in_ops_loop_and_sentinel_keeps_f3()
+    test_f4_closed_markets_do_not_call_audit()
     test_read_only_wiring_preserves_protection_skip_and_public_ntfy_contract()
     print("\n보호매도 차단/매도가능 고갈 관측 회귀 통과.")
 
