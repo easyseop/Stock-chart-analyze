@@ -2257,3 +2257,34 @@ baseline, 미armed, 총보유 불신/조회실패는 모두 거부한다. F4는 
 `docs/CLAUDE_REVIEW_ACK_ZERO_FILL_STALE_BEFORE.md`다.
 
 기본 브랜치 병합·Oracle 배포·운영 CLI apply·kill/env 변경은 하지 않았다.
+
+### 44. 2026-08-23 F4 파수꾼 핫루프 분리와 갭 연속확인
+
+Claude 선행 판정에서 F1·F2·F3는 통과했고, F4의 KIS 6회 조회가 파수꾼
+heartbeat를 최대 450초 밀 수 있는 P1과 비차단 P3 두 건이 남았다. 기존 브랜치
+`codex/ack-zero-fill-stale-before`에서 그 세 항목만 수정했으며 코드 커밋은
+`f1461e71`이다.
+
+G1은 권장안 ①을 선택했다. `protection_observability.check()`에는 원장만 읽는
+F3만 남기고, F4는 텔레그램 읽기 전용 프로세스가 호출하는
+`ops_status.maybe_audit_sellable_gaps()`로 옮겼다. 기본 10분 간격·열린 시장에서만
+실행하며 실패도 간격을 적용한다. 파수꾼 실제 사이클 spy에서 F3 1회, F4 0회,
+F4용 KIS 잔고/nccs 호출 0회를 확인했다. ops 쪽에서는 같은 1초 내 두 호출 중
+F4가 정확히 1회였다. telegram은 systemd `Restart=always`이고 health beacon의
+기본 감시 유닛이라 프로세스 정지는 자동 재시작·down 보고로 드러난다.
+
+G2는 운영 코드를 건드리지 않고 BUY+단일 0체결행이 `hold`이며
+`zero_fill_proof=false`인 독립 테스트를 추가해 SELL 제한 mutation을 잡는다.
+
+G3는 `SELLABLE_GAP_CONFIRMATIONS` 기본 2를 추가했다. 같은
+`total:sellable:open_sell` 갭을 래치 파일에 원자/fsync로 연속 기록해 1회차는
+침묵, 2회차에만 P0를 보낸다. 갭 해소는 카운터를 리셋하고 닫힌 시장은 카운터를
+보존한다. 전송 실패는 다음 감사에서 재시도하며 저장 실패는 경보/회복 0·기존
+파일 byte 동일이다. 영구 누수 최초 경보는 기본 감사 간격만큼 약 10분 늦어진다.
+
+최종 검증은 Python 전체 74/74, Node 19/19(Node 24.15), compileall, app.js 문법,
+diff check가 모두 통과했다. 상세 부분 재검토 요청은
+`docs/CLAUDE_REVIEW_ACK_ZERO_FILL_G1_G3.md`다. F1·F2·F3, safe_qty, baseline,
+주문·kill·동결 경로는 수정하지 않았다.
+
+기본 브랜치 병합·Oracle 배포·운영 CLI apply·kill/env 변경은 하지 않았다.
