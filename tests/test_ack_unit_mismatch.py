@@ -601,6 +601,24 @@ def test_operator_zero_fill_requires_armed_nonbaseline_ownership():
     print("[PASS] operator-zero-fill: 사용자 baseline·미무장 소유경계 거부")
 
 
+def test_operator_zero_fill_branch_is_sell_only():
+    """G2 mutation guard: 새 zero-fill 분기에서 SELL 제한 제거를 즉시 검출한다."""
+    with tempfile.TemporaryDirectory() as tmp:
+        L, _O, _R, _S, _KO = _setup(tmp)
+        from scripts import kis_ack_resolve as CLI
+        importlib.reload(CLI)
+        CLI.ledger.LEDGER_PATH = L.LEDGER_PATH
+        _ack(L, "buy:zero-fill-mutation", "BUY0", before=0,
+             odno="99001", age_s=601, side="BUY")
+        evidence = _zero_fill_evidence("BUY0", "99001", current=0)
+        with mock.patch.object(CLI, "_read_market", return_value=evidence):
+            plan = CLI.collect_plan("buy:zero-fill-mutation")
+        assert plan["side"] == "BUY"
+        assert plan["kind"] == "hold" and not plan["resolvable"]
+        assert not plan["zero_fill_proof"]
+    print("[PASS] G2 BUY+단일0체결행은 operator-zero-fill 불가")
+
+
 def main():
     test_c1_sell_uses_total_for_baseline_and_sellable_for_clamp()
     test_c1_balance_table_no_fill_then_full_fill()
@@ -616,6 +634,7 @@ def main():
     test_f1_f2_operator_zero_fill_stale_before_ingr_fixture()
     test_operator_zero_fill_refuses_ambiguous_or_unsafe_evidence()
     test_operator_zero_fill_requires_armed_nonbaseline_ownership()
+    test_operator_zero_fill_branch_is_sell_only()
     print("\nACK 단위 불일치/동결 자기잠금/거절 사유 회귀 통과.")
 
 

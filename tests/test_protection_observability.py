@@ -15,6 +15,7 @@ def _setup(tmp: str):
     os.environ["PROTECTION_ALERT_LATCH_PATH"] = os.path.join(tmp, "alerts.json")
     os.environ["PROTECTION_BLOCKED_ALERT_S"] = "60"
     os.environ["SELLABLE_GAP_AUDIT_S"] = "60"
+    os.environ["SELLABLE_GAP_CONFIRMATIONS"] = "2"
     from bot import ledger, protection_observability as watch
     importlib.reload(ledger)
     importlib.reload(watch)
@@ -111,6 +112,8 @@ def test_f4_gap_formula_latch_failure_and_recovery():
             "open_sell": {"INGR": 5}}
         with mock.patch("bot.notify.send",
                         side_effect=lambda text, **kw: sent.append((text, kw)) or True):
+            assert not watch.audit_sellable_gaps(
+                held, scope_markets={"US"}, snapshot=alert)
             assert watch.audit_sellable_gaps(
                 held, scope_markets={"US"}, snapshot=alert)
             assert not watch.audit_sellable_gaps(
@@ -138,6 +141,8 @@ def test_f4_gap_formula_latch_failure_and_recovery():
             with mock.patch("bot.notify.send", return_value=True) as send:
                 assert not watch2.audit_sellable_gaps(
                     held, scope_markets={"US"}, snapshot=explained)
+                assert not watch2.audit_sellable_gaps(
+                    held, scope_markets={"US"}, snapshot=partly_unexplained)
                 assert watch2.audit_sellable_gaps(
                     held, scope_markets={"US"}, snapshot=partly_unexplained)
             assert send.call_count == 1 and "45.5%" in send.call_args.args[0]
@@ -179,14 +184,136 @@ def test_f4_collects_complete_pages_and_partial_sell_remaining():
     print("[PASS] F4 완전 3거래소·부분체결 잔여3 합산·잔고/nccs 실패=None")
 
 
+def test_f4_requires_persistent_gap_and_resets_transient_counter():
+    with tempfile.TemporaryDirectory() as tmp:
+        _ledger, watch = _setup(tmp)
+        held = {"INGR": {"q": 11}}
+        gap = {"total": {"INGR": 11}, "sellable": {"INGR": 1},
+               "open_sell": {"INGR": 0}}
+        clear = {"total": {"INGR": 11}, "sellable": {"INGR": 11},
+                 "open_sell": {"INGR": 0}}
+        with mock.patch("bot.notify.send", return_value=True) as send:
+            assert not watch.audit_sellable_gaps(
+                held, scope_markets={"US"}, snapshot=gap)       # 1회차 침묵
+            assert not watch.audit_sellable_gaps(
+                held, scope_markets={"US"}, snapshot=clear)     # 해소 → 카운터 리셋
+            assert not watch.audit_sellable_gaps(
+                held, scope_markets={"US"}, snapshot=gap)       # 다시 1회차
+            importlib.reload(watch)                              # 재시작에도 카운터 영속
+            assert watch.audit_sellable_gaps(
+                held, scope_markets={"US"}, snapshot=gap)       # 같은 갭 2회차
+            assert not watch.audit_sellable_gaps(
+                held, scope_markets={"US"}, snapshot=gap)       # 중복 경보 0
+        assert send.call_count == 1
+        state = json.load(open(os.environ["PROTECTION_ALERT_LATCH_PATH"],
+                               encoding="utf-8"))
+        assert state["sellable_gap"] == ["INGR"]
+        assert state["sellable_gap_counts"]["INGR"]["count"] == 3
+    print("[PASS] G3 갭 1회 침묵·2회 경보·해소 리셋·재시작 영속")
+
+
+def test_f4_counter_preserves_closed_market_and_retries_delivery_or_write_failure():
+    with tempfile.TemporaryDirectory() as tmp:
+        _ledger, watch = _setup(tmp)
+        held = {"INGR": {"q": 11}}
+        gap = {"total": {"INGR": 11}, "sellable": {"INGR": 1},
+               "open_sell": {"INGR": 0}}
+        clear = {"total": {"INGR": 11}, "sellable": {"INGR": 11},
+                 "open_sell": {"INGR": 0}}
+        assert not watch.audit_sellable_gaps(
+            held, scope_markets={"US"}, snapshot=gap)
+        # KR만 열린 사이클은 US 카운터를 지우거나 늘리지 않는다.
+        counts = watch._advance_gap_counts({}, scope_markets={"KR"})
+        assert counts == {"INGR": 1}
+
+        delivery = mock.Mock(side_effect=[False, True])
+        with mock.patch("bot.notify.send", delivery):
+            assert not watch.audit_sellable_gaps(
+                held, scope_markets={"US"}, snapshot=gap)   # 2회차, 전송 실패
+            assert watch.audit_sellable_gaps(
+                held, scope_markets={"US"}, snapshot=gap)   # 다음 감사 재시도 성공
+        assert delivery.call_count == 2
+
+        before = open(os.environ["PROTECTION_ALERT_LATCH_PATH"], "rb").read()
+        with mock.patch.object(watch, "_write_unlocked", side_effect=OSError("disk")), \
+             mock.patch("bot.notify.send") as send:
+            assert not watch.audit_sellable_gaps(
+                held, scope_markets={"US"}, snapshot=clear)
+        assert not send.called
+        assert open(os.environ["PROTECTION_ALERT_LATCH_PATH"], "rb").read() == before
+    print("[PASS] G3 닫힌시장 카운터 유지·전송실패 재시도·저장실패 byte 불변")
+
+
+def test_f4_runs_only_in_ops_loop_and_sentinel_keeps_f3():
+    from bot import ops_status, protection_observability as watch, sentinel
+
+    class EmptyKisBroker:
+        name = "kis"
+        def holdings(self):
+            return {}
+
+    with tempfile.TemporaryDirectory() as tmp:
+        _setup(tmp)
+        sentinel.SENT_PATH = os.path.join(tmp, "sent.json")
+        state = {}
+        f3 = mock.Mock(return_value=False)
+        f4 = mock.Mock(return_value=False)
+        blocking_balance = mock.Mock(side_effect=AssertionError("F4 KIS call in sentinel"))
+        blocking_orders = mock.Mock(side_effect=AssertionError("F4 KIS call in sentinel"))
+        with mock.patch.object(sentinel, "_fetch_positions", return_value=([], 0)), \
+             mock.patch.object(sentinel, "_market_open", return_value=True), \
+             mock.patch.object(sentinel, "_notify", return_value=True), \
+             mock.patch.object(watch, "audit_blocked_protection", f3), \
+             mock.patch.object(watch, "audit_sellable_gaps", f4), \
+             mock.patch("bot.kis_positions.load", return_value={}), \
+             mock.patch("bot.ownership.baseline", return_value=set()), \
+             mock.patch("bot.balance_health.record_success"), \
+             mock.patch("bot.kis.holding_quantities", blocking_balance), \
+             mock.patch("bot.kis.open_orders", blocking_orders):
+            sentinel.check_once(EmptyKisBroker(), state)
+        assert f3.call_count == 1
+        assert f4.call_count == 0
+        assert blocking_balance.call_count == 0 and blocking_orders.call_count == 0
+
+        ops_status._last_sellable_gap_audit_at = 0.0
+        with mock.patch("bot.settings.market_open", return_value=True), \
+             mock.patch("bot.kis_positions.load", return_value={
+                 "INGR": {"qty": 11, "ccy": "USD"}}), \
+             mock.patch.object(watch, "audit_sellable_gaps", return_value=False) as audit:
+            assert not ops_status.maybe_audit_sellable_gaps(now=1000)
+            assert not ops_status.maybe_audit_sellable_gaps(now=1001)
+        assert audit.call_count == 1
+        assert audit.call_args.kwargs["scope_markets"] == {"KR", "US"}
+        assert audit.call_args.args[0] == {"INGR": {"q": 11}}
+        ops_status._last_sellable_gap_audit_at = 0.0
+        with mock.patch("bot.settings.market_open", return_value=True), \
+             mock.patch("bot.kis_positions.load", return_value={
+                 "INGR": {"qty": 11, "ccy": ""}}), \
+             mock.patch.object(watch, "audit_sellable_gaps") as invalid_audit:
+            assert not ops_status.maybe_audit_sellable_gaps(now=2000)
+        assert not invalid_audit.called
+    print("[PASS] G1 sentinel F4/KIS spy 0·F3 1회·ops 주기 F4 1회")
+
+
 def test_read_only_wiring_preserves_protection_skip_and_public_ntfy_contract():
-    from bot import notify, protection_observability as watch, sentinel
+    from bot import kis_telegram, notify, ops_status, protection_observability as watch, sentinel
     src = inspect.getsource(watch)
     for banned in ("place_sell", "place_buy", "raise_level", "lower_level",
                    "ownership.unfreeze"):
         assert banned not in src, banned
     sentinel_src = inspect.getsource(sentinel.check_once)
     assert "protection_observability.check" in sentinel_src
+    assert "audit_sellable_gaps" not in sentinel_src
+    assert "audit_sellable_gaps" not in inspect.getsource(watch.check)
+    assert "audit_sellable_gaps" in inspect.getsource(ops_status.maybe_audit_sellable_gaps)
+    assert "maybe_audit_sellable_gaps" in inspect.getsource(kis_telegram.main)
+    root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    telegram_unit = open(os.path.join(root, "infra/server/telegram.service"),
+                         encoding="utf-8").read()
+    beacon = open(os.path.join(root, "infra/server/health_beacon.sh"),
+                  encoding="utf-8").read()
+    assert "Restart=always" in telegram_unit
+    assert "BEACON_UNITS:-sentinel buyloop telegram" in beacon
     assert 'phase="before_protection_audit"' in sentinel_src
     assert ('ledger.open_order_count(code, side="SELL") >= 1' in sentinel_src
             and 'ledger.open_order_count(code, side="CANCEL") >= 1' in sentinel_src)
@@ -204,6 +331,9 @@ def main():
     test_alert_delivery_failure_is_not_latched()
     test_f4_gap_formula_latch_failure_and_recovery()
     test_f4_collects_complete_pages_and_partial_sell_remaining()
+    test_f4_requires_persistent_gap_and_resets_transient_counter()
+    test_f4_counter_preserves_closed_market_and_retries_delivery_or_write_failure()
+    test_f4_runs_only_in_ops_loop_and_sentinel_keeps_f3()
     test_read_only_wiring_preserves_protection_skip_and_public_ntfy_contract()
     print("\n보호매도 차단/매도가능 고갈 관측 회귀 통과.")
 

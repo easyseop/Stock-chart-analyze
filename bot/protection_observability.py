@@ -15,9 +15,6 @@ import time
 from bot import ledger
 
 _US_EXCGS = ("NASD", "NYSE", "AMEX")
-_last_gap_audit_at = 0.0
-
-
 def _alert_after_s() -> int:
     try:
         value = int(os.environ.get("PROTECTION_BLOCKED_ALERT_S", "1800") or 1800)
@@ -41,7 +38,7 @@ def _latch_path() -> str:
                      "protection_alerts.json"))
 
 
-def _load_unlocked(path: str) -> dict[str, set[str]]:
+def _load_unlocked(path: str) -> dict:
     try:
         with open(path, encoding="utf-8") as fp:
             raw = json.load(fp)
@@ -49,14 +46,29 @@ def _load_unlocked(path: str) -> dict[str, set[str]]:
         raw = {}
     if not isinstance(raw, dict):
         raw = {}
+    counts: dict[str, dict] = {}
+    raw_counts = raw.get("sellable_gap_counts", {})
+    if isinstance(raw_counts, dict):
+        for symbol, row in raw_counts.items():
+            if not isinstance(row, dict):
+                continue
+            clean = str(symbol).upper()
+            signature = str(row.get("signature") or "")
+            try:
+                count = int(row.get("count") or 0)
+            except (TypeError, ValueError):
+                continue
+            if clean and signature and count > 0:
+                counts[clean] = {"signature": signature, "count": count}
     return {
         "blocked": {str(x).upper() for x in raw.get("blocked", []) if str(x)},
         "sellable_gap": {
             str(x).upper() for x in raw.get("sellable_gap", []) if str(x)},
+        "sellable_gap_counts": counts,
     }
 
 
-def _read_latches() -> dict[str, set[str]]:
+def _read_latches() -> dict:
     path = _latch_path()
     try:
         with open(path + ".lock", "a+", encoding="utf-8") as lock:
@@ -64,7 +76,32 @@ def _read_latches() -> dict[str, set[str]]:
             fcntl.flock(lock.fileno(), fcntl.LOCK_EX)
             return _load_unlocked(path)
     except OSError:
-        return {"blocked": set(), "sellable_gap": set()}
+        return {"blocked": set(), "sellable_gap": set(),
+                "sellable_gap_counts": {}}
+
+
+def _write_unlocked(path: str, state: dict) -> None:
+    """잠금 보유자가 래치와 연속 관찰 카운터를 한 파일에 원자 저장한다."""
+    parent = os.path.dirname(path) or "."
+    payload = {
+        "blocked": sorted(state.get("blocked", set())),
+        "sellable_gap": sorted(state.get("sellable_gap", set())),
+        "sellable_gap_counts": state.get("sellable_gap_counts", {}),
+    }
+    tmp = f"{path}.tmp.{os.getpid()}"
+    fd = os.open(tmp, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+    with os.fdopen(fd, "w", encoding="utf-8") as fp:
+        json.dump(payload, fp, ensure_ascii=False,
+                  separators=(",", ":"), sort_keys=True)
+        fp.flush()
+        os.fsync(fp.fileno())
+    os.replace(tmp, path)
+    os.chmod(path, 0o600)
+    dfd = os.open(parent, os.O_RDONLY)
+    try:
+        os.fsync(dfd)
+    finally:
+        os.close(dfd)
 
 
 def _update_latch(kind: str, *, add: set[str], remove: set[str]) -> bool:
@@ -78,21 +115,7 @@ def _update_latch(kind: str, *, add: set[str], remove: set[str]) -> bool:
             fcntl.flock(lock.fileno(), fcntl.LOCK_EX)
             state = _load_unlocked(path)
             state[kind] = (state.get(kind, set()) | set(add)) - set(remove)
-            payload = {name: sorted(values) for name, values in state.items()}
-            tmp = f"{path}.tmp.{os.getpid()}"
-            fd = os.open(tmp, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
-            with os.fdopen(fd, "w", encoding="utf-8") as fp:
-                json.dump(payload, fp, ensure_ascii=False,
-                          separators=(",", ":"), sort_keys=True)
-                fp.flush()
-                os.fsync(fp.fileno())
-            os.replace(tmp, path)
-            os.chmod(path, 0o600)
-            dfd = os.open(parent, os.O_RDONLY)
-            try:
-                os.fsync(dfd)
-            finally:
-                os.close(dfd)
+            _write_unlocked(path, state)
         return True
     except OSError:
         try:
@@ -100,6 +123,50 @@ def _update_latch(kind: str, *, add: set[str], remove: set[str]) -> bool:
         except OSError:
             pass
         return False
+
+
+def _gap_confirmations() -> int:
+    try:
+        value = int(os.environ.get("SELLABLE_GAP_CONFIRMATIONS", "2") or 2)
+    except (TypeError, ValueError):
+        value = 2
+    return max(1, min(10, value))
+
+
+def _advance_gap_counts(observed: dict[str, str], *,
+                        scope_markets: set[str]) -> dict[str, int] | None:
+    """같은 갭의 연속 관찰 횟수를 영속한다. 저장 실패면 판정 전체를 보류한다.
+
+    닫힌 시장은 이번 감사 범위가 아니므로 기존 카운터를 유지한다. 열린 시장에서
+    갭이 사라지거나 서명이 바뀌면 각각 삭제/1회부터 다시 시작한다.
+    """
+    path = _latch_path()
+    parent = os.path.dirname(path) or "."
+    try:
+        os.makedirs(parent, mode=0o700, exist_ok=True)
+        with open(path + ".lock", "a+", encoding="utf-8") as lock:
+            os.chmod(path + ".lock", 0o600)
+            fcntl.flock(lock.fileno(), fcntl.LOCK_EX)
+            state = _load_unlocked(path)
+            previous = state.get("sellable_gap_counts", {})
+            current = {
+                symbol: dict(row) for symbol, row in previous.items()
+                if _market(symbol) not in scope_markets
+            }
+            for symbol, signature in observed.items():
+                old = previous.get(symbol, {})
+                count = (int(old.get("count") or 0) + 1
+                         if old.get("signature") == signature else 1)
+                current[symbol] = {"signature": signature, "count": count}
+            state["sellable_gap_counts"] = current
+            _write_unlocked(path, state)
+            return {symbol: int(row["count"]) for symbol, row in current.items()}
+    except (OSError, TypeError, ValueError):
+        try:
+            os.unlink(f"{path}.tmp.{os.getpid()}")
+        except OSError:
+            pass
+        return None
 
 
 def _market(symbol: str) -> str:
@@ -253,7 +320,8 @@ def audit_sellable_gaps(held: dict, *, scope_markets: set[str],
     if any(not isinstance(proof.get(key), dict)
            for key in ("total", "sellable", "open_sell")):
         return False
-    current: dict[str, str] = {}
+    observed: dict[str, str] = {}
+    signatures: dict[str, str] = {}
     try:
         for symbol, row in (held or {}).items():
             symbol = str(symbol).upper()
@@ -267,11 +335,21 @@ def audit_sellable_gaps(held: dict, *, scope_markets: set[str],
             unexplained = (total - available) - explained
             if total > 0 and unexplained > 0:
                 ratio = 100.0 * unexplained / total
-                current[symbol] = (
+                observed[symbol] = (
                     f"🚨 {symbol} 설명되지 않는 매도가능 부족 {ratio:.1f}% — "
                     "브로커 예약/체결 상태 수동 확인")
+                signatures[symbol] = f"{total}:{available}:{explained}"
     except (AttributeError, TypeError, ValueError):
         return False
+    counts = _advance_gap_counts(signatures, scope_markets=scope_markets)
+    if counts is None:
+        return False                              # 상태 저장 실패 != 확인 완료
+    previous = _read_latches().get("sellable_gap", set())
+    threshold = _gap_confirmations()
+    current = {
+        symbol: message for symbol, message in observed.items()
+        if counts.get(symbol, 0) >= threshold or symbol in previous
+    }
     return _notify_transitions(
         "sellable_gap", current, scope_markets=scope_markets,
         recovery_label="매도가능 부족")
@@ -279,13 +357,10 @@ def audit_sellable_gaps(held: dict, *, scope_markets: set[str],
 
 def check(held: dict, *, scope_markets: set[str],
           now_ts: float | None = None) -> bool:
-    """파수꾼 사이클 배선. F3은 매번, API가 필요한 F4는 기본 10분마다."""
-    global _last_gap_audit_at
+    """파수꾼 사이클 배선. 원장만 읽는 F3은 매번 수행한다.
+
+    KIS 6회 조회가 필요한 F4는 ops_status 주기 루프로 분리했다.
+    """
     stamp = time.time() if now_ts is None else float(now_ts)
-    sent = audit_blocked_protection(
+    return audit_blocked_protection(
         held, scope_markets=scope_markets, now_ts=stamp)
-    if stamp - _last_gap_audit_at >= _gap_interval_s():
-        _last_gap_audit_at = stamp              # 실패도 간격 적용(API 폭주 방지)
-        sent = audit_sellable_gaps(
-            held, scope_markets=scope_markets) or sent
-    return sent
