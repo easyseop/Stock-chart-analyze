@@ -2216,3 +2216,44 @@ key/filled를 제거했으며 빈 reconcile meta key를 거부한다.
 통과했다. 신규 방어 5종을 제거한 mutation은 모두 해당 테스트 rc=1로 KILLED됐다.
 부분 재검토 문서는 `docs/CLAUDE_REVIEW_ACK_UNIT_MISMATCH_V2.md`다. 기본 브랜치
 병합·Oracle 배포·운영 CLI apply는 아직 하지 않았다.
+
+### 43. 2026-08-22 단일 0체결 ACK 운영자 복구와 보호 공백 관측
+
+최신 기본 브랜치 `9dd278e5`에서 clean worktree
+`/private/tmp/stock-ack-zero-fill`, 브랜치
+`codex/ack-zero-fill-stale-before`를 만들었다. 사용자 checkout과 앞선 ACK 검토
+브랜치는 건드리지 않았다. 구현 커밋은 `61dce915`, 총보유 불신 회귀 보강은
+`d5fd1b88`이다.
+
+F1/F2는 `scripts/kis_ack_resolve.py`에 운영자 전용
+`operator-zero-fill`을 추가했다. 자동 경로와 동일한
+`kis_reconcile._closed_zero_fill_row`를 직접 재사용하며, SELL submitted/ack,
+기체결 0, nccs exact ODNO 완전 부재, ccnl 단일 0체결, 10분 유예, 동일심볼
+in-flight 1건, armed/non-baseline, fresh 총보유 성공, 비어 있지 않은 operator
+ack를 모두 요구한다. stale `hldg_before`는 비교하지 않고 intent/result 감사에
+원값·fresh 현재값·zero proof를 남긴다. 회계 호출 없이 주문만 rejected terminal로
+닫고 그 뒤에만 동결을 해제한다. 기존 before=None/잔고불변/자동 3경로는 수정하지
+않았다.
+
+F3/F4는 신규 읽기 전용 `bot/protection_observability.py`로 분리했다. 보유 종목이
+30분+ 열린 SELL/CANCEL 때문에 손절 판단에서 제외되면 P0 1회와 회복 1회를 보내고,
+총보유-매도가능 차이가 브로커 열린 SELL 잔량보다 큰 경우에도 종목과 설명되지
+않는 부족 비율만 P0로 보낸다. 래치는 전송 성공 뒤 원자/fsync 파일에 저장해
+재시작 후에도 유지한다. US 3거래소/KR 잔고·nccs 중 하나라도 불신이면 부분 합계를
+버리고 경보/회복 판정을 모두 보류한다. 기존 safe_qty clamp, SELL/CANCEL skip,
+주문·kill·동결 경로는 바꾸지 않았다. 공개 ntfy는 category-only다.
+
+INGR `before=6/current=11/zero 1행/nccs 0/601s` 재현은 운영자 경로만
+rejected+unfreeze, accounting 0이었고 자동 direct/balance/absence는 모두 0건이다.
+양수행, zero 2행, nccs 생존, 599초, BUY, partial, cancel_pending, 다중주문,
+baseline, 미armed, 총보유 불신/조회실패는 모두 거부한다. F4는 11/1/open0 P0,
+11/6/open5 침묵, 11/1/open5 P0와 부분체결 잔여 계산을 검증했다.
+
+검증은 Python 전체 74/74 모듈, Node 19/19, compileall, app.js 문법, diff check가
+통과했다. 안전 도구가 고의 게이트 제거 mutation을 실제 브랜치와 detached 복제본
+모두에서 추가 승인 필요로 차단해 우회하지 않았다. 독립 반례 행렬·호출 spy는
+모두 통과했으며, mutation이 Claude 승인 조건이면 사용자의 별도 허용 뒤 복제본에서
+실행해야 한다. 상세 검토 요청은
+`docs/CLAUDE_REVIEW_ACK_ZERO_FILL_STALE_BEFORE.md`다.
+
+기본 브랜치 병합·Oracle 배포·운영 CLI apply·kill/env 변경은 하지 않았다.
