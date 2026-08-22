@@ -29,6 +29,7 @@ _US_EXCGS = ("NASD", "NYSE", "AMEX")
 ACK_STUCK_ALERT_S = int(
     os.environ.get("ACK_STUCK_ALERT_S", "1800") or 1800)
 _stuck_ack_alerted: set[str] = set()
+_last_sellable_gap_audit_at = 0.0
 
 
 def _kis_budget_s() -> float:
@@ -154,6 +155,50 @@ def maybe_alert_stuck_acks(now: float | None = None) -> bool:
         _update_stuck_latch(add=delivered, remove=recovered)
         return sent
     except Exception:
+        return False
+
+
+def maybe_audit_sellable_gaps(now: float | None = None) -> bool:
+    """F4 매도가능 갭 감사를 파수꾼과 분리된 주기 진단 프로세스에서 수행한다.
+
+    텔레그램 서비스가 매 루프 호출하되 이 함수가 자체적으로 기본 10분 간격을
+    적용한다. KIS 지연이 길어져도 파수꾼 heartbeat·손절 판단에는 영향을 주지
+    않는다. telegram은 systemd Restart=always이고 기존 health beacon의 기본 감시
+    유닛이라, 프로세스 정지는 자동 재시작과 down 경보 양쪽으로 드러난다.
+    """
+    global _last_sellable_gap_audit_at
+    try:
+        from bot import kis_positions, protection_observability, settings
+        stamp = time.time() if now is None else float(now)
+        if stamp - _last_sellable_gap_audit_at \
+                < protection_observability._gap_interval_s():
+            return False
+        scope_markets: set[str] = set()
+        if settings.market_open("KRW"):
+            scope_markets.add("KR")
+        if settings.market_open("USD"):
+            scope_markets.add("US")
+        if not scope_markets:
+            return False
+        _last_sellable_gap_audit_at = stamp       # 실패도 간격 적용(API 폭주 방지)
+        held = {}
+        for symbol, row in kis_positions.load().items():
+            if not isinstance(row, dict):
+                continue
+            ccy = str(row.get("ccy") or "").upper()
+            if ccy not in ("KRW", "USD"):
+                return False                     # 시장 불명은 다른 시장으로 추측 금지
+            market = "KR" if ccy == "KRW" else "US"
+            try:
+                qty = int(row.get("qty") or 0)
+            except (TypeError, ValueError):
+                return False                     # 로컬 보호원장 불신이면 판정 보류
+            if qty > 0 and market in scope_markets:
+                held[str(symbol).upper()] = {"q": qty}
+        return protection_observability.audit_sellable_gaps(
+            held, scope_markets=scope_markets)
+    except Exception as exc:
+        print(f"ops-status: F4 감사 보류 — {type(exc).__name__}", flush=True)
         return False
 
 

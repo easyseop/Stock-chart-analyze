@@ -601,7 +601,8 @@ def record_reconcile_meta(key: str, *, reason: str, meta: dict) -> None:
         "nccs_count", "ccnl_count", "odno_absent", "hldg_before", "hldg_now",
         "side", "intended", "submit_msg_cd", "submit_msg1",
         "last_msg_cd", "last_msg1", "last_status", "last_source",
-        "before_unknown",
+        "before_unknown", "zero_fill_proof", "hldg_before_recorded",
+        "hldg_now_observed",
     }
     def safe_value(value):
         if not isinstance(value, str):
@@ -626,7 +627,8 @@ def record_operator_action(key: str, *, action: str, ack: str,
     if not str(ack or "").strip():
         raise PermissionError("operator ack required")
     allowed = {"symbol", "side", "market", "kind", "filled", "state",
-               "before_unknown"}
+               "before_unknown", "zero_fill_proof", "hldg_before_recorded",
+               "hldg_now_observed"}
     clean = {str(k): (sanitize_broker_text(v) if isinstance(v, str) else v)
              for k, v in (evidence or {}).items() if str(k) in allowed}
     _append({"ev": "operator_action", "key": str(key),

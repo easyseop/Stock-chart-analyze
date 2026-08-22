@@ -2216,3 +2216,75 @@ key/filled를 제거했으며 빈 reconcile meta key를 거부한다.
 통과했다. 신규 방어 5종을 제거한 mutation은 모두 해당 테스트 rc=1로 KILLED됐다.
 부분 재검토 문서는 `docs/CLAUDE_REVIEW_ACK_UNIT_MISMATCH_V2.md`다. 기본 브랜치
 병합·Oracle 배포·운영 CLI apply는 아직 하지 않았다.
+
+### 43. 2026-08-22 단일 0체결 ACK 운영자 복구와 보호 공백 관측
+
+최신 기본 브랜치 `9dd278e5`에서 clean worktree
+`/private/tmp/stock-ack-zero-fill`, 브랜치
+`codex/ack-zero-fill-stale-before`를 만들었다. 사용자 checkout과 앞선 ACK 검토
+브랜치는 건드리지 않았다. 구현 커밋은 `61dce915`, 총보유 불신 회귀 보강은
+`d5fd1b88`이다.
+
+F1/F2는 `scripts/kis_ack_resolve.py`에 운영자 전용
+`operator-zero-fill`을 추가했다. 자동 경로와 동일한
+`kis_reconcile._closed_zero_fill_row`를 직접 재사용하며, SELL submitted/ack,
+기체결 0, nccs exact ODNO 완전 부재, ccnl 단일 0체결, 10분 유예, 동일심볼
+in-flight 1건, armed/non-baseline, fresh 총보유 성공, 비어 있지 않은 operator
+ack를 모두 요구한다. stale `hldg_before`는 비교하지 않고 intent/result 감사에
+원값·fresh 현재값·zero proof를 남긴다. 회계 호출 없이 주문만 rejected terminal로
+닫고 그 뒤에만 동결을 해제한다. 기존 before=None/잔고불변/자동 3경로는 수정하지
+않았다.
+
+F3/F4는 신규 읽기 전용 `bot/protection_observability.py`로 분리했다. 보유 종목이
+30분+ 열린 SELL/CANCEL 때문에 손절 판단에서 제외되면 P0 1회와 회복 1회를 보내고,
+총보유-매도가능 차이가 브로커 열린 SELL 잔량보다 큰 경우에도 종목과 설명되지
+않는 부족 비율만 P0로 보낸다. 래치는 전송 성공 뒤 원자/fsync 파일에 저장해
+재시작 후에도 유지한다. US 3거래소/KR 잔고·nccs 중 하나라도 불신이면 부분 합계를
+버리고 경보/회복 판정을 모두 보류한다. 기존 safe_qty clamp, SELL/CANCEL skip,
+주문·kill·동결 경로는 바꾸지 않았다. 공개 ntfy는 category-only다.
+
+INGR `before=6/current=11/zero 1행/nccs 0/601s` 재현은 운영자 경로만
+rejected+unfreeze, accounting 0이었고 자동 direct/balance/absence는 모두 0건이다.
+양수행, zero 2행, nccs 생존, 599초, BUY, partial, cancel_pending, 다중주문,
+baseline, 미armed, 총보유 불신/조회실패는 모두 거부한다. F4는 11/1/open0 P0,
+11/6/open5 침묵, 11/1/open5 P0와 부분체결 잔여 계산을 검증했다.
+
+검증은 Python 전체 74/74 모듈, Node 19/19, compileall, app.js 문법, diff check가
+통과했다. 안전 도구가 고의 게이트 제거 mutation을 실제 브랜치와 detached 복제본
+모두에서 추가 승인 필요로 차단해 우회하지 않았다. 독립 반례 행렬·호출 spy는
+모두 통과했으며, mutation이 Claude 승인 조건이면 사용자의 별도 허용 뒤 복제본에서
+실행해야 한다. 상세 검토 요청은
+`docs/CLAUDE_REVIEW_ACK_ZERO_FILL_STALE_BEFORE.md`다.
+
+기본 브랜치 병합·Oracle 배포·운영 CLI apply·kill/env 변경은 하지 않았다.
+
+### 44. 2026-08-23 F4 파수꾼 핫루프 분리와 갭 연속확인
+
+Claude 선행 판정에서 F1·F2·F3는 통과했고, F4의 KIS 6회 조회가 파수꾼
+heartbeat를 최대 450초 밀 수 있는 P1과 비차단 P3 두 건이 남았다. 기존 브랜치
+`codex/ack-zero-fill-stale-before`에서 그 세 항목만 수정했으며 코드 커밋은
+`f1461e71`이다.
+
+G1은 권장안 ①을 선택했다. `protection_observability.check()`에는 원장만 읽는
+F3만 남기고, F4는 텔레그램 읽기 전용 프로세스가 호출하는
+`ops_status.maybe_audit_sellable_gaps()`로 옮겼다. 기본 10분 간격·열린 시장에서만
+실행하며 실패도 간격을 적용한다. 파수꾼 실제 사이클 spy에서 F3 1회, F4 0회,
+F4용 KIS 잔고/nccs 호출 0회를 확인했다. ops 쪽에서는 같은 1초 내 두 호출 중
+F4가 정확히 1회였다. telegram은 systemd `Restart=always`이고 health beacon의
+기본 감시 유닛이라 프로세스 정지는 자동 재시작·down 보고로 드러난다.
+
+G2는 운영 코드를 건드리지 않고 BUY+단일 0체결행이 `hold`이며
+`zero_fill_proof=false`인 독립 테스트를 추가해 SELL 제한 mutation을 잡는다.
+
+G3는 `SELLABLE_GAP_CONFIRMATIONS` 기본 2를 추가했다. 같은
+`total:sellable:open_sell` 갭을 래치 파일에 원자/fsync로 연속 기록해 1회차는
+침묵, 2회차에만 P0를 보낸다. 갭 해소는 카운터를 리셋하고 닫힌 시장은 카운터를
+보존한다. 전송 실패는 다음 감사에서 재시도하며 저장 실패는 경보/회복 0·기존
+파일 byte 동일이다. 영구 누수 최초 경보는 기본 감사 간격만큼 약 10분 늦어진다.
+
+최종 검증은 Python 전체 74/74, Node 19/19(Node 24.15), compileall, app.js 문법,
+diff check가 모두 통과했다. 상세 부분 재검토 요청은
+`docs/CLAUDE_REVIEW_ACK_ZERO_FILL_G1_G3.md`다. F1·F2·F3, safe_qty, baseline,
+주문·kill·동결 경로는 수정하지 않았다.
+
+기본 브랜치 병합·Oracle 배포·운영 CLI apply·kill/env 변경은 하지 않았다.

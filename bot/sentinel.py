@@ -539,6 +539,7 @@ def check_once(broker, state: dict) -> None:
     # 매도하면 다른 계좌/지연 스냅샷을 실계좌 주문으로 바꾸는 치명적 경계 위반이다.
     held = feed
     is_kis_truth = str(getattr(broker, "name", "")).lower() == "kis"
+    fresh_broker_holdings = False
     if hasattr(broker, "holdings"):
         # KIS 잔고는 블로킹 I/O다. 호출 직전에만 전진 증거를 남겨 타임아웃
         # 버스트가 직전 sleep과 합쳐져 heartbeat 120s로 증폭되지 않게 한다.
@@ -547,6 +548,7 @@ def check_once(broker, state: dict) -> None:
         bh = broker.holdings()
         used_cached_holdings = False
         if bh is not None and is_kis_truth:
+            fresh_broker_holdings = True
             from bot import balance_health
             balance_health.record_success(sender=lambda text: _notify(text, critical=True))
             state["_broker_holdings"] = {
@@ -623,6 +625,23 @@ def check_once(broker, state: dict) -> None:
                     critical=True)
             state["_unprot"] = unprot
             state["_provisional"] = provisional
+    # 주문·손절 판단과 분리된 읽기 전용 관측: 오래된 열린 SELL/CANCEL 때문에
+    # 보호 판단이 스킵되거나, 열린 매도로 설명되지 않는 매도가능 부족을 P0로
+    # 알린다. fresh 브로커 잔고가 없으면 실패를 '미보유/해소'로 오독하지 않는다.
+    if is_kis_truth and fresh_broker_holdings:
+        try:
+            from bot import protection_observability
+            scope_markets = set()
+            if _market_open("KRW"):
+                scope_markets.add("KR")
+            if _market_open("USD"):
+                scope_markets.add("US")
+            if scope_markets:
+                _beat(state, phase="before_protection_audit")
+                protection_observability.check(
+                    held, scope_markets=scope_markets)
+        except Exception as exc:
+            print(f"[보호 관측 오류] {type(exc).__name__}: {exc}", flush=True)
     sent = _load_sent()
     active_chases = (_advance_us_chases(held, sent)
                      if LIVE and isinstance(broker, _KisBroker) else set())

@@ -558,6 +558,9 @@ def main() -> int:
         try:
             from bot import ops_status
             ops_status.maybe_publish()
+            # KIS 6회 조회 F4는 손절 파수꾼 heartbeat와 분리된 이 프로세스에서만
+            # 기본 10분마다 수행한다. telegram은 Restart=always+health beacon 감시다.
+            ops_status.maybe_audit_sellable_gaps()
             ops_status.maybe_remind_kill()   # L1+ 지속 리마인드(2026-08-10)
             ops_status.maybe_alert_stuck_acks()
             from bot import trade_stats
