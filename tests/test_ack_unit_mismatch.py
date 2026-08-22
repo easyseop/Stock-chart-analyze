@@ -428,6 +428,177 @@ def test_p3_armed_terminal_and_observation_contracts():
     print("[PASS] P3 armed·terminal-only unfreeze·관측 dedup·빈 key 거부")
 
 
+def _zero_fill_evidence(symbol: str, odno: str, *, current: int,
+                        duplicates: int = 1, nccs: bool = False) -> dict:
+    raw = {
+        "odno": odno, "pdno": symbol, "ft_ord_qty": "5",
+        "ft_ccld_qty": "0", "ft_ccld_unpr3": "0",
+        "sll_buy_dvsn_cd_name": "매도", "prcs_stat_name": "",
+    }
+    return {
+        "market": "US",
+        "nccs": [dict(raw, nccs_qty="5")] if nccs else [],
+        "ccnl": [dict(raw) for _ in range(duplicates)],
+        "holdings": {symbol: current},
+        "rows": [_row(symbol, odno=odno, filled=0, opened=False)],
+    }
+
+
+def test_f1_f2_operator_zero_fill_stale_before_ingr_fixture():
+    """INGR 실물: before=6·현재=11·단일 0체결행을 운영자만 종결."""
+    with tempfile.TemporaryDirectory() as tmp:
+        L, O, R, _S, _KO = _setup(tmp)
+        from scripts import kis_ack_resolve as CLI
+        importlib.reload(CLI)
+        CLI.ledger.LEDGER_PATH = L.LEDGER_PATH
+        order = _ack(L, "xe:INGR:half:2026-08-11#2", "INGR",
+                     before=6, odno="0000096001", age_s=601)
+        O.freeze("INGR", "stale sellable hldg_before")
+        evidence = _zero_fill_evidence(
+            "INGR", "0000096001", current=11)
+
+        # 완화는 운영자 경로뿐이다. 자동 direct/balance/absence는 모두 0건.
+        assert R.resolve_acks_from_rows(evidence["rows"]) == []
+        assert R.resolve_acks_by_balance(
+            {"US": {"INGR": 11}}, complete_snapshot=True) == []
+        proof = {order["key"]: {
+            "nccs_rows": evidence["nccs"], "ccnl_rows": evidence["ccnl"],
+            "holdings": evidence["holdings"]}}
+        assert R.resolve_acks_by_absence(
+            proof, orders=L.open_orders())[0] == []
+
+        with mock.patch.object(CLI, "_read_market", return_value=evidence):
+            plan = CLI.collect_plan(order["key"])
+        assert plan["kind"] == "operator-zero-fill" and plan["resolvable"]
+        assert plan["zero_fill_proof"] is True
+        assert plan["hldg_before_recorded"] == 6
+        assert plan["hldg_now_observed"] == 11
+        safe = CLI.safe_plan(plan)
+        assert "hldg_before_recorded" not in safe and "hldg_now_observed" not in safe
+
+        with mock.patch.object(CLI, "_read_market", return_value=evidence), \
+             mock.patch("bot.kis_accounting.sync_fill") as accounting:
+            result = CLI.apply_plan(order["key"], ack="INGR 0체결행 운영자 확인")
+        assert result["result"] == "rejected" and result["unfrozen"]
+        assert not accounting.called and not O.is_frozen("INGR")
+        events = [json.loads(line) for line in open(L.LEDGER_PATH, encoding="utf-8")]
+        audit = [event for event in events if event.get("ev") == "operator_action"]
+        assert len(audit) == 2
+        for event in audit:
+            ev = event["evidence"]
+            assert ev["zero_fill_proof"] is True
+            assert ev["hldg_before_recorded"] == 6
+            assert ev["hldg_now_observed"] == 11
+    print("[PASS] F1/F2 INGR stale-before: 운영자 zero-fill 종결·자동3경로0·회계0·감사")
+
+
+def test_operator_zero_fill_refuses_ambiguous_or_unsafe_evidence():
+    with tempfile.TemporaryDirectory() as tmp:
+        L, O, _R, _S, _KO = _setup(tmp)
+        from scripts import kis_ack_resolve as CLI
+        importlib.reload(CLI)
+        CLI.ledger.LEDGER_PATH = L.LEDGER_PATH
+
+        _ack(L, "sell:zero", "ZERO", before=6, odno="97001", age_s=601)
+        O.freeze("ZERO", "review")
+        good = _zero_fill_evidence("ZERO", "97001", current=11)
+
+        # 양수 체결은 기존 direct-fill 경로이고 zero-fill 완화가 아니다.
+        positive = {**good, "ccnl": [{
+            **good["ccnl"][0], "ft_ccld_qty": "5",
+            "ft_ccld_unpr3": "101"}],
+            "rows": [_row("ZERO", odno="97001", filled=5)]}
+        with mock.patch.object(CLI, "_read_market", return_value=positive):
+            assert CLI.collect_plan("sell:zero")["kind"] == "direct-fill"
+
+        # 같은 ODNO 0체결 2행은 모호, nccs에 살아 있어도 거부.
+        for bad in (
+            _zero_fill_evidence("ZERO", "97001", current=11, duplicates=2),
+            _zero_fill_evidence("ZERO", "97001", current=11, nccs=True),
+        ):
+            with mock.patch.object(CLI, "_read_market", return_value=bad):
+                assert CLI.collect_plan("sell:zero")["kind"] == "hold"
+
+        submitted = L.state_of("sell:zero")["submitted_at"]
+        with mock.patch.object(CLI, "_read_market", return_value=good):
+            assert CLI.collect_plan(
+                "sell:zero", now_ts=submitted + 599)["kind"] == "hold"
+            assert CLI.collect_plan(
+                "sell:zero", now_ts=submitted + 601)["kind"] \
+                == "operator-zero-fill"
+
+        # 조회 실패는 원장/동결 바이트 무변경.
+        ledger_before = open(L.LEDGER_PATH, "rb").read()
+        freeze_before = open(os.environ["SYMBOL_FREEZE_PATH"], "rb").read()
+        with mock.patch.object(CLI, "_read_market",
+                               side_effect=RuntimeError("untrusted")):
+            try:
+                CLI.apply_plan("sell:zero", ack="조회 확인")
+                raise AssertionError("query failure must fail")
+            except RuntimeError:
+                pass
+        assert open(L.LEDGER_PATH, "rb").read() == ledger_before
+        assert open(os.environ["SYMBOL_FREEZE_PATH"], "rb").read() == freeze_before
+
+        # BUY, partial, cancel_pending, 동일심볼 2건은 전부 거부.
+        _ack(L, "buy:zero", "BUY0", before=0, odno="97002",
+             age_s=601, side="BUY")
+        buy_evidence = _zero_fill_evidence("BUY0", "97002", current=0)
+        with mock.patch.object(CLI, "_read_market", return_value=buy_evidence):
+            assert CLI.collect_plan("buy:zero")["kind"] == "hold"
+
+        _ack(L, "sell:partial-zero", "PART0", before=6, odno="97003")
+        L.on_result("sell:partial-zero", "partial", 1, open_order=True)
+        part_evidence = _zero_fill_evidence("PART0", "97003", current=10)
+        with mock.patch.object(CLI, "_read_market", return_value=part_evidence):
+            assert CLI.collect_plan("sell:partial-zero")["kind"] == "hold"
+
+        _ack(L, "sell:cancel-zero", "CXL0", before=6, odno="97004")
+        L.on_result("sell:cancel-zero", "cancel_pending", 0, open_order=True)
+        cancel_evidence = _zero_fill_evidence("CXL0", "97004", current=11)
+        with mock.patch.object(CLI, "_read_market", return_value=cancel_evidence):
+            assert CLI.collect_plan("sell:cancel-zero")["kind"] == "hold"
+
+        _ack(L, "sell:multi-zero-1", "MZ", before=6, odno="97005")
+        _ack(L, "sell:multi-zero-2", "MZ", before=6, odno="97006")
+        with mock.patch.object(CLI, "_read_market", return_value=
+                               _zero_fill_evidence("MZ", "97005", current=11)):
+            try:
+                CLI.collect_plan("sell:multi-zero-1")
+                raise AssertionError("same-symbol multi must fail")
+            except RuntimeError:
+                pass
+    print("[PASS] operator-zero-fill: 양수/중복/nccs/599s/BUY/partial/cancel/multi/조회실패 방어")
+
+
+def test_operator_zero_fill_requires_armed_nonbaseline_ownership():
+    with tempfile.TemporaryDirectory() as tmp:
+        L, O, _R, _S, _KO = _setup(tmp)
+        from scripts import kis_ack_resolve as CLI
+        importlib.reload(CLI)
+        CLI.ledger.LEDGER_PATH = L.LEDGER_PATH
+        _ack(L, "sell:baseline-zero", "USER0", before=6, odno="98001")
+        O.capture_baseline([{"ovrs_pdno": "USER0"}])
+        evidence = _zero_fill_evidence("USER0", "98001", current=11)
+        with mock.patch.object(CLI, "_read_market", return_value=evidence):
+            try:
+                CLI.collect_plan("sell:baseline-zero")
+                raise AssertionError("baseline must fail")
+            except RuntimeError:
+                pass
+
+        os.unlink(os.environ["USER_BASELINE_PATH"])
+        _ack(L, "sell:unarmed-zero", "UNARM0", before=6, odno="98002")
+        with mock.patch.object(CLI, "_read_market", return_value=
+                               _zero_fill_evidence("UNARM0", "98002", current=11)):
+            try:
+                CLI.collect_plan("sell:unarmed-zero")
+                raise AssertionError("unarmed must fail")
+            except RuntimeError:
+                pass
+    print("[PASS] operator-zero-fill: 사용자 baseline·미무장 소유경계 거부")
+
+
 def main():
     test_c1_sell_uses_total_for_baseline_and_sellable_for_clamp()
     test_c1_balance_table_no_fill_then_full_fill()
@@ -440,6 +611,9 @@ def main():
     test_r1_before_unknown_refuses_untrusted_or_present_evidence()
     test_r2_numeric_msg_code_visible_but_account_stays_redacted()
     test_p3_armed_terminal_and_observation_contracts()
+    test_f1_f2_operator_zero_fill_stale_before_ingr_fixture()
+    test_operator_zero_fill_refuses_ambiguous_or_unsafe_evidence()
+    test_operator_zero_fill_requires_armed_nonbaseline_ownership()
     print("\nACK 단위 불일치/동결 자기잠금/거절 사유 회귀 통과.")
 
 

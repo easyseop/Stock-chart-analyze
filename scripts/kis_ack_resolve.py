@@ -120,6 +120,9 @@ def collect_plan(key: str, *, now_ts: float | None = None) -> dict:
     kind = "hold"
     filled = 0
     before_unknown = False
+    zero_fill_proof = False
+    hldg_before_recorded = None
+    hldg_now_observed = None
     reason = "직접/부재 증거 불충분"
     if len(exact) == 1 and int(exact[0].get("filled") or 0) > 0:
         kind = "terminal-direct-unfreeze" if terminal_review else "direct-fill"
@@ -130,6 +133,10 @@ def collect_plan(key: str, *, now_ts: float | None = None) -> dict:
                     == odno for row in evidence["nccs"])
         c_has = any(kis_reconcile.order_no_key(row.get("odno") or row.get("ODNO"))
                     == odno for row in evidence["ccnl"])
+        # 자동 부재 대사와 운영자 CLI가 같은 단일 0체결 판정 함수를 쓴다.
+        # 로직을 복제하면 브로커 응답 변종이 생길 때 두 경로가 다시 어긋난다.
+        zero_fill_row = kis_reconcile._closed_zero_fill_row(
+            evidence["ccnl"], odno)
         before_raw = order.get("hldg_before")
         try:
             before = int(before_raw) if before_raw is not None else None
@@ -141,7 +148,24 @@ def collect_plan(key: str, *, now_ts: float | None = None) -> dict:
         known_unchanged = before is not None and current == before
         operator_unknown_sell = (side == "SELL" and before_raw is None
                                  and current is not None)
-        if (not n_has and not c_has
+        # 단일 0체결 행은 브로커의 직접 종결 진술이다. 다만 mock이 체결 직후
+        # 잠깐 같은 행을 노출한 실측이 있어, fresh 총보유 조회와 10분 유예 및
+        # 운영자 ack를 모두 요구한다. 오염된 hldg_before는 감사용으로만 남기고
+        # 비교 근거로 쓰지 않는다. 자동 3경로의 기준은 전혀 바꾸지 않는다.
+        if (side == "SELL" and not terminal_review
+                and state in ("submitted", "ack") and filled_so_far == 0
+                and not n_has and c_has and zero_fill_row is not None
+                and len(exact) == 1 and int(exact[0].get("filled") or 0) == 0
+                and current is not None
+                and age_s >= max(kis_reconcile.REJECT_ABSENCE_MIN_S,
+                                 kis_reconcile.ACK_AGE_MIN_S)):
+            kind = "operator-zero-fill"
+            zero_fill_proof = True
+            hldg_before_recorded = before_raw
+            hldg_now_observed = current
+            reason = ("ODNO 단일 0체결행 + 미체결 완전 부재 + fresh 총보유 "
+                      "확인 + 10분 유예 + 운영자 승인")
+        elif (not n_has and not c_has
                 and state in ("submitted", "ack") and filled_so_far == 0
                 and (known_unchanged or operator_unknown_sell)
                 and age_s >= max(kis_reconcile.REJECT_ABSENCE_MIN_S,
@@ -158,6 +182,9 @@ def collect_plan(key: str, *, now_ts: float | None = None) -> dict:
         "market": evidence["market"], "state": str(order.get("state") or ""),
         "kind": kind, "resolvable": kind != "hold", "filled": filled,
         "before_unknown": before_unknown,
+        "zero_fill_proof": zero_fill_proof,
+        "hldg_before_recorded": hldg_before_recorded,
+        "hldg_now_observed": hldg_now_observed,
         "exact_odno_matches": len(exact), "open_count": counts.get(symbol, 0),
         "frozen": ownership.is_frozen(symbol), "reason": reason,
         "_rows": rows,  # apply 내부 전용; 출력 전에 제거
@@ -166,7 +193,7 @@ def collect_plan(key: str, *, now_ts: float | None = None) -> dict:
 
 def safe_plan(plan: dict) -> dict:
     """화면 출력용 — ODNO·계좌·가격·수량·원장키가 없다."""
-    hidden = {"key", "filled"}
+    hidden = {"key", "filled", "hldg_before_recorded", "hldg_now_observed"}
     return {key: value for key, value in plan.items()
             if not key.startswith("_") and key not in hidden}
 
@@ -181,7 +208,10 @@ def apply_plan(key: str, *, ack: str) -> dict:
     evidence = {"symbol": plan["symbol"], "side": plan["side"],
                 "market": plan["market"], "kind": plan["kind"],
                 "filled": int(plan.get("filled") or 0), "state": "intent",
-                "before_unknown": bool(plan.get("before_unknown"))}
+                "before_unknown": bool(plan.get("before_unknown")),
+                "zero_fill_proof": bool(plan.get("zero_fill_proof")),
+                "hldg_before_recorded": plan.get("hldg_before_recorded"),
+                "hldg_now_observed": plan.get("hldg_now_observed")}
     # 실제 상태 전이보다 먼저 운영자 승인 의도를 durable하게 남겨, 그 사이
     # 프로세스가 죽어도 누가 어떤 fresh 증거로 시도했는지 사라지지 않게 한다.
     ledger.record_operator_action(
@@ -209,6 +239,18 @@ def apply_plan(key: str, *, ack: str) -> dict:
                       "운영자 확인: 완전 부재+fresh 총보유 확인(before 미상)"
                       if plan.get("before_unknown") else
                       "운영자 확인: 완전 부재+총보유 불변")})
+    elif plan["kind"] == "operator-zero-fill":
+        # 0체결 확정이므로 회계(sync_fill)는 호출하지 않는다. 원장 주문만
+        # rejected terminal로 닫고, 운영자 감사와 동결해제를 뒤에서 수행한다.
+        result = {"key": str(key), **ledger.reconcile(
+            str(key), 0, open_order=False)}
+        ledger.record_reconcile_meta(
+            str(key), reason="operator-zero-fill-proof",
+            meta={"source": "operator-zero-fill-proof",
+                  "zero_fill_proof": True,
+                  "hldg_before_recorded": plan.get("hldg_before_recorded"),
+                  "hldg_now_observed": plan.get("hldg_now_observed"),
+                  "broker_reason": "운영자 확인: ODNO 단일 0체결행"})
     else:                                          # pragma: no cover - 위 gate 방어
         raise RuntimeError("unsupported plan kind")
 
@@ -219,7 +261,10 @@ def apply_plan(key: str, *, ack: str) -> dict:
                   "market": plan["market"], "kind": plan["kind"],
                   "filled": int(result.get("filled") or 0),
                   "state": str(result.get("state") or ""),
-                  "before_unknown": bool(plan.get("before_unknown"))})
+                  "before_unknown": bool(plan.get("before_unknown")),
+                  "zero_fill_proof": bool(plan.get("zero_fill_proof")),
+                  "hldg_before_recorded": plan.get("hldg_before_recorded"),
+                  "hldg_now_observed": plan.get("hldg_now_observed")})
     if terminal and ownership.is_frozen(plan["symbol"]):
         ownership.unfreeze(plan["symbol"], ack=ack)
     return {**safe_plan(plan), "result": str(result.get("state") or ""),
