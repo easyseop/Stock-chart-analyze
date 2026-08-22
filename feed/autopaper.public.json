@@ -1,10 +1,10 @@
 {
- "generated_at": "2026-08-22T23:45:08.229890+09:00",
- "updated": "2026-08-22",
+ "generated_at": "2026-08-23T00:00:10.374334+09:00",
+ "updated": "2026-08-23",
  "start": 100000000,
  "cash": 43797967,
- "equity": 101512020,
- "ret_pct": 1.51,
+ "equity": 101438287,
+ "ret_pct": 1.44,
  "positions": [
   {
    "code": "MRSH",
@@ -17,7 +17,7 @@
    "target": 192.2575,
    "half_done": true,
    "opened": "2026-07-06",
-   "pl_krw": 883367,
+   "pl_krw": 881945,
    "pl_pct": 10.16,
    "price_age_min": 7.2
   },
@@ -32,7 +32,7 @@
    "target": 30.5824,
    "half_done": true,
    "opened": "2026-07-09",
-   "pl_krw": 15816,
+   "pl_krw": 15790,
    "pl_pct": 20.62,
    "price_age_min": 7.2
   },
@@ -47,7 +47,7 @@
    "target": 141.2316,
    "half_done": true,
    "opened": "2026-07-11",
-   "pl_krw": 1042148,
+   "pl_krw": 1040471,
    "pl_pct": 18.56,
    "price_age_min": 7.2
   },
@@ -62,7 +62,7 @@
    "target": 58.7184,
    "half_done": true,
    "opened": "2026-07-22",
-   "pl_krw": 234076,
+   "pl_krw": 233699,
    "pl_pct": 8.02,
    "price_age_min": 7.4
   },
@@ -92,7 +92,7 @@
    "target": 57.1234,
    "half_done": true,
    "opened": "2026-07-29",
-   "pl_krw": 393308,
+   "pl_krw": 392675,
    "pl_pct": 4.56,
    "price_age_min": 7.2
   },
@@ -107,7 +107,7 @@
    "target": 95.117,
    "half_done": true,
    "opened": "2026-07-30",
-   "pl_krw": 471021,
+   "pl_krw": 470263,
    "pl_pct": 8.4,
    "price_age_min": 7.2
   },
@@ -122,9 +122,9 @@
    "target": 192.4206,
    "half_done": true,
    "opened": "2026-08-03",
-   "pl_krw": 271293,
+   "pl_krw": 270857,
    "pl_pct": 8.24,
-   "price_age_min": 7.7
+   "price_age_min": 7.6
   },
   {
    "code": "DPZ",
@@ -137,7 +137,7 @@
    "target": 402.5845,
    "half_done": false,
    "opened": "2026-08-07",
-   "pl_krw": -158504,
+   "pl_krw": -158249,
    "pl_pct": -3.24,
    "price_age_min": 7.2
   },
@@ -152,7 +152,7 @@
    "target": 103.3659,
    "half_done": false,
    "opened": "2026-08-11",
-   "pl_krw": -56055,
+   "pl_krw": -55965,
    "pl_pct": -1.86,
    "price_age_min": 7.2
   },
@@ -206,7 +206,7 @@
  "pos_cap_pct": 33.3,
  "cap_violations": [],
  "rule_violations": [],
- "fx": 1386.13,
+ "fx": 1383.9,
  "stats": {
   "all": {
    "n": 12,
@@ -931,6 +931,10 @@
   {
    "d": "2026-08-22",
    "v": 101512020
+  },
+  {
+   "d": "2026-08-23",
+   "v": 101438287
   }
  ],
  "log": [
