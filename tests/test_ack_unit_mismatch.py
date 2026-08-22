@@ -515,6 +515,8 @@ def test_operator_zero_fill_refuses_ambiguous_or_unsafe_evidence():
         for bad in (
             _zero_fill_evidence("ZERO", "97001", current=11, duplicates=2),
             _zero_fill_evidence("ZERO", "97001", current=11, nccs=True),
+            {**_zero_fill_evidence("ZERO", "97001", current=11),
+             "holdings": {"ZERO": "not-a-number"}},
         ):
             with mock.patch.object(CLI, "_read_market", return_value=bad):
                 assert CLI.collect_plan("sell:zero")["kind"] == "hold"
