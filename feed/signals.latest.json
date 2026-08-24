@@ -1,15 +1,15 @@
 {
  "version": 1,
- "generated_at": "2026-08-24T14:24:21+09:00",
+ "generated_at": "2026-08-24T14:37:38+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "a_ablation": [
   {
    "code": "207940",
    "gate": "rp",
-   "range_pos": 0.444,
-   "runup63": 0.106,
+   "range_pos": 0.4453,
+   "runup63": 0.1067,
    "stage": 3,
-   "price": 1565000.0
+   "price": 1566000.0
   },
   {
    "code": "BKR",
@@ -136,7 +136,7 @@
   "ok": 9,
   "watch": 221,
   "reasons": {
-   "밸류영역 밖(지지대 아님)": 333,
+   "밸류영역 밖(지지대 아님)": 332,
    "매물대 정보 없음": 139,
    "추락 중(범위 1%)": 136,
    "추락 중(범위 2%)": 108,
@@ -2002,34 +2002,6 @@
    }
   },
   {
-   "id": "373220-2026-08-24-watch",
-   "code": "373220",
-   "name": "LG에너지솔루션",
-   "ccy": "KRW",
-   "group": "watch",
-   "entry_kind": "now",
-   "stage": 2,
-   "price": 361000.0,
-   "entry": 361000.0,
-   "stop": 323764.6533,
-   "target": 435470.6934,
-   "shares_1pct": 2,
-   "range_pos": 0.2981,
-   "norm": -20.8,
-   "bear_share": 0.25,
-   "fresh": true,
-   "break_gap": 0.0052,
-   "earnings_d": null,
-   "tactic": {
-    "stop_pct": 10.3,
-    "pb_price": 348958.8333,
-    "pb_stop_pct": 7.2,
-    "mode": "pullback",
-    "label": "⏳ 눌림 지정가만",
-    "desc": "지금 추격 금지(손절폭 10.3%) — <b>348,959원 눌림 지정가만</b>. 눌리면 손절폭 7.2%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
-   }
-  },
-  {
    "id": "ORLA-2026-08-24-watch",
    "code": "ORLA",
    "name": "Orla Mining Ltd.",
@@ -2980,6 +2952,34 @@
    "break_gap": 0.0019,
    "earnings_d": -18,
    "tactic": null
+  },
+  {
+   "id": "373220-2026-08-24-watch",
+   "code": "373220",
+   "name": "LG에너지솔루션",
+   "ccy": "KRW",
+   "group": "watch",
+   "entry_kind": "now",
+   "stage": 1,
+   "price": 360500.0,
+   "entry": 360500.0,
+   "stop": 323264.6533,
+   "target": 434970.6934,
+   "shares_1pct": 2,
+   "range_pos": 0.296,
+   "norm": -18.9,
+   "bear_share": 0.25,
+   "fresh": true,
+   "break_gap": 0.0038,
+   "earnings_d": null,
+   "tactic": {
+    "stop_pct": 10.3,
+    "pb_price": 348958.8333,
+    "pb_stop_pct": 7.4,
+    "mode": "pullback",
+    "label": "⏳ 눌림 지정가만",
+    "desc": "지금 추격 금지(손절폭 10.3%) — <b>348,959원 눌림 지정가만</b>. 눌리면 손절폭 7.4%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
+   }
   },
   {
    "id": "WING-2026-08-24-watch",
