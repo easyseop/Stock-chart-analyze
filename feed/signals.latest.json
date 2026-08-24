@@ -1,15 +1,15 @@
 {
  "version": 1,
- "generated_at": "2026-08-24T13:52:11+09:00",
+ "generated_at": "2026-08-24T14:14:36+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "a_ablation": [
   {
    "code": "207940",
    "gate": "rp",
-   "range_pos": 0.444,
-   "runup63": 0.106,
+   "range_pos": 0.4466,
+   "runup63": 0.1074,
    "stage": 3,
-   "price": 1565000.0
+   "price": 1567000.0
   },
   {
    "code": "BKR",
@@ -134,16 +134,16 @@
  ],
  "shelf_debug": {
   "ok": 9,
-  "watch": 221,
+  "watch": 220,
   "reasons": {
-   "밸류영역 밖(지지대 아님)": 332,
+   "밸류영역 밖(지지대 아님)": 333,
    "매물대 정보 없음": 139,
    "추락 중(범위 1%)": 136,
-   "추락 중(범위 2%)": 109,
+   "추락 중(범위 2%)": 110,
    "추락 중(범위 0%)": 103,
-   "반등 미확인(터치·상단마감·거래량)": 95,
-   "추락 중(범위 4%)": 92,
-   "추락 중(범위 3%)": 92
+   "추락 중(범위 4%)": 93,
+   "추락 중(범위 3%)": 91,
+   "반등 미확인(터치·상단마감·거래량)": 90
   }
  },
  "signals": [
@@ -2065,24 +2065,24 @@
    "group": "watch",
    "entry_kind": "now",
    "stage": 2,
-   "price": 132700.0,
-   "entry": 132700.0,
-   "stop": 112807.1773,
-   "target": 172485.6455,
+   "price": 132800.0,
+   "entry": 132800.0,
+   "stop": 112907.1773,
+   "target": 172585.6455,
    "shares_1pct": 5,
-   "range_pos": 0.116,
+   "range_pos": 0.1166,
    "norm": -54.7,
    "bear_share": 0.5,
    "fresh": true,
-   "break_gap": 0.008,
+   "break_gap": 0.0087,
    "earnings_d": null,
    "tactic": {
     "stop_pct": 15.0,
     "pb_price": 113100.0,
-    "pb_stop_pct": 0.3,
+    "pb_stop_pct": 0.2,
     "mode": "pullback",
     "label": "⏳ 눌림 지정가만",
-    "desc": "지금 추격 금지(손절폭 15.0%) — <b>113,100원 눌림 지정가만</b>. 눌리면 손절폭 0.3%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
+    "desc": "지금 추격 금지(손절폭 15.0%) — <b>113,100원 눌림 지정가만</b>. 눌리면 손절폭 0.2%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
    }
   },
   {
@@ -2499,34 +2499,6 @@
    }
   },
   {
-   "id": "024110-2026-08-24-watch",
-   "code": "024110",
-   "name": "기업은행",
-   "ccy": "KRW",
-   "group": "watch",
-   "entry_kind": "now",
-   "stage": 1,
-   "price": 20100.0,
-   "entry": 20100.0,
-   "stop": 19031.2941,
-   "target": 22237.4118,
-   "shares_1pct": 93,
-   "range_pos": 0.1322,
-   "norm": 9.4,
-   "bear_share": 0.375,
-   "fresh": true,
-   "break_gap": -0.008,
-   "earnings_d": null,
-   "tactic": {
-    "stop_pct": 5.3,
-    "pb_price": 19950.0,
-    "pb_stop_pct": 4.6,
-    "mode": "full",
-    "label": "⚡ 즉시 분할",
-    "desc": "손절폭 5.3%로 타이트 — 현재가에서 1~2회 분할 매수. 기다리는 이득보다 놓치는 비용이 큼"
-   }
-  },
-  {
    "id": "SR-2026-08-24-watch",
    "code": "SR",
    "name": "Spire Inc.",
@@ -2793,6 +2765,34 @@
    }
   },
   {
+   "id": "030200-2026-08-24-watch",
+   "code": "030200",
+   "name": "KT",
+   "ccy": "KRW",
+   "group": "watch",
+   "entry_kind": "now",
+   "stage": 1,
+   "price": 52500.0,
+   "entry": 52500.0,
+   "stop": 49641.0594,
+   "target": 58217.8813,
+   "shares_1pct": 34,
+   "range_pos": 0.2066,
+   "norm": -3.8,
+   "bear_share": 0.25,
+   "fresh": true,
+   "break_gap": -0.0198,
+   "earnings_d": null,
+   "tactic": {
+    "stop_pct": 5.4,
+    "pb_price": 51391.9872,
+    "pb_stop_pct": 3.4,
+    "mode": "full",
+    "label": "⚡ 즉시 분할",
+    "desc": "손절폭 5.4%로 타이트 — 현재가에서 1~2회 분할 매수. 기다리는 이득보다 놓치는 비용이 큼"
+   }
+  },
+  {
    "id": "SWKS-2026-08-24-watch",
    "code": "SWKS",
    "name": "Skyworks Solutions, Inc.",
@@ -2849,6 +2849,34 @@
    }
   },
   {
+   "id": "024110-2026-08-24-watch",
+   "code": "024110",
+   "name": "기업은행",
+   "ccy": "KRW",
+   "group": "watch",
+   "entry_kind": "now",
+   "stage": 1,
+   "price": 20050.0,
+   "entry": 20050.0,
+   "stop": 18981.2941,
+   "target": 22187.4118,
+   "shares_1pct": 93,
+   "range_pos": 0.1276,
+   "norm": -9.4,
+   "bear_share": 0.375,
+   "fresh": true,
+   "break_gap": -0.0105,
+   "earnings_d": null,
+   "tactic": {
+    "stop_pct": 5.3,
+    "pb_price": 19950.0,
+    "pb_stop_pct": 4.9,
+    "mode": "full",
+    "label": "⚡ 즉시 분할",
+    "desc": "손절폭 5.3%로 타이트 — 현재가에서 1~2회 분할 매수. 기다리는 이득보다 놓치는 비용이 큼"
+   }
+  },
+  {
    "id": "035250-2026-08-24-watch",
    "code": "035250",
    "name": "강원랜드",
@@ -2856,24 +2884,52 @@
    "group": "watch",
    "entry_kind": "now",
    "stage": 1,
-   "price": 14400.0,
-   "entry": 14400.0,
-   "stop": 13749.9294,
-   "target": 15700.1413,
+   "price": 14430.0,
+   "entry": 14430.0,
+   "stop": 13779.9294,
+   "target": 15730.1413,
    "shares_1pct": 153,
-   "range_pos": 0.0847,
+   "range_pos": 0.0899,
    "norm": -9.4,
    "bear_share": 0.375,
    "fresh": true,
-   "break_gap": -0.0042,
+   "break_gap": -0.0022,
    "earnings_d": null,
    "tactic": {
     "stop_pct": 4.5,
     "pb_price": 14062.5,
-    "pb_stop_pct": 2.2,
+    "pb_stop_pct": 2.0,
     "mode": "full",
     "label": "⚡ 즉시 분할",
     "desc": "손절폭 4.5%로 타이트 — 현재가에서 1~2회 분할 매수. 기다리는 이득보다 놓치는 비용이 큼"
+   }
+  },
+  {
+   "id": "323410-2026-08-24-watch",
+   "code": "323410",
+   "name": "카카오뱅크",
+   "ccy": "KRW",
+   "group": "watch",
+   "entry_kind": "now",
+   "stage": 1,
+   "price": 21550.0,
+   "entry": 21550.0,
+   "stop": 19953.2139,
+   "target": 24743.5722,
+   "shares_1pct": 62,
+   "range_pos": 0.2348,
+   "norm": -9.4,
+   "bear_share": 0.375,
+   "fresh": true,
+   "break_gap": -0.0167,
+   "earnings_d": null,
+   "tactic": {
+    "stop_pct": 7.4,
+    "pb_price": 21006.25,
+    "pb_stop_pct": 5.0,
+    "mode": "half",
+    "label": "⚖ 반반 진입",
+    "desc": "손절폭 7.4% — 절반은 현재가, 절반은 눌림 21,006원 지정가(거기선 손절폭 5.0%)"
    }
   },
   {
@@ -2905,24 +2961,24 @@
    "group": "watch",
    "entry_kind": "now",
    "stage": 1,
-   "price": 358250.0,
-   "entry": 358250.0,
-   "stop": 321014.6533,
-   "target": 432720.6934,
+   "price": 359000.0,
+   "entry": 359000.0,
+   "stop": 321764.6533,
+   "target": 433470.6934,
    "shares_1pct": 2,
-   "range_pos": 0.2865,
+   "range_pos": 0.2896,
    "norm": -18.9,
    "bear_share": 0.25,
    "fresh": true,
-   "break_gap": -0.0025,
+   "break_gap": -0.0004,
    "earnings_d": null,
    "tactic": {
     "stop_pct": 10.4,
     "pb_price": 348958.8333,
-    "pb_stop_pct": 8.0,
+    "pb_stop_pct": 7.8,
     "mode": "pullback",
     "label": "⏳ 눌림 지정가만",
-    "desc": "지금 추격 금지(손절폭 10.4%) — <b>348,959원 눌림 지정가만</b>. 눌리면 손절폭 8.0%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
+    "desc": "지금 추격 금지(손절폭 10.4%) — <b>348,959원 눌림 지정가만</b>. 눌리면 손절폭 7.8%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
    }
   },
   {
