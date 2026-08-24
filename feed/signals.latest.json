@@ -1,15 +1,15 @@
 {
  "version": 1,
- "generated_at": "2026-08-24T10:04:36+09:00",
+ "generated_at": "2026-08-24T10:15:17+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "a_ablation": [
   {
    "code": "207940",
    "gate": "rp",
-   "range_pos": 0.4453,
-   "runup63": 0.1067,
+   "range_pos": 0.4361,
+   "runup63": 0.1018,
    "stage": 3,
-   "price": 1566000.0
+   "price": 1559000.0
   },
   {
    "code": "BKR",
@@ -134,16 +134,16 @@
  ],
  "shelf_debug": {
   "ok": 9,
-  "watch": 223,
+  "watch": 218,
   "reasons": {
-   "밸류영역 밖(지지대 아님)": 337,
+   "밸류영역 밖(지지대 아님)": 339,
    "매물대 정보 없음": 139,
    "추락 중(범위 1%)": 136,
    "추락 중(범위 2%)": 109,
    "추락 중(범위 0%)": 103,
    "추락 중(범위 4%)": 93,
-   "반등 미확인(터치·상단마감·거래량)": 92,
-   "추락 중(범위 3%)": 91
+   "추락 중(범위 5%)": 91,
+   "추락 중(범위 3%)": 90
   }
  },
  "signals": [
@@ -2058,6 +2058,34 @@
    }
   },
   {
+   "id": "064350-2026-08-24-watch",
+   "code": "064350",
+   "name": "현대로템",
+   "ccy": "KRW",
+   "group": "watch",
+   "entry_kind": "now",
+   "stage": 2,
+   "price": 134100.0,
+   "entry": 134100.0,
+   "stop": 114335.7487,
+   "target": 173628.5026,
+   "shares_1pct": 5,
+   "range_pos": 0.1243,
+   "norm": -54.7,
+   "bear_share": 0.5,
+   "fresh": true,
+   "break_gap": 0.0186,
+   "earnings_d": null,
+   "tactic": {
+    "stop_pct": 14.7,
+    "pb_price": null,
+    "pb_stop_pct": null,
+    "mode": "pullback",
+    "label": "⏳ 눌림 지정가만",
+    "desc": "지금 추격 금지(손절폭 14.7%) — 받칠 지지에 눌릴 때까지 대기"
+   }
+  },
+  {
    "id": "LYFT-2026-08-24-watch",
    "code": "LYFT",
    "name": "Lyft, Inc.",
@@ -2737,34 +2765,6 @@
    }
   },
   {
-   "id": "030200-2026-08-24-watch",
-   "code": "030200",
-   "name": "KT",
-   "ccy": "KRW",
-   "group": "watch",
-   "entry_kind": "now",
-   "stage": 1,
-   "price": 52500.0,
-   "entry": 52500.0,
-   "stop": 49641.0594,
-   "target": 58217.8813,
-   "shares_1pct": 34,
-   "range_pos": 0.2066,
-   "norm": -3.8,
-   "bear_share": 0.25,
-   "fresh": true,
-   "break_gap": -0.0198,
-   "earnings_d": null,
-   "tactic": {
-    "stop_pct": 5.4,
-    "pb_price": 51391.9872,
-    "pb_stop_pct": 3.4,
-    "mode": "full",
-    "label": "⚡ 즉시 분할",
-    "desc": "손절폭 5.4%로 타이트 — 현재가에서 1~2회 분할 매수. 기다리는 이득보다 놓치는 비용이 큼"
-   }
-  },
-  {
    "id": "SWKS-2026-08-24-watch",
    "code": "SWKS",
    "name": "Skyworks Solutions, Inc.",
@@ -2828,16 +2828,16 @@
    "group": "watch",
    "entry_kind": "now",
    "stage": 1,
-   "price": 19960.0,
-   "entry": 19960.0,
-   "stop": 18908.4369,
-   "target": 22063.1261,
+   "price": 19950.0,
+   "entry": 19950.0,
+   "stop": 18898.4369,
+   "target": 22053.1261,
    "shares_1pct": 95,
-   "range_pos": 0.1194,
+   "range_pos": 0.1185,
    "norm": -9.4,
    "bear_share": 0.375,
    "fresh": true,
-   "break_gap": -0.0149,
+   "break_gap": -0.0154,
    "earnings_d": null,
    "tactic": {
     "stop_pct": 5.3,
@@ -2856,21 +2856,21 @@
    "group": "watch",
    "entry_kind": "now",
    "stage": 1,
-   "price": 14440.0,
-   "entry": 14440.0,
-   "stop": 13789.9294,
-   "target": 15740.1413,
+   "price": 14430.0,
+   "entry": 14430.0,
+   "stop": 13779.9294,
+   "target": 15730.1413,
    "shares_1pct": 153,
-   "range_pos": 0.0917,
+   "range_pos": 0.0899,
    "norm": -9.4,
    "bear_share": 0.375,
    "fresh": true,
-   "break_gap": -0.0015,
+   "break_gap": -0.0022,
    "earnings_d": null,
    "tactic": {
     "stop_pct": 4.5,
     "pb_price": 14062.5,
-    "pb_stop_pct": 1.9,
+    "pb_stop_pct": 2.0,
     "mode": "full",
     "label": "⚡ 즉시 분할",
     "desc": "손절폭 4.5%로 타이트 — 현재가에서 1~2회 분할 매수. 기다리는 이득보다 놓치는 비용이 큼"
@@ -2896,34 +2896,6 @@
    "break_gap": 0.0019,
    "earnings_d": -18,
    "tactic": null
-  },
-  {
-   "id": "373220-2026-08-24-watch",
-   "code": "373220",
-   "name": "LG에너지솔루션",
-   "ccy": "KRW",
-   "group": "watch",
-   "entry_kind": "now",
-   "stage": 1,
-   "price": 358000.0,
-   "entry": 358000.0,
-   "stop": 320764.6533,
-   "target": 432470.6934,
-   "shares_1pct": 2,
-   "range_pos": 0.2854,
-   "norm": -18.9,
-   "bear_share": 0.25,
-   "fresh": true,
-   "break_gap": -0.0032,
-   "earnings_d": null,
-   "tactic": {
-    "stop_pct": 10.4,
-    "pb_price": 348958.8333,
-    "pb_stop_pct": 8.1,
-    "mode": "pullback",
-    "label": "⏳ 눌림 지정가만",
-    "desc": "지금 추격 금지(손절폭 10.4%) — <b>348,959원 눌림 지정가만</b>. 눌리면 손절폭 8.1%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
-   }
   },
   {
    "id": "WING-2026-08-24-watch",
@@ -2989,16 +2961,16 @@
    "group": "watch",
    "entry_kind": "now",
    "stage": 1,
-   "price": 266500.0,
-   "entry": 266500.0,
-   "stop": 237071.2095,
-   "target": 325357.581,
+   "price": 268000.0,
+   "entry": 268000.0,
+   "stop": 238499.7809,
+   "target": 327000.4382,
    "shares_1pct": 3,
-   "range_pos": 0.1991,
+   "range_pos": 0.2061,
    "norm": -28.3,
    "bear_share": 0.375,
    "fresh": true,
-   "break_gap": -0.0164,
+   "break_gap": -0.0108,
    "earnings_d": null,
    "tactic": {
     "stop_pct": 11.0,
@@ -3007,6 +2979,34 @@
     "mode": "pullback",
     "label": "⏳ 눌림 지정가만",
     "desc": "지금 추격 금지(손절폭 11.0%) — 받칠 지지에 눌릴 때까지 대기"
+   }
+  },
+  {
+   "id": "373220-2026-08-24-watch",
+   "code": "373220",
+   "name": "LG에너지솔루션",
+   "ccy": "KRW",
+   "group": "watch",
+   "entry_kind": "now",
+   "stage": 1,
+   "price": 356500.0,
+   "entry": 356500.0,
+   "stop": 319264.6533,
+   "target": 430970.6934,
+   "shares_1pct": 2,
+   "range_pos": 0.2791,
+   "norm": -28.3,
+   "bear_share": 0.375,
+   "fresh": true,
+   "break_gap": -0.0074,
+   "earnings_d": null,
+   "tactic": {
+    "stop_pct": 10.4,
+    "pb_price": 348958.8333,
+    "pb_stop_pct": 8.5,
+    "mode": "pullback",
+    "label": "⏳ 눌림 지정가만",
+    "desc": "지금 추격 금지(손절폭 10.4%) — <b>348,959원 눌림 지정가만</b>. 눌리면 손절폭 8.5%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
    }
   },
   {
@@ -3035,34 +3035,6 @@
     "mode": "pullback",
     "label": "⏳ 눌림 지정가만",
     "desc": "지금 추격 금지(손절폭 13.3%) — <b>$28.80 눌림 지정가만</b>. 눌리면 손절폭 9.7%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
-   }
-  },
-  {
-   "id": "064350-2026-08-24-watch",
-   "code": "064350",
-   "name": "현대로템",
-   "ccy": "KRW",
-   "group": "watch",
-   "entry_kind": "now",
-   "stage": 1,
-   "price": 132300.0,
-   "entry": 132300.0,
-   "stop": 112735.7487,
-   "target": 171428.5026,
-   "shares_1pct": 5,
-   "range_pos": 0.1137,
-   "norm": -52.8,
-   "bear_share": 0.5,
-   "fresh": true,
-   "break_gap": 0.0049,
-   "earnings_d": null,
-   "tactic": {
-    "stop_pct": 14.8,
-    "pb_price": 113100.0,
-    "pb_stop_pct": 0.3,
-    "mode": "pullback",
-    "label": "⏳ 눌림 지정가만",
-    "desc": "지금 추격 금지(손절폭 14.8%) — <b>113,100원 눌림 지정가만</b>. 눌리면 손절폭 0.3%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
    }
   },
   {
