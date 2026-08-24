@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated_at": "2026-08-24T13:42:26+09:00",
+ "generated_at": "2026-08-24T13:52:11+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "a_ablation": [
   {
@@ -134,16 +134,16 @@
  ],
  "shelf_debug": {
   "ok": 9,
-  "watch": 220,
+  "watch": 221,
   "reasons": {
-   "밸류영역 밖(지지대 아님)": 331,
+   "밸류영역 밖(지지대 아님)": 332,
    "매물대 정보 없음": 139,
    "추락 중(범위 1%)": 136,
-   "추락 중(범위 2%)": 110,
+   "추락 중(범위 2%)": 109,
    "추락 중(범위 0%)": 103,
-   "반등 미확인(터치·상단마감·거래량)": 94,
+   "반등 미확인(터치·상단마감·거래량)": 95,
    "추락 중(범위 4%)": 92,
-   "추락 중(범위 3%)": 91
+   "추락 중(범위 3%)": 92
   }
  },
  "signals": [
@@ -2793,34 +2793,6 @@
    }
   },
   {
-   "id": "030200-2026-08-24-watch",
-   "code": "030200",
-   "name": "KT",
-   "ccy": "KRW",
-   "group": "watch",
-   "entry_kind": "now",
-   "stage": 1,
-   "price": 52600.0,
-   "entry": 52600.0,
-   "stop": 49741.0594,
-   "target": 58317.8813,
-   "shares_1pct": 34,
-   "range_pos": 0.2113,
-   "norm": -3.8,
-   "bear_share": 0.25,
-   "fresh": true,
-   "break_gap": -0.018,
-   "earnings_d": null,
-   "tactic": {
-    "stop_pct": 5.4,
-    "pb_price": 51391.9872,
-    "pb_stop_pct": 3.2,
-    "mode": "full",
-    "label": "⚡ 즉시 분할",
-    "desc": "손절폭 5.4%로 타이트 — 현재가에서 1~2회 분할 매수. 기다리는 이득보다 놓치는 비용이 큼"
-   }
-  },
-  {
    "id": "SWKS-2026-08-24-watch",
    "code": "SWKS",
    "name": "Skyworks Solutions, Inc.",
@@ -2884,52 +2856,24 @@
    "group": "watch",
    "entry_kind": "now",
    "stage": 1,
-   "price": 14430.0,
-   "entry": 14430.0,
-   "stop": 13779.9294,
-   "target": 15730.1413,
+   "price": 14400.0,
+   "entry": 14400.0,
+   "stop": 13749.9294,
+   "target": 15700.1413,
    "shares_1pct": 153,
-   "range_pos": 0.0899,
+   "range_pos": 0.0847,
    "norm": -9.4,
    "bear_share": 0.375,
    "fresh": true,
-   "break_gap": -0.0022,
+   "break_gap": -0.0042,
    "earnings_d": null,
    "tactic": {
     "stop_pct": 4.5,
     "pb_price": 14062.5,
-    "pb_stop_pct": 2.0,
+    "pb_stop_pct": 2.2,
     "mode": "full",
     "label": "⚡ 즉시 분할",
     "desc": "손절폭 4.5%로 타이트 — 현재가에서 1~2회 분할 매수. 기다리는 이득보다 놓치는 비용이 큼"
-   }
-  },
-  {
-   "id": "323410-2026-08-24-watch",
-   "code": "323410",
-   "name": "카카오뱅크",
-   "ccy": "KRW",
-   "group": "watch",
-   "entry_kind": "now",
-   "stage": 1,
-   "price": 21500.0,
-   "entry": 21500.0,
-   "stop": 19903.2139,
-   "target": 24693.5722,
-   "shares_1pct": 62,
-   "range_pos": 0.23,
-   "norm": -9.4,
-   "bear_share": 0.375,
-   "fresh": true,
-   "break_gap": -0.019,
-   "earnings_d": null,
-   "tactic": {
-    "stop_pct": 7.4,
-    "pb_price": 21006.25,
-    "pb_stop_pct": 5.3,
-    "mode": "half",
-    "label": "⚖ 반반 진입",
-    "desc": "손절폭 7.4% — 절반은 현재가, 절반은 눌림 21,006원 지정가(거기선 손절폭 5.3%)"
    }
   },
   {
@@ -2961,24 +2905,24 @@
    "group": "watch",
    "entry_kind": "now",
    "stage": 1,
-   "price": 358000.0,
-   "entry": 358000.0,
-   "stop": 320764.6533,
-   "target": 432470.6934,
+   "price": 358250.0,
+   "entry": 358250.0,
+   "stop": 321014.6533,
+   "target": 432720.6934,
    "shares_1pct": 2,
-   "range_pos": 0.2854,
+   "range_pos": 0.2865,
    "norm": -18.9,
    "bear_share": 0.25,
    "fresh": true,
-   "break_gap": -0.0032,
+   "break_gap": -0.0025,
    "earnings_d": null,
    "tactic": {
     "stop_pct": 10.4,
     "pb_price": 348958.8333,
-    "pb_stop_pct": 8.1,
+    "pb_stop_pct": 8.0,
     "mode": "pullback",
     "label": "⏳ 눌림 지정가만",
-    "desc": "지금 추격 금지(손절폭 10.4%) — <b>348,959원 눌림 지정가만</b>. 눌리면 손절폭 8.1%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
+    "desc": "지금 추격 금지(손절폭 10.4%) — <b>348,959원 눌림 지정가만</b>. 눌리면 손절폭 8.0%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
    }
   },
   {
@@ -3045,24 +2989,24 @@
    "group": "watch",
    "entry_kind": "now",
    "stage": 1,
-   "price": 267500.0,
-   "entry": 267500.0,
-   "stop": 237571.2095,
-   "target": 327357.581,
+   "price": 268500.0,
+   "entry": 268500.0,
+   "stop": 238571.2095,
+   "target": 328357.581,
    "shares_1pct": 3,
-   "range_pos": 0.2037,
+   "range_pos": 0.2084,
    "norm": -28.3,
    "bear_share": 0.375,
    "fresh": true,
-   "break_gap": -0.0127,
+   "break_gap": -0.009,
    "earnings_d": null,
    "tactic": {
-    "stop_pct": 11.2,
+    "stop_pct": 11.1,
     "pb_price": null,
     "pb_stop_pct": null,
     "mode": "pullback",
     "label": "⏳ 눌림 지정가만",
-    "desc": "지금 추격 금지(손절폭 11.2%) — 받칠 지지에 눌릴 때까지 대기"
+    "desc": "지금 추격 금지(손절폭 11.1%) — 받칠 지지에 눌릴 때까지 대기"
    }
   },
   {
