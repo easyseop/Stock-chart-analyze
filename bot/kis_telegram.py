@@ -423,7 +423,7 @@ def _diag_text() -> str:
     try:
         from bot import ledger
         fold = ledger._fold()
-        open_n = sum(1 for c in fold.values() if c.get("open_order"))
+        open_n = sum(1 for c in fold.values() if ledger.fold_is_open(c))
         unk = sum(1 for c in fold.values() if c.get("state") == "unknown")
         L.append(f"원장: 열린 주문 {open_n} · UNKNOWN {unk} "
                  + ("✅" if unk == 0 else "🚨 UNKNOWN 수동 확인 필요"))

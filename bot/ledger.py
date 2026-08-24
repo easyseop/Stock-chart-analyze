@@ -788,11 +788,22 @@ def unaccounted_fills(side: str | None = None) -> int:
     return n
 
 
+def fold_is_open(cur: dict) -> bool:
+    """접힌 주문 1건이 아직 '열린 주문'인지 — 열림 판정의 단일 출처.
+
+    `/진단`의 열린 주문 카운터가 `_fold()` 행에 존재하지도 않는 `open_order`
+    키를 보고 있어서 **항상 0**을 출력했다(실측 2026-08-24: INGR SELL이 3일째
+    열려 있는데 "원장: 열린 주문 0 ✅"). 열림 판정을 여기 하나로 모아 조회부와
+    표시부가 갈라지지 못하게 한다.
+    """
+    state = cur.get("state")
+    return (state not in _TERMINAL
+            and not (state == "partial" and cur.get("open") is False))
+
+
 def open_orders(symbol: str | None = None, *, side: str | None = None) -> list:
     """종료되지 않은(잔여 가능성 있는) 주문 목록 — 대사·경합 판정 대상."""
-    return [o for o in orders_for(symbol, side=side)
-            if o.get("state") not in _TERMINAL
-            and not (o.get("state") == "partial" and o.get("open") is False)]
+    return [o for o in orders_for(symbol, side=side) if fold_is_open(o)]
 
 
 # ── KIS 확장: 브로커 핸들(ODNO)·합성 대사키·신뢰도·동일종목 규칙 ─────────

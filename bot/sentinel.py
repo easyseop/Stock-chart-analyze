@@ -111,6 +111,7 @@ def _fetch_positions() -> tuple[list[dict], float | None]:
 class _PaperBroker:
     """dry-run 브로커 — 판단을 실행하지 않고 보고만 한다(기본값)."""
     name = "paper(dry-run)"
+    on_beat = None            # 파수꾼이 사이클마다 주입하는 전진-증거 콜백
 
     def quote(self, code: str, ccy: str) -> float | None:
         # 1순위: 토스 시세(키 있을 때만·실패 시 조용히 폴백) — 손절 감시용 최신가.
@@ -269,7 +270,17 @@ class _KisBroker(_PaperBroker):
         if settings.market_open("USD"):
             plan += [("US", "NASD"), ("US", "NYSE"), ("US", "AMEX")]
         by_market: dict[str, dict[str, dict]] = {}
+        # 잔고 조회는 시장별로 **순차 블로킹**이다. 미장이 열리면 NASD·NYSE·AMEX
+        #   3콜이 연달아 나가는데, 각 콜은 `_get`의 재시도 3회 × (유량대기 10s +
+        #   HTTP 15s)라 한 콜만으로도 heartbeat 60s 경계를 넘길 수 있다. 예전에는
+        #   3콜 전체를 감싸는 beat가 호출 **직전** 하나뿐이라 나이가 3콜 합계로
+        #   누적됐다(실측 2026-08-24 미장 개장: 77s p0 → 회복 알림이 반복).
+        #   콜 사이에도 전진 증거를 남긴다 — 콜 자체가 멈추면 heartbeat도 그
+        #   자리에서 멈추므로 '살아있는 척'이 되지는 않는다.
+        beat = getattr(self, "on_beat", None)
         for market, ex in plan:
+            if callable(beat):
+                beat(phase="balance", market=market, excg=ex)
             rows = kis.positions_detail(market, excg=ex)
             if rows is None:
                 return None
@@ -516,6 +527,12 @@ def _beat(state: dict, **extra) -> None:
 def check_once(broker, state: dict) -> None:
     """한 사이클: 피드 → 장중 보유 종목 시세 → 하드/소프트 손절 판단."""
     state["_broker_name"] = getattr(broker, "name", "")
+    # 브로커 내부의 긴 블로킹 구간(시장별 잔고 조회)도 전진 증거를 남기게 한다.
+    # 주입 실패(어댑터가 속성을 막는 경우)는 관측 저하일 뿐 손절을 막지 않는다.
+    try:
+        broker.on_beat = lambda **extra: _beat(state, **extra)
+    except (AttributeError, TypeError):
+        pass
     _reconcile_open(broker)                    # 먼저 UNKNOWN 대사(잠금 해제 기회)
     positions, age = _fetch_positions()
     stale = age is not None and age > FEED_STALE_MIN                 # 보호모드 진입(정적손절)
