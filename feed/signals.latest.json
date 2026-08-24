@@ -1,16 +1,8 @@
 {
  "version": 1,
- "generated_at": "2026-08-24T15:39:33+09:00",
+ "generated_at": "2026-08-24T16:15:27+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "a_ablation": [
-  {
-   "code": "207940",
-   "gate": "rp",
-   "range_pos": 0.4493,
-   "runup63": 0.1088,
-   "stage": 3,
-   "price": 1569000.0
-  },
   {
    "code": "BKR",
    "gate": "rp",
@@ -134,7 +126,7 @@
  ],
  "shelf_debug": {
   "ok": 10,
-  "watch": 221,
+  "watch": 220,
   "reasons": {
    "밸류영역 밖(지지대 아님)": 333,
    "매물대 정보 없음": 139,
@@ -2041,24 +2033,24 @@
    "group": "watch",
    "entry_kind": "now",
    "stage": 2,
-   "price": 362500.0,
-   "entry": 362500.0,
-   "stop": 325264.6533,
-   "target": 436970.6934,
+   "price": 362000.0,
+   "entry": 362000.0,
+   "stop": 324764.6533,
+   "target": 436470.6934,
    "shares_1pct": 2,
-   "range_pos": 0.3044,
+   "range_pos": 0.3023,
    "norm": -20.8,
    "bear_share": 0.25,
    "fresh": true,
-   "break_gap": 0.0093,
+   "break_gap": 0.0079,
    "earnings_d": null,
    "tactic": {
     "stop_pct": 10.3,
     "pb_price": 348958.8333,
-    "pb_stop_pct": 6.8,
+    "pb_stop_pct": 6.9,
     "mode": "pullback",
     "label": "⏳ 눌림 지정가만",
-    "desc": "지금 추격 금지(손절폭 10.3%) — <b>348,959원 눌림 지정가만</b>. 눌리면 손절폭 6.8%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
+    "desc": "지금 추격 금지(손절폭 10.3%) — <b>348,959원 눌림 지정가만</b>. 눌리면 손절폭 6.9%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
    }
   },
   {
@@ -2125,24 +2117,24 @@
    "group": "watch",
    "entry_kind": "now",
    "stage": 2,
-   "price": 133700.0,
-   "entry": 133700.0,
-   "stop": 113807.1773,
-   "target": 173485.6455,
+   "price": 134200.0,
+   "entry": 134200.0,
+   "stop": 114307.1773,
+   "target": 173985.6455,
    "shares_1pct": 5,
-   "range_pos": 0.122,
+   "range_pos": 0.1249,
    "norm": -54.7,
    "bear_share": 0.5,
    "fresh": true,
-   "break_gap": 0.0156,
+   "break_gap": 0.0193,
    "earnings_d": null,
    "tactic": {
-    "stop_pct": 14.9,
+    "stop_pct": 14.8,
     "pb_price": null,
     "pb_stop_pct": null,
     "mode": "pullback",
     "label": "⏳ 눌림 지정가만",
-    "desc": "지금 추격 금지(손절폭 14.9%) — 받칠 지지에 눌릴 때까지 대기"
+    "desc": "지금 추격 금지(손절폭 14.8%) — 받칠 지지에 눌릴 때까지 대기"
    }
   },
   {
