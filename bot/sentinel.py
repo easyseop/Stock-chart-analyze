@@ -533,6 +533,18 @@ def check_once(broker, state: dict) -> None:
         broker.on_beat = lambda **extra: _beat(state, **extra)
     except (AttributeError, TypeError):
         pass
+    # 사이클 맨 앞의 ACK/UNKNOWN 대사는 US 3거래소 × (미체결+체결내역) + 잔고까지
+    #   블로킹 조회가 열 번 넘게 나가는 최장 구간인데, 종전에는 이 전체에
+    #   heartbeat가 하나도 없어 나이가 그대로 누적됐다(실측 2026-08-24: 재기동
+    #   직후 5분간 61→303s 단조 증가 → watchdog 재기동 → 같은 구간에서 또 정지).
+    #   조회 단위 전진 증거는 `kis._get` 한 곳이 덮는다.
+    if str(getattr(broker, "name", "")).lower() == "kis":
+        try:
+            from bot import kis
+            kis.set_progress_beat(lambda **extra: _beat(state, **extra))
+        except Exception:
+            pass
+    _beat(state, phase="before_reconcile")
     _reconcile_open(broker)                    # 먼저 UNKNOWN 대사(잠금 해제 기회)
     positions, age = _fetch_positions()
     stale = age is not None and age > FEED_STALE_MIN                 # 보호모드 진입(정적손절)

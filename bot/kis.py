@@ -346,6 +346,41 @@ def _is_timeout_exception(exc: BaseException) -> bool:
     return False
 
 
+_PROGRESS_BEAT = None
+
+
+def set_progress_beat(callback) -> None:
+    """긴 블로킹 조회 구간의 '전진 증거' 콜백을 주입한다(파수꾼 전용).
+
+    왜 여기인가(실측 2026-08-24 15:46 UTC): 파수꾼은 사이클 맨 앞에서
+    `_reconcile_open()` → `kis_boot.boot_reconcile()` → `_resolve_acks()`를
+    돌린다. 3일째 열린 INGR ACK 하나 때문에 매 사이클 US 3거래소 × (미체결 +
+    체결내역) + 잔고까지 열 번 넘는 블로킹 조회가 나가는데, 이 구간 전체에
+    heartbeat가 **한 번도** 없었다. 재기동 직후 5분간 나이가 61→303s로 단조
+    증가했고(deploy grace가 재기동만 눌렀다), grace가 끝나자마자
+    `heartbeat_hard`로 관찰이 리셋됐다 — 자가복구가 30분을 채울 방법이 없었다.
+
+    호출부마다 beat를 뿌리면 새 조회가 추가될 때 또 빠진다. 모든 데이터-플레인
+    조회가 통과하는 `_get` 한 곳에 두어 현재·미래 호출부를 전부 덮는다.
+    주문 플레인은 이 함수를 쓰지 않으므로 영향이 없다.
+
+    콜백을 심지 않은 프로세스(buyloop·portfolio-web)에서는 no-op이다.
+    """
+    global _PROGRESS_BEAT
+    _PROGRESS_BEAT = callback if callable(callback) else None
+
+
+def _progress(**extra) -> None:
+    """전진 증거 1회. 실패해도 조회를 막지 않는다(관측이 거래를 죽이면 안 된다)."""
+    callback = _PROGRESS_BEAT
+    if callback is None:
+        return
+    try:
+        callback(**extra)
+    except Exception:
+        pass
+
+
 def _get(path: str, tr: str, params: dict, *, tr_cont: str = "") -> dict | None:
     """인증 GET. 401→토큰 1회 강제 재발급, EGW00201→짧은 백오프 1회 재시도. 실패 None."""
     _set_get_failure(None)
@@ -356,6 +391,10 @@ def _get(path: str, tr: str, params: dict, *, tr_cont: str = "") -> dict | None:
     k, s = _cred()
     url = BASE_URL + path + "?" + urllib.parse.urlencode(params)
     for attempt in range(3):
+        # 두 블로킹 대기(유량 최대 10s + HTTP 최대 15s) **앞에** 전진 증거를
+        # 남긴다. 호출이 실제로 멈추면 beat도 그 자리에서 멈추므로 '살아있는
+        # 척'은 되지 않는다 — fail-closed 계약은 그대로다.
+        _progress(phase="kis_get", path=path, attempt=attempt)
         # 재시도도 별도 HTTP 호출이다. 매 attempt마다 공용 버킷 슬롯을 소비해야
         # 여러 프로세스 합산 초당 한도가 정확히 유지된다.
         if not _LIMITER.acquire("data", timeout=10.0):

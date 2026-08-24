@@ -109,3 +109,87 @@ def test_check_once_injects_beat_callback(monkeypatch):
     except RuntimeError:
         pass
     assert callable(broker.on_beat)
+
+
+def test_get_emits_progress_before_each_attempt(monkeypatch):
+    """모든 데이터-플레인 조회가 블로킹 대기 **앞에** 전진 증거를 남긴다.
+
+    유량 대기(최대 10s)와 HTTP(최대 15s) 뒤에 찍으면 한 콜만으로 60s 경계를
+    넘길 수 있고, 재시도 3회면 나이가 그대로 누적된다.
+    """
+    from bot import kis
+
+    beats: list[dict] = []
+    order: list[str] = []
+
+    class _Limiter:
+        @staticmethod
+        def acquire(plane, timeout=None):
+            order.append("acquire")
+            return False              # 즉시 반환 — HTTP까지 가지 않는다
+
+    monkeypatch.setattr(kis, "_token", lambda force=False: "tok")
+    monkeypatch.setattr(kis, "_cred", lambda: ("k", "s"))
+    monkeypatch.setattr(kis, "_LIMITER", _Limiter)
+    kis.set_progress_beat(lambda **kw: (beats.append(kw), order.append("beat")))
+    try:
+        assert kis._get("/x", "TR", {}) is None
+    finally:
+        kis.set_progress_beat(None)
+
+    assert order == ["beat", "acquire"], order
+    assert beats[0]["phase"] == "kis_get"
+    assert beats[0]["path"] == "/x"
+
+
+def test_progress_beat_is_noop_without_injection(monkeypatch):
+    """콜백을 심지 않은 프로세스(buyloop 등)에서는 아무 일도 하지 않는다."""
+    from bot import kis
+    kis.set_progress_beat(None)
+    kis._progress(phase="kis_get")          # 예외 없이 통과해야 한다
+
+
+def test_progress_beat_failure_never_blocks_the_query(monkeypatch):
+    """관측이 거래를 죽이면 안 된다 — 콜백이 던져도 조회는 계속된다."""
+    from bot import kis
+
+    def _boom(**kw):
+        raise RuntimeError("beat failed")
+
+    monkeypatch.setattr(kis, "_token", lambda force=False: "tok")
+    monkeypatch.setattr(kis, "_cred", lambda: ("k", "s"))
+    monkeypatch.setattr(kis, "_LIMITER",
+                        type("L", (), {"acquire": staticmethod(
+                            lambda plane, timeout=None: False)}))
+    kis.set_progress_beat(_boom)
+    try:
+        assert kis._get("/x", "TR", {}) is None      # None = 유량대기 초과, 예외 아님
+    finally:
+        kis.set_progress_beat(None)
+
+
+def test_sentinel_wires_progress_beat_for_kis(monkeypatch):
+    """파수꾼이 대사 구간 **전에** kis 콜백을 심고 한 번 beat한다 — 배선 회귀 고정."""
+    from bot import kis, sentinel
+
+    injected: list = []
+    monkeypatch.setattr(kis, "set_progress_beat",
+                        lambda cb: injected.append(cb))
+
+    seen: list[str] = []
+
+    def _reconcile(broker):
+        seen.append("reconcile")
+        assert injected and callable(injected[-1]), "대사 전에 심어야 한다"
+
+    monkeypatch.setattr(sentinel, "_reconcile_open", _reconcile)
+    monkeypatch.setattr(sentinel, "_fetch_positions",
+                        lambda: (_ for _ in ()).throw(RuntimeError("stop")))
+
+    broker = sentinel._PaperBroker()
+    broker.name = "kis"
+    try:
+        sentinel.check_once(broker, {})
+    except RuntimeError:
+        pass
+    assert seen == ["reconcile"]
