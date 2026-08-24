@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-08-25T00:36:28.964155+09:00",
+ "generated_at": "2026-08-25T00:44:50.379776+09:00",
  "updated": "2026-08-25",
  "start": 100000000,
  "cash": 43797967,
@@ -19,7 +19,7 @@
    "opened": "2026-07-06",
    "pl_krw": 1036683,
    "pl_pct": 11.94,
-   "price_age_min": 0.4
+   "price_age_min": 8.8
   },
   {
    "code": "HMC",
@@ -34,7 +34,7 @@
    "opened": "2026-07-09",
    "pl_krw": 13922,
    "pl_pct": 18.18,
-   "price_age_min": 0.4
+   "price_age_min": 8.8
   },
   {
    "code": "J",
@@ -49,7 +49,7 @@
    "opened": "2026-07-11",
    "pl_krw": 1055498,
    "pl_pct": 18.83,
-   "price_age_min": 0.4
+   "price_age_min": 8.8
   },
   {
    "code": "MAIN",
@@ -64,7 +64,7 @@
    "opened": "2026-07-22",
    "pl_krw": 254741,
    "pl_pct": 8.75,
-   "price_age_min": 0.4
+   "price_age_min": 8.8
   },
   {
    "code": "004370",
@@ -79,7 +79,7 @@
    "opened": "2026-07-27",
    "pl_krw": 870000,
    "pl_pct": 23.61,
-   "price_age_min": 0.4
+   "price_age_min": 8.8
   },
   {
    "code": "EQT",
@@ -94,7 +94,7 @@
    "opened": "2026-07-29",
    "pl_krw": 354988,
    "pl_pct": 4.13,
-   "price_age_min": 0.4
+   "price_age_min": 8.7
   },
   {
    "code": "MDT",
@@ -109,7 +109,7 @@
    "opened": "2026-07-30",
    "pl_krw": 457892,
    "pl_pct": 8.17,
-   "price_age_min": 0.4
+   "price_age_min": 8.7
   },
   {
    "code": "AVY",
@@ -124,7 +124,7 @@
    "opened": "2026-08-03",
    "pl_krw": 279131,
    "pl_pct": 8.49,
-   "price_age_min": 0.4
+   "price_age_min": 8.7
   },
   {
    "code": "DPZ",
@@ -139,7 +139,7 @@
    "opened": "2026-08-07",
    "pl_krw": -102475,
    "pl_pct": -2.1,
-   "price_age_min": 0.4
+   "price_age_min": 8.7
   },
   {
    "code": "UFPI",
@@ -154,7 +154,7 @@
    "opened": "2026-08-11",
    "pl_krw": -28065,
    "pl_pct": -0.93,
-   "price_age_min": 0.4
+   "price_age_min": 8.7
   },
   {
    "code": "036460",
@@ -169,7 +169,7 @@
    "opened": "2026-08-19",
    "pl_krw": 265000,
    "pl_pct": 3.55,
-   "price_age_min": 0.4
+   "price_age_min": 8.7
   }
  ],
  "pending": [
@@ -1585,6 +1585,6 @@
    "r": -1.26
   }
  ],
- "lane": "fast",
+ "lane": "bulk",
  "data_stale": []
 }
