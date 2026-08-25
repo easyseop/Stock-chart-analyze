@@ -51,10 +51,30 @@ def _stats(values: list[float]) -> dict:
     }
 
 
-def _hold_days(row: dict) -> float | None:
-    """보유일수 — opened(매수일)와 day(청산일) 차이."""
+def pair_entry_days(rows: list[dict]) -> dict[int, str]:
+    """매도 행 → 그 종목의 직전 매수일.
+
+    매도 행에는 ``opened``가 없다. 종전 구현은 그 필드를 읽어 **모든** 보유일이
+    조용히 0으로 찍혔다(실측 2026-08-25: 50건 전부 0.0일). 없는 값을 0으로
+    보여주면 "샀다가 당일 청산"으로 읽혀서 진입 타이밍 판단을 정반대로 몬다.
+    시간순으로 훑어 같은 종목의 마지막 선행 매수와 짝짓고, 짝이 없으면
+    None으로 남긴다 — 0이 아니라 '모름'이다.
+    """
+    entry_day: dict[int, str] = {}
+    last_buy: dict[str, str] = {}
+    for row in sorted(rows, key=lambda r: str(r.get("executed_at") or "")):
+        code = str(row.get("code") or "").upper()
+        if str(row.get("side") or "") == "buy":
+            last_buy[code] = str(row.get("day") or "")
+        elif str(row.get("side") or "") == "sell" and last_buy.get(code):
+            entry_day[id(row)] = last_buy[code]
+    return entry_day
+
+
+def _hold_days(row: dict, entry_day: dict[int, str]) -> float | None:
+    """보유일수 — 짝지은 매수일과 청산일의 차이. 짝이 없으면 None."""
     import datetime
-    opened, closed = str(row.get("opened") or ""), str(row.get("day") or "")
+    opened, closed = entry_day.get(id(row), ""), str(row.get("day") or "")
     try:
         d0 = datetime.date.fromisoformat(opened[:10])
         d1 = datetime.date.fromisoformat(closed[:10])
@@ -63,8 +83,9 @@ def _hold_days(row: dict) -> float | None:
     return (d1 - d0).days
 
 
-def analyze(rows: list[dict]) -> dict:
+def analyze(rows: list[dict], entry_day: dict[int, str] | None = None) -> dict:
     """한 슬리브의 매도 행 → 종료 사유별 분해."""
+    entry_day = {} if entry_day is None else entry_day
     by_kind: dict[str, list[dict]] = {}
     for row in rows:
         by_kind.setdefault(str(row.get("reason_kind") or "other"), []).append(row)
@@ -78,7 +99,8 @@ def analyze(rows: list[dict]) -> dict:
         returns = [float(r["return_pct"]) for r in group
                    if r.get("return_pct") is not None]
         wins = [v for v in returns if v > 0]
-        holds = [d for d in (_hold_days(r) for r in group) if d is not None]
+        holds = [d for d in (_hold_days(r, entry_day) for r in group)
+                 if d is not None]
         out["by_kind"][kind] = {
             "label": _KIND_LABEL.get(kind, kind),
             "n": len(group),
@@ -112,8 +134,11 @@ def main(argv: list[str] | None = None) -> int:
         return 1
 
     wanted = ("A", "B") if args.sleeve == "ALL" else (args.sleeve,)
+    # 짝짓기는 매수 행이 필요하므로 전체 행으로 한 번만 만든다.
+    entry_day = pair_entry_days(snap.get("trades") or [])
     result = {s: analyze([r for r in sells
-                          if str(r.get("sleeve") or "A").upper() == s])
+                          if str(r.get("sleeve") or "A").upper() == s],
+                         entry_day)
               for s in wanted}
     result["_partial"] = bool(snap.get("partial"))
 
@@ -138,11 +163,13 @@ def main(argv: list[str] | None = None) -> int:
               f"{'-'*8} {'-'*8} {'-'*8} {'-'*7}")
         for kind, info in data["by_kind"].items():
             r, h = info["returns"], info["hold_days"]
+            hold = f"{h['avg']:>6.1f}일" if h.get("n") else "     ?"
+            miss = "" if h.get("n", 0) == info["n"] else \
+                f"  (보유일 {info['n'] - h.get('n', 0)}건 미상)"
             print(f" {info['label']:<20} {info['n']:>5} "
                   f"{info['share_pct']:>6.1f}% {info['win_n']:>4} "
                   f"{r.get('avg', 0):>+7.2f}% {r.get('median', 0):>+7.2f}% "
-                  f"{r.get('min', 0):>+7.2f}% "
-                  f"{h.get('avg', 0):>6.1f}일")
+                  f"{r.get('min', 0):>+7.2f}% {hold}{miss}")
         print()
         for kind, info in data["by_kind"].items():
             for text in info["reasons"]:
