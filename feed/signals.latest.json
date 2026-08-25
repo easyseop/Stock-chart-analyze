@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated_at": "2026-08-25T09:40:41+09:00",
+ "generated_at": "2026-08-25T09:51:13+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "a_ablation": [
   {
@@ -126,14 +126,14 @@
  ],
  "shelf_debug": {
   "ok": 11,
-  "watch": 214,
+  "watch": 213,
   "reasons": {
-   "밸류영역 밖(지지대 아님)": 339,
+   "밸류영역 밖(지지대 아님)": 335,
    "추락 중(범위 1%)": 159,
    "매물대 정보 없음": 138,
    "추락 중(범위 2%)": 122,
-   "반등 미확인(터치·상단마감·거래량)": 110,
    "추락 중(범위 0%)": 108,
+   "반등 미확인(터치·상단마감·거래량)": 107,
    "추락 중(범위 3%)": 103,
    "추락 중(범위 5%)": 84
   }
@@ -1720,34 +1720,6 @@
    }
   },
   {
-   "id": "064350-2026-08-25-watch",
-   "code": "064350",
-   "name": "현대로템",
-   "ccy": "KRW",
-   "group": "watch",
-   "entry_kind": "now",
-   "stage": 2,
-   "price": 130200.0,
-   "entry": 130200.0,
-   "stop": 111142.3789,
-   "target": 168315.2422,
-   "shares_1pct": 5,
-   "range_pos": 0.1012,
-   "norm": -50.9,
-   "bear_share": 0.5,
-   "fresh": true,
-   "break_gap": 0.0066,
-   "earnings_d": null,
-   "tactic": {
-    "stop_pct": 14.6,
-    "pb_price": 113100.0,
-    "pb_stop_pct": 1.7,
-    "mode": "pullback",
-    "label": "⏳ 눌림 지정가만",
-    "desc": "지금 추격 금지(손절폭 14.6%) — <b>113,100원 눌림 지정가만</b>. 눌리면 손절폭 1.7%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
-   }
-  },
-  {
    "id": "BRO-2026-08-25-watch",
    "code": "BRO",
    "name": "Brown & Brown, Inc.",
@@ -2609,24 +2581,24 @@
    "group": "watch",
    "entry_kind": "now",
    "stage": 1,
-   "price": 52700.0,
-   "entry": 52700.0,
-   "stop": 49988.1266,
-   "target": 58123.7469,
+   "price": 52600.0,
+   "entry": 52600.0,
+   "stop": 49873.8408,
+   "target": 58052.3183,
    "shares_1pct": 36,
-   "range_pos": 0.216,
+   "range_pos": 0.2113,
    "norm": -3.8,
    "bear_share": 0.25,
    "fresh": true,
-   "break_gap": -0.0137,
+   "break_gap": -0.0156,
    "earnings_d": null,
    "tactic": {
-    "stop_pct": 5.1,
+    "stop_pct": 5.2,
     "pb_price": 51391.9872,
-    "pb_stop_pct": 2.7,
+    "pb_stop_pct": 3.0,
     "mode": "full",
     "label": "⚡ 즉시 분할",
-    "desc": "손절폭 5.1%로 타이트 — 현재가에서 1~2회 분할 매수. 기다리는 이득보다 놓치는 비용이 큼"
+    "desc": "손절폭 5.2%로 타이트 — 현재가에서 1~2회 분할 매수. 기다리는 이득보다 놓치는 비용이 큼"
    }
   },
   {
@@ -2721,24 +2693,24 @@
    "group": "watch",
    "entry_kind": "now",
    "stage": 1,
-   "price": 20100.0,
-   "entry": 20100.0,
-   "stop": 19066.3037,
-   "target": 22167.3926,
+   "price": 20150.0,
+   "entry": 20150.0,
+   "stop": 19109.1608,
+   "target": 22231.6783,
    "shares_1pct": 96,
-   "range_pos": 0.1322,
+   "range_pos": 0.1368,
    "norm": -9.4,
    "bear_share": 0.375,
    "fresh": true,
-   "break_gap": -0.0043,
+   "break_gap": -0.0018,
    "earnings_d": null,
    "tactic": {
-    "stop_pct": 5.1,
-    "pb_price": 19950.0,
+    "stop_pct": 5.2,
+    "pb_price": 19987.5,
     "pb_stop_pct": 4.4,
     "mode": "full",
     "label": "⚡ 즉시 분할",
-    "desc": "손절폭 5.1%로 타이트 — 현재가에서 1~2회 분할 매수. 기다리는 이득보다 놓치는 비용이 큼"
+    "desc": "손절폭 5.2%로 타이트 — 현재가에서 1~2회 분할 매수. 기다리는 이득보다 놓치는 비용이 큼"
    }
   },
   {
@@ -2749,21 +2721,21 @@
    "group": "watch",
    "entry_kind": "now",
    "stage": 1,
-   "price": 14450.0,
-   "entry": 14450.0,
-   "stop": 13819.5262,
-   "target": 15710.9475,
+   "price": 14410.0,
+   "entry": 14410.0,
+   "stop": 13778.0977,
+   "target": 15673.8047,
    "shares_1pct": 158,
-   "range_pos": 0.0935,
+   "range_pos": 0.0864,
    "norm": -9.4,
    "bear_share": 0.375,
    "fresh": true,
-   "break_gap": 0.0022,
+   "break_gap": -0.0006,
    "earnings_d": null,
    "tactic": {
     "stop_pct": 4.4,
     "pb_price": 14062.5,
-    "pb_stop_pct": 1.7,
+    "pb_stop_pct": 2.0,
     "mode": "full",
     "label": "⚡ 즉시 분할",
     "desc": "손절폭 4.4%로 타이트 — 현재가에서 1~2회 분할 매수. 기다리는 이득보다 놓치는 비용이 큼"
@@ -2879,34 +2851,6 @@
     "mode": "half",
     "label": "⚖ 반반 진입",
     "desc": "손절폭 6.6% — 절반은 현재가, 절반은 눌림 $71.68 지정가(거기선 손절폭 2.0%)"
-   }
-  },
-  {
-   "id": "004020-2026-08-25-watch",
-   "code": "004020",
-   "name": "현대제철",
-   "ccy": "KRW",
-   "group": "watch",
-   "entry_kind": "now",
-   "stage": 1,
-   "price": 27600.0,
-   "entry": 27600.0,
-   "stop": 24743.2805,
-   "target": 33313.439,
-   "shares_1pct": 35,
-   "range_pos": 0.1477,
-   "norm": -28.3,
-   "bear_share": 0.375,
-   "fresh": true,
-   "break_gap": -0.0197,
-   "earnings_d": null,
-   "tactic": {
-    "stop_pct": 10.4,
-    "pb_price": null,
-    "pb_stop_pct": null,
-    "mode": "pullback",
-    "label": "⏳ 눌림 지정가만",
-    "desc": "지금 추격 금지(손절폭 10.4%) — 받칠 지지에 눌릴 때까지 대기"
    }
   },
   {
