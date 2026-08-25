@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated_at": "2026-08-26T02:16:41+09:00",
+ "generated_at": "2026-08-26T02:34:47+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "a_ablation": [
   {
@@ -1984,6 +1984,34 @@
    }
   },
   {
+   "id": "AOS-2026-08-26-watch",
+   "code": "AOS",
+   "name": "A.O. Smith Corporation",
+   "ccy": "USD",
+   "group": "watch",
+   "entry_kind": "now",
+   "stage": 1,
+   "price": 61.89,
+   "entry": 61.89,
+   "stop": 58.4845,
+   "target": 68.701,
+   "shares_1pct": 29,
+   "range_pos": 0.279,
+   "norm": 35.8,
+   "bear_share": 0.0,
+   "fresh": true,
+   "break_gap": -0.011,
+   "earnings_d": 63,
+   "tactic": {
+    "stop_pct": 5.5,
+    "pb_price": 59.5517,
+    "pb_stop_pct": 1.8,
+    "mode": "full",
+    "label": "⚡ 즉시 분할",
+    "desc": "손절폭 5.5%로 타이트 — 현재가에서 1~2회 분할 매수. 기다리는 이득보다 놓치는 비용이 큼"
+   }
+  },
+  {
    "id": "GIB-2026-08-26-watch",
    "code": "GIB",
    "name": "CGI Inc.",
@@ -2065,34 +2093,6 @@
     "mode": "full",
     "label": "⚡ 즉시 분할",
     "desc": "손절폭 4.2%로 타이트 — 현재가에서 1~2회 분할 매수. 기다리는 이득보다 놓치는 비용이 큼"
-   }
-  },
-  {
-   "id": "AOS-2026-08-26-watch",
-   "code": "AOS",
-   "name": "A.O. Smith Corporation",
-   "ccy": "USD",
-   "group": "watch",
-   "entry_kind": "now",
-   "stage": 1,
-   "price": 61.89,
-   "entry": 61.89,
-   "stop": 58.4845,
-   "target": 68.701,
-   "shares_1pct": 29,
-   "range_pos": 0.279,
-   "norm": 26.4,
-   "bear_share": 0.0,
-   "fresh": true,
-   "break_gap": -0.011,
-   "earnings_d": 63,
-   "tactic": {
-    "stop_pct": 5.5,
-    "pb_price": 59.5517,
-    "pb_stop_pct": 1.8,
-    "mode": "full",
-    "label": "⚡ 즉시 분할",
-    "desc": "손절폭 5.5%로 타이트 — 현재가에서 1~2회 분할 매수. 기다리는 이득보다 놓치는 비용이 큼"
    }
   },
   {
