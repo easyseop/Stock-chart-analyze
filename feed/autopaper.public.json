@@ -1,8 +1,8 @@
 {
- "generated_at": "2026-08-26T13:16:16.370924+09:00",
+ "generated_at": "2026-08-26T13:23:16.346644+09:00",
  "updated": "2026-08-26",
  "start": 100000000,
- "cash": 43797967,
+ "cash": 19892317,
  "equity": 102063225,
  "ret_pct": 2.06,
  "positions": [
@@ -19,7 +19,7 @@
    "opened": "2026-07-06",
    "pl_krw": 951849,
    "pl_pct": 10.95,
-   "price_age_min": 267.6
+   "price_age_min": 274.6
   },
   {
    "code": "HMC",
@@ -34,7 +34,7 @@
    "opened": "2026-07-09",
    "pl_krw": 11453,
    "pl_pct": 14.95,
-   "price_age_min": 267.6
+   "price_age_min": 274.6
   },
   {
    "code": "J",
@@ -49,7 +49,7 @@
    "opened": "2026-07-11",
    "pl_krw": 1076194,
    "pl_pct": 19.18,
-   "price_age_min": 267.6
+   "price_age_min": 274.6
   },
   {
    "code": "MAIN",
@@ -64,7 +64,7 @@
    "opened": "2026-07-22",
    "pl_krw": 247362,
    "pl_pct": 8.49,
-   "price_age_min": 267.8
+   "price_age_min": 274.8
   },
   {
    "code": "004370",
@@ -79,7 +79,7 @@
    "opened": "2026-07-27",
    "pl_krw": 905000,
    "pl_pct": 24.56,
-   "price_age_min": 8.3
+   "price_age_min": 4.9
   },
   {
    "code": "EQT",
@@ -94,7 +94,7 @@
    "opened": "2026-07-29",
    "pl_krw": 439863,
    "pl_pct": 5.11,
-   "price_age_min": 267.6
+   "price_age_min": 274.5
   },
   {
    "code": "MDT",
@@ -109,7 +109,7 @@
    "opened": "2026-07-30",
    "pl_krw": 326741,
    "pl_pct": 5.83,
-   "price_age_min": 267.5
+   "price_age_min": 274.5
   },
   {
    "code": "AVY",
@@ -124,7 +124,7 @@
    "opened": "2026-08-03",
    "pl_krw": 198144,
    "pl_pct": 6.02,
-   "price_age_min": 267.5
+   "price_age_min": 274.5
   },
   {
    "code": "DPZ",
@@ -139,7 +139,7 @@
    "opened": "2026-08-07",
    "pl_krw": -46739,
    "pl_pct": -0.96,
-   "price_age_min": 267.5
+   "price_age_min": 274.5
   },
   {
    "code": "UFPI",
@@ -154,7 +154,7 @@
    "opened": "2026-08-11",
    "pl_krw": -58330,
    "pl_pct": -1.94,
-   "price_age_min": 267.5
+   "price_age_min": 274.5
   },
   {
    "code": "036460",
@@ -169,7 +169,22 @@
    "opened": "2026-08-19",
    "pl_krw": 360400,
    "pl_pct": 4.82,
-   "price_age_min": 8.6
+   "price_age_min": 5.1
+  },
+  {
+   "code": "035250",
+   "name": "강원랜드",
+   "ccy": "KRW",
+   "q": 1643,
+   "avg": 14550.0,
+   "price": 14550.0,
+   "stop": 13929.1519,
+   "target": 15791.6962,
+   "half_done": false,
+   "opened": "2026-08-26",
+   "pl_krw": 0,
+   "pl_pct": 0.0,
+   "price_age_min": 5.1
   }
  ],
  "pending": [],
@@ -924,6 +939,19 @@
  "log": [
   {
    "d": "2026-08-26",
+   "type": "buy",
+   "code": "035250",
+   "name": "강원랜드",
+   "q": 1643,
+   "price": 14550.0,
+   "ccy": "KRW",
+   "amt": 23905650,
+   "note": "즉시 분할 — 🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권11% · 체크4/6 · 손절폭4.3%",
+   "stop": 13929.1519,
+   "target": 15791.6962
+  },
+  {
+   "d": "2026-08-26",
    "type": "cancel",
    "code": "036460",
    "name": "한국가스공사",
@@ -1543,19 +1571,6 @@
    "pl": 3524,
    "pl_pct": 7.1,
    "r": 1.0
-  },
-  {
-   "d": "2026-07-10",
-   "type": "buy",
-   "code": "SARO",
-   "name": "StandardAero, Inc.",
-   "q": 161,
-   "price": 27.9,
-   "ccy": "USD",
-   "amt": 6780568,
-   "note": "반반 1차 — 🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권38% · 체크4/6 · 손절폭7.3%",
-   "stop": 25.8678,
-   "target": 31.9643
   }
  ],
  "lane": "bulk",
