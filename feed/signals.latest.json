@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated_at": "2026-08-27T01:03:26+09:00",
+ "generated_at": "2026-08-27T01:08:00+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "a_ablation": [
   {
@@ -544,36 +544,23 @@
    }
   },
   {
-   "id": "066970-2026-08-27-shelf",
+   "id": "066970-2026-08-27-b0-shadow",
    "code": "066970",
    "name": "엘앤에프",
    "ccy": "KRW",
-   "group": "shelf",
-   "entry_kind": "shelf",
-   "stage": 0,
-   "price": 122200.0,
+   "group": "shelf_shadow_b0",
+   "shadow": true,
+   "orderable": false,
    "entry": 122200.0,
    "stop": 107996.0,
    "target": 145554.1667,
-   "shares_1pct": 0,
-   "range_pos": 0.38,
+   "stage": 0,
    "norm": -24.6,
-   "bear_share": 0.375,
-   "shelf": {
-    "poc": 124829.1667,
-    "val": 69562.5,
-    "vah": 145554.1667,
-    "rr": 1.64,
-    "overhead": 0.525,
-    "history_bars": 1875,
-    "profile_pnl_proxy": -0.0316,
-    "runup252": 0.4496
-   },
-   "fresh": true,
-   "break_gap": null,
-   "earnings_d": null,
-   "tactic": "full",
-   "trend_above_200": false
+   "range_pos": 0.38,
+   "b0_reject_reason": "200일선 아래(B1)",
+   "trend_above_200": false,
+   "fresh": false,
+   "tactic": "shadow"
   },
   {
    "id": "001820-2026-08-27-b2-shadow",
