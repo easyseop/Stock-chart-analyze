@@ -131,8 +131,10 @@ def test_overhead_and_zone():
 
 def test_classify_shelf():
     ok_shelf = {"ok": True, "entry": 101, "stop": 96, "target": 110, "reason": "매물대 지지 반등"}
+    # 2026-08-26 B1 확정 이후 B는 200일선 위만 받는다 — 픽스처에 추세를 명시한다.
     base = {"ccy": "USD", "turnover": 5e7, "shelf": ok_shelf,
-            "rs": {"rel": 0.0}, "ext": {"ma120_stretch": 0.0}}
+            "rs": {"rel": 0.0}, "sr": {"price": 101.0},
+            "ext": {"ma120_stretch": 0.0, "ma200": 95.0}}
     assert gates.classify_shelf(base)["group"] == "shelf"
     # 이미 폭등이면 매물대 무관하게 제외
     blow = dict(base, rs={"rel": 0.5})

@@ -609,16 +609,7 @@ def _signals_json(results: list[dict],
     #   group=="now"/"shelf"만 소비하므로 아래 그룹은 구조적으로 주문 불가.
     #   ① B1은 별도 스트림이 아니라 기존 shelf 신호의 trend_above_200 태그로
     #      재구성한다(같은 후보에 태그만 다르면 중복 발행이 낭비).
-    def finite_number(value, *, positive: bool = False):
-        if isinstance(value, bool):
-            return None
-        try:
-            number = float(value)
-        except (TypeError, ValueError, OverflowError):
-            return None
-        if not math.isfinite(number) or (positive and number <= 0):
-            return None
-        return number
+    finite_number = gates.finite_number      # 게이트와 동일 규칙(복제 금지)
 
     by_code = {r["code"]: r for r in results}
     for row in sigs:
@@ -631,6 +622,45 @@ def _signals_json(results: list[dict],
             row["trend_above_200"] = (
                 bool(price_r > ma200_r)
                 if price_r is not None and ma200_r is not None else None)
+    #   ①-b B0 섀도 — 200일선 필터(B1)로 **걸러낸** 후보를 계속 관측한다.
+    #      걸러낸 걸 그냥 버리면 필터가 옳았는지 영영 검증할 수 없다. 도입
+    #      근거인 "위 5건"이 얇으므로, 한 달 뒤 이 섀도와 실제 B를 나란히 놓고
+    #      필터의 순효과를 실측해야 한다. 진입·손절·목표는 필터 도입 **전과
+    #      동일하게** 산출한다 — 그래야 비교가 성립한다.
+    b0 = []
+    for r in results:
+        reject = gates.shelf_trend_rejection(r)
+        if reject is None:
+            continue                          # 필터와 무관하게 탈락했거나 통과
+        sh_b0 = r.get("shelf") or {}
+        price_b0 = finite_number((r.get("sr") or {}).get("price"), positive=True)
+        ma200_b0 = finite_number((r.get("ext") or {}).get("ma200"), positive=True)
+        b0.append({
+            "id": f'{r["code"]}-{day}-b0-shadow',
+            "code": r["code"], "name": r.get("name") or r["code"],
+            "ccy": r.get("ccy", "USD"), "group": "shelf_shadow_b0",
+            "shadow": True, "orderable": False,
+            "entry": float(sh_b0.get("entry") or 0),
+            "stop": float(sh_b0.get("stop") or 0),
+            "target": float(sh_b0.get("target") or 0),
+            "stage": 0,
+            "norm": round(float(r.get("norm", 0)), 1),
+            "range_pos": round(float(r.get("range_pos", 0.5)), 4),
+            "b0_reject_reason": reject,
+            "trend_above_200": (bool(price_b0 >= ma200_b0)
+                                if price_b0 is not None and ma200_b0 is not None
+                                else None),
+            "fresh": False, "tactic": "shadow",
+        })
+    b0.sort(key=lambda x: -x["norm"])
+    sigs.extend(b0[:10])
+    if b0:
+        by_reason: dict[str, int] = {}
+        for row in b0:
+            by_reason[row["b0_reject_reason"]] = \
+                by_reason.get(row["b0_reject_reason"], 0) + 1
+        print("  B1 필터: " + " · ".join(
+            f"{k} {v}건" for k, v in sorted(by_reason.items())), flush=True)
     #   ② B2 — 추세 눌림목(별도 전략 계열): 200일선 위 + 상승 기울기 +
     #      50일선 근처 되돌림 + 반등 확인(상단마감·거래량). 진입/손절/목표는
     #      B와 같은 구조(반등저점 −2% / 2R)로 맞춰 비교 가능성을 확보한다.

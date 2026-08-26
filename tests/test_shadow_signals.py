@@ -102,12 +102,19 @@ def test_b2_and_b1_reject_nonfinite_observation_inputs():
     payload = json.loads(screener._signals_json([bad], frames))
     assert not [s for s in payload["signals"]
                 if s["group"] == "shelf_shadow_b2"]
+    # B1 확정(2026-08-26) 이후: 판정불가(inf)는 shelf에서 **거절**되고 B0
+    #   섀도로 넘어간다. 관측은 계속되되 주문 후보로는 승격되지 않는다 —
+    #   비유한 관측값이 조용히 "200일선 위"로 통과하던 경로를 막는다.
     shelf = _result(ma50=99.0, ma200=float("inf"), slope=0.05)
     shelf["shelf"] = {"ok": True, "entry": 100, "stop": 95,
                       "target": 110, "rr": 2, "checks": {}}
     payload2 = json.loads(screener._signals_json([shelf], frames))
-    rows = [s for s in payload2["signals"] if s["group"] == "shelf"]
-    assert rows and rows[0]["trend_above_200"] is None
+    assert not [s for s in payload2["signals"] if s["group"] == "shelf"]
+    b0 = [s for s in payload2["signals"] if s["group"] == "shelf_shadow_b0"]
+    assert b0 and b0[0]["trend_above_200"] is None
+    assert b0[0]["b0_reject_reason"] == "200일선 판정불가(이력부족)"
+    assert b0[0]["orderable"] is False
+    assert "NaN" not in json.dumps(payload2, allow_nan=False)
     assert "NaN" not in json.dumps(payload, allow_nan=False)
     print("[PASS] B1/B2 NaN·inf 관측값은 false 신호/비표준 JSON으로 승격 안 됨")
 

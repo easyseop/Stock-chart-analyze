@@ -16,6 +16,8 @@ screener가 같은 질문("이미 올랐나", "추천해도 되나")을 각자 �
 """
 from __future__ import annotations
 
+import math
+
 import config
 from scanner import plan
 
@@ -57,13 +59,55 @@ def _stop_pct(r: dict) -> float:
     return (entry - stop) / entry if entry else 0.0
 
 
-def classify_shelf(r: dict) -> dict:
-    """매물대 반등 슬리브(B) 판정 — {'group': 'shelf'|None, 'reasons': [...]}.
+def finite_number(value, *, positive: bool = False) -> float | None:
+    """판정에 쓸 수 있는 유한 실수만 통과. 아니면 None.
 
-    A와 별개 신호 스트림. **하락추세 veto는 적용하지 않는다**(B는 전환 미확정·
-    하락 중 지지 반등을 노림). 대신 잡주·저유동·이미폭등 하드 제외는 유지."""
+    bool을 거부하는 것이 핵심이다 — 파이썬에서 ``True``는 ``float(True)==1.0``이라
+    조용히 "가격 1.0"으로 둔갑한다. 게이트가 숫자를 기대하는 자리에 플래그가
+    흘러들면 아무도 모르게 통과한다.
+
+    screener의 섀도 태깅과 이 게이트가 **같은 함수**를 써야 태그(trend_above_200)와
+    실제 판정이 갈리지 않는다. 복제하면 나중에 한쪽만 고쳐진다.
+    """
+    if isinstance(value, bool):
+        return None
+    try:
+        number = float(value)
+    except (TypeError, ValueError, OverflowError):
+        return None
+    if not math.isfinite(number) or (positive and number <= 0):
+        return None
+    return number
+
+
+def trend_200_reason(r: dict) -> str | None:
+    """슬리브 B의 200일선 게이트. 통과면 None, 걸리면 사유 문자열.
+
+    왜 B에만 거는가(2026-08-26 실측): 진입일 200일선 아래에서 시작한 B 청산
+    9건이 **전부** 손실이고 MFE 중앙값이 0.26R이었다 — 오르다 반납한 게 아니라
+    애초에 오르지 않았다. 같은 달·같은 추세 위치에서 A는 13건 중 9승이므로
+    시장이 아니라 B 신호의 결함이다(Fisher p=0.0047). A에는 걸지 않는다.
+
+    판정불가(이력 200일 미만 등)는 **거절**한다 — 매수 게이트이므로 모르는 것을
+    사지 않는 쪽이 안전하고, 이 저장소의 `조회 실패 ≠ 부재` 원칙과 같은 방향이다.
+    사유를 '아래'와 구분해 남겨야 이력부족으로 잃는 후보 수를 따로 셀 수 있다.
+    """
+    price = finite_number((r.get("sr") or {}).get("price"), positive=True)
+    ma200 = finite_number((r.get("ext") or {}).get("ma200"), positive=True)
+    if price is None or ma200 is None:
+        return "200일선 판정불가(이력부족)"
+    return None if price >= ma200 else "200일선 아래(B1)"
+
+
+def _shelf_pretrend_reasons(r: dict) -> list[str]:
+    """추세 게이트 **이전**까지의 탈락 사유. 빈 리스트 = 거기까진 통과.
+
+    `classify_shelf`와 `shelf_trend_rejection`이 같은 판정을 두 번 쓰기 때문에
+    한곳에 둔다. 복제하면 "필터가 걸러낸 것"과 "원래도 탈락이던 것"의 경계가
+    조용히 어긋나 섀도 표본이 오염된다.
+    """
     if not getattr(config, "SHELF_ENABLED", False):
-        return {"group": None, "reasons": ["shelf 비활성"]}
+        return ["shelf 비활성"]
     reasons = []
     if plan.junk(r):
         reasons.append("동전주·심한 부실")
@@ -77,10 +121,42 @@ def classify_shelf(r: dict) -> dict:
     if rs_rel >= config.BLOWOFF_RATIO or ext.get("ma120_stretch", 0) >= config.BLOWOFF_RATIO:
         reasons.append("이미 폭등")           # 꼭대기 매물대 매수 방지(B에도 적용)
     if reasons:
-        return {"group": None, "reasons": reasons}
+        return reasons
     sh = r.get("shelf") or {}
     if not sh.get("ok"):
-        return {"group": None, "reasons": [sh.get("reason", "매물대 미충족")]}
+        return [sh.get("reason", "매물대 미충족")]
+    return []
+
+
+def shelf_trend_rejection(r: dict) -> str | None:
+    """"200일선 필터가 **없었다면** B였을" 후보의 거절 사유. 아니면 None.
+
+    B0 섀도의 모집단을 정의한다. 다른 사유로 이미 탈락한 후보는 필터와 무관하니
+    None을 준다 — 섞으면 섀도가 필터의 효과가 아니라 잡동사니를 재게 된다.
+
+    `SHELF_REQUIRE_TREND_200`과 **무관하게** 판정한다. 관측은 스위치를 꺼도
+    계속돼야 필터를 껐다 켰다 하며 비교할 수 있다.
+    """
+    if _shelf_pretrend_reasons(r):
+        return None
+    return trend_200_reason(r)
+
+
+def classify_shelf(r: dict) -> dict:
+    """매물대 반등 슬리브(B) 판정 — {'group': 'shelf'|None, 'reasons': [...]}.
+
+    A와 별개 신호 스트림. **하락추세 veto는 적용하지 않는다**(B는 전환 미확정·
+    하락 중 지지 반등을 노림). 대신 잡주·저유동·이미폭등 하드 제외는 유지하고,
+    2026-08-26 실측으로 확정된 200일선 필터(B1)를 마지막에 건다."""
+    reasons = _shelf_pretrend_reasons(r)
+    if reasons:
+        return {"group": None, "reasons": reasons}
+    # 추세 게이트는 하드 제외 **뒤**에 온다. 순서가 바뀌면 잡주가 "200일선
+    #   아래"로 보고돼 제외 사유 통계가 오염된다.
+    if getattr(config, "SHELF_REQUIRE_TREND_200", True):
+        trend = trend_200_reason(r)
+        if trend:
+            return {"group": None, "reasons": [trend]}
     return {"group": "shelf", "reasons": []}
 
 
