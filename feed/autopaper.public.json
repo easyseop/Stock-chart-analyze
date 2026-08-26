@@ -1,10 +1,10 @@
 {
- "generated_at": "2026-08-26T09:58:03.844514+09:00",
+ "generated_at": "2026-08-26T10:07:46.884264+09:00",
  "updated": "2026-08-26",
  "start": 100000000,
  "cash": 43797967,
- "equity": 102013825,
- "ret_pct": 2.01,
+ "equity": 102051225,
+ "ret_pct": 2.05,
  "positions": [
   {
    "code": "MRSH",
@@ -19,7 +19,7 @@
    "opened": "2026-07-06",
    "pl_krw": 951849,
    "pl_pct": 10.95,
-   "price_age_min": 69.4
+   "price_age_min": 79.1
   },
   {
    "code": "HMC",
@@ -34,7 +34,7 @@
    "opened": "2026-07-09",
    "pl_krw": 11453,
    "pl_pct": 14.95,
-   "price_age_min": 69.4
+   "price_age_min": 79.1
   },
   {
    "code": "J",
@@ -49,7 +49,7 @@
    "opened": "2026-07-11",
    "pl_krw": 1076194,
    "pl_pct": 19.18,
-   "price_age_min": 69.4
+   "price_age_min": 79.1
   },
   {
    "code": "MAIN",
@@ -64,7 +64,7 @@
    "opened": "2026-07-22",
    "pl_krw": 247362,
    "pl_pct": 8.49,
-   "price_age_min": 69.6
+   "price_age_min": 79.3
   },
   {
    "code": "004370",
@@ -72,14 +72,14 @@
    "ccy": "KRW",
    "q": 10,
    "avg": 368500.0,
-   "price": 453000.0,
+   "price": 452500.0,
    "stop": 416866.6108,
    "target": 420011.1858,
    "half_done": true,
    "opened": "2026-07-27",
-   "pl_krw": 845000,
-   "pl_pct": 22.93,
-   "price_age_min": 6.2
+   "pl_krw": 840000,
+   "pl_pct": 22.8,
+   "price_age_min": 7.6
   },
   {
    "code": "EQT",
@@ -94,7 +94,7 @@
    "opened": "2026-07-29",
    "pl_krw": 439863,
    "pl_pct": 5.11,
-   "price_age_min": 69.3
+   "price_age_min": 79.1
   },
   {
    "code": "MDT",
@@ -109,7 +109,7 @@
    "opened": "2026-07-30",
    "pl_krw": 326741,
    "pl_pct": 5.83,
-   "price_age_min": 69.3
+   "price_age_min": 79.1
   },
   {
    "code": "AVY",
@@ -124,7 +124,7 @@
    "opened": "2026-08-03",
    "pl_krw": 198144,
    "pl_pct": 6.02,
-   "price_age_min": 69.3
+   "price_age_min": 79.0
   },
   {
    "code": "DPZ",
@@ -139,7 +139,7 @@
    "opened": "2026-08-07",
    "pl_krw": -46739,
    "pl_pct": -0.96,
-   "price_age_min": 69.3
+   "price_age_min": 79.0
   },
   {
    "code": "UFPI",
@@ -154,7 +154,7 @@
    "opened": "2026-08-11",
    "pl_krw": -58330,
    "pl_pct": -1.94,
-   "price_age_min": 69.3
+   "price_age_min": 79.0
   },
   {
    "code": "036460",
@@ -162,45 +162,17 @@
    "ccy": "KRW",
    "q": 212,
    "avg": 35250.0,
-   "price": 37000.0,
+   "price": 37200.0,
    "stop": 32875.0305,
    "target": 39999.939,
    "half_done": false,
    "opened": "2026-08-19",
-   "pl_krw": 371000,
-   "pl_pct": 4.96,
-   "price_age_min": 6.4
+   "pl_krw": 413400,
+   "pl_pct": 5.53,
+   "price_age_min": 7.7
   }
  ],
- "pending": [
-  {
-   "code": "036460",
-   "name": "한국가스공사",
-   "ccy": "KRW",
-   "limit": 34050.0,
-   "stop": 32875.0305,
-   "target": 39999.939,
-   "q": 213,
-   "created": "2026-08-19",
-   "atr": 1187.4847,
-   "plan": {
-    "entry": 35250.0,
-    "stop": 32875.0305,
-    "target": 39999.939,
-    "pb": 34050.0,
-    "tactic": "half"
-   },
-   "ctx": {
-    "mode": "half",
-    "fresh": true,
-    "stage": 3,
-    "rp": 28,
-    "rec": 4,
-    "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권28% · 체크4/6 · 손절폭6.7%"
-   },
-   "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권28% · 체크4/6 · 손절폭6.7%"
-  }
- ],
+ "pending": [],
  "trades": 12,
  "win_trades": 9,
  "pos_cap_pct": 33.3,
@@ -946,10 +918,21 @@
   },
   {
    "d": "2026-08-26",
-   "v": 102013825
+   "v": 102051225
   }
  ],
  "log": [
+  {
+   "d": "2026-08-26",
+   "type": "cancel",
+   "code": "036460",
+   "name": "한국가스공사",
+   "q": 0,
+   "price": 37200.0,
+   "ccy": "KRW",
+   "amt": 0,
+   "note": "지정가 취소 — 신호 부패: 제외 게이트 — 이미 폭등"
+  },
   {
    "d": "2026-08-22",
    "type": "sell",
@@ -1573,20 +1556,6 @@
    "note": "반반 1차 — 🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권38% · 체크4/6 · 손절폭7.3%",
    "stop": 25.8678,
    "target": 31.9643
-  },
-  {
-   "d": "2026-07-10",
-   "type": "sell",
-   "code": "EQT",
-   "name": "EQT Corporation",
-   "q": 256,
-   "price": 48.83,
-   "ccy": "USD",
-   "amt": 18869600,
-   "note": "손절(급락 즉시)",
-   "pl": -1257844,
-   "pl_pct": -6.2,
-   "r": -1.26
   }
  ],
  "lane": "bulk",
