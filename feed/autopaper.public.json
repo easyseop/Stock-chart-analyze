@@ -1,10 +1,10 @@
 {
- "generated_at": "2026-08-27T22:51:41.659074+09:00",
+ "generated_at": "2026-08-27T23:11:38.813752+09:00",
  "updated": "2026-08-27",
  "start": 100000000,
- "cash": 19892317,
- "equity": 101457480,
- "ret_pct": 1.46,
+ "cash": 15214270,
+ "equity": 101366826,
+ "ret_pct": 1.37,
  "positions": [
   {
    "code": "MRSH",
@@ -12,29 +12,14 @@
    "ccy": "USD",
    "q": 36,
    "avg": 174.3075,
-   "price": 191.17999267578125,
+   "price": 190.44000244140625,
    "stop": 184.80249938964843,
    "target": 192.2575,
    "half_done": true,
    "opened": "2026-07-06",
-   "pl_krw": 841918,
-   "pl_pct": 9.68,
-   "price_age_min": 0.4
-  },
-  {
-   "code": "HMC",
-   "name": "Honda Motor Company, Ltd.",
-   "ccy": "USD",
-   "q": 2,
-   "avg": 27.665,
-   "price": 31.125,
-   "stop": 31.22209984741211,
-   "target": 30.5824,
-   "half_done": true,
-   "opened": "2026-07-09",
-   "pl_krw": 9592,
-   "pl_pct": 12.51,
-   "price_age_min": 0.4
+   "pl_krw": 804994,
+   "pl_pct": 9.26,
+   "price_age_min": 0.3
   },
   {
    "code": "J",
@@ -42,14 +27,14 @@
    "ccy": "USD",
    "q": 32,
    "avg": 126.585,
-   "price": 151.6649932861328,
+   "price": 150.84500122070312,
    "stop": 141.94489267578126,
    "target": 141.2316,
    "half_done": true,
    "opened": "2026-07-11",
-   "pl_krw": 1112412,
-   "pl_pct": 19.81,
-   "price_age_min": 0.4
+   "pl_krw": 1076042,
+   "pl_pct": 19.16,
+   "price_age_min": 0.3
   },
   {
    "code": "MAIN",
@@ -57,14 +42,14 @@
    "ccy": "USD",
    "q": 39,
    "avg": 53.96,
-   "price": 58.56499862670898,
+   "price": 58.45000076293945,
    "stop": 55.9411983215332,
    "target": 58.7184,
    "half_done": true,
    "opened": "2026-07-22",
-   "pl_krw": 248933,
-   "pl_pct": 8.53,
-   "price_age_min": 0.4
+   "pl_krw": 242717,
+   "pl_pct": 8.32,
+   "price_age_min": 0.3
   },
   {
    "code": "004370",
@@ -79,7 +64,7 @@
    "opened": "2026-07-27",
    "pl_krw": 585000,
    "pl_pct": 15.88,
-   "price_age_min": 0.4
+   "price_age_min": 0.3
   },
   {
    "code": "EQT",
@@ -87,14 +72,14 @@
    "ccy": "USD",
    "q": 121,
    "avg": 51.375,
-   "price": 54.43999862670898,
+   "price": 54.380001068115234,
    "stop": 51.97369984741211,
    "target": 57.1234,
    "half_done": true,
    "opened": "2026-07-29",
-   "pl_krw": 514048,
-   "pl_pct": 5.97,
-   "price_age_min": 0.4
+   "pl_krw": 503986,
+   "pl_pct": 5.85,
+   "price_age_min": 0.3
   },
   {
    "code": "MDT",
@@ -102,14 +87,14 @@
    "ccy": "USD",
    "q": 47,
    "avg": 86.12,
-   "price": 90.9521026611328,
+   "price": 90.76000213623048,
    "stop": 87.73240335693359,
    "target": 95.117,
    "half_done": true,
    "opened": "2026-07-30",
-   "pl_krw": 314791,
-   "pl_pct": 5.61,
-   "price_age_min": 0.4
+   "pl_krw": 302276,
+   "pl_pct": 5.39,
+   "price_age_min": 0.3
   },
   {
    "code": "AVY",
@@ -117,14 +102,14 @@
    "ccy": "USD",
    "q": 14,
    "avg": 169.73,
-   "price": 180.52999877929688,
+   "price": 180.4499969482422,
    "stop": 169.73,
    "target": 192.4206,
    "half_done": true,
    "opened": "2026-08-03",
-   "pl_krw": 209575,
-   "pl_pct": 6.36,
-   "price_age_min": 0.4
+   "pl_krw": 208023,
+   "pl_pct": 6.32,
+   "price_age_min": 0.3
   },
   {
    "code": "DPZ",
@@ -132,14 +117,14 @@
    "ccy": "USD",
    "q": 10,
    "avg": 353.285,
-   "price": 335.79998779296875,
+   "price": 337.29998779296875,
    "stop": 328.6353,
    "target": 402.5845,
    "half_done": false,
    "opened": "2026-08-07",
-   "pl_krw": -242356,
-   "pl_pct": -4.95,
-   "price_age_min": 0.4
+   "pl_krw": -221565,
+   "pl_pct": -4.52,
+   "price_age_min": 0.3
   },
   {
    "code": "UFPI",
@@ -147,14 +132,14 @@
    "ccy": "USD",
    "q": 24,
    "avg": 90.485,
-   "price": 85.70500183105469,
+   "price": 85.47000122070312,
    "stop": 84.0446,
    "target": 103.3659,
    "half_done": false,
    "opened": "2026-08-11",
-   "pl_krw": -159011,
-   "pl_pct": -5.28,
-   "price_age_min": 0.4
+   "pl_krw": -166829,
+   "pl_pct": -5.54,
+   "price_age_min": 0.3
   },
   {
    "code": "036460",
@@ -169,7 +154,7 @@
    "opened": "2026-08-19",
    "pl_krw": 349800,
    "pl_pct": 4.68,
-   "price_age_min": 0.4
+   "price_age_min": 0.3
   },
   {
    "code": "035250",
@@ -184,29 +169,44 @@
    "opened": "2026-08-26",
    "pl_krw": -16430,
    "pl_pct": -0.07,
-   "price_age_min": 0.4
+   "price_age_min": 0.3
+  },
+  {
+   "code": "NAVI",
+   "name": "Navient Corporation",
+   "ccy": "USD",
+   "q": 372,
+   "avg": 9.24,
+   "price": 9.239999771118164,
+   "stop": 8.5322,
+   "target": 10.6555,
+   "half_done": false,
+   "opened": "2026-08-27",
+   "pl_krw": 0,
+   "pl_pct": -0.0,
+   "price_age_min": 0.3
   }
  ],
  "pending": [],
- "trades": 12,
- "win_trades": 9,
+ "trades": 13,
+ "win_trades": 10,
  "pos_cap_pct": 33.3,
  "cap_violations": [],
  "rule_violations": [],
  "fx": 1386.08,
  "stats": {
   "all": {
-   "n": 12,
-   "win": 9,
-   "win_rate": 75,
-   "avg_r": 0.17
+   "n": 13,
+   "win": 10,
+   "win_rate": 77,
+   "avg_r": 0.31
   },
   "by_mode": {
    "full": {
-    "n": 3,
-    "win": 1,
-    "win_rate": 33,
-    "avg_r": -0.61
+    "n": 4,
+    "win": 2,
+    "win_rate": 50,
+    "avg_r": 0.04
    },
    "half": {
     "n": 4,
@@ -222,10 +222,10 @@
    }
   },
   "fresh": {
-   "n": 11,
-   "win": 8,
-   "win_rate": 73,
-   "avg_r": 0.15
+   "n": 12,
+   "win": 9,
+   "win_rate": 75,
+   "avg_r": 0.31
   },
   "stale": {
    "n": 1,
@@ -235,10 +235,10 @@
   },
   "by_stage": {
    "3": {
-    "n": 12,
-    "win": 9,
-    "win_rate": 75,
-    "avg_r": 0.17
+    "n": 13,
+    "win": 10,
+    "win_rate": 77,
+    "avg_r": 0.31
    }
   },
   "by_ccy": {
@@ -249,16 +249,58 @@
     "avg_r": 0.38
    },
    "USD": {
-    "n": 11,
-    "win": 8,
-    "win_rate": 73,
-    "avg_r": 0.15
+    "n": 12,
+    "win": 9,
+    "win_rate": 75,
+    "avg_r": 0.31
    }
   },
-  "slip_entry_pct": -1.19,
+  "slip_entry_pct": -1.1,
   "slip_stop_pct": -0.76
  },
  "closed": [
+  {
+   "code": "HMC",
+   "name": "Honda Motor Company, Ltd.",
+   "ccy": "USD",
+   "ctx": {
+    "mode": "full",
+    "fresh": true,
+    "stage": 3,
+    "rp": 38,
+    "rec": 6,
+    "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권38% · 체크6/6 · 손절폭5.3%"
+   },
+   "plan": {
+    "entry": 27.665,
+    "stop": 26.2063,
+    "target": 30.5824,
+    "pb": null,
+    "tactic": "full"
+   },
+   "fill": {
+    "avg": 27.665,
+    "q": 3
+   },
+   "exits": [
+    {
+     "d": "2026-07-28",
+     "q": 1,
+     "price": 30.115,
+     "note": "+1R 절반 익절"
+    },
+    {
+     "d": "2026-08-27",
+     "q": 2,
+     "price": 31.13,
+     "note": "트레일 스탑"
+    }
+   ],
+   "opened": "2026-07-09",
+   "closed": "2026-08-27",
+   "pl": 13202,
+   "r": 2.0
+  },
   {
    "code": "FND",
    "name": "Floor & Decor Holdings, Inc.",
@@ -937,10 +979,37 @@
   },
   {
    "d": "2026-08-27",
-   "v": 101457480
+   "v": 101366826
   }
  ],
  "log": [
+  {
+   "d": "2026-08-27",
+   "type": "buy",
+   "code": "NAVI",
+   "name": "Navient Corporation",
+   "q": 372,
+   "price": 9.24,
+   "ccy": "USD",
+   "amt": 4764345,
+   "note": "반반 1차 — 🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권29% · 체크6/6 · 손절폭7.7%",
+   "stop": 8.5322,
+   "target": 10.6555
+  },
+  {
+   "d": "2026-08-27",
+   "type": "sell",
+   "code": "HMC",
+   "name": "Honda Motor Company, Ltd.",
+   "q": 2,
+   "price": 31.13,
+   "ccy": "USD",
+   "amt": 86297,
+   "note": "트레일 스탑",
+   "pl": 9606,
+   "pl_pct": 12.5,
+   "r": 2.0
+  },
   {
    "d": "2026-08-26",
    "type": "buy",
@@ -1548,33 +1617,6 @@
    "note": "+1R 절반 익절",
    "pl": 324351,
    "pl_pct": 6.6
-  },
-  {
-   "d": "2026-07-11",
-   "type": "buy",
-   "code": "J",
-   "name": "Jacobs Solutions Inc.",
-   "q": 64,
-   "price": 126.585,
-   "ccy": "USD",
-   "amt": 12173061,
-   "note": "즉시 분할 — 🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권33% · 체크4/6 · 손절폭5.8%",
-   "stop": 119.2617,
-   "target": 141.2316
-  },
-  {
-   "d": "2026-07-11",
-   "type": "sell",
-   "code": "CMG",
-   "name": "Chipotle Mexican Grill, Inc.",
-   "q": 1,
-   "price": 35.545,
-   "ccy": "USD",
-   "amt": 53409,
-   "note": "+1R 절반 익절",
-   "pl": 3524,
-   "pl_pct": 7.1,
-   "r": 1.0
   }
  ],
  "lane": "fast",
