@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated_at": "2026-08-28T09:01:00+09:00",
+ "generated_at": "2026-08-28T09:09:03+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "a_ablation": [
   {
@@ -160,13 +160,13 @@
   "ok": 5,
   "watch": 193,
   "reasons": {
-   "밸류영역 밖(지지대 아님)": 336,
-   "추락 중(범위 1%)": 159,
+   "밸류영역 밖(지지대 아님)": 337,
+   "추락 중(범위 1%)": 158,
    "매물대 정보 없음": 142,
    "추락 중(범위 3%)": 104,
-   "추락 중(범위 2%)": 103,
+   "추락 중(범위 2%)": 104,
    "추락 중(범위 0%)": 99,
-   "반등 미확인(상단마감·거래량)": 90,
+   "반등 미확인(상단마감·거래량)": 89,
    "추락 중(범위 6%)": 87
   }
  },
@@ -587,6 +587,46 @@
    "tactic": "shadow"
   },
   {
+   "id": "MGEE-2026-08-28-shelf-watch",
+   "code": "MGEE",
+   "name": "MGE Energy Inc.",
+   "ccy": "USD",
+   "group": "shelf_watch",
+   "entry_kind": "shelf_watch",
+   "stage": 0,
+   "price": 79.39,
+   "entry": 79.39,
+   "stop": 76.9692,
+   "target": 83.7173,
+   "shares_1pct": 0,
+   "range_pos": 0.4562,
+   "norm": 49.1,
+   "bear_share": 0.0,
+   "shelf": {
+    "poc": 79.7548,
+    "val": 75.7923,
+    "vah": 83.7173,
+    "rr": 1.79,
+    "overhead": 0.486,
+    "reason": "반등 미확인(거래량)",
+    "history_bars": 1923,
+    "profile_pnl_proxy": 0.0028,
+    "runup252": -0.0919,
+    "checks": {
+     "터치": true,
+     "회복": true,
+     "상단마감": true,
+     "거래량": false,
+     "신저가아님": true
+    }
+   },
+   "fresh": false,
+   "break_gap": null,
+   "earnings_d": null,
+   "tactic": "watch",
+   "trend_above_200": true
+  },
+  {
    "id": "GIS-2026-08-28-shelf-watch",
    "code": "GIS",
    "name": "General Mills, Inc.",
@@ -623,46 +663,6 @@
    "fresh": false,
    "break_gap": null,
    "earnings_d": 26,
-   "tactic": "watch",
-   "trend_above_200": true
-  },
-  {
-   "id": "MGEE-2026-08-28-shelf-watch",
-   "code": "MGEE",
-   "name": "MGE Energy Inc.",
-   "ccy": "USD",
-   "group": "shelf_watch",
-   "entry_kind": "shelf_watch",
-   "stage": 0,
-   "price": 79.39,
-   "entry": 79.39,
-   "stop": 76.9692,
-   "target": 83.7173,
-   "shares_1pct": 0,
-   "range_pos": 0.4562,
-   "norm": 39.6,
-   "bear_share": 0.125,
-   "shelf": {
-    "poc": 79.7548,
-    "val": 75.7923,
-    "vah": 83.7173,
-    "rr": 1.79,
-    "overhead": 0.486,
-    "reason": "반등 미확인(거래량)",
-    "history_bars": 1923,
-    "profile_pnl_proxy": 0.0028,
-    "runup252": -0.0919,
-    "checks": {
-     "터치": true,
-     "회복": true,
-     "상단마감": true,
-     "거래량": false,
-     "신저가아님": true
-    }
-   },
-   "fresh": false,
-   "break_gap": null,
-   "earnings_d": null,
    "tactic": "watch",
    "trend_above_200": true
   },
