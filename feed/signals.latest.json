@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated_at": "2026-08-31T18:27:35+09:00",
+ "generated_at": "2026-08-31T19:12:51+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "a_ablation": [
   {
@@ -172,6 +172,34 @@
  },
  "signals": [
   {
+   "id": "030200-2026-08-31-now",
+   "code": "030200",
+   "name": "KT",
+   "ccy": "KRW",
+   "group": "now",
+   "entry_kind": "now",
+   "stage": 4,
+   "price": 53400.0,
+   "entry": 53400.0,
+   "stop": 50726.8031,
+   "target": 58746.3938,
+   "shares_1pct": 37,
+   "range_pos": 0.2488,
+   "norm": 7.5,
+   "bear_share": 0.125,
+   "fresh": true,
+   "break_gap": 0.0091,
+   "earnings_d": null,
+   "tactic": {
+    "stop_pct": 5.0,
+    "pb_price": 51401.6667,
+    "pb_stop_pct": 1.3,
+    "mode": "full",
+    "label": "⚡ 즉시 분할",
+    "desc": "손절폭 5.0%로 타이트 — 현재가에서 1~2회 분할 매수. 기다리는 이득보다 놓치는 비용이 큼"
+   }
+  },
+  {
    "id": "BSY-2026-08-31-now",
    "code": "BSY",
    "name": "Bentley Systems, Incorporated",
@@ -197,34 +225,6 @@
     "mode": "half",
     "label": "⚖ 반반 진입",
     "desc": "손절폭 7.7% — 절반은 현재가, 절반은 눌림 $35.12 지정가(거기선 손절폭 1.9%)"
-   }
-  },
-  {
-   "id": "030200-2026-08-31-now",
-   "code": "030200",
-   "name": "KT",
-   "ccy": "KRW",
-   "group": "now",
-   "entry_kind": "now",
-   "stage": 3,
-   "price": 53400.0,
-   "entry": 53400.0,
-   "stop": 50726.8031,
-   "target": 58746.3938,
-   "shares_1pct": 37,
-   "range_pos": 0.2488,
-   "norm": 5.7,
-   "bear_share": 0.125,
-   "fresh": true,
-   "break_gap": 0.0091,
-   "earnings_d": null,
-   "tactic": {
-    "stop_pct": 5.0,
-    "pb_price": 51401.6667,
-    "pb_stop_pct": 1.3,
-    "mode": "full",
-    "label": "⚡ 즉시 분할",
-    "desc": "손절폭 5.0%로 타이트 — 현재가에서 1~2회 분할 매수. 기다리는 이득보다 놓치는 비용이 큼"
    }
   },
   {
@@ -1214,7 +1214,7 @@
     "overhead": 0.365,
     "reason": "반등 미확인(터치)",
     "history_bars": 1878,
-    "profile_pnl_proxy": 0.0512,
+    "profile_pnl_proxy": 0.0511,
     "runup252": 1.4831,
     "checks": {
      "터치": false,
@@ -1309,6 +1309,27 @@
    "earnings_d": null,
    "tactic": "watch",
    "trend_above_200": false
+  },
+  {
+   "id": "024110-2026-08-31-watch",
+   "code": "024110",
+   "name": "기업은행",
+   "ccy": "KRW",
+   "group": "watch",
+   "entry_kind": "breakout",
+   "stage": 4,
+   "price": 20700.0,
+   "entry": 20850.0,
+   "stop": 19819.4755,
+   "target": 22911.049,
+   "shares_1pct": 97,
+   "range_pos": 0.1873,
+   "norm": -7.5,
+   "bear_share": 0.375,
+   "fresh": true,
+   "break_gap": 0.041,
+   "earnings_d": null,
+   "tactic": null
   },
   {
    "id": "BZ-2026-08-31-watch",
@@ -1413,27 +1434,6 @@
    "fresh": true,
    "break_gap": 0.0365,
    "earnings_d": -21,
-   "tactic": null
-  },
-  {
-   "id": "024110-2026-08-31-watch",
-   "code": "024110",
-   "name": "기업은행",
-   "ccy": "KRW",
-   "group": "watch",
-   "entry_kind": "breakout",
-   "stage": 3,
-   "price": 20700.0,
-   "entry": 20850.0,
-   "stop": 19819.4755,
-   "target": 22911.049,
-   "shares_1pct": 97,
-   "range_pos": 0.1873,
-   "norm": -9.4,
-   "bear_share": 0.375,
-   "fresh": true,
-   "break_gap": 0.041,
-   "earnings_d": null,
    "tactic": null
   },
   {
