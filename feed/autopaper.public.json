@@ -1,10 +1,10 @@
 {
- "generated_at": "2026-08-31T23:42:02.894359+09:00",
- "updated": "2026-08-31",
+ "generated_at": "2026-09-01T00:00:09.512936+09:00",
+ "updated": "2026-09-01",
  "start": 100000000,
- "cash": 15390690,
- "equity": 101877452,
- "ret_pct": 1.88,
+ "cash": 15254331,
+ "equity": 101548616,
+ "ret_pct": 1.55,
  "positions": [
   {
    "code": "MRSH",
@@ -12,14 +12,14 @@
    "ccy": "USD",
    "q": 36,
    "avg": 174.3075,
-   "price": 190.8800048828125,
+   "price": 190.7350006103516,
    "stop": 184.80249938964843,
    "target": 192.2575,
    "half_done": true,
    "opened": "2026-07-06",
-   "pl_krw": 820739,
-   "pl_pct": 9.51,
-   "price_age_min": 0.6
+   "pl_krw": 809270,
+   "pl_pct": 9.42,
+   "price_age_min": 8.2
   },
   {
    "code": "J",
@@ -27,14 +27,14 @@
    "ccy": "USD",
    "q": 32,
    "avg": 126.585,
-   "price": 151.52499389648438,
+   "price": 151.52999877929688,
    "stop": 141.94489267578126,
    "target": 141.2316,
    "half_done": true,
    "opened": "2026-07-11",
-   "pl_krw": 1097894,
-   "pl_pct": 19.7,
-   "price_age_min": 0.6
+   "pl_krw": 1092328,
+   "pl_pct": 19.71,
+   "price_age_min": 7.6
   },
   {
    "code": "MAIN",
@@ -42,14 +42,14 @@
    "ccy": "USD",
    "q": 39,
    "avg": 53.96,
-   "price": 58.98500061035156,
+   "price": 59.08100128173828,
    "stop": 55.9411983215332,
    "target": 58.7184,
    "half_done": true,
    "opened": "2026-07-22",
-   "pl_krw": 269597,
-   "pl_pct": 9.31,
-   "price_age_min": 0.6
+   "pl_krw": 273300,
+   "pl_pct": 9.49,
+   "price_age_min": 9.2
   },
   {
    "code": "004370",
@@ -64,7 +64,7 @@
    "opened": "2026-07-27",
    "pl_krw": 750000,
    "pl_pct": 20.35,
-   "price_age_min": 0.6
+   "price_age_min": 7.6
   },
   {
    "code": "EQT",
@@ -72,14 +72,14 @@
    "ccy": "USD",
    "q": 121,
    "avg": 51.375,
-   "price": 54.79999923706055,
+   "price": 54.43999862670898,
    "stop": 51.97369984741211,
    "target": 57.1234,
    "half_done": true,
    "opened": "2026-07-29",
-   "pl_krw": 570112,
-   "pl_pct": 6.67,
-   "price_age_min": 0.5
+   "pl_krw": 507499,
+   "pl_pct": 5.97,
+   "price_age_min": 7.6
   },
   {
    "code": "MDT",
@@ -87,14 +87,14 @@
    "ccy": "USD",
    "q": 47,
    "avg": 86.12,
-   "price": 90.9499969482422,
+   "price": 90.91999816894533,
    "stop": 87.73240335693359,
    "target": 95.117,
    "half_done": true,
    "opened": "2026-07-30",
-   "pl_krw": 312291,
-   "pl_pct": 5.61,
-   "price_age_min": 0.5
+   "pl_krw": 308715,
+   "pl_pct": 5.57,
+   "price_age_min": 7.6
   },
   {
    "code": "AVY",
@@ -102,29 +102,14 @@
    "ccy": "USD",
    "q": 14,
    "avg": 169.73,
-   "price": 176.81500244140625,
+   "price": 177.24000549316406,
    "stop": 169.73,
    "target": 192.4206,
    "half_done": true,
    "opened": "2026-08-03",
-   "pl_krw": 136453,
-   "pl_pct": 4.17,
-   "price_age_min": 0.5
-  },
-  {
-   "code": "UFPI",
-   "name": "UFP Industries, Inc.",
-   "ccy": "USD",
-   "q": 24,
-   "avg": 90.485,
-   "price": 85.13500213623047,
-   "stop": 84.0446,
-   "target": 103.3659,
-   "half_done": false,
-   "opened": "2026-08-11",
-   "pl_krw": -176636,
-   "pl_pct": -5.91,
-   "price_age_min": 0.5
+   "pl_krw": 143876,
+   "pl_pct": 4.42,
+   "price_age_min": 7.6
   },
   {
    "code": "036460",
@@ -139,7 +124,7 @@
    "opened": "2026-08-19",
    "pl_krw": 466400,
    "pl_pct": 6.24,
-   "price_age_min": 0.5
+   "price_age_min": 7.6
   },
   {
    "code": "035250",
@@ -154,7 +139,7 @@
    "opened": "2026-08-26",
    "pl_krw": 164300,
    "pl_pct": 0.69,
-   "price_age_min": 0.5
+   "price_age_min": 9.7
   },
   {
    "code": "NAVI",
@@ -162,14 +147,14 @@
    "ccy": "USD",
    "q": 372,
    "avg": 9.24,
-   "price": 9.600000381469728,
+   "price": 9.59000015258789,
    "stop": 8.5322,
    "target": 10.6555,
    "half_done": false,
    "opened": "2026-08-27",
-   "pl_krw": 184230,
-   "pl_pct": 3.9,
-   "price_age_min": 0.5
+   "pl_krw": 178168,
+   "pl_pct": 3.79,
+   "price_age_min": 7.6
   },
   {
    "code": "TM",
@@ -177,29 +162,44 @@
    "ccy": "USD",
    "q": 17,
    "avg": 193.05,
-   "price": 197.67999267578125,
+   "price": 197.4447021484375,
    "stop": 186.9998,
    "target": 205.1504,
    "half_done": false,
    "opened": "2026-08-28",
-   "pl_krw": 108279,
-   "pl_pct": 2.4,
-   "price_age_min": 0.5
+   "pl_krw": 102235,
+   "pl_pct": 2.28,
+   "price_age_min": 9.4
+  },
+  {
+   "code": "BSY",
+   "name": "Bentley Systems, Incorporated",
+   "ccy": "USD",
+   "q": 58,
+   "avg": 36.9546,
+   "price": 36.9546012878418,
+   "stop": 34.2145,
+   "target": 42.4347,
+   "half_done": false,
+   "opened": "2026-09-01",
+   "pl_krw": 0,
+   "pl_pct": 0.0,
+   "price_age_min": 10.1
   }
  ],
  "pending": [],
- "trades": 14,
+ "trades": 15,
  "win_trades": 10,
  "pos_cap_pct": 33.3,
  "cap_violations": [],
  "rule_violations": [],
- "fx": 1375.67,
+ "fx": 1368.42,
  "stats": {
   "all": {
-   "n": 14,
+   "n": 15,
    "win": 10,
-   "win_rate": 71,
-   "avg_r": 0.26
+   "win_rate": 67,
+   "avg_r": 0.19
   },
   "by_mode": {
    "full": {
@@ -209,10 +209,10 @@
     "avg_r": 0.04
    },
    "half": {
-    "n": 5,
+    "n": 6,
     "win": 4,
-    "win_rate": 80,
-    "avg_r": 0.49
+    "win_rate": 67,
+    "avg_r": 0.27
    },
    "pullback": {
     "n": 5,
@@ -222,10 +222,10 @@
    }
   },
   "fresh": {
-   "n": 13,
+   "n": 14,
    "win": 9,
-   "win_rate": 69,
-   "avg_r": 0.25
+   "win_rate": 64,
+   "avg_r": 0.17
   },
   "stale": {
    "n": 1,
@@ -235,10 +235,10 @@
   },
   "by_stage": {
    "3": {
-    "n": 14,
+    "n": 15,
     "win": 10,
-    "win_rate": 71,
-    "avg_r": 0.26
+    "win_rate": 67,
+    "avg_r": 0.19
    }
   },
   "by_ccy": {
@@ -249,16 +249,52 @@
     "avg_r": 0.38
    },
    "USD": {
-    "n": 13,
+    "n": 14,
     "win": 9,
-    "win_rate": 69,
-    "avg_r": 0.25
+    "win_rate": 64,
+    "avg_r": 0.17
    }
   },
-  "slip_entry_pct": -1.02,
+  "slip_entry_pct": -0.95,
   "slip_stop_pct": -0.76
  },
  "closed": [
+  {
+   "code": "UFPI",
+   "name": "UFP Industries, Inc.",
+   "ccy": "USD",
+   "ctx": {
+    "mode": "half",
+    "fresh": true,
+    "stage": 3,
+    "rp": 31,
+    "rec": 6,
+    "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권31% · 체크6/6 · 손절폭7.1%"
+   },
+   "plan": {
+    "entry": 90.485,
+    "stop": 84.0446,
+    "target": 103.3659,
+    "pb": 89.606,
+    "tactic": "half"
+   },
+   "fill": {
+    "avg": 90.485,
+    "q": 24
+   },
+   "exits": [
+    {
+     "d": "2026-09-01",
+     "q": 24,
+     "price": 85.155,
+     "note": "타임 스탑(+1R 미도달)"
+    }
+   ],
+   "opened": "2026-08-11",
+   "closed": "2026-09-01",
+   "pl": -175048,
+   "r": -0.8
+  },
   {
    "code": "DPZ",
    "name": "Domino's Pizza Inc",
@@ -1032,9 +1068,40 @@
   {
    "d": "2026-08-31",
    "v": 101877452
+  },
+  {
+   "d": "2026-09-01",
+   "v": 101548616
   }
  ],
  "log": [
+  {
+   "d": "2026-09-01",
+   "type": "buy",
+   "code": "BSY",
+   "name": "Bentley Systems, Incorporated",
+   "q": 58,
+   "price": 36.9546,
+   "ccy": "USD",
+   "amt": 2933026,
+   "note": "반반 1차 — 🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권30% · 체크6/6 · 손절폭7.4%",
+   "stop": 34.2145,
+   "target": 42.4347
+  },
+  {
+   "d": "2026-09-01",
+   "type": "sell",
+   "code": "UFPI",
+   "name": "UFP Industries, Inc.",
+   "q": 24,
+   "price": 85.155,
+   "ccy": "USD",
+   "amt": 2796667,
+   "note": "타임 스탑(+1R 미도달)",
+   "pl": -175048,
+   "pl_pct": -5.9,
+   "r": -0.8
+  },
   {
    "d": "2026-08-28",
    "type": "buy",
@@ -1645,33 +1712,8 @@
    "pl": 1562,
    "pl_pct": 7.9,
    "r": 1.03
-  },
-  {
-   "d": "2026-07-21",
-   "type": "order",
-   "code": "VRSK",
-   "name": "Verisk Analytics, Inc.",
-   "q": 51,
-   "price": 190.174,
-   "ccy": "USD",
-   "amt": 14338718,
-   "note": "눌림 지정가 주문(추격 금지) — 🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권29% · 체크4/6 · 손절폭6.4%"
-  },
-  {
-   "d": "2026-07-21",
-   "type": "sell",
-   "code": "FND",
-   "name": "Floor & Decor Holdings, Inc.",
-   "q": 61,
-   "price": 54.395,
-   "ccy": "USD",
-   "amt": 4905439,
-   "note": "본전 스탑",
-   "pl": -26811,
-   "pl_pct": -0.5,
-   "r": 0.45
   }
  ],
- "lane": "fast",
+ "lane": "bulk",
  "data_stale": []
 }
