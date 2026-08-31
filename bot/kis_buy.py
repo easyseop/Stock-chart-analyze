@@ -262,8 +262,19 @@ def execute_entry(pos_key: str, symbol: str, *, price_usd: float,
         open_cost = (float(open_cost_krw) if seed_krw is not None
                      else max(open_cost, float(open_cost_krw)))
     if not envelope.invariant_ok(seed, open_cost):
-        kill.raise_level(1, "kis_buy", f"불변식 위반 open_cost {open_cost:.0f} > SEED")
-        return BuyDecision(False, "invariant", "open_cost > SEED — 회계 버그, 신규 중지")
+        # 예산선을 스친 것과 장부가 깨진 것을 구분한다. 전자는 이 매수만 거절하고,
+        #   후자만 kill을 올려 사람을 부른다. 어느 쪽이든 신규 매수는 막히므로
+        #   완충 구간에서 노출이 늘지는 않는다(근거는 envelope.accounting_breach).
+        if envelope.accounting_breach(seed, open_cost):
+            kill.raise_level(
+                1, "kis_buy",
+                f"회계 불변식 위반 open_cost {open_cost:.0f} > 한도 {seed:.0f} "
+                f"+{envelope.budget_kill_margin()*100:.0f}% 완충")
+            return BuyDecision(False, "invariant",
+                               "open_cost가 한도를 설명 불가 폭으로 초과 — 신규 중지")
+        return BuyDecision(
+            False, "budget",
+            f"슬리브 배분 한도 도달({open_cost:.0f}/{seed:.0f}) — 이번 매수만 거절")
     sleeve_dep = envelope.deployable(
         seed, envelope.bot_cash(seed, t["buy_cost"], t["sell_proceeds"]), open_cost)
     total_open = (float(total_open_cost_krw) if total_open_cost_krw is not None
@@ -272,12 +283,18 @@ def execute_entry(pos_key: str, symbol: str, *, price_usd: float,
                        if operating_limit_krw is not None
                        else envelope.operating_limit_krw())
     if total_open > operating_limit + 1e-6:
-        kill.raise_level(
-            1, "kis_buy",
-            f"A+B 예약원가 {total_open:.0f} > 운영한도 {operating_limit:.0f}")
+        if envelope.accounting_breach(operating_limit, total_open):
+            kill.raise_level(
+                1, "kis_buy",
+                f"A+B 회계 불변식 위반 {total_open:.0f} > 운영한도 "
+                f"{operating_limit:.0f} +{envelope.budget_kill_margin()*100:.0f}% 완충")
+            return BuyDecision(
+                False, "total_invariant",
+                "A+B 원가가 운영한도를 설명 불가 폭으로 초과 — 신규 중지")
         return BuyDecision(
-            False, "total_invariant",
-            "A+B held+in-flight+planned > operating limit — 신규 중지")
+            False, "total_budget",
+            f"A+B 운영한도 도달({total_open:.0f}/{operating_limit:.0f}) — "
+            "이번 매수만 거절")
     dep = min(sleeve_dep, envelope.combined_deployable(
         total_open, operating_limit=operating_limit))
     bp_native = kis.buying_power_of(symbol, price_usd, market=market, excg=excg)

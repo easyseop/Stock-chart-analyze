@@ -451,6 +451,49 @@ def test_mirror_stage():
     print("[PASS] mirror: 목록 없이 직접진입·신규 10종목·leg 중복 제외·risk1%")
 
 
+def test_hairline_budget_breach_blocks_without_kill():
+    """실측 2026-08-29 재현 — 2,634원 초과가 kill L1을 68시간 붙잡았다.
+
+    A 투입원가 35,152,634 vs 배분한도 35,150,000. 회계는 멀쩡했다(명목 시드
+    37,000,000 · costbook 34,205,761). 브로커 원가는 현재 환율로 재평가되고
+    costbook은 체결 시점 환율로 고정되므로, 고정된 선에 대면 환율이 하루 0.3%만
+    움직여도 선을 넘나든다 — 손으로 내린 kill이 1분 만에 재발한 이유다.
+
+    계약: 매수는 막되 kill은 올리지 않는다.
+    """
+    with tempfile.TemporaryDirectory() as tmp:
+        M = _setup(tmp)
+        X = M["kis_buy"]
+        os.environ["TRADE_STAGE"] = "mirror"
+        os.environ["ALLOWED_SYMBOLS"] = "AAPL"
+        _ready_all_gates(M, tmp)
+        kw = dict(price_usd=100.0, per_share_risk_usd=5.0, krw_per_usd=1400.0,
+                  risk_pct=0.01, seed_krw=35_150_000,
+                  held_cost_krw=35_152_634, total_held_cost_krw=35_152_634,
+                  total_open_cost_krw=35_152_634,
+                  operating_limit_krw=39_900_000)
+        with mock.patch.object(M["rollout"], "us_regular_open", return_value=True), \
+             mock.patch("bot.kis_orders.place_buy") as place:
+            d = X.execute_entry("hair#1", "AAPL",
+                                open_cost_krw=35_152_634, **kw)
+        assert d.gate == "budget", (d.gate, d.why)
+        assert not d.ok and not place.called
+        assert M["kill"].level() == 0, "2,634원 초과로 kill이 올라갔다"
+
+        # 같은 자리에서 설명 불가 폭(+13.8%)이면 여전히 kill — 완화가 구멍이 아님
+        with mock.patch.object(M["rollout"], "us_regular_open", return_value=True), \
+             mock.patch("bot.kis_orders.place_buy") as place2:
+            d2 = X.execute_entry("hair#2", "AAPL",
+                                 open_cost_krw=40_000_000,
+                                 **{**kw, "held_cost_krw": 40_000_000,
+                                    "total_held_cost_krw": 40_000_000,
+                                    "total_open_cost_krw": 40_000_000})
+        assert d2.gate == "invariant", (d2.gate, d2.why)
+        assert not d2.ok and not place2.called
+        assert M["kill"].level() >= 1
+    print("[PASS] 2,634원 초과=차단만 · 설명불가 초과=kill 유지")
+
+
 def test_broker_truth_open_cost_gate():
     """검토 수정 — costbook이 비어도(미배선 #25) 브로커-진실 open_cost_krw가
     총량 게이트(deployable=SEED−open_cost)·불변식을 실제로 물게 한다."""
@@ -527,9 +570,12 @@ def test_combined_a_b_total_gate():
         with mock.patch.object(M["rollout"], "us_regular_open", return_value=True), \
              mock.patch("bot.kis_orders.place_buy") as place:
             decision = X.execute_entry("sum#1", "AAPL", **kw)
-        assert decision.gate == "total_invariant"
-        assert M["kill"].level() >= 1 and not place.called
-    print("[PASS] A 2900만+B 450만 각 명목내·합계 3350만 → 5%완충 한도 차단")
+        # 초과분 25만/3325만 = 0.75% — 환율 재평가로도 설명되는 폭이다.
+        #   차단은 하되 kill은 올리지 않는다(래치 = 전 슬리브 중단 + 수동 해제).
+        assert decision.gate == "total_budget"
+        assert not decision.ok and not place.called
+        assert M["kill"].level() == 0, "예산선을 스친 것으로 kill이 올라갔다"
+    print("[PASS] A 2900만+B 450만 각 명목내·합계 3350만 → 차단하되 kill 없음")
 
 
 def test_gap_price_reserves_marketable_limit_not_stale_quote():

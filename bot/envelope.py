@@ -147,5 +147,45 @@ def size_buy(price_krw: float, per_share_risk_krw: float, *,
 
 
 def invariant_ok(seed: float, open_cost: float) -> bool:
-    """불변식: bot_open_cost ≤ SEED. 위반=사이징/회계 버그 → 신규 매수 금지+P0."""
+    """예산선: bot_open_cost ≤ SEED. 초과 = 신규 매수 금지(그 매수만 거절)."""
     return open_cost <= seed + 1e-6
+
+
+# 예산선을 스치는 것과 장부가 깨진 것은 전혀 다른 사건인데, 종전에는 둘 다
+#   래치된 kill L1(전 슬리브 매수 중단 + 운영자 수동 해제)을 받았다.
+#   실측 2026-08-29: A 투입원가 35,152,634가 배분한도 35,150,000을 **2,634원**
+#   (0.0075%) 넘겨 kill L1이 68시간 지속됐다. 회계는 멀쩡했다 — 명목 시드
+#   37,000,000 대비 costbook은 34,205,761로 280만원 여유였다.
+#
+#   초과가 사라지지 않는 이유는 비교 대상이 서로 다른 축이기 때문이다. 호출부가
+#   넘기는 브로커 투입원가는 **현재 환율**로 재평가되지만(kis_buyloop.py:281)
+#   costbook 원가는 체결 시점 환율로 고정된다. 움직이는 값을 고정된 선에 대면
+#   원-달러가 하루 0.3%만 움직여도 선을 넘나든다 — 08-19에 손으로 내린 kill이
+#   1분 만에 재발한 것이 그 증거다.
+#
+#   그래서 예산선 초과는 **그 매수를 거절**하는 것으로 끝내고, kill은 환율·예약
+#   잡음으로 설명되지 않는 폭을 넘었을 때만 올린다. 이 완충 구간에서도 신규
+#   매수는 여전히 전부 막히므로 노출이 늘지 않는다 — 달라지는 것은 "사람을
+#   부를 만한 사건인가"뿐이다.
+DEFAULT_BUDGET_KILL_MARGIN = 0.05
+
+
+def budget_kill_margin() -> float:
+    try:
+        value = float(os.environ.get("BOT_BUDGET_KILL_MARGIN",
+                                     str(DEFAULT_BUDGET_KILL_MARGIN)))
+    except (TypeError, ValueError):
+        return DEFAULT_BUDGET_KILL_MARGIN
+    if not (value == value) or value < 0 or value > 1:   # nan·음수·과대 방어
+        return DEFAULT_BUDGET_KILL_MARGIN
+    return value
+
+
+def accounting_breach(limit: float, open_cost: float) -> bool:
+    """환율·예약 잡음으로 설명되지 않는 초과인가 — kill L1을 올릴 사건인지 판정.
+
+    한도가 0 이하면(미설정·오설정) 어떤 투입도 설명 불가로 본다 — fail-closed.
+    """
+    if limit <= 0:
+        return open_cost > 1e-6
+    return open_cost > limit * (1.0 + budget_kill_margin()) + 1e-6
