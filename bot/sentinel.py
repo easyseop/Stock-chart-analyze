@@ -639,7 +639,20 @@ def check_once(broker, state: dict) -> None:
                               "code": code, "q": int(qty), "_bt": True,
                               "_broker_cache": used_cached_holdings,
                               "_provisional": code in provisional}
-            for code in unprot - state.get("_unprot", set()):     # 새 무보호만 알림
+            # 무보호 래치는 **파일**에 둔다. 프로세스 메모리에 두면 재기동·
+            #   일시적 잔고 이상마다 같은 고아가 새것으로 다시 보고된다(실측
+            #   2026-08-31~09-01: OMCL 2주가 하룻밤 세 번 P0). 반복 경보는
+            #   익숙해지는 순간 진짜 새 고아를 묻어버린다. 이 블록은 완전한
+            #   브로커 스냅샷(bh is not None)에서만 도므로 미조회를 '해소'로
+            #   오독하지 않는다.
+            try:
+                from bot import protection_observability as _po
+                fresh_unprot, resolved_unprot = _po.unprotected_transitions(unprot)
+            except Exception as exc:      # 관측 실패가 보호를 막지 않는다
+                print(f"[무보호 래치 오류] {type(exc).__name__}: {exc}", flush=True)
+                fresh_unprot = unprot - state.get("_unprot", set())
+                resolved_unprot = set()
+            for code in sorted(fresh_unprot):                     # 새 무보호만 알림
                 _notify(f"🚨 손절선 불명 KIS 보유 {code} — 수동 확인 필요(브로커-진실)",
                         critical=True)
                 try:
@@ -647,6 +660,8 @@ def check_once(broker, state: dict) -> None:
                     ownership.freeze(code, "KIS 실보유 손절선 불명 — 수동 확인")
                 except Exception:
                     pass
+            for code in sorted(resolved_unprot):
+                _notify(f"✅ 손절선 불명 해소 — {code}", critical=True)
             for code in provisional - state.get("_provisional", set()):
                 _notify(
                     f"🟡 KIS 보유 {code} — 주문 접수 후 대사 중. "

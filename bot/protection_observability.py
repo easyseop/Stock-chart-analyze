@@ -60,11 +60,25 @@ def _load_unlocked(path: str) -> dict:
                 continue
             if clean and signature and count > 0:
                 counts[clean] = {"signature": signature, "count": count}
+    clear_counts: dict[str, int] = {}
+    raw_clear = raw.get("unprotected_clear_counts", {})
+    if isinstance(raw_clear, dict):
+        for symbol, value in raw_clear.items():
+            clean = str(symbol).upper()
+            try:
+                count = int(value)
+            except (TypeError, ValueError):
+                continue
+            if clean and count > 0:
+                clear_counts[clean] = count
     return {
         "blocked": {str(x).upper() for x in raw.get("blocked", []) if str(x)},
         "sellable_gap": {
             str(x).upper() for x in raw.get("sellable_gap", []) if str(x)},
         "sellable_gap_counts": counts,
+        "unprotected": {
+            str(x).upper() for x in raw.get("unprotected", []) if str(x)},
+        "unprotected_clear_counts": clear_counts,
     }
 
 
@@ -87,6 +101,8 @@ def _write_unlocked(path: str, state: dict) -> None:
         "blocked": sorted(state.get("blocked", set())),
         "sellable_gap": sorted(state.get("sellable_gap", set())),
         "sellable_gap_counts": state.get("sellable_gap_counts", {}),
+        "unprotected": sorted(state.get("unprotected", set())),
+        "unprotected_clear_counts": state.get("unprotected_clear_counts", {}),
     }
     tmp = f"{path}.tmp.{os.getpid()}"
     fd = os.open(tmp, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
@@ -353,6 +369,62 @@ def audit_sellable_gaps(held: dict, *, scope_markets: set[str],
     return _notify_transitions(
         "sellable_gap", current, scope_markets=scope_markets,
         recovery_label="매도가능 부족")
+
+
+def _unprotected_clear_confirmations() -> int:
+    try:
+        value = int(os.environ.get("UNPROTECTED_CLEAR_CONFIRMATIONS", "2") or 2)
+    except (TypeError, ValueError):
+        value = 2
+    return max(1, min(10, value))
+
+
+def unprotected_transitions(current: set[str]) -> tuple[set[str], set[str]]:
+    """무보호 보유의 (신규, 해소) 전이. 래치를 파일에 영속한다.
+
+    왜 파일인가(실측 2026-08-31~09-01): 파수꾼이 이 집합을 프로세스 메모리에
+    들고 있어서 재기동이나 일시적 잔고 이상마다 **같은 고아가 새것으로 다시
+    보고**됐다. OMCL 2주 하나가 하룻밤에 세 번 P0로 올라왔다. 반복 경보는 그
+    자체로 위험하다 — 익숙해지면 **진짜 새 고아를 묻어버린다**.
+
+    해소는 한 번의 관측으로 확정하지 않는다. 브로커 응답에서 한 사이클 빠졌다가
+    다시 나타나면 래치가 풀렸다 걸리며 경보가 되살아나기 때문이다. 연속 N회
+    (기본 2) 깨끗해야 해소로 본다 — 매도가능 갭 관측과 같은 규율이다.
+
+    호출부는 **완전한 브로커 스냅샷**을 확보한 사이클에서만 부른다. 조회 실패
+    사이클에 부르면 미조회를 '해소'로 오독한다.
+    """
+    current = {str(x).upper() for x in current if str(x).strip()}
+    path = _latch_path()
+    parent = os.path.dirname(path) or "."
+    try:
+        os.makedirs(parent, mode=0o700, exist_ok=True)
+        with open(path + ".lock", "a+", encoding="utf-8") as lock:
+            os.chmod(path + ".lock", 0o600)
+            fcntl.flock(lock.fileno(), fcntl.LOCK_EX)
+            state = _load_unlocked(path)
+            latched = state.get("unprotected", set())
+            counts = dict(state.get("unprotected_clear_counts", {}))
+            threshold = _unprotected_clear_confirmations()
+            fresh = current - latched
+            resolved: set[str] = set()
+            for symbol in latched:
+                if symbol in current:
+                    counts.pop(symbol, None)          # 다시 관측됨 — 카운터 초기화
+                    continue
+                counts[symbol] = counts.get(symbol, 0) + 1
+                if counts[symbol] >= threshold:
+                    resolved.add(symbol)
+                    counts.pop(symbol, None)
+            state["unprotected"] = (latched | fresh) - resolved
+            state["unprotected_clear_counts"] = {
+                k: v for k, v in counts.items() if k in state["unprotected"]}
+            _write_unlocked(path, state)
+            return fresh, resolved
+    except OSError:
+        # 래치를 쓸 수 없으면 **아무것도 새것이 아니라고** 보고한다. 알림을
+        #   못 쓰는 상태에서 전부 새것으로 처리하면 매 사이클 폭주한다.
+        return set(), set()
 
 
 def check(held: dict, *, scope_markets: set[str],
