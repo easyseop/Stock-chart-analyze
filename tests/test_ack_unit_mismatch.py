@@ -25,7 +25,8 @@ def _setup(tmp: str):
 
 
 def _ack(ledger, key: str, symbol: str, *, qty: int = 5, before=11,
-         odno: str = "0000012345", age_s: float = 601, side: str = "SELL"):
+         odno: str = "0000012345", age_s: float = 601, side: str = "SELL",
+         confirmed: bool = True):
     ledger._append({
         "ev": "submit", "key": key, "symbol": symbol, "intended": qty,
         "filled": 0, "state": "submitted", "reason": "test",
@@ -34,6 +35,12 @@ def _ack(ledger, key: str, symbol: str, *, qty: int = 5, before=11,
     })
     ledger.bind_broker_order(key, odno, ord_tmd="101500")
     ledger.on_result(key, "ack", 0)
+    if confirmed:
+        # 부재 종결은 간격을 둔 2회 관측을 요구한다(2026-09-01 하드닝).
+        #   이 파일의 관심사는 단위 불일치·msg_cd 정화라 1회차를 미리 채워둔다.
+        ledger.record_reconcile_meta(
+            key, reason="absence-observed",
+            meta={"absence_first_at": time.time() - age_s})
     return {"key": key, **ledger.state_of(key)}
 
 

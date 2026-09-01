@@ -25,6 +25,7 @@
 """
 from __future__ import annotations
 
+import math
 import os
 import re
 
@@ -362,6 +363,23 @@ def resolve_acks_from_rows(rows: list[dict],
 REJECT_ABSENCE_MIN_S = max(
     600, int(os.environ.get("REJECT_ABSENCE_MIN_S", "600") or 600))
 
+# 부재 증명은 **두 번의 독립 관측**을 요구한다. 한 번의 스냅샷으로 종결하면
+#   브로커 저널 지연을 '부재'로 오독한다 — 실측 2건이 그렇게 났다:
+#
+#     PAAS  08-26 11:01 ET 매도 5주 제출 → 같은 세션 5주 @52.99 체결(odno 41030).
+#           11:12 ET(제출 11분 뒤) 부재 증명이 돌 때 ccnl에 체결행이 아직 없었고
+#           잔고도 5주 그대로였다 → `rejected·filled=0` 종결. 실제로는 전량 체결.
+#           → 유령 포지션(원장 5주 · 브로커 0주), B costbook 33만원 과대.
+#     OMCL  08-28 매수 1주 × 2건(odno 44603·44854) 동일 경로로 오종결.
+#           → 무보호 고아 2주(손절선 없이 방치, 사후 감사로만 발견).
+#
+#   두 번 다 시간이 지난 뒤 조회하면 체결행이 **보인다**. 즉 저널은 늦을 뿐
+#   틀리지 않는다 — 그래서 해법은 더 엄격한 증거가 아니라 **간격을 둔 재확인**이다.
+#   첫 관측은 원장에 표식만 남기고, 이 창을 넘긴 두 번째 관측에서만 종결한다.
+#   표식을 append-only 원장에 두므로 재기동에도 살아남고 감사 흔적이 남는다.
+ABSENCE_CONFIRM_WINDOW_S = max(
+    60, int(os.environ.get("ABSENCE_CONFIRM_WINDOW_S", "600") or 600))
+
 
 def _closed_zero_fill_row(rows: list[dict], odno: str) -> dict | None:
     """ODNO의 명시적 0체결 행이 단 하나일 때만 반환한다."""
@@ -463,7 +481,30 @@ def resolve_acks_by_absence(evidence_by_key: dict[str, dict],
                            if zero_fill_row is not None else "absence-proof"),
                 "reason": "absence-balance-contradiction",
             })
+            # 증거가 깨졌으니 재확인 표식을 무장 해제한다. 남겨두면 나중에
+            #   증거가 다시 깨끗해 보일 때 낡은 표식만 믿고 즉시 종결한다.
+            if (order.get("reconcile_meta") or {}).get("absence_first_at"):
+                ledger.record_reconcile_meta(
+                    key, reason="absence-rearm",
+                    meta={"absence_first_at": 0.0})   # 0 = 무장 해제
             continue
+        # ── 재확인 게이트 — 여기부터가 종결 직전 마지막 방어선 ──────────
+        prior_meta = order.get("reconcile_meta") or {}
+        try:
+            first_at = prior_meta.get("absence_first_at")
+            first_at = None if first_at is None else float(first_at)
+        except (TypeError, ValueError):
+            first_at = None
+        if (first_at is None or not math.isfinite(first_at)
+                or first_at <= 0 or first_at > now_ts):
+            # 첫 관측 — 표식만 남기고 이번 사이클은 종결하지 않는다.
+            ledger.record_reconcile_meta(
+                key, reason="absence-observed",
+                meta={"absence_first_at": now_ts,
+                      "absence_first_hldg": current})
+            continue
+        if now_ts - first_at < ABSENCE_CONFIRM_WINDOW_S:
+            continue                     # 아직 재확인 창을 못 채움
         result = ledger.reconcile(key, 0, open_order=False)
         via = "zero-fill-balance-proof" if zero_fill_row is not None \
             else "absence-proof"

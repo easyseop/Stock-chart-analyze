@@ -603,6 +603,10 @@ def record_reconcile_meta(key: str, *, reason: str, meta: dict) -> None:
         "last_msg_cd", "last_msg1", "last_status", "last_source",
         "before_unknown", "zero_fill_proof", "hldg_before_recorded",
         "hldg_now_observed",
+        # 부재 증명 재확인 표식(2026-09-01). 타임스탬프와 수량뿐이라 브로커
+        #   식별자·계좌 정보가 섞이지 않는다. 0은 '무장 해제'를 뜻한다 —
+        #   이 화이트리스트가 None을 버리므로 해제는 값으로 표현해야 한다.
+        "absence_first_at", "absence_first_hldg",
     }
     def safe_value(value):
         if not isinstance(value, str):

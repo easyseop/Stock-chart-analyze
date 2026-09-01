@@ -31,7 +31,7 @@ def _paths(tmp: str) -> None:
 def _ack(key: str = "xe:TAP:time:2026-07-20", *, symbol: str = "TAP",
          side: str = "SELL", qty: int = 80, before: int = 80,
          age_s: float = 601, market: str = "US", excg: str = "NYSE",
-         odno: str = "0000038291") -> dict:
+         odno: str = "0000038291", confirmed: bool = True) -> dict:
     L._append({"ev": "submit", "key": key, "symbol": symbol,
                "intended": qty, "filled": 0, "state": "submitted",
                "reason": "time stop", "ts": time.time() - age_s,
@@ -39,6 +39,15 @@ def _ack(key: str = "xe:TAP:time:2026-07-20", *, symbol: str = "TAP",
                         "market": market, "excg": excg}})
     L.bind_broker_order(key, odno, ord_tmd="223114")
     L.on_result(key, "ack", 0)
+    if confirmed:
+        # 부재 종결은 간격을 둔 **2회** 관측을 요구한다(2026-09-01 하드닝 —
+        #   PAAS·OMCL 실측에서 단일 스냅샷이 브로커 저널 지연을 '부재'로
+        #   오독했다). 이 파일의 기존 테스트들은 증거 카운트·정화·모순 처리가
+        #   관심사이므로 1회차 관측을 픽스처에서 충족시켜 둔다. 게이트 자체는
+        #   test_absence_confirmation.py가 따로 덮는다.
+        L.record_reconcile_meta(
+            key, reason="absence-observed",
+            meta={"absence_first_at": time.time() - age_s})
     return {"key": key, **(L.state_of(key) or {})}
 
 
