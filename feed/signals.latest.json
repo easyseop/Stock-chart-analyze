@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated_at": "2026-09-03T06:01:24+09:00",
+ "generated_at": "2026-09-03T06:17:16+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "a_ablation": [
   {
@@ -1285,7 +1285,7 @@
     "overhead": 0.53,
     "reason": "반등 미확인(거래량)",
     "history_bars": 1928,
-    "profile_pnl_proxy": -0.0819,
+    "profile_pnl_proxy": -0.0818,
     "runup252": 0.9318,
     "checks": {
      "터치": true,
