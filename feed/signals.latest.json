@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated_at": "2026-09-02T16:16:45+09:00",
+ "generated_at": "2026-09-02T16:32:30+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "a_ablation": [
   {
@@ -140,9 +140,9 @@
    "추락 중(범위 1%)": 178,
    "추락 중(범위 0%)": 162,
    "매물대 정보 없음": 141,
-   "추락 중(범위 2%)": 108,
+   "추락 중(범위 2%)": 107,
+   "추락 중(범위 3%)": 106,
    "반등 미확인(터치·상단마감·거래량)": 106,
-   "추락 중(범위 3%)": 105,
    "추락 중(범위 6%)": 85
   }
  },
@@ -229,6 +229,34 @@
     "mode": "pullback",
     "label": "⏳ 눌림 지정가만",
     "desc": "지금 추격 금지(손절폭 10.4%) — <b>328,362원 눌림 지정가만</b>. 눌리면 손절폭 5.2%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
+   }
+  },
+  {
+   "id": "SITE-2026-09-02-now",
+   "code": "SITE",
+   "name": "SiteOne Landscape Supply, Inc.",
+   "ccy": "USD",
+   "group": "now",
+   "entry_kind": "now",
+   "stage": 3,
+   "price": 97.47,
+   "entry": 97.47,
+   "stop": 90.9277,
+   "target": 110.5546,
+   "shares_1pct": 15,
+   "range_pos": 0.0943,
+   "norm": -7.5,
+   "bear_share": 0.375,
+   "fresh": true,
+   "break_gap": 0.0253,
+   "earnings_d": 56,
+   "tactic": {
+    "stop_pct": 6.7,
+    "pb_price": null,
+    "pb_stop_pct": null,
+    "mode": "half",
+    "label": "⚖ 반반 진입",
+    "desc": "손절폭 6.7% — 절반만 현재가, 나머지는 눌림 확인 후 추가"
    }
   },
   {
@@ -1551,8 +1579,8 @@
    "stage": 2,
    "price": 67.41,
    "entry": 67.41,
-   "stop": 61.8088,
-   "target": 78.6125,
+   "stop": 61.7201,
+   "target": 78.7898,
    "shares_1pct": 17,
    "range_pos": 0.3972,
    "norm": -4.7,
@@ -1561,12 +1589,40 @@
    "break_gap": 0.0179,
    "earnings_d": 62,
    "tactic": {
-    "stop_pct": 8.3,
+    "stop_pct": 8.4,
     "pb_price": null,
     "pb_stop_pct": null,
     "mode": "pullback",
     "label": "⏳ 눌림 지정가만",
-    "desc": "지금 추격 금지(손절폭 8.3%) — 받칠 지지에 눌릴 때까지 대기"
+    "desc": "지금 추격 금지(손절폭 8.4%) — 받칠 지지에 눌릴 때까지 대기"
+   }
+  },
+  {
+   "id": "PODD-2026-09-02-watch",
+   "code": "PODD",
+   "name": "Insulet Corporation",
+   "ccy": "USD",
+   "group": "watch",
+   "entry_kind": "now",
+   "stage": 2,
+   "price": 148.38,
+   "entry": 148.38,
+   "stop": 135.971,
+   "target": 173.1981,
+   "shares_1pct": 8,
+   "range_pos": 0.0962,
+   "norm": -5.7,
+   "bear_share": 0.25,
+   "fresh": true,
+   "break_gap": 0.0113,
+   "earnings_d": null,
+   "tactic": {
+    "stop_pct": 8.4,
+    "pb_price": 139.9148,
+    "pb_stop_pct": 2.8,
+    "mode": "pullback",
+    "label": "⏳ 눌림 지정가만",
+    "desc": "지금 추격 금지(손절폭 8.4%) — <b>$139.91 눌림 지정가만</b>. 눌리면 손절폭 2.8%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
    }
   },
   {
@@ -1617,34 +1673,6 @@
    "break_gap": 0.03,
    "earnings_d": 57,
    "tactic": null
-  },
-  {
-   "id": "SITE-2026-09-02-watch",
-   "code": "SITE",
-   "name": "SiteOne Landscape Supply, Inc.",
-   "ccy": "USD",
-   "group": "watch",
-   "entry_kind": "now",
-   "stage": 2,
-   "price": 97.47,
-   "entry": 97.47,
-   "stop": 90.6147,
-   "target": 111.1805,
-   "shares_1pct": 14,
-   "range_pos": 0.0943,
-   "norm": -18.9,
-   "bear_share": 0.375,
-   "fresh": true,
-   "break_gap": 0.0188,
-   "earnings_d": 56,
-   "tactic": {
-    "stop_pct": 7.0,
-    "pb_price": null,
-    "pb_stop_pct": null,
-    "mode": "half",
-    "label": "⚖ 반반 진입",
-    "desc": "손절폭 7.0% — 절반만 현재가, 나머지는 눌림 확인 후 추가"
-   }
   },
   {
    "id": "ORLA-2026-09-02-watch",
@@ -1712,8 +1740,8 @@
    "stage": 1,
    "price": 545.66,
    "entry": 545.66,
-   "stop": 508.9798,
-   "target": 619.0202,
+   "stop": 506.8881,
+   "target": 623.2037,
    "shares_1pct": 2,
    "range_pos": 0.3761,
    "norm": 39.3,
@@ -1722,12 +1750,12 @@
    "break_gap": 0.0005,
    "earnings_d": -6,
    "tactic": {
-    "stop_pct": 6.7,
+    "stop_pct": 7.1,
     "pb_price": null,
     "pb_stop_pct": null,
     "mode": "half",
     "label": "⚖ 반반 진입",
-    "desc": "손절폭 6.7% — 절반만 현재가, 나머지는 눌림 확인 후 추가"
+    "desc": "손절폭 7.1% — 절반만 현재가, 나머지는 눌림 확인 후 추가"
    }
   },
   {
@@ -1740,8 +1768,8 @@
    "stage": 1,
    "price": 23.71,
    "entry": 23.71,
-   "stop": 22.4137,
-   "target": 26.3027,
+   "stop": 22.4131,
+   "target": 26.3039,
    "shares_1pct": 77,
    "range_pos": 0.2841,
    "norm": 33.0,
@@ -1768,22 +1796,22 @@
    "stage": 1,
    "price": 34.71,
    "entry": 34.71,
-   "stop": 32.613,
-   "target": 38.904,
-   "shares_1pct": 47,
-   "range_pos": 0.184,
+   "stop": 32.6874,
+   "target": 38.7552,
+   "shares_1pct": 49,
+   "range_pos": 0.1873,
    "norm": 31.1,
    "bear_share": 0.125,
    "fresh": true,
-   "break_gap": -0.0191,
+   "break_gap": -0.015,
    "earnings_d": 50,
    "tactic": {
-    "stop_pct": 6.0,
+    "stop_pct": 5.8,
     "pb_price": null,
     "pb_stop_pct": null,
-    "mode": "half",
-    "label": "⚖ 반반 진입",
-    "desc": "손절폭 6.0% — 절반만 현재가, 나머지는 눌림 확인 후 추가"
+    "mode": "full",
+    "label": "⚡ 즉시 분할",
+    "desc": "손절폭 5.8%로 타이트 — 현재가에서 1~2회 분할 매수. 기다리는 이득보다 놓치는 비용이 큼"
    }
   },
   {
@@ -2006,19 +2034,19 @@
    "stage": 1,
    "price": 80.36,
    "entry": 80.36,
-   "stop": 77.0334,
-   "target": 87.0133,
+   "stop": 77.0721,
+   "target": 86.9357,
    "shares_1pct": 30,
    "range_pos": 0.3768,
    "norm": 17.0,
    "bear_share": 0.0,
    "fresh": true,
-   "break_gap": -0.0169,
+   "break_gap": -0.0158,
    "earnings_d": 61,
    "tactic": {
     "stop_pct": 4.1,
-    "pb_price": 79.4686,
-    "pb_stop_pct": 3.1,
+    "pb_price": 79.3506,
+    "pb_stop_pct": 2.9,
     "mode": "full",
     "label": "⚡ 즉시 분할",
     "desc": "손절폭 4.1%로 타이트 — 현재가에서 1~2회 분할 매수. 기다리는 이득보다 놓치는 비용이 큼"
@@ -2221,6 +2249,27 @@
    }
   },
   {
+   "id": "PG-2026-09-02-watch",
+   "code": "PG",
+   "name": "Procter & Gamble Company",
+   "ccy": "USD",
+   "group": "watch",
+   "entry_kind": "breakout",
+   "stage": 1,
+   "price": 146.21,
+   "entry": 148.5,
+   "stop": 143.254,
+   "target": 158.992,
+   "shares_1pct": 19,
+   "range_pos": 0.2899,
+   "norm": 7.5,
+   "bear_share": 0.125,
+   "fresh": true,
+   "break_gap": -0.007,
+   "earnings_d": 50,
+   "tactic": null
+  },
+  {
    "id": "HLF-2026-09-02-watch",
    "code": "HLF",
    "name": "Herbalife Ltd.",
@@ -2305,27 +2354,6 @@
    }
   },
   {
-   "id": "PG-2026-09-02-watch",
-   "code": "PG",
-   "name": "Procter & Gamble Company",
-   "ccy": "USD",
-   "group": "watch",
-   "entry_kind": "breakout",
-   "stage": 1,
-   "price": 146.21,
-   "entry": 148.5,
-   "stop": 143.1055,
-   "target": 159.2891,
-   "shares_1pct": 18,
-   "range_pos": 0.2899,
-   "norm": -1.9,
-   "bear_share": 0.25,
-   "fresh": true,
-   "break_gap": -0.008,
-   "earnings_d": 50,
-   "tactic": null
-  },
-  {
    "id": "MMS-2026-09-02-watch",
    "code": "MMS",
    "name": "Maximus, Inc.",
@@ -2351,34 +2379,6 @@
     "mode": "half",
     "label": "⚖ 반반 진입",
     "desc": "손절폭 6.3% — 절반만 현재가, 나머지는 눌림 확인 후 추가"
-   }
-  },
-  {
-   "id": "PODD-2026-09-02-watch",
-   "code": "PODD",
-   "name": "Insulet Corporation",
-   "ccy": "USD",
-   "group": "watch",
-   "entry_kind": "now",
-   "stage": 1,
-   "price": 148.38,
-   "entry": 148.38,
-   "stop": 135.5749,
-   "target": 173.9902,
-   "shares_1pct": 7,
-   "range_pos": 0.0962,
-   "norm": -13.2,
-   "bear_share": 0.375,
-   "fresh": true,
-   "break_gap": 0.0049,
-   "earnings_d": null,
-   "tactic": {
-    "stop_pct": 8.6,
-    "pb_price": 139.9148,
-    "pb_stop_pct": 3.1,
-    "mode": "pullback",
-    "label": "⏳ 눌림 지정가만",
-    "desc": "지금 추격 금지(손절폭 8.6%) — <b>$139.91 눌림 지정가만</b>. 눌리면 손절폭 3.1%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
    }
   },
   {
