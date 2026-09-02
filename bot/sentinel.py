@@ -645,9 +645,15 @@ def check_once(broker, state: dict) -> None:
             #   익숙해지는 순간 진짜 새 고아를 묻어버린다. 이 블록은 완전한
             #   브로커 스냅샷(bh is not None)에서만 도므로 미조회를 '해소'로
             #   오독하지 않는다.
+            unprot_scope = set()
+            if _market_open("KRW"):
+                unprot_scope.add("KR")
+            if _market_open("USD"):
+                unprot_scope.add("US")
             try:
                 from bot import protection_observability as _po
-                fresh_unprot, resolved_unprot = _po.unprotected_transitions(unprot)
+                fresh_unprot, resolved_unprot = _po.unprotected_transitions(
+                    unprot, scope_markets=unprot_scope)
             except Exception as exc:      # 관측 실패가 보호를 막지 않는다
                 print(f"[무보호 래치 오류] {type(exc).__name__}: {exc}", flush=True)
                 fresh_unprot = unprot - state.get("_unprot", set())

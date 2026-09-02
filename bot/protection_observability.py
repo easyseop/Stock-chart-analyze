@@ -379,7 +379,14 @@ def _unprotected_clear_confirmations() -> int:
     return max(1, min(10, value))
 
 
-def unprotected_transitions(current: set[str]) -> tuple[set[str], set[str]]:
+def _symbol_market(symbol: str) -> str:
+    """심볼의 시장. 국내는 6자리 숫자(브로커 호출 없이 판정)."""
+    clean = str(symbol).strip()
+    return "KR" if clean.isdigit() and len(clean) == 6 else "US"
+
+
+def unprotected_transitions(current: set[str], *,
+                            scope_markets: set[str]) -> tuple[set[str], set[str]]:
     """무보호 보유의 (신규, 해소) 전이. 래치를 파일에 영속한다.
 
     왜 파일인가(실측 2026-08-31~09-01): 파수꾼이 이 집합을 프로세스 메모리에
@@ -391,8 +398,14 @@ def unprotected_transitions(current: set[str]) -> tuple[set[str], set[str]]:
     다시 나타나면 래치가 풀렸다 걸리며 경보가 되살아나기 때문이다. 연속 N회
     (기본 2) 깨끗해야 해소로 본다 — 매도가능 갭 관측과 같은 규율이다.
 
-    호출부는 **완전한 브로커 스냅샷**을 확보한 사이클에서만 부른다. 조회 실패
-    사이클에 부르면 미조회를 '해소'로 오독한다.
+    `scope_markets`는 이번 스냅샷이 **실제로 조회한** 시장이다. 그 밖의 시장에
+    속한 심볼은 판단을 보류한다 — 장이 닫히면 `holdings()`가 조회를 아예 하지
+    않고 빈 맵을 반환하므로, 범위를 보지 않으면 "미조회"를 "사라졌다"로 읽는다.
+    실측 2026-09-02: 이 구분이 없어 미장 마감 중 OMCL 래치가 풀렸고 22:31
+    개장과 함께 같은 고아가 또 P0로 올라왔다. `조회 실패 ≠ 부재`와 같은 원칙이
+    `미조회 ≠ 부재`에도 적용돼야 한다.
+
+    호출부는 조회 실패 사이클에는 아예 부르지 않는다(브로커 스냅샷이 None).
     """
     current = {str(x).upper() for x in current if str(x).strip()}
     path = _latch_path()
@@ -409,6 +422,8 @@ def unprotected_transitions(current: set[str]) -> tuple[set[str], set[str]]:
             fresh = current - latched
             resolved: set[str] = set()
             for symbol in latched:
+                if _symbol_market(symbol) not in scope_markets:
+                    continue                  # 이번 스냅샷이 안 본 시장 — 보류
                 if symbol in current:
                     counts.pop(symbol, None)          # 다시 관측됨 — 카운터 초기화
                     continue
