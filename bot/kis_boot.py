@@ -304,8 +304,17 @@ def _resolve_acks() -> list[dict]:
     try:
         now = time.time()
         initial_open = ledger.open_orders()
+        # `partial`도 조회 대상이다. 이 목록이 **어느 거래소·어느 날짜의 체결내역을
+        #   읽을지**를 정하므로, 여기서 빠지면 그 주문의 체결행을 애초에 가져오지
+        #   않는다. `resolve_acks_from_rows`는 partial을 이미 받는데도(321행) 볼
+        #   행이 없어 잔량이 영원히 미회계로 남는다.
+        #   실측 2026-09-02: TRUP 매도 7주가 브로커에서 전량 체결(odno 41895
+        #   @28.08)됐는데 원장은 `partial 1/7 · accounted=1`에 멈췄다. 다른 주문이
+        #   우연히 같은 거래소·날짜를 조회해 주지 않으면 스스로는 못 빠져나온다.
+        #   부재 증명(resolve_acks_by_absence)은 자체 게이트에서 partial을 계속
+        #   제외하므로, 이미 체결이 있는 주문을 '거절'로 닫을 위험은 없다.
         aged = [o for o in initial_open
-                if o.get("state") in ("submitted", "ack")
+                if o.get("state") in ("submitted", "ack", "partial")
                 and (o.get("side") or "").upper() in ("BUY", "SELL")
                 and now - float(o.get("submitted_at") or 0)
                 >= kis_reconcile.ACK_AGE_MIN_S]
