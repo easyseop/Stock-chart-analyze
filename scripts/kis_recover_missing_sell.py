@@ -1,11 +1,18 @@
 #!/usr/bin/env python3
-"""실제 체결된 매도가 `rejected·0체결`로 오종결된 주문의 회계 복구(주문 0건).
+"""브로커 체결이 원장 기록보다 많은 **닫힌 매도**의 회계 복구(주문 0건).
 
-왜(실측 2026-08-26): PAAS 매도 5주(odno 41030)가 같은 세션에 @52.99 전량
-체결됐는데, 11분 뒤 부재 증명이 돌 때 브로커 저널이 아직 그 체결을 보여주지
-않아 `rejected·filled=0`으로 닫혔다. 그 결과 원장은 5주를 계속 보유 중이라고
-믿고(유령 포지션), costbook은 33만원을 묶어두고, 보호원장은 있지도 않은
-수량에 손절선을 걸고 있다.
+실측 2건. 둘 다 브로커 저널 지연이 뿌리다:
+
+  PAAS  08-26 매도 5주(odno 41030) @52.99 전량 체결. 11분 뒤 부재 증명이 돌 때
+        저널에 체결행이 없어 `rejected·filled=0`으로 닫혔다.
+  TRUP  09-02 매도 7주(odno 41895) @28.08 전량 체결. 원장은 `partial 1/7 ·
+        open=False`로 닫혀 6주가 미회계로 남았다.
+
+둘 다 원장이 있지도 않은 수량을 보유 중이라 믿는다(유령 포지션) — costbook이
+원가를 묶어두고, 보호원장은 없는 수량에 손절선을 건다.
+
+기준은 상태 이름이 아니라 **닫혀 있는데 기록이 브로커보다 적은가**다. 열린
+주문은 자동 대사의 몫이라 거부한다 — 끼어들면 이중 회계가 난다.
 
 `bot/accounting_recovery.py`는 반대 시나리오(매수 유실)만 다룬다. 매도 유실은
 포지션을 **닫아야** 하므로 경로가 다르다.
@@ -14,7 +21,8 @@
   · 회계를 재구현하지 않는다 — 정상 경로인 `kis_accounting.sync_fill`을 그대로
     태운다. 복구가 평상시 회계와 갈라지면 그 자체가 새 버그다.
   · plan은 읽기 전용. apply는 증거를 **처음부터 다시** 수집한다(plan 재사용 금지).
-  · 브로커 ccnl의 ODNO·수량이 원장과 일치할 때만 진행. 조회 실패는 부재가 아니다.
+  · 브로커 ccnl의 ODNO가 원장과 일치하고 체결량이 기록을 넘을 때만 진행.
+    조회 실패는 부재가 아니다.
   · 브로커 현재 보유가 '이미 줄어 있음'을 함께 확인한다 — 아직 들고 있으면
     체결이 아니라 우리 판정이 맞았을 수 있으므로 거부한다.
   · sync_fill의 event_id가 멱등이라 중간 크래시 뒤 재실행이 안전하다.
@@ -28,6 +36,7 @@ import datetime
 import json
 import os
 import sys
+from zoneinfo import ZoneInfo
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -36,6 +45,7 @@ from bot import (costbook, kis, kis_accounting, kis_positions,  # noqa: E402
 
 US_EXCGS = ("NASD", "NYSE", "AMEX")
 KST = datetime.timezone(datetime.timedelta(hours=9))
+ET = ZoneInfo("America/New_York")
 
 
 class Refused(RuntimeError):
@@ -96,10 +106,15 @@ def collect(key: str, *, trade_date: str) -> dict:
     side = str(order.get("side") or "").upper()
     if side != "SELL":
         raise Refused(f"매도 주문이 아니다(side={side!r})")
-    if order.get("state") != "rejected":
-        raise Refused(f"거절 종결된 주문만 대상(state={order.get('state')!r})")
-    if int(order.get("filled") or 0) != 0:
-        raise Refused("이미 체결이 기록돼 있다 — 이 도구 대상 아님")
+    # 대상은 '거절'만이 아니다. 실측 2026-09-02 TRUP: 7주 전량 체결(odno 41895
+    #   @28.08)인데 원장이 `partial 1/7 · open=False`로 닫혀 6주가 미회계로
+    #   남았다. 같은 뿌리(브로커 저널 지연)의 다른 얼굴이라 같은 도구로 다룬다.
+    #   기준은 상태 이름이 아니라 **닫혀 있는데 기록이 브로커보다 적은가**다.
+    if ledger.fold_is_open(order):
+        raise Refused(
+            f"아직 열린 주문(state={order.get('state')!r}) — 자동 대사가 처리한다. "
+            "끼어들면 이중 회계가 난다")
+    recorded = int(order.get("filled") or 0)
     odno = kis_reconcile.order_no_key(order.get("odno"))
     if not odno:
         raise Refused("원장에 ODNO가 없다 — 브로커 대조 불가")
@@ -111,6 +126,10 @@ def collect(key: str, *, trade_date: str) -> dict:
     intended = int(order.get("intended") or 0)
     if fill["qty"] > intended:
         raise Refused(f"체결({fill['qty']})이 주문수량({intended})을 초과")
+    if fill["qty"] <= recorded:
+        raise Refused(
+            f"브로커 체결({fill['qty']})이 원장 기록({recorded})을 넘지 않는다 — "
+            "복구할 것이 없다")
     held_now = _broker_holding(symbol)
     ledger_qty = int((kis_positions.load().get(symbol) or {}).get("qty") or 0)
     if held_now >= ledger_qty and ledger_qty > 0:
@@ -122,20 +141,38 @@ def collect(key: str, *, trade_date: str) -> dict:
         "key": key, "symbol": symbol, "odno": odno,
         "trade_date": trade_date,
         "fill_qty": fill["qty"], "fill_price": fill["price"],
+        "recorded_filled": recorded, "missing_qty": fill["qty"] - recorded,
         "intended": intended,
         "pos_key": str(order.get("pos_key")), "sleeve": str(order.get("sleeve")),
         "fx": float(order.get("fx")),
         "ledger_position_qty": ledger_qty,
         "costbook_open_qty": costbook.open_qty(symbol),
         "broker_qty_now": held_now,
-        "realized_day_kst": _day_kst(trade_date),
+        "realized_day_kst": _realized_day_kst(order, trade_date),
     }
 
 
-def _day_kst(trade_date: str) -> str:
-    """미 동부 거래일 → 실현손익이 귀속될 KST 일자(장 마감은 KST 익일 새벽)."""
-    day = datetime.datetime.strptime(trade_date, "%Y%m%d")
-    return (day + datetime.timedelta(days=1)).strftime("%Y-%m-%d")
+def _realized_day_kst(order: dict, trade_date: str) -> str:
+    """실현손익이 귀속될 KST 일자.
+
+    첫 판본은 `거래일 + 1일`로 계산했는데 틀렸다. 미장은 KST 22:30~05:00에
+    걸쳐 있어 **11:00 ET가 경계**다 — 그 전 체결은 KST 같은 날, 그 뒤는 익일이다.
+    09:35 ET 체결을 익일로 밀면 거래가 달을 넘어가 월별 결산이 어긋난다.
+
+    ccnl 행에는 체결 시각이 없으므로 주문의 `submitted_at`(정확한 epoch)에서
+    유도한다. 체결은 제출 몇 분 뒤이므로 날짜 판정에는 충분하다. 다만 제출
+    세션과 체결 세션이 다르면 시각을 유추할 수 없어 거부한다 — 결산 숫자를
+    추측으로 채우지 않는다.
+    """
+    stamp = float(order.get("submitted_at") or 0)
+    if stamp <= 0:
+        raise Refused("주문 제출 시각이 없어 실현일을 판정할 수 없다")
+    submitted_et = datetime.datetime.fromtimestamp(stamp, ET).strftime("%Y%m%d")
+    if submitted_et != trade_date:
+        raise Refused(
+            f"제출 거래일({submitted_et})과 체결 거래일({trade_date})이 다르다 — "
+            "실현일 귀속을 자동 판단할 수 없다(월별 결산에 영향)")
+    return datetime.datetime.fromtimestamp(stamp, KST).strftime("%Y-%m-%d")
 
 
 def apply(key: str, *, trade_date: str, ack: str) -> dict:
