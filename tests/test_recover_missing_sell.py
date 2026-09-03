@@ -16,7 +16,7 @@ import pytest
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "scripts"))
 import kis_recover_missing_sell as RS   # noqa: E402
 
-from bot import costbook, kis_positions, ledger as L  # noqa: E402
+from bot import costbook, kis_positions, ledger as L, ownership  # noqa: E402
 
 
 ET = ZoneInfo("America/New_York")
@@ -38,6 +38,9 @@ def env(monkeypatch):
     monkeypatch.setenv("KIS_POSITIONS_PATH", f"{tmp}/positions.jsonl")
     monkeypatch.setenv("COSTBOOK_PATH", f"{tmp}/costbook.jsonl")
     monkeypatch.setattr(kis_positions, "PATH", f"{tmp}/positions.jsonl")
+    monkeypatch.setenv("SYMBOL_FREEZE_PATH", f"{tmp}/freeze.json")
+    with open(f"{tmp}/freeze.json", "w", encoding="utf-8") as fp:
+        fp.write("{}")
     key = "xe:PAAS:time:2026-08-06#1"
     L._append({"ev": "submit", "key": key, "symbol": "PAAS", "intended": 5,
                "filled": 0, "state": "submitted", "reason": "B 타임스탑 21일",
@@ -101,7 +104,7 @@ def test_refuses_buy_row(env, monkeypatch):
                         lambda excg=None, start=None, end=None:
                         {"rt_cd": "0",
                          "output": [_row(side="02")] if excg == "NYSE" else []})
-    with pytest.raises(RS.Refused, match="매도 행이 아니다"):
+    with pytest.raises(RS.Refused, match="방향이 다르다"):
         RS.collect(env, trade_date="20260826")
 
 
@@ -147,7 +150,7 @@ def test_apply_is_idempotent(env):
 def test_apply_records_operator_audit(env):
     RS.apply(env, trade_date="20260826", ack="운영자: 근거 X")
     action = L.state_of(env)["last_operator_action"]
-    assert action["action"] == "recover-missing-sell"
+    assert action["action"] == "recover-missing-fill"
     assert action["ack"] == "운영자: 근거 X"
     assert action["evidence"]["filled"] == 5
 
@@ -243,3 +246,114 @@ def test_closed_partial_apply_accounts_the_remainder(env, monkeypatch):
     assert out["accounting"]["ok"] and out["accounting"]["delta"] == 6
     assert L.state_of(key)["filled"] == 7
     assert out["position_qty_after"] == 0
+
+
+# ── OMCL: 매수 유실 → 무보호 고아 ──────────────────────────────
+OMCL_ROWS = [_row(odno="0000044603", qty="1", price="32.96", side="02", pdno="OMCL"),
+             _row(odno="0000044854", qty="1", price="32.96", side="02", pdno="OMCL")]
+
+
+def _omcl_orders(monkeypatch, *, broker_qty=2, stop=30.71, freeze_why="KIS 실보유 손절선 불명 — 수동 확인"):
+    keys = []
+    for suffix, odno, hh, mm in (("08-28", "0000044603", 11, 10),
+                                 ("08-29", "0000044854", 11, 22)):
+        key = f"kb:OMCL:OMCL-2026-{suffix}-now"
+        L._append({"ev": "submit", "key": key, "symbol": "OMCL", "intended": 1,
+                   "filled": 0, "state": "submitted", "reason": "진입",
+                   "ts": _et(2026, 8, 28, hh, mm),
+                   "meta": {"side": "BUY", "market": "US", "excg": "NASD",
+                            "hldg_before": 0, "price": 32.96, "fx": 1380.0,
+                            "pos_key": key, "sleeve": "A", "ccy": "USD",
+                            "stop": stop, "target": 37.3, "name": "Omnicell",
+                            "opened": "2026-08-28"}})
+        L.bind_broker_order(key, odno, ord_tmd=f"{hh:02d}{mm:02d}00")
+        L.on_result(key, "rejected", 0, open_order=False)
+        keys.append(key)
+    monkeypatch.setattr(RS.kis, "fills",
+                        lambda excg=None, start=None, end=None:
+                        {"rt_cd": "0", "output": OMCL_ROWS if excg == "NASD" else []})
+    monkeypatch.setattr(RS.kis, "holdings",
+                        lambda market, excg=None:
+                        {"OMCL": broker_qty} if excg == "NASD" and broker_qty else {})
+    if freeze_why:
+        ownership.freeze("OMCL", freeze_why)
+    return keys
+
+
+def test_buy_plan_matches_broker(env, monkeypatch):
+    k1, _ = _omcl_orders(monkeypatch)
+    plan = RS.collect(k1, trade_date="20260828")
+    assert plan["side"] == "BUY" and plan["fill_qty"] == 1 and plan["missing_qty"] == 1
+    assert plan["broker_qty_now"] == 2 and plan["ledger_position_qty"] == 0
+    assert "손절선 불명" in plan["frozen_why"]
+
+
+def test_two_single_share_buys_recover_sequentially(env, monkeypatch):
+    """OMCL 그대로 — 1주 주문 둘이 합쳐 2주. 하나씩 복구해도 잔고 가드가 성립한다."""
+    k1, k2 = _omcl_orders(monkeypatch)
+    out1 = RS.apply(k1, trade_date="20260828", ack="운영자: odno 44603")
+    assert out1["accounting"]["ok"] and out1["accounting"]["delta"] == 1
+    assert out1["position_qty_after"] == 1 and out1["costbook_open_after"] == 1
+    assert out1["unfrozen"] is True and not ownership.is_frozen("OMCL")
+    out2 = RS.apply(k2, trade_date="20260828", ack="운영자: odno 44854")
+    assert out2["position_qty_after"] == 2 and out2["costbook_open_after"] == 2
+    for k in (k1, k2):
+        st = L.state_of(k)
+        assert st["state"] == "filled" and st["filled"] == 1 and int(st["accounted"]) == 1
+    rec = kis_positions.load()["OMCL"]
+    assert rec["qty"] == 2 and rec["stop"] > 0          # 이제 보호된다
+
+
+def test_buy_refused_when_broker_does_not_hold(env, monkeypatch):
+    k1, _ = _omcl_orders(monkeypatch, broker_qty=0)
+    with pytest.raises(RS.Refused, match="못 미친다"):
+        RS.collect(k1, trade_date="20260828")
+
+
+def test_buy_refused_without_stop_meta(env, monkeypatch):
+    """무보호 포지션을 '복구'라는 이름으로 만들면 안 된다."""
+    k1, _ = _omcl_orders(monkeypatch, stop=0)
+    with pytest.raises(RS.Refused, match="손절선 메타"):
+        RS.collect(k1, trade_date="20260828")
+
+
+def test_buy_refuses_sell_row(env, monkeypatch):
+    k1, _ = _omcl_orders(monkeypatch)
+    monkeypatch.setattr(RS.kis, "fills",
+                        lambda excg=None, start=None, end=None:
+                        {"rt_cd": "0", "output": [_row(odno="0000044603", qty="1",
+                                                       price="32.96", side="01",
+                                                       pdno="OMCL")]
+                         if excg == "NASD" else []})
+    with pytest.raises(RS.Refused, match="방향이 다르다"):
+        RS.collect(k1, trade_date="20260828")
+
+
+def test_other_freeze_reason_is_left_alone(env, monkeypatch):
+    """동결은 안전장치 — 풀 근거가 '손절선 불명'일 때만 푼다."""
+    k1, _ = _omcl_orders(monkeypatch, freeze_why="사용자 수동 동결")
+    out = RS.apply(k1, trade_date="20260828", ack="운영자")
+    assert out["accounting"]["ok"] and out["unfrozen"] is False
+    assert ownership.is_frozen("OMCL")
+
+
+def test_buy_session_mismatch_refused(env, monkeypatch):
+    k1, _ = _omcl_orders(monkeypatch)
+    with pytest.raises(RS.Refused, match="실현일 귀속을 자동 판단"):
+        RS.collect(k1, trade_date="20260829")
+
+
+def test_failed_accounting_never_unfreezes_even_with_prior_position(env, monkeypatch):
+    """1주 복구 뒤 재동결된 상태에서 2주째 회계가 실패하면 동결을 풀면 안 된다.
+
+    `protected > 0`만 보면 앞선 복구분 때문에 참이 된다. 회계 성공 여부를 따로
+    봐야 "실패했는데 보호됐다"고 착각해 안전장치를 내리는 일이 없다.
+    """
+    k1, k2 = _omcl_orders(monkeypatch)
+    RS.apply(k1, trade_date="20260828", ack="운영자: 1주")          # 해제됨
+    ownership.freeze("OMCL", "KIS 실보유 손절선 불명 — 수동 확인")     # 재동결
+    monkeypatch.setattr(RS.kis_accounting, "sync_fill",
+                        lambda *a, **k: {"ok": False, "delta": 0, "why": "test"})
+    out = RS.apply(k2, trade_date="20260828", ack="운영자: 2주")
+    assert out["accounting"]["ok"] is False
+    assert out["unfrozen"] is False and ownership.is_frozen("OMCL")

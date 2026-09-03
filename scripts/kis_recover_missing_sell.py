@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""브로커 체결이 원장 기록보다 많은 **닫힌 매도**의 회계 복구(주문 0건).
+"""브로커 체결이 원장 기록보다 많은 **닫힌 주문**(매수·매도)의 회계 복구(주문 0건).
 
 실측 2건. 둘 다 브로커 저널 지연이 뿌리다:
 
@@ -8,8 +8,16 @@
   TRUP  09-02 매도 7주(odno 41895) @28.08 전량 체결. 원장은 `partial 1/7 ·
         open=False`로 닫혀 6주가 미회계로 남았다.
 
-둘 다 원장이 있지도 않은 수량을 보유 중이라 믿는다(유령 포지션) — costbook이
-원가를 묶어두고, 보호원장은 없는 수량에 손절선을 건다.
+  OMCL  08-28 매수 1주 × 2건(odno 44603·44854) @32.96 체결. 둘 다 `rejected·0`으로
+        닫혀 브로커에만 2주가 있다 — 어느 원장에도 없는 **무보호 고아**.
+
+매도 유실은 유령 포지션(원장이 없는 수량을 보유 중이라 믿음)을, 매수 유실은
+무보호 고아(손절선 없이 방치)를 만든다. 뿌리가 같으니 도구도 하나다.
+`bot/accounting_recovery.py`는 보호원장에 이미 포지션이 있는 경우(CVNA)를
+전제해 진짜 고아에는 세 겹으로 맞지 않는다.
+
+매수 복구가 끝나 손절선이 생기면, 파수꾼이 "손절선 불명"으로 걸어둔 동결을
+같은 ack로 해제한다. 다른 사유의 동결은 건드리지 않는다.
 
 기준은 상태 이름이 아니라 **닫혀 있는데 기록이 브로커보다 적은가**다. 열린
 주문은 자동 대사의 몫이라 거부한다 — 끼어들면 이중 회계가 난다.
@@ -41,7 +49,7 @@ from zoneinfo import ZoneInfo
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from bot import (costbook, kis, kis_accounting, kis_positions,  # noqa: E402
-                 kis_reconcile, ledger)
+                 kis_reconcile, ledger, ownership)
 
 US_EXCGS = ("NASD", "NYSE", "AMEX")
 KST = datetime.timezone(datetime.timedelta(hours=9))
@@ -52,8 +60,11 @@ class Refused(RuntimeError):
     """증거·원장 전제가 불충분해 복구를 거부했다."""
 
 
-def _broker_fill(symbol: str, odno: str, trade_date: str) -> dict:
-    """해당 거래일 ccnl에서 ODNO가 일치하는 **매도** 체결행 하나. 없으면 거부."""
+_SIDE_CODE = {"SELL": ("01", "1"), "BUY": ("02", "2")}
+
+
+def _broker_fill(symbol: str, odno: str, trade_date: str, side: str) -> dict:
+    """해당 거래일 ccnl에서 ODNO가 일치하는, 주문과 같은 방향의 체결행 하나."""
     matches, failures = [], []
     for excg in US_EXCGS:
         raw = kis.fills(excg=excg, start=trade_date, end=trade_date)
@@ -73,8 +84,10 @@ def _broker_fill(symbol: str, odno: str, trade_date: str) -> dict:
     if len(matches) != 1:
         raise Refused(f"ODNO {odno} 체결행 {len(matches)}건 — 유일해야 진행")
     row = matches[0]
-    if str(row.get("sll_buy_dvsn_cd") or "") not in ("01", "1"):
-        raise Refused(f"매도 행이 아니다(sll_buy_dvsn_cd={row.get('sll_buy_dvsn_cd')!r})")
+    if str(row.get("sll_buy_dvsn_cd") or "") not in _SIDE_CODE[side]:
+        raise Refused(
+            f"주문 방향({side})과 체결행 방향이 다르다"
+            f"(sll_buy_dvsn_cd={row.get('sll_buy_dvsn_cd')!r})")
     try:
         qty = int(float(row.get("ft_ccld_qty")))
         price = float(row.get("ft_ccld_unpr3"))
@@ -104,8 +117,8 @@ def collect(key: str, *, trade_date: str) -> dict:
         raise Refused(f"원장에 주문 없음: {key}")
     symbol = str(order.get("symbol") or "").upper()
     side = str(order.get("side") or "").upper()
-    if side != "SELL":
-        raise Refused(f"매도 주문이 아니다(side={side!r})")
+    if side not in _SIDE_CODE:
+        raise Refused(f"매수/매도 주문이 아니다(side={side!r})")
     # 대상은 '거절'만이 아니다. 실측 2026-09-02 TRUP: 7주 전량 체결(odno 41895
     #   @28.08)인데 원장이 `partial 1/7 · open=False`로 닫혀 6주가 미회계로
     #   남았다. 같은 뿌리(브로커 저널 지연)의 다른 얼굴이라 같은 도구로 다룬다.
@@ -121,8 +134,12 @@ def collect(key: str, *, trade_date: str) -> dict:
     for field in ("pos_key", "fx", "sleeve"):
         if not order.get(field):
             raise Refused(f"체결 회계에 필요한 메타 누락: {field}")
+    if side == "BUY" and float(order.get("stop") or 0) <= 0:
+        # sync_fill의 BUY 분기가 손절선 없는 포지션을 만들지 않게 막는다. 복구의
+        #   목적이 "무보호를 보호로" 바꾸는 것이므로 여기서 멈추는 게 맞다.
+        raise Refused("매수 복구에는 손절선 메타(stop)가 필요하다 — 무보호 포지션을 만들 수 없다")
 
-    fill = _broker_fill(symbol, odno, trade_date)
+    fill = _broker_fill(symbol, odno, trade_date, side)
     intended = int(order.get("intended") or 0)
     if fill["qty"] > intended:
         raise Refused(f"체결({fill['qty']})이 주문수량({intended})을 초과")
@@ -130,18 +147,30 @@ def collect(key: str, *, trade_date: str) -> dict:
         raise Refused(
             f"브로커 체결({fill['qty']})이 원장 기록({recorded})을 넘지 않는다 — "
             "복구할 것이 없다")
+    frozen = ownership.frozen_state().get(symbol) or {}
     held_now = _broker_holding(symbol)
     ledger_qty = int((kis_positions.load().get(symbol) or {}).get("qty") or 0)
-    if held_now >= ledger_qty and ledger_qty > 0:
-        raise Refused(
-            f"브로커 보유({held_now})가 아직 원장({ledger_qty}) 이상 — "
-            "매도가 반영되지 않았다. 우리 거절 판정이 맞을 수 있으므로 거부")
+    missing = fill["qty"] - recorded
+    if side == "SELL":
+        if held_now >= ledger_qty and ledger_qty > 0:
+            raise Refused(
+                f"브로커 보유({held_now})가 아직 원장({ledger_qty}) 이상 — "
+                "매도가 반영되지 않았다. 우리 거절 판정이 맞을 수 있으므로 거부")
+    else:
+        # 매수 복구는 브로커가 그 수량을 **실제로 들고 있어야** 한다. 원장 수량에
+        #   이번 복구분을 더한 만큼이 브로커에 없으면 체결이 아니거나 이미 팔린
+        #   것이다. 같은 종목을 1주씩 두 번 복구하는 경우(OMCL)에도 성립한다.
+        if held_now < ledger_qty + missing:
+            raise Refused(
+                f"브로커 보유({held_now})가 원장({ledger_qty})+복구분({missing})에 "
+                "못 미친다 — 체결이 아니거나 이미 청산됨")
 
     return {
-        "key": key, "symbol": symbol, "odno": odno,
+        "key": key, "symbol": symbol, "side": side, "odno": odno,
         "trade_date": trade_date,
+        "frozen_why": str(frozen.get("why") or "") if frozen else "",
         "fill_qty": fill["qty"], "fill_price": fill["price"],
-        "recorded_filled": recorded, "missing_qty": fill["qty"] - recorded,
+        "recorded_filled": recorded, "missing_qty": missing,
         "intended": intended,
         "pos_key": str(order.get("pos_key")), "sleeve": str(order.get("sleeve")),
         "fx": float(order.get("fx")),
@@ -179,30 +208,42 @@ def apply(key: str, *, trade_date: str, ack: str) -> dict:
     if not str(ack or "").strip():
         raise Refused("--apply에는 --ack 문자열이 필요")
     plan = collect(key, trade_date=trade_date)        # 증거 재수집(재사용 금지)
+    side = plan["side"]
+    kind = f"missing-{side.lower()}-accounting"
     ledger.record_operator_action(
-        key, action="recover-missing-sell-intent", ack=ack,
-        evidence={"symbol": plan["symbol"], "side": "SELL",
-                  "market": "US", "kind": "missing-sell-accounting",
+        key, action="recover-missing-fill-intent", ack=ack,
+        evidence={"symbol": plan["symbol"], "side": side,
+                  "market": "US", "kind": kind,
                   "filled": plan["fill_qty"], "state": "intent"})
     ledger.on_result(key, "filled", plan["fill_qty"],
                      fill_price=plan["fill_price"],
                      fill_price_source="broker-forensic",
                      open_order=False)
     ledger.record_reconcile_meta(
-        key, reason="operator-missing-sell-recovery",
-        meta={"source": "operator-missing-sell-recovery",
-              "broker_reason": "운영자 확인: ccnl ODNO 일치 체결행 + 잔고 감소"})
+        key, reason="operator-missing-fill-recovery",
+        meta={"source": "operator-missing-fill-recovery",
+              "broker_reason": ("운영자 확인: ccnl ODNO 일치 체결행 + 잔고 감소"
+                                if side == "SELL" else
+                                "운영자 확인: ccnl ODNO 일치 체결행 + 잔고 보유")})
     acct = kis_accounting.sync_fill(
         key, filled_qty=plan["fill_qty"], fill_price=plan["fill_price"],
         fill_price_source="broker-forensic",
         realized_day_kst=plan["realized_day_kst"])
     ledger.record_operator_action(
-        key, action="recover-missing-sell", ack=ack,
-        evidence={"symbol": plan["symbol"], "side": "SELL", "market": "US",
-                  "kind": "missing-sell-accounting",
-                  "filled": plan["fill_qty"],
+        key, action="recover-missing-fill", ack=ack,
+        evidence={"symbol": plan["symbol"], "side": side, "market": "US",
+                  "kind": kind, "filled": plan["fill_qty"],
                   "state": "filled" if acct.get("ok") else "accounting-failed"})
-    return {**plan, "accounting": acct,
+    # 매수 복구로 손절선이 생겼으면, 파수꾼이 "손절선 불명"으로 걸어둔 동결을
+    #   푼다. 회계가 실패했거나 다른 사유의 동결이면 손대지 않는다 — 동결은
+    #   안전장치라 풀 근거가 정확히 이것뿐일 때만 푼다.
+    unfrozen = False
+    protected = int((kis_positions.load().get(plan["symbol"]) or {}).get("qty") or 0)
+    if (side == "BUY" and acct.get("ok") and protected > 0
+            and "손절선 불명" in plan.get("frozen_why", "")):
+        ownership.unfreeze(plan["symbol"], ack=ack)
+        unfrozen = True
+    return {**plan, "accounting": acct, "unfrozen": unfrozen,
             "position_qty_after": int(
                 (kis_positions.load().get(plan["symbol"]) or {}).get("qty") or 0),
             "costbook_open_after": costbook.open_qty(plan["symbol"])}
@@ -210,7 +251,7 @@ def apply(key: str, *, trade_date: str, ack: str) -> dict:
 
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(
-        description="체결됐으나 거절로 오종결된 매도의 회계 복구(주문 0건)")
+        description="체결됐으나 닫혀버린 매수/매도의 회계 복구(주문 0건)")
     ap.add_argument("--key", required=True, help="원장 주문키")
     ap.add_argument("--trade-date", required=True, help="미 동부 거래일 YYYYMMDD")
     mode = ap.add_mutually_exclusive_group(required=True)
