@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated_at": "2026-09-03T09:11:13+09:00",
+ "generated_at": "2026-09-03T09:56:47+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "a_ablation": [
   {
@@ -65,7 +65,7 @@
    "range_pos": 0.7763,
    "runup63": 0.1468,
    "stage": 3,
-   "price": 195.25999450683597
+   "price": 195.259994506836
   },
   {
    "code": "DJCO",
@@ -149,17 +149,17 @@
   }
  ],
  "shelf_debug": {
-  "ok": 4,
+  "ok": 5,
   "watch": 226,
   "reasons": {
-   "밸류영역 밖(지지대 아님)": 367,
-   "추락 중(범위 1%)": 179,
-   "추락 중(범위 0%)": 164,
+   "밸류영역 밖(지지대 아님)": 364,
+   "추락 중(범위 1%)": 183,
+   "추락 중(범위 0%)": 161,
    "매물대 정보 없음": 141,
-   "추락 중(범위 2%)": 110,
+   "추락 중(범위 2%)": 109,
    "반등 미확인(터치·상단마감·거래량)": 103,
-   "추락 중(범위 3%)": 100,
-   "추락 중(범위 6%)": 84
+   "추락 중(범위 3%)": 97,
+   "추락 중(범위 9%)": 85
   }
  },
  "signals": [
@@ -822,46 +822,6 @@
    "trend_above_200": false
   },
   {
-   "id": "KD-2026-09-03-shelf-watch",
-   "code": "KD",
-   "name": "Kyndryl Holdings, Inc.",
-   "ccy": "USD",
-   "group": "shelf_watch",
-   "entry_kind": "shelf_watch",
-   "stage": 0,
-   "price": 13.145,
-   "entry": 13.145,
-   "stop": 12.6273,
-   "target": 14.5625,
-   "shares_1pct": 0,
-   "range_pos": 0.1279,
-   "norm": 15.1,
-   "bear_share": 0.125,
-   "shelf": {
-    "poc": 12.5792,
-    "val": 10.5958,
-    "vah": 14.5625,
-    "rr": 2.74,
-    "overhead": 0.443,
-    "reason": "반등 미확인(상단마감·거래량)",
-    "history_bars": 1220,
-    "profile_pnl_proxy": -0.1892,
-    "runup252": -0.5893,
-    "checks": {
-     "터치": true,
-     "회복": true,
-     "상단마감": false,
-     "거래량": false,
-     "신저가아님": true
-    }
-   },
-   "fresh": false,
-   "break_gap": null,
-   "earnings_d": null,
-   "tactic": "watch",
-   "trend_above_200": false
-  },
-  {
    "id": "TM-2026-09-03-shelf-watch",
    "code": "TM",
    "name": "Toyota Motor Corporation",
@@ -900,46 +860,6 @@
    "earnings_d": 63,
    "tactic": "watch",
    "trend_above_200": false
-  },
-  {
-   "id": "GOLD-2026-09-03-shelf-watch",
-   "code": "GOLD",
-   "name": "Gold.com, Inc.",
-   "ccy": "USD",
-   "group": "shelf_watch",
-   "entry_kind": "shelf_watch",
-   "stage": 0,
-   "price": 44.16,
-   "entry": 44.16,
-   "stop": 41.3462,
-   "target": 62.0437,
-   "shares_1pct": 0,
-   "range_pos": 0.4957,
-   "norm": 9.4,
-   "bear_share": 0.125,
-   "shelf": {
-    "poc": 43.4187,
-    "val": 35.9687,
-    "vah": 62.0437,
-    "rr": 6.36,
-    "overhead": 0.36,
-    "reason": "반등 미확인(거래량)",
-    "history_bars": 1928,
-    "profile_pnl_proxy": 0.0595,
-    "runup252": 0.8516,
-    "checks": {
-     "터치": true,
-     "회복": true,
-     "상단마감": true,
-     "거래량": false,
-     "신저가아님": true
-    }
-   },
-   "fresh": false,
-   "break_gap": null,
-   "earnings_d": 5,
-   "tactic": "watch",
-   "trend_above_200": true
   },
   {
    "id": "066970-2026-09-03-shelf-watch",
@@ -1222,6 +1142,46 @@
    "trend_above_200": false
   },
   {
+   "id": "GLW-2026-09-03-shelf-watch",
+   "code": "GLW",
+   "name": "Corning Incorporated",
+   "ccy": "USD",
+   "group": "shelf_watch",
+   "entry_kind": "shelf_watch",
+   "stage": 0,
+   "price": 145.56,
+   "entry": 145.56,
+   "stop": 140.4242,
+   "target": 164.6758,
+   "shares_1pct": 0,
+   "range_pos": 0.3862,
+   "norm": -9.4,
+   "bear_share": 0.25,
+   "shelf": {
+    "poc": 87.5608,
+    "val": 70.4242,
+    "vah": 164.6758,
+    "rr": 3.72,
+    "overhead": 0.514,
+    "reason": "반등 미확인(터치)",
+    "history_bars": 1927,
+    "profile_pnl_proxy": 0.0239,
+    "runup252": 1.1259,
+    "checks": {
+     "터치": false,
+     "회복": true,
+     "상단마감": true,
+     "거래량": true,
+     "신저가아님": true
+    }
+   },
+   "fresh": false,
+   "break_gap": null,
+   "earnings_d": 54,
+   "tactic": "watch",
+   "trend_above_200": true
+  },
+  {
    "id": "ALB-2026-09-03-shelf-watch",
    "code": "ALB",
    "name": "Albemarle Corporation",
@@ -1300,6 +1260,46 @@
    "earnings_d": null,
    "tactic": "watch",
    "trend_above_200": true
+  },
+  {
+   "id": "UA-2026-09-03-shelf-watch",
+   "code": "UA",
+   "name": "Under Armour, Inc.",
+   "ccy": "USD",
+   "group": "shelf_watch",
+   "entry_kind": "shelf_watch",
+   "stage": 0,
+   "price": 5.03,
+   "entry": 5.03,
+   "stop": 4.655,
+   "target": 6.0108,
+   "shares_1pct": 0,
+   "range_pos": 0.273,
+   "norm": -11.5,
+   "bear_share": 0.25,
+   "shelf": {
+    "poc": 4.8567,
+    "val": 4.1973,
+    "vah": 6.0108,
+    "rr": 2.62,
+    "overhead": 0.532,
+    "reason": "반등 미확인(거래량)",
+    "history_bars": 1928,
+    "profile_pnl_proxy": -0.0679,
+    "runup252": 0.0286,
+    "checks": {
+     "터치": true,
+     "회복": true,
+     "상단마감": true,
+     "거래량": false,
+     "신저가아님": true
+    }
+   },
+   "fresh": false,
+   "break_gap": null,
+   "earnings_d": -27,
+   "tactic": "watch",
+   "trend_above_200": false
   },
   {
    "id": "LBRT-2026-09-03-shelf-watch",
@@ -1588,7 +1588,7 @@
    "bear_share": 0.25,
    "fresh": true,
    "break_gap": 0.0198,
-   "earnings_d": -1,
+   "earnings_d": null,
    "tactic": {
     "stop_pct": 9.5,
     "pb_price": 9.9662,
@@ -2080,6 +2080,34 @@
    "break_gap": 0.0023,
    "earnings_d": -24,
    "tactic": null
+  },
+  {
+   "id": "MIR-2026-09-03-watch",
+   "code": "MIR",
+   "name": "Mirion Technologies, Inc.",
+   "ccy": "USD",
+   "group": "watch",
+   "entry_kind": "now",
+   "stage": 1,
+   "price": 15.51,
+   "entry": 15.51,
+   "stop": 14.1675,
+   "target": 18.195,
+   "shares_1pct": 74,
+   "range_pos": 0.0866,
+   "norm": -17.0,
+   "bear_share": 0.375,
+   "fresh": true,
+   "break_gap": -0.0196,
+   "earnings_d": 54,
+   "tactic": {
+    "stop_pct": 8.7,
+    "pb_price": 14.23,
+    "pb_stop_pct": 0.4,
+    "mode": "pullback",
+    "label": "⏳ 눌림 지정가만",
+    "desc": "지금 추격 금지(손절폭 8.7%) — <b>$14.23 눌림 지정가만</b>. 눌리면 손절폭 0.4%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
+   }
   },
   {
    "id": "LBRT-2026-09-03-watch",
