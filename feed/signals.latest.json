@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated_at": "2026-09-04T09:02:02+09:00",
+ "generated_at": "2026-09-04T09:12:43+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "a_ablation": [
   {
@@ -93,15 +93,15 @@
   }
  ],
  "shelf_debug": {
-  "ok": 6,
-  "watch": 222,
+  "ok": 7,
+  "watch": 221,
   "reasons": {
-   "밸류영역 밖(지지대 아님)": 368,
+   "밸류영역 밖(지지대 아님)": 367,
    "추락 중(범위 1%)": 185,
-   "추락 중(범위 0%)": 163,
+   "추락 중(범위 0%)": 165,
    "매물대 정보 없음": 141,
-   "추락 중(범위 2%)": 102,
-   "반등 미확인(터치·상단마감·거래량)": 100,
+   "반등 미확인(터치·상단마감·거래량)": 101,
+   "추락 중(범위 2%)": 101,
    "추락 중(범위 3%)": 95,
    "추락 중(범위 5%)": 87
   }
@@ -640,6 +640,65 @@
    }
   },
   {
+   "id": "047050-2026-09-04-b0-shadow",
+   "code": "047050",
+   "name": "포스코인터내셔널",
+   "ccy": "KRW",
+   "group": "shelf_shadow_b0",
+   "shadow": true,
+   "orderable": false,
+   "entry": 55500.0,
+   "stop": 51646.0,
+   "target": 68990.625,
+   "stage": 0,
+   "norm": -0.0,
+   "range_pos": 0.2298,
+   "b0_reject_reason": "200일선 아래(B1)",
+   "trend_above_200": false,
+   "fresh": false,
+   "tactic": "shadow"
+  },
+  {
+   "id": "BL-2026-09-04-shelf-watch",
+   "code": "BL",
+   "name": "BlackLine, Inc.",
+   "ccy": "USD",
+   "group": "shelf_watch",
+   "entry_kind": "shelf_watch",
+   "stage": 0,
+   "price": 33.45,
+   "entry": 33.45,
+   "stop": 31.2424,
+   "target": 48.6731,
+   "shares_1pct": 0,
+   "range_pos": 0.2509,
+   "norm": 30.2,
+   "bear_share": 0.125,
+   "shelf": {
+    "poc": 29.7852,
+    "val": 25.4265,
+    "vah": 48.6731,
+    "rr": 6.9,
+    "overhead": 0.545,
+    "reason": "반등 미확인(터치·거래량)",
+    "history_bars": 1929,
+    "profile_pnl_proxy": -0.1501,
+    "runup252": -0.3697,
+    "checks": {
+     "터치": false,
+     "회복": true,
+     "상단마감": true,
+     "거래량": false,
+     "신저가아님": true
+    }
+   },
+   "fresh": false,
+   "break_gap": null,
+   "earnings_d": 60,
+   "tactic": "watch",
+   "trend_above_200": false
+  },
+  {
    "id": "KD-2026-09-04-shelf-watch",
    "code": "KD",
    "name": "Kyndryl Holdings, Inc.",
@@ -910,46 +969,6 @@
      "회복": true,
      "상단마감": true,
      "거래량": true,
-     "신저가아님": true
-    }
-   },
-   "fresh": false,
-   "break_gap": null,
-   "earnings_d": null,
-   "tactic": "watch",
-   "trend_above_200": true
-  },
-  {
-   "id": "240810-2026-09-04-shelf-watch",
-   "code": "240810",
-   "name": "원익IPS",
-   "ccy": "KRW",
-   "group": "shelf_watch",
-   "entry_kind": "shelf_watch",
-   "stage": 0,
-   "price": 109700.0,
-   "entry": 109700.0,
-   "stop": 102606.0,
-   "target": 140721.875,
-   "shares_1pct": 0,
-   "range_pos": 0.4816,
-   "norm": -1.9,
-   "bear_share": 0.25,
-   "shelf": {
-    "poc": 121890.625,
-    "val": 59119.7917,
-    "vah": 140721.875,
-    "rr": 4.37,
-    "overhead": 0.494,
-    "reason": "반등 미확인(거래량)",
-    "history_bars": 1880,
-    "profile_pnl_proxy": 0.0352,
-    "runup252": 1.6402,
-    "checks": {
-     "터치": true,
-     "회복": true,
-     "상단마감": true,
-     "거래량": false,
      "신저가아님": true
     }
    },
@@ -1819,6 +1838,34 @@
    }
   },
   {
+   "id": "003380-2026-09-04-watch",
+   "code": "003380",
+   "name": "하림지주",
+   "ccy": "KRW",
+   "group": "watch",
+   "entry_kind": "now",
+   "stage": 1,
+   "price": 10890.0,
+   "entry": 10890.0,
+   "stop": 9760.8403,
+   "target": 13148.3195,
+   "shares_1pct": 88,
+   "range_pos": 0.3052,
+   "norm": -0.0,
+   "bear_share": 0.25,
+   "fresh": true,
+   "break_gap": -0.0056,
+   "earnings_d": null,
+   "tactic": {
+    "stop_pct": 10.4,
+    "pb_price": 10150.0,
+    "pb_stop_pct": 3.8,
+    "mode": "pullback",
+    "label": "⏳ 눌림 지정가만",
+    "desc": "지금 추격 금지(손절폭 10.4%) — <b>10,150원 눌림 지정가만</b>. 눌리면 손절폭 3.8%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
+   }
+  },
+  {
    "id": "AB-2026-09-04-watch",
    "code": "AB",
    "name": "AllianceBernstein Holding L.P.  Units",
@@ -1984,6 +2031,34 @@
     "mode": "half",
     "label": "⚖ 반반 진입",
     "desc": "손절폭 6.2% — 절반은 현재가, 절반은 눌림 $11.66 지정가(거기선 손절폭 5.0%)"
+   }
+  },
+  {
+   "id": "263750-2026-09-04-watch",
+   "code": "263750",
+   "name": "펄어비스",
+   "ccy": "KRW",
+   "group": "watch",
+   "entry_kind": "now",
+   "stage": 1,
+   "price": 30950.0,
+   "entry": 30950.0,
+   "stop": 28014.6503,
+   "target": 36820.6995,
+   "shares_1pct": 34,
+   "range_pos": 0.0313,
+   "norm": -46.2,
+   "bear_share": 0.5,
+   "fresh": true,
+   "break_gap": -0.005,
+   "earnings_d": null,
+   "tactic": {
+    "stop_pct": 9.5,
+    "pb_price": 29450.0,
+    "pb_stop_pct": 4.9,
+    "mode": "pullback",
+    "label": "⏳ 눌림 지정가만",
+    "desc": "지금 추격 금지(손절폭 9.5%) — <b>29,450원 눌림 지정가만</b>. 눌리면 손절폭 4.9%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
    }
   },
   {
