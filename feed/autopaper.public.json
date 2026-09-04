@@ -1,10 +1,10 @@
 {
- "generated_at": "2026-09-04T10:56:18.004765+09:00",
+ "generated_at": "2026-09-04T11:24:21.230765+09:00",
  "updated": "2026-09-04",
  "start": 100000000,
- "cash": 21428737,
- "equity": 100499019,
- "ret_pct": 0.5,
+ "cash": 17210937,
+ "equity": 100681889,
+ "ret_pct": 0.68,
  "positions": [
   {
    "code": "MRSH",
@@ -19,7 +19,7 @@
    "opened": "2026-07-06",
    "pl_krw": 691062,
    "pl_pct": 8.12,
-   "price_age_min": 80.8
+   "price_age_min": 108.9
   },
   {
    "code": "J",
@@ -34,7 +34,7 @@
    "opened": "2026-07-11",
    "pl_krw": 909534,
    "pl_pct": 16.55,
-   "price_age_min": 84.5
+   "price_age_min": 112.5
   },
   {
    "code": "MAIN",
@@ -49,7 +49,7 @@
    "opened": "2026-07-22",
    "pl_krw": 217414,
    "pl_pct": 7.62,
-   "price_age_min": 82.1
+   "price_age_min": 110.2
   },
   {
    "code": "004370",
@@ -57,14 +57,14 @@
    "ccy": "KRW",
    "q": 10,
    "avg": 368500.0,
-   "price": 422500.0,
+   "price": 426000.0,
    "stop": 420366.6108,
    "target": 420011.1858,
    "half_done": true,
    "opened": "2026-07-27",
-   "pl_krw": 540000,
-   "pl_pct": 14.65,
-   "price_age_min": 8.4
+   "pl_krw": 575000,
+   "pl_pct": 15.6,
+   "price_age_min": 7.5
   },
   {
    "code": "EQT",
@@ -79,7 +79,7 @@
    "opened": "2026-07-29",
    "pl_krw": 695057,
    "pl_pct": 8.24,
-   "price_age_min": 90.1
+   "price_age_min": 118.2
   },
   {
    "code": "MDT",
@@ -94,7 +94,7 @@
    "opened": "2026-07-30",
    "pl_krw": 444974,
    "pl_pct": 8.1,
-   "price_age_min": 81.7
+   "price_age_min": 109.7
   },
   {
    "code": "AVY",
@@ -109,22 +109,7 @@
    "opened": "2026-08-03",
    "pl_krw": 62665,
    "pl_pct": 1.94,
-   "price_age_min": 97.3
-  },
-  {
-   "code": "036460",
-   "name": "한국가스공사",
-   "ccy": "KRW",
-   "q": 106,
-   "avg": 35250.0,
-   "price": 35000.0,
-   "stop": 35250.0,
-   "target": 39999.939,
-   "half_done": true,
-   "opened": "2026-08-19",
-   "pl_krw": -26500,
-   "pl_pct": -0.71,
-   "price_age_min": 8.8
+   "price_age_min": 125.4
   },
   {
    "code": "035250",
@@ -132,14 +117,14 @@
    "ccy": "KRW",
    "q": 1643,
    "avg": 14550.0,
-   "price": 14660.0,
+   "price": 14750.0,
    "stop": 13929.1519,
    "target": 15791.6962,
    "half_done": false,
    "opened": "2026-08-26",
-   "pl_krw": 180730,
-   "pl_pct": 0.76,
-   "price_age_min": 8.8
+   "pl_krw": 328600,
+   "pl_pct": 1.37,
+   "price_age_min": 7.7
   },
   {
    "code": "NAVI",
@@ -154,7 +139,7 @@
    "opened": "2026-08-27",
    "pl_krw": 121097,
    "pl_pct": 2.6,
-   "price_age_min": 80.2
+   "price_age_min": 108.3
   },
   {
    "code": "TM",
@@ -169,7 +154,7 @@
    "opened": "2026-08-28",
    "pl_krw": 83255,
    "pl_pct": 3.53,
-   "price_age_min": 70.9
+   "price_age_min": 99.0
   },
   {
    "code": "BSY",
@@ -184,22 +169,65 @@
    "opened": "2026-09-01",
    "pl_krw": -107353,
    "pl_pct": -3.69,
-   "price_age_min": 95.6
+   "price_age_min": 123.6
+  },
+  {
+   "code": "323410",
+   "name": "카카오뱅크",
+   "ccy": "KRW",
+   "q": 362,
+   "avg": 21900.0,
+   "price": 21900.0,
+   "stop": 20511.373,
+   "target": 24677.254,
+   "half_done": false,
+   "opened": "2026-09-04",
+   "pl_krw": 0,
+   "pl_pct": 0.0,
+   "price_age_min": 8.0
   }
  ],
- "pending": [],
- "trades": 15,
- "win_trades": 10,
+ "pending": [
+  {
+   "code": "323410",
+   "name": "카카오뱅크",
+   "ccy": "KRW",
+   "limit": 21463.77,
+   "stop": 20511.373,
+   "target": 24677.254,
+   "q": 98,
+   "created": "2026-09-04",
+   "atr": 694.3135,
+   "plan": {
+    "entry": 21900.0,
+    "stop": 20511.373,
+    "target": 24677.254,
+    "pb": 21463.77,
+    "tactic": "half"
+   },
+   "ctx": {
+    "mode": "half",
+    "fresh": true,
+    "stage": 3,
+    "rp": 27,
+    "rec": 4,
+    "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권27% · 체크4/6 · 손절폭6.3%"
+   },
+   "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권27% · 체크4/6 · 손절폭6.3%"
+  }
+ ],
+ "trades": 16,
+ "win_trades": 11,
  "pos_cap_pct": 33.3,
  "cap_violations": [],
  "rule_violations": [],
  "fx": 1356.38,
  "stats": {
   "all": {
-   "n": 15,
-   "win": 10,
-   "win_rate": 67,
-   "avg_r": 0.19
+   "n": 16,
+   "win": 11,
+   "win_rate": 69,
+   "avg_r": 0.2
   },
   "by_mode": {
    "full": {
@@ -209,10 +237,10 @@
     "avg_r": 0.04
    },
    "half": {
-    "n": 6,
-    "win": 4,
-    "win_rate": 67,
-    "avg_r": 0.27
+    "n": 7,
+    "win": 5,
+    "win_rate": 71,
+    "avg_r": 0.3
    },
    "pullback": {
     "n": 5,
@@ -222,10 +250,10 @@
    }
   },
   "fresh": {
-   "n": 14,
-   "win": 9,
-   "win_rate": 64,
-   "avg_r": 0.17
+   "n": 15,
+   "win": 10,
+   "win_rate": 67,
+   "avg_r": 0.19
   },
   "stale": {
    "n": 1,
@@ -235,18 +263,18 @@
   },
   "by_stage": {
    "3": {
-    "n": 15,
-    "win": 10,
-    "win_rate": 67,
-    "avg_r": 0.19
+    "n": 16,
+    "win": 11,
+    "win_rate": 69,
+    "avg_r": 0.2
    }
   },
   "by_ccy": {
    "KRW": {
-    "n": 1,
-    "win": 1,
+    "n": 2,
+    "win": 2,
     "win_rate": 100,
-    "avg_r": 0.38
+    "avg_r": 0.42
    },
    "USD": {
     "n": 14,
@@ -255,10 +283,52 @@
     "avg_r": 0.17
    }
   },
-  "slip_entry_pct": -0.95,
+  "slip_entry_pct": -0.89,
   "slip_stop_pct": -0.76
  },
  "closed": [
+  {
+   "code": "036460",
+   "name": "한국가스공사",
+   "ccy": "KRW",
+   "ctx": {
+    "mode": "half",
+    "fresh": true,
+    "stage": 3,
+    "rp": 28,
+    "rec": 4,
+    "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권28% · 체크4/6 · 손절폭6.7%"
+   },
+   "plan": {
+    "entry": 35250.0,
+    "stop": 32875.0305,
+    "target": 39999.939,
+    "pb": 34050.0,
+    "tactic": "half"
+   },
+   "fill": {
+    "avg": 35250.0,
+    "q": 212
+   },
+   "exits": [
+    {
+     "d": "2026-09-01",
+     "q": 106,
+     "price": 37650.0,
+     "note": "+1R 절반 익절"
+    },
+    {
+     "d": "2026-09-04",
+     "q": 106,
+     "price": 35000.0,
+     "note": "본전 스탑"
+    }
+   ],
+   "opened": "2026-08-19",
+   "closed": "2026-09-04",
+   "pl": 227900,
+   "r": 0.45
+  },
   {
    "code": "UFPI",
    "name": "UFP Industries, Inc.",
@@ -1083,10 +1153,37 @@
   },
   {
    "d": "2026-09-04",
-   "v": 100499019
+   "v": 100681889
   }
  ],
  "log": [
+  {
+   "d": "2026-09-04",
+   "type": "buy",
+   "code": "323410",
+   "name": "카카오뱅크",
+   "q": 362,
+   "price": 21900.0,
+   "ccy": "KRW",
+   "amt": 7927800,
+   "note": "반반 1차 — 🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권27% · 체크4/6 · 손절폭6.3%",
+   "stop": 20511.373,
+   "target": 24677.254
+  },
+  {
+   "d": "2026-09-04",
+   "type": "sell",
+   "code": "036460",
+   "name": "한국가스공사",
+   "q": 106,
+   "price": 35000.0,
+   "ccy": "KRW",
+   "amt": 3710000,
+   "note": "본전 스탑",
+   "pl": -26500,
+   "pl_pct": -0.7,
+   "r": 0.45
+  },
   {
    "d": "2026-09-01",
    "type": "sell",
@@ -1697,32 +1794,6 @@
    "pl": -1839,
    "pl_pct": -4.6,
    "r": -1.16
-  },
-  {
-   "d": "2026-07-24",
-   "type": "sell",
-   "code": "J",
-   "name": "Jacobs Solutions Inc.",
-   "q": 32,
-   "price": 134.915,
-   "ccy": "USD",
-   "amt": 6360130,
-   "note": "+1R 절반 익절",
-   "pl": 392691,
-   "pl_pct": 6.6
-  },
-  {
-   "d": "2026-07-24",
-   "type": "buy",
-   "code": "SHOP",
-   "name": "Shopify Inc.",
-   "q": 59,
-   "price": 114.9801,
-   "ccy": "USD",
-   "amt": 9993797,
-   "note": "눌림 지정가 체결 — 🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권26% · 체크4/6 · 손절폭9.5%",
-   "stop": 105.7277,
-   "target": 138.8546
   }
  ],
  "lane": "bulk",
