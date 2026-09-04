@@ -1,8 +1,16 @@
 {
  "version": 1,
- "generated_at": "2026-09-04T16:00:07+09:00",
+ "generated_at": "2026-09-04T16:15:37+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "a_ablation": [
+  {
+   "code": "000810",
+   "gate": "rp",
+   "range_pos": 0.7219,
+   "runup63": -0.0104,
+   "stage": 4,
+   "price": 663000.0
+  },
   {
    "code": "MRP",
    "gate": "rp",
@@ -12,20 +20,12 @@
    "price": 31.71999931335449
   },
   {
-   "code": "000810",
-   "gate": "rp",
-   "range_pos": 0.7219,
-   "runup63": -0.0104,
-   "stage": 3,
-   "price": 663000.0
-  },
-  {
    "code": "139130",
    "gate": "rp",
-   "range_pos": 0.5687,
-   "runup63": 0.0928,
+   "range_pos": 0.5665,
+   "runup63": 0.0916,
    "stage": 3,
-   "price": 18140.0
+   "price": 18120.0
   },
   {
    "code": "ASTH",
@@ -110,7 +110,7 @@
  ],
  "shelf_debug": {
   "ok": 10,
-  "watch": 200,
+  "watch": 199,
   "reasons": {
    "밸류영역 밖(지지대 아님)": 374,
    "추락 중(범위 1%)": 166,
@@ -243,24 +243,24 @@
    "group": "now",
    "entry_kind": "now",
    "stage": 3,
-   "price": 42250.0,
-   "entry": 42250.0,
-   "stop": 38576.3415,
-   "target": 49597.3169,
+   "price": 42200.0,
+   "entry": 42200.0,
+   "stop": 38526.3415,
+   "target": 49547.3169,
    "shares_1pct": 27,
-   "range_pos": 0.0833,
+   "range_pos": 0.0817,
    "norm": -47.2,
    "bear_share": 0.5,
    "fresh": true,
-   "break_gap": 0.0422,
+   "break_gap": 0.041,
    "earnings_d": null,
    "tactic": {
     "stop_pct": 8.7,
     "pb_price": 41200.0,
-    "pb_stop_pct": 6.4,
+    "pb_stop_pct": 6.5,
     "mode": "pullback",
     "label": "⏳ 눌림 지정가만",
-    "desc": "지금 추격 금지(손절폭 8.7%) — <b>41,200원 눌림 지정가만</b>. 눌리면 손절폭 6.4%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
+    "desc": "지금 추격 금지(손절폭 8.7%) — <b>41,200원 눌림 지정가만</b>. 눌리면 손절폭 6.5%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
    }
   },
   {
@@ -305,7 +305,7 @@
    "target": 156.0169,
    "shares_1pct": 10,
    "range_pos": 0.2558,
-   "norm": 16.0,
+   "norm": 25.5,
    "bear_share": 0.125,
    "fresh": false,
    "break_gap": 0.0567,
@@ -348,6 +348,34 @@
    }
   },
   {
+   "id": "OLMA-2026-09-04-now",
+   "code": "OLMA",
+   "name": "Olema Pharmaceuticals, Inc.",
+   "ccy": "USD",
+   "group": "now",
+   "entry_kind": "now",
+   "stage": 3,
+   "price": 10.73,
+   "entry": 10.73,
+   "stop": 9.6235,
+   "target": 12.9429,
+   "shares_1pct": 90,
+   "range_pos": 0.1567,
+   "norm": 6.6,
+   "bear_share": 0.25,
+   "fresh": false,
+   "break_gap": 0.0897,
+   "earnings_d": -25,
+   "tactic": {
+    "stop_pct": 10.3,
+    "pb_price": 9.6952,
+    "pb_stop_pct": 0.7,
+    "mode": "pullback",
+    "label": "⏳ 눌림 지정가만",
+    "desc": "지금 추격 금지(손절폭 10.3% · 돌파후 진행) — <b>$9.70 눌림 지정가만</b>. 눌리면 손절폭 0.7%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
+   }
+  },
+  {
    "id": "024110-2026-09-04-now",
    "code": "024110",
    "name": "기업은행",
@@ -355,24 +383,24 @@
    "group": "now",
    "entry_kind": "now",
    "stage": 3,
-   "price": 20750.0,
-   "entry": 20750.0,
-   "stop": 19673.2244,
-   "target": 22903.5511,
+   "price": 20700.0,
+   "entry": 20700.0,
+   "stop": 19623.2244,
+   "target": 22853.5511,
    "shares_1pct": 92,
-   "range_pos": 0.1919,
+   "range_pos": 0.1873,
    "norm": -0.0,
    "bear_share": 0.25,
    "fresh": false,
-   "break_gap": 0.0596,
+   "break_gap": 0.0571,
    "earnings_d": null,
    "tactic": {
     "stop_pct": 5.2,
     "pb_price": 19946.5625,
-    "pb_stop_pct": 1.4,
+    "pb_stop_pct": 1.6,
     "mode": "half",
     "label": "⚖ 반반 진입",
-    "desc": "손절폭 5.2% · 돌파후 진행 — 절반은 현재가, 절반은 눌림 19,947원 지정가(거기선 손절폭 1.4%)"
+    "desc": "손절폭 5.2% · 돌파후 진행 — 절반은 현재가, 절반은 눌림 19,947원 지정가(거기선 손절폭 1.6%)"
    }
   },
   {
@@ -401,34 +429,6 @@
     "mode": "pullback",
     "label": "⏳ 눌림 지정가만",
     "desc": "지금 추격 금지(손절폭 10.2% · 돌파후 진행) — <b>348,623원 눌림 지정가만</b>. 눌리면 손절폭 7.7%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
-   }
-  },
-  {
-   "id": "OLMA-2026-09-04-now",
-   "code": "OLMA",
-   "name": "Olema Pharmaceuticals, Inc.",
-   "ccy": "USD",
-   "group": "now",
-   "entry_kind": "now",
-   "stage": 3,
-   "price": 10.73,
-   "entry": 10.73,
-   "stop": 9.6235,
-   "target": 12.9429,
-   "shares_1pct": 90,
-   "range_pos": 0.1567,
-   "norm": -4.7,
-   "bear_share": 0.25,
-   "fresh": false,
-   "break_gap": 0.0897,
-   "earnings_d": -25,
-   "tactic": {
-    "stop_pct": 10.3,
-    "pb_price": 9.6952,
-    "pb_stop_pct": 0.7,
-    "mode": "pullback",
-    "label": "⏳ 눌림 지정가만",
-    "desc": "지금 추격 금지(손절폭 10.3% · 돌파후 진행) — <b>$9.70 눌림 지정가만</b>. 눌리면 손절폭 0.7%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
    }
   },
   {
@@ -551,24 +551,24 @@
    "group": "now",
    "entry_kind": "now",
    "stage": 3,
-   "price": 281500.0,
-   "entry": 281500.0,
-   "stop": 249976.9703,
-   "target": 344546.0594,
+   "price": 282000.0,
+   "entry": 282000.0,
+   "stop": 250476.9703,
+   "target": 345046.0594,
    "shares_1pct": 3,
-   "range_pos": 0.2693,
+   "range_pos": 0.2717,
    "norm": -9.4,
    "bear_share": 0.25,
    "fresh": false,
-   "break_gap": 0.1255,
+   "break_gap": 0.1275,
    "earnings_d": null,
    "tactic": {
     "stop_pct": 11.2,
     "pb_price": 250750.0,
-    "pb_stop_pct": 0.3,
+    "pb_stop_pct": 0.1,
     "mode": "pullback",
     "label": "⏳ 눌림 지정가만",
-    "desc": "지금 추격 금지(손절폭 11.2% · 돌파후 진행) — <b>250,750원 눌림 지정가만</b>. 눌리면 손절폭 0.3%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
+    "desc": "지금 추격 금지(손절폭 11.2% · 돌파후 진행) — <b>250,750원 눌림 지정가만</b>. 눌리면 손절폭 0.1%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
    }
   },
   {
@@ -691,24 +691,24 @@
    "group": "now",
    "entry_kind": "now",
    "stage": 3,
-   "price": 86500.0,
-   "entry": 86500.0,
-   "stop": 78054.3857,
-   "target": 103391.2286,
+   "price": 86800.0,
+   "entry": 86800.0,
+   "stop": 78354.3857,
+   "target": 103691.2286,
    "shares_1pct": 11,
-   "range_pos": 0.2048,
-   "norm": -50.0,
+   "range_pos": 0.2079,
+   "norm": -38.7,
    "bear_share": 0.5,
    "fresh": false,
-   "break_gap": 0.0747,
+   "break_gap": 0.0784,
    "earnings_d": null,
    "tactic": {
-    "stop_pct": 9.8,
+    "stop_pct": 9.7,
     "pb_price": 83412.5,
-    "pb_stop_pct": 6.4,
+    "pb_stop_pct": 6.1,
     "mode": "pullback",
     "label": "⏳ 눌림 지정가만",
-    "desc": "지금 추격 금지(손절폭 9.8% · 돌파후 진행) — <b>83,412원 눌림 지정가만</b>. 눌리면 손절폭 6.4%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
+    "desc": "지금 추격 금지(손절폭 9.7% · 돌파후 진행) — <b>83,412원 눌림 지정가만</b>. 눌리면 손절폭 6.1%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
    }
   },
   {
@@ -1498,6 +1498,27 @@
    "tactic": null
   },
   {
+   "id": "TM-2026-09-04-watch",
+   "code": "TM",
+   "name": "Toyota Motor Corporation",
+   "ccy": "USD",
+   "group": "watch",
+   "entry_kind": "breakout",
+   "stage": 3,
+   "price": 199.87,
+   "entry": 200.5,
+   "stop": 194.1913,
+   "target": 213.1174,
+   "shares_1pct": 15,
+   "range_pos": 0.4079,
+   "norm": 35.8,
+   "bear_share": 0.25,
+   "fresh": true,
+   "break_gap": 0.0277,
+   "earnings_d": 62,
+   "tactic": null
+  },
+  {
    "id": "ULTA-2026-09-04-watch",
    "code": "ULTA",
    "name": "Ulta Beauty, Inc.",
@@ -1516,27 +1537,6 @@
    "fresh": true,
    "break_gap": 0.0262,
    "earnings_d": -8,
-   "tactic": null
-  },
-  {
-   "id": "TM-2026-09-04-watch",
-   "code": "TM",
-   "name": "Toyota Motor Corporation",
-   "ccy": "USD",
-   "group": "watch",
-   "entry_kind": "breakout",
-   "stage": 3,
-   "price": 199.87,
-   "entry": 200.5,
-   "stop": 194.1913,
-   "target": 213.1174,
-   "shares_1pct": 15,
-   "range_pos": 0.4079,
-   "norm": 24.5,
-   "bear_share": 0.25,
-   "fresh": true,
-   "break_gap": 0.0277,
-   "earnings_d": 62,
    "tactic": null
   },
   {
@@ -1722,6 +1722,34 @@
    }
   },
   {
+   "id": "MMS-2026-09-04-watch",
+   "code": "MMS",
+   "name": "Maximus, Inc.",
+   "ccy": "USD",
+   "group": "watch",
+   "entry_kind": "now",
+   "stage": 2,
+   "price": 58.43,
+   "entry": 58.43,
+   "stop": 54.7974,
+   "target": 65.6952,
+   "shares_1pct": 27,
+   "range_pos": 0.1206,
+   "norm": 0.0,
+   "bear_share": 0.25,
+   "fresh": true,
+   "break_gap": 0.0058,
+   "earnings_d": -29,
+   "tactic": {
+    "stop_pct": 6.2,
+    "pb_price": null,
+    "pb_stop_pct": null,
+    "mode": "half",
+    "label": "⚖ 반반 진입",
+    "desc": "손절폭 6.2% — 절반만 현재가, 나머지는 눌림 확인 후 추가"
+   }
+  },
+  {
    "id": "NVR-2026-09-04-watch",
    "code": "NVR",
    "name": "NVR, Inc.",
@@ -1824,34 +1852,6 @@
     "mode": "pullback",
     "label": "⏳ 눌림 지정가만",
     "desc": "지금 추격 금지(손절폭 12.0%) — <b>$141.63 눌림 지정가만</b>. 눌리면 손절폭 9.2%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
-   }
-  },
-  {
-   "id": "MMS-2026-09-04-watch",
-   "code": "MMS",
-   "name": "Maximus, Inc.",
-   "ccy": "USD",
-   "group": "watch",
-   "entry_kind": "now",
-   "stage": 2,
-   "price": 58.43,
-   "entry": 58.43,
-   "stop": 54.7974,
-   "target": 65.6952,
-   "shares_1pct": 27,
-   "range_pos": 0.1206,
-   "norm": -9.4,
-   "bear_share": 0.25,
-   "fresh": true,
-   "break_gap": 0.0058,
-   "earnings_d": -29,
-   "tactic": {
-    "stop_pct": 6.2,
-    "pb_price": null,
-    "pb_stop_pct": null,
-    "mode": "half",
-    "label": "⚖ 반반 진입",
-    "desc": "손절폭 6.2% — 절반만 현재가, 나머지는 눌림 확인 후 추가"
    }
   },
   {
@@ -2107,6 +2107,34 @@
    }
   },
   {
+   "id": "OTIS-2026-09-04-watch",
+   "code": "OTIS",
+   "name": "Otis Worldwide Corporation",
+   "ccy": "USD",
+   "group": "watch",
+   "entry_kind": "now",
+   "stage": 1,
+   "price": 71.48,
+   "entry": 71.48,
+   "stop": 68.7893,
+   "target": 76.8614,
+   "shares_1pct": 37,
+   "range_pos": 0.0913,
+   "norm": 26.4,
+   "bear_share": 0.125,
+   "fresh": true,
+   "break_gap": -0.0012,
+   "earnings_d": 54,
+   "tactic": {
+    "stop_pct": 3.8,
+    "pb_price": 69.8418,
+    "pb_stop_pct": 1.5,
+    "mode": "full",
+    "label": "⚡ 즉시 분할",
+    "desc": "손절폭 3.8%로 타이트 — 현재가에서 1~2회 분할 매수. 기다리는 이득보다 놓치는 비용이 큼"
+   }
+  },
+  {
    "id": "TSCO-2026-09-04-watch",
    "code": "TSCO",
    "name": "Tractor Supply Company",
@@ -2160,34 +2188,6 @@
     "mode": "full",
     "label": "⚡ 즉시 분할",
     "desc": "손절폭 3.9%로 타이트 — 현재가에서 1~2회 분할 매수. 기다리는 이득보다 놓치는 비용이 큼"
-   }
-  },
-  {
-   "id": "OTIS-2026-09-04-watch",
-   "code": "OTIS",
-   "name": "Otis Worldwide Corporation",
-   "ccy": "USD",
-   "group": "watch",
-   "entry_kind": "now",
-   "stage": 1,
-   "price": 71.48,
-   "entry": 71.48,
-   "stop": 68.7893,
-   "target": 76.8614,
-   "shares_1pct": 37,
-   "range_pos": 0.0913,
-   "norm": 17.0,
-   "bear_share": 0.25,
-   "fresh": true,
-   "break_gap": -0.0012,
-   "earnings_d": 54,
-   "tactic": {
-    "stop_pct": 3.8,
-    "pb_price": 69.8418,
-    "pb_stop_pct": 1.5,
-    "mode": "full",
-    "label": "⚡ 즉시 분할",
-    "desc": "손절폭 3.8%로 타이트 — 현재가에서 1~2회 분할 매수. 기다리는 이득보다 놓치는 비용이 큼"
    }
   },
   {
@@ -2499,6 +2499,34 @@
    }
   },
   {
+   "id": "TAC-2026-09-04-watch",
+   "code": "TAC",
+   "name": "TransAlta Corporation",
+   "ccy": "USD",
+   "group": "watch",
+   "entry_kind": "now",
+   "stage": 1,
+   "price": 11.81,
+   "entry": 11.81,
+   "stop": 11.0796,
+   "target": 13.2708,
+   "shares_1pct": 136,
+   "range_pos": 0.0662,
+   "norm": -3.8,
+   "bear_share": 0.375,
+   "fresh": true,
+   "break_gap": -0.0008,
+   "earnings_d": 62,
+   "tactic": {
+    "stop_pct": 6.2,
+    "pb_price": 11.66,
+    "pb_stop_pct": 5.0,
+    "mode": "half",
+    "label": "⚖ 반반 진입",
+    "desc": "손절폭 6.2% — 절반은 현재가, 절반은 눌림 $11.66 지정가(거기선 손절폭 5.0%)"
+   }
+  },
+  {
    "id": "GBCI-2026-09-04-watch",
    "code": "GBCI",
    "name": "Glacier Bancorp, Inc.",
@@ -2623,34 +2651,6 @@
    "break_gap": 0.0041,
    "earnings_d": null,
    "tactic": null
-  },
-  {
-   "id": "TAC-2026-09-04-watch",
-   "code": "TAC",
-   "name": "TransAlta Corporation",
-   "ccy": "USD",
-   "group": "watch",
-   "entry_kind": "now",
-   "stage": 1,
-   "price": 11.81,
-   "entry": 11.81,
-   "stop": 11.0796,
-   "target": 13.2708,
-   "shares_1pct": 136,
-   "range_pos": 0.0662,
-   "norm": -13.2,
-   "bear_share": 0.375,
-   "fresh": true,
-   "break_gap": -0.0008,
-   "earnings_d": 62,
-   "tactic": {
-    "stop_pct": 6.2,
-    "pb_price": 11.66,
-    "pb_stop_pct": 5.0,
-    "mode": "half",
-    "label": "⚖ 반반 진입",
-    "desc": "손절폭 6.2% — 절반은 현재가, 절반은 눌림 $11.66 지정가(거기선 손절폭 5.0%)"
-   }
   },
   {
    "id": "CRUS-2026-09-04-watch",
