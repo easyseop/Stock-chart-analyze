@@ -1,10 +1,10 @@
 {
- "generated_at": "2026-09-07T09:49:04.053308+09:00",
+ "generated_at": "2026-09-07T10:04:36.629843+09:00",
  "updated": "2026-09-07",
  "start": 100000000,
- "cash": 19899092,
- "equity": 100129922,
- "ret_pct": 0.13,
+ "cash": 17166892,
+ "equity": 100080862,
+ "ret_pct": 0.08,
  "positions": [
   {
    "code": "MRSH",
@@ -19,7 +19,7 @@
    "opened": "2026-07-06",
    "pl_krw": 556072,
    "pl_pct": 6.56,
-   "price_age_min": 72.3
+   "price_age_min": 7.6
   },
   {
    "code": "J",
@@ -34,7 +34,7 @@
    "opened": "2026-07-11",
    "pl_krw": 849355,
    "pl_pct": 15.52,
-   "price_age_min": 72.3
+   "price_age_min": 7.6
   },
   {
    "code": "MAIN",
@@ -49,21 +49,6 @@
    "opened": "2026-07-22",
    "pl_krw": 196018,
    "pl_pct": 6.89,
-   "price_age_min": 72.3
-  },
-  {
-   "code": "004370",
-   "name": "농심",
-   "ccy": "KRW",
-   "q": 10,
-   "avg": 368500.0,
-   "price": 414000.0,
-   "stop": 420366.6108,
-   "target": 420011.1858,
-   "half_done": true,
-   "opened": "2026-07-27",
-   "pl_krw": 455000,
-   "pl_pct": 12.35,
    "price_age_min": 7.6
   },
   {
@@ -79,7 +64,7 @@
    "opened": "2026-07-29",
    "pl_krw": 620418,
    "pl_pct": 7.39,
-   "price_age_min": 72.3
+   "price_age_min": 7.6
   },
   {
    "code": "MDT",
@@ -94,7 +79,7 @@
    "opened": "2026-07-30",
    "pl_krw": 511189,
    "pl_pct": 9.35,
-   "price_age_min": 72.3
+   "price_age_min": 7.6
   },
   {
    "code": "AVY",
@@ -109,7 +94,7 @@
    "opened": "2026-08-03",
    "pl_krw": 100819,
    "pl_pct": 3.14,
-   "price_age_min": 72.3
+   "price_age_min": 7.6
   },
   {
    "code": "035250",
@@ -117,14 +102,14 @@
    "ccy": "KRW",
    "q": 1643,
    "avg": 14550.0,
-   "price": 14730.0,
+   "price": 14710.0,
    "stop": 13929.1519,
    "target": 15791.6962,
    "half_done": false,
    "opened": "2026-08-26",
-   "pl_krw": 295740,
-   "pl_pct": 1.24,
-   "price_age_min": 7.8
+   "pl_krw": 262880,
+   "pl_pct": 1.1,
+   "price_age_min": 9.8
   },
   {
    "code": "NAVI",
@@ -139,7 +124,7 @@
    "opened": "2026-08-27",
    "pl_krw": 196018,
    "pl_pct": 4.22,
-   "price_age_min": 72.3
+   "price_age_min": 7.6
   },
   {
    "code": "TM",
@@ -154,7 +139,7 @@
    "opened": "2026-08-28",
    "pl_krw": 49369,
    "pl_pct": 2.1,
-   "price_age_min": 74.4
+   "price_age_min": 9.7
   },
   {
    "code": "323410",
@@ -162,14 +147,29 @@
    "ccy": "KRW",
    "q": 362,
    "avg": 21900.0,
-   "price": 21950.0,
+   "price": 21850.0,
    "stop": 20511.373,
    "target": 24677.254,
    "half_done": false,
    "opened": "2026-09-04",
-   "pl_krw": 18100,
-   "pl_pct": 0.23,
-   "price_age_min": 8.1
+   "pl_krw": -18100,
+   "pl_pct": -0.23,
+   "price_age_min": 10.0
+  },
+  {
+   "code": "030200",
+   "name": "KT",
+   "ccy": "KRW",
+   "q": 126,
+   "avg": 54700.0,
+   "price": 54700.0,
+   "stop": 52281.2945,
+   "target": 59537.4111,
+   "half_done": false,
+   "opened": "2026-09-07",
+   "pl_krw": 0,
+   "pl_pct": 0.0,
+   "price_age_min": 9.8
   }
  ],
  "pending": [
@@ -201,18 +201,18 @@
    "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권27% · 체크4/6 · 손절폭6.3%"
   }
  ],
- "trades": 17,
- "win_trades": 11,
+ "trades": 18,
+ "win_trades": 12,
  "pos_cap_pct": 33.3,
  "cap_violations": [],
  "rule_violations": [],
  "fx": 1351.1,
  "stats": {
   "all": {
-   "n": 17,
-   "win": 11,
-   "win_rate": 65,
-   "avg_r": 0.13
+   "n": 18,
+   "win": 12,
+   "win_rate": 67,
+   "avg_r": 0.2
   },
   "by_mode": {
    "full": {
@@ -222,10 +222,10 @@
     "avg_r": 0.04
    },
    "half": {
-    "n": 8,
-    "win": 5,
-    "win_rate": 62,
-    "avg_r": 0.13
+    "n": 9,
+    "win": 6,
+    "win_rate": 67,
+    "avg_r": 0.28
    },
    "pullback": {
     "n": 5,
@@ -235,10 +235,10 @@
    }
   },
   "fresh": {
-   "n": 16,
-   "win": 10,
-   "win_rate": 62,
-   "avg_r": 0.12
+   "n": 17,
+   "win": 11,
+   "win_rate": 65,
+   "avg_r": 0.19
   },
   "stale": {
    "n": 1,
@@ -248,18 +248,18 @@
   },
   "by_stage": {
    "3": {
-    "n": 17,
-    "win": 11,
-    "win_rate": 65,
-    "avg_r": 0.13
+    "n": 18,
+    "win": 12,
+    "win_rate": 67,
+    "avg_r": 0.2
    }
   },
   "by_ccy": {
    "KRW": {
-    "n": 2,
-    "win": 2,
+    "n": 3,
+    "win": 3,
     "win_rate": 100,
-    "avg_r": 0.42
+    "avg_r": 0.76
    },
    "USD": {
     "n": 15,
@@ -268,10 +268,52 @@
     "avg_r": 0.09
    }
   },
-  "slip_entry_pct": -0.84,
+  "slip_entry_pct": -0.79,
   "slip_stop_pct": -0.6
  },
  "closed": [
+  {
+   "code": "004370",
+   "name": "농심",
+   "ccy": "KRW",
+   "ctx": {
+    "mode": "half",
+    "fresh": true,
+    "stage": 3,
+    "rp": 19,
+    "rec": 3,
+    "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권19% · 체크3/6 · 손절폭7.0%"
+   },
+   "plan": {
+    "entry": 368500.0,
+    "stop": 342744.4071,
+    "target": 420011.1858,
+    "pb": 350306.25,
+    "tactic": "half"
+   },
+   "fill": {
+    "avg": 368500.0,
+    "q": 19
+   },
+   "exits": [
+    {
+     "d": "2026-07-29",
+     "q": 9,
+     "price": 394500.0,
+     "note": "+1R 절반 익절"
+    },
+    {
+     "d": "2026-09-07",
+     "q": 10,
+     "price": 416000.0,
+     "note": "트레일 스탑"
+    }
+   ],
+   "opened": "2026-07-27",
+   "closed": "2026-09-07",
+   "pl": 709000,
+   "r": 1.45
+  },
   {
    "code": "BSY",
    "name": "Bentley Systems, Incorporated",
@@ -1186,10 +1228,37 @@
   },
   {
    "d": "2026-09-07",
-   "v": 100129922
+   "v": 100080862
   }
  ],
  "log": [
+  {
+   "d": "2026-09-07",
+   "type": "buy",
+   "code": "030200",
+   "name": "KT",
+   "q": 126,
+   "price": 54700.0,
+   "ccy": "KRW",
+   "amt": 6892200,
+   "note": "즉시 분할 — 🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권31% · 체크4/6 · 손절폭4.4%",
+   "stop": 52281.2945,
+   "target": 59537.4111
+  },
+  {
+   "d": "2026-09-07",
+   "type": "sell",
+   "code": "004370",
+   "name": "농심",
+   "q": 10,
+   "price": 416000.0,
+   "ccy": "KRW",
+   "amt": 4160000,
+   "note": "트레일 스탑",
+   "pl": 475000,
+   "pl_pct": 12.9,
+   "r": 1.45
+  },
   {
    "d": "2026-09-04",
    "type": "sell",
@@ -1805,28 +1874,6 @@
    "note": "반반 1차 — 🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권19% · 체크3/6 · 손절폭7.0%",
    "stop": 342744.4071,
    "target": 420011.1858
-  },
-  {
-   "d": "2026-07-26",
-   "type": "cancel",
-   "code": "VRSK",
-   "name": "Verisk Analytics, Inc.",
-   "q": 0,
-   "price": 201.34,
-   "ccy": "USD",
-   "amt": 0,
-   "note": "지정가 취소 — 신호 부패: 어닝 D-3 이내(신규 진입 금지 구간)"
-  },
-  {
-   "d": "2026-07-25",
-   "type": "order",
-   "code": "FRPT",
-   "name": "Freshpet, Inc.",
-   "q": 89,
-   "price": 52.1708,
-   "ccy": "USD",
-   "amt": 6776706,
-   "note": "눌림 지정가 주문(추격 금지) — 🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권28% · 체크3/6 · 손절폭9.9%"
   }
  ],
  "lane": "bulk",
