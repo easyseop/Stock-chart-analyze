@@ -1,10 +1,10 @@
 {
- "generated_at": "2026-09-08T23:12:38.408189+09:00",
+ "generated_at": "2026-09-08T23:32:07.409856+09:00",
  "updated": "2026-09-08",
  "start": 100000000,
- "cash": 17957324,
- "equity": 99597935,
- "ret_pct": -0.4,
+ "cash": 20285107,
+ "equity": 99618659,
+ "ret_pct": -0.38,
  "positions": [
   {
    "code": "J",
@@ -12,14 +12,14 @@
    "ccy": "USD",
    "q": 32,
    "avg": 126.585,
-   "price": 144.22000122070312,
+   "price": 144.44000244140625,
    "stop": 141.94489267578126,
    "target": 141.2316,
    "half_done": true,
    "opened": "2026-07-11",
-   "pl_krw": 759659,
-   "pl_pct": 13.93,
-   "price_age_min": 1.1
+   "pl_krw": 769136,
+   "pl_pct": 14.11,
+   "price_age_min": 0.4
   },
   {
    "code": "MAIN",
@@ -27,14 +27,14 @@
    "ccy": "USD",
    "q": 39,
    "avg": 53.96,
-   "price": 57.25,
+   "price": 57.18000030517578,
    "stop": 55.9411983215332,
    "target": 58.7184,
    "half_done": true,
    "opened": "2026-07-22",
-   "pl_krw": 172725,
-   "pl_pct": 6.1,
-   "price_age_min": 1.1
+   "pl_krw": 169050,
+   "pl_pct": 5.97,
+   "price_age_min": 0.4
   },
   {
    "code": "EQT",
@@ -42,14 +42,14 @@
    "ccy": "USD",
    "q": 121,
    "avg": 51.375,
-   "price": 55.6349983215332,
+   "price": 55.790000915527344,
    "stop": 52.06870106811523,
    "target": 57.1234,
    "half_done": true,
    "opened": "2026-07-29",
-   "pl_krw": 693886,
-   "pl_pct": 8.29,
-   "price_age_min": 1.1
+   "pl_krw": 719134,
+   "pl_pct": 8.59,
+   "price_age_min": 0.4
   },
   {
    "code": "MDT",
@@ -57,14 +57,14 @@
    "ccy": "USD",
    "q": 47,
    "avg": 86.12,
-   "price": 92.86000061035156,
+   "price": 92.12999725341795,
    "stop": 87.84239633789062,
    "target": 95.117,
    "half_done": true,
    "opened": "2026-07-30",
-   "pl_krw": 426433,
-   "pl_pct": 7.83,
-   "price_age_min": 1.1
+   "pl_krw": 380247,
+   "pl_pct": 6.98,
+   "price_age_min": 0.4
   },
   {
    "code": "AVY",
@@ -72,14 +72,14 @@
    "ccy": "USD",
    "q": 14,
    "avg": 169.73,
-   "price": 172.4550018310547,
+   "price": 172.1199951171875,
    "stop": 169.73,
    "target": 192.4206,
    "half_done": true,
    "opened": "2026-08-03",
-   "pl_krw": 51356,
-   "pl_pct": 1.61,
-   "price_age_min": 1.1
+   "pl_krw": 45042,
+   "pl_pct": 1.41,
+   "price_age_min": 0.4
   },
   {
    "code": "035250",
@@ -94,7 +94,7 @@
    "opened": "2026-08-26",
    "pl_krw": 492900,
    "pl_pct": 2.06,
-   "price_age_min": 1.1
+   "price_age_min": 0.4
   },
   {
    "code": "NAVI",
@@ -102,29 +102,14 @@
    "ccy": "USD",
    "q": 372,
    "avg": 9.24,
-   "price": 9.515000343322754,
+   "price": 9.545000076293944,
    "stop": 8.5322,
    "target": 10.6555,
    "half_done": false,
    "opened": "2026-08-27",
-   "pl_krw": 137711,
-   "pl_pct": 2.98,
-   "price_age_min": 1.1
-  },
-  {
-   "code": "TM",
-   "name": "Toyota Motor Corporation",
-   "ccy": "USD",
-   "q": 9,
-   "avg": 193.05,
-   "price": 192.68499755859372,
-   "stop": 193.05,
-   "target": 205.1504,
-   "half_done": true,
-   "opened": "2026-08-28",
-   "pl_krw": -4422,
-   "pl_pct": -0.19,
-   "price_age_min": 1.1
+   "pl_krw": 152734,
+   "pl_pct": 3.3,
+   "price_age_min": 0.4
   },
   {
    "code": "323410",
@@ -139,7 +124,7 @@
    "opened": "2026-09-04",
    "pl_krw": 0,
    "pl_pct": 0.0,
-   "price_age_min": 1.1
+   "price_age_min": 0.4
   },
   {
    "code": "030200",
@@ -154,7 +139,7 @@
    "opened": "2026-09-07",
    "pl_krw": -50400,
    "pl_pct": -0.73,
-   "price_age_min": 1.1
+   "price_age_min": 0.3
   },
   {
    "code": "ADMA",
@@ -162,14 +147,14 @@
    "ccy": "USD",
    "q": 628,
    "avg": 9.55,
-   "price": 9.425000190734863,
+   "price": 9.46500015258789,
    "stop": 8.9618,
    "target": 10.7264,
    "half_done": false,
    "opened": "2026-09-08",
-   "pl_krw": -105673,
-   "pl_pct": -1.31,
-   "price_age_min": 1.0
+   "pl_krw": -71857,
+   "pl_pct": -0.89,
+   "price_age_min": 0.3
   }
  ],
  "pending": [
@@ -228,25 +213,25 @@
    "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권18% · 체크5/6 · 손절폭6.2%"
   }
  ],
- "trades": 19,
- "win_trades": 13,
+ "trades": 20,
+ "win_trades": 14,
  "pos_cap_pct": 33.3,
  "cap_violations": [],
  "rule_violations": [],
  "fx": 1346.15,
  "stats": {
   "all": {
-   "n": 19,
-   "win": 13,
-   "win_rate": 68,
-   "avg_r": 0.25
+   "n": 20,
+   "win": 14,
+   "win_rate": 70,
+   "avg_r": 0.26
   },
   "by_mode": {
    "full": {
-    "n": 5,
-    "win": 3,
-    "win_rate": 60,
-    "avg_r": 0.24
+    "n": 6,
+    "win": 4,
+    "win_rate": 67,
+    "avg_r": 0.27
    },
    "half": {
     "n": 9,
@@ -262,10 +247,10 @@
    }
   },
   "fresh": {
-   "n": 18,
-   "win": 12,
-   "win_rate": 67,
-   "avg_r": 0.24
+   "n": 19,
+   "win": 13,
+   "win_rate": 68,
+   "avg_r": 0.25
   },
   "stale": {
    "n": 1,
@@ -275,10 +260,10 @@
   },
   "by_stage": {
    "3": {
-    "n": 19,
-    "win": 13,
-    "win_rate": 68,
-    "avg_r": 0.25
+    "n": 20,
+    "win": 14,
+    "win_rate": 70,
+    "avg_r": 0.26
    }
   },
   "by_ccy": {
@@ -289,16 +274,58 @@
     "avg_r": 0.76
    },
    "USD": {
-    "n": 16,
-    "win": 10,
-    "win_rate": 62,
-    "avg_r": 0.15
+    "n": 17,
+    "win": 11,
+    "win_rate": 65,
+    "avg_r": 0.17
    }
   },
-  "slip_entry_pct": -0.75,
+  "slip_entry_pct": -0.71,
   "slip_stop_pct": -0.6
  },
  "closed": [
+  {
+   "code": "TM",
+   "name": "Toyota Motor Corporation",
+   "ccy": "USD",
+   "ctx": {
+    "mode": "full",
+    "fresh": true,
+    "stage": 3,
+    "rp": 33,
+    "rec": 6,
+    "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권33% · 체크6/6 · 손절폭3.1%"
+   },
+   "plan": {
+    "entry": 193.05,
+    "stop": 186.9998,
+    "target": 205.1504,
+    "pb": null,
+    "tactic": "full"
+   },
+   "fill": {
+    "avg": 193.05,
+    "q": 17
+   },
+   "exits": [
+    {
+     "d": "2026-09-01",
+     "q": 8,
+     "price": 199.455,
+     "note": "+1R 절반 익절"
+    },
+    {
+     "d": "2026-09-08",
+     "q": 9,
+     "price": 192.135,
+     "note": "본전 스탑"
+    }
+   ],
+   "opened": "2026-08-28",
+   "closed": "2026-09-08",
+   "pl": 59032,
+   "r": 0.42
+  },
   {
    "code": "MRSH",
    "name": "Marsh",
@@ -1301,10 +1328,24 @@
   },
   {
    "d": "2026-09-08",
-   "v": 99597935
+   "v": 99618659
   }
  ],
  "log": [
+  {
+   "d": "2026-09-08",
+   "type": "sell",
+   "code": "TM",
+   "name": "Toyota Motor Corporation",
+   "q": 9,
+   "price": 192.135,
+   "ccy": "USD",
+   "amt": 2327783,
+   "note": "본전 스탑",
+   "pl": -11086,
+   "pl_pct": -0.5,
+   "r": 0.42
+  },
   {
    "d": "2026-09-08",
    "type": "buy",
@@ -1936,20 +1977,6 @@
    "note": "반반 1차 — 🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권28% · 체크3/6 · 손절폭6.6%",
    "stop": 47.7785,
    "target": 57.923
-  },
-  {
-   "d": "2026-07-28",
-   "type": "sell",
-   "code": "STE",
-   "name": "STERIS plc",
-   "q": 6,
-   "price": 219.6,
-   "ccy": "USD",
-   "amt": 1933960,
-   "note": "타임 스탑(+1R 미도달)",
-   "pl": 57948,
-   "pl_pct": 3.1,
-   "r": 0.58
   }
  ],
  "lane": "fast",
