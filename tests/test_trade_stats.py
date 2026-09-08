@@ -24,17 +24,20 @@ def _snap(rows, available=True, partial=False):
             "generated_at": "2026-08-15T00:00:00+00:00", "trades": rows}
 
 
+# 프로덕션 거래 행에는 `ts`가 없다 — `executed_at`/`day`(KST)만 있다. 종전 픽스처는
+#   `ts`를 넣어 by_month의 존재하지 않는 키 읽기 버그와 짝을 맞춘 채 통과했다
+#   (실측 2026-08-25 발행분 by_month={}). 행 모양을 프로덕션과 같게 맞춘다.
 _ROWS = [
-    {"side": "sell", "sleeve": "A", "ts": "2026-08-10T12:00:00+00:00",
+    {"side": "sell", "sleeve": "A", "day": "2026-08-10", "executed_at": "2026-08-10T21:00:00+09:00",
      "realized_pnl_krw": 12000.0, "return_pct": 3.0,
      "code": "AAPL", "name": "Apple", "qty": 10, "price": 220.5},
-    {"side": "sell", "sleeve": "A", "ts": "2026-08-11T12:00:00+00:00",
+    {"side": "sell", "sleeve": "A", "day": "2026-08-11", "executed_at": "2026-08-11T21:00:00+09:00",
      "realized_pnl_krw": -5000.0, "return_pct": -1.0,
      "code": "TAP", "name": "Molson", "qty": 80, "price": 41.2},
-    {"side": "sell", "sleeve": "B", "ts": "2026-08-11T13:00:00+00:00",
+    {"side": "sell", "sleeve": "B", "day": "2026-08-11", "executed_at": "2026-08-11T22:00:00+09:00",
      "realized_pnl_krw": 3000.0, "return_pct": 1.0,
      "code": "PAAS", "name": "Pan Am", "qty": 5, "price": 30.0},
-    {"side": "buy", "sleeve": "A", "ts": "2026-08-11T14:00:00+00:00",
+    {"side": "buy", "sleeve": "A", "day": "2026-08-11", "executed_at": "2026-08-11T23:00:00+09:00",
      "realized_pnl_krw": None, "return_pct": None, "code": "BX"},
 ]
 
