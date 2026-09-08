@@ -1,10 +1,10 @@
 {
- "generated_at": "2026-09-08T12:42:51.836964+09:00",
+ "generated_at": "2026-09-08T13:10:34.463235+09:00",
  "updated": "2026-09-08",
  "start": 100000000,
  "cash": 17166892,
- "equity": 100553109,
- "ret_pct": 0.55,
+ "equity": 100431489,
+ "ret_pct": 0.43,
  "positions": [
   {
    "code": "MRSH",
@@ -19,7 +19,7 @@
    "opened": "2026-07-06",
    "pl_krw": 554035,
    "pl_pct": 6.56,
-   "price_age_min": 109.3
+   "price_age_min": 137.0
   },
   {
    "code": "J",
@@ -34,7 +34,7 @@
    "opened": "2026-07-11",
    "pl_krw": 846244,
    "pl_pct": 15.52,
-   "price_age_min": 109.3
+   "price_age_min": 137.0
   },
   {
    "code": "MAIN",
@@ -49,7 +49,7 @@
    "opened": "2026-07-22",
    "pl_krw": 195299,
    "pl_pct": 6.89,
-   "price_age_min": 109.3
+   "price_age_min": 137.0
   },
   {
    "code": "EQT",
@@ -64,7 +64,7 @@
    "opened": "2026-07-29",
    "pl_krw": 618145,
    "pl_pct": 7.39,
-   "price_age_min": 109.3
+   "price_age_min": 137.0
   },
   {
    "code": "MDT",
@@ -79,7 +79,7 @@
    "opened": "2026-07-30",
    "pl_krw": 509316,
    "pl_pct": 9.35,
-   "price_age_min": 109.2
+   "price_age_min": 137.0
   },
   {
    "code": "AVY",
@@ -94,7 +94,7 @@
    "opened": "2026-08-03",
    "pl_krw": 100450,
    "pl_pct": 3.14,
-   "price_age_min": 109.2
+   "price_age_min": 137.0
   },
   {
    "code": "035250",
@@ -102,14 +102,14 @@
    "ccy": "KRW",
    "q": 1643,
    "avg": 14550.0,
-   "price": 14990.0,
+   "price": 14950.0,
    "stop": 13929.1519,
    "target": 15791.6962,
    "half_done": false,
    "opened": "2026-08-26",
-   "pl_krw": 722920,
-   "pl_pct": 3.02,
-   "price_age_min": 7.3
+   "pl_krw": 657200,
+   "pl_pct": 2.75,
+   "price_age_min": 8.4
   },
   {
    "code": "NAVI",
@@ -124,7 +124,7 @@
    "opened": "2026-08-27",
    "pl_krw": 195300,
    "pl_pct": 4.22,
-   "price_age_min": 109.2
+   "price_age_min": 136.9
   },
   {
    "code": "TM",
@@ -139,7 +139,7 @@
    "opened": "2026-08-28",
    "pl_krw": 49188,
    "pl_pct": 2.1,
-   "price_age_min": 112.3
+   "price_age_min": 140.0
   },
   {
    "code": "323410",
@@ -147,14 +147,14 @@
    "ccy": "KRW",
    "q": 362,
    "avg": 21900.0,
-   "price": 22050.0,
+   "price": 22000.0,
    "stop": 20511.373,
    "target": 24677.254,
    "half_done": false,
    "opened": "2026-09-04",
-   "pl_krw": 54300,
-   "pl_pct": 0.68,
-   "price_age_min": 7.6
+   "pl_krw": 36200,
+   "pl_pct": 0.46,
+   "price_age_min": 8.8
   },
   {
    "code": "030200",
@@ -162,14 +162,14 @@
    "ccy": "KRW",
    "q": 126,
    "avg": 54700.0,
-   "price": 55500.0,
+   "price": 55200.0,
    "stop": 52281.2945,
    "target": 59537.4111,
    "half_done": false,
    "opened": "2026-09-07",
-   "pl_krw": 100800,
-   "pl_pct": 1.46,
-   "price_age_min": 7.7
+   "pl_krw": 63000,
+   "pl_pct": 0.91,
+   "price_age_min": 8.8
   }
  ],
  "pending": [
@@ -1232,7 +1232,7 @@
   },
   {
    "d": "2026-09-08",
-   "v": 100553109
+   "v": 100431489
   }
  ],
  "log": [
