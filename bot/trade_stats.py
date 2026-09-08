@@ -83,7 +83,10 @@ def summary(limit: int = 500) -> dict | None:
     }
     months: dict[str, dict] = {}
     for row in rows:
-        month = str(row.get("ts") or "")[:7]                 # YYYY-MM
+        # 거래 행에는 `ts`가 없다 — `day`(KST 실현일, costbook day_kst 기준)가
+        #   월 귀속의 정답이다. 종전 코드는 존재하지 않는 키를 읽어 by_month가
+        #   **항상 빈 값**이었다(실측 2026-08-25 발행분 `"by_month": {}`).
+        month = str(row.get("day") or row.get("executed_at") or "")[:7]   # YYYY-MM
         if len(month) == 7:
             months.setdefault(month, []).append(row)
     return {
