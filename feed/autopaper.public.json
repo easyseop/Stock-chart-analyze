@@ -1,10 +1,10 @@
 {
- "generated_at": "2026-09-09T23:01:52.668046+09:00",
+ "generated_at": "2026-09-09T23:22:05.372237+09:00",
  "updated": "2026-09-09",
  "start": 100000000,
- "cash": 20285107,
- "equity": 98517553,
- "ret_pct": -1.48,
+ "cash": 18369051,
+ "equity": 98558391,
+ "ret_pct": -1.44,
  "positions": [
   {
    "code": "J",
@@ -12,14 +12,14 @@
    "ccy": "USD",
    "q": 32,
    "avg": 126.585,
-   "price": 142.75,
+   "price": 143.64500427246094,
    "stop": 141.94489267578126,
    "target": 141.2316,
    "half_done": true,
    "opened": "2026-07-11",
-   "pl_krw": 694040,
-   "pl_pct": 12.77,
-   "price_age_min": 7.7
+   "pl_krw": 732466,
+   "pl_pct": 13.48,
+   "price_age_min": 0.5
   },
   {
    "code": "MAIN",
@@ -27,14 +27,14 @@
    "ccy": "USD",
    "q": 39,
    "avg": 53.96,
-   "price": 56.369998931884766,
+   "price": 56.31760025024414,
    "stop": 55.9411983215332,
    "target": 58.7184,
    "half_done": true,
    "opened": "2026-07-22",
-   "pl_krw": 126107,
-   "pl_pct": 4.47,
-   "price_age_min": 7.6
+   "pl_krw": 123365,
+   "pl_pct": 4.37,
+   "price_age_min": 0.5
   },
   {
    "code": "EQT",
@@ -42,14 +42,14 @@
    "ccy": "USD",
    "q": 121,
    "avg": 51.375,
-   "price": 54.66999816894531,
+   "price": 54.56999969482422,
    "stop": 52.06870106811523,
    "target": 57.1234,
    "half_done": true,
    "opened": "2026-07-29",
-   "pl_krw": 534933,
-   "pl_pct": 6.41,
-   "price_age_min": 7.6
+   "pl_krw": 518698,
+   "pl_pct": 6.22,
+   "price_age_min": 0.5
   },
   {
    "code": "MDT",
@@ -57,29 +57,14 @@
    "ccy": "USD",
    "q": 47,
    "avg": 86.12,
-   "price": 93.1999969482422,
+   "price": 93.08000183105467,
    "stop": 87.84239633789062,
    "target": 95.117,
    "half_done": true,
    "opened": "2026-07-30",
-   "pl_krw": 446467,
-   "pl_pct": 8.22,
-   "price_age_min": 7.6
-  },
-  {
-   "code": "AVY",
-   "name": "Avery Dennison Corporation",
-   "ccy": "USD",
-   "q": 14,
-   "avg": 169.73,
-   "price": 169.07000732421875,
-   "stop": 169.73,
-   "target": 192.4206,
-   "half_done": true,
-   "opened": "2026-08-03",
-   "pl_krw": -12397,
-   "pl_pct": -0.39,
-   "price_age_min": 7.6
+   "pl_krw": 438900,
+   "pl_pct": 8.08,
+   "price_age_min": 0.5
   },
   {
    "code": "035250",
@@ -94,7 +79,7 @@
    "opened": "2026-08-26",
    "pl_krw": 197160,
    "pl_pct": 0.82,
-   "price_age_min": 11.1
+   "price_age_min": 0.5
   },
   {
    "code": "NAVI",
@@ -102,14 +87,14 @@
    "ccy": "USD",
    "q": 372,
    "avg": 9.24,
-   "price": 9.300000190734863,
+   "price": 9.3149995803833,
    "stop": 8.5322,
    "target": 10.6555,
    "half_done": false,
    "opened": "2026-08-27",
-   "pl_krw": 29947,
-   "pl_pct": 0.65,
-   "price_age_min": 7.6
+   "pl_krw": 37433,
+   "pl_pct": 0.81,
+   "price_age_min": 0.5
   },
   {
    "code": "323410",
@@ -124,7 +109,7 @@
    "opened": "2026-09-04",
    "pl_krw": -108600,
    "pl_pct": -1.37,
-   "price_age_min": 10.6
+   "price_age_min": 0.5
   },
   {
    "code": "030200",
@@ -139,7 +124,7 @@
    "opened": "2026-09-07",
    "pl_krw": -201600,
    "pl_pct": -2.93,
-   "price_age_min": 11.5
+   "price_age_min": 0.5
   },
   {
    "code": "ADMA",
@@ -147,14 +132,29 @@
    "ccy": "USD",
    "q": 628,
    "avg": 9.55,
-   "price": 9.460000038146973,
+   "price": 9.475000381469728,
    "stop": 8.9618,
    "target": 10.7264,
    "half_done": false,
    "opened": "2026-09-08",
-   "pl_krw": -75833,
-   "pl_pct": -0.94,
-   "price_age_min": 10.7
+   "pl_krw": -63194,
+   "pl_pct": -0.79,
+   "price_age_min": 0.5
+  },
+  {
+   "code": "ULTA",
+   "name": "Ulta Beauty, Inc.",
+   "ccy": "USD",
+   "q": 7,
+   "avg": 543.09,
+   "price": 543.0900268554688,
+   "stop": 506.4666,
+   "target": 616.3368,
+   "half_done": false,
+   "opened": "2026-09-09",
+   "pl_krw": 0,
+   "pl_pct": 0.0,
+   "price_age_min": 0.5
   }
  ],
  "pending": [
@@ -213,18 +213,18 @@
    "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권18% · 체크5/6 · 손절폭6.2%"
   }
  ],
- "trades": 20,
- "win_trades": 14,
+ "trades": 21,
+ "win_trades": 15,
  "pos_cap_pct": 33.3,
  "cap_violations": [],
  "rule_violations": [],
  "fx": 1341.71,
  "stats": {
   "all": {
-   "n": 20,
-   "win": 14,
-   "win_rate": 70,
-   "avg_r": 0.26
+   "n": 21,
+   "win": 15,
+   "win_rate": 71,
+   "avg_r": 0.27
   },
   "by_mode": {
    "full": {
@@ -234,10 +234,10 @@
     "avg_r": 0.27
    },
    "half": {
-    "n": 9,
-    "win": 6,
-    "win_rate": 67,
-    "avg_r": 0.28
+    "n": 10,
+    "win": 7,
+    "win_rate": 70,
+    "avg_r": 0.3
    },
    "pullback": {
     "n": 5,
@@ -247,10 +247,10 @@
    }
   },
   "fresh": {
-   "n": 19,
-   "win": 13,
-   "win_rate": 68,
-   "avg_r": 0.25
+   "n": 20,
+   "win": 14,
+   "win_rate": 70,
+   "avg_r": 0.26
   },
   "stale": {
    "n": 1,
@@ -264,6 +264,12 @@
     "win": 14,
     "win_rate": 70,
     "avg_r": 0.26
+   },
+   "4": {
+    "n": 1,
+    "win": 1,
+    "win_rate": 100,
+    "avg_r": 0.52
    }
   },
   "by_ccy": {
@@ -274,16 +280,58 @@
     "avg_r": 0.76
    },
    "USD": {
-    "n": 17,
-    "win": 11,
-    "win_rate": 65,
-    "avg_r": 0.17
+    "n": 18,
+    "win": 12,
+    "win_rate": 67,
+    "avg_r": 0.19
    }
   },
-  "slip_entry_pct": -0.71,
+  "slip_entry_pct": -0.68,
   "slip_stop_pct": -0.6
  },
  "closed": [
+  {
+   "code": "AVY",
+   "name": "Avery Dennison Corporation",
+   "ccy": "USD",
+   "ctx": {
+    "mode": "half",
+    "fresh": true,
+    "stage": 4,
+    "rp": 37,
+    "rec": 5,
+    "basis": "🔥 갓 전환(추세선 부근) · ④ 전환 확정 ⭐ · 저점권37% · 체크5/6 · 손절폭6.7%"
+   },
+   "plan": {
+    "entry": 169.73,
+    "stop": 158.3847,
+    "target": 192.4206,
+    "pb": null,
+    "tactic": "half"
+   },
+   "fill": {
+    "avg": 169.73,
+    "q": 28
+   },
+   "exits": [
+    {
+     "d": "2026-08-19",
+     "q": 14,
+     "price": 181.88,
+     "note": "+1R 절반 익절"
+    },
+    {
+     "d": "2026-09-09",
+     "q": 14,
+     "price": 169.54,
+     "note": "본전 스탑"
+    }
+   ],
+   "opened": "2026-08-03",
+   "closed": "2026-09-09",
+   "pl": 236554,
+   "r": 0.52
+  },
   {
    "code": "TM",
    "name": "Toyota Motor Corporation",
@@ -1332,10 +1380,37 @@
   },
   {
    "d": "2026-09-09",
-   "v": 98517553
+   "v": 98558391
   }
  ],
  "log": [
+  {
+   "d": "2026-09-09",
+   "type": "buy",
+   "code": "ULTA",
+   "name": "Ulta Beauty, Inc.",
+   "q": 7,
+   "price": 543.09,
+   "ccy": "USD",
+   "amt": 5100685,
+   "note": "반반 1차 — 🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권37% · 체크6/6 · 손절폭6.7%",
+   "stop": 506.4666,
+   "target": 616.3368
+  },
+  {
+   "d": "2026-09-09",
+   "type": "sell",
+   "code": "AVY",
+   "name": "Avery Dennison Corporation",
+   "q": 14,
+   "price": 169.54,
+   "ccy": "USD",
+   "amt": 3184629,
+   "note": "본전 스탑",
+   "pl": -3569,
+   "pl_pct": -0.1,
+   "r": 0.52
+  },
   {
    "d": "2026-09-08",
    "type": "sell",
@@ -1955,34 +2030,8 @@
    "pl": 364586,
    "pl_pct": 3.9,
    "r": 0.38
-  },
-  {
-   "d": "2026-07-28",
-   "type": "sell",
-   "code": "SHOP",
-   "name": "Shopify Inc.",
-   "q": 29,
-   "price": 124.805,
-   "ccy": "USD",
-   "amt": 5312439,
-   "note": "+1R 절반 익절",
-   "pl": 418206,
-   "pl_pct": 8.5
-  },
-  {
-   "d": "2026-07-28",
-   "type": "buy",
-   "code": "CRC",
-   "name": "California Resources Corporation",
-   "q": 101,
-   "price": 51.16,
-   "ccy": "USD",
-   "amt": 7584306,
-   "note": "반반 1차 — 🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권28% · 체크3/6 · 손절폭6.6%",
-   "stop": 47.7785,
-   "target": 57.923
   }
  ],
- "lane": "bulk",
+ "lane": "fast",
  "data_stale": []
 }
