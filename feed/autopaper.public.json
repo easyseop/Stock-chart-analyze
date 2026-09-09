@@ -1,26 +1,11 @@
 {
- "generated_at": "2026-09-10T04:51:54.548937+09:00",
+ "generated_at": "2026-09-10T04:57:12.282991+09:00",
  "updated": "2026-09-10",
  "start": 100000000,
- "cash": 18369051,
- "equity": 98236515,
- "ret_pct": -1.76,
+ "cash": 24442430,
+ "equity": 98228984,
+ "ret_pct": -1.77,
  "positions": [
-  {
-   "code": "J",
-   "name": "Jacobs Solutions Inc.",
-   "ccy": "USD",
-   "q": 32,
-   "avg": 126.585,
-   "price": 141.72000122070312,
-   "stop": 141.94489267578126,
-   "target": 141.2316,
-   "half_done": true,
-   "opened": "2026-07-11",
-   "pl_krw": 648790,
-   "pl_pct": 11.96,
-   "price_age_min": 0.4
-  },
   {
    "code": "MAIN",
    "name": "Main Street Capital Corporation",
@@ -34,7 +19,7 @@
    "opened": "2026-07-22",
    "pl_krw": 125386,
    "pl_pct": 4.45,
-   "price_age_min": 0.4
+   "price_age_min": 5.3
   },
   {
    "code": "EQT",
@@ -42,14 +27,14 @@
    "ccy": "USD",
    "q": 121,
    "avg": 51.375,
-   "price": 54.415000915527344,
+   "price": 54.45500183105469,
    "stop": 52.06870106811523,
    "target": 57.1234,
    "half_done": true,
    "opened": "2026-07-29",
-   "pl_krw": 492755,
-   "pl_pct": 5.92,
-   "price_age_min": 0.4
+   "pl_krw": 499239,
+   "pl_pct": 6.0,
+   "price_age_min": 5.3
   },
   {
    "code": "MDT",
@@ -57,14 +42,14 @@
    "ccy": "USD",
    "q": 47,
    "avg": 86.12,
-   "price": 92.10079956054688,
+   "price": 92.09619903564452,
    "stop": 87.84239633789062,
    "target": 95.117,
    "half_done": true,
    "opened": "2026-07-30",
-   "pl_krw": 376555,
+   "pl_krw": 376266,
    "pl_pct": 6.94,
-   "price_age_min": 0.4
+   "price_age_min": 5.3
   },
   {
    "code": "035250",
@@ -79,7 +64,7 @@
    "opened": "2026-08-26",
    "pl_krw": 197160,
    "pl_pct": 0.82,
-   "price_age_min": 0.4
+   "price_age_min": 8.2
   },
   {
    "code": "NAVI",
@@ -87,14 +72,14 @@
    "ccy": "USD",
    "q": 372,
    "avg": 9.24,
-   "price": 9.3100004196167,
+   "price": 9.270000457763672,
    "stop": 8.5322,
    "target": 10.6555,
    "half_done": false,
    "opened": "2026-08-27",
-   "pl_krw": 34883,
-   "pl_pct": 0.76,
-   "price_age_min": 0.4
+   "pl_krw": 14950,
+   "pl_pct": 0.32,
+   "price_age_min": 5.3
   },
   {
    "code": "323410",
@@ -109,7 +94,7 @@
    "opened": "2026-09-04",
    "pl_krw": -108600,
    "pl_pct": -1.37,
-   "price_age_min": 0.4
+   "price_age_min": 7.6
   },
   {
    "code": "030200",
@@ -124,7 +109,7 @@
    "opened": "2026-09-07",
    "pl_krw": -201600,
    "pl_pct": -2.93,
-   "price_age_min": 0.4
+   "price_age_min": 8.5
   },
   {
    "code": "ADMA",
@@ -139,7 +124,7 @@
    "opened": "2026-09-08",
    "pl_krw": -147221,
    "pl_pct": -1.83,
-   "price_age_min": 0.4
+   "price_age_min": 7.8
   },
   {
    "code": "ULTA",
@@ -147,14 +132,14 @@
    "ccy": "USD",
    "q": 7,
    "avg": 543.09,
-   "price": 542.8250122070312,
+   "price": 543.6699829101562,
    "stop": 506.4666,
    "target": 616.3368,
    "half_done": false,
    "opened": "2026-09-09",
-   "pl_krw": -2485,
-   "pl_pct": -0.05,
-   "price_age_min": 0.4
+   "pl_krw": 5439,
+   "pl_pct": 0.11,
+   "price_age_min": 8.4
   }
  ],
  "pending": [
@@ -211,27 +196,54 @@
     "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권18% · 체크5/6 · 손절폭6.2%"
    },
    "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권18% · 체크5/6 · 손절폭6.2%"
+  },
+  {
+   "code": "AI",
+   "name": "C3.ai, Inc.",
+   "ccy": "USD",
+   "limit": 9.9662,
+   "stop": 9.3671,
+   "target": 12.4057,
+   "q": 501,
+   "created": "2026-09-10",
+   "atr": 0.5064,
+   "plan": {
+    "entry": 10.38,
+    "stop": 9.3671,
+    "target": 12.4057,
+    "pb": 9.9662,
+    "tactic": "pullback"
+   },
+   "ctx": {
+    "mode": "pullback",
+    "fresh": true,
+    "stage": 3,
+    "rp": 22,
+    "rec": 4,
+    "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권22% · 체크4/6 · 손절폭9.8%"
+   },
+   "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권22% · 체크4/6 · 손절폭9.8%"
   }
  ],
- "trades": 21,
- "win_trades": 15,
+ "trades": 22,
+ "win_trades": 16,
  "pos_cap_pct": 33.3,
  "cap_violations": [],
  "rule_violations": [],
  "fx": 1339.59,
  "stats": {
   "all": {
-   "n": 21,
-   "win": 15,
-   "win_rate": 71,
-   "avg_r": 0.27
+   "n": 22,
+   "win": 16,
+   "win_rate": 73,
+   "avg_r": 0.32
   },
   "by_mode": {
    "full": {
-    "n": 6,
-    "win": 4,
-    "win_rate": 67,
-    "avg_r": 0.27
+    "n": 7,
+    "win": 5,
+    "win_rate": 71,
+    "avg_r": 0.44
    },
    "half": {
     "n": 10,
@@ -247,10 +259,10 @@
    }
   },
   "fresh": {
-   "n": 20,
-   "win": 14,
-   "win_rate": 70,
-   "avg_r": 0.26
+   "n": 21,
+   "win": 15,
+   "win_rate": 71,
+   "avg_r": 0.32
   },
   "stale": {
    "n": 1,
@@ -260,10 +272,10 @@
   },
   "by_stage": {
    "3": {
-    "n": 20,
-    "win": 14,
-    "win_rate": 70,
-    "avg_r": 0.26
+    "n": 21,
+    "win": 15,
+    "win_rate": 71,
+    "avg_r": 0.31
    },
    "4": {
     "n": 1,
@@ -280,16 +292,58 @@
     "avg_r": 0.76
    },
    "USD": {
-    "n": 18,
-    "win": 12,
-    "win_rate": 67,
-    "avg_r": 0.19
+    "n": 19,
+    "win": 13,
+    "win_rate": 68,
+    "avg_r": 0.26
    }
   },
-  "slip_entry_pct": -0.68,
+  "slip_entry_pct": -0.65,
   "slip_stop_pct": -0.6
  },
  "closed": [
+  {
+   "code": "J",
+   "name": "Jacobs Solutions Inc.",
+   "ccy": "USD",
+   "ctx": {
+    "mode": "full",
+    "fresh": true,
+    "stage": 3,
+    "rp": 33,
+    "rec": 4,
+    "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권33% · 체크4/6 · 손절폭5.8%"
+   },
+   "plan": {
+    "entry": 126.585,
+    "stop": 119.2617,
+    "target": 141.2316,
+    "pb": 125.5425,
+    "tactic": "full"
+   },
+   "fill": {
+    "avg": 126.585,
+    "q": 64
+   },
+   "exits": [
+    {
+     "d": "2026-07-24",
+     "q": 32,
+     "price": 134.915,
+     "note": "+1R 절반 익절"
+    },
+    {
+     "d": "2026-09-10",
+     "q": 32,
+     "price": 141.68,
+     "note": "트레일 스탑"
+    }
+   ],
+   "opened": "2026-07-11",
+   "closed": "2026-09-10",
+   "pl": 1039766,
+   "r": 1.48
+  },
   {
    "code": "AVY",
    "name": "Avery Dennison Corporation",
@@ -1384,10 +1438,35 @@
   },
   {
    "d": "2026-09-10",
-   "v": 98236515
+   "v": 98228984
   }
  ],
  "log": [
+  {
+   "d": "2026-09-10",
+   "type": "order",
+   "code": "AI",
+   "name": "C3.ai, Inc.",
+   "q": 501,
+   "price": 9.9662,
+   "ccy": "USD",
+   "amt": 6688661,
+   "note": "눌림 지정가 주문(추격 금지) — 🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권22% · 체크4/6 · 손절폭9.8%"
+  },
+  {
+   "d": "2026-09-10",
+   "type": "sell",
+   "code": "J",
+   "name": "Jacobs Solutions Inc.",
+   "q": 32,
+   "price": 141.68,
+   "ccy": "USD",
+   "amt": 6073379,
+   "note": "트레일 스탑",
+   "pl": 647075,
+   "pl_pct": 11.9,
+   "r": 1.48
+  },
   {
    "d": "2026-09-09",
    "type": "buy",
@@ -2007,35 +2086,8 @@
    "ccy": "USD",
    "amt": 0,
    "note": "지정가 취소 — 신호 부패: 제외 게이트 — 하락추세/방어선 이탈"
-  },
-  {
-   "d": "2026-07-28",
-   "type": "sell",
-   "code": "HMC",
-   "name": "Honda Motor Company, Ltd.",
-   "q": 1,
-   "price": 30.115,
-   "ccy": "USD",
-   "amt": 44202,
-   "note": "+1R 절반 익절",
-   "pl": 3596,
-   "pl_pct": 8.9
-  },
-  {
-   "d": "2026-07-28",
-   "type": "sell",
-   "code": "068270",
-   "name": "셀트리온",
-   "q": 54,
-   "price": 182100.0,
-   "ccy": "KRW",
-   "amt": 9833400,
-   "note": "타임 스탑(+1R 미도달)",
-   "pl": 364586,
-   "pl_pct": 3.9,
-   "r": 0.38
   }
  ],
- "lane": "fast",
+ "lane": "bulk",
  "data_stale": []
 }
