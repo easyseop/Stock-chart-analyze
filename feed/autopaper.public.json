@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-09-10T09:11:30.348106+09:00",
+ "generated_at": "2026-09-10T09:55:16.274294+09:00",
  "updated": "2026-09-10",
  "start": 100000000,
  "cash": 24442430,
@@ -19,7 +19,7 @@
    "opened": "2026-07-22",
    "pl_krw": 123818,
    "pl_pct": 4.39,
-   "price_age_min": 33.3
+   "price_age_min": 26.7
   },
   {
    "code": "EQT",
@@ -34,7 +34,7 @@
    "opened": "2026-07-29",
    "pl_krw": 527604,
    "pl_pct": 6.34,
-   "price_age_min": 33.3
+   "price_age_min": 32.9
   },
   {
    "code": "MDT",
@@ -49,7 +49,7 @@
    "opened": "2026-07-30",
    "pl_krw": 363283,
    "pl_pct": 6.7,
-   "price_age_min": 33.3
+   "price_age_min": 26.4
   },
   {
    "code": "035250",
@@ -64,7 +64,7 @@
    "opened": "2026-08-26",
    "pl_krw": 197160,
    "pl_pct": 0.82,
-   "price_age_min": 9.0
+   "price_age_min": 41.9
   },
   {
    "code": "NAVI",
@@ -79,7 +79,7 @@
    "opened": "2026-08-27",
    "pl_krw": 19933,
    "pl_pct": 0.43,
-   "price_age_min": 33.3
+   "price_age_min": 25.2
   },
   {
    "code": "323410",
@@ -94,7 +94,7 @@
    "opened": "2026-09-04",
    "pl_krw": -108600,
    "pl_pct": -1.37,
-   "price_age_min": 9.4
+   "price_age_min": 41.1
   },
   {
    "code": "030200",
@@ -109,7 +109,7 @@
    "opened": "2026-09-07",
    "pl_krw": -201600,
    "pl_pct": -2.93,
-   "price_age_min": 9.5
+   "price_age_min": 41.9
   },
   {
    "code": "ADMA",
@@ -124,7 +124,7 @@
    "opened": "2026-09-08",
    "pl_krw": -84126,
    "pl_pct": -1.05,
-   "price_age_min": 35.4
+   "price_age_min": 40.5
   },
   {
    "code": "ULTA",
@@ -139,7 +139,7 @@
    "opened": "2026-09-09",
    "pl_krw": -11534,
    "pl_pct": -0.23,
-   "price_age_min": 35.9
+   "price_age_min": 17.3
   }
  ],
  "pending": [
@@ -2089,5 +2089,9 @@
   }
  ],
  "lane": "bulk",
- "data_stale": []
+ "data_stale": [
+  "035250",
+  "323410",
+  "030200"
+ ]
 }
