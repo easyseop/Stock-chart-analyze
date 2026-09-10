@@ -1,10 +1,10 @@
 {
- "generated_at": "2026-09-10T14:18:00.542802+09:00",
+ "generated_at": "2026-09-10T14:46:11.357711+09:00",
  "updated": "2026-09-10",
  "start": 100000000,
  "cash": 22338981,
- "equity": 98216346,
- "ret_pct": -1.78,
+ "equity": 98212516,
+ "ret_pct": -1.79,
  "positions": [
   {
    "code": "MAIN",
@@ -19,7 +19,7 @@
    "opened": "2026-07-22",
    "pl_krw": 123818,
    "pl_pct": 4.39,
-   "price_age_min": 144.9
+   "price_age_min": 173.0
   },
   {
    "code": "EQT",
@@ -34,7 +34,7 @@
    "opened": "2026-07-29",
    "pl_krw": 527604,
    "pl_pct": 6.34,
-   "price_age_min": 144.8
+   "price_age_min": 173.0
   },
   {
    "code": "MDT",
@@ -49,7 +49,7 @@
    "opened": "2026-07-30",
    "pl_krw": 363283,
    "pl_pct": 6.7,
-   "price_age_min": 144.8
+   "price_age_min": 173.0
   },
   {
    "code": "035250",
@@ -57,14 +57,14 @@
    "ccy": "KRW",
    "q": 1643,
    "avg": 14550.0,
-   "price": 14700.0,
+   "price": 14690.0,
    "stop": 13929.1519,
    "target": 15791.6962,
    "half_done": false,
    "opened": "2026-08-26",
-   "pl_krw": 246450,
-   "pl_pct": 1.03,
-   "price_age_min": 5.7
+   "pl_krw": 230020,
+   "pl_pct": 0.96,
+   "price_age_min": 8.7
   },
   {
    "code": "NAVI",
@@ -79,7 +79,7 @@
    "opened": "2026-08-27",
    "pl_krw": 19933,
    "pl_pct": 0.43,
-   "price_age_min": 144.8
+   "price_age_min": 173.0
   },
   {
    "code": "323410",
@@ -94,7 +94,7 @@
    "opened": "2026-09-04",
    "pl_krw": -210249,
    "pl_pct": -2.1,
-   "price_age_min": 6.0
+   "price_age_min": 9.1
   },
   {
    "code": "030200",
@@ -102,14 +102,14 @@
    "ccy": "KRW",
    "q": 126,
    "avg": 54700.0,
-   "price": 52900.0,
+   "price": 53000.0,
    "stop": 52281.2945,
    "target": 59537.4111,
    "half_done": false,
    "opened": "2026-09-07",
-   "pl_krw": -226800,
-   "pl_pct": -3.29,
-   "price_age_min": 6.1
+   "pl_krw": -214200,
+   "pl_pct": -3.11,
+   "price_age_min": 9.2
   },
   {
    "code": "ADMA",
@@ -124,7 +124,7 @@
    "opened": "2026-09-08",
    "pl_krw": -84126,
    "pl_pct": -1.05,
-   "price_age_min": 147.4
+   "price_age_min": 175.6
   },
   {
    "code": "ULTA",
@@ -139,7 +139,7 @@
    "opened": "2026-09-09",
    "pl_krw": -11534,
    "pl_pct": -0.23,
-   "price_age_min": 148.0
+   "price_age_min": 176.2
   }
  ],
  "pending": [
@@ -1438,7 +1438,7 @@
   },
   {
    "d": "2026-09-10",
-   "v": 98216346
+   "v": 98212516
   }
  ],
  "log": [
