@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated_at": "2026-09-11T09:01:45+09:00",
+ "generated_at": "2026-09-11T09:09:20+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "a_ablation": [
   {
@@ -126,16 +126,16 @@
  ],
  "shelf_debug": {
   "ok": 12,
-  "watch": 176,
+  "watch": 175,
   "reasons": {
    "밸류영역 밖(지지대 아님)": 378,
    "추락 중(범위 1%)": 169,
    "매물대 정보 없음": 147,
    "추락 중(범위 0%)": 135,
    "추락 중(범위 2%)": 111,
-   "추락 중(범위 4%)": 108,
+   "추락 중(범위 4%)": 109,
    "추락 중(범위 3%)": 90,
-   "반등 미확인(터치·상단마감·거래량)": 89
+   "추락 중(범위 6%)": 89
   }
  },
  "signals": [
@@ -1290,6 +1290,46 @@
    "trend_above_200": true
   },
   {
+   "id": "166090-2026-09-11-shelf-watch",
+   "code": "166090",
+   "name": "하나머티리얼즈",
+   "ccy": "KRW",
+   "group": "shelf_watch",
+   "entry_kind": "shelf_watch",
+   "stage": 0,
+   "price": 55000.0,
+   "entry": 55000.0,
+   "stop": 49784.0,
+   "target": 62922.9167,
+   "shares_1pct": 0,
+   "range_pos": 0.4786,
+   "norm": -17.0,
+   "bear_share": 0.375,
+   "shelf": {
+    "poc": 41889.5833,
+    "val": 39260.4167,
+    "vah": 62922.9167,
+    "rr": 1.52,
+    "overhead": 0.517,
+    "reason": "반등 미확인(터치)",
+    "history_bars": 1886,
+    "profile_pnl_proxy": 0.0216,
+    "runup252": 1.0716,
+    "checks": {
+     "터치": false,
+     "회복": true,
+     "상단마감": true,
+     "거래량": true,
+     "신저가아님": true
+    }
+   },
+   "fresh": false,
+   "break_gap": null,
+   "earnings_d": null,
+   "tactic": "watch",
+   "trend_above_200": false
+  },
+  {
    "id": "023530-2026-09-11-shelf-watch",
    "code": "023530",
    "name": "롯데쇼핑",
@@ -1566,46 +1606,6 @@
    "fresh": false,
    "break_gap": null,
    "earnings_d": 45,
-   "tactic": "watch",
-   "trend_above_200": false
-  },
-  {
-   "id": "STRL-2026-09-11-shelf-watch",
-   "code": "STRL",
-   "name": "Sterling Infrastructure, Inc.",
-   "ccy": "USD",
-   "group": "shelf_watch",
-   "entry_kind": "shelf_watch",
-   "stage": 0,
-   "price": 484.86,
-   "entry": 484.86,
-   "stop": 464.1819,
-   "target": 568.2029,
-   "shares_1pct": 0,
-   "range_pos": 0.2807,
-   "norm": -57.4,
-   "bear_share": 0.5,
-   "shelf": {
-    "poc": 326.8362,
-    "val": 296.6654,
-    "vah": 568.2029,
-    "rr": 4.03,
-    "overhead": 0.406,
-    "reason": "반등 미확인(터치·거래량)",
-    "history_bars": 1933,
-    "profile_pnl_proxy": -0.0614,
-    "runup252": 0.6101,
-    "checks": {
-     "터치": false,
-     "회복": true,
-     "상단마감": true,
-     "거래량": false,
-     "신저가아님": true
-    }
-   },
-   "fresh": false,
-   "break_gap": null,
-   "earnings_d": 52,
    "tactic": "watch",
    "trend_above_200": false
   },
@@ -2058,34 +2058,6 @@
    }
   },
   {
-   "id": "AB-2026-09-11-watch",
-   "code": "AB",
-   "name": "AllianceBernstein Holding L.P.  Units",
-   "ccy": "USD",
-   "group": "watch",
-   "entry_kind": "now",
-   "stage": 1,
-   "price": 36.38,
-   "entry": 36.38,
-   "stop": 35.2845,
-   "target": 38.571,
-   "shares_1pct": 91,
-   "range_pos": 0.1589,
-   "norm": -5.7,
-   "bear_share": 0.125,
-   "fresh": true,
-   "break_gap": -0.0084,
-   "earnings_d": 41,
-   "tactic": {
-    "stop_pct": 3.0,
-    "pb_price": 35.903,
-    "pb_stop_pct": 1.7,
-    "mode": "full",
-    "label": "⚡ 즉시 분할",
-    "desc": "손절폭 3.0%로 타이트 — 현재가에서 1~2회 분할 매수. 기다리는 이득보다 놓치는 비용이 큼"
-   }
-  },
-  {
    "id": "IDA-2026-09-11-watch",
    "code": "IDA",
    "name": "IDACORP, Inc.",
@@ -2111,6 +2083,34 @@
     "mode": "full",
     "label": "⚡ 즉시 분할",
     "desc": "손절폭 3.9%로 타이트 — 현재가에서 1~2회 분할 매수. 기다리는 이득보다 놓치는 비용이 큼"
+   }
+  },
+  {
+   "id": "AB-2026-09-11-watch",
+   "code": "AB",
+   "name": "AllianceBernstein Holding L.P.  Units",
+   "ccy": "USD",
+   "group": "watch",
+   "entry_kind": "now",
+   "stage": 1,
+   "price": 36.38,
+   "entry": 36.38,
+   "stop": 35.2845,
+   "target": 38.571,
+   "shares_1pct": 91,
+   "range_pos": 0.1589,
+   "norm": -15.1,
+   "bear_share": 0.25,
+   "fresh": true,
+   "break_gap": -0.0084,
+   "earnings_d": 41,
+   "tactic": {
+    "stop_pct": 3.0,
+    "pb_price": 35.903,
+    "pb_stop_pct": 1.7,
+    "mode": "full",
+    "label": "⚡ 즉시 분할",
+    "desc": "손절폭 3.0%로 타이트 — 현재가에서 1~2회 분할 매수. 기다리는 이득보다 놓치는 비용이 큼"
    }
   },
   {

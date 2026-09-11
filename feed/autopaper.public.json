@@ -1,8 +1,8 @@
 {
- "generated_at": "2026-09-11T09:01:17.872918+09:00",
+ "generated_at": "2026-09-11T09:09:06.084169+09:00",
  "updated": "2026-09-11",
  "start": 100000000,
- "cash": 22557865,
+ "cash": 29109865,
  "equity": 98062367,
  "ret_pct": -1.94,
  "positions": [
@@ -19,7 +19,7 @@
    "opened": "2026-07-29",
    "pl_krw": 583562,
    "pl_pct": 6.98,
-   "price_age_min": 7.5
+   "price_age_min": 15.3
   },
   {
    "code": "MDT",
@@ -34,7 +34,7 @@
    "opened": "2026-07-30",
    "pl_krw": 347755,
    "pl_pct": 6.39,
-   "price_age_min": 7.5
+   "price_age_min": 15.3
   },
   {
    "code": "035250",
@@ -49,7 +49,7 @@
    "opened": "2026-08-26",
    "pl_krw": 230020,
    "pl_pct": 0.96,
-   "price_age_min": 10.7
+   "price_age_min": 5.6
   },
   {
    "code": "NAVI",
@@ -64,7 +64,7 @@
    "opened": "2026-08-27",
    "pl_krw": -45040,
    "pl_pct": -0.97,
-   "price_age_min": 7.5
+   "price_age_min": 15.3
   },
   {
    "code": "323410",
@@ -79,22 +79,7 @@
    "opened": "2026-09-04",
    "pl_krw": -210249,
    "pl_pct": -2.1,
-   "price_age_min": 7.5
-  },
-  {
-   "code": "030200",
-   "name": "KT",
-   "ccy": "KRW",
-   "q": 126,
-   "avg": 54700.0,
-   "price": 52000.0,
-   "stop": 52281.2945,
-   "target": 59537.4111,
-   "half_done": false,
-   "opened": "2026-09-07",
-   "pl_krw": -340200,
-   "pl_pct": -4.94,
-   "price_age_min": 9.1
+   "price_age_min": 5.9
   },
   {
    "code": "ADMA",
@@ -109,7 +94,7 @@
    "opened": "2026-09-08",
    "pl_krw": -135173,
    "pl_pct": -1.68,
-   "price_age_min": 11.3
+   "price_age_min": 19.1
   },
   {
    "code": "ULTA",
@@ -124,7 +109,7 @@
    "opened": "2026-09-09",
    "pl_krw": -70250,
    "pl_pct": -1.37,
-   "price_age_min": 9.2
+   "price_age_min": 17.0
   },
   {
    "code": "ALG",
@@ -139,7 +124,7 @@
    "opened": "2026-09-11",
    "pl_krw": -15336,
    "pl_pct": -0.56,
-   "price_age_min": 10.9
+   "price_age_min": 18.7
   }
  ],
  "pending": [
@@ -223,9 +208,36 @@
     "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권32% · 체크6/6 · 손절폭9.7%"
    },
    "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권32% · 체크6/6 · 손절폭9.7%"
+  },
+  {
+   "code": "039490",
+   "name": "키움증권",
+   "ccy": "KRW",
+   "limit": 260356.25,
+   "stop": 248272.3285,
+   "target": 326955.3429,
+   "q": 25,
+   "created": "2026-09-11",
+   "atr": 13113.8357,
+   "plan": {
+    "entry": 274500.0,
+    "stop": 248272.3285,
+    "target": 326955.3429,
+    "pb": 260356.25,
+    "tactic": "pullback"
+   },
+   "ctx": {
+    "mode": "pullback",
+    "fresh": true,
+    "stage": 4,
+    "rp": 24,
+    "rec": 4,
+    "basis": "🔥 갓 전환(추세선 부근) · ④ 전환 확정 ⭐ · 저점권24% · 체크4/6 · 손절폭9.6%"
+   },
+   "basis": "🔥 갓 전환(추세선 부근) · ④ 전환 확정 ⭐ · 저점권24% · 체크4/6 · 손절폭9.6%"
   }
  ],
- "trades": 23,
+ "trades": 24,
  "win_trades": 17,
  "pos_cap_pct": 33.3,
  "cap_violations": [],
@@ -233,17 +245,17 @@
  "fx": 1345.28,
  "stats": {
   "all": {
-   "n": 23,
+   "n": 24,
    "win": 17,
-   "win_rate": 74,
-   "avg_r": 0.35
+   "win_rate": 71,
+   "avg_r": 0.29
   },
   "by_mode": {
    "full": {
-    "n": 8,
+    "n": 9,
     "win": 6,
-    "win_rate": 75,
-    "avg_r": 0.5
+    "win_rate": 67,
+    "avg_r": 0.32
    },
    "half": {
     "n": 10,
@@ -259,10 +271,10 @@
    }
   },
   "fresh": {
-   "n": 22,
+   "n": 23,
    "win": 16,
-   "win_rate": 73,
-   "avg_r": 0.35
+   "win_rate": 70,
+   "avg_r": 0.28
   },
   "stale": {
    "n": 1,
@@ -272,10 +284,10 @@
   },
   "by_stage": {
    "3": {
-    "n": 22,
+    "n": 23,
     "win": 16,
-    "win_rate": 73,
-    "avg_r": 0.34
+    "win_rate": 70,
+    "avg_r": 0.28
    },
    "4": {
     "n": 1,
@@ -286,10 +298,10 @@
   },
   "by_ccy": {
    "KRW": {
-    "n": 3,
+    "n": 4,
     "win": 3,
-    "win_rate": 100,
-    "avg_r": 0.76
+    "win_rate": 75,
+    "avg_r": 0.29
    },
    "USD": {
     "n": 20,
@@ -298,10 +310,46 @@
     "avg_r": 0.29
    }
   },
-  "slip_entry_pct": -0.62,
-  "slip_stop_pct": -0.6
+  "slip_entry_pct": -0.59,
+  "slip_stop_pct": -0.59
  },
  "closed": [
+  {
+   "code": "030200",
+   "name": "KT",
+   "ccy": "KRW",
+   "ctx": {
+    "mode": "full",
+    "fresh": true,
+    "stage": 3,
+    "rp": 31,
+    "rec": 4,
+    "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권31% · 체크4/6 · 손절폭4.4%"
+   },
+   "plan": {
+    "entry": 54700.0,
+    "stop": 52281.2945,
+    "target": 59537.4111,
+    "pb": null,
+    "tactic": "full"
+   },
+   "fill": {
+    "avg": 54700.0,
+    "q": 126
+   },
+   "exits": [
+    {
+     "d": "2026-09-11",
+     "q": 126,
+     "price": 52000.0,
+     "note": "손절"
+    }
+   ],
+   "opened": "2026-09-07",
+   "closed": "2026-09-11",
+   "pl": -340200,
+   "r": -1.12
+  },
   {
    "code": "MAIN",
    "name": "Main Street Capital Corporation",
@@ -1490,6 +1538,31 @@
  "log": [
   {
    "d": "2026-09-11",
+   "type": "order",
+   "code": "039490",
+   "name": "키움증권",
+   "q": 25,
+   "price": 260356.25,
+   "ccy": "KRW",
+   "amt": 6508906,
+   "note": "눌림 지정가 주문(추격 금지) — 🔥 갓 전환(추세선 부근) · ④ 전환 확정 ⭐ · 저점권24% · 체크4/6 · 손절폭9.6%"
+  },
+  {
+   "d": "2026-09-11",
+   "type": "sell",
+   "code": "030200",
+   "name": "KT",
+   "q": 126,
+   "price": 52000.0,
+   "ccy": "KRW",
+   "amt": 6552000,
+   "note": "손절",
+   "pl": -340200,
+   "pl_pct": -4.9,
+   "r": -1.12
+  },
+  {
+   "d": "2026-09-11",
    "type": "buy",
    "code": "ALG",
    "name": "Alamo Group, Inc.",
@@ -2107,32 +2180,6 @@
    "pl": -3659,
    "pl_pct": -3.6,
    "r": 0.59
-  },
-  {
-   "d": "2026-07-29",
-   "type": "sell",
-   "code": "LSPD",
-   "name": "Lightspeed Commerce Inc. Subordinate Votin",
-   "q": 7,
-   "price": 10.875,
-   "ccy": "USD",
-   "amt": 110692,
-   "note": "+1R 절반 익절",
-   "pl": 8703,
-   "pl_pct": 8.5
-  },
-  {
-   "d": "2026-07-29",
-   "type": "sell",
-   "code": "LSPD",
-   "name": "Lightspeed Commerce Inc. Subordinate Votin",
-   "q": 14,
-   "price": 10.72,
-   "ccy": "USD",
-   "amt": 218228,
-   "note": "어닝 축소 — 절반(MFE<1R)",
-   "pl": 14250,
-   "pl_pct": 7.0
   }
  ],
  "lane": "bulk",
