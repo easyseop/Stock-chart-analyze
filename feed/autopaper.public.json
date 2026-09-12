@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-09-12T10:13:02.294385+09:00",
+ "generated_at": "2026-09-12T11:00:29.035143+09:00",
  "updated": "2026-09-12",
  "start": 100000000,
  "cash": 27923608,
@@ -19,7 +19,7 @@
    "opened": "2026-07-29",
    "pl_krw": 437267,
    "pl_pct": 5.25,
-   "price_age_min": 6.9
+   "price_age_min": 7.6
   },
   {
    "code": "MDT",
@@ -34,7 +34,7 @@
    "opened": "2026-07-30",
    "pl_krw": 305032,
    "pl_pct": 5.62,
-   "price_age_min": 6.9
+   "price_age_min": 7.5
   },
   {
    "code": "035250",
@@ -49,7 +49,7 @@
    "opened": "2026-08-26",
    "pl_krw": 410750,
    "pl_pct": 1.72,
-   "price_age_min": 9.3
+   "price_age_min": 10.5
   },
   {
    "code": "NAVI",
@@ -64,7 +64,7 @@
    "opened": "2026-08-27",
    "pl_krw": 89788,
    "pl_pct": 1.95,
-   "price_age_min": 6.8
+   "price_age_min": 7.5
   },
   {
    "code": "323410",
@@ -79,7 +79,7 @@
    "opened": "2026-09-04",
    "pl_krw": -210249,
    "pl_pct": -2.1,
-   "price_age_min": 6.8
+   "price_age_min": 7.5
   },
   {
    "code": "ADMA",
@@ -94,7 +94,7 @@
    "opened": "2026-09-08",
    "pl_krw": -270617,
    "pl_pct": -3.02,
-   "price_age_min": 7.9
+   "price_age_min": 8.8
   },
   {
    "code": "ULTA",
@@ -109,7 +109,7 @@
    "opened": "2026-09-09",
    "pl_krw": 34636,
    "pl_pct": 0.68,
-   "price_age_min": 6.8
+   "price_age_min": 7.5
   },
   {
    "code": "ALG",
@@ -124,7 +124,7 @@
    "opened": "2026-09-11",
    "pl_krw": 13677,
    "pl_pct": 0.51,
-   "price_age_min": 9.6
+   "price_age_min": 10.8
   },
   {
    "code": "TKC",
@@ -139,7 +139,7 @@
    "opened": "2026-09-12",
    "pl_krw": -784,
    "pl_pct": -0.28,
-   "price_age_min": 8.9
+   "price_age_min": 10.0
   }
  ],
  "pending": [
@@ -169,33 +169,6 @@
     "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권22% · 체크4/6 · 손절폭9.8%"
    },
    "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권22% · 체크4/6 · 손절폭9.8%"
-  },
-  {
-   "code": "003380",
-   "name": "하림지주",
-   "ccy": "KRW",
-   "limit": 10172.5,
-   "stop": 10019.5952,
-   "target": 13260.8096,
-   "q": 3,
-   "created": "2026-09-10",
-   "atr": 540.2024,
-   "plan": {
-    "entry": 11100.0,
-    "stop": 10019.5952,
-    "target": 13260.8096,
-    "pb": 10172.5,
-    "tactic": "pullback"
-   },
-   "ctx": {
-    "mode": "pullback",
-    "fresh": true,
-    "stage": 3,
-    "rp": 32,
-    "rec": 6,
-    "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권32% · 체크6/6 · 손절폭9.7%"
-   },
-   "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권32% · 체크6/6 · 손절폭9.7%"
   },
   {
    "code": "039490",
@@ -1530,6 +1503,17 @@
  "log": [
   {
    "d": "2026-09-12",
+   "type": "cancel",
+   "code": "003380",
+   "name": "하림지주",
+   "q": 0,
+   "price": 11460.0,
+   "ccy": "KRW",
+   "amt": 0,
+   "note": "지정가 취소 — 신호 부패: 제외 게이트 — 이미 폭등"
+  },
+  {
+   "d": "2026-09-12",
    "type": "buy",
    "code": "TKC",
    "name": "Turkcell Iletisim Hizmetleri AS",
@@ -2157,20 +2141,6 @@
    "ccy": "USD",
    "amt": 5085780,
    "note": "눌림 지정가 주문(추격 금지) — 🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권33% · 체크4/6 · 손절폭8.1%"
-  },
-  {
-   "d": "2026-08-01",
-   "type": "sell",
-   "code": "SHOP",
-   "name": "Shopify Inc.",
-   "q": 30,
-   "price": 116.05,
-   "ccy": "USD",
-   "amt": 5000305,
-   "note": "트레일 스탑",
-   "pl": 46099,
-   "pl_pct": 0.9,
-   "r": 0.58
   }
  ],
  "lane": "bulk",
