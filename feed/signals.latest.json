@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated_at": "2026-09-12T23:43:13+09:00",
+ "generated_at": "2026-09-13T00:30:45+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "a_ablation": [
   {
@@ -132,7 +132,7 @@
  },
  "signals": [
   {
-   "id": "ALG-2026-09-12-now",
+   "id": "ALG-2026-09-13-now",
    "code": "ALG",
    "name": "Alamo Group, Inc.",
    "ccy": "USD",
@@ -160,7 +160,7 @@
    }
   },
   {
-   "id": "CEG-2026-09-12-now",
+   "id": "CEG-2026-09-13-now",
    "code": "CEG",
    "name": "Constellation Energy Corporation",
    "ccy": "USD",
@@ -188,7 +188,7 @@
    }
   },
   {
-   "id": "204320-2026-09-12-now",
+   "id": "204320-2026-09-13-now",
    "code": "204320",
    "name": "HL만도",
    "ccy": "KRW",
@@ -216,7 +216,7 @@
    }
   },
   {
-   "id": "272210-2026-09-12-now",
+   "id": "272210-2026-09-13-now",
    "code": "272210",
    "name": "한화시스템",
    "ccy": "KRW",
@@ -244,7 +244,7 @@
    }
   },
   {
-   "id": "MIR-2026-09-12-now",
+   "id": "MIR-2026-09-13-now",
    "code": "MIR",
    "name": "Mirion Technologies, Inc.",
    "ccy": "USD",
@@ -272,7 +272,7 @@
    }
   },
   {
-   "id": "TKC-2026-09-12-now",
+   "id": "TKC-2026-09-13-now",
    "code": "TKC",
    "name": "Turkcell Iletisim Hizmetleri AS",
    "ccy": "USD",
@@ -300,7 +300,7 @@
    }
   },
   {
-   "id": "PFSI-2026-09-12-now",
+   "id": "PFSI-2026-09-13-now",
    "code": "PFSI",
    "name": "PennyMac Financial Services, Inc.",
    "ccy": "USD",
@@ -328,7 +328,7 @@
    }
   },
   {
-   "id": "064350-2026-09-12-now",
+   "id": "064350-2026-09-13-now",
    "code": "064350",
    "name": "현대로템",
    "ccy": "KRW",
@@ -356,7 +356,7 @@
    }
   },
   {
-   "id": "TAC-2026-09-12-now",
+   "id": "TAC-2026-09-13-now",
    "code": "TAC",
    "name": "TransAlta Corporation",
    "ccy": "USD",
@@ -384,7 +384,7 @@
    }
   },
   {
-   "id": "139480-2026-09-12-now",
+   "id": "139480-2026-09-13-now",
    "code": "139480",
    "name": "이마트",
    "ccy": "KRW",
@@ -412,7 +412,7 @@
    }
   },
   {
-   "id": "064400-2026-09-12-now",
+   "id": "064400-2026-09-13-now",
    "code": "064400",
    "name": "LG씨엔에스",
    "ccy": "KRW",
@@ -440,7 +440,7 @@
    }
   },
   {
-   "id": "039490-2026-09-12-now",
+   "id": "039490-2026-09-13-now",
    "code": "039490",
    "name": "키움증권",
    "ccy": "KRW",
@@ -468,7 +468,7 @@
    }
   },
   {
-   "id": "018880-2026-09-12-now",
+   "id": "018880-2026-09-13-now",
    "code": "018880",
    "name": "한온시스템",
    "ccy": "KRW",
@@ -496,7 +496,7 @@
    }
   },
   {
-   "id": "016360-2026-09-12-now",
+   "id": "016360-2026-09-13-now",
    "code": "016360",
    "name": "삼성증권",
    "ccy": "KRW",
@@ -524,7 +524,7 @@
    }
   },
   {
-   "id": "APP-2026-09-12-now",
+   "id": "APP-2026-09-13-now",
    "code": "APP",
    "name": "Applovin Corporation",
    "ccy": "USD",
@@ -552,7 +552,7 @@
    }
   },
   {
-   "id": "042660-2026-09-12-now",
+   "id": "042660-2026-09-13-now",
    "code": "042660",
    "name": "한화오션",
    "ccy": "KRW",
@@ -580,7 +580,7 @@
    }
   },
   {
-   "id": "AAON-2026-09-12-now",
+   "id": "AAON-2026-09-13-now",
    "code": "AAON",
    "name": "AAON, Inc.",
    "ccy": "USD",
@@ -608,7 +608,7 @@
    }
   },
   {
-   "id": "AMSC-2026-09-12-now",
+   "id": "AMSC-2026-09-13-now",
    "code": "AMSC",
    "name": "American Superconductor Corporation",
    "ccy": "USD",
@@ -636,7 +636,7 @@
    }
   },
   {
-   "id": "ACVA-2026-09-12-shelf",
+   "id": "ACVA-2026-09-13-shelf",
    "code": "ACVA",
    "name": "ACV Auctions Inc.",
    "ccy": "USD",
@@ -668,7 +668,7 @@
    "trend_above_200": true
   },
   {
-   "id": "QCOM-2026-09-12-shelf",
+   "id": "QCOM-2026-09-13-shelf",
    "code": "QCOM",
    "name": "QUALCOMM Incorporated",
    "ccy": "USD",
@@ -700,7 +700,7 @@
    "trend_above_200": true
   },
   {
-   "id": "TM-2026-09-12-b0-shadow",
+   "id": "TM-2026-09-13-b0-shadow",
    "code": "TM",
    "name": "Toyota Motor Corporation",
    "ccy": "USD",
@@ -719,7 +719,7 @@
    "tactic": "shadow"
   },
   {
-   "id": "004170-2026-09-12-b0-shadow",
+   "id": "004170-2026-09-13-b0-shadow",
    "code": "004170",
    "name": "신세계",
    "ccy": "KRW",
@@ -738,7 +738,7 @@
    "tactic": "shadow"
   },
   {
-   "id": "ENPH-2026-09-12-b0-shadow",
+   "id": "ENPH-2026-09-13-b0-shadow",
    "code": "ENPH",
    "name": "Enphase Energy, Inc.",
    "ccy": "USD",
@@ -757,7 +757,7 @@
    "tactic": "shadow"
   },
   {
-   "id": "F-2026-09-12-b2-shadow",
+   "id": "F-2026-09-13-b2-shadow",
    "code": "F",
    "name": "Ford Motor Company",
    "ccy": "USD",
@@ -775,7 +775,7 @@
    "tactic": "shadow"
   },
   {
-   "id": "MELI-2026-09-12-shelf-watch",
+   "id": "MELI-2026-09-13-shelf-watch",
    "code": "MELI",
    "name": "MercadoLibre, Inc.",
    "ccy": "USD",
@@ -815,7 +815,7 @@
    "trend_above_200": true
   },
   {
-   "id": "ALG-2026-09-12-shelf-watch",
+   "id": "ALG-2026-09-13-shelf-watch",
    "code": "ALG",
    "name": "Alamo Group, Inc.",
    "ccy": "USD",
@@ -855,7 +855,7 @@
    "trend_above_200": false
   },
   {
-   "id": "BZ-2026-09-12-shelf-watch",
+   "id": "BZ-2026-09-13-shelf-watch",
    "code": "BZ",
    "name": "KANZHUN LIMITED",
    "ccy": "USD",
@@ -895,7 +895,7 @@
    "trend_above_200": true
   },
   {
-   "id": "KNSL-2026-09-12-shelf-watch",
+   "id": "KNSL-2026-09-13-shelf-watch",
    "code": "KNSL",
    "name": "Kinsale Capital Group, Inc.",
    "ccy": "USD",
@@ -935,7 +935,7 @@
    "trend_above_200": true
   },
   {
-   "id": "LMT-2026-09-12-shelf-watch",
+   "id": "LMT-2026-09-13-shelf-watch",
    "code": "LMT",
    "name": "Lockheed Martin Corporation",
    "ccy": "USD",
@@ -975,7 +975,7 @@
    "trend_above_200": false
   },
   {
-   "id": "011780-2026-09-12-shelf-watch",
+   "id": "011780-2026-09-13-shelf-watch",
    "code": "011780",
    "name": "금호석유화학",
    "ccy": "KRW",
@@ -1015,7 +1015,7 @@
    "trend_above_200": false
   },
   {
-   "id": "120110-2026-09-12-shelf-watch",
+   "id": "120110-2026-09-13-shelf-watch",
    "code": "120110",
    "name": "코오롱인더",
    "ccy": "KRW",
@@ -1055,7 +1055,7 @@
    "trend_above_200": false
   },
   {
-   "id": "047050-2026-09-12-shelf-watch",
+   "id": "047050-2026-09-13-shelf-watch",
    "code": "047050",
    "name": "포스코인터내셔널",
    "ccy": "KRW",
@@ -1095,7 +1095,7 @@
    "trend_above_200": false
   },
   {
-   "id": "RIVN-2026-09-12-shelf-watch",
+   "id": "RIVN-2026-09-13-shelf-watch",
    "code": "RIVN",
    "name": "Rivian Automotive, Inc.",
    "ccy": "USD",
@@ -1135,7 +1135,7 @@
    "trend_above_200": false
   },
   {
-   "id": "LINE-2026-09-12-shelf-watch",
+   "id": "LINE-2026-09-13-shelf-watch",
    "code": "LINE",
    "name": "Lineage, Inc.",
    "ccy": "USD",
@@ -1175,7 +1175,7 @@
    "trend_above_200": false
   },
   {
-   "id": "UAL-2026-09-12-shelf-watch",
+   "id": "UAL-2026-09-13-shelf-watch",
    "code": "UAL",
    "name": "United Airlines Holdings, Inc.",
    "ccy": "USD",
@@ -1215,7 +1215,7 @@
    "trend_above_200": false
   },
   {
-   "id": "SG-2026-09-12-shelf-watch",
+   "id": "SG-2026-09-13-shelf-watch",
    "code": "SG",
    "name": "Sweetgreen, Inc.",
    "ccy": "USD",
@@ -1255,7 +1255,7 @@
    "trend_above_200": false
   },
   {
-   "id": "023530-2026-09-12-shelf-watch",
+   "id": "023530-2026-09-13-shelf-watch",
    "code": "023530",
    "name": "롯데쇼핑",
    "ccy": "KRW",
@@ -1295,7 +1295,7 @@
    "trend_above_200": false
   },
   {
-   "id": "069960-2026-09-12-shelf-watch",
+   "id": "069960-2026-09-13-shelf-watch",
    "code": "069960",
    "name": "현대백화점",
    "ccy": "KRW",
@@ -1335,7 +1335,7 @@
    "trend_above_200": false
   },
   {
-   "id": "POWI-2026-09-12-shelf-watch",
+   "id": "POWI-2026-09-13-shelf-watch",
    "code": "POWI",
    "name": "Power Integrations, Inc.",
    "ccy": "USD",
@@ -1375,7 +1375,7 @@
    "trend_above_200": false
   },
   {
-   "id": "SAIA-2026-09-12-shelf-watch",
+   "id": "SAIA-2026-09-13-shelf-watch",
    "code": "SAIA",
    "name": "Saia, Inc.",
    "ccy": "USD",
@@ -1415,7 +1415,7 @@
    "trend_above_200": false
   },
   {
-   "id": "030200-2026-09-12-watch",
+   "id": "030200-2026-09-13-watch",
    "code": "030200",
    "name": "KT",
    "ccy": "KRW",
@@ -1443,7 +1443,7 @@
    }
   },
   {
-   "id": "032640-2026-09-12-watch",
+   "id": "032640-2026-09-13-watch",
    "code": "032640",
    "name": "LG유플러스",
    "ccy": "KRW",
@@ -1471,7 +1471,7 @@
    }
   },
   {
-   "id": "086280-2026-09-12-watch",
+   "id": "086280-2026-09-13-watch",
    "code": "086280",
    "name": "현대글로비스",
    "ccy": "KRW",
@@ -1499,7 +1499,7 @@
    }
   },
   {
-   "id": "IPGP-2026-09-12-watch",
+   "id": "IPGP-2026-09-13-watch",
    "code": "IPGP",
    "name": "IPG Photonics Corporation",
    "ccy": "USD",
@@ -1527,7 +1527,7 @@
    }
   },
   {
-   "id": "CRUS-2026-09-12-watch",
+   "id": "CRUS-2026-09-13-watch",
    "code": "CRUS",
    "name": "Cirrus Logic, Inc.",
    "ccy": "USD",
@@ -1555,7 +1555,7 @@
    }
   },
   {
-   "id": "ARRY-2026-09-12-watch",
+   "id": "ARRY-2026-09-13-watch",
    "code": "ARRY",
    "name": "Array Technologies, Inc.",
    "ccy": "USD",
@@ -1583,7 +1583,7 @@
    }
   },
   {
-   "id": "ORLA-2026-09-12-watch",
+   "id": "ORLA-2026-09-13-watch",
    "code": "ORLA",
    "name": "Orla Mining Ltd.",
    "ccy": "USD",
@@ -1611,7 +1611,7 @@
    }
   },
   {
-   "id": "POWI-2026-09-12-watch",
+   "id": "POWI-2026-09-13-watch",
    "code": "POWI",
    "name": "Power Integrations, Inc.",
    "ccy": "USD",
@@ -1639,7 +1639,7 @@
    }
   },
   {
-   "id": "SAIA-2026-09-12-watch",
+   "id": "SAIA-2026-09-13-watch",
    "code": "SAIA",
    "name": "Saia, Inc.",
    "ccy": "USD",
@@ -1667,7 +1667,7 @@
    }
   },
   {
-   "id": "029780-2026-09-12-watch",
+   "id": "029780-2026-09-13-watch",
    "code": "029780",
    "name": "삼성카드",
    "ccy": "KRW",
@@ -1695,7 +1695,7 @@
    }
   },
   {
-   "id": "088980-2026-09-12-watch",
+   "id": "088980-2026-09-13-watch",
    "code": "088980",
    "name": "맥쿼리인프라",
    "ccy": "KRW",
@@ -1723,7 +1723,7 @@
    }
   },
   {
-   "id": "377300-2026-09-12-watch",
+   "id": "377300-2026-09-13-watch",
    "code": "377300",
    "name": "카카오페이",
    "ccy": "KRW",
@@ -1751,7 +1751,7 @@
    }
   },
   {
-   "id": "MLYS-2026-09-12-watch",
+   "id": "MLYS-2026-09-13-watch",
    "code": "MLYS",
    "name": "Mineralys Therapeutics, Inc.",
    "ccy": "USD",
@@ -1779,7 +1779,7 @@
    }
   },
   {
-   "id": "007660-2026-09-12-watch",
+   "id": "007660-2026-09-13-watch",
    "code": "007660",
    "name": "이수페타시스",
    "ccy": "KRW",
@@ -1807,7 +1807,7 @@
    }
   },
   {
-   "id": "017800-2026-09-12-watch",
+   "id": "017800-2026-09-13-watch",
    "code": "017800",
    "name": "현대엘리베이터",
    "ccy": "KRW",
@@ -1835,7 +1835,7 @@
    }
   },
   {
-   "id": "TM-2026-09-12-watch",
+   "id": "TM-2026-09-13-watch",
    "code": "TM",
    "name": "Toyota Motor Corporation",
    "ccy": "USD",
@@ -1856,7 +1856,7 @@
    "tactic": null
   },
   {
-   "id": "MRP-2026-09-12-watch",
+   "id": "MRP-2026-09-13-watch",
    "code": "MRP",
    "name": "Millrose Properties, Inc.",
    "ccy": "USD",
@@ -1884,7 +1884,7 @@
    }
   },
   {
-   "id": "015760-2026-09-12-watch",
+   "id": "015760-2026-09-13-watch",
    "code": "015760",
    "name": "한국전력",
    "ccy": "KRW",
@@ -1912,7 +1912,7 @@
    }
   },
   {
-   "id": "ADMA-2026-09-12-watch",
+   "id": "ADMA-2026-09-13-watch",
    "code": "ADMA",
    "name": "ADMA Biologics Inc",
    "ccy": "USD",
@@ -1940,7 +1940,7 @@
    }
   },
   {
-   "id": "LOPE-2026-09-12-watch",
+   "id": "LOPE-2026-09-13-watch",
    "code": "LOPE",
    "name": "Grand Canyon Education, Inc.",
    "ccy": "USD",
@@ -1961,7 +1961,7 @@
    "tactic": null
   },
   {
-   "id": "AB-2026-09-12-watch",
+   "id": "AB-2026-09-13-watch",
    "code": "AB",
    "name": "AllianceBernstein Holding L.P.  Units",
    "ccy": "USD",
@@ -1989,7 +1989,7 @@
    }
   },
   {
-   "id": "GBCI-2026-09-12-watch",
+   "id": "GBCI-2026-09-13-watch",
    "code": "GBCI",
    "name": "Glacier Bancorp, Inc.",
    "ccy": "USD",
@@ -2017,7 +2017,7 @@
    }
   },
   {
-   "id": "SEB-2026-09-12-watch",
+   "id": "SEB-2026-09-13-watch",
    "code": "SEB",
    "name": "Seaboard Corporation",
    "ccy": "USD",
@@ -2045,7 +2045,7 @@
    }
   },
   {
-   "id": "JEF-2026-09-12-watch",
+   "id": "JEF-2026-09-13-watch",
    "code": "JEF",
    "name": "Jefferies Financial Group Inc.",
    "ccy": "USD",
@@ -2073,7 +2073,7 @@
    }
   },
   {
-   "id": "KT-2026-09-12-watch",
+   "id": "KT-2026-09-13-watch",
    "code": "KT",
    "name": "KT Corporation",
    "ccy": "USD",
@@ -2094,7 +2094,7 @@
    "tactic": null
   },
   {
-   "id": "263750-2026-09-12-watch",
+   "id": "263750-2026-09-13-watch",
    "code": "263750",
    "name": "펄어비스",
    "ccy": "KRW",
@@ -2115,7 +2115,7 @@
    "tactic": null
   },
   {
-   "id": "GME-2026-09-12-watch",
+   "id": "GME-2026-09-13-watch",
    "code": "GME",
    "name": "GameStop Corporation",
    "ccy": "USD",
@@ -2136,7 +2136,7 @@
    "tactic": null
   },
   {
-   "id": "TDS-2026-09-12-watch",
+   "id": "TDS-2026-09-13-watch",
    "code": "TDS",
    "name": "Telephone and Data Systems, Inc.",
    "ccy": "USD",
@@ -2157,7 +2157,7 @@
    "tactic": null
   },
   {
-   "id": "GLW-2026-09-12-watch",
+   "id": "GLW-2026-09-13-watch",
    "code": "GLW",
    "name": "Corning Incorporated",
    "ccy": "USD",
@@ -2178,7 +2178,7 @@
    "tactic": null
   },
   {
-   "id": "CLS-2026-09-12-watch",
+   "id": "CLS-2026-09-13-watch",
    "code": "CLS",
    "name": "Celestica, Inc.",
    "ccy": "USD",
@@ -2199,7 +2199,7 @@
    "tactic": null
   },
   {
-   "id": "NXPI-2026-09-12-watch",
+   "id": "NXPI-2026-09-13-watch",
    "code": "NXPI",
    "name": "NXP Semiconductors N.V.",
    "ccy": "USD",
@@ -2220,7 +2220,7 @@
    "tactic": null
   },
   {
-   "id": "329180-2026-09-12-watch",
+   "id": "329180-2026-09-13-watch",
    "code": "329180",
    "name": "HD현대중공업",
    "ccy": "KRW",
@@ -2241,7 +2241,7 @@
    "tactic": null
   },
   {
-   "id": "CLSK-2026-09-12-watch",
+   "id": "CLSK-2026-09-13-watch",
    "code": "CLSK",
    "name": "CleanSpark, Inc.",
    "ccy": "USD",
@@ -2262,7 +2262,7 @@
    "tactic": null
   },
   {
-   "id": "ECHO-2026-09-12-watch",
+   "id": "ECHO-2026-09-13-watch",
    "code": "ECHO",
    "name": "EchoStar Corporation",
    "ccy": "USD",
@@ -2283,7 +2283,7 @@
    "tactic": null
   },
   {
-   "id": "STRL-2026-09-12-watch",
+   "id": "STRL-2026-09-13-watch",
    "code": "STRL",
    "name": "Sterling Infrastructure, Inc.",
    "ccy": "USD",
