@@ -25,9 +25,11 @@
 """
 from __future__ import annotations
 
+import datetime
 import math
 import os
 import re
+from zoneinfo import ZoneInfo
 
 from bot import ledger, ownership
 
@@ -401,6 +403,58 @@ def _closed_zero_fill_row(rows: list[dict], odno: str) -> dict | None:
     return row if qty == 0 else None
 
 
+_REMAINING_KEYS = ("nccs_qty", "rmn_qty")
+
+
+def _row_remaining_qty(row: dict) -> float | None:
+    """ccnl 행의 미체결 잔량. 필드가 없으면 None(모름) — 0으로 추측하지 않는다."""
+    present = next((key for key in _REMAINING_KEYS if key in row), None)
+    if present is None:
+        return None
+    try:
+        value = float(row.get(present))
+    except (TypeError, ValueError):
+        return None
+    return value if math.isfinite(value) and value >= 0 else None
+
+
+def _session_day(order: dict, ts: float) -> str:
+    """주문 시장의 거래일(YYYYMMDD). 국내=KST, 해외=미 동부."""
+    symbol = str(order.get("symbol") or "")
+    market = str(order.get("market") or "").upper()
+    domestic = market == "KR" or (not market and symbol.isdigit() and len(symbol) == 6)
+    zone = ZoneInfo("Asia/Seoul") if domestic else ZoneInfo("America/New_York")
+    return datetime.datetime.fromtimestamp(float(ts), zone).strftime("%Y%m%d")
+
+
+def zero_fill_row_still_live(row: dict, order: dict, now_ts: float) -> bool:
+    """0체결 행이 '아직 살아 있는 당일 주문'인가.
+
+    실측 2026-09-09 OBDC·NFG: 미체결 조회(nccs)에는 안 보이는데 체결내역
+    (ccnl)의 같은 ODNO 행은 `ft_ccld_qty=0 · nccs_qty=주문수량`이었다. 즉 mock
+    은 살아 있는 주문을 미체결 목록에서 빼놓는다. OBDC는 그 상태로 20분 재확인
+    창까지 통과해 `rejected`로 닫혔고, 뒤늦게 3주 전량 체결이 올라와 원장 3주
+    ·브로커 0주의 유령이 됐다. NFG도 같은 형태로 닫혔지만 브로커에는 잔량 8주가
+    남아 있어, 다음 익절 재시도가 겹치면 이중 매도가 된다.
+
+    잔량 필드가 양수이고 주문이 **오늘 거래일**의 것이면 살아 있는 것으로 본다
+    (해외·국내 모두 당일 유효 주문). 지난 거래일 주문은 잔량 표시가 남아 있어도
+    더는 체결될 수 없으므로 종전대로 종결 후보다. 잔량 필드가 없으면 판단하지
+    않는다(호출자는 종전 규칙을 그대로 쓴다).
+    """
+    remaining = _row_remaining_qty(row)
+    if remaining is None or remaining <= 0:
+        return False
+    submitted = order.get("submitted_at")
+    try:
+        submitted = float(submitted)
+    except (TypeError, ValueError):
+        return True                      # 시각 불명 — 살아 있다고 보수적으로 본다
+    if not math.isfinite(submitted) or submitted <= 0:
+        return True
+    return _session_day(order, submitted) == _session_day(order, now_ts)
+
+
 def resolve_acks_by_absence(evidence_by_key: dict[str, dict],
                             now_ts: float | None = None,
                             orders: list[dict] | None = None,
@@ -457,6 +511,11 @@ def resolve_acks_by_absence(evidence_by_key: dict[str, dict],
         # 행은 mock에서 체결 직후 잠시 보일 수 있으므로, 10분 유예와 완전한
         # 잔고 불변을 함께 증명할 때만 종결 근거로 쓴다.
         zero_fill_row = _closed_zero_fill_row(ccnl_rows, odno)
+        if zero_fill_row is not None and zero_fill_row_still_live(
+                zero_fill_row, order, now_ts):
+            # 잔량이 남은 당일 주문 — 미체결 목록에 안 보여도 살아 있다.
+            #   닫으면 뒤늦은 체결이 유령 포지션·이중 매도가 된다(OBDC·NFG).
+            zero_fill_row = None
         ccnl_has_order = has_order(ccnl_rows)
         if has_order(nccs_rows) or (ccnl_has_order and zero_fill_row is None):
             continue

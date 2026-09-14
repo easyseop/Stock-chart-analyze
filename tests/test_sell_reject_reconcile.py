@@ -208,9 +208,11 @@ def test_closed_row_reason_is_sanitized_and_bounded():
     with tempfile.TemporaryDirectory() as tmp:
         _paths(tmp)
         order = _ack()
+        # nccs_qty=0: 잔량이 남은 당일 행은 살아 있는 주문이라 종결 후보가
+        #   아니다(2026-09-09 OBDC·NFG). 이 테스트의 관심사는 메시지 정화다.
         raw = {"odno": "38291", "pdno": "TAP",
                "sll_buy_dvsn_cd": "01", "ft_ord_qty": "80",
-               "ft_ccld_qty": "0", "nccs_qty": "80",
+               "ft_ccld_qty": "0", "nccs_qty": "0",
                "_response_msg_cd": "20310000\x00",
                "_response_msg1": "X\n" + "a" * 300}
         rs, contradictions = R.resolve_acks_by_absence(
