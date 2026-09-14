@@ -34,6 +34,7 @@ import urllib.parse
 import urllib.request
 
 from bot import ledger, trade_history
+from scripts import session_days
 
 _UA = {"User-Agent": "Mozilla/5.0"}
 
@@ -92,25 +93,11 @@ def _stop_of(code: str) -> float | None:
     return None if best is None else best[1]
 
 
-def _pair_entries(rows: list[dict]) -> dict[int, str]:
-    """매도 행 → 그 종목의 직전 매수일. 같은 종목의 마지막 선행 매수를 쓴다."""
-    entry_day: dict[int, str] = {}
-    last_buy: dict[str, str] = {}
-    for row in sorted(rows, key=lambda r: str(r.get("executed_at") or "")):
-        code = str(row.get("code") or "").upper()
-        if row.get("side") == "buy":
-            last_buy[code] = str(row.get("day") or "")
-        elif row.get("side") == "sell" and last_buy.get(code):
-            entry_day[id(row)] = last_buy[code]
-    return entry_day
-
-
 def analyze(sleeve: str, *, pause: float = 0.4) -> list[dict]:
     snap = trade_history.snapshot(limit=500)
     if not isinstance(snap, dict) or not snap.get("available"):
         raise RuntimeError("원장 무결성 미확인 — 분석 중단")
     rows = snap.get("trades") or []
-    entry_day = _pair_entries(rows)
     sells = [r for r in rows
              if str(r.get("side") or "").lower() == "sell"
              and str(r.get("sleeve") or "A").upper() == sleeve]
@@ -120,7 +107,9 @@ def analyze(sleeve: str, *, pause: float = 0.4) -> list[dict]:
     for row in sells:
         code = str(row.get("code") or "").upper()
         entry = row.get("entry_price")
-        d0, d1 = entry_day.get(id(row)), str(row.get("day") or "")
+        # 세션일 = 원장 제출 시각을 시장 시간대로(KST 달력일은 자정 이후 미국
+        #   진입을 다음 세션으로 오독한다 — 진입 세션의 고가가 창에서 빠진다).
+        d0, d1, _entry_order = session_days.sessions_for_sell(row)
         rec = {"code": code, "reason_kind": row.get("reason_kind"),
                "reason": row.get("reason"), "ret": row.get("return_pct"),
                "entry": entry, "d0": d0, "d1": d1,

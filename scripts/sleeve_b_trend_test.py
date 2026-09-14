@@ -33,6 +33,7 @@ import urllib.parse
 import urllib.request
 
 from bot import ledger, trade_history
+from scripts import session_days
 
 _UA = {"User-Agent": "Mozilla/5.0"}
 MA_WINDOW = 200
@@ -76,15 +77,20 @@ def _syms(code: str, market: str) -> list[str]:
     return [code]
 
 
-def trend_at(bars: list[dict], day: str) -> tuple[float | None, float | None]:
-    """(진입일 종가, 그날까지의 200일 이동평균). 봉이 모자라면 (종가, None)."""
-    prior = [b for b in bars if b["d"] <= day]
+def trend_at(bars: list[dict], session_day: str,
+             entry_price: float) -> tuple[float | None, float | None]:
+    """(진입가, 진입 세션 **직전까지** 완결된 200봉 이동평균).
+
+    진입 세션의 봉은 진입 시점에 아직 닫히지 않았고, 그 종가는 진입 이후의
+    움직임(손절 등)을 담는다. 그래서 세션일 미만의 봉만 쓴다 — 미래 참조 없음.
+    봉이 모자라면 (진입가, None)으로 판정을 보류한다.
+    """
+    prior = [b for b in bars if b["d"] < session_day]
     if not prior:
         return None, None
-    price = prior[-1]["c"]
     if len(prior) < MA_WINDOW:
-        return price, None                  # 표본 부족 — 추정하지 않는다
-    return price, statistics.fmean(b["c"] for b in prior[-MA_WINDOW:])
+        return float(entry_price), None     # 표본 부족 — 추정하지 않는다
+    return float(entry_price), statistics.fmean(b["c"] for b in prior[-MA_WINDOW:])
 
 
 def _stop_of(code: str) -> float | None:
@@ -100,23 +106,11 @@ def _stop_of(code: str) -> float | None:
     return None if best is None else best[1]
 
 
-def _pair(rows: list[dict]) -> dict[int, str]:
-    entry_day, last_buy = {}, {}
-    for row in sorted(rows, key=lambda r: str(r.get("executed_at") or "")):
-        code = str(row.get("code") or "").upper()
-        if str(row.get("side") or "") == "buy":
-            last_buy[code] = str(row.get("day") or "")
-        elif str(row.get("side") or "") == "sell" and last_buy.get(code):
-            entry_day[id(row)] = last_buy[code]
-    return entry_day
-
-
 def collect(sleeve: str, *, pause: float = 0.4) -> list[dict]:
     snap = trade_history.snapshot(limit=500)
     if not isinstance(snap, dict) or not snap.get("available"):
         raise RuntimeError("원장 무결성 미확인 — 분석 중단")
     rows = snap.get("trades") or []
-    entry_day = _pair(rows)
     sells = [r for r in rows
              if str(r.get("side") or "").lower() == "sell"
              and str(r.get("sleeve") or "A").upper() == sleeve]
@@ -124,13 +118,15 @@ def collect(sleeve: str, *, pause: float = 0.4) -> list[dict]:
     out = []
     for row in sells:
         code = str(row.get("code") or "").upper()
-        entry_px, d0 = row.get("entry_price"), entry_day.get(id(row))
-        d1 = str(row.get("day") or "")
+        entry_px = row.get("entry_price")
+        # 세션일은 원장 제출 시각을 시장 시간대로 바꿔 얻는다 — KST 달력일은
+        #   자정 이후 미국 진입을 다음 세션으로 오독한다(RZLV 09-01).
+        d0, d1, _entry_order = session_days.sessions_for_sell(row)
         rec = {"code": code, "ret": row.get("return_pct"),
-               "reason_kind": row.get("reason_kind"), "d0": d0,
+               "reason_kind": row.get("reason_kind"), "d0": d0, "d1": d1,
                "above": None, "gap_pct": None, "mfe_r": None, "why": ""}
-        if not entry_px or not d0:
-            rec["why"] = "진입일/진입가 미상"
+        if not entry_px or not d0 or not d1:
+            rec["why"] = "진입 세션/진입가 미상"
             out.append(rec); continue
         if code not in cache:
             bars = None
@@ -145,9 +141,9 @@ def collect(sleeve: str, *, pause: float = 0.4) -> list[dict]:
         if bars is None:
             rec["why"] = "야후 조회 실패(실패≠부재)"
             out.append(rec); continue
-        price, ma = trend_at(bars, d0)
+        price, ma = trend_at(bars, d0, float(entry_px))
         if price is None:
-            rec["why"] = f"진입일({d0}) 이전 봉 없음"
+            rec["why"] = f"진입 세션({d0}) 이전 봉 없음"
             out.append(rec); continue
         if ma is None:
             rec["why"] = f"200일치 봉 부족 — 판정 보류"
