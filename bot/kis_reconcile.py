@@ -132,14 +132,25 @@ def _tmd_seconds(tmd: str) -> int | None:
     return int(s[:2]) * 3600 + int(s[2:4]) * 60 + int(s[4:6])
 
 
-def normalize_rows(nccs: dict | None, ccnl: dict | None) -> list[dict]:
+def _us_session_today() -> str:
+    return datetime.datetime.now(ZoneInfo("America/New_York")).strftime("%Y%m%d")
+
+
+def normalize_rows(nccs: dict | None, ccnl: dict | None, *,
+                   today: str | None = None) -> list[dict]:
     """nccs/ccnl 응답을 공통 행 형태로 정규화(+중복 ODNO 병합 — ccnl 우선).
 
-    반환 행: {odno, pdno, side, ord_qty, filled, price, ord_tmd, src}
+    반환 행: {odno, pdno, side, ord_qty, filled, price, ord_tmd, src, open}
     · filled: ccnl은 ft_ccld_qty, nccs는 ft_ord_qty−nccs_qty(부분체결 유추).
     · 같은 ODNO가 양쪽에 있으면 ccnl(체결 확정치)로 병합.
+    · open: 잔량(nccs_qty)>0이면 살아 있는 주문. **ccnl 행도 본다** — mock은
+      살아 있는 주문을 미체결 목록에서 빼놓으므로(2026-09-09 OBDC·NFG·ALG)
+      ccnl에만 보이는 `체결 4/22 · 잔량 18` 행을 '닫힌 부분체결'로 읽으면
+      나머지 18주가 영영 미회계로 남는다(ALG 실측). 다만 지난 거래일 행의
+      잔량 표시는 더 체결될 수 없으니 닫힌 것으로 본다(today=미 동부 거래일).
     """
     out: dict[str, dict] = {}
+    today = today or _us_session_today()
 
     def _norm(row: dict, src: str) -> dict | None:
         odno = str(row.get("odno") or "").strip()
@@ -150,6 +161,10 @@ def normalize_rows(nccs: dict | None, ccnl: dict | None) -> list[dict]:
         still_open = False
         if src == "ccnl":
             filled = _f(row.get("ft_ccld_qty"))
+            nq = _f(row.get("nccs_qty"), default=-1.0)
+            ord_dt = str(row.get("ord_dt") or "").strip()
+            # 주문일이 없으면 오늘로 본다(보수적: 살아 있다고 가정).
+            still_open = nq > 0 and (not ord_dt or ord_dt == today)
         else:
             nq = _f(row.get("nccs_qty"), default=-1.0)
             cq = _f(row.get("ft_ccld_qty"), default=-1.0)

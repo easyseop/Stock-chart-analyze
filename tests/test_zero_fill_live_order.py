@@ -190,3 +190,90 @@ def test_zero_remaining_is_not_live():
     row = {"ft_ccld_qty": "0", "nccs_qty": "0"}
     assert R.zero_fill_row_still_live(
         row, {"symbol": "NFG", "submitted_at": time.time()}, time.time()) is False
+
+
+# ── ALG 재현: ccnl에만 보이는 부분체결 행의 잔량은 '열린 주문'이다 ──────────
+#   09-10 00:38 KST 매수 22주(odno 45807). 저널이 4주 체결·잔량 18을 먼저
+#   보였고, 코드는 ccnl 행을 무조건 닫힌 것으로 읽어 `partial 4/22 · open=False`
+#   로 종결했다. 브로커는 22주 전량 체결 — 18주가 미회계로 남았다.
+
+def _buy(key="kb:ALG:ALG-2026-09-10-now", symbol="ALG", qty=22, odno="0000045807",
+         submitted=None):
+    submitted = _et(2026, 9, 9, 11, 38) if submitted is None else submitted
+    L._append({"ev": "submit", "key": key, "symbol": symbol, "intended": qty,
+               "filled": 0, "state": "submitted", "reason": "미러진입",
+               "ts": submitted,
+               "meta": {"side": "BUY", "market": "US", "excg": "NYSE",
+                        "hldg_before": 0, "price": 170.81, "stop": 160.14,
+                        "pos_key": key, "sleeve": "A", "fx": 1380.0}})
+    L.bind_broker_order(key, odno, ord_tmd="113841")
+    L.on_result(key, "ack", 0)
+    return key
+
+
+def _alg_row(filled, remaining, *, ord_dt="20260909"):
+    return {"odno": "45807", "pdno": "ALG", "sll_buy_dvsn_cd": "02",
+            "ord_dt": ord_dt, "ft_ord_qty": "22", "ft_ccld_qty": str(filled),
+            "nccs_qty": str(remaining), "ft_ccld_unpr3": "170.30000000"}
+
+
+def test_ccnl_partial_row_with_remaining_is_open():
+    rows = R.normalize_rows(None, {"rt_cd": "0", "output": [_alg_row(4, 18)]},
+                            today="20260909")
+    assert rows[0]["filled"] == 4 and rows[0]["open"] is True
+
+
+def test_ccnl_row_with_zero_remaining_is_closed():
+    rows = R.normalize_rows(None, {"rt_cd": "0", "output": [_alg_row(4, 0)]},
+                            today="20260909")
+    assert rows[0]["open"] is False
+
+
+def test_ccnl_row_from_previous_session_is_closed_despite_remaining():
+    rows = R.normalize_rows(None, {"rt_cd": "0", "output": [_alg_row(4, 18)]},
+                            today="20260910")
+    assert rows[0]["open"] is False
+
+
+def test_ccnl_row_without_order_date_is_treated_as_live():
+    rows = R.normalize_rows(None, {"rt_cd": "0", "output": [_alg_row(4, 18, ord_dt="")]},
+                            today="20260910")
+    assert rows[0]["open"] is True
+
+
+def test_nccs_row_open_flag_is_kept_when_ccnl_merges():
+    nccs = {"rt_cd": "0", "output": [{"odno": "45807", "pdno": "ALG",
+                                      "ft_ord_qty": "22", "nccs_qty": "18",
+                                      "sll_buy_dvsn_cd": "02"}]}
+    rows = R.normalize_rows(nccs, {"rt_cd": "0", "output": [_alg_row(4, 0)]},
+                            today="20260909")
+    assert len(rows) == 1 and rows[0]["filled"] == 4 and rows[0]["open"] is True
+
+
+def test_alg_partial_stays_open_then_full_fill_is_accounted(monkeypatch):
+    from bot import kis_accounting
+    monkeypatch.setattr(kis_accounting, "sync_fill",
+                        lambda *a, **k: {"ok": True, "delta": k.get("filled_qty")})
+    key = _buy()
+    first = R.normalize_rows(None, {"rt_cd": "0", "output": [_alg_row(4, 18)]},
+                             today="20260909")
+    rs = R.resolve_acks_from_rows(first)
+    assert len(rs) == 1 and rs[0]["state"] == "partial" and rs[0]["open"] is True
+    cur = L.state_of(key)
+    assert cur["state"] == "partial" and L.fold_is_open(cur), "부분체결을 닫아 버렸다"
+    later = R.normalize_rows(None, {"rt_cd": "0", "output": [_alg_row(22, 0)]},
+                             today="20260909")
+    rs = R.resolve_acks_from_rows(later)
+    assert len(rs) == 1 and rs[0]["state"] == "filled"
+    assert L.state_of(key)["filled"] == 22
+
+
+def test_alg_legacy_behaviour_closed_partial(monkeypatch):
+    """옛 규칙 재현(잔량 0 표시) — 부분체결이 닫히고 잔량은 사후 도구 몫."""
+    from bot import kis_accounting
+    monkeypatch.setattr(kis_accounting, "sync_fill", lambda *a, **k: {"ok": True})
+    key = _buy()
+    rs = R.resolve_acks_from_rows(R.normalize_rows(
+        None, {"rt_cd": "0", "output": [_alg_row(4, 0)]}, today="20260909"))
+    assert rs[0]["state"] == "partial" and rs[0]["open"] is False
+    assert not L.fold_is_open(L.state_of(key))
