@@ -357,3 +357,32 @@ def test_failed_accounting_never_unfreezes_even_with_prior_position(env, monkeyp
     out = RS.apply(k2, trade_date="20260828", ack="운영자: 2주")
     assert out["accounting"]["ok"] is False
     assert out["unfrozen"] is False and ownership.is_frozen("OMCL")
+
+
+# ── 브로커 보유는 합산하지 않는다(2026-09-14 ALG: 감사 22 vs 도구 44) ────────
+
+def test_duplicate_exchange_rows_are_not_summed(monkeypatch):
+    monkeypatch.setattr(RS.kis, "holdings",
+                        lambda market, excg=None: {"ALG": 22})   # 세 거래소 모두 22
+    assert RS._broker_holding("ALG") == 22
+
+
+def test_single_exchange_report_is_used(monkeypatch):
+    monkeypatch.setattr(RS.kis, "holdings",
+                        lambda market, excg=None: {"ALG": 22} if excg == "NYSE" else {})
+    assert RS._broker_holding("ALG") == 22
+
+
+def test_conflicting_exchange_quantities_refuse(monkeypatch):
+    monkeypatch.setattr(RS.kis, "holdings",
+                        lambda market, excg=None:
+                        {"ALG": 22} if excg == "NYSE" else {"ALG": 4})
+    with pytest.raises(RS.Refused, match="거래소별"):
+        RS._broker_holding("ALG")
+
+
+def test_any_exchange_failure_still_refuses(monkeypatch):
+    monkeypatch.setattr(RS.kis, "holdings",
+                        lambda market, excg=None: None if excg == "AMEX" else {"ALG": 22})
+    with pytest.raises(RS.Refused, match="잔고 조회 실패"):
+        RS._broker_holding("ALG")

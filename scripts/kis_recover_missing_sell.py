@@ -99,14 +99,28 @@ def _broker_fill(symbol: str, odno: str, trade_date: str, side: str) -> dict:
 
 
 def _broker_holding(symbol: str) -> int:
-    """전 거래소 합산 보유. 하나라도 실패하면 거부(실패≠0주)."""
-    total = 0
+    """브로커 보유 수량. 하나라도 조회 실패면 거부(실패≠0주).
+
+    첫 판본은 세 거래소 응답을 **합산**했다. 실측 2026-09-14 ALG: 감사는
+    22주(코드별 중복 제거)인데 이 도구는 44주를 보고했다 — mock이 같은
+    보유를 둘 이상의 거래소 조회에 되풀이해 준다. 합산은 매수 복구의
+    "브로커가 그만큼 들고 있나" 가드를 헐겁게 만든다. 거래소별 값을 따로
+    모아, 같으면 그 값을 쓰고 서로 다르면 어느 쪽이 맞는지 알 수 없으니
+    거부한다.
+    """
+    seen: dict[str, int] = {}
     for excg in US_EXCGS:
         held = kis.holdings("US", excg=excg)
         if held is None:
             raise Refused(f"잔고 조회 실패({excg}) — 실패는 0주가 아니다")
-        total += int(held.get(symbol, 0) or 0)
-    return total
+        qty = int(held.get(symbol, 0) or 0)
+        if qty > 0:
+            seen[excg] = qty
+    if not seen:
+        return 0
+    if len(set(seen.values())) > 1:
+        raise Refused(f"거래소별 보유 수량 불일치 {seen} — 합산하지 않는다")
+    return next(iter(seen.values()))
 
 
 def collect(key: str, *, trade_date: str) -> dict:
