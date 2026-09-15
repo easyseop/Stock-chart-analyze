@@ -1,10 +1,10 @@
 {
- "generated_at": "2026-09-16T00:02:14.261650+09:00",
+ "generated_at": "2026-09-16T00:13:23.970974+09:00",
  "updated": "2026-09-16",
  "start": 100000000,
- "cash": 36159896,
- "equity": 98011906,
- "ret_pct": -1.99,
+ "cash": 38678669,
+ "equity": 98021354,
+ "ret_pct": -1.98,
  "positions": [
   {
    "code": "EQT",
@@ -12,14 +12,14 @@
    "ccy": "USD",
    "q": 121,
    "avg": 51.375,
-   "price": 52.8849983215332,
+   "price": 52.91999816894531,
    "stop": 52.06870106811523,
    "target": 57.1234,
    "half_done": true,
    "opened": "2026-07-29",
-   "pl_krw": 248540,
-   "pl_pct": 2.94,
-   "price_age_min": 0.4
+   "pl_krw": 254301,
+   "pl_pct": 3.01,
+   "price_age_min": 6.4
   },
   {
    "code": "MDT",
@@ -27,14 +27,14 @@
    "ccy": "USD",
    "q": 47,
    "avg": 86.12,
-   "price": 93.37999725341795,
+   "price": 93.5749969482422,
    "stop": 87.84239633789062,
    "target": 95.117,
    "half_done": true,
    "opened": "2026-07-30",
-   "pl_krw": 464161,
-   "pl_pct": 8.43,
-   "price_age_min": 0.4
+   "pl_krw": 476629,
+   "pl_pct": 8.66,
+   "price_age_min": 8.2
   },
   {
    "code": "035250",
@@ -49,22 +49,22 @@
    "opened": "2026-08-26",
    "pl_krw": 295740,
    "pl_pct": 1.24,
-   "price_age_min": 0.4
+   "price_age_min": 6.4
   },
   {
    "code": "NAVI",
    "name": "Navient Corporation",
    "ccy": "USD",
-   "q": 372,
+   "q": 186,
    "avg": 9.24,
    "price": 9.954999923706056,
-   "stop": 8.5322,
+   "stop": 9.24,
    "target": 10.6555,
-   "half_done": false,
+   "half_done": true,
    "opened": "2026-08-27",
-   "pl_krw": 361813,
+   "pl_krw": 180906,
    "pl_pct": 7.74,
-   "price_age_min": 0.3
+   "price_age_min": 6.4
   },
   {
    "code": "323410",
@@ -79,7 +79,7 @@
    "opened": "2026-09-04",
    "pl_krw": -302249,
    "pl_pct": -3.01,
-   "price_age_min": 0.3
+   "price_age_min": 6.4
   },
   {
    "code": "ULTA",
@@ -87,14 +87,14 @@
    "ccy": "USD",
    "q": 7,
    "avg": 543.09,
-   "price": 544.3599853515625,
+   "price": 543.4099731445312,
    "stop": 506.4666,
    "target": 616.3368,
    "half_done": false,
    "opened": "2026-09-09",
-   "pl_krw": 12093,
-   "pl_pct": 0.23,
-   "price_age_min": 0.3
+   "pl_krw": 3047,
+   "pl_pct": 0.06,
+   "price_age_min": 6.4
   },
   {
    "code": "ALG",
@@ -109,7 +109,7 @@
    "opened": "2026-09-11",
    "pl_krw": 5387,
    "pl_pct": 0.2,
-   "price_age_min": 0.3
+   "price_age_min": 6.4
   },
   {
    "code": "TKC",
@@ -117,14 +117,14 @@
    "ccy": "USD",
    "q": 39,
    "avg": 5.385,
-   "price": 5.170000076293945,
+   "price": 5.175000190734863,
    "stop": 5.1447,
    "target": 5.8655,
    "half_done": false,
    "opened": "2026-09-12",
-   "pl_krw": -11406,
-   "pl_pct": -3.99,
-   "price_age_min": 0.3
+   "pl_krw": -11141,
+   "pl_pct": -3.9,
+   "price_age_min": 8.7
   }
  ],
  "pending": [
@@ -1588,10 +1588,23 @@
   },
   {
    "d": "2026-09-16",
-   "v": 98011906
+   "v": 98021354
   }
  ],
  "log": [
+  {
+   "d": "2026-09-16",
+   "type": "sell",
+   "code": "NAVI",
+   "name": "Navient Corporation",
+   "q": 186,
+   "price": 9.955,
+   "ccy": "USD",
+   "amt": 2518772,
+   "note": "+1R 절반 익절",
+   "pl": 180906,
+   "pl_pct": 7.7
+  },
   {
    "d": "2026-09-15",
    "type": "order",
@@ -2220,21 +2233,8 @@
    "ccy": "KRW",
    "amt": 0,
    "note": "지정가 취소 — 신호 부패: 제외 게이트 — 이미 폭등"
-  },
-  {
-   "d": "2026-08-05",
-   "type": "sell",
-   "code": "MAIN",
-   "name": "Main Street Capital Corporation",
-   "q": 39,
-   "price": 56.65,
-   "ccy": "USD",
-   "amt": 3150931,
-   "note": "+1R 절반 익절",
-   "pl": 149621,
-   "pl_pct": 5.0
   }
  ],
- "lane": "fast",
+ "lane": "bulk",
  "data_stale": []
 }
