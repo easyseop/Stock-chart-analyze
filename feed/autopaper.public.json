@@ -1,10 +1,10 @@
 {
- "generated_at": "2026-09-15T22:46:45.587520+09:00",
+ "generated_at": "2026-09-15T23:01:55.795252+09:00",
  "updated": "2026-09-15",
  "start": 100000000,
- "cash": 27923608,
- "equity": 97758297,
- "ret_pct": -2.24,
+ "cash": 36159896,
+ "equity": 97662842,
+ "ret_pct": -2.34,
  "positions": [
   {
    "code": "EQT",
@@ -12,14 +12,14 @@
    "ccy": "USD",
    "q": 121,
    "avg": 51.375,
-   "price": 53.27999877929688,
+   "price": 53.22999954223633,
    "stop": 52.06870106811523,
    "target": 57.1234,
    "half_done": true,
    "opened": "2026-07-29",
-   "pl_krw": 310725,
-   "pl_pct": 3.71,
-   "price_age_min": 0.5
+   "pl_krw": 302570,
+   "pl_pct": 3.61,
+   "price_age_min": 0.4
   },
   {
    "code": "MDT",
@@ -27,14 +27,14 @@
    "ccy": "USD",
    "q": 47,
    "avg": 86.12,
-   "price": 92.8324966430664,
+   "price": 93.31999969482422,
    "stop": 87.84239633789062,
    "target": 95.117,
    "half_done": true,
    "opened": "2026-07-30",
-   "pl_krw": 425283,
-   "pl_pct": 7.79,
-   "price_age_min": 0.5
+   "pl_krw": 456170,
+   "pl_pct": 8.36,
+   "price_age_min": 0.4
   },
   {
    "code": "035250",
@@ -49,7 +49,7 @@
    "opened": "2026-08-26",
    "pl_krw": 295740,
    "pl_pct": 1.24,
-   "price_age_min": 0.5
+   "price_age_min": 0.4
   },
   {
    "code": "NAVI",
@@ -57,14 +57,14 @@
    "ccy": "USD",
    "q": 372,
    "avg": 9.24,
-   "price": 9.729999542236328,
+   "price": 9.739999771118164,
    "stop": 8.5322,
    "target": 10.6555,
    "half_done": false,
    "opened": "2026-08-27",
-   "pl_krw": 245717,
-   "pl_pct": 5.3,
-   "price_age_min": 0.5
+   "pl_krw": 250732,
+   "pl_pct": 5.41,
+   "price_age_min": 0.4
   },
   {
    "code": "323410",
@@ -79,22 +79,7 @@
    "opened": "2026-09-04",
    "pl_krw": -302249,
    "pl_pct": -3.01,
-   "price_age_min": 0.5
-  },
-  {
-   "code": "ADMA",
-   "name": "ADMA Biologics Inc",
-   "ccy": "USD",
-   "q": 701,
-   "avg": 9.517894579172612,
-   "price": 8.8149995803833,
-   "stop": 8.9618,
-   "target": 10.7264,
-   "half_done": false,
-   "opened": "2026-09-08",
-   "pl_krw": -664209,
-   "pl_pct": -7.38,
-   "price_age_min": 0.5
+   "price_age_min": 0.4
   },
   {
    "code": "ULTA",
@@ -102,14 +87,14 @@
    "ccy": "USD",
    "q": 7,
    "avg": 543.09,
-   "price": 542.2000122070312,
+   "price": 540.739990234375,
    "stop": 506.4666,
    "target": 616.3368,
    "half_done": false,
    "opened": "2026-09-09",
-   "pl_krw": -8398,
-   "pl_pct": -0.16,
-   "price_age_min": 0.4
+   "pl_krw": -22175,
+   "pl_pct": -0.43,
+   "price_age_min": 0.3
   },
   {
    "code": "ALG",
@@ -117,14 +102,14 @@
    "ccy": "USD",
    "q": 12,
    "avg": 168.23,
-   "price": 168.97999572753906,
+   "price": 167.9499969482422,
    "stop": 158.2099,
    "target": 188.2702,
    "half_done": false,
    "opened": "2026-09-11",
-   "pl_krw": 12132,
-   "pl_pct": 0.45,
-   "price_age_min": 0.4
+   "pl_krw": -4529,
+   "pl_pct": -0.17,
+   "price_age_min": 0.3
   },
   {
    "code": "TKC",
@@ -132,14 +117,14 @@
    "ccy": "USD",
    "q": 39,
    "avg": 5.385,
-   "price": 5.199999809265137,
+   "price": 5.215000152587891,
    "stop": 5.1447,
    "target": 5.8655,
    "half_done": false,
    "opened": "2026-09-12",
-   "pl_krw": -9726,
-   "pl_pct": -3.44,
-   "price_age_min": 0.4
+   "pl_krw": -8937,
+   "pl_pct": -3.16,
+   "price_age_min": 0.3
   }
  ],
  "pending": [
@@ -223,9 +208,36 @@
     "basis": "↗ 돌파후 진행(승률↓) · ③ 돌파후 횡보(대기) · 저점권21% · 체크4/6 · 손절폭8.6%"
    },
    "basis": "↗ 돌파후 진행(승률↓) · ③ 돌파후 횡보(대기) · 저점권21% · 체크4/6 · 손절폭8.6%"
+  },
+  {
+   "code": "LBRT",
+   "name": "Liberty Energy Inc.",
+   "ccy": "USD",
+   "limit": 17.9,
+   "stop": 17.3903,
+   "target": 23.7043,
+   "q": 342,
+   "created": "2026-09-15",
+   "atr": 1.0523,
+   "plan": {
+    "entry": 19.495,
+    "stop": 17.3903,
+    "target": 23.7043,
+    "pb": 17.9,
+    "tactic": "pullback"
+   },
+   "ctx": {
+    "mode": "pullback",
+    "fresh": false,
+    "stage": 3,
+    "rp": 37,
+    "rec": 3,
+    "basis": "↗ 돌파후 진행(승률↓) · ③ 돌파후 횡보(대기) · 저점권37% · 체크3/6 · 손절폭10.8%"
+   },
+   "basis": "↗ 돌파후 진행(승률↓) · ③ 돌파후 횡보(대기) · 저점권37% · 체크3/6 · 손절폭10.8%"
   }
  ],
- "trades": 24,
+ "trades": 25,
  "win_trades": 17,
  "pos_cap_pct": 33.3,
  "cap_violations": [],
@@ -233,10 +245,10 @@
  "fx": 1348.02,
  "stats": {
   "all": {
-   "n": 24,
+   "n": 25,
    "win": 17,
-   "win_rate": 71,
-   "avg_r": 0.29
+   "win_rate": 68,
+   "avg_r": 0.22
   },
   "by_mode": {
    "full": {
@@ -246,10 +258,10 @@
     "avg_r": 0.32
    },
    "half": {
-    "n": 10,
+    "n": 11,
     "win": 7,
-    "win_rate": 70,
-    "avg_r": 0.3
+    "win_rate": 64,
+    "avg_r": 0.15
    },
    "pullback": {
     "n": 5,
@@ -259,10 +271,10 @@
    }
   },
   "fresh": {
-   "n": 23,
+   "n": 24,
    "win": 16,
-   "win_rate": 70,
-   "avg_r": 0.28
+   "win_rate": 67,
+   "avg_r": 0.21
   },
   "stale": {
    "n": 1,
@@ -272,10 +284,10 @@
   },
   "by_stage": {
    "3": {
-    "n": 23,
+    "n": 24,
     "win": 16,
-    "win_rate": 70,
-    "avg_r": 0.28
+    "win_rate": 67,
+    "avg_r": 0.21
    },
    "4": {
     "n": 1,
@@ -292,16 +304,52 @@
     "avg_r": 0.29
    },
    "USD": {
-    "n": 20,
+    "n": 21,
     "win": 14,
-    "win_rate": 70,
-    "avg_r": 0.29
+    "win_rate": 67,
+    "avg_r": 0.21
    }
   },
-  "slip_entry_pct": -0.59,
-  "slip_stop_pct": -0.59
+  "slip_entry_pct": -0.58,
+  "slip_stop_pct": -0.95
  },
  "closed": [
+  {
+   "code": "ADMA",
+   "name": "ADMA Biologics Inc",
+   "ccy": "USD",
+   "ctx": {
+    "mode": "half",
+    "fresh": true,
+    "stage": 3,
+    "rp": 18,
+    "rec": 5,
+    "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권18% · 체크5/6 · 손절폭6.2%"
+   },
+   "plan": {
+    "entry": 9.55,
+    "stop": 8.9618,
+    "target": 10.7264,
+    "pb": 9.2417,
+    "tactic": "half"
+   },
+   "fill": {
+    "avg": 9.5179,
+    "q": 701
+   },
+   "exits": [
+    {
+     "d": "2026-09-15",
+     "q": 701,
+     "price": 8.716,
+     "note": "손절(급락 즉시)"
+    }
+   ],
+   "opened": "2026-09-08",
+   "closed": "2026-09-15",
+   "pl": -757760,
+   "r": -1.44
+  },
   {
    "code": "030200",
    "name": "KT",
@@ -1536,10 +1584,35 @@
   },
   {
    "d": "2026-09-15",
-   "v": 97758297
+   "v": 97662842
   }
  ],
  "log": [
+  {
+   "d": "2026-09-15",
+   "type": "order",
+   "code": "LBRT",
+   "name": "Liberty Energy Inc.",
+   "q": 342,
+   "price": 17.9,
+   "ccy": "USD",
+   "amt": 8252309,
+   "note": "눌림 지정가 주문(추격 금지) — ↗ 돌파후 진행(승률↓) · ③ 돌파후 횡보(대기) · 저점권37% · 체크3/6 · 손절폭10.8%"
+  },
+  {
+   "d": "2026-09-15",
+   "type": "sell",
+   "code": "ADMA",
+   "name": "ADMA Biologics Inc",
+   "q": 701,
+   "price": 8.716,
+   "ccy": "USD",
+   "amt": 8236289,
+   "note": "손절(급락 즉시)",
+   "pl": -757760,
+   "pl_pct": -8.4,
+   "r": -1.44
+  },
   {
    "d": "2026-09-14",
    "type": "order",
@@ -2156,30 +2229,6 @@
    "note": "+1R 절반 익절",
    "pl": 149621,
    "pl_pct": 5.0
-  },
-  {
-   "d": "2026-08-03",
-   "type": "buy",
-   "code": "AVY",
-   "name": "Avery Dennison Corporation",
-   "q": 28,
-   "price": 169.73,
-   "ccy": "USD",
-   "amt": 6827355,
-   "note": "반반 1차 — 🔥 갓 전환(추세선 부근) · ④ 전환 확정 ⭐ · 저점권37% · 체크5/6 · 손절폭6.7%",
-   "stop": 158.3847,
-   "target": 192.4206
-  },
-  {
-   "d": "2026-08-02",
-   "type": "cancel",
-   "code": "FRPT",
-   "name": "Freshpet, Inc.",
-   "q": 0,
-   "price": 59.54,
-   "ccy": "USD",
-   "amt": 0,
-   "note": "지정가 취소 — 신호 부패: 어닝 D-3 이내(신규 진입 금지 구간)"
   }
  ],
  "lane": "fast",
