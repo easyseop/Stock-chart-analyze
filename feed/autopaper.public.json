@@ -1,10 +1,10 @@
 {
- "generated_at": "2026-09-16T01:51:48.362098+09:00",
+ "generated_at": "2026-09-16T01:59:14.605073+09:00",
  "updated": "2026-09-16",
  "start": 100000000,
  "cash": 38678669,
- "equity": 98115936,
- "ret_pct": -1.88,
+ "equity": 98111738,
+ "ret_pct": -1.89,
  "positions": [
   {
    "code": "EQT",
@@ -12,14 +12,14 @@
    "ccy": "USD",
    "q": 121,
    "avg": 51.375,
-   "price": 53.32500076293945,
+   "price": 53.32279968261719,
    "stop": 52.06870106811523,
    "target": 57.1234,
    "half_done": true,
    "opened": "2026-07-29",
-   "pl_krw": 320963,
-   "pl_pct": 3.8,
-   "price_age_min": 0.3
+   "pl_krw": 320601,
+   "pl_pct": 3.79,
+   "price_age_min": 7.2
   },
   {
    "code": "MDT",
@@ -27,14 +27,14 @@
    "ccy": "USD",
    "q": 47,
    "avg": 86.12,
-   "price": 94.52999877929688,
+   "price": 94.47000122070312,
    "stop": 87.85239847412109,
    "target": 95.117,
    "half_done": true,
    "opened": "2026-07-30",
-   "pl_krw": 537686,
-   "pl_pct": 9.77,
-   "price_age_min": 0.3
+   "pl_krw": 533850,
+   "pl_pct": 9.7,
+   "price_age_min": 9.0
   },
   {
    "code": "035250",
@@ -49,7 +49,7 @@
    "opened": "2026-08-26",
    "pl_krw": 295740,
    "pl_pct": 1.24,
-   "price_age_min": 0.3
+   "price_age_min": 7.2
   },
   {
    "code": "NAVI",
@@ -64,7 +64,7 @@
    "opened": "2026-08-27",
    "pl_krw": 161930,
    "pl_pct": 6.93,
-   "price_age_min": 0.3
+   "price_age_min": 7.2
   },
   {
    "code": "323410",
@@ -79,7 +79,7 @@
    "opened": "2026-09-04",
    "pl_krw": -302249,
    "pl_pct": -3.01,
-   "price_age_min": 0.3
+   "price_age_min": 7.2
   },
   {
    "code": "ULTA",
@@ -94,7 +94,7 @@
    "opened": "2026-09-09",
    "pl_krw": -21520,
    "pl_pct": -0.42,
-   "price_age_min": 0.3
+   "price_age_min": 7.2
   },
   {
    "code": "ALG",
@@ -109,7 +109,7 @@
    "opened": "2026-09-11",
    "pl_krw": 16324,
    "pl_pct": 0.59,
-   "price_age_min": 0.3
+   "price_age_min": 7.2
   },
   {
    "code": "TKC",
@@ -124,7 +124,7 @@
    "opened": "2026-09-12",
    "pl_krw": -11671,
    "pl_pct": -4.09,
-   "price_age_min": 0.3
+   "price_age_min": 9.5
   }
  ],
  "pending": [
@@ -1588,7 +1588,7 @@
   },
   {
    "d": "2026-09-16",
-   "v": 98115936
+   "v": 98111738
   }
  ],
  "log": [
@@ -2235,6 +2235,6 @@
    "note": "지정가 취소 — 신호 부패: 제외 게이트 — 이미 폭등"
   }
  ],
- "lane": "fast",
+ "lane": "bulk",
  "data_stale": []
 }
