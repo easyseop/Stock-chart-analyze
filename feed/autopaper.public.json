@@ -1,10 +1,10 @@
 {
- "generated_at": "2026-09-16T22:25:07.280593+09:00",
+ "generated_at": "2026-09-16T22:42:47.132013+09:00",
  "updated": "2026-09-16",
  "start": 100000000,
- "cash": 41986394,
- "equity": 97805548,
- "ret_pct": -2.19,
+ "cash": 42249265,
+ "equity": 97478056,
+ "ret_pct": -2.52,
  "positions": [
   {
    "code": "EQT",
@@ -12,14 +12,14 @@
    "ccy": "USD",
    "q": 121,
    "avg": 51.375,
-   "price": 53.119998931884766,
+   "price": 51.625,
    "stop": 52.06870106811523,
    "target": 57.1234,
    "half_done": true,
    "opened": "2026-07-29",
-   "pl_krw": 287220,
-   "pl_pct": 3.4,
-   "price_age_min": 4.5
+   "pl_krw": 41149,
+   "pl_pct": 0.49,
+   "price_age_min": 0.4
   },
   {
    "code": "MDT",
@@ -27,14 +27,14 @@
    "ccy": "USD",
    "q": 47,
    "avg": 86.12,
-   "price": 93.75,
+   "price": 93.96499633789062,
    "stop": 87.85239847412109,
    "target": 95.117,
    "half_done": true,
    "opened": "2026-07-30",
-   "pl_krw": 487817,
-   "pl_pct": 8.86,
-   "price_age_min": 6.1
+   "pl_krw": 501563,
+   "pl_pct": 9.11,
+   "price_age_min": 0.4
   },
   {
    "code": "NAVI",
@@ -42,14 +42,14 @@
    "ccy": "USD",
    "q": 186,
    "avg": 9.24,
-   "price": 10.0,
+   "price": 9.949999809265137,
    "stop": 9.24,
    "target": 10.6555,
    "half_done": true,
    "opened": "2026-08-27",
-   "pl_krw": 192292,
-   "pl_pct": 8.23,
-   "price_age_min": 4.5
+   "pl_krw": 179641,
+   "pl_pct": 7.68,
+   "price_age_min": 0.4
   },
   {
    "code": "323410",
@@ -64,7 +64,7 @@
    "opened": "2026-09-04",
    "pl_krw": -463249,
    "pl_pct": -4.62,
-   "price_age_min": 4.5
+   "price_age_min": 0.4
   },
   {
    "code": "ULTA",
@@ -72,14 +72,14 @@
    "ccy": "USD",
    "q": 7,
    "avg": 543.09,
-   "price": 544.3200073242188,
+   "price": 536.9849853515625,
    "stop": 506.4666,
    "target": 616.3368,
    "half_done": false,
    "opened": "2026-09-09",
-   "pl_krw": 11712,
-   "pl_pct": 0.23,
-   "price_age_min": 4.4
+   "pl_krw": -58133,
+   "pl_pct": -1.12,
+   "price_age_min": 0.4
   },
   {
    "code": "ALG",
@@ -87,29 +87,14 @@
    "ccy": "USD",
    "q": 12,
    "avg": 168.23,
-   "price": 169.47000122070312,
+   "price": 169.45750427246094,
    "stop": 158.2099,
    "target": 188.2702,
    "half_done": false,
    "opened": "2026-09-11",
-   "pl_krw": 20241,
-   "pl_pct": 0.74,
-   "price_age_min": 4.4
-  },
-  {
-   "code": "TKC",
-   "name": "Turkcell Iletisim Hizmetleri AS",
-   "ccy": "USD",
-   "q": 39,
-   "avg": 5.385,
-   "price": 5.190000057220459,
-   "stop": 5.1447,
-   "target": 5.8655,
-   "half_done": false,
-   "opened": "2026-09-12",
-   "pl_krw": -10345,
-   "pl_pct": -3.62,
-   "price_age_min": 6.8
+   "pl_krw": 20037,
+   "pl_pct": 0.73,
+   "price_age_min": 0.4
   },
   {
    "code": "032640",
@@ -124,7 +109,7 @@
    "opened": "2026-09-16",
    "pl_krw": -134615,
    "pl_pct": -0.64,
-   "price_age_min": 5.6
+   "price_age_min": 0.4
   }
  ],
  "pending": [
@@ -235,9 +220,36 @@
     "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권34% · 체크4/6 · 손절폭9.9%"
    },
    "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권34% · 체크4/6 · 손절폭9.9%"
+  },
+  {
+   "code": "BAH",
+   "name": "Booz Allen Hamilton Holding Corporation",
+   "ccy": "USD",
+   "limit": 78.4457,
+   "stop": 73.5895,
+   "target": 88.756,
+   "q": 3,
+   "created": "2026-09-16",
+   "atr": 2.5277,
+   "plan": {
+    "entry": 78.645,
+    "stop": 73.5895,
+    "target": 88.756,
+    "pb": 78.4457,
+    "tactic": "pullback"
+   },
+   "ctx": {
+    "mode": "pullback",
+    "fresh": true,
+    "stage": 3,
+    "rp": 39,
+    "rec": 4,
+    "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권39% · 체크4/6 · 손절폭6.4%"
+   },
+   "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권39% · 체크4/6 · 손절폭6.4%"
   }
  ],
- "trades": 26,
+ "trades": 27,
  "win_trades": 18,
  "pos_cap_pct": 33.3,
  "cap_violations": [],
@@ -245,17 +257,17 @@
  "fx": 1360.3,
  "stats": {
   "all": {
-   "n": 26,
+   "n": 27,
    "win": 18,
-   "win_rate": 69,
-   "avg_r": 0.22
+   "win_rate": 67,
+   "avg_r": 0.15
   },
   "by_mode": {
    "full": {
-    "n": 10,
+    "n": 11,
     "win": 7,
-    "win_rate": 70,
-    "avg_r": 0.32
+    "win_rate": 64,
+    "avg_r": 0.12
    },
    "half": {
     "n": 11,
@@ -271,10 +283,10 @@
    }
   },
   "fresh": {
-   "n": 25,
+   "n": 26,
    "win": 17,
-   "win_rate": 68,
-   "avg_r": 0.22
+   "win_rate": 65,
+   "avg_r": 0.14
   },
   "stale": {
    "n": 1,
@@ -284,10 +296,10 @@
   },
   "by_stage": {
    "3": {
-    "n": 25,
+    "n": 26,
     "win": 17,
-    "win_rate": 68,
-    "avg_r": 0.21
+    "win_rate": 65,
+    "avg_r": 0.13
    },
    "4": {
     "n": 1,
@@ -304,16 +316,52 @@
     "avg_r": 0.29
    },
    "USD": {
-    "n": 21,
+    "n": 22,
     "win": 14,
-    "win_rate": 67,
-    "avg_r": 0.21
+    "win_rate": 64,
+    "avg_r": 0.11
    }
   },
-  "slip_entry_pct": -0.56,
-  "slip_stop_pct": -0.95
+  "slip_entry_pct": -0.54,
+  "slip_stop_pct": -1.34
  },
  "closed": [
+  {
+   "code": "TKC",
+   "name": "Turkcell Iletisim Hizmetleri AS",
+   "ccy": "USD",
+   "ctx": {
+    "mode": "full",
+    "fresh": true,
+    "stage": 3,
+    "rp": 21,
+    "rec": 4,
+    "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권21% · 체크4/6 · 손절폭4.5%"
+   },
+   "plan": {
+    "entry": 5.385,
+    "stop": 5.1447,
+    "target": 5.8655,
+    "pb": null,
+    "tactic": "full"
+   },
+   "fill": {
+    "avg": 5.385,
+    "q": 39
+   },
+   "exits": [
+    {
+     "d": "2026-09-16",
+     "q": 39,
+     "price": 4.955,
+     "note": "손절(급락 즉시)"
+    }
+   ],
+   "opened": "2026-09-12",
+   "closed": "2026-09-16",
+   "pl": -22812,
+   "r": -1.82
+  },
   {
    "code": "035250",
    "name": "강원랜드",
@@ -1624,10 +1672,35 @@
   },
   {
    "d": "2026-09-16",
-   "v": 97805548
+   "v": 97478056
   }
  ],
  "log": [
+  {
+   "d": "2026-09-16",
+   "type": "order",
+   "code": "BAH",
+   "name": "Booz Allen Hamilton Holding Corporation",
+   "q": 3,
+   "price": 78.4457,
+   "ccy": "USD",
+   "amt": 320129,
+   "note": "눌림 지정가 주문(추격 금지) — 🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권39% · 체크4/6 · 손절폭6.4%"
+  },
+  {
+   "d": "2026-09-16",
+   "type": "sell",
+   "code": "TKC",
+   "name": "Turkcell Iletisim Hizmetleri AS",
+   "q": 39,
+   "price": 4.955,
+   "ccy": "USD",
+   "amt": 262871,
+   "note": "손절(급락 즉시)",
+   "pl": -22812,
+   "pl_pct": -8.0,
+   "r": -1.82
+  },
   {
    "d": "2026-09-16",
    "type": "order",
@@ -2247,33 +2320,8 @@
    "pl": 58544,
    "pl_pct": 1.8,
    "r": 0.62
-  },
-  {
-   "d": "2026-08-10",
-   "type": "order",
-   "code": "FND",
-   "name": "Floor & Decor Holdings, Inc.",
-   "q": 103,
-   "price": 54.6923,
-   "ccy": "USD",
-   "amt": 7928598,
-   "note": "눌림 지정가 주문(추격 금지) — 🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권35% · 체크6/6 · 손절폭9.6%"
-  },
-  {
-   "d": "2026-08-10",
-   "type": "sell",
-   "code": "CRC",
-   "name": "California Resources Corporation",
-   "q": 101,
-   "price": 52.11,
-   "ccy": "USD",
-   "amt": 7407564,
-   "note": "어닝 회피 — 전량(진행 없음, MFE<0.5R)",
-   "pl": 135045,
-   "pl_pct": 1.9,
-   "r": 0.27
   }
  ],
- "lane": "bulk",
+ "lane": "fast",
  "data_stale": []
 }
