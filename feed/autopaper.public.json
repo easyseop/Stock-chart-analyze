@@ -1,10 +1,10 @@
 {
- "generated_at": "2026-09-16T09:57:47.106495+09:00",
+ "generated_at": "2026-09-16T10:07:37.879085+09:00",
  "updated": "2026-09-16",
  "start": 100000000,
- "cash": 62880059,
- "equity": 98101163,
- "ret_pct": -1.9,
+ "cash": 41986394,
+ "equity": 97997663,
+ "ret_pct": -2.0,
  "positions": [
   {
    "code": "EQT",
@@ -19,7 +19,7 @@
    "opened": "2026-07-29",
    "pl_krw": 287220,
    "pl_pct": 3.4,
-   "price_age_min": 32.1
+   "price_age_min": 41.9
   },
   {
    "code": "MDT",
@@ -34,7 +34,7 @@
    "opened": "2026-07-30",
    "pl_krw": 487817,
    "pl_pct": 8.86,
-   "price_age_min": 25.5
+   "price_age_min": 35.3
   },
   {
    "code": "NAVI",
@@ -49,7 +49,7 @@
    "opened": "2026-08-27",
    "pl_krw": 192292,
    "pl_pct": 8.23,
-   "price_age_min": 24.4
+   "price_age_min": 34.2
   },
   {
    "code": "323410",
@@ -57,14 +57,14 @@
    "ccy": "KRW",
    "q": 460,
    "avg": 21807.06404347826,
-   "price": 21150.0,
+   "price": 20925.0,
    "stop": 20511.373,
    "target": 24677.254,
    "half_done": false,
    "opened": "2026-09-04",
-   "pl_krw": -302249,
-   "pl_pct": -3.01,
-   "price_age_min": 40.3
+   "pl_krw": -405749,
+   "pl_pct": -4.04,
+   "price_age_min": 6.7
   },
   {
    "code": "ULTA",
@@ -79,7 +79,7 @@
    "opened": "2026-09-09",
    "pl_krw": 11712,
    "pl_pct": 0.23,
-   "price_age_min": 16.4
+   "price_age_min": 26.3
   },
   {
    "code": "ALG",
@@ -94,7 +94,7 @@
    "opened": "2026-09-11",
    "pl_krw": 20241,
    "pl_pct": 0.74,
-   "price_age_min": 39.1
+   "price_age_min": 49.0
   },
   {
    "code": "TKC",
@@ -109,7 +109,22 @@
    "opened": "2026-09-12",
    "pl_krw": -10345,
    "pl_pct": -3.62,
-   "price_age_min": 17.4
+   "price_age_min": 27.2
+  },
+  {
+   "code": "032640",
+   "name": "LG유플러스",
+   "ccy": "KRW",
+   "q": 1417,
+   "avg": 14745.0,
+   "price": 14745.0,
+   "stop": 14053.4865,
+   "target": 16128.0269,
+   "half_done": false,
+   "opened": "2026-09-16",
+   "pl_krw": 0,
+   "pl_pct": 0.0,
+   "price_age_min": 6.6
   }
  ],
  "pending": [
@@ -1609,10 +1624,23 @@
   },
   {
    "d": "2026-09-16",
-   "v": 98101163
+   "v": 97997663
   }
  ],
  "log": [
+  {
+   "d": "2026-09-16",
+   "type": "buy",
+   "code": "032640",
+   "name": "LG유플러스",
+   "q": 1417,
+   "price": 14745.0,
+   "ccy": "KRW",
+   "amt": 20893665,
+   "note": "즉시 분할 — 🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권19% · 체크4/6 · 손절폭4.7%",
+   "stop": 14053.4865,
+   "target": 16128.0269
+  },
   {
    "d": "2026-09-16",
    "type": "sell",
@@ -2246,21 +2274,8 @@
    "ccy": "USD",
    "amt": 0,
    "note": "지정가 취소 — 신호 부패: 제외 게이트 — 이미 폭등"
-  },
-  {
-   "d": "2026-08-07",
-   "type": "order",
-   "code": "015760",
-   "name": "한국전력",
-   "q": 292,
-   "price": 32000.0,
-   "ccy": "KRW",
-   "amt": 9344000,
-   "note": "눌림 지정가 주문(추격 금지) — 🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권8% · 체크4/6 · 손절폭9.8%"
   }
  ],
  "lane": "bulk",
- "data_stale": [
-  "323410"
- ]
+ "data_stale": []
 }
