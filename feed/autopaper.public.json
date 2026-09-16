@@ -1,39 +1,24 @@
 {
- "generated_at": "2026-09-16T22:42:47.132013+09:00",
+ "generated_at": "2026-09-16T23:02:33.634357+09:00",
  "updated": "2026-09-16",
  "start": 100000000,
- "cash": 42249265,
- "equity": 97478056,
- "ret_pct": -2.52,
+ "cash": 50780292,
+ "equity": 97486093,
+ "ret_pct": -2.51,
  "positions": [
-  {
-   "code": "EQT",
-   "name": "EQT Corporation",
-   "ccy": "USD",
-   "q": 121,
-   "avg": 51.375,
-   "price": 51.625,
-   "stop": 52.06870106811523,
-   "target": 57.1234,
-   "half_done": true,
-   "opened": "2026-07-29",
-   "pl_krw": 41149,
-   "pl_pct": 0.49,
-   "price_age_min": 0.4
-  },
   {
    "code": "MDT",
    "name": "Medtronic plc.",
    "ccy": "USD",
    "q": 47,
    "avg": 86.12,
-   "price": 93.96499633789062,
+   "price": 93.90499877929688,
    "stop": 87.85239847412109,
    "target": 95.117,
    "half_done": true,
    "opened": "2026-07-30",
-   "pl_krw": 501563,
-   "pl_pct": 9.11,
+   "pl_krw": 497727,
+   "pl_pct": 9.04,
    "price_age_min": 0.4
   },
   {
@@ -42,13 +27,13 @@
    "ccy": "USD",
    "q": 186,
    "avg": 9.24,
-   "price": 9.949999809265137,
+   "price": 9.947999954223633,
    "stop": 9.24,
    "target": 10.6555,
    "half_done": true,
    "opened": "2026-08-27",
-   "pl_krw": 179641,
-   "pl_pct": 7.68,
+   "pl_krw": 179135,
+   "pl_pct": 7.66,
    "price_age_min": 0.4
   },
   {
@@ -72,13 +57,13 @@
    "ccy": "USD",
    "q": 7,
    "avg": 543.09,
-   "price": 536.9849853515625,
+   "price": 534.3599853515625,
    "stop": 506.4666,
    "target": 616.3368,
    "half_done": false,
    "opened": "2026-09-09",
-   "pl_krw": -58133,
-   "pl_pct": -1.12,
+   "pl_krw": -83128,
+   "pl_pct": -1.61,
    "price_age_min": 0.4
   },
   {
@@ -87,13 +72,13 @@
    "ccy": "USD",
    "q": 12,
    "avg": 168.23,
-   "price": 169.45750427246094,
+   "price": 169.67999267578125,
    "stop": 158.2099,
    "target": 188.2702,
    "half_done": false,
    "opened": "2026-09-11",
-   "pl_krw": 20037,
-   "pl_pct": 0.73,
+   "pl_krw": 23669,
+   "pl_pct": 0.86,
    "price_age_min": 0.4
   },
   {
@@ -249,25 +234,25 @@
    "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권39% · 체크4/6 · 손절폭6.4%"
   }
  ],
- "trades": 27,
- "win_trades": 18,
+ "trades": 28,
+ "win_trades": 19,
  "pos_cap_pct": 33.3,
  "cap_violations": [],
  "rule_violations": [],
  "fx": 1360.3,
  "stats": {
   "all": {
-   "n": 27,
-   "win": 18,
-   "win_rate": 67,
-   "avg_r": 0.15
+   "n": 28,
+   "win": 19,
+   "win_rate": 68,
+   "avg_r": 0.16
   },
   "by_mode": {
    "full": {
-    "n": 11,
-    "win": 7,
-    "win_rate": 64,
-    "avg_r": 0.12
+    "n": 12,
+    "win": 8,
+    "win_rate": 67,
+    "avg_r": 0.16
    },
    "half": {
     "n": 11,
@@ -283,10 +268,10 @@
    }
   },
   "fresh": {
-   "n": 26,
-   "win": 17,
-   "win_rate": 65,
-   "avg_r": 0.14
+   "n": 27,
+   "win": 18,
+   "win_rate": 67,
+   "avg_r": 0.15
   },
   "stale": {
    "n": 1,
@@ -296,10 +281,10 @@
   },
   "by_stage": {
    "3": {
-    "n": 26,
-    "win": 17,
-    "win_rate": 65,
-    "avg_r": 0.13
+    "n": 27,
+    "win": 18,
+    "win_rate": 67,
+    "avg_r": 0.15
    },
    "4": {
     "n": 1,
@@ -316,16 +301,58 @@
     "avg_r": 0.29
    },
    "USD": {
-    "n": 22,
-    "win": 14,
-    "win_rate": 64,
-    "avg_r": 0.11
+    "n": 23,
+    "win": 15,
+    "win_rate": 65,
+    "avg_r": 0.13
    }
   },
-  "slip_entry_pct": -0.54,
+  "slip_entry_pct": -0.52,
   "slip_stop_pct": -1.34
  },
  "closed": [
+  {
+   "code": "EQT",
+   "name": "EQT Corporation",
+   "ccy": "USD",
+   "ctx": {
+    "mode": "full",
+    "fresh": true,
+    "stage": 3,
+    "rp": 17,
+    "rec": 3,
+    "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권17% · 체크3/6 · 손절폭5.6%"
+   },
+   "plan": {
+    "entry": 51.375,
+    "stop": 48.5008,
+    "target": 57.1234,
+    "pb": 50.94,
+    "tactic": "full"
+   },
+   "fill": {
+    "avg": 51.375,
+    "q": 242
+   },
+   "exits": [
+    {
+     "d": "2026-08-12",
+     "q": 121,
+     "price": 54.34,
+     "note": "+1R 절반 익절"
+    },
+    {
+     "d": "2026-09-16",
+     "q": 121,
+     "price": 51.83,
+     "note": "트레일 스탑"
+    }
+   ],
+   "opened": "2026-07-29",
+   "closed": "2026-09-16",
+   "pl": 581514,
+   "r": 0.57
+  },
   {
    "code": "TKC",
    "name": "Turkcell Iletisim Hizmetleri AS",
@@ -1672,10 +1699,24 @@
   },
   {
    "d": "2026-09-16",
-   "v": 97478056
+   "v": 97486093
   }
  ],
  "log": [
+  {
+   "d": "2026-09-16",
+   "type": "sell",
+   "code": "EQT",
+   "name": "EQT Corporation",
+   "q": 121,
+   "price": 51.83,
+   "ccy": "USD",
+   "amt": 8531027,
+   "note": "트레일 스탑",
+   "pl": 74892,
+   "pl_pct": 0.9,
+   "r": 0.57
+  },
   {
    "d": "2026-09-16",
    "type": "order",
@@ -2306,20 +2347,6 @@
    "note": "반반 1차 — 🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권31% · 체크6/6 · 손절폭7.1%",
    "stop": 84.0446,
    "target": 103.3659
-  },
-  {
-   "d": "2026-08-11",
-   "type": "sell",
-   "code": "SARO",
-   "name": "StandardAero, Inc.",
-   "q": 81,
-   "price": 28.41,
-   "ccy": "USD",
-   "amt": 3261229,
-   "note": "트레일 스탑",
-   "pl": 58544,
-   "pl_pct": 1.8,
-   "r": 0.62
   }
  ],
  "lane": "fast",
