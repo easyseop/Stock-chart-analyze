@@ -1,10 +1,10 @@
 {
- "generated_at": "2026-09-16T23:51:47.283193+09:00",
- "updated": "2026-09-16",
+ "generated_at": "2026-09-17T00:10:13.832342+09:00",
+ "updated": "2026-09-17",
  "start": 100000000,
- "cash": 50780292,
- "equity": 97527837,
- "ret_pct": -2.47,
+ "cash": 42081688,
+ "equity": 97604911,
+ "ret_pct": -2.4,
  "positions": [
   {
    "code": "MDT",
@@ -12,14 +12,14 @@
    "ccy": "USD",
    "q": 47,
    "avg": 86.12,
-   "price": 94.22000122070312,
+   "price": 94.1750030517578,
    "stop": 87.85239847412109,
    "target": 95.117,
    "half_done": true,
    "opened": "2026-07-30",
-   "pl_krw": 517866,
-   "pl_pct": 9.41,
-   "price_age_min": 0.4
+   "pl_krw": 517424,
+   "pl_pct": 9.35,
+   "price_age_min": 5.9
   },
   {
    "code": "NAVI",
@@ -27,14 +27,14 @@
    "ccy": "USD",
    "q": 186,
    "avg": 9.24,
-   "price": 10.079999923706056,
+   "price": 10.109999656677246,
    "stop": 9.24,
    "target": 10.6555,
    "half_done": true,
    "opened": "2026-08-27",
-   "pl_krw": 212533,
-   "pl_pct": 9.09,
-   "price_age_min": 0.4
+   "pl_krw": 221164,
+   "pl_pct": 9.42,
+   "price_age_min": 4.3
   },
   {
    "code": "323410",
@@ -49,7 +49,7 @@
    "opened": "2026-09-04",
    "pl_krw": -463249,
    "pl_pct": -4.62,
-   "price_age_min": 0.4
+   "price_age_min": 4.3
   },
   {
    "code": "ULTA",
@@ -57,14 +57,14 @@
    "ccy": "USD",
    "q": 7,
    "avg": 543.09,
-   "price": 536.0700073242188,
+   "price": 535.1500244140625,
    "stop": 506.4666,
    "target": 616.3368,
    "half_done": false,
    "opened": "2026-09-09",
-   "pl_krw": -66845,
-   "pl_pct": -1.29,
-   "price_age_min": 0.4
+   "pl_krw": -75963,
+   "pl_pct": -1.46,
+   "price_age_min": 4.3
   },
   {
    "code": "ALG",
@@ -72,14 +72,14 @@
    "ccy": "USD",
    "q": 12,
    "avg": 168.23,
-   "price": 167.9600067138672,
+   "price": 168.1999969482422,
    "stop": 158.2099,
    "target": 188.2702,
    "half_done": false,
    "opened": "2026-09-11",
-   "pl_krw": -4407,
-   "pl_pct": -0.16,
-   "price_age_min": 0.4
+   "pl_krw": -492,
+   "pl_pct": -0.02,
+   "price_age_min": 4.3
   },
   {
    "code": "032640",
@@ -94,7 +94,37 @@
    "opened": "2026-09-16",
    "pl_krw": -134615,
    "pl_pct": -0.64,
-   "price_age_min": 0.4
+   "price_age_min": 5.5
+  },
+  {
+   "code": "BAH",
+   "name": "Booz Allen Hamilton Holding Corporation",
+   "ccy": "USD",
+   "q": 3,
+   "avg": 78.4457,
+   "price": 78.34500122070312,
+   "stop": 73.5895,
+   "target": 88.756,
+   "half_done": false,
+   "opened": "2026-09-17",
+   "pl_krw": -413,
+   "pl_pct": -0.13,
+   "price_age_min": 6.7
+  },
+  {
+   "code": "LOPE",
+   "name": "Grand Canyon Education, Inc.",
+   "ccy": "USD",
+   "q": 40,
+   "avg": 153.23,
+   "price": 153.22999572753906,
+   "stop": 145.224,
+   "target": 169.242,
+   "half_done": false,
+   "opened": "2026-09-17",
+   "pl_krw": 0,
+   "pl_pct": -0.0,
+   "price_age_min": 6.8
   }
  ],
  "pending": [
@@ -205,33 +235,6 @@
     "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권34% · 체크4/6 · 손절폭9.9%"
    },
    "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권34% · 체크4/6 · 손절폭9.9%"
-  },
-  {
-   "code": "BAH",
-   "name": "Booz Allen Hamilton Holding Corporation",
-   "ccy": "USD",
-   "limit": 78.4457,
-   "stop": 73.5895,
-   "target": 88.756,
-   "q": 3,
-   "created": "2026-09-16",
-   "atr": 2.5277,
-   "plan": {
-    "entry": 78.645,
-    "stop": 73.5895,
-    "target": 88.756,
-    "pb": 78.4457,
-    "tactic": "pullback"
-   },
-   "ctx": {
-    "mode": "pullback",
-    "fresh": true,
-    "stage": 3,
-    "rp": 39,
-    "rec": 4,
-    "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권39% · 체크4/6 · 손절폭6.4%"
-   },
-   "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권39% · 체크4/6 · 손절폭6.4%"
   }
  ],
  "trades": 28,
@@ -239,7 +242,7 @@
  "pos_cap_pct": 33.3,
  "cap_violations": [],
  "rule_violations": [],
- "fx": 1360.3,
+ "fx": 1366.73,
  "stats": {
   "all": {
    "n": 28,
@@ -1700,9 +1703,39 @@
   {
    "d": "2026-09-16",
    "v": 97527837
+  },
+  {
+   "d": "2026-09-17",
+   "v": 97604911
   }
  ],
  "log": [
+  {
+   "d": "2026-09-17",
+   "type": "buy",
+   "code": "LOPE",
+   "name": "Grand Canyon Education, Inc.",
+   "q": 40,
+   "price": 153.23,
+   "ccy": "USD",
+   "amt": 8376961,
+   "note": "즉시 분할 — 🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권21% · 체크6/6 · 손절폭5.2%",
+   "stop": 145.224,
+   "target": 169.242
+  },
+  {
+   "d": "2026-09-17",
+   "type": "buy",
+   "code": "BAH",
+   "name": "Booz Allen Hamilton Holding Corporation",
+   "q": 3,
+   "price": 78.4457,
+   "ccy": "USD",
+   "amt": 321642,
+   "note": "눌림 지정가 체결 — 🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권39% · 체크4/6 · 손절폭6.4%",
+   "stop": 73.5895,
+   "target": 88.756
+  },
   {
    "d": "2026-09-16",
    "type": "sell",
@@ -2321,34 +2354,8 @@
    "note": "+1R 절반 익절",
    "pl": 304503,
    "pl_pct": 5.4
-  },
-  {
-   "d": "2026-08-12",
-   "type": "sell",
-   "code": "EQT",
-   "name": "EQT Corporation",
-   "q": 121,
-   "price": 54.34,
-   "ccy": "USD",
-   "amt": 9284953,
-   "note": "+1R 절반 익절",
-   "pl": 506623,
-   "pl_pct": 5.8
-  },
-  {
-   "d": "2026-08-11",
-   "type": "buy",
-   "code": "UFPI",
-   "name": "UFP Industries, Inc.",
-   "q": 24,
-   "price": 90.485,
-   "ccy": "USD",
-   "amt": 3077605,
-   "note": "반반 1차 — 🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권31% · 체크6/6 · 손절폭7.1%",
-   "stop": 84.0446,
-   "target": 103.3659
   }
  ],
- "lane": "fast",
+ "lane": "bulk",
  "data_stale": []
 }
