@@ -1,8 +1,8 @@
 {
- "generated_at": "2026-09-16T08:58:53.950080+09:00",
+ "generated_at": "2026-09-16T09:57:47.106495+09:00",
  "updated": "2026-09-16",
  "start": 100000000,
- "cash": 38678669,
+ "cash": 62880059,
  "equity": 98101163,
  "ret_pct": -1.9,
  "positions": [
@@ -19,7 +19,7 @@
    "opened": "2026-07-29",
    "pl_krw": 287220,
    "pl_pct": 3.4,
-   "price_age_min": 6.3
+   "price_age_min": 32.1
   },
   {
    "code": "MDT",
@@ -34,22 +34,7 @@
    "opened": "2026-07-30",
    "pl_krw": 487817,
    "pl_pct": 8.86,
-   "price_age_min": 8.6
-  },
-  {
-   "code": "035250",
-   "name": "강원랜드",
-   "ccy": "KRW",
-   "q": 1643,
-   "avg": 14550.0,
-   "price": 14730.0,
-   "stop": 13929.1519,
-   "target": 15791.6962,
-   "half_done": false,
-   "opened": "2026-08-26",
-   "pl_krw": 295740,
-   "pl_pct": 1.24,
-   "price_age_min": 6.3
+   "price_age_min": 25.5
   },
   {
    "code": "NAVI",
@@ -64,7 +49,7 @@
    "opened": "2026-08-27",
    "pl_krw": 192292,
    "pl_pct": 8.23,
-   "price_age_min": 6.3
+   "price_age_min": 24.4
   },
   {
    "code": "323410",
@@ -79,7 +64,7 @@
    "opened": "2026-09-04",
    "pl_krw": -302249,
    "pl_pct": -3.01,
-   "price_age_min": 6.3
+   "price_age_min": 40.3
   },
   {
    "code": "ULTA",
@@ -94,7 +79,7 @@
    "opened": "2026-09-09",
    "pl_krw": 11712,
    "pl_pct": 0.23,
-   "price_age_min": 6.3
+   "price_age_min": 16.4
   },
   {
    "code": "ALG",
@@ -109,7 +94,7 @@
    "opened": "2026-09-11",
    "pl_krw": 20241,
    "pl_pct": 0.74,
-   "price_age_min": 6.3
+   "price_age_min": 39.1
   },
   {
    "code": "TKC",
@@ -124,7 +109,7 @@
    "opened": "2026-09-12",
    "pl_krw": -10345,
    "pl_pct": -3.62,
-   "price_age_min": 9.5
+   "price_age_min": 17.4
   }
  ],
  "pending": [
@@ -237,24 +222,24 @@
    "basis": "↗ 돌파후 진행(승률↓) · ③ 돌파후 횡보(대기) · 저점권37% · 체크3/6 · 손절폭10.8%"
   }
  ],
- "trades": 25,
- "win_trades": 17,
+ "trades": 26,
+ "win_trades": 18,
  "pos_cap_pct": 33.3,
  "cap_violations": [],
  "rule_violations": [],
  "fx": 1360.3,
  "stats": {
   "all": {
-   "n": 25,
-   "win": 17,
-   "win_rate": 68,
+   "n": 26,
+   "win": 18,
+   "win_rate": 69,
    "avg_r": 0.22
   },
   "by_mode": {
    "full": {
-    "n": 9,
-    "win": 6,
-    "win_rate": 67,
+    "n": 10,
+    "win": 7,
+    "win_rate": 70,
     "avg_r": 0.32
    },
    "half": {
@@ -271,10 +256,10 @@
    }
   },
   "fresh": {
-   "n": 24,
-   "win": 16,
-   "win_rate": 67,
-   "avg_r": 0.21
+   "n": 25,
+   "win": 17,
+   "win_rate": 68,
+   "avg_r": 0.22
   },
   "stale": {
    "n": 1,
@@ -284,9 +269,9 @@
   },
   "by_stage": {
    "3": {
-    "n": 24,
-    "win": 16,
-    "win_rate": 67,
+    "n": 25,
+    "win": 17,
+    "win_rate": 68,
     "avg_r": 0.21
    },
    "4": {
@@ -298,9 +283,9 @@
   },
   "by_ccy": {
    "KRW": {
-    "n": 4,
-    "win": 3,
-    "win_rate": 75,
+    "n": 5,
+    "win": 4,
+    "win_rate": 80,
     "avg_r": 0.29
    },
    "USD": {
@@ -310,10 +295,46 @@
     "avg_r": 0.21
    }
   },
-  "slip_entry_pct": -0.58,
+  "slip_entry_pct": -0.56,
   "slip_stop_pct": -0.95
  },
  "closed": [
+  {
+   "code": "035250",
+   "name": "강원랜드",
+   "ccy": "KRW",
+   "ctx": {
+    "mode": "full",
+    "fresh": true,
+    "stage": 3,
+    "rp": 11,
+    "rec": 4,
+    "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권11% · 체크4/6 · 손절폭4.3%"
+   },
+   "plan": {
+    "entry": 14550.0,
+    "stop": 13929.1519,
+    "target": 15791.6962,
+    "pb": 14075.0,
+    "tactic": "full"
+   },
+   "fill": {
+    "avg": 14550.0,
+    "q": 1643
+   },
+   "exits": [
+    {
+     "d": "2026-09-16",
+     "q": 1643,
+     "price": 14730.0,
+     "note": "타임 스탑(+1R 미도달)"
+    }
+   ],
+   "opened": "2026-08-26",
+   "closed": "2026-09-16",
+   "pl": 295740,
+   "r": 0.29
+  },
   {
    "code": "ADMA",
    "name": "ADMA Biologics Inc",
@@ -1595,6 +1616,20 @@
   {
    "d": "2026-09-16",
    "type": "sell",
+   "code": "035250",
+   "name": "강원랜드",
+   "q": 1643,
+   "price": 14730.0,
+   "ccy": "KRW",
+   "amt": 24201390,
+   "note": "타임 스탑(+1R 미도달)",
+   "pl": 295740,
+   "pl_pct": 1.2,
+   "r": 0.29
+  },
+  {
+   "d": "2026-09-16",
+   "type": "sell",
    "code": "NAVI",
    "name": "Navient Corporation",
    "q": 186,
@@ -2222,19 +2257,10 @@
    "ccy": "KRW",
    "amt": 9344000,
    "note": "눌림 지정가 주문(추격 금지) — 🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권8% · 체크4/6 · 손절폭9.8%"
-  },
-  {
-   "d": "2026-08-07",
-   "type": "cancel",
-   "code": "004370",
-   "name": "농심",
-   "q": 0,
-   "price": 405500.0,
-   "ccy": "KRW",
-   "amt": 0,
-   "note": "지정가 취소 — 신호 부패: 제외 게이트 — 이미 폭등"
   }
  ],
  "lane": "bulk",
- "data_stale": []
+ "data_stale": [
+  "323410"
+ ]
 }
