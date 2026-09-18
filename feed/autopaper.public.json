@@ -1,10 +1,10 @@
 {
- "generated_at": "2026-09-18T15:08:30.356856+09:00",
+ "generated_at": "2026-09-18T15:18:50.901520+09:00",
  "updated": "2026-09-18",
  "start": 100000000,
  "cash": 33626454,
- "equity": 97198874,
- "ret_pct": -2.8,
+ "equity": 97187374,
+ "ret_pct": -2.81,
  "positions": [
   {
    "code": "MDT",
@@ -19,7 +19,7 @@
    "opened": "2026-07-30",
    "pl_krw": 431625,
    "pl_pct": 7.72,
-   "price_age_min": 46.6
+   "price_age_min": 57.0
   },
   {
    "code": "NAVI",
@@ -34,7 +34,7 @@
    "opened": "2026-08-27",
    "pl_krw": 154117,
    "pl_pct": 6.49,
-   "price_age_min": 44.3
+   "price_age_min": 54.7
   },
   {
    "code": "323410",
@@ -42,14 +42,14 @@
    "ccy": "KRW",
    "q": 460,
    "avg": 21807.06404347826,
-   "price": 20625.0,
+   "price": 20600.0,
    "stop": 20511.373,
    "target": 24677.254,
    "half_done": false,
    "opened": "2026-09-04",
-   "pl_krw": -543749,
-   "pl_pct": -5.42,
-   "price_age_min": 6.7
+   "pl_krw": -555249,
+   "pl_pct": -5.54,
+   "price_age_min": 8.8
   },
   {
    "code": "ULTA",
@@ -64,7 +64,7 @@
    "opened": "2026-09-09",
    "pl_krw": 6187,
    "pl_pct": 0.12,
-   "price_age_min": 44.3
+   "price_age_min": 54.7
   },
   {
    "code": "ALG",
@@ -79,7 +79,7 @@
    "opened": "2026-09-11",
    "pl_krw": 6463,
    "pl_pct": 0.23,
-   "price_age_min": 44.3
+   "price_age_min": 54.7
   },
   {
    "code": "032640",
@@ -94,7 +94,7 @@
    "opened": "2026-09-16",
    "pl_krw": -743925,
    "pl_pct": -3.56,
-   "price_age_min": 6.6
+   "price_age_min": 8.7
   },
   {
    "code": "BAH",
@@ -109,7 +109,7 @@
    "opened": "2026-09-17",
    "pl_krw": 1841,
    "pl_pct": 0.57,
-   "price_age_min": 47.6
+   "price_age_min": 57.9
   },
   {
    "code": "LOPE",
@@ -124,7 +124,7 @@
    "opened": "2026-09-17",
    "pl_krw": -45296,
    "pl_pct": -0.54,
-   "price_age_min": 45.8
+   "price_age_min": 56.2
   },
   {
    "code": "FHB",
@@ -139,7 +139,7 @@
    "opened": "2026-09-17",
    "pl_krw": 46594,
    "pl_pct": 0.55,
-   "price_age_min": 47.5
+   "price_age_min": 57.8
   }
  ],
  "pending": [
@@ -1698,7 +1698,7 @@
   },
   {
    "d": "2026-09-18",
-   "v": 97198874
+   "v": 97187374
   }
  ],
  "log": [
