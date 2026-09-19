@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated_at": "2026-09-19T11:33:32+09:00",
+ "generated_at": "2026-09-19T12:16:38+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "a_ablation": [
   {
@@ -78,14 +78,14 @@
  ],
  "shelf_debug": {
   "ok": 8,
-  "watch": 154,
+  "watch": 155,
   "reasons": {
-   "밸류영역 밖(지지대 아님)": 372,
+   "밸류영역 밖(지지대 아님)": 373,
    "추락 중(범위 1%)": 206,
    "추락 중(범위 0%)": 167,
    "추락 중(범위 2%)": 155,
    "매물대 정보 없음": 148,
-   "추락 중(범위 4%)": 128,
+   "추락 중(범위 4%)": 129,
    "추락 중(범위 3%)": 128,
    "추락 중(범위 5%)": 99
   }
@@ -1551,24 +1551,24 @@
    "group": "watch",
    "entry_kind": "now",
    "stage": 2,
-   "price": 17.69,
-   "entry": 17.69,
-   "stop": 15.519,
-   "target": 22.0321,
-   "shares_1pct": 46,
-   "range_pos": 0.1453,
+   "price": 17.11,
+   "entry": 17.11,
+   "stop": 14.8726,
+   "target": 21.5848,
+   "shares_1pct": 44,
+   "range_pos": 0.1282,
    "norm": -24.5,
    "bear_share": 0.375,
    "fresh": true,
-   "break_gap": 0.0321,
+   "break_gap": 0.0095,
    "earnings_d": -44,
    "tactic": {
-    "stop_pct": 12.3,
-    "pb_price": 17.0775,
-    "pb_stop_pct": 9.1,
+    "stop_pct": 13.1,
+    "pb_price": 16.095,
+    "pb_stop_pct": 7.6,
     "mode": "pullback",
     "label": "⏳ 눌림 지정가만",
-    "desc": "지금 추격 금지(손절폭 12.3% · 단기 이격) — <b>$17.08 눌림 지정가만</b>. 눌리면 손절폭 9.1%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
+    "desc": "지금 추격 금지(손절폭 13.1%) — <b>$16.09 눌림 지정가만</b>. 눌리면 손절폭 7.6%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
    }
   },
   {
@@ -1618,34 +1618,6 @@
     "mode": "pullback",
     "label": "⏳ 눌림 지정가만",
     "desc": "지금 추격 금지(손절폭 11.8%) — <b>$50.14 눌림 지정가만</b>. 눌리면 손절폭 1.9%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
-   }
-  },
-  {
-   "id": "NXT-2026-09-19-watch",
-   "code": "NXT",
-   "name": "Nextpower Inc.",
-   "ccy": "USD",
-   "group": "watch",
-   "entry_kind": "now",
-   "stage": 2,
-   "price": 83.36,
-   "entry": 83.36,
-   "stop": 74.0983,
-   "target": 101.8834,
-   "shares_1pct": 10,
-   "range_pos": 0.1687,
-   "norm": -27.9,
-   "bear_share": 0.375,
-   "fresh": true,
-   "break_gap": 0.0397,
-   "earnings_d": 39,
-   "tactic": {
-    "stop_pct": 11.1,
-    "pb_price": 76.715,
-    "pb_stop_pct": 3.4,
-    "mode": "pullback",
-    "label": "⏳ 눌림 지정가만",
-    "desc": "지금 추격 금지(손절폭 11.1%) — <b>$76.71 눌림 지정가만</b>. 눌리면 손절폭 3.4%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
    }
   },
   {
@@ -1733,53 +1705,32 @@
    }
   },
   {
-   "id": "OR-2026-09-19-watch",
-   "code": "OR",
-   "name": "OR Royalties Inc.",
+   "id": "NXT-2026-09-19-watch",
+   "code": "NXT",
+   "name": "Nextpower Inc.",
    "ccy": "USD",
    "group": "watch",
    "entry_kind": "now",
-   "stage": 1,
-   "price": 36.99,
-   "entry": 36.99,
-   "stop": 34.3666,
-   "target": 42.2368,
-   "shares_1pct": 38,
-   "range_pos": 0.4605,
-   "norm": 51.9,
-   "bear_share": 0.0,
+   "stage": 2,
+   "price": 80.47,
+   "entry": 80.47,
+   "stop": 71.2247,
+   "target": 98.9606,
+   "shares_1pct": 10,
+   "range_pos": 0.1342,
+   "norm": -36.1,
+   "bear_share": 0.375,
    "fresh": true,
-   "break_gap": -0.0184,
-   "earnings_d": null,
+   "break_gap": 0.0175,
+   "earnings_d": 39,
    "tactic": {
-    "stop_pct": 7.1,
-    "pb_price": 35.5084,
-    "pb_stop_pct": 3.2,
-    "mode": "half",
-    "label": "⚖ 반반 진입",
-    "desc": "손절폭 7.1% — 절반은 현재가, 절반은 눌림 $35.51 지정가(거기선 손절폭 3.2%)"
+    "stop_pct": 11.5,
+    "pb_price": 76.715,
+    "pb_stop_pct": 7.2,
+    "mode": "pullback",
+    "label": "⏳ 눌림 지정가만",
+    "desc": "지금 추격 금지(손절폭 11.5%) — <b>$76.71 눌림 지정가만</b>. 눌리면 손절폭 7.2%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
    }
-  },
-  {
-   "id": "PSIX-2026-09-19-watch",
-   "code": "PSIX",
-   "name": "Power Solutions International, Inc.",
-   "ccy": "USD",
-   "group": "watch",
-   "entry_kind": "pullback",
-   "stage": 1,
-   "price": 45.55,
-   "entry": 44.13,
-   "stop": 38.9554,
-   "target": 54.4793,
-   "shares_1pct": 19,
-   "range_pos": 0.2147,
-   "norm": 50.0,
-   "bear_share": 0.25,
-   "fresh": true,
-   "break_gap": -0.0151,
-   "earnings_d": -44,
-   "tactic": null
   },
   {
    "id": "CRAI-2026-09-19-watch",
@@ -1808,6 +1759,27 @@
     "label": "⚖ 반반 진입",
     "desc": "손절폭 6.7% — 절반은 현재가, 절반은 눌림 $161.27 지정가(거기선 손절폭 4.3%)"
    }
+  },
+  {
+   "id": "PSIX-2026-09-19-watch",
+   "code": "PSIX",
+   "name": "Power Solutions International, Inc.",
+   "ccy": "USD",
+   "group": "watch",
+   "entry_kind": "pullback",
+   "stage": 1,
+   "price": 45.87,
+   "entry": 44.13,
+   "stop": 38.9264,
+   "target": 54.5372,
+   "shares_1pct": 19,
+   "range_pos": 0.2181,
+   "norm": 25.5,
+   "bear_share": 0.25,
+   "fresh": true,
+   "break_gap": 0.0007,
+   "earnings_d": -44,
+   "tactic": null
   },
   {
    "id": "017800-2026-09-19-watch",
