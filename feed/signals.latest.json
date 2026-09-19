@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated_at": "2026-09-19T10:34:04+09:00",
+ "generated_at": "2026-09-19T11:17:35+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "a_ablation": [
   {
@@ -78,7 +78,7 @@
  ],
  "shelf_debug": {
   "ok": 8,
-  "watch": 153,
+  "watch": 154,
   "reasons": {
    "밸류영역 밖(지지대 아님)": 372,
    "추락 중(범위 1%)": 205,
@@ -101,8 +101,8 @@
    "stage": 4,
    "price": 126.07,
    "entry": 126.07,
-   "stop": 121.2587,
-   "target": 135.6926,
+   "stop": 121.1915,
+   "target": 135.8269,
    "shares_1pct": 20,
    "range_pos": 0.3404,
    "norm": 13.2,
@@ -111,12 +111,12 @@
    "break_gap": 0.0193,
    "earnings_d": -44,
    "tactic": {
-    "stop_pct": 3.8,
+    "stop_pct": 3.9,
     "pb_price": 123.3907,
-    "pb_stop_pct": 1.7,
+    "pb_stop_pct": 1.8,
     "mode": "full",
     "label": "⚡ 즉시 분할",
-    "desc": "손절폭 3.8%로 타이트 — 현재가에서 1~2회 분할 매수. 기다리는 이득보다 놓치는 비용이 큼"
+    "desc": "손절폭 3.9%로 타이트 — 현재가에서 1~2회 분할 매수. 기다리는 이득보다 놓치는 비용이 큼"
    }
   },
   {
@@ -241,8 +241,8 @@
    "stage": 3,
    "price": 140.6,
    "entry": 140.6,
-   "stop": 129.9508,
-   "target": 161.8985,
+   "stop": 129.9408,
+   "target": 161.9185,
    "shares_1pct": 9,
    "range_pos": 0.0621,
    "norm": -22.6,
@@ -409,8 +409,8 @@
    "stage": 3,
    "price": 76.76,
    "entry": 76.76,
-   "stop": 69.0859,
-   "target": 92.1083,
+   "stop": 69.0852,
+   "target": 92.1097,
    "shares_1pct": 13,
    "range_pos": 0.0462,
    "norm": -19.8,
@@ -1327,34 +1327,6 @@
    "tactic": null
   },
   {
-   "id": "QGEN-2026-09-19-watch",
-   "code": "QGEN",
-   "name": "Qiagen N.V.",
-   "ccy": "USD",
-   "group": "watch",
-   "entry_kind": "now",
-   "stage": 2,
-   "price": 44.38,
-   "entry": 44.38,
-   "stop": 42.0343,
-   "target": 49.0713,
-   "shares_1pct": 42,
-   "range_pos": 0.4686,
-   "norm": 34.0,
-   "bear_share": 0.0,
-   "fresh": true,
-   "break_gap": 0.0065,
-   "earnings_d": null,
-   "tactic": {
-    "stop_pct": 5.3,
-    "pb_price": 42.0729,
-    "pb_stop_pct": 0.1,
-    "mode": "full",
-    "label": "⚡ 즉시 분할",
-    "desc": "손절폭 5.3%로 타이트 — 현재가에서 1~2회 분할 매수. 기다리는 이득보다 놓치는 비용이 큼"
-   }
-  },
-  {
    "id": "088980-2026-09-19-watch",
    "code": "088980",
    "name": "맥쿼리인프라",
@@ -1807,6 +1779,34 @@
     "mode": "full",
     "label": "⚡ 즉시 분할",
     "desc": "손절폭 5.6%로 타이트 — 현재가에서 1~2회 분할 매수. 기다리는 이득보다 놓치는 비용이 큼"
+   }
+  },
+  {
+   "id": "QGEN-2026-09-19-watch",
+   "code": "QGEN",
+   "name": "Qiagen N.V.",
+   "ccy": "USD",
+   "group": "watch",
+   "entry_kind": "now",
+   "stage": 1,
+   "price": 43.33,
+   "entry": 43.33,
+   "stop": 40.999,
+   "target": 47.9919,
+   "shares_1pct": 42,
+   "range_pos": 0.427,
+   "norm": 20.8,
+   "bear_share": 0.125,
+   "fresh": true,
+   "break_gap": -0.0155,
+   "earnings_d": null,
+   "tactic": {
+    "stop_pct": 5.4,
+    "pb_price": 42.0729,
+    "pb_stop_pct": 2.6,
+    "mode": "full",
+    "label": "⚡ 즉시 분할",
+    "desc": "손절폭 5.4%로 타이트 — 현재가에서 1~2회 분할 매수. 기다리는 이득보다 놓치는 비용이 큼"
    }
   },
   {
@@ -2470,8 +2470,8 @@
    "stage": 3,
    "price": 518.68,
    "entry": 444.52,
-   "stop": 383.1554,
-   "target": 567.2492,
+   "stop": 383.1561,
+   "target": 567.2478,
    "shares_1pct": 1,
    "range_pos": 0.3274,
    "norm": -10.4,
