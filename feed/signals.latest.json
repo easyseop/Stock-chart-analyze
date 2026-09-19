@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated_at": "2026-09-19T11:17:35+09:00",
+ "generated_at": "2026-09-19T11:33:32+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "a_ablation": [
   {
@@ -81,13 +81,13 @@
   "watch": 154,
   "reasons": {
    "밸류영역 밖(지지대 아님)": 372,
-   "추락 중(범위 1%)": 205,
+   "추락 중(범위 1%)": 206,
    "추락 중(범위 0%)": 167,
-   "추락 중(범위 2%)": 157,
+   "추락 중(범위 2%)": 155,
    "매물대 정보 없음": 148,
-   "추락 중(범위 4%)": 127,
-   "추락 중(범위 3%)": 126,
-   "추락 중(범위 5%)": 100
+   "추락 중(범위 4%)": 128,
+   "추락 중(범위 3%)": 128,
+   "추락 중(범위 5%)": 99
   }
  },
  "signals": [
@@ -1432,6 +1432,34 @@
    "tactic": null
   },
   {
+   "id": "ECG-2026-09-19-watch",
+   "code": "ECG",
+   "name": "Everus Construction Group, Inc.",
+   "ccy": "USD",
+   "group": "watch",
+   "entry_kind": "now",
+   "stage": 2,
+   "price": 115.97,
+   "entry": 115.97,
+   "stop": 104.2373,
+   "target": 139.4354,
+   "shares_1pct": 8,
+   "range_pos": 0.4066,
+   "norm": -18.9,
+   "bear_share": 0.375,
+   "fresh": true,
+   "break_gap": 0.0325,
+   "earnings_d": 45,
+   "tactic": {
+    "stop_pct": 10.1,
+    "pb_price": 108.7335,
+    "pb_stop_pct": 4.1,
+    "mode": "pullback",
+    "label": "⏳ 눌림 지정가만",
+    "desc": "지금 추격 금지(손절폭 10.1%) — <b>$108.73 눌림 지정가만</b>. 눌리면 손절폭 4.1%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
+   }
+  },
+  {
    "id": "MOD-2026-09-19-watch",
    "code": "MOD",
    "name": "Modine Manufacturing Company",
@@ -1674,6 +1702,34 @@
     "mode": "pullback",
     "label": "⏳ 눌림 지정가만",
     "desc": "지금 추격 금지(손절폭 10.8%) — 받칠 지지에 눌릴 때까지 대기"
+   }
+  },
+  {
+   "id": "ENVX-2026-09-19-watch",
+   "code": "ENVX",
+   "name": "Enovix Corporation",
+   "ccy": "USD",
+   "group": "watch",
+   "entry_kind": "now",
+   "stage": 2,
+   "price": 2.99,
+   "entry": 2.99,
+   "stop": 2.5502,
+   "target": 3.8697,
+   "shares_1pct": 227,
+   "range_pos": 0.0123,
+   "norm": -36.1,
+   "bear_share": 0.375,
+   "fresh": true,
+   "break_gap": 0.0377,
+   "earnings_d": -38,
+   "tactic": {
+    "stop_pct": 14.7,
+    "pb_price": 2.85,
+    "pb_stop_pct": 10.5,
+    "mode": "pullback",
+    "label": "⏳ 눌림 지정가만",
+    "desc": "지금 추격 금지(손절폭 14.7%) — <b>$2.85 눌림 지정가만</b>. 눌리면 손절폭 10.5%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
    }
   },
   {
@@ -1929,24 +1985,24 @@
    "group": "watch",
    "entry_kind": "now",
    "stage": 1,
-   "price": 76.2,
-   "entry": 76.2,
-   "stop": 69.1595,
-   "target": 90.2809,
+   "price": 75.84,
+   "entry": 75.84,
+   "stop": 68.911,
+   "target": 89.698,
    "shares_1pct": 14,
-   "range_pos": 0.2016,
+   "range_pos": 0.197,
    "norm": 11.3,
    "bear_share": 0.125,
    "fresh": true,
-   "break_gap": 0.0018,
+   "break_gap": 0.0005,
    "earnings_d": -23,
    "tactic": {
-    "stop_pct": 9.2,
+    "stop_pct": 9.1,
     "pb_price": 70.0117,
-    "pb_stop_pct": 1.2,
+    "pb_stop_pct": 1.6,
     "mode": "pullback",
     "label": "⏳ 눌림 지정가만",
-    "desc": "지금 추격 금지(손절폭 9.2%) — <b>$70.01 눌림 지정가만</b>. 눌리면 손절폭 1.2%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
+    "desc": "지금 추격 금지(손절폭 9.1%) — <b>$70.01 눌림 지정가만</b>. 눌리면 손절폭 1.6%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
    }
   },
   {
@@ -2118,24 +2174,24 @@
    "group": "watch",
    "entry_kind": "now",
    "stage": 1,
-   "price": 24.68,
-   "entry": 24.68,
-   "stop": 22.5237,
-   "target": 28.9926,
-   "shares_1pct": 46,
-   "range_pos": 0.4218,
+   "price": 24.27,
+   "entry": 24.27,
+   "stop": 22.1649,
+   "target": 28.4803,
+   "shares_1pct": 47,
+   "range_pos": 0.3894,
    "norm": -1.9,
    "bear_share": 0.125,
    "fresh": true,
-   "break_gap": -0.0082,
+   "break_gap": -0.0168,
    "earnings_d": 45,
    "tactic": {
     "stop_pct": 8.7,
-    "pb_price": 24.2507,
-    "pb_stop_pct": 7.1,
+    "pb_price": 23.6089,
+    "pb_stop_pct": 6.1,
     "mode": "pullback",
     "label": "⏳ 눌림 지정가만",
-    "desc": "지금 추격 금지(손절폭 8.7%) — <b>$24.25 눌림 지정가만</b>. 눌리면 손절폭 7.1%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
+    "desc": "지금 추격 금지(손절폭 8.7%) — <b>$23.61 눌림 지정가만</b>. 눌리면 손절폭 6.1%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
    }
   },
   {
@@ -2251,62 +2307,6 @@
    }
   },
   {
-   "id": "ECG-2026-09-19-watch",
-   "code": "ECG",
-   "name": "Everus Construction Group, Inc.",
-   "ccy": "USD",
-   "group": "watch",
-   "entry_kind": "now",
-   "stage": 1,
-   "price": 113.34,
-   "entry": 113.34,
-   "stop": 101.1802,
-   "target": 137.6597,
-   "shares_1pct": 8,
-   "range_pos": 0.3786,
-   "norm": -17.0,
-   "bear_share": 0.375,
-   "fresh": true,
-   "break_gap": -0.0034,
-   "earnings_d": 45,
-   "tactic": {
-    "stop_pct": 10.7,
-    "pb_price": 108.7335,
-    "pb_stop_pct": 6.9,
-    "mode": "pullback",
-    "label": "⏳ 눌림 지정가만",
-    "desc": "지금 추격 금지(손절폭 10.7%) — <b>$108.73 눌림 지정가만</b>. 눌리면 손절폭 6.9%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
-   }
-  },
-  {
-   "id": "GXO-2026-09-19-watch",
-   "code": "GXO",
-   "name": "GXO Logistics, Inc.",
-   "ccy": "USD",
-   "group": "watch",
-   "entry_kind": "now",
-   "stage": 1,
-   "price": 46.58,
-   "entry": 46.58,
-   "stop": 43.476,
-   "target": 52.788,
-   "shares_1pct": 32,
-   "range_pos": 0.0727,
-   "norm": -17.0,
-   "bear_share": 0.375,
-   "fresh": true,
-   "break_gap": -0.0148,
-   "earnings_d": 45,
-   "tactic": {
-    "stop_pct": 6.7,
-    "pb_price": 45.1693,
-    "pb_stop_pct": 3.7,
-    "mode": "half",
-    "label": "⚖ 반반 진입",
-    "desc": "손절폭 6.7% — 절반은 현재가, 절반은 눌림 $45.17 지정가(거기선 손절폭 3.7%)"
-   }
-  },
-  {
    "id": "MNRO-2026-09-19-watch",
    "code": "MNRO",
    "name": "Monro, Inc.",
@@ -2398,24 +2398,24 @@
    "group": "watch",
    "entry_kind": "now",
    "stage": 1,
-   "price": 66.51,
-   "entry": 66.51,
-   "stop": 62.3576,
-   "target": 74.8148,
+   "price": 66.36,
+   "entry": 66.36,
+   "stop": 62.317,
+   "target": 74.4459,
    "shares_1pct": 24,
-   "range_pos": 0.0155,
+   "range_pos": 0.014,
    "norm": -32.8,
    "bear_share": 0.375,
    "fresh": true,
-   "break_gap": -0.0067,
+   "break_gap": -0.0006,
    "earnings_d": 31,
    "tactic": {
-    "stop_pct": 6.2,
+    "stop_pct": 6.1,
     "pb_price": 65.03,
-    "pb_stop_pct": 4.1,
+    "pb_stop_pct": 4.2,
     "mode": "half",
     "label": "⚖ 반반 진입",
-    "desc": "손절폭 6.2% — 절반은 현재가, 절반은 눌림 $65.03 지정가(거기선 손절폭 4.1%)"
+    "desc": "손절폭 6.1% — 절반은 현재가, 절반은 눌림 $65.03 지정가(거기선 손절폭 4.2%)"
    }
   },
   {
