@@ -1,10 +1,10 @@
 {
- "generated_at": "2026-09-21T14:26:48.179705+09:00",
+ "generated_at": "2026-09-21T14:38:10.664993+09:00",
  "updated": "2026-09-21",
  "start": 100000000,
  "cash": 33680197,
- "equity": 97226456,
- "ret_pct": -2.77,
+ "equity": 97212286,
+ "ret_pct": -2.79,
  "positions": [
   {
    "code": "MDT",
@@ -19,7 +19,7 @@
    "opened": "2026-07-30",
    "pl_krw": 391489,
    "pl_pct": 6.98,
-   "price_age_min": 336.3
+   "price_age_min": 347.6
   },
   {
    "code": "NAVI",
@@ -34,7 +34,7 @@
    "opened": "2026-08-27",
    "pl_krw": 69602,
    "pl_pct": 2.92,
-   "price_age_min": 336.3
+   "price_age_min": 347.6
   },
   {
    "code": "ULTA",
@@ -49,7 +49,7 @@
    "opened": "2026-09-09",
    "pl_krw": -20471,
    "pl_pct": -0.39,
-   "price_age_min": 336.3
+   "price_age_min": 347.6
   },
   {
    "code": "ALG",
@@ -64,7 +64,7 @@
    "opened": "2026-09-11",
    "pl_krw": -26278,
    "pl_pct": -0.94,
-   "price_age_min": 336.2
+   "price_age_min": 347.6
   },
   {
    "code": "032640",
@@ -72,14 +72,14 @@
    "ccy": "KRW",
    "q": 1417,
    "avg": 14745.0,
-   "price": 14460.0,
+   "price": 14450.0,
    "stop": 14053.4865,
    "target": 16128.0269,
    "half_done": false,
    "opened": "2026-09-16",
-   "pl_krw": -403845,
-   "pl_pct": -1.93,
-   "price_age_min": 9.6
+   "pl_krw": -418015,
+   "pl_pct": -2.0,
+   "price_age_min": 9.5
   },
   {
    "code": "BAH",
@@ -94,7 +94,7 @@
    "opened": "2026-09-17",
    "pl_krw": -5720,
    "pl_pct": -1.75,
-   "price_age_min": 338.7
+   "price_age_min": 350.1
   },
   {
    "code": "LOPE",
@@ -109,7 +109,7 @@
    "opened": "2026-09-17",
    "pl_krw": -108658,
    "pl_pct": -1.28,
-   "price_age_min": 337.5
+   "price_age_min": 348.8
   },
   {
    "code": "FHB",
@@ -124,7 +124,7 @@
    "opened": "2026-09-17",
    "pl_krw": 30061,
    "pl_pct": 0.35,
-   "price_age_min": 339.1
+   "price_age_min": 350.5
   },
   {
    "code": "064400",
@@ -139,7 +139,7 @@
    "opened": "2026-09-21",
    "pl_krw": -34457,
    "pl_pct": -0.37,
-   "price_age_min": 9.7
+   "price_age_min": 9.6
   }
  ],
  "pending": [
@@ -1746,7 +1746,7 @@
   },
   {
    "d": "2026-09-21",
-   "v": 97226456
+   "v": 97212286
   }
  ],
  "log": [
