@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated_at": "2026-09-23T05:45:59+09:00",
+ "generated_at": "2026-09-23T06:31:50+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "a_ablation": [
   {
@@ -83,6 +83,34 @@
   }
  },
  "signals": [
+  {
+   "id": "FHB-2026-09-23-now",
+   "code": "FHB",
+   "name": "First Hawaiian, Inc.",
+   "ccy": "USD",
+   "group": "now",
+   "entry_kind": "now",
+   "stage": 4,
+   "price": 25.18,
+   "entry": 25.18,
+   "stop": 24.2373,
+   "target": 27.0655,
+   "shares_1pct": 106,
+   "range_pos": 0.3195,
+   "norm": -13.1,
+   "bear_share": 0.25,
+   "fresh": true,
+   "break_gap": 0.005,
+   "earnings_d": 31,
+   "tactic": {
+    "stop_pct": 3.7,
+    "pb_price": 25.085,
+    "pb_stop_pct": 3.4,
+    "mode": "full",
+    "label": "⚡ 즉시 분할",
+    "desc": "손절폭 3.7%로 타이트 — 현재가에서 1~2회 분할 매수. 기다리는 이득보다 놓치는 비용이 큼"
+   }
+  },
   {
    "id": "088980-2026-09-23-now",
    "code": "088980",
@@ -193,34 +221,6 @@
     "mode": "pullback",
     "label": "⏳ 눌림 지정가만",
     "desc": "지금 추격 금지(손절폭 11.5%) — <b>$50.14 눌림 지정가만</b>. 눌리면 손절폭 4.2%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
-   }
-  },
-  {
-   "id": "FHB-2026-09-23-now",
-   "code": "FHB",
-   "name": "First Hawaiian, Inc.",
-   "ccy": "USD",
-   "group": "now",
-   "entry_kind": "now",
-   "stage": 3,
-   "price": 25.18,
-   "entry": 25.18,
-   "stop": 24.2373,
-   "target": 27.0655,
-   "shares_1pct": 106,
-   "range_pos": 0.3195,
-   "norm": -16.4,
-   "bear_share": 0.25,
-   "fresh": true,
-   "break_gap": 0.005,
-   "earnings_d": 31,
-   "tactic": {
-    "stop_pct": 3.7,
-    "pb_price": 25.085,
-    "pb_stop_pct": 3.4,
-    "mode": "full",
-    "label": "⚡ 즉시 분할",
-    "desc": "손절폭 3.7%로 타이트 — 현재가에서 1~2회 분할 매수. 기다리는 이득보다 놓치는 비용이 큼"
    }
   },
   {
