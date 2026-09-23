@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated_at": "2026-09-23T08:46:22+09:00",
+ "generated_at": "2026-09-23T09:10:49+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "a_ablation": [
   {
@@ -70,16 +70,16 @@
  ],
  "shelf_debug": {
   "ok": 7,
-  "watch": 144,
+  "watch": 146,
   "reasons": {
    "밸류영역 밖(지지대 아님)": 379,
    "추락 중(범위 1%)": 204,
-   "추락 중(범위 0%)": 167,
+   "추락 중(범위 0%)": 168,
    "추락 중(범위 2%)": 160,
    "매물대 정보 없음": 148,
-   "추락 중(범위 3%)": 130,
+   "추락 중(범위 3%)": 129,
    "추락 중(범위 4%)": 127,
-   "추락 중(범위 5%)": 99
+   "추락 중(범위 5%)": 100
   }
  },
  "signals": [
@@ -101,7 +101,7 @@
    "bear_share": 0.25,
    "fresh": true,
    "break_gap": 0.005,
-   "earnings_d": 31,
+   "earnings_d": 30,
    "tactic": {
     "stop_pct": 3.7,
     "pb_price": 25.085,
@@ -185,7 +185,7 @@
    "bear_share": 0.25,
    "fresh": true,
    "break_gap": 0.0271,
-   "earnings_d": -47,
+   "earnings_d": -48,
    "tactic": {
     "stop_pct": 3.7,
     "pb_price": 123.3907,
@@ -213,7 +213,7 @@
    "bear_share": 0.25,
    "fresh": true,
    "break_gap": 0.0356,
-   "earnings_d": -40,
+   "earnings_d": -41,
    "tactic": {
     "stop_pct": 11.5,
     "pb_price": 50.14,
@@ -269,7 +269,7 @@
    "bear_share": 0.375,
    "fresh": true,
    "break_gap": 0.0496,
-   "earnings_d": 27,
+   "earnings_d": 26,
    "tactic": {
     "stop_pct": 5.4,
     "pb_price": 196.99,
@@ -297,7 +297,7 @@
    "bear_share": 0.25,
    "fresh": false,
    "break_gap": 0.0996,
-   "earnings_d": 35,
+   "earnings_d": 34,
    "tactic": {
     "stop_pct": 10.8,
     "pb_price": null,
@@ -381,7 +381,7 @@
    "bear_share": 0.25,
    "fresh": false,
    "break_gap": 0.3104,
-   "earnings_d": 41,
+   "earnings_d": 40,
    "tactic": {
     "stop_pct": 11.3,
     "pb_price": 462.8307,
@@ -437,7 +437,7 @@
    "bear_share": 0.375,
    "fresh": false,
    "break_gap": 0.1375,
-   "earnings_d": 44,
+   "earnings_d": 43,
    "tactic": {
     "stop_pct": 9.3,
     "pb_price": 75.424,
@@ -465,7 +465,7 @@
    "bear_share": 0.375,
    "fresh": false,
    "break_gap": 0.0885,
-   "earnings_d": 42,
+   "earnings_d": 41,
    "tactic": {
     "stop_pct": 10.0,
     "pb_price": null,
@@ -493,7 +493,7 @@
    "bear_share": 0.375,
    "fresh": false,
    "break_gap": 0.0731,
-   "earnings_d": 36,
+   "earnings_d": 35,
    "tactic": {
     "stop_pct": 10.6,
     "pb_price": 76.715,
@@ -521,7 +521,7 @@
    "bear_share": 0.375,
    "fresh": false,
    "break_gap": 0.0937,
-   "earnings_d": 37,
+   "earnings_d": 36,
    "tactic": {
     "stop_pct": 7.0,
     "pb_price": 32.018,
@@ -614,7 +614,7 @@
    },
    "fresh": false,
    "break_gap": null,
-   "earnings_d": 22,
+   "earnings_d": 21,
    "tactic": "watch",
    "trend_above_200": true
   },
@@ -689,6 +689,46 @@
      "회복": true,
      "상단마감": true,
      "거래량": false,
+     "신저가아님": true
+    }
+   },
+   "fresh": false,
+   "break_gap": null,
+   "earnings_d": null,
+   "tactic": "watch",
+   "trend_above_200": false
+  },
+  {
+   "id": "218410-2026-09-23-shelf-watch",
+   "code": "218410",
+   "name": "RFHIC",
+   "ccy": "KRW",
+   "group": "shelf_watch",
+   "entry_kind": "shelf_watch",
+   "stage": 0,
+   "price": 59000.0,
+   "entry": 59000.0,
+   "stop": 53606.0,
+   "target": 82581.25,
+   "shares_1pct": 0,
+   "range_pos": 0.3297,
+   "norm": 16.0,
+   "bear_share": 0.25,
+   "shelf": {
+    "poc": 31931.25,
+    "val": 27710.4167,
+    "vah": 82581.25,
+    "rr": 4.37,
+    "overhead": 0.464,
+    "reason": "반등 미확인(터치·상단마감)",
+    "history_bars": 1894,
+    "profile_pnl_proxy": -0.0535,
+    "runup252": 1.0811,
+    "checks": {
+     "터치": false,
+     "회복": true,
+     "상단마감": false,
+     "거래량": true,
      "신저가아님": true
     }
    },
@@ -774,7 +814,7 @@
    },
    "fresh": false,
    "break_gap": null,
-   "earnings_d": 34,
+   "earnings_d": 33,
    "tactic": "watch",
    "trend_above_200": false
   },
@@ -814,7 +854,7 @@
    },
    "fresh": false,
    "break_gap": null,
-   "earnings_d": -41,
+   "earnings_d": -42,
    "tactic": "watch",
    "trend_above_200": false
   },
@@ -894,7 +934,7 @@
    },
    "fresh": false,
    "break_gap": null,
-   "earnings_d": 35,
+   "earnings_d": 34,
    "tactic": "watch",
    "trend_above_200": false
   },
@@ -934,7 +974,7 @@
    },
    "fresh": false,
    "break_gap": null,
-   "earnings_d": 41,
+   "earnings_d": 40,
    "tactic": "watch",
    "trend_above_200": false
   },
@@ -974,7 +1014,7 @@
    },
    "fresh": false,
    "break_gap": null,
-   "earnings_d": 36,
+   "earnings_d": 35,
    "tactic": "watch",
    "trend_above_200": false
   },
@@ -1014,7 +1054,7 @@
    },
    "fresh": false,
    "break_gap": null,
-   "earnings_d": -13,
+   "earnings_d": -14,
    "tactic": "watch",
    "trend_above_200": true
   },
@@ -1054,7 +1094,7 @@
    },
    "fresh": false,
    "break_gap": null,
-   "earnings_d": 34,
+   "earnings_d": 33,
    "tactic": "watch",
    "trend_above_200": false
   },
@@ -1139,46 +1179,6 @@
    "trend_above_200": false
   },
   {
-   "id": "COCO-2026-09-23-shelf-watch",
-   "code": "COCO",
-   "name": "The Vita Coco Company, Inc.",
-   "ccy": "USD",
-   "group": "shelf_watch",
-   "entry_kind": "shelf_watch",
-   "stage": 0,
-   "price": 56.12,
-   "entry": 56.12,
-   "stop": 53.5864,
-   "target": 72.7758,
-   "shares_1pct": 0,
-   "range_pos": 0.3836,
-   "norm": -24.6,
-   "bear_share": 0.375,
-   "shelf": {
-    "poc": 54.7008,
-    "val": 46.6675,
-    "vah": 72.7758,
-    "rr": 6.57,
-    "overhead": 0.46,
-    "reason": "반등 미확인(상단마감·거래량)",
-    "history_bars": 1232,
-    "profile_pnl_proxy": -0.0294,
-    "runup252": 0.4294,
-    "checks": {
-     "터치": true,
-     "회복": true,
-     "상단마감": false,
-     "거래량": false,
-     "신저가아님": true
-    }
-   },
-   "fresh": false,
-   "break_gap": null,
-   "earnings_d": 36,
-   "tactic": "watch",
-   "trend_above_200": false
-  },
-  {
    "id": "069960-2026-09-23-shelf-watch",
    "code": "069960",
    "name": "현대백화점",
@@ -1236,7 +1236,7 @@
    "bear_share": 0.125,
    "fresh": true,
    "break_gap": 0.0157,
-   "earnings_d": 43,
+   "earnings_d": 42,
    "tactic": null
   },
   {
@@ -1257,7 +1257,7 @@
    "bear_share": 0.375,
    "fresh": true,
    "break_gap": 0.0308,
-   "earnings_d": -47,
+   "earnings_d": -48,
    "tactic": null
   },
   {
@@ -1390,7 +1390,7 @@
    "bear_share": 0.25,
    "fresh": true,
    "break_gap": 0.0132,
-   "earnings_d": 30,
+   "earnings_d": 29,
    "tactic": null
   },
   {
@@ -1411,7 +1411,7 @@
    "bear_share": 0.25,
    "fresh": true,
    "break_gap": 0.0232,
-   "earnings_d": 42,
+   "earnings_d": 41,
    "tactic": {
     "stop_pct": 8.9,
     "pb_price": null,
@@ -1439,7 +1439,7 @@
    "bear_share": 0.375,
    "fresh": true,
    "break_gap": 0.1957,
-   "earnings_d": 36,
+   "earnings_d": 35,
    "tactic": null
   },
   {
@@ -1488,7 +1488,7 @@
    "bear_share": 0.375,
    "fresh": true,
    "break_gap": 0.0258,
-   "earnings_d": 28,
+   "earnings_d": 27,
    "tactic": {
     "stop_pct": 5.7,
     "pb_price": 65.03,
@@ -1516,7 +1516,7 @@
    "bear_share": 0.0,
    "fresh": true,
    "break_gap": -0.0031,
-   "earnings_d": -26,
+   "earnings_d": -27,
    "tactic": {
     "stop_pct": 6.1,
     "pb_price": 547.5662,
@@ -1628,7 +1628,7 @@
    "bear_share": 0.25,
    "fresh": true,
    "break_gap": 0.0032,
-   "earnings_d": 34,
+   "earnings_d": 33,
    "tactic": {
     "stop_pct": 7.1,
     "pb_price": 50.29,
@@ -1656,7 +1656,7 @@
    "bear_share": 0.125,
    "fresh": true,
    "break_gap": 0.0044,
-   "earnings_d": 43,
+   "earnings_d": 42,
    "tactic": {
     "stop_pct": 3.2,
     "pb_price": null,
@@ -1684,7 +1684,7 @@
    "bear_share": 0.25,
    "fresh": true,
    "break_gap": 0.0024,
-   "earnings_d": -41,
+   "earnings_d": -42,
    "tactic": null
   },
   {
@@ -1705,7 +1705,7 @@
    "bear_share": 0.125,
    "fresh": true,
    "break_gap": -0.0019,
-   "earnings_d": 29,
+   "earnings_d": 28,
    "tactic": {
     "stop_pct": 4.7,
     "pb_price": 17.8079,
@@ -1733,7 +1733,7 @@
    "bear_share": 0.125,
    "fresh": true,
    "break_gap": -0.0108,
-   "earnings_d": 35,
+   "earnings_d": 34,
    "tactic": {
     "stop_pct": 3.7,
     "pb_price": 39.916,
@@ -1761,7 +1761,7 @@
    "bear_share": 0.125,
    "fresh": true,
    "break_gap": -0.0155,
-   "earnings_d": 35,
+   "earnings_d": 34,
    "tactic": {
     "stop_pct": 3.6,
     "pb_price": 60.4192,
@@ -1845,7 +1845,7 @@
    "bear_share": 0.25,
    "fresh": true,
    "break_gap": 0.0024,
-   "earnings_d": 77,
+   "earnings_d": 76,
    "tactic": {
     "stop_pct": 5.9,
     "pb_price": null,
@@ -1873,7 +1873,7 @@
    "bear_share": 0.25,
    "fresh": true,
    "break_gap": -0.0089,
-   "earnings_d": 45,
+   "earnings_d": 44,
    "tactic": {
     "stop_pct": 3.5,
     "pb_price": 47.64,
@@ -1901,7 +1901,7 @@
    "bear_share": 0.375,
    "fresh": true,
    "break_gap": -0.0029,
-   "earnings_d": 44,
+   "earnings_d": 43,
    "tactic": {
     "stop_pct": 6.1,
     "pb_price": 11.6922,
@@ -1978,7 +1978,7 @@
    "bear_share": 0.25,
    "fresh": false,
    "break_gap": 0.0957,
-   "earnings_d": -26,
+   "earnings_d": -27,
    "tactic": null
   },
   {
@@ -1999,7 +1999,7 @@
    "bear_share": 0.25,
    "fresh": false,
    "break_gap": 0.1911,
-   "earnings_d": 36,
+   "earnings_d": 35,
    "tactic": null
   },
   {
@@ -2020,7 +2020,7 @@
    "bear_share": 0.5,
    "fresh": false,
    "break_gap": 0.0546,
-   "earnings_d": 28,
+   "earnings_d": 27,
    "tactic": null
   }
  ]
