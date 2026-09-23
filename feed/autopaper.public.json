@@ -1,10 +1,10 @@
 {
- "generated_at": "2026-09-23T23:02:34.360985+09:00",
+ "generated_at": "2026-09-23T23:16:04.393901+09:00",
  "updated": "2026-09-23",
  "start": 100000000,
- "cash": 21513784,
- "equity": 96236853,
- "ret_pct": -3.76,
+ "cash": 21271358,
+ "equity": 96248719,
+ "ret_pct": -3.75,
  "positions": [
   {
    "code": "MDT",
@@ -12,29 +12,14 @@
    "ccy": "USD",
    "q": 47,
    "avg": 86.12,
-   "price": 90.24500274658205,
+   "price": 90.41000366210938,
    "stop": 87.85239847412109,
    "target": 95.117,
    "half_done": true,
    "opened": "2026-07-30",
-   "pl_krw": 263234,
-   "pl_pct": 4.79,
-   "price_age_min": 0.4
-  },
-  {
-   "code": "NAVI",
-   "name": "Navient Corporation",
-   "ccy": "USD",
-   "q": 186,
-   "avg": 9.24,
-   "price": 9.220000267028809,
-   "stop": 9.24,
-   "target": 10.6555,
-   "half_done": true,
-   "opened": "2026-08-27",
-   "pl_krw": -5051,
-   "pl_pct": -0.22,
-   "price_age_min": 0.4
+   "pl_krw": 273763,
+   "pl_pct": 4.98,
+   "price_age_min": 7.9
   },
   {
    "code": "ULTA",
@@ -42,14 +27,14 @@
    "ccy": "USD",
    "q": 7,
    "avg": 543.09,
-   "price": 546.1900024414062,
+   "price": 548.0,
    "stop": 506.4666,
    "target": 616.3368,
    "half_done": false,
    "opened": "2026-09-09",
-   "pl_krw": 29463,
-   "pl_pct": 0.57,
-   "price_age_min": 0.4
+   "pl_krw": 46666,
+   "pl_pct": 0.9,
+   "price_age_min": 9.4
   },
   {
    "code": "ALG",
@@ -57,14 +42,14 @@
    "ccy": "USD",
    "q": 12,
    "avg": 168.23,
-   "price": 165.08999633789062,
+   "price": 165.18499755859375,
    "stop": 158.2099,
    "target": 188.2702,
    "half_done": false,
    "opened": "2026-09-11",
-   "pl_krw": -51160,
-   "pl_pct": -1.87,
-   "price_age_min": 0.4
+   "pl_krw": -49612,
+   "pl_pct": -1.81,
+   "price_age_min": 7.9
   },
   {
    "code": "032640",
@@ -79,7 +64,7 @@
    "opened": "2026-09-16",
    "pl_krw": -148785,
    "pl_pct": -0.71,
-   "price_age_min": 0.3
+   "price_age_min": 10.9
   },
   {
    "code": "BAH",
@@ -87,14 +72,14 @@
    "ccy": "USD",
    "q": 3,
    "avg": 78.4457,
-   "price": 77.2300033569336,
+   "price": 77.5,
    "stop": 73.5895,
    "target": 88.756,
    "half_done": false,
    "opened": "2026-09-17",
-   "pl_krw": -4952,
-   "pl_pct": -1.55,
-   "price_age_min": 0.3
+   "pl_krw": -3852,
+   "pl_pct": -1.21,
+   "price_age_min": 7.9
   },
   {
    "code": "LOPE",
@@ -109,7 +94,7 @@
    "opened": "2026-09-17",
    "pl_krw": -304679,
    "pl_pct": -3.66,
-   "price_age_min": 0.3
+   "price_age_min": 7.9
   },
   {
    "code": "FHB",
@@ -117,14 +102,14 @@
    "ccy": "USD",
    "q": 241,
    "avg": 25.67,
-   "price": 25.1299991607666,
+   "price": 25.084999084472656,
    "stop": 24.7327,
    "target": 27.5447,
    "half_done": false,
    "opened": "2026-09-17",
-   "pl_krw": -176698,
-   "pl_pct": -2.1,
-   "price_age_min": 0.3
+   "pl_krw": -191423,
+   "pl_pct": -2.28,
+   "price_age_min": 10.7
   },
   {
    "code": "064400",
@@ -139,7 +124,7 @@
    "opened": "2026-09-21",
    "pl_krw": -7657,
    "pl_pct": -0.08,
-   "price_age_min": 0.3
+   "price_age_min": 10.5
   },
   {
    "code": "204320",
@@ -154,7 +139,7 @@
    "opened": "2026-09-22",
    "pl_krw": -152006,
    "pl_pct": -2.69,
-   "price_age_min": 0.3
+   "price_age_min": 7.9
   },
   {
    "code": "039490",
@@ -169,7 +154,22 @@
    "opened": "2026-09-22",
    "pl_krw": 141094,
    "pl_pct": 2.17,
-   "price_age_min": 0.3
+   "price_age_min": 10.4
+  },
+  {
+   "code": "CNM",
+   "name": "Core & Main, Inc.",
+   "ccy": "USD",
+   "q": 44,
+   "avg": 42.97,
+   "price": 42.970001220703125,
+   "stop": 40.5224,
+   "target": 47.8653,
+   "half_done": false,
+   "opened": "2026-09-23",
+   "pl_krw": 0,
+   "pl_pct": 0.0,
+   "price_age_min": 8.9
   }
  ],
  "pending": [
@@ -201,18 +201,18 @@
    "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권22% · 체크4/6 · 손절폭9.8%"
   }
  ],
- "trades": 29,
- "win_trades": 19,
+ "trades": 30,
+ "win_trades": 20,
  "pos_cap_pct": 33.3,
  "cap_violations": [],
  "rule_violations": [],
  "fx": 1357.75,
  "stats": {
   "all": {
-   "n": 29,
-   "win": 19,
-   "win_rate": 66,
-   "avg_r": 0.12
+   "n": 30,
+   "win": 20,
+   "win_rate": 67,
+   "avg_r": 0.13
   },
   "by_mode": {
    "full": {
@@ -222,10 +222,10 @@
     "avg_r": 0.16
    },
    "half": {
-    "n": 12,
-    "win": 7,
-    "win_rate": 58,
-    "avg_r": 0.04
+    "n": 13,
+    "win": 8,
+    "win_rate": 62,
+    "avg_r": 0.07
    },
    "pullback": {
     "n": 5,
@@ -235,10 +235,10 @@
    }
   },
   "fresh": {
-   "n": 28,
-   "win": 18,
-   "win_rate": 64,
-   "avg_r": 0.11
+   "n": 29,
+   "win": 19,
+   "win_rate": 66,
+   "avg_r": 0.12
   },
   "stale": {
    "n": 1,
@@ -248,10 +248,10 @@
   },
   "by_stage": {
    "3": {
-    "n": 28,
-    "win": 18,
-    "win_rate": 64,
-    "avg_r": 0.1
+    "n": 29,
+    "win": 19,
+    "win_rate": 66,
+    "avg_r": 0.12
    },
    "4": {
     "n": 1,
@@ -268,16 +268,58 @@
     "avg_r": 0.05
    },
    "USD": {
-    "n": 23,
-    "win": 15,
-    "win_rate": 65,
-    "avg_r": 0.13
+    "n": 24,
+    "win": 16,
+    "win_rate": 67,
+    "avg_r": 0.15
    }
   },
-  "slip_entry_pct": -0.52,
+  "slip_entry_pct": -0.5,
   "slip_stop_pct": -1.27
  },
  "closed": [
+  {
+   "code": "NAVI",
+   "name": "Navient Corporation",
+   "ccy": "USD",
+   "ctx": {
+    "mode": "half",
+    "fresh": true,
+    "stage": 3,
+    "rp": 29,
+    "rec": 6,
+    "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권29% · 체크6/6 · 손절폭7.7%"
+   },
+   "plan": {
+    "entry": 9.24,
+    "stop": 8.5322,
+    "target": 10.6555,
+    "pb": 8.821,
+    "tactic": "half"
+   },
+   "fill": {
+    "avg": 9.24,
+    "q": 372
+   },
+   "exits": [
+    {
+     "d": "2026-09-16",
+     "q": 186,
+     "price": 9.955,
+     "note": "+1R 절반 익절"
+    },
+    {
+     "d": "2026-09-23",
+     "q": 186,
+     "price": 9.205,
+     "note": "본전 스탑"
+    }
+   ],
+   "opened": "2026-08-27",
+   "closed": "2026-09-23",
+   "pl": 172067,
+   "r": 0.47
+  },
   {
    "code": "323410",
    "name": "카카오뱅크",
@@ -1730,10 +1772,37 @@
   },
   {
    "d": "2026-09-23",
-   "v": 96236853
+   "v": 96248719
   }
  ],
  "log": [
+  {
+   "d": "2026-09-23",
+   "type": "buy",
+   "code": "CNM",
+   "name": "Core & Main, Inc.",
+   "q": 44,
+   "price": 42.97,
+   "ccy": "USD",
+   "amt": 2567071,
+   "note": "즉시 분할 — 🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권15% · 체크4/6 · 손절폭5.7%",
+   "stop": 40.5224,
+   "target": 47.8653
+  },
+  {
+   "d": "2026-09-23",
+   "type": "sell",
+   "code": "NAVI",
+   "name": "Navient Corporation",
+   "q": 186,
+   "price": 9.205,
+   "ccy": "USD",
+   "amt": 2324644,
+   "note": "본전 스탑",
+   "pl": -8839,
+   "pl_pct": -0.4,
+   "r": 0.47
+  },
   {
    "d": "2026-09-22",
    "type": "buy",
@@ -2351,35 +2420,8 @@
    "note": "반반 1차 — 🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권29% · 체크6/6 · 손절폭7.7%",
    "stop": 8.5322,
    "target": 10.6555
-  },
-  {
-   "d": "2026-08-27",
-   "type": "sell",
-   "code": "HMC",
-   "name": "Honda Motor Company, Ltd.",
-   "q": 2,
-   "price": 31.13,
-   "ccy": "USD",
-   "amt": 86297,
-   "note": "트레일 스탑",
-   "pl": 9606,
-   "pl_pct": 12.5,
-   "r": 2.0
-  },
-  {
-   "d": "2026-08-26",
-   "type": "buy",
-   "code": "035250",
-   "name": "강원랜드",
-   "q": 1643,
-   "price": 14550.0,
-   "ccy": "KRW",
-   "amt": 23905650,
-   "note": "즉시 분할 — 🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권11% · 체크4/6 · 손절폭4.3%",
-   "stop": 13929.1519,
-   "target": 15791.6962
   }
  ],
- "lane": "fast",
+ "lane": "bulk",
  "data_stale": []
 }
