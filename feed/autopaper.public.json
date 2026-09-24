@@ -1,9 +1,9 @@
 {
- "generated_at": "2026-09-25T00:02:23.175907+09:00",
+ "generated_at": "2026-09-25T00:02:20.613860+09:00",
  "updated": "2026-09-25",
  "start": 100000000,
  "cash": 21271358,
- "equity": 96413670,
+ "equity": 96408444,
  "ret_pct": -3.59,
  "positions": [
   {
@@ -12,14 +12,14 @@
    "ccy": "USD",
    "q": 47,
    "avg": 86.12,
-   "price": 89.45999908447266,
+   "price": 89.54010009765625,
    "stop": 87.85239847412109,
    "target": 95.117,
    "half_done": true,
    "opened": "2026-07-30",
-   "pl_krw": 214800,
-   "pl_pct": 3.88,
-   "price_age_min": 0.5
+   "pl_krw": 219855,
+   "pl_pct": 3.97,
+   "price_age_min": 7.7
   },
   {
    "code": "ULTA",
@@ -27,14 +27,14 @@
    "ccy": "USD",
    "q": 7,
    "avg": 543.09,
-   "price": 543.0,
+   "price": 544.0,
    "stop": 506.4666,
    "target": 616.3368,
    "half_done": false,
    "opened": "2026-09-09",
-   "pl_krw": -862,
-   "pl_pct": -0.02,
-   "price_age_min": 0.5
+   "pl_krw": 8712,
+   "pl_pct": 0.17,
+   "price_age_min": 9.5
   },
   {
    "code": "ALG",
@@ -42,14 +42,14 @@
    "ccy": "USD",
    "q": 12,
    "avg": 168.23,
-   "price": 159.36000061035156,
+   "price": 159.97000122070312,
    "stop": 158.2099,
    "target": 188.2702,
    "half_done": false,
    "opened": "2026-09-11",
-   "pl_krw": -145645,
-   "pl_pct": -5.27,
-   "price_age_min": 0.5
+   "pl_krw": -135569,
+   "pl_pct": -4.91,
+   "price_age_min": 7.7
   },
   {
    "code": "032640",
@@ -64,7 +64,7 @@
    "opened": "2026-09-16",
    "pl_krw": -148785,
    "pl_pct": -0.71,
-   "price_age_min": 0.5
+   "price_age_min": 10.7
   },
   {
    "code": "BAH",
@@ -72,14 +72,14 @@
    "ccy": "USD",
    "q": 3,
    "avg": 78.4457,
-   "price": 75.61499786376953,
+   "price": 75.66500091552734,
    "stop": 73.5895,
    "target": 88.756,
    "half_done": false,
    "opened": "2026-09-17",
-   "pl_krw": -11620,
-   "pl_pct": -3.61,
-   "price_age_min": 0.5
+   "pl_krw": -11410,
+   "pl_pct": -3.54,
+   "price_age_min": 7.7
   },
   {
    "code": "LOPE",
@@ -87,14 +87,14 @@
    "ccy": "USD",
    "q": 40,
    "avg": 153.23,
-   "price": 152.84500122070312,
+   "price": 152.3300018310547,
    "stop": 145.224,
    "target": 169.242,
    "half_done": false,
    "opened": "2026-09-17",
-   "pl_krw": -21072,
-   "pl_pct": -0.25,
-   "price_age_min": 0.5
+   "pl_krw": -49238,
+   "pl_pct": -0.59,
+   "price_age_min": 7.7
   },
   {
    "code": "FHB",
@@ -102,14 +102,14 @@
    "ccy": "USD",
    "q": 241,
    "avg": 25.67,
-   "price": 24.76000022888184,
+   "price": 24.78499984741211,
    "stop": 24.7327,
    "target": 27.5447,
    "half_done": false,
    "opened": "2026-09-17",
-   "pl_krw": -300088,
-   "pl_pct": -3.54,
-   "price_age_min": 0.5
+   "pl_krw": -291716,
+   "pl_pct": -3.45,
+   "price_age_min": 9.2
   },
   {
    "code": "064400",
@@ -124,7 +124,7 @@
    "opened": "2026-09-21",
    "pl_krw": -7657,
    "pl_pct": -0.08,
-   "price_age_min": 0.5
+   "price_age_min": 10.3
   },
   {
    "code": "204320",
@@ -139,7 +139,7 @@
    "opened": "2026-09-22",
    "pl_krw": -152006,
    "pl_pct": -2.69,
-   "price_age_min": 0.5
+   "price_age_min": 7.7
   },
   {
    "code": "039490",
@@ -154,7 +154,7 @@
    "opened": "2026-09-22",
    "pl_krw": 141094,
    "pl_pct": 2.17,
-   "price_age_min": 0.5
+   "price_age_min": 10.2
   },
   {
    "code": "CNM",
@@ -162,14 +162,14 @@
    "ccy": "USD",
    "q": 44,
    "avg": 42.97,
-   "price": 42.025001525878906,
+   "price": 42.095001220703125,
    "stop": 40.5224,
    "target": 47.8653,
    "half_done": false,
    "opened": "2026-09-23",
-   "pl_krw": -56895,
-   "pl_pct": -2.2,
-   "price_age_min": 0.5
+   "pl_krw": -52658,
+   "pl_pct": -2.04,
+   "price_age_min": 9.2
   }
  ],
  "pending": [
@@ -206,7 +206,7 @@
  "pos_cap_pct": 33.3,
  "cap_violations": [],
  "rule_violations": [],
- "fx": 1368.33,
+ "fx": 1367.73,
  "stats": {
   "all": {
    "n": 30,
@@ -1777,6 +1777,10 @@
   {
    "d": "2026-09-24",
    "v": 96445967
+  },
+  {
+   "d": "2026-09-25",
+   "v": 96408444
   }
  ],
  "log": [
@@ -2426,7 +2430,6 @@
    "target": 10.6555
   }
  ],
- "lane": "fast",
- "data_stale": [],
- "lock_skipped": true
+ "lane": "bulk",
+ "data_stale": []
 }
