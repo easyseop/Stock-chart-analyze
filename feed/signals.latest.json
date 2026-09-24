@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated_at": "2026-09-24T10:18:19+09:00",
+ "generated_at": "2026-09-24T10:44:15+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "a_ablation": [
   {
@@ -1902,34 +1902,6 @@
    }
   },
   {
-   "id": "008770-2026-09-24-watch",
-   "code": "008770",
-   "name": "호텔신라",
-   "ccy": "KRW",
-   "group": "watch",
-   "entry_kind": "now",
-   "stage": 1,
-   "price": 40150.0,
-   "entry": 40150.0,
-   "stop": 37845.3757,
-   "target": 44759.2487,
-   "shares_1pct": 43,
-   "range_pos": 0.0147,
-   "norm": 7.5,
-   "bear_share": 0.25,
-   "fresh": true,
-   "break_gap": -0.014,
-   "earnings_d": null,
-   "tactic": {
-    "stop_pct": 5.7,
-    "pb_price": 40025.0,
-    "pb_stop_pct": 5.4,
-    "mode": "full",
-    "label": "⚡ 즉시 분할",
-    "desc": "손절폭 5.7%로 타이트 — 현재가에서 1~2회 분할 매수. 기다리는 이득보다 놓치는 비용이 큼"
-   }
-  },
-  {
    "id": "020150-2026-09-24-watch",
    "code": "020150",
    "name": "롯데에너지머티리얼즈",
@@ -2011,6 +1983,34 @@
     "mode": "full",
     "label": "⚡ 즉시 분할",
     "desc": "손절폭 3.4%로 타이트 — 현재가에서 1~2회 분할 매수. 기다리는 이득보다 놓치는 비용이 큼"
+   }
+  },
+  {
+   "id": "008770-2026-09-24-watch",
+   "code": "008770",
+   "name": "호텔신라",
+   "ccy": "KRW",
+   "group": "watch",
+   "entry_kind": "now",
+   "stage": 1,
+   "price": 40150.0,
+   "entry": 40150.0,
+   "stop": 37845.3757,
+   "target": 44759.2487,
+   "shares_1pct": 43,
+   "range_pos": 0.0147,
+   "norm": -1.9,
+   "bear_share": 0.25,
+   "fresh": true,
+   "break_gap": -0.014,
+   "earnings_d": null,
+   "tactic": {
+    "stop_pct": 5.7,
+    "pb_price": 40025.0,
+    "pb_stop_pct": 5.4,
+    "mode": "full",
+    "label": "⚡ 즉시 분할",
+    "desc": "손절폭 5.7%로 타이트 — 현재가에서 1~2회 분할 매수. 기다리는 이득보다 놓치는 비용이 큼"
    }
   },
   {
