@@ -1,10 +1,10 @@
 {
- "generated_at": "2026-09-29T01:26:14.113751+09:00",
+ "generated_at": "2026-09-29T01:25:57.493558+09:00",
  "updated": "2026-09-29",
  "start": 100000000,
- "cash": 26902617,
- "equity": 96033748,
- "ret_pct": -3.97,
+ "cash": 26811451,
+ "equity": 95981607,
+ "ret_pct": -4.02,
  "positions": [
   {
    "code": "ULTA",
@@ -12,14 +12,14 @@
    "ccy": "USD",
    "q": 7,
    "avg": 543.09,
-   "price": 548.1699829101562,
+   "price": 546.1599731445312,
    "stop": 506.4666,
    "target": 616.3368,
    "half_done": false,
    "opened": "2026-09-09",
-   "pl_krw": 48379,
-   "pl_pct": 0.94,
-   "price_age_min": 0.4
+   "pl_krw": 29236,
+   "pl_pct": 0.57,
+   "price_age_min": 6.1
   },
   {
    "code": "032640",
@@ -34,22 +34,7 @@
    "opened": "2026-09-16",
    "pl_krw": 35425,
    "pl_pct": 0.17,
-   "price_age_min": 0.4
-  },
-  {
-   "code": "LOPE",
-   "name": "Grand Canyon Education, Inc.",
-   "ccy": "USD",
-   "q": 40,
-   "avg": 153.23,
-   "price": 145.19000244140625,
-   "stop": 145.224,
-   "target": 169.242,
-   "half_done": false,
-   "opened": "2026-09-17",
-   "pl_krw": -437530,
-   "pl_pct": -5.25,
-   "price_age_min": 0.4
+   "price_age_min": 7.3
   },
   {
    "code": "FHB",
@@ -57,14 +42,14 @@
    "ccy": "USD",
    "q": 241,
    "avg": 25.67,
-   "price": 25.104999542236328,
+   "price": 25.049999237060547,
    "stop": 24.7327,
    "target": 27.5447,
    "half_done": false,
    "opened": "2026-09-17",
-   "pl_krw": -185250,
-   "pl_pct": -2.2,
-   "price_age_min": 0.4
+   "pl_krw": -203283,
+   "pl_pct": -2.42,
+   "price_age_min": 6.8
   },
   {
    "code": "064400",
@@ -79,7 +64,7 @@
    "opened": "2026-09-21",
    "pl_krw": 99543,
    "pl_pct": 1.07,
-   "price_age_min": 0.4
+   "price_age_min": 4.7
   },
   {
    "code": "204320",
@@ -94,7 +79,7 @@
    "opened": "2026-09-22",
    "pl_krw": -37056,
    "pl_pct": -0.65,
-   "price_age_min": 0.4
+   "price_age_min": 4.7
   },
   {
    "code": "039490",
@@ -109,7 +94,7 @@
    "opened": "2026-09-22",
    "pl_krw": -83906,
    "pl_pct": -1.29,
-   "price_age_min": 0.4
+   "price_age_min": 6.7
   },
   {
    "code": "CNM",
@@ -117,14 +102,14 @@
    "ccy": "USD",
    "q": 44,
    "avg": 42.97,
-   "price": 42.38999938964844,
+   "price": 42.19499969482422,
    "stop": 40.5224,
    "target": 47.8653,
    "half_done": false,
    "opened": "2026-09-23",
-   "pl_krw": -34719,
-   "pl_pct": -1.35,
-   "price_age_min": 0.3
+   "pl_krw": -46392,
+   "pl_pct": -1.8,
+   "price_age_min": 5.8
   },
   {
    "code": "WMT",
@@ -132,14 +117,14 @@
    "ccy": "USD",
    "q": 17,
    "avg": 108.63,
-   "price": 108.62999725341795,
+   "price": 108.52999877929688,
    "stop": 104.4167,
    "target": 117.0566,
    "half_done": false,
    "opened": "2026-09-25",
-   "pl_krw": 0,
-   "pl_pct": -0.0,
-   "price_age_min": 0.3
+   "pl_krw": -2313,
+   "pl_pct": -0.09,
+   "price_age_min": 7.4
   },
   {
    "code": "GBX",
@@ -147,14 +132,29 @@
    "ccy": "USD",
    "q": 6,
    "avg": 42.68,
-   "price": 42.5099983215332,
+   "price": 42.38999938964844,
    "stop": 40.5054,
    "target": 47.0292,
    "half_done": false,
    "opened": "2026-09-25",
-   "pl_krw": -1388,
-   "pl_pct": -0.4,
-   "price_age_min": 0.3
+   "pl_krw": -2367,
+   "pl_pct": -0.68,
+   "price_age_min": 6.7
+  },
+  {
+   "code": "GBCI",
+   "name": "Glacier Bancorp, Inc.",
+   "ccy": "USD",
+   "q": 133,
+   "avg": 44.17,
+   "price": 44.16999816894531,
+   "stop": 42.3931,
+   "target": 47.7239,
+   "half_done": false,
+   "opened": "2026-09-29",
+   "pl_krw": 0,
+   "pl_pct": -0.0,
+   "price_age_min": 6.8
   }
  ],
  "pending": [
@@ -213,7 +213,7 @@
    "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권9% · 체크3/6 · 손절폭9.0%"
   }
  ],
- "trades": 33,
+ "trades": 34,
  "win_trades": 21,
  "pos_cap_pct": 33.3,
  "cap_violations": [],
@@ -221,17 +221,17 @@
  "fx": 1360.48,
  "stats": {
   "all": {
-   "n": 33,
+   "n": 34,
    "win": 21,
-   "win_rate": 64,
-   "avg_r": 0.08
+   "win_rate": 62,
+   "avg_r": 0.04
   },
   "by_mode": {
    "full": {
-    "n": 14,
+    "n": 15,
     "win": 9,
-    "win_rate": 64,
-    "avg_r": 0.11
+    "win_rate": 60,
+    "avg_r": 0.04
    },
    "half": {
     "n": 13,
@@ -247,10 +247,10 @@
    }
   },
   "fresh": {
-   "n": 32,
+   "n": 33,
    "win": 20,
-   "win_rate": 62,
-   "avg_r": 0.07
+   "win_rate": 61,
+   "avg_r": 0.03
   },
   "stale": {
    "n": 1,
@@ -260,10 +260,10 @@
   },
   "by_stage": {
    "3": {
-    "n": 32,
+    "n": 33,
     "win": 20,
-    "win_rate": 62,
-    "avg_r": 0.06
+    "win_rate": 61,
+    "avg_r": 0.03
    },
    "4": {
     "n": 1,
@@ -280,16 +280,52 @@
     "avg_r": 0.05
    },
    "USD": {
-    "n": 27,
+    "n": 28,
     "win": 17,
-    "win_rate": 63,
-    "avg_r": 0.08
+    "win_rate": 61,
+    "avg_r": 0.04
    }
   },
-  "slip_entry_pct": -0.46,
-  "slip_stop_pct": -1.02
+  "slip_entry_pct": -0.45,
+  "slip_stop_pct": -0.93
  },
  "closed": [
+  {
+   "code": "LOPE",
+   "name": "Grand Canyon Education, Inc.",
+   "ccy": "USD",
+   "ctx": {
+    "mode": "full",
+    "fresh": true,
+    "stage": 3,
+    "rp": 21,
+    "rec": 6,
+    "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권21% · 체크6/6 · 손절폭5.2%"
+   },
+   "plan": {
+    "entry": 153.23,
+    "stop": 145.224,
+    "target": 169.242,
+    "pb": null,
+    "tactic": "full"
+   },
+   "fill": {
+    "avg": 153.23,
+    "q": 40
+   },
+   "exits": [
+    {
+     "d": "2026-09-29",
+     "q": 40,
+     "price": 145.19,
+     "note": "손절"
+    }
+   ],
+   "opened": "2026-09-17",
+   "closed": "2026-09-29",
+   "pl": -437530,
+   "r": -1.0
+  },
   {
    "code": "MDT",
    "name": "Medtronic plc.",
@@ -1423,42 +1459,6 @@
    "closed": "2026-07-25",
    "pl": -1839,
    "r": -1.16
-  },
-  {
-   "code": "NU",
-   "name": "Nu Holdings Ltd.",
-   "ccy": "USD",
-   "ctx": {
-    "mode": "half",
-    "fresh": true,
-    "stage": 3,
-    "rp": 27,
-    "rec": 4,
-    "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권27% · 체크4/6 · 손절폭7.6%"
-   },
-   "plan": {
-    "entry": 13.335,
-    "stop": 12.3253,
-    "target": 15.3544,
-    "pb": null,
-    "tactic": "half"
-   },
-   "fill": {
-    "avg": 13.335,
-    "q": 1
-   },
-   "exits": [
-    {
-     "d": "2026-07-22",
-     "q": 1,
-     "price": 14.39,
-     "note": "+1R 절반 익절"
-    }
-   ],
-   "opened": "2026-07-09",
-   "closed": "2026-07-22",
-   "pl": 1562,
-   "r": 1.03
   }
  ],
  "hist": [
@@ -1808,10 +1808,37 @@
   },
   {
    "d": "2026-09-29",
-   "v": 95921763
+   "v": 95981607
   }
  ],
  "log": [
+  {
+   "d": "2026-09-29",
+   "type": "buy",
+   "code": "GBCI",
+   "name": "Glacier Bancorp, Inc.",
+   "q": 133,
+   "price": 44.17,
+   "ccy": "USD",
+   "amt": 7992289,
+   "note": "즉시 분할 — 🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권29% · 체크4/6 · 손절폭4.0%",
+   "stop": 42.3931,
+   "target": 47.7239
+  },
+  {
+   "d": "2026-09-29",
+   "type": "sell",
+   "code": "LOPE",
+   "name": "Grand Canyon Education, Inc.",
+   "q": 40,
+   "price": 145.19,
+   "ccy": "USD",
+   "amt": 7901124,
+   "note": "손절",
+   "pl": -437530,
+   "pl_pct": -5.2,
+   "r": -1.0
+  },
   {
    "d": "2026-09-25",
    "type": "order",
@@ -2428,36 +2455,8 @@
    "note": "반반 1차 — 🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권27% · 체크4/6 · 손절폭6.3%",
    "stop": 20511.373,
    "target": 24677.254
-  },
-  {
-   "d": "2026-09-04",
-   "type": "sell",
-   "code": "036460",
-   "name": "한국가스공사",
-   "q": 106,
-   "price": 35000.0,
-   "ccy": "KRW",
-   "amt": 3710000,
-   "note": "본전 스탑",
-   "pl": -26500,
-   "pl_pct": -0.7,
-   "r": 0.45
-  },
-  {
-   "d": "2026-09-01",
-   "type": "sell",
-   "code": "TM",
-   "name": "Toyota Motor Corporation",
-   "q": 8,
-   "price": 199.455,
-   "ccy": "USD",
-   "amt": 2183506,
-   "note": "+1R 절반 익절",
-   "pl": 70118,
-   "pl_pct": 3.3
   }
  ],
- "lane": "fast",
- "data_stale": [],
- "lock_skipped": true
+ "lane": "bulk",
+ "data_stale": []
 }
