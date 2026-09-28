@@ -1,10 +1,10 @@
 {
- "generated_at": "2026-09-29T02:51:04.064753+09:00",
+ "generated_at": "2026-09-29T03:06:10.150110+09:00",
  "updated": "2026-09-29",
  "start": 100000000,
  "cash": 26811451,
- "equity": 96056842,
- "ret_pct": -3.94,
+ "equity": 96024674,
+ "ret_pct": -3.98,
  "positions": [
   {
    "code": "ULTA",
@@ -12,13 +12,13 @@
    "ccy": "USD",
    "q": 7,
    "avg": 543.09,
-   "price": 547.780029296875,
+   "price": 546.3400268554688,
    "stop": 506.4666,
    "target": 616.3368,
    "half_done": false,
    "opened": "2026-09-09",
-   "pl_krw": 44665,
-   "pl_pct": 0.86,
+   "pl_krw": 30951,
+   "pl_pct": 0.6,
    "price_age_min": 0.4
   },
   {
@@ -42,13 +42,13 @@
    "ccy": "USD",
    "q": 241,
    "avg": 25.67,
-   "price": 25.114999771118164,
+   "price": 25.100000381469727,
    "stop": 24.7327,
    "target": 27.5447,
    "half_done": false,
    "opened": "2026-09-17",
-   "pl_krw": -181971,
-   "pl_pct": -2.16,
+   "pl_krw": -186889,
+   "pl_pct": -2.22,
    "price_age_min": 0.4
   },
   {
@@ -102,14 +102,14 @@
    "ccy": "USD",
    "q": 44,
    "avg": 42.97,
-   "price": 42.36000061035156,
+   "price": 42.3849983215332,
    "stop": 40.5224,
    "target": 47.8653,
    "half_done": false,
    "opened": "2026-09-23",
-   "pl_krw": -36515,
-   "pl_pct": -1.42,
-   "price_age_min": 0.3
+   "pl_krw": -35019,
+   "pl_pct": -1.36,
+   "price_age_min": 0.4
   },
   {
    "code": "WMT",
@@ -117,14 +117,14 @@
    "ccy": "USD",
    "q": 17,
    "avg": 108.63,
-   "price": 108.6999969482422,
+   "price": 108.8249969482422,
    "stop": 104.4167,
    "target": 117.0566,
    "half_done": false,
    "opened": "2026-09-25",
-   "pl_krw": 1619,
-   "pl_pct": 0.06,
-   "price_age_min": 0.3
+   "pl_krw": 4510,
+   "pl_pct": 0.18,
+   "price_age_min": 0.4
   },
   {
    "code": "GBX",
@@ -132,14 +132,14 @@
    "ccy": "USD",
    "q": 6,
    "avg": 42.68,
-   "price": 42.20000076293945,
+   "price": 42.11000061035156,
    "stop": 40.5054,
    "target": 47.0292,
    "half_done": false,
    "opened": "2026-09-25",
-   "pl_krw": -3918,
-   "pl_pct": -1.12,
-   "price_age_min": 0.3
+   "pl_krw": -4653,
+   "pl_pct": -1.34,
+   "price_age_min": 0.4
   },
   {
    "code": "GBCI",
@@ -147,14 +147,14 @@
    "ccy": "USD",
    "q": 133,
    "avg": 44.17,
-   "price": 44.31499862670898,
+   "price": 44.220001220703125,
    "stop": 42.3931,
    "target": 47.7239,
    "half_done": false,
    "opened": "2026-09-29",
-   "pl_krw": 26237,
-   "pl_pct": 0.33,
-   "price_age_min": 0.3
+   "pl_krw": 9047,
+   "pl_pct": 0.11,
+   "price_age_min": 0.4
   }
  ],
  "pending": [
@@ -1808,7 +1808,7 @@
   },
   {
    "d": "2026-09-29",
-   "v": 96056842
+   "v": 96024674
   }
  ],
  "log": [
