@@ -186,7 +186,10 @@ def _sync_fill_locked(key: str, *, filled_qty: int | None = None,
 
     symbol = str(cur.get("symbol") or "").upper()
     side = str(cur.get("side") or "").upper()
-    pos_key = str(cur.get("pos_key") or "")
+    # 눌림 2차 주문(pending, parent_key)은 원장 키가 `…:pb`라 pos_key도 그 키로
+    #   기록된다. 회계는 부모 포지션에 귀속한다 — 따로 두면 매도가 부모 lot만
+    #   닫아 2차 원가가 영원히 남는다(2026-09-17 WLDN +96%, CHKP +127%).
+    pos_key = str(cur.get("parent_key") or cur.get("pos_key") or "")
     sleeve = str(cur.get("sleeve") or "A")
     market = cur.get("market") or ("KR" if symbol.isdigit() and len(symbol) == 6 else "US")
     try:

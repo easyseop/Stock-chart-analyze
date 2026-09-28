@@ -241,12 +241,30 @@ def _trade_rows(position_events: list[dict], cost_events: list[dict],
     meta_by_pos = _position_meta(orders)
     add_by_event: dict[str, dict] = {}
     close_by_event: dict[str, dict] = {}
+    spills: list[dict] = []
     for event in cost_events:
         event_id = str(event.get("event_id") or "")
         if event.get("ev") == "add" and event_id:
             add_by_event.setdefault(event_id, event)
         elif event.get("ev") == "close" and event_id:
-            close_by_event.setdefault(event_id, event)
+            if costbook.SPILL_SEP in event_id:
+                spills.append(event)
+            else:
+                close_by_event.setdefault(event_id, event)
+    # 한 매도가 여러 lot을 닫으면(costbook.close_plan) 두 번째 이후 lot의
+    #   close는 spill 이벤트다. 거래이력 행은 매도 1건이므로 원가·손익·대금을
+    #   기본 이벤트에 합쳐 한 행으로 보여준다.
+    for event in spills:
+        base_id = str(event.get("event_id") or "").split(costbook.SPILL_SEP, 1)[0]
+        base = close_by_event.get(base_id)
+        if base is None:
+            continue
+        merged = dict(base)
+        for field in ("cost_closed_krw", "realized_pnl_krw", "proceeds_krw"):
+            a, b = _number(base.get(field)), _number(event.get(field))
+            if a is not None or b is not None:
+                merged[field] = (a or 0.0) + (b or 0.0)
+        close_by_event[base_id] = merged
 
     lots: dict[str, dict] = {}
     active_by_code: dict[str, str] = {}
@@ -417,12 +435,36 @@ def _trade_rows(position_events: list[dict], cost_events: list[dict],
         actual_key, lot = match
         before_qty = max(0, int(lot.get("qty") or 0))
         qty = min(before_qty, qty_requested)
-        if qty <= 0:
+        # 지명 lot이 모자라면 같은 종목의 다른 lot에서 이어서 차감한다 —
+        #   costbook.close_plan과 같은 규칙(눌림 2차 lot이 다른 키에 있을 때).
+        spill_take: list[tuple[str, dict, int]] = []
+        shortfall = qty_requested - qty
+        if shortfall > 0:
+            lot_sleeve = str(lot.get("sleeve") or "A").upper()
+            for other_key in sorted(lots):
+                if other_key == actual_key or shortfall <= 0:
+                    continue
+                other = lots[other_key]
+                if (other.get("symbol") != code
+                        or int(other.get("qty") or 0) <= 0
+                        or str(other.get("sleeve") or "A").upper() != lot_sleeve):
+                    continue
+                take = min(shortfall, int(other["qty"]))
+                spill_take.append((other_key, other, take))
+                shortfall -= take
+        spill_qty = sum(t for _, _, t in spill_take)
+        if qty + spill_qty <= 0:
             incomplete += 1
             continue
-        entry_price = (
-            float(lot.get("native_cost") or 0) / before_qty
+        native_cost_closed = (
+            float(lot.get("native_cost") or 0) * (qty / before_qty)
             if before_qty > 0 else 0.0)
+        for _, other, take in spill_take:
+            other_qty = max(1, int(other.get("qty") or 0))
+            native_cost_closed += float(other.get("native_cost") or 0) * (take / other_qty)
+        entry_price = (native_cost_closed / (qty + spill_qty)
+                       if qty + spill_qty > 0 else 0.0)
+        qty = qty + spill_qty
         cost_event = close_by_event.get(event_id) or {}
         order = order_map.get(_order_key(event_id, "SELL"), {})
         fallback_meta = meta_by_pos.get(actual_key, {})
@@ -438,7 +480,9 @@ def _trade_rows(position_events: list[dict], cost_events: list[dict],
         timestamp = (cost_event.get("ts") or event.get("ts")
                      or order.get("submitted_at"))
         proceeds_krw = _number(cost_event.get("proceeds_krw"))
-        remaining = max(0, before_qty - qty)
+        remaining = max(0, before_qty - (qty - spill_qty)) + sum(
+            max(0, int(other.get("qty") or 0) - take)
+            for _, other, take in spill_take)
         name = str(lot.get("name") or fallback_meta.get("name") or code)
         sleeve = str(lot.get("sleeve") or fallback_meta.get("sleeve") or "A").upper()
         price_source = str(order.get("fill_price_source") or "broker")
@@ -488,14 +532,25 @@ def _trade_rows(position_events: list[dict], cost_events: list[dict],
         })
         if event_id:
             sell_rows[event_id] = trades[-1]
-        ratio = qty / before_qty
+        own_qty = qty - spill_qty
+        ratio = own_qty / before_qty if before_qty > 0 else 1.0
         lot["native_cost"] = max(
             0.0, float(lot.get("native_cost") or 0) * (1 - ratio))
-        lot["qty"] = remaining
-        if remaining <= 0:
+        lot["qty"] = max(0, before_qty - own_qty)
+        if lot["qty"] <= 0:
             lots.pop(actual_key, None)
             if active_by_code.get(code) == actual_key:
                 active_by_code.pop(code, None)
+        for other_key, other, take in spill_take:
+            other_qty = max(0, int(other.get("qty") or 0))
+            other_ratio = take / other_qty if other_qty > 0 else 1.0
+            other["native_cost"] = max(
+                0.0, float(other.get("native_cost") or 0) * (1 - other_ratio))
+            other["qty"] = max(0, other_qty - take)
+            if other["qty"] <= 0:
+                lots.pop(other_key, None)
+                if active_by_code.get(code) == other_key:
+                    active_by_code.pop(code, None)
 
     seen_repairs: set[str] = set()
     for repair in position_events:

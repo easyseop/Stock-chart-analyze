@@ -251,28 +251,94 @@ def add_recovery_lot(pos_key: str, symbol: str, qty: int, fill_price: float,
     return exact
 
 
+SPILL_SEP = ":spill:"
+
+
+def spill_event_id(event_id: str, lot_key: str) -> str:
+    """같은 매도 체결이 두 번째 이후 lot을 닫을 때의 이벤트 id."""
+    return f"{event_id}{SPILL_SEP}{lot_key}" if event_id else ""
+
+
+def close_plan(lots: dict, pos_key: str, qty: int,
+               sleeve: str | None = None) -> list[tuple[str, int]]:
+    """매도 수량을 어느 lot에서 얼마씩 차감할지 — 지명 lot 먼저, 모자라면
+    같은 종목·같은 슬리브의 다른 열린 lot 순서대로.
+
+    실측 2026-09-17 WLDN: 1차 19주(pos_key)와 눌림 2차 20주(pos_key:pb)가
+    다른 키에 쌓였는데 39주 매도가 지명 lot만 닫아 19주 원가로 39주 대금을
+    실현했다(+96%). 2차 20주 원가는 영원히 열린 채 남아 예산까지 과대했다.
+    CHKP(+127%)·OMCL(+95%)도 같은 얼굴이다. 한 종목의 매도는 그 종목의
+    모든 lot에서 나간다.
+    """
+    remaining = max(0, int(qty))
+    cur = lots.get(pos_key) or {}
+    plan: list[tuple[str, int]] = []
+    take = min(remaining, max(0, int(cur.get("qty") or 0)))
+    plan.append((pos_key, take))
+    remaining -= take
+    symbol = cur.get("symbol")
+    sl = sleeve or cur.get("sleeve") or "A"
+    if remaining > 0 and symbol:
+        for key in sorted(lots):
+            if key == pos_key:
+                continue
+            lot = lots[key]
+            if (lot.get("symbol") != symbol or int(lot.get("qty") or 0) <= 0
+                    or str(lot.get("sleeve") or "A") != str(sl)):
+                continue
+            take = min(remaining, int(lot["qty"]))
+            plan.append((key, take))
+            remaining -= take
+            if remaining <= 0:
+                break
+    return plan
+
+
 def close_lot(pos_key: str, qty: int, proceeds_krw: float,
               *, sleeve: str | None = None, day_kst: str | None = None,
               event_id: str = "") -> float:
-    """매도 확정 체결 기록. 반환은 이번 체결의 실현손익(원)."""
+    """매도 확정 체결 기록. 반환은 이번 체결의 실현손익(원) — 모든 lot 합산.
+
+    지명 lot이 모자라면 같은 종목·슬리브의 다른 lot으로 이어서 닫는다
+    (close_plan). 대금은 닫은 수량 비례로 나눠 싣고, 첫 이벤트는 종전과 같은
+    event_id, 이후 lot은 spill_event_id로 남겨 재시도 멱등성과 거래이력 합산이
+    함께 성립한다. 닫을 lot이 하나도 없으면(구버전 ack-시점 포지션) 종전처럼
+    지명 키에 대금 전액을 싣는다.
+    """
     folded = _fold()
+    results = folded.get("event_results", {})
     if event_id:
-        previous = folded.get("event_results", {}).get(event_id)
+        previous = results.get(event_id)
         if previous is not None:
-            return float(previous.get("pnl") or 0)
-    cur = folded["lots"].get(pos_key) or {"qty": 0, "cost_krw": 0.0,
-                                          "sleeve": sleeve or "A"}
-    q = min(max(0, int(qty)), int(cur.get("qty", 0)))
-    cost_closed = (float(cur.get("cost_krw", 0.0)) * q / int(cur["qty"])
-                   if int(cur.get("qty", 0)) > 0 else 0.0)
-    pnl = float(proceeds_krw) - cost_closed
-    _append({"ev": "close", "key": pos_key, "qty": int(qty),
-             "proceeds_krw": float(proceeds_krw),
-             "cost_closed_krw": cost_closed, "realized_pnl_krw": pnl,
-             "sleeve": sleeve or cur.get("sleeve", "A"),
-             "day_kst": day_kst or _day_kst(),
-             "event_id": str(event_id or "")})
-    return pnl
+            prefix = spill_event_id(event_id, "")
+            return float(previous.get("pnl") or 0) + sum(
+                float(v.get("pnl") or 0) for k, v in results.items()
+                if k.startswith(prefix))
+    lots = folded["lots"]
+    cur = lots.get(pos_key) or {"qty": 0, "cost_krw": 0.0,
+                                "sleeve": sleeve or "A"}
+    plan = close_plan(lots, pos_key, qty, sleeve)
+    closed_total = sum(q for _, q in plan)
+    day = day_kst or _day_kst()
+    total_pnl = 0.0
+    for index, (key, q) in enumerate(plan):
+        lot = lots.get(key) or cur
+        lot_qty = int(lot.get("qty") or 0)
+        cost_closed = (float(lot.get("cost_krw", 0.0)) * q / lot_qty
+                       if lot_qty > 0 and q > 0 else 0.0)
+        share = (float(proceeds_krw) * q / closed_total if closed_total > 0
+                 else (float(proceeds_krw) if index == 0 else 0.0))
+        pnl = share - cost_closed
+        total_pnl += pnl
+        _append({"ev": "close", "key": key,
+                 "qty": int(qty) if index == 0 else int(q),
+                 "proceeds_krw": share,
+                 "cost_closed_krw": cost_closed, "realized_pnl_krw": pnl,
+                 "sleeve": sleeve or lot.get("sleeve", "A"),
+                 "day_kst": day,
+                 "event_id": (str(event_id or "") if index == 0
+                              else spill_event_id(str(event_id), key))})
+    return total_pnl
 
 
 def open_cost_total(sleeve: str | None = None) -> float:
