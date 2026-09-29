@@ -1,10 +1,10 @@
 {
- "generated_at": "2026-09-29T22:09:57.051830+09:00",
+ "generated_at": "2026-09-29T22:31:17.668240+09:00",
  "updated": "2026-09-29",
  "start": 100000000,
- "cash": 26811451,
- "equity": 95792189,
- "ret_pct": -4.21,
+ "cash": 21183635,
+ "equity": 95757558,
+ "ret_pct": -4.24,
  "positions": [
   {
    "code": "ULTA",
@@ -12,14 +12,14 @@
    "ccy": "USD",
    "q": 7,
    "avg": 543.09,
-   "price": 549.1300048828125,
+   "price": 546.5449829101562,
    "stop": 506.4666,
    "target": 616.3368,
    "half_done": false,
    "opened": "2026-09-09",
-   "pl_krw": 57521,
-   "pl_pct": 1.11,
-   "price_age_min": 5.4
+   "pl_krw": 32903,
+   "pl_pct": 0.64,
+   "price_age_min": 0.5
   },
   {
    "code": "032640",
@@ -34,7 +34,7 @@
    "opened": "2026-09-16",
    "pl_krw": 77935,
    "pl_pct": 0.37,
-   "price_age_min": 6.7
+   "price_age_min": 0.5
   },
   {
    "code": "FHB",
@@ -42,14 +42,14 @@
    "ccy": "USD",
    "q": 241,
    "avg": 25.67,
-   "price": 24.959999084472656,
+   "price": 24.96999931335449,
    "stop": 24.7327,
    "target": 27.5447,
    "half_done": false,
    "opened": "2026-09-17",
-   "pl_krw": -232792,
-   "pl_pct": -2.77,
-   "price_age_min": 6.2
+   "pl_krw": -229513,
+   "pl_pct": -2.73,
+   "price_age_min": 0.5
   },
   {
    "code": "064400",
@@ -64,7 +64,7 @@
    "opened": "2026-09-21",
    "pl_krw": -21057,
    "pl_pct": -0.23,
-   "price_age_min": 3.9
+   "price_age_min": 0.5
   },
   {
    "code": "204320",
@@ -79,7 +79,7 @@
    "opened": "2026-09-22",
    "pl_krw": -103606,
    "pl_pct": -1.83,
-   "price_age_min": 3.9
+   "price_age_min": 0.5
   },
   {
    "code": "039490",
@@ -94,7 +94,7 @@
    "opened": "2026-09-22",
    "pl_krw": -121406,
    "pl_pct": -1.87,
-   "price_age_min": 3.9
+   "price_age_min": 0.4
   },
   {
    "code": "CNM",
@@ -102,14 +102,14 @@
    "ccy": "USD",
    "q": 44,
    "avg": 42.97,
-   "price": 42.38999938964844,
+   "price": 42.41999816894531,
    "stop": 40.5224,
    "target": 47.8653,
    "half_done": false,
    "opened": "2026-09-23",
-   "pl_krw": -34719,
-   "pl_pct": -1.35,
-   "price_age_min": 5.1
+   "pl_krw": -32924,
+   "pl_pct": -1.28,
+   "price_age_min": 0.4
   },
   {
    "code": "WMT",
@@ -117,14 +117,14 @@
    "ccy": "USD",
    "q": 17,
    "avg": 108.63,
-   "price": 108.7300033569336,
+   "price": 107.52999877929688,
    "stop": 104.4167,
    "target": 117.0566,
    "half_done": false,
    "opened": "2026-09-25",
-   "pl_krw": 2313,
-   "pl_pct": 0.09,
-   "price_age_min": 6.7
+   "pl_krw": -25441,
+   "pl_pct": -1.01,
+   "price_age_min": 0.4
   },
   {
    "code": "GBX",
@@ -139,7 +139,7 @@
    "opened": "2026-09-25",
    "pl_krw": -4816,
    "pl_pct": -1.38,
-   "price_age_min": 6.1
+   "price_age_min": 0.4
   },
   {
    "code": "GBCI",
@@ -147,14 +147,29 @@
    "ccy": "USD",
    "q": 133,
    "avg": 44.17,
-   "price": 44.060001373291016,
+   "price": 44.130001068115234,
    "stop": 42.3931,
    "target": 47.7239,
    "half_done": false,
    "opened": "2026-09-29",
-   "pl_krw": -19904,
-   "pl_pct": -0.25,
-   "price_age_min": 6.2
+   "pl_krw": -7238,
+   "pl_pct": -0.09,
+   "price_age_min": 0.4
+  },
+  {
+   "code": "BKE",
+   "name": "Buckle, Inc.",
+   "ccy": "USD",
+   "q": 96,
+   "avg": 43.09,
+   "price": 43.09000015258789,
+   "stop": 41.0781,
+   "target": 47.1138,
+   "half_done": false,
+   "opened": "2026-09-29",
+   "pl_krw": 0,
+   "pl_pct": 0.0,
+   "price_age_min": 0.2
   }
  ],
  "pending": [
@@ -184,33 +199,6 @@
     "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권22% · 체크4/6 · 손절폭9.8%"
    },
    "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권22% · 체크4/6 · 손절폭9.8%"
-  },
-  {
-   "code": "SRAD",
-   "name": "Sportradar Group AG",
-   "ccy": "USD",
-   "limit": 12.0701,
-   "stop": 11.949,
-   "target": 15.492,
-   "q": 341,
-   "created": "2026-09-25",
-   "atr": 0.5905,
-   "plan": {
-    "entry": 13.13,
-    "stop": 11.949,
-    "target": 15.492,
-    "pb": 12.0701,
-    "tactic": "pullback"
-   },
-   "ctx": {
-    "mode": "pullback",
-    "fresh": true,
-    "stage": 3,
-    "rp": 9,
-    "rec": 3,
-    "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권9% · 체크3/6 · 손절폭9.0%"
-   },
-   "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권9% · 체크3/6 · 손절폭9.0%"
   }
  ],
  "trades": 34,
@@ -1808,10 +1796,34 @@
   },
   {
    "d": "2026-09-29",
-   "v": 95792189
+   "v": 95757558
   }
  ],
  "log": [
+  {
+   "d": "2026-09-29",
+   "type": "buy",
+   "code": "BKE",
+   "name": "Buckle, Inc.",
+   "q": 96,
+   "price": 43.09,
+   "ccy": "USD",
+   "amt": 5627816,
+   "note": "즉시 분할 — 🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권18% · 체크4/6 · 손절폭4.7%",
+   "stop": 41.0781,
+   "target": 47.1138
+  },
+  {
+   "d": "2026-09-29",
+   "type": "cancel",
+   "code": "SRAD",
+   "name": "Sportradar Group AG",
+   "q": 0,
+   "price": 12.48,
+   "ccy": "USD",
+   "amt": 0,
+   "note": "지정가 취소 — 신호 부패: 제외 게이트 — 하락추세/방어선 이탈"
+  },
   {
    "d": "2026-09-29",
    "type": "buy",
@@ -2428,35 +2440,8 @@
    "pl": 475000,
    "pl_pct": 12.9,
    "r": 1.45
-  },
-  {
-   "d": "2026-09-04",
-   "type": "sell",
-   "code": "BSY",
-   "name": "Bentley Systems, Incorporated",
-   "q": 58,
-   "price": 34.17,
-   "ccy": "USD",
-   "amt": 2688155,
-   "note": "손절",
-   "pl": -219065,
-   "pl_pct": -7.5,
-   "r": -1.01
-  },
-  {
-   "d": "2026-09-04",
-   "type": "buy",
-   "code": "323410",
-   "name": "카카오뱅크",
-   "q": 362,
-   "price": 21900.0,
-   "ccy": "KRW",
-   "amt": 7927800,
-   "note": "반반 1차 — 🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권27% · 체크4/6 · 손절폭6.3%",
-   "stop": 20511.373,
-   "target": 24677.254
   }
  ],
- "lane": "bulk",
+ "lane": "fast",
  "data_stale": []
 }
