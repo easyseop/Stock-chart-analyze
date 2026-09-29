@@ -1,10 +1,10 @@
 {
- "generated_at": "2026-09-30T01:06:11.755314+09:00",
+ "generated_at": "2026-09-30T01:26:15.609312+09:00",
  "updated": "2026-09-30",
  "start": 100000000,
- "cash": 21168398,
- "equity": 95312568,
- "ret_pct": -4.69,
+ "cash": 21281456,
+ "equity": 95318143,
+ "ret_pct": -4.68,
  "positions": [
   {
    "code": "032640",
@@ -19,21 +19,6 @@
    "opened": "2026-09-16",
    "pl_krw": 77935,
    "pl_pct": 0.37,
-   "price_age_min": 0.4
-  },
-  {
-   "code": "FHB",
-   "name": "First Hawaiian, Inc.",
-   "ccy": "USD",
-   "q": 241,
-   "avg": 25.67,
-   "price": 24.71999931335449,
-   "stop": 24.7327,
-   "target": 27.5447,
-   "half_done": false,
-   "opened": "2026-09-17",
-   "pl_krw": -310498,
-   "pl_pct": -3.7,
    "price_age_min": 0.4
   },
   {
@@ -87,13 +72,13 @@
    "ccy": "USD",
    "q": 44,
    "avg": 42.97,
-   "price": 41.720001220703125,
+   "price": 41.709999084472656,
    "stop": 40.5224,
    "target": 47.8653,
    "half_done": false,
    "opened": "2026-09-23",
-   "pl_krw": -74590,
-   "pl_pct": -2.91,
+   "pl_krw": -75187,
+   "pl_pct": -2.93,
    "price_age_min": 0.4
   },
   {
@@ -102,12 +87,12 @@
    "ccy": "USD",
    "q": 17,
    "avg": 108.63,
-   "price": 105.98999786376952,
+   "price": 105.99500274658205,
    "stop": 104.4167,
    "target": 117.0566,
    "half_done": false,
    "opened": "2026-09-25",
-   "pl_krw": -60865,
+   "pl_krw": -60750,
    "pl_pct": -2.43,
    "price_age_min": 0.4
   },
@@ -117,13 +102,13 @@
    "ccy": "USD",
    "q": 6,
    "avg": 42.68,
-   "price": 41.6349983215332,
+   "price": 41.369998931884766,
    "stop": 40.5054,
    "target": 47.0292,
    "half_done": false,
    "opened": "2026-09-25",
-   "pl_krw": -8503,
-   "pl_pct": -2.45,
+   "pl_krw": -10660,
+   "pl_pct": -3.07,
    "price_age_min": 0.4
   },
   {
@@ -132,13 +117,13 @@
    "ccy": "USD",
    "q": 133,
    "avg": 44.17,
-   "price": 43.709999084472656,
+   "price": 43.77000045776367,
    "stop": 42.3931,
    "target": 47.7239,
    "half_done": false,
    "opened": "2026-09-29",
-   "pl_krw": -82971,
-   "pl_pct": -1.04,
+   "pl_krw": -72149,
+   "pl_pct": -0.91,
    "price_age_min": 0.4
   },
   {
@@ -147,13 +132,13 @@
    "ccy": "USD",
    "q": 96,
    "avg": 43.09,
-   "price": 42.459999084472656,
+   "price": 42.415000915527344,
    "stop": 41.0781,
    "target": 47.1138,
    "half_done": false,
    "opened": "2026-09-29",
-   "pl_krw": -82022,
-   "pl_pct": -1.46,
+   "pl_krw": -87880,
+   "pl_pct": -1.57,
    "price_age_min": 0.4
   },
   {
@@ -162,13 +147,28 @@
    "ccy": "USD",
    "q": 18,
    "avg": 213.675,
-   "price": 212.25999450683597,
+   "price": 212.4600067138672,
    "stop": 202.2342,
    "target": 236.5566,
    "half_done": false,
    "opened": "2026-09-30",
-   "pl_krw": -34542,
-   "pl_pct": -0.66,
+   "pl_krw": -29659,
+   "pl_pct": -0.57,
+   "price_age_min": 0.4
+  },
+  {
+   "code": "DOV",
+   "name": "Dover Corporation",
+   "ccy": "USD",
+   "q": 31,
+   "avg": 189.45,
+   "price": 189.4499969482422,
+   "stop": 181.2117,
+   "target": 205.9266,
+   "half_done": false,
+   "opened": "2026-09-30",
+   "pl_krw": 0,
+   "pl_pct": -0.0,
    "price_age_min": 0.4
   }
  ],
@@ -201,7 +201,7 @@
    "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권22% · 체크4/6 · 손절폭9.8%"
   }
  ],
- "trades": 35,
+ "trades": 36,
  "win_trades": 22,
  "pos_cap_pct": 33.3,
  "cap_violations": [],
@@ -209,17 +209,17 @@
  "fx": 1356.18,
  "stats": {
   "all": {
-   "n": 35,
+   "n": 36,
    "win": 22,
-   "win_rate": 63,
-   "avg_r": 0.05
+   "win_rate": 61,
+   "avg_r": 0.02
   },
   "by_mode": {
    "full": {
-    "n": 15,
+    "n": 16,
     "win": 9,
-    "win_rate": 60,
-    "avg_r": 0.04
+    "win_rate": 56,
+    "avg_r": -0.03
    },
    "half": {
     "n": 14,
@@ -235,10 +235,10 @@
    }
   },
   "fresh": {
-   "n": 34,
+   "n": 35,
    "win": 21,
-   "win_rate": 62,
-   "avg_r": 0.04
+   "win_rate": 60,
+   "avg_r": 0.01
   },
   "stale": {
    "n": 1,
@@ -248,10 +248,10 @@
   },
   "by_stage": {
    "3": {
-    "n": 34,
+    "n": 35,
     "win": 21,
-    "win_rate": 62,
-    "avg_r": 0.03
+    "win_rate": 60,
+    "avg_r": 0.0
    },
    "4": {
     "n": 1,
@@ -268,16 +268,52 @@
     "avg_r": 0.05
    },
    "USD": {
-    "n": 29,
+    "n": 30,
     "win": 18,
-    "win_rate": 62,
-    "avg_r": 0.04
+    "win_rate": 60,
+    "avg_r": 0.01
    }
   },
-  "slip_entry_pct": -0.44,
-  "slip_stop_pct": -0.93
+  "slip_entry_pct": -0.42,
+  "slip_stop_pct": -0.86
  },
  "closed": [
+  {
+   "code": "FHB",
+   "name": "First Hawaiian, Inc.",
+   "ccy": "USD",
+   "ctx": {
+    "mode": "full",
+    "fresh": true,
+    "stage": 3,
+    "rp": 38,
+    "rec": 4,
+    "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권38% · 체크4/6 · 손절폭3.7%"
+   },
+   "plan": {
+    "entry": 25.67,
+    "stop": 24.7327,
+    "target": 27.5447,
+    "pb": 25.085,
+    "tactic": "full"
+   },
+   "fill": {
+    "avg": 25.67,
+    "q": 241
+   },
+   "exits": [
+    {
+     "d": "2026-09-30",
+     "q": 241,
+     "price": 24.715,
+     "note": "손절"
+    }
+   ],
+   "opened": "2026-09-17",
+   "closed": "2026-09-30",
+   "pl": -312132,
+   "r": -1.01
+  },
   {
    "code": "ULTA",
    "name": "Ulta Beauty, Inc.",
@@ -1411,42 +1447,6 @@
    "closed": "2026-07-28",
    "pl": 364586,
    "r": 0.38
-  },
-  {
-   "code": "STE",
-   "name": "STERIS plc",
-   "ccy": "USD",
-   "ctx": {
-    "mode": "full",
-    "fresh": true,
-    "stage": 3,
-    "rp": 24,
-    "rec": 4,
-    "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권24% · 체크4/6 · 손절폭5.1%"
-   },
-   "plan": {
-    "entry": 213.02,
-    "stop": 202.063,
-    "target": 234.934,
-    "pb": null,
-    "tactic": "full"
-   },
-   "fill": {
-    "avg": 213.02,
-    "q": 6
-   },
-   "exits": [
-    {
-     "d": "2026-07-28",
-     "q": 6,
-     "price": 219.6,
-     "note": "타임 스탑(+1R 미도달)"
-    }
-   ],
-   "opened": "2026-07-07",
-   "closed": "2026-07-28",
-   "pl": 57948,
-   "r": 0.58
   }
  ],
  "hist": [
@@ -1800,10 +1800,37 @@
   },
   {
    "d": "2026-09-30",
-   "v": 95312568
+   "v": 95318143
   }
  ],
  "log": [
+  {
+   "d": "2026-09-30",
+   "type": "buy",
+   "code": "DOV",
+   "name": "Dover Corporation",
+   "q": 31,
+   "price": 189.45,
+   "ccy": "USD",
+   "amt": 7964778,
+   "note": "즉시 분할 — 🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권39% · 체크4/6 · 손절폭4.3%",
+   "stop": 181.2117,
+   "target": 205.9266
+  },
+  {
+   "d": "2026-09-30",
+   "type": "sell",
+   "code": "FHB",
+   "name": "First Hawaiian, Inc.",
+   "q": 241,
+   "price": 24.715,
+   "ccy": "USD",
+   "amt": 8077836,
+   "note": "손절",
+   "pl": -312132,
+   "pl_pct": -3.7,
+   "r": -1.01
+  },
   {
    "d": "2026-09-30",
    "type": "buy",
@@ -2417,33 +2444,6 @@
    "pl": -11086,
    "pl_pct": -0.5,
    "r": 0.42
-  },
-  {
-   "d": "2026-09-08",
-   "type": "buy",
-   "code": "ADMA",
-   "name": "ADMA Biologics Inc",
-   "q": 628,
-   "price": 9.55,
-   "ccy": "USD",
-   "amt": 8073400,
-   "note": "반반 1차 — 🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권18% · 체크5/6 · 손절폭6.2%",
-   "stop": 8.9618,
-   "target": 10.7264
-  },
-  {
-   "d": "2026-09-08",
-   "type": "sell",
-   "code": "MRSH",
-   "name": "Marsh",
-   "q": 36,
-   "price": 182.905,
-   "ccy": "USD",
-   "amt": 8863832,
-   "note": "트레일 스탑",
-   "pl": 416647,
-   "pl_pct": 4.9,
-   "r": 1.03
   }
  ],
  "lane": "fast",
