@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated_at": "2026-09-29T20:32:06+09:00",
+ "generated_at": "2026-09-29T20:45:37+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "a_ablation": [
   {
@@ -169,11 +169,11 @@
   "watch": 140,
   "reasons": {
    "밸류영역 밖(지지대 아님)": 398,
-   "추락 중(범위 1%)": 238,
-   "추락 중(범위 0%)": 201,
-   "추락 중(범위 2%)": 187,
+   "추락 중(범위 1%)": 239,
+   "추락 중(범위 0%)": 199,
+   "추락 중(범위 2%)": 186,
    "매물대 정보 없음": 150,
-   "추락 중(범위 3%)": 146,
+   "추락 중(범위 3%)": 147,
    "추락 중(범위 5%)": 140,
    "추락 중(범위 4%)": 101
   }
@@ -691,12 +691,12 @@
    "group": "shelf_shadow_b0",
    "shadow": true,
    "orderable": false,
-   "entry": 248000.0,
+   "entry": 247000.0,
    "stop": 217560.0,
    "target": 300052.0833,
    "stage": 0,
    "norm": 5.7,
-   "range_pos": 0.4257,
+   "range_pos": 0.4198,
    "b0_reject_reason": "200일선 아래(B1)",
    "trend_above_200": false,
    "fresh": false,
@@ -739,46 +739,6 @@
    "fresh": false,
    "break_gap": null,
    "earnings_d": 36,
-   "tactic": "watch",
-   "trend_above_200": false
-  },
-  {
-   "id": "OGC-2026-09-29-shelf-watch",
-   "code": "OGC",
-   "name": "OceanaGold Corporation",
-   "ccy": "USD",
-   "group": "shelf_watch",
-   "entry_kind": "shelf_watch",
-   "stage": 0,
-   "price": 28.0,
-   "entry": 28.0,
-   "stop": 26.4404,
-   "target": 30.9446,
-   "shares_1pct": 0,
-   "range_pos": 0.3553,
-   "norm": 37.7,
-   "bear_share": 0.125,
-   "shelf": {
-    "poc": 28.9629,
-    "val": 24.0087,
-    "vah": 30.9446,
-    "rr": 1.89,
-    "overhead": 0.529,
-    "reason": "반등 미확인(거래량·신저가아님)",
-    "history_bars": 1943,
-    "profile_pnl_proxy": -0.0186,
-    "runup252": 0.378,
-    "checks": {
-     "터치": true,
-     "회복": true,
-     "상단마감": true,
-     "거래량": false,
-     "신저가아님": false
-    }
-   },
-   "fresh": false,
-   "break_gap": null,
-   "earnings_d": null,
    "tactic": "watch",
    "trend_above_200": false
   },
@@ -1061,6 +1021,46 @@
    "earnings_d": 37,
    "tactic": "watch",
    "trend_above_200": false
+  },
+  {
+   "id": "010060-2026-09-29-shelf-watch",
+   "code": "010060",
+   "name": "OCI홀딩스",
+   "ccy": "KRW",
+   "group": "shelf_watch",
+   "entry_kind": "shelf_watch",
+   "stage": 0,
+   "price": 216500.0,
+   "entry": 216500.0,
+   "stop": 188356.0,
+   "target": 269362.5,
+   "shares_1pct": 0,
+   "range_pos": 0.4026,
+   "norm": 13.2,
+   "bear_share": 0.25,
+   "shelf": {
+    "poc": 117837.5,
+    "val": 104062.5,
+    "vah": 269362.5,
+    "rr": 1.88,
+    "overhead": 0.467,
+    "reason": "반등 미확인(터치)",
+    "history_bars": 1897,
+    "profile_pnl_proxy": -0.0096,
+    "runup252": 1.2343,
+    "checks": {
+     "터치": false,
+     "회복": true,
+     "상단마감": true,
+     "거래량": true,
+     "신저가아님": true
+    }
+   },
+   "fresh": false,
+   "break_gap": null,
+   "earnings_d": null,
+   "tactic": "watch",
+   "trend_above_200": true
   },
   {
    "id": "LAD-2026-09-29-shelf-watch",
