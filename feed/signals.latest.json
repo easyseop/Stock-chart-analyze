@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated_at": "2026-09-30T16:45:27+09:00",
+ "generated_at": "2026-09-30T16:59:35+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "a_ablation": [
   {
@@ -544,6 +544,34 @@
    }
   },
   {
+   "id": "016360-2026-09-30-now",
+   "code": "016360",
+   "name": "삼성증권",
+   "ccy": "KRW",
+   "group": "now",
+   "entry_kind": "now",
+   "stage": 4,
+   "price": 88400.0,
+   "entry": 88400.0,
+   "stop": 82570.2071,
+   "target": 100059.5858,
+   "shares_1pct": 17,
+   "range_pos": 0.1918,
+   "norm": -5.7,
+   "bear_share": 0.25,
+   "fresh": false,
+   "break_gap": 0.1526,
+   "earnings_d": null,
+   "tactic": {
+    "stop_pct": 6.6,
+    "pb_price": 84158.3333,
+    "pb_stop_pct": 1.9,
+    "mode": "pullback",
+    "label": "⏳ 눌림 지정가만",
+    "desc": "지금 추격 금지(손절폭 6.6% · 돌파후 진행) — <b>84,158원 눌림 지정가만</b>. 눌리면 손절폭 1.9%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
+   }
+  },
+  {
    "id": "LGN-2026-09-30-now",
    "code": "LGN",
    "name": "Legence Corp.",
@@ -597,34 +625,6 @@
     "mode": "pullback",
     "label": "⏳ 눌림 지정가만",
     "desc": "지금 추격 금지(손절폭 12.0% · 돌파후 진행) — <b>$107.48 눌림 지정가만</b>. 눌리면 손절폭 11.2%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
-   }
-  },
-  {
-   "id": "016360-2026-09-30-now",
-   "code": "016360",
-   "name": "삼성증권",
-   "ccy": "KRW",
-   "group": "now",
-   "entry_kind": "now",
-   "stage": 3,
-   "price": 88400.0,
-   "entry": 88400.0,
-   "stop": 82570.2071,
-   "target": 100059.5858,
-   "shares_1pct": 17,
-   "range_pos": 0.1918,
-   "norm": -7.5,
-   "bear_share": 0.25,
-   "fresh": false,
-   "break_gap": 0.1526,
-   "earnings_d": null,
-   "tactic": {
-    "stop_pct": 6.6,
-    "pb_price": 84158.3333,
-    "pb_stop_pct": 1.9,
-    "mode": "pullback",
-    "label": "⏳ 눌림 지정가만",
-    "desc": "지금 추격 금지(손절폭 6.6% · 돌파후 진행) — <b>84,158원 눌림 지정가만</b>. 눌리면 손절폭 1.9%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
    }
   },
   {
