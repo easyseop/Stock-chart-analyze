@@ -1,9 +1,9 @@
 {
- "generated_at": "2026-10-01T04:15:43.840435+09:00",
+ "generated_at": "2026-10-01T04:28:44.032601+09:00",
  "updated": "2026-10-01",
  "start": 100000000,
- "cash": 14372879,
- "equity": 94702933,
+ "cash": 14275711,
+ "equity": 94695741,
  "ret_pct": -5.3,
  "positions": [
   {
@@ -19,7 +19,7 @@
    "opened": "2026-09-16",
    "pl_krw": -304655,
    "pl_pct": -1.46,
-   "price_age_min": 10.3
+   "price_age_min": 8.1
   },
   {
    "code": "064400",
@@ -34,7 +34,7 @@
    "opened": "2026-09-21",
    "pl_krw": -88057,
    "pl_pct": -0.95,
-   "price_age_min": 7.7
+   "price_age_min": 5.4
   },
   {
    "code": "204320",
@@ -49,7 +49,7 @@
    "opened": "2026-09-22",
    "pl_krw": -133856,
    "pl_pct": -2.37,
-   "price_age_min": 7.7
+   "price_age_min": 5.4
   },
   {
    "code": "039490",
@@ -64,7 +64,7 @@
    "opened": "2026-09-22",
    "pl_krw": -221406,
    "pl_pct": -3.4,
-   "price_age_min": 7.7
+   "price_age_min": 5.3
   },
   {
    "code": "CNM",
@@ -72,14 +72,14 @@
    "ccy": "USD",
    "q": 44,
    "avg": 42.97,
-   "price": 41.709999084472656,
+   "price": 41.72999954223633,
    "stop": 40.5224,
    "target": 47.8653,
    "half_done": false,
    "opened": "2026-09-23",
-   "pl_krw": -75153,
-   "pl_pct": -2.93,
-   "price_age_min": 7.7
+   "pl_krw": -73960,
+   "pl_pct": -2.89,
+   "price_age_min": 5.3
   },
   {
    "code": "WMT",
@@ -87,29 +87,14 @@
    "ccy": "USD",
    "q": 17,
    "avg": 108.63,
-   "price": 104.4800033569336,
+   "price": 104.80999755859376,
    "stop": 104.4167,
    "target": 117.0566,
    "half_done": false,
    "opened": "2026-09-25",
-   "pl_krw": -95636,
-   "pl_pct": -3.82,
-   "price_age_min": 7.7
-  },
-  {
-   "code": "GBX",
-   "name": "Greenbrier Companies, Inc.",
-   "ccy": "USD",
-   "q": 6,
-   "avg": 42.68,
-   "price": 40.41999816894531,
-   "stop": 40.5054,
-   "target": 47.0292,
-   "half_done": false,
-   "opened": "2026-09-25",
-   "pl_krw": -18382,
-   "pl_pct": -5.3,
-   "price_age_min": 7.6
+   "pl_krw": -88031,
+   "pl_pct": -3.52,
+   "price_age_min": 5.3
   },
   {
    "code": "GBCI",
@@ -117,14 +102,14 @@
    "ccy": "USD",
    "q": 133,
    "avg": 44.17,
-   "price": 43.2400016784668,
+   "price": 43.290000915527344,
    "stop": 42.3931,
    "target": 47.7239,
    "half_done": false,
    "opened": "2026-09-29",
-   "pl_krw": -167671,
-   "pl_pct": -2.11,
-   "price_age_min": 9.0
+   "pl_krw": -158657,
+   "pl_pct": -1.99,
+   "price_age_min": 6.7
   },
   {
    "code": "BKE",
@@ -132,14 +117,14 @@
    "ccy": "USD",
    "q": 96,
    "avg": 43.09,
-   "price": 43.255001068115234,
+   "price": 43.22999954223633,
    "stop": 41.0781,
    "target": 47.1138,
    "half_done": false,
    "opened": "2026-09-29",
-   "pl_krw": 21473,
-   "pl_pct": 0.38,
-   "price_age_min": 10.1
+   "pl_krw": 18219,
+   "pl_pct": 0.32,
+   "price_age_min": 7.8
   },
   {
    "code": "TEL",
@@ -147,14 +132,14 @@
    "ccy": "USD",
    "q": 18,
    "avg": 213.675,
-   "price": 212.93499755859372,
+   "price": 212.5800018310547,
    "stop": 202.2342,
    "target": 236.5566,
    "half_done": false,
    "opened": "2026-09-30",
-   "pl_krw": -18056,
-   "pl_pct": -0.35,
-   "price_age_min": 10.7
+   "pl_krw": -26718,
+   "pl_pct": -0.51,
+   "price_age_min": 8.5
   },
   {
    "code": "DOV",
@@ -162,14 +147,14 @@
    "ccy": "USD",
    "q": 31,
    "avg": 189.45,
-   "price": 188.31500244140625,
+   "price": 188.47999572753903,
    "stop": 181.2117,
    "target": 205.9266,
    "half_done": false,
    "opened": "2026-09-30",
-   "pl_krw": -47696,
-   "pl_pct": -0.6,
-   "price_age_min": 10.7
+   "pl_krw": -40762,
+   "pl_pct": -0.51,
+   "price_age_min": 8.5
   },
   {
    "code": "CRAI",
@@ -177,18 +162,33 @@
    "ccy": "USD",
    "q": 31,
    "avg": 164.4,
-   "price": 165.44000244140625,
+   "price": 164.9499969482422,
    "stop": 153.1602,
    "target": 186.8795,
    "half_done": false,
    "opened": "2026-10-01",
-   "pl_krw": 43704,
-   "pl_pct": 0.63,
-   "price_age_min": 10.5
+   "pl_krw": 23113,
+   "pl_pct": 0.33,
+   "price_age_min": 8.3
+  },
+  {
+   "code": "GE",
+   "name": "GE Aerospace",
+   "ccy": "USD",
+   "q": 1,
+   "avg": 314.62,
+   "price": 314.6199951171875,
+   "stop": 297.5081,
+   "target": 348.8438,
+   "half_done": false,
+   "opened": "2026-10-01",
+   "pl_krw": 0,
+   "pl_pct": -0.0,
+   "price_age_min": 8.6
   }
  ],
  "pending": [],
- "trades": 36,
+ "trades": 37,
  "win_trades": 22,
  "pos_cap_pct": 33.3,
  "cap_violations": [],
@@ -196,17 +196,17 @@
  "fx": 1355.58,
  "stats": {
   "all": {
-   "n": 36,
+   "n": 37,
    "win": 22,
-   "win_rate": 61,
-   "avg_r": 0.02
+   "win_rate": 59,
+   "avg_r": -0.01
   },
   "by_mode": {
    "full": {
-    "n": 16,
+    "n": 17,
     "win": 9,
-    "win_rate": 56,
-    "avg_r": -0.03
+    "win_rate": 53,
+    "avg_r": -0.09
    },
    "half": {
     "n": 14,
@@ -222,10 +222,10 @@
    }
   },
   "fresh": {
-   "n": 35,
+   "n": 36,
    "win": 21,
-   "win_rate": 60,
-   "avg_r": 0.01
+   "win_rate": 58,
+   "avg_r": -0.02
   },
   "stale": {
    "n": 1,
@@ -235,10 +235,10 @@
   },
   "by_stage": {
    "3": {
-    "n": 35,
+    "n": 36,
     "win": 21,
-    "win_rate": 60,
-    "avg_r": 0.0
+    "win_rate": 58,
+    "avg_r": -0.03
    },
    "4": {
     "n": 1,
@@ -255,16 +255,52 @@
     "avg_r": 0.05
    },
    "USD": {
-    "n": 30,
+    "n": 31,
     "win": 18,
-    "win_rate": 60,
-    "avg_r": 0.01
+    "win_rate": 58,
+    "avg_r": -0.02
    }
   },
-  "slip_entry_pct": -0.42,
-  "slip_stop_pct": -0.86
+  "slip_entry_pct": -0.41,
+  "slip_stop_pct": -0.79
  },
  "closed": [
+  {
+   "code": "GBX",
+   "name": "Greenbrier Companies, Inc.",
+   "ccy": "USD",
+   "ctx": {
+    "mode": "full",
+    "fresh": true,
+    "stage": 3,
+    "rp": 21,
+    "rec": 4,
+    "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권21% · 체크4/6 · 손절폭5.1%"
+   },
+   "plan": {
+    "entry": 42.68,
+    "stop": 40.5054,
+    "target": 47.0292,
+    "pb": 41.27,
+    "tactic": "full"
+   },
+   "fill": {
+    "avg": 42.68,
+    "q": 6
+   },
+   "exits": [
+    {
+     "d": "2026-10-01",
+     "q": 6,
+     "price": 40.49,
+     "note": "손절"
+    }
+   ],
+   "opened": "2026-09-25",
+   "closed": "2026-10-01",
+   "pl": -17812,
+   "r": -1.0
+  },
   {
    "code": "FHB",
    "name": "First Hawaiian, Inc.",
@@ -1398,42 +1434,6 @@
    "closed": "2026-07-30",
    "pl": 19293,
    "r": 0.59
-  },
-  {
-   "code": "068270",
-   "name": "셀트리온",
-   "ccy": "KRW",
-   "ctx": {
-    "mode": "pullback",
-    "fresh": false,
-    "stage": 3,
-    "rp": 28,
-    "rec": 4,
-    "basis": "↗ 돌파후 진행(승률↓) · ③ 돌파후 횡보(대기) · 저점권28% · 체크4/6 · 손절폭10.5%"
-   },
-   "plan": {
-    "entry": 176100.0,
-    "stop": 157651.1713,
-    "target": 212997.6574,
-    "pb": 175348.4128,
-    "tactic": "pullback"
-   },
-   "fill": {
-    "avg": 175348.4128,
-    "q": 54
-   },
-   "exits": [
-    {
-     "d": "2026-07-28",
-     "q": 54,
-     "price": 182100.0,
-     "note": "타임 스탑(+1R 미도달)"
-    }
-   ],
-   "opened": "2026-07-07",
-   "closed": "2026-07-28",
-   "pl": 364586,
-   "r": 0.38
   }
  ],
  "hist": [
@@ -1791,10 +1791,37 @@
   },
   {
    "d": "2026-10-01",
-   "v": 94702933
+   "v": 94695741
   }
  ],
  "log": [
+  {
+   "d": "2026-10-01",
+   "type": "buy",
+   "code": "GE",
+   "name": "GE Aerospace",
+   "q": 1,
+   "price": 314.62,
+   "ccy": "USD",
+   "amt": 426493,
+   "note": "즉시 분할 — 🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권38% · 체크4/6 · 손절폭5.4%",
+   "stop": 297.5081,
+   "target": 348.8438
+  },
+  {
+   "d": "2026-10-01",
+   "type": "sell",
+   "code": "GBX",
+   "name": "Greenbrier Companies, Inc.",
+   "q": 6,
+   "price": 40.49,
+   "ccy": "USD",
+   "amt": 329325,
+   "note": "손절",
+   "pl": -17812,
+   "pl_pct": -5.1,
+   "r": -1.0
+  },
   {
    "d": "2026-10-01",
    "type": "buy",
@@ -2404,33 +2431,6 @@
    "ccy": "USD",
    "amt": 6688661,
    "note": "눌림 지정가 주문(추격 금지) — 🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권22% · 체크4/6 · 손절폭9.8%"
-  },
-  {
-   "d": "2026-09-10",
-   "type": "sell",
-   "code": "J",
-   "name": "Jacobs Solutions Inc.",
-   "q": 32,
-   "price": 141.68,
-   "ccy": "USD",
-   "amt": 6073379,
-   "note": "트레일 스탑",
-   "pl": 647075,
-   "pl_pct": 11.9,
-   "r": 1.48
-  },
-  {
-   "d": "2026-09-09",
-   "type": "buy",
-   "code": "ULTA",
-   "name": "Ulta Beauty, Inc.",
-   "q": 7,
-   "price": 543.09,
-   "ccy": "USD",
-   "amt": 5100685,
-   "note": "반반 1차 — 🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권37% · 체크6/6 · 손절폭6.7%",
-   "stop": 506.4666,
-   "target": 616.3368
   }
  ],
  "lane": "bulk",
