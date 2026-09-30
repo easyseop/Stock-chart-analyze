@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated_at": "2026-09-30T20:10:25+09:00",
+ "generated_at": "2026-09-30T20:29:27+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "a_ablation": [
   {
@@ -166,16 +166,16 @@
  ],
  "shelf_debug": {
   "ok": 12,
-  "watch": 154,
+  "watch": 152,
   "reasons": {
    "밸류영역 밖(지지대 아님)": 422,
-   "추락 중(범위 1%)": 249,
-   "추락 중(범위 0%)": 217,
+   "추락 중(범위 1%)": 248,
+   "추락 중(범위 0%)": 218,
    "추락 중(범위 2%)": 176,
    "추락 중(범위 3%)": 154,
    "매물대 정보 없음": 147,
    "추락 중(범위 4%)": 122,
-   "추락 중(범위 5%)": 116
+   "추락 중(범위 5%)": 115
   }
  },
  "signals": [
@@ -887,23 +887,23 @@
    "group": "shelf",
    "entry_kind": "shelf",
    "stage": 0,
-   "price": 128600.0,
-   "entry": 128600.0,
+   "price": 128300.0,
+   "entry": 128300.0,
    "stop": 116130.0,
    "target": 172162.5,
    "shares_1pct": 0,
-   "range_pos": 0.3985,
+   "range_pos": 0.3971,
    "norm": 28.3,
    "bear_share": 0.125,
    "shelf": {
     "poc": 128037.5,
     "val": 75087.5,
     "vah": 172162.5,
-    "rr": 3.49,
+    "rr": 3.6,
     "overhead": 0.442,
     "history_bars": 1681,
-    "profile_pnl_proxy": -0.0132,
-    "runup252": 1.4971
+    "profile_pnl_proxy": -0.0155,
+    "runup252": 1.4913
    },
    "fresh": true,
    "break_gap": null,
@@ -1051,13 +1051,13 @@
    "group": "shelf_shadow_b2",
    "shadow": true,
    "orderable": false,
-   "entry": 128600.0,
+   "entry": 128300.0,
    "stop": 116130.0,
-   "target": 153540.0,
+   "target": 152640.0,
    "stage": 0,
    "norm": 28.3,
-   "range_pos": 0.3985,
-   "runup252": 1.4971,
+   "range_pos": 0.3971,
+   "runup252": 1.4913,
    "fresh": false,
    "tactic": "shadow"
   },
