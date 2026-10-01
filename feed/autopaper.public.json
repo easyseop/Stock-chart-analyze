@@ -1,10 +1,10 @@
 {
- "generated_at": "2026-10-01T22:44:26.431465+09:00",
+ "generated_at": "2026-10-01T22:57:37.286251+09:00",
  "updated": "2026-10-01",
  "start": 100000000,
- "cash": 14165531,
- "equity": 94924916,
- "ret_pct": -5.08,
+ "cash": 16564731,
+ "equity": 94901875,
+ "ret_pct": -5.1,
  "positions": [
   {
    "code": "032640",
@@ -19,7 +19,7 @@
    "opened": "2026-09-16",
    "pl_krw": -290485,
    "pl_pct": -1.39,
-   "price_age_min": 9.5
+   "price_age_min": 8.3
   },
   {
    "code": "064400",
@@ -34,7 +34,7 @@
    "opened": "2026-09-21",
    "pl_krw": 166543,
    "pl_pct": 1.79,
-   "price_age_min": 7.1
+   "price_age_min": 5.4
   },
   {
    "code": "204320",
@@ -49,7 +49,7 @@
    "opened": "2026-09-22",
    "pl_krw": -6806,
    "pl_pct": -0.12,
-   "price_age_min": 7.1
+   "price_age_min": 5.4
   },
   {
    "code": "CNM",
@@ -57,29 +57,14 @@
    "ccy": "USD",
    "q": 44,
    "avg": 42.97,
-   "price": 41.209999084472656,
+   "price": 41.06499862670898,
    "stop": 40.5224,
    "target": 47.8653,
    "half_done": false,
    "opened": "2026-09-23",
-   "pl_krw": -104976,
-   "pl_pct": -4.1,
-   "price_age_min": 7.1
-  },
-  {
-   "code": "WMT",
-   "name": "Walmart Inc.",
-   "ccy": "USD",
-   "q": 17,
-   "avg": 108.63,
-   "price": 104.3385009765625,
-   "stop": 104.4167,
-   "target": 117.0566,
-   "half_done": false,
-   "opened": "2026-09-25",
-   "pl_krw": -98897,
-   "pl_pct": -3.95,
-   "price_age_min": 7.1
+   "pl_krw": -113625,
+   "pl_pct": -4.43,
+   "price_age_min": 5.4
   },
   {
    "code": "GBCI",
@@ -87,14 +72,14 @@
    "ccy": "USD",
    "q": 133,
    "avg": 44.17,
-   "price": 42.99250030517578,
+   "price": 42.59999847412109,
    "stop": 42.3931,
    "target": 47.7239,
    "half_done": false,
    "opened": "2026-09-29",
-   "pl_krw": -212294,
-   "pl_pct": -2.67,
-   "price_age_min": 8.1
+   "pl_krw": -283059,
+   "pl_pct": -3.55,
+   "price_age_min": 6.7
   },
   {
    "code": "BKE",
@@ -102,14 +87,14 @@
    "ccy": "USD",
    "q": 96,
    "avg": 43.09,
-   "price": 42.5,
+   "price": 42.630001068115234,
    "stop": 41.0781,
    "target": 47.1138,
    "half_done": false,
    "opened": "2026-09-29",
-   "pl_krw": -76780,
-   "pl_pct": -1.37,
-   "price_age_min": 9.6
+   "pl_krw": -59862,
+   "pl_pct": -1.07,
+   "price_age_min": 8.4
   },
   {
    "code": "TEL",
@@ -117,14 +102,14 @@
    "ccy": "USD",
    "q": 18,
    "avg": 213.675,
-   "price": 212.8300018310547,
+   "price": 214.05999755859372,
    "stop": 202.2342,
    "target": 236.5566,
    "half_done": false,
    "opened": "2026-09-30",
-   "pl_krw": -20618,
-   "pl_pct": -0.4,
-   "price_age_min": 9.8
+   "pl_krw": 9394,
+   "pl_pct": 0.18,
+   "price_age_min": 8.7
   },
   {
    "code": "DOV",
@@ -132,14 +117,14 @@
    "ccy": "USD",
    "q": 31,
    "avg": 189.45,
-   "price": 187.2449951171875,
+   "price": 188.27999877929688,
    "stop": 181.2117,
    "target": 205.9266,
    "half_done": false,
    "opened": "2026-09-30",
-   "pl_krw": -92661,
-   "pl_pct": -1.16,
-   "price_age_min": 9.9
+   "pl_krw": -49167,
+   "pl_pct": -0.62,
+   "price_age_min": 8.7
   },
   {
    "code": "CRAI",
@@ -147,14 +132,14 @@
    "ccy": "USD",
    "q": 31,
    "avg": 164.4,
-   "price": 169.91000366210938,
+   "price": 169.25999450683594,
    "stop": 153.1602,
    "target": 186.8795,
    "half_done": false,
    "opened": "2026-10-01",
-   "pl_krw": 231547,
-   "pl_pct": 3.35,
-   "price_age_min": 10.2
+   "pl_krw": 204231,
+   "pl_pct": 2.96,
+   "price_age_min": 8.5
   },
   {
    "code": "GE",
@@ -162,14 +147,14 @@
    "ccy": "USD",
    "q": 1,
    "avg": 314.62,
-   "price": 314.19000244140625,
+   "price": 313.1050109863281,
    "stop": 297.5081,
    "target": 348.8438,
    "half_done": false,
    "opened": "2026-10-01",
-   "pl_krw": -583,
-   "pl_pct": -0.14,
-   "price_age_min": 9.9
+   "pl_krw": -2054,
+   "pl_pct": -0.48,
+   "price_age_min": 8.8
   },
   {
    "code": "088980",
@@ -184,11 +169,11 @@
    "opened": "2026-10-01",
    "pl_krw": -25680,
    "pl_pct": -0.41,
-   "price_age_min": 9.5
+   "price_age_min": 8.3
   }
  ],
  "pending": [],
- "trades": 38,
+ "trades": 39,
  "win_trades": 22,
  "pos_cap_pct": 33.3,
  "cap_violations": [],
@@ -196,17 +181,17 @@
  "fx": 1355.58,
  "stats": {
   "all": {
-   "n": 38,
+   "n": 39,
    "win": 22,
-   "win_rate": 58,
-   "avg_r": -0.04
+   "win_rate": 56,
+   "avg_r": -0.07
   },
   "by_mode": {
    "full": {
-    "n": 17,
+    "n": 18,
     "win": 9,
-    "win_rate": 53,
-    "avg_r": -0.09
+    "win_rate": 50,
+    "avg_r": -0.14
    },
    "half": {
     "n": 14,
@@ -222,10 +207,10 @@
    }
   },
   "fresh": {
-   "n": 37,
+   "n": 38,
    "win": 21,
-   "win_rate": 57,
-   "avg_r": -0.05
+   "win_rate": 55,
+   "avg_r": -0.08
   },
   "stale": {
    "n": 1,
@@ -235,10 +220,10 @@
   },
   "by_stage": {
    "3": {
-    "n": 36,
+    "n": 37,
     "win": 21,
-    "win_rate": 58,
-    "avg_r": -0.03
+    "win_rate": 57,
+    "avg_r": -0.05
    },
    "4": {
     "n": 2,
@@ -255,16 +240,52 @@
     "avg_r": -0.11
    },
    "USD": {
-    "n": 31,
+    "n": 32,
     "win": 18,
-    "win_rate": 58,
-    "avg_r": -0.02
+    "win_rate": 56,
+    "avg_r": -0.06
    }
   },
-  "slip_entry_pct": -0.54,
-  "slip_stop_pct": -0.77
+  "slip_entry_pct": -0.52,
+  "slip_stop_pct": -0.74
  },
  "closed": [
+  {
+   "code": "WMT",
+   "name": "Walmart Inc.",
+   "ccy": "USD",
+   "ctx": {
+    "mode": "full",
+    "fresh": true,
+    "stage": 3,
+    "rp": 27,
+    "rec": 4,
+    "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권27% · 체크4/6 · 손절폭3.9%"
+   },
+   "plan": {
+    "entry": 108.63,
+    "stop": 104.4167,
+    "target": 117.0566,
+    "pb": null,
+    "tactic": "full"
+   },
+   "fill": {
+    "avg": 108.63,
+    "q": 17
+   },
+   "exits": [
+    {
+     "d": "2026-10-01",
+     "q": 17,
+     "price": 104.11,
+     "note": "손절"
+    }
+   ],
+   "opened": "2026-09-25",
+   "closed": "2026-10-01",
+   "pl": -104163,
+   "r": -1.06
+  },
   {
    "code": "039490",
    "name": "키움증권",
@@ -1380,48 +1401,6 @@
    "closed": "2026-08-10",
    "pl": 135045,
    "r": 0.27
-  },
-  {
-   "code": "SHOP",
-   "name": "Shopify Inc.",
-   "ccy": "USD",
-   "ctx": {
-    "mode": "pullback",
-    "fresh": true,
-    "stage": 3,
-    "rp": 26,
-    "rec": 4,
-    "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권26% · 체크4/6 · 손절폭9.5%"
-   },
-   "plan": {
-    "entry": 116.77,
-    "stop": 105.7277,
-    "target": 138.8546,
-    "pb": 114.9801,
-    "tactic": "pullback"
-   },
-   "fill": {
-    "avg": 114.9801,
-    "q": 59
-   },
-   "exits": [
-    {
-     "d": "2026-07-28",
-     "q": 29,
-     "price": 124.805,
-     "note": "+1R 절반 익절"
-    },
-    {
-     "d": "2026-08-01",
-     "q": 30,
-     "price": 116.05,
-     "note": "트레일 스탑"
-    }
-   ],
-   "opened": "2026-07-24",
-   "closed": "2026-08-01",
-   "pl": 464305,
-   "r": 0.58
   }
  ],
  "hist": [
@@ -1779,10 +1758,24 @@
   },
   {
    "d": "2026-10-01",
-   "v": 94924916
+   "v": 94901875
   }
  ],
  "log": [
+  {
+   "d": "2026-10-01",
+   "type": "sell",
+   "code": "WMT",
+   "name": "Walmart Inc.",
+   "q": 17,
+   "price": 104.11,
+   "ccy": "USD",
+   "amt": 2399200,
+   "note": "손절",
+   "pl": -104163,
+   "pl_pct": -4.2,
+   "r": -1.06
+  },
   {
    "d": "2026-10-01",
    "type": "buy",
@@ -2411,17 +2404,6 @@
    "pl": 103620,
    "pl_pct": 3.7,
    "r": 0.92
-  },
-  {
-   "d": "2026-09-10",
-   "type": "order",
-   "code": "003380",
-   "name": "하림지주",
-   "q": 3,
-   "price": 10172.5,
-   "ccy": "KRW",
-   "amt": 30518,
-   "note": "눌림 지정가 주문(추격 금지) — 🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권32% · 체크6/6 · 손절폭9.7%"
   }
  ],
  "lane": "bulk",
