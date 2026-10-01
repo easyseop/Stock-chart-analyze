@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated_at": "2026-10-01T08:46:03+09:00",
+ "generated_at": "2026-10-01T09:02:42+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "a_ablation": [
   {
@@ -197,7 +197,7 @@
    "bear_share": 0.0,
    "fresh": true,
    "break_gap": 0.0118,
-   "earnings_d": 28,
+   "earnings_d": 27,
    "tactic": {
     "stop_pct": 5.3,
     "pb_price": 200.3303,
@@ -225,7 +225,7 @@
    "bear_share": 0.125,
    "fresh": true,
    "break_gap": 0.0193,
-   "earnings_d": 36,
+   "earnings_d": 35,
    "tactic": {
     "stop_pct": 6.8,
     "pb_price": 153.8019,
@@ -253,7 +253,7 @@
    "bear_share": 0.125,
    "fresh": true,
    "break_gap": 0.0186,
-   "earnings_d": 0,
+   "earnings_d": -1,
    "tactic": {
     "stop_pct": 8.4,
     "pb_price": 32.2806,
@@ -393,7 +393,7 @@
    "bear_share": 0.125,
    "fresh": true,
    "break_gap": 0.0352,
-   "earnings_d": 51,
+   "earnings_d": 50,
    "tactic": {
     "stop_pct": 4.9,
     "pb_price": null,
@@ -421,7 +421,7 @@
    "bear_share": 0.125,
    "fresh": true,
    "break_gap": 0.0103,
-   "earnings_d": 22,
+   "earnings_d": 21,
    "tactic": {
     "stop_pct": 4.4,
     "pb_price": 184.82,
@@ -449,7 +449,7 @@
    "bear_share": 0.125,
    "fresh": true,
    "break_gap": 0.01,
-   "earnings_d": 20,
+   "earnings_d": 19,
    "tactic": {
     "stop_pct": 5.5,
     "pb_price": null,
@@ -505,7 +505,7 @@
    "bear_share": 0.25,
    "fresh": true,
    "break_gap": 0.0349,
-   "earnings_d": -27,
+   "earnings_d": -28,
    "tactic": {
     "stop_pct": 6.3,
     "pb_price": 26.63,
@@ -561,7 +561,7 @@
    "bear_share": 0.375,
    "fresh": true,
    "break_gap": 0.0197,
-   "earnings_d": 34,
+   "earnings_d": 33,
    "tactic": {
     "stop_pct": 7.6,
     "pb_price": 23.5581,
@@ -617,7 +617,7 @@
    "bear_share": 0.25,
    "fresh": false,
    "break_gap": 0.0796,
-   "earnings_d": -55,
+   "earnings_d": -56,
    "tactic": {
     "stop_pct": 10.1,
     "pb_price": 44.2889,
@@ -645,7 +645,7 @@
    "bear_share": 0.375,
    "fresh": false,
    "break_gap": 0.0844,
-   "earnings_d": 20,
+   "earnings_d": 19,
    "tactic": {
     "stop_pct": 5.4,
     "pb_price": null,
@@ -673,7 +673,7 @@
    "bear_share": 0.25,
    "fresh": false,
    "break_gap": 0.0902,
-   "earnings_d": 34,
+   "earnings_d": 33,
    "tactic": {
     "stop_pct": 8.0,
     "pb_price": 74.1396,
@@ -729,7 +729,7 @@
    "bear_share": 0.25,
    "fresh": false,
    "break_gap": 0.0752,
-   "earnings_d": 19,
+   "earnings_d": 18,
    "tactic": {
     "stop_pct": 5.5,
     "pb_price": 201.198,
@@ -757,7 +757,7 @@
    "bear_share": 0.25,
    "fresh": false,
    "break_gap": 0.3072,
-   "earnings_d": 36,
+   "earnings_d": 35,
    "tactic": {
     "stop_pct": 10.2,
     "pb_price": 75.424,
@@ -785,7 +785,7 @@
    "bear_share": 0.25,
    "fresh": false,
    "break_gap": 0.2133,
-   "earnings_d": 29,
+   "earnings_d": 28,
    "tactic": {
     "stop_pct": 6.4,
     "pb_price": 32.0117,
@@ -841,7 +841,7 @@
    "bear_share": 0.375,
    "fresh": false,
    "break_gap": 0.1025,
-   "earnings_d": -48,
+   "earnings_d": -49,
    "tactic": {
     "stop_pct": 10.3,
     "pb_price": 50.14,
@@ -869,7 +869,7 @@
    "bear_share": 0.375,
    "fresh": false,
    "break_gap": 0.1055,
-   "earnings_d": 29,
+   "earnings_d": 28,
    "tactic": {
     "stop_pct": 11.0,
     "pb_price": 203.38,
@@ -897,7 +897,7 @@
    "bear_share": 0.375,
    "fresh": false,
    "break_gap": 0.1077,
-   "earnings_d": 28,
+   "earnings_d": 27,
    "tactic": {
     "stop_pct": 9.7,
     "pb_price": 76.715,
@@ -995,7 +995,7 @@
    },
    "fresh": true,
    "break_gap": null,
-   "earnings_d": -51,
+   "earnings_d": -52,
    "tactic": "full",
    "trend_above_200": true
   },
@@ -1053,7 +1053,7 @@
    },
    "fresh": false,
    "break_gap": null,
-   "earnings_d": 70,
+   "earnings_d": 69,
    "tactic": "watch",
    "trend_above_200": true
   },
@@ -1093,7 +1093,7 @@
    },
    "fresh": false,
    "break_gap": null,
-   "earnings_d": 63,
+   "earnings_d": 62,
    "tactic": "watch",
    "trend_above_200": true
   },
@@ -1133,7 +1133,7 @@
    },
    "fresh": false,
    "break_gap": null,
-   "earnings_d": -54,
+   "earnings_d": -55,
    "tactic": "watch",
    "trend_above_200": false
   },
@@ -1253,7 +1253,7 @@
    },
    "fresh": false,
    "break_gap": null,
-   "earnings_d": 0,
+   "earnings_d": -1,
    "tactic": "watch",
    "trend_above_200": false
   },
@@ -1293,7 +1293,7 @@
    },
    "fresh": false,
    "break_gap": null,
-   "earnings_d": 35,
+   "earnings_d": 34,
    "tactic": "watch",
    "trend_above_200": false
   },
@@ -1333,7 +1333,7 @@
    },
    "fresh": false,
    "break_gap": null,
-   "earnings_d": -55,
+   "earnings_d": -56,
    "tactic": "watch",
    "trend_above_200": false
   },
@@ -1413,7 +1413,7 @@
    },
    "fresh": false,
    "break_gap": null,
-   "earnings_d": 26,
+   "earnings_d": 25,
    "tactic": "watch",
    "trend_above_200": false
   },
@@ -1453,7 +1453,7 @@
    },
    "fresh": false,
    "break_gap": null,
-   "earnings_d": 29,
+   "earnings_d": 28,
    "tactic": "watch",
    "trend_above_200": false
   },
@@ -1533,7 +1533,7 @@
    },
    "fresh": false,
    "break_gap": null,
-   "earnings_d": 29,
+   "earnings_d": 28,
    "tactic": "watch",
    "trend_above_200": false
   },
@@ -1573,7 +1573,7 @@
    },
    "fresh": false,
    "break_gap": null,
-   "earnings_d": -55,
+   "earnings_d": -56,
    "tactic": "watch",
    "trend_above_200": true
   },
@@ -1653,7 +1653,7 @@
    },
    "fresh": false,
    "break_gap": null,
-   "earnings_d": 20,
+   "earnings_d": 19,
    "tactic": "watch",
    "trend_above_200": false
   },
@@ -1675,7 +1675,7 @@
    "bear_share": 0.125,
    "fresh": true,
    "break_gap": 0.0067,
-   "earnings_d": -49,
+   "earnings_d": -50,
    "tactic": null
   },
   {
@@ -1696,7 +1696,7 @@
    "bear_share": 0.375,
    "fresh": true,
    "break_gap": 0.0277,
-   "earnings_d": 26,
+   "earnings_d": 25,
    "tactic": null
   },
   {
@@ -1717,7 +1717,7 @@
    "bear_share": 0.0,
    "fresh": true,
    "break_gap": 0.0077,
-   "earnings_d": -36,
+   "earnings_d": -37,
    "tactic": {
     "stop_pct": 7.0,
     "pb_price": 87.3465,
@@ -1745,7 +1745,7 @@
    "bear_share": 0.25,
    "fresh": true,
    "break_gap": 0.0125,
-   "earnings_d": 34,
+   "earnings_d": 33,
    "tactic": {
     "stop_pct": 6.7,
     "pb_price": 27.2489,
@@ -1773,7 +1773,7 @@
    "bear_share": 0.25,
    "fresh": true,
    "break_gap": 0.0117,
-   "earnings_d": 33,
+   "earnings_d": 32,
    "tactic": {
     "stop_pct": 10.7,
     "pb_price": 444.4609,
@@ -1801,7 +1801,7 @@
    "bear_share": 0.25,
    "fresh": true,
    "break_gap": 0.0077,
-   "earnings_d": 0,
+   "earnings_d": -1,
    "tactic": {
     "stop_pct": 5.1,
     "pb_price": 19.1683,
@@ -1829,7 +1829,7 @@
    "bear_share": 0.25,
    "fresh": true,
    "break_gap": 0.0088,
-   "earnings_d": -49,
+   "earnings_d": -50,
    "tactic": {
     "stop_pct": 4.9,
     "pb_price": 88.8071,
@@ -1885,7 +1885,7 @@
    "bear_share": 0.375,
    "fresh": true,
    "break_gap": 0.021,
-   "earnings_d": 29,
+   "earnings_d": 28,
    "tactic": {
     "stop_pct": 7.2,
     "pb_price": 322.2233,
@@ -1913,7 +1913,7 @@
    "bear_share": 0.375,
    "fresh": true,
    "break_gap": 0.0222,
-   "earnings_d": 34,
+   "earnings_d": 33,
    "tactic": {
     "stop_pct": 11.4,
     "pb_price": 95.82,
@@ -1941,7 +1941,7 @@
    "bear_share": 0.375,
    "fresh": true,
    "break_gap": 0.0118,
-   "earnings_d": 29,
+   "earnings_d": 28,
    "tactic": {
     "stop_pct": 5.8,
     "pb_price": 35.0392,
@@ -1969,7 +1969,7 @@
    "bear_share": 0.375,
    "fresh": true,
    "break_gap": 0.0271,
-   "earnings_d": -49,
+   "earnings_d": -50,
    "tactic": null
   },
   {
@@ -1990,7 +1990,7 @@
    "bear_share": 0.375,
    "fresh": true,
    "break_gap": 0.0593,
-   "earnings_d": -51,
+   "earnings_d": -52,
    "tactic": {
     "stop_pct": 12.6,
     "pb_price": 21.08,
@@ -2074,7 +2074,7 @@
    "bear_share": 0.125,
    "fresh": true,
    "break_gap": -0.0015,
-   "earnings_d": 70,
+   "earnings_d": 69,
    "tactic": {
     "stop_pct": 9.0,
     "pb_price": 10.006,
@@ -2130,7 +2130,7 @@
    "bear_share": 0.125,
    "fresh": true,
    "break_gap": -0.0009,
-   "earnings_d": 22,
+   "earnings_d": 21,
    "tactic": {
     "stop_pct": 3.4,
     "pb_price": 143.2675,
@@ -2158,7 +2158,7 @@
    "bear_share": 0.125,
    "fresh": true,
    "break_gap": -0.0083,
-   "earnings_d": -2,
+   "earnings_d": -3,
    "tactic": {
     "stop_pct": 7.2,
     "pb_price": 128.6851,
@@ -2186,7 +2186,7 @@
    "bear_share": 0.125,
    "fresh": true,
    "break_gap": -0.0136,
-   "earnings_d": 21,
+   "earnings_d": 20,
    "tactic": {
     "stop_pct": 4.4,
     "pb_price": 6069.9264,
@@ -2242,7 +2242,7 @@
    "bear_share": 0.25,
    "fresh": true,
    "break_gap": -0.0134,
-   "earnings_d": 27,
+   "earnings_d": 26,
    "tactic": {
     "stop_pct": 3.5,
     "pb_price": null,
@@ -2270,7 +2270,7 @@
    "bear_share": 0.375,
    "fresh": true,
    "break_gap": -0.0139,
-   "earnings_d": 28,
+   "earnings_d": 27,
    "tactic": {
     "stop_pct": 6.4,
     "pb_price": 42.6757,
@@ -2326,7 +2326,7 @@
    "bear_share": 0.25,
    "fresh": true,
    "break_gap": -0.0148,
-   "earnings_d": 37,
+   "earnings_d": 36,
    "tactic": {
     "stop_pct": 3.3,
     "pb_price": 46.38,
@@ -2354,7 +2354,7 @@
    "bear_share": 0.375,
    "fresh": true,
    "break_gap": -0.0046,
-   "earnings_d": 36,
+   "earnings_d": 35,
    "tactic": {
     "stop_pct": 7.7,
     "pb_price": 8.3,
@@ -2382,7 +2382,7 @@
    "bear_share": 0.25,
    "fresh": true,
    "break_gap": -0.0187,
-   "earnings_d": 29,
+   "earnings_d": 28,
    "tactic": {
     "stop_pct": 3.7,
     "pb_price": 125.9217,
@@ -2410,7 +2410,7 @@
    "bear_share": 0.25,
    "fresh": true,
    "break_gap": -0.0033,
-   "earnings_d": 34,
+   "earnings_d": 33,
    "tactic": {
     "stop_pct": 3.6,
     "pb_price": 90.9741,
@@ -2438,7 +2438,7 @@
    "bear_share": 0.375,
    "fresh": true,
    "break_gap": -0.0063,
-   "earnings_d": 27,
+   "earnings_d": 26,
    "tactic": {
     "stop_pct": 5.8,
     "pb_price": 54.7257,
@@ -2466,7 +2466,7 @@
    "bear_share": 0.375,
    "fresh": true,
    "break_gap": -0.0086,
-   "earnings_d": -51,
+   "earnings_d": -52,
    "tactic": {
     "stop_pct": 6.4,
     "pb_price": 65.1806,
@@ -2494,7 +2494,7 @@
    "bear_share": 0.375,
    "fresh": true,
    "break_gap": -0.0007,
-   "earnings_d": 29,
+   "earnings_d": 28,
    "tactic": {
     "stop_pct": 8.7,
     "pb_price": 56.56,
@@ -2522,7 +2522,7 @@
    "bear_share": 0.375,
    "fresh": true,
    "break_gap": -0.01,
-   "earnings_d": -1,
+   "earnings_d": -2,
    "tactic": {
     "stop_pct": 5.5,
     "pb_price": 35.22,
@@ -2550,7 +2550,7 @@
    "bear_share": 0.375,
    "fresh": false,
    "break_gap": 0.1661,
-   "earnings_d": -34,
+   "earnings_d": -35,
    "tactic": null
   },
   {
@@ -2571,7 +2571,7 @@
    "bear_share": 0.125,
    "fresh": false,
    "break_gap": 0.1031,
-   "earnings_d": -54,
+   "earnings_d": -55,
    "tactic": null
   },
   {
@@ -2592,7 +2592,7 @@
    "bear_share": 0.25,
    "fresh": false,
    "break_gap": 0.0761,
-   "earnings_d": 62,
+   "earnings_d": 61,
    "tactic": null
   },
   {
@@ -2634,7 +2634,7 @@
    "bear_share": 0.25,
    "fresh": false,
    "break_gap": 0.1458,
-   "earnings_d": 35,
+   "earnings_d": 34,
    "tactic": null
   },
   {
@@ -2676,7 +2676,7 @@
    "bear_share": 0.375,
    "fresh": false,
    "break_gap": 0.3448,
-   "earnings_d": 34,
+   "earnings_d": 33,
    "tactic": null
   },
   {
@@ -2697,7 +2697,7 @@
    "bear_share": 0.375,
    "fresh": false,
    "break_gap": 0.1189,
-   "earnings_d": -55,
+   "earnings_d": -56,
    "tactic": null
   }
  ]
