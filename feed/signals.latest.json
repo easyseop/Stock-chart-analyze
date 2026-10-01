@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated_at": "2026-10-02T06:00:43+09:00",
+ "generated_at": "2026-10-02T06:17:09+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "a_ablation": [
   {
@@ -1420,46 +1420,6 @@
    "trend_above_200": false
   },
   {
-   "id": "006260-2026-10-02-shelf-watch",
-   "code": "006260",
-   "name": "LS",
-   "ccy": "KRW",
-   "group": "shelf_watch",
-   "entry_kind": "shelf_watch",
-   "stage": 0,
-   "price": 298000.0,
-   "entry": 298000.0,
-   "stop": 287140.0,
-   "target": 318025.0,
-   "shares_1pct": 0,
-   "range_pos": 0.3089,
-   "norm": 8.5,
-   "bear_share": 0.125,
-   "shelf": {
-    "poc": 207325.0,
-    "val": 170425.0,
-    "vah": 318025.0,
-    "rr": 1.84,
-    "overhead": 0.425,
-    "reason": "반등 미확인(터치·상단마감)",
-    "history_bars": 1899,
-    "profile_pnl_proxy": 0.0099,
-    "runup252": 0.5692,
-    "checks": {
-     "터치": false,
-     "회복": true,
-     "상단마감": false,
-     "거래량": true,
-     "신저가아님": true
-    }
-   },
-   "fresh": false,
-   "break_gap": null,
-   "earnings_d": null,
-   "tactic": "watch",
-   "trend_above_200": false
-  },
-  {
    "id": "LYFT-2026-10-02-shelf-watch",
    "code": "LYFT",
    "name": "Lyft, Inc.",
@@ -1616,6 +1576,46 @@
    "fresh": false,
    "break_gap": null,
    "earnings_d": 28,
+   "tactic": "watch",
+   "trend_above_200": false
+  },
+  {
+   "id": "POWI-2026-10-02-shelf-watch",
+   "code": "POWI",
+   "name": "Power Integrations, Inc.",
+   "ccy": "USD",
+   "group": "shelf_watch",
+   "entry_kind": "shelf_watch",
+   "stage": 0,
+   "price": 51.5,
+   "entry": 51.5,
+   "stop": 49.4704,
+   "target": 64.79,
+   "shares_1pct": 0,
+   "range_pos": 0.3422,
+   "norm": -10.4,
+   "bear_share": 0.25,
+   "shelf": {
+    "poc": 37.1433,
+    "val": 32.1167,
+    "vah": 64.79,
+    "rr": 6.55,
+    "overhead": 0.423,
+    "reason": "반등 미확인(터치)",
+    "history_bars": 1948,
+    "profile_pnl_proxy": -0.0495,
+    "runup252": 0.328,
+    "checks": {
+     "터치": false,
+     "회복": true,
+     "상단마감": true,
+     "거래량": true,
+     "신저가아님": true
+    }
+   },
+   "fresh": false,
+   "break_gap": null,
+   "earnings_d": null,
    "tactic": "watch",
    "trend_above_200": false
   },
