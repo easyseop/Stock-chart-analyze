@@ -1,10 +1,10 @@
 {
- "generated_at": "2026-10-01T23:45:07.056541+09:00",
+ "generated_at": "2026-10-01T23:58:50.544336+09:00",
  "updated": "2026-10-01",
  "start": 100000000,
- "cash": 16564731,
- "equity": 94970259,
- "ret_pct": -5.03,
+ "cash": 24203708,
+ "equity": 94991018,
+ "ret_pct": -5.01,
  "positions": [
   {
    "code": "032640",
@@ -19,7 +19,7 @@
    "opened": "2026-09-16",
    "pl_krw": -290485,
    "pl_pct": -1.39,
-   "price_age_min": 10.0
+   "price_age_min": 8.7
   },
   {
    "code": "064400",
@@ -34,7 +34,7 @@
    "opened": "2026-09-21",
    "pl_krw": 166543,
    "pl_pct": 1.79,
-   "price_age_min": 7.4
+   "price_age_min": 5.8
   },
   {
    "code": "204320",
@@ -49,7 +49,7 @@
    "opened": "2026-09-22",
    "pl_krw": -6806,
    "pl_pct": -0.12,
-   "price_age_min": 7.4
+   "price_age_min": 5.8
   },
   {
    "code": "CNM",
@@ -57,29 +57,14 @@
    "ccy": "USD",
    "q": 44,
    "avg": 42.97,
-   "price": 41.2599983215332,
+   "price": 41.06999969482422,
    "stop": 40.5224,
    "target": 47.8653,
    "half_done": false,
    "opened": "2026-09-23",
-   "pl_krw": -101994,
-   "pl_pct": -3.98,
-   "price_age_min": 7.4
-  },
-  {
-   "code": "GBCI",
-   "name": "Glacier Bancorp, Inc.",
-   "ccy": "USD",
-   "q": 133,
-   "avg": 44.17,
-   "price": 42.36000061035156,
-   "stop": 42.3931,
-   "target": 47.7239,
-   "half_done": false,
-   "opened": "2026-09-29",
-   "pl_krw": -326329,
-   "pl_pct": -4.1,
-   "price_age_min": 8.6
+   "pl_krw": -113327,
+   "pl_pct": -4.42,
+   "price_age_min": 5.8
   },
   {
    "code": "BKE",
@@ -87,14 +72,14 @@
    "ccy": "USD",
    "q": 96,
    "avg": 43.09,
-   "price": 42.4900016784668,
+   "price": 42.532501220703125,
    "stop": 41.0781,
    "target": 47.1138,
    "half_done": false,
    "opened": "2026-09-29",
-   "pl_krw": -78081,
-   "pl_pct": -1.39,
-   "price_age_min": 10.0
+   "pl_krw": -72550,
+   "pl_pct": -1.29,
+   "price_age_min": 8.8
   },
   {
    "code": "TEL",
@@ -102,14 +87,14 @@
    "ccy": "USD",
    "q": 18,
    "avg": 213.675,
-   "price": 214.3000030517578,
+   "price": 215.3699951171875,
    "stop": 202.2342,
    "target": 236.5566,
    "half_done": false,
    "opened": "2026-09-30",
-   "pl_krw": 15250,
-   "pl_pct": 0.29,
-   "price_age_min": 10.3
+   "pl_krw": 41359,
+   "pl_pct": 0.79,
+   "price_age_min": 9.1
   },
   {
    "code": "DOV",
@@ -117,14 +102,14 @@
    "ccy": "USD",
    "q": 31,
    "avg": 189.45,
-   "price": 188.03500366210935,
+   "price": 188.69000244140625,
    "stop": 181.2117,
    "target": 205.9266,
    "half_done": false,
    "opened": "2026-09-30",
-   "pl_krw": -59462,
-   "pl_pct": -0.75,
-   "price_age_min": 10.3
+   "pl_krw": -31937,
+   "pl_pct": -0.4,
+   "price_age_min": 9.1
   },
   {
    "code": "CRAI",
@@ -132,14 +117,14 @@
    "ccy": "USD",
    "q": 31,
    "avg": 164.4,
-   "price": 172.1999969482422,
+   "price": 171.52999877929688,
    "stop": 153.1602,
    "target": 186.8795,
    "half_done": false,
    "opened": "2026-10-01",
-   "pl_krw": 327779,
-   "pl_pct": 4.74,
-   "price_age_min": 10.1
+   "pl_krw": 299624,
+   "pl_pct": 4.34,
+   "price_age_min": 9.0
   },
   {
    "code": "GE",
@@ -147,14 +132,14 @@
    "ccy": "USD",
    "q": 1,
    "avg": 314.62,
-   "price": 312.46551513671875,
+   "price": 311.9349975585937,
    "stop": 297.5081,
    "target": 348.8438,
    "half_done": false,
    "opened": "2026-10-01",
-   "pl_krw": -2921,
-   "pl_pct": -0.68,
-   "price_age_min": 10.5
+   "pl_krw": -3640,
+   "pl_pct": -0.85,
+   "price_age_min": 9.4
   },
   {
    "code": "088980",
@@ -169,11 +154,11 @@
    "opened": "2026-10-01",
    "pl_krw": -25680,
    "pl_pct": -0.41,
-   "price_age_min": 10.0
+   "price_age_min": 8.7
   }
  ],
  "pending": [],
- "trades": 39,
+ "trades": 40,
  "win_trades": 22,
  "pos_cap_pct": 33.3,
  "cap_violations": [],
@@ -181,17 +166,17 @@
  "fx": 1355.58,
  "stats": {
   "all": {
-   "n": 39,
+   "n": 40,
    "win": 22,
-   "win_rate": 56,
-   "avg_r": -0.07
+   "win_rate": 55,
+   "avg_r": -0.09
   },
   "by_mode": {
    "full": {
-    "n": 18,
+    "n": 19,
     "win": 9,
-    "win_rate": 50,
-    "avg_r": -0.14
+    "win_rate": 47,
+    "avg_r": -0.19
    },
    "half": {
     "n": 14,
@@ -207,10 +192,10 @@
    }
   },
   "fresh": {
-   "n": 38,
+   "n": 39,
    "win": 21,
-   "win_rate": 55,
-   "avg_r": -0.08
+   "win_rate": 54,
+   "avg_r": -0.1
   },
   "stale": {
    "n": 1,
@@ -220,10 +205,10 @@
   },
   "by_stage": {
    "3": {
-    "n": 37,
+    "n": 38,
     "win": 21,
-    "win_rate": 57,
-    "avg_r": -0.05
+    "win_rate": 55,
+    "avg_r": -0.08
    },
    "4": {
     "n": 2,
@@ -240,16 +225,52 @@
     "avg_r": -0.11
    },
    "USD": {
-    "n": 32,
+    "n": 33,
     "win": 18,
-    "win_rate": 56,
-    "avg_r": -0.06
+    "win_rate": 55,
+    "avg_r": -0.08
    }
   },
-  "slip_entry_pct": -0.52,
-  "slip_stop_pct": -0.74
+  "slip_entry_pct": -0.51,
+  "slip_stop_pct": -0.7
  },
  "closed": [
+  {
+   "code": "GBCI",
+   "name": "Glacier Bancorp, Inc.",
+   "ccy": "USD",
+   "ctx": {
+    "mode": "full",
+    "fresh": true,
+    "stage": 3,
+    "rp": 29,
+    "rec": 4,
+    "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권29% · 체크4/6 · 손절폭4.0%"
+   },
+   "plan": {
+    "entry": 44.17,
+    "stop": 42.3931,
+    "target": 47.7239,
+    "pb": 43.433,
+    "tactic": "full"
+   },
+   "fill": {
+    "avg": 44.17,
+    "q": 133
+   },
+   "exits": [
+    {
+     "d": "2026-10-01",
+     "q": 133,
+     "price": 42.37,
+     "note": "손절"
+    }
+   ],
+   "opened": "2026-09-29",
+   "closed": "2026-10-01",
+   "pl": -324526,
+   "r": -1.01
+  },
   {
    "code": "WMT",
    "name": "Walmart Inc.",
@@ -1365,42 +1386,6 @@
    "closed": "2026-08-11",
    "pl": 307482,
    "r": 0.62
-  },
-  {
-   "code": "CRC",
-   "name": "California Resources Corporation",
-   "ccy": "USD",
-   "ctx": {
-    "mode": "half",
-    "fresh": true,
-    "stage": 3,
-    "rp": 28,
-    "rec": 3,
-    "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권28% · 체크3/6 · 손절폭6.6%"
-   },
-   "plan": {
-    "entry": 51.16,
-    "stop": 47.7785,
-    "target": 57.923,
-    "pb": 49.8145,
-    "tactic": "half"
-   },
-   "fill": {
-    "avg": 51.16,
-    "q": 101
-   },
-   "exits": [
-    {
-     "d": "2026-08-10",
-     "q": 101,
-     "price": 52.11,
-     "note": "어닝 회피 — 전량(진행 없음, MFE<0.5R)"
-    }
-   ],
-   "opened": "2026-07-28",
-   "closed": "2026-08-10",
-   "pl": 135045,
-   "r": 0.27
   }
  ],
  "hist": [
@@ -1758,10 +1743,24 @@
   },
   {
    "d": "2026-10-01",
-   "v": 94970259
+   "v": 94991018
   }
  ],
  "log": [
+  {
+   "d": "2026-10-01",
+   "type": "sell",
+   "code": "GBCI",
+   "name": "Glacier Bancorp, Inc.",
+   "q": 133,
+   "price": 42.37,
+   "ccy": "USD",
+   "amt": 7638978,
+   "note": "손절",
+   "pl": -324526,
+   "pl_pct": -4.1,
+   "r": -1.01
+  },
   {
    "d": "2026-10-01",
    "type": "sell",
@@ -2390,20 +2389,6 @@
    "note": "즉시 분할 — 🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권30% · 체크4/6 · 손절폭6.0%",
    "stop": 158.2099,
    "target": 188.2702
-  },
-  {
-   "d": "2026-09-11",
-   "type": "sell",
-   "code": "MAIN",
-   "name": "Main Street Capital Corporation",
-   "q": 39,
-   "price": 55.935,
-   "ccy": "USD",
-   "amt": 2934681,
-   "note": "트레일 스탑",
-   "pl": 103620,
-   "pl_pct": 3.7,
-   "r": 0.92
   }
  ],
  "lane": "bulk",
