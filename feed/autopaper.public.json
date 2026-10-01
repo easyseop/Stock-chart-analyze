@@ -1,10 +1,10 @@
 {
- "generated_at": "2026-10-01T23:58:50.544336+09:00",
- "updated": "2026-10-01",
+ "generated_at": "2026-10-02T00:17:30.952609+09:00",
+ "updated": "2026-10-02",
  "start": 100000000,
- "cash": 24203708,
- "equity": 94991018,
- "ret_pct": -5.01,
+ "cash": 24176724,
+ "equity": 95167772,
+ "ret_pct": -4.83,
  "positions": [
   {
    "code": "032640",
@@ -19,7 +19,7 @@
    "opened": "2026-09-16",
    "pl_krw": -290485,
    "pl_pct": -1.39,
-   "price_age_min": 8.7
+   "price_age_min": 0.4
   },
   {
    "code": "064400",
@@ -34,7 +34,7 @@
    "opened": "2026-09-21",
    "pl_krw": 166543,
    "pl_pct": 1.79,
-   "price_age_min": 5.8
+   "price_age_min": 0.4
   },
   {
    "code": "204320",
@@ -49,7 +49,7 @@
    "opened": "2026-09-22",
    "pl_krw": -6806,
    "pl_pct": -0.12,
-   "price_age_min": 5.8
+   "price_age_min": 0.4
   },
   {
    "code": "CNM",
@@ -57,14 +57,14 @@
    "ccy": "USD",
    "q": 44,
    "avg": 42.97,
-   "price": 41.06999969482422,
+   "price": 41.15999984741211,
    "stop": 40.5224,
    "target": 47.8653,
    "half_done": false,
    "opened": "2026-09-23",
-   "pl_krw": -113327,
-   "pl_pct": -4.42,
-   "price_age_min": 5.8
+   "pl_krw": -108538,
+   "pl_pct": -4.21,
+   "price_age_min": 0.4
   },
   {
    "code": "BKE",
@@ -72,14 +72,14 @@
    "ccy": "USD",
    "q": 96,
    "avg": 43.09,
-   "price": 42.532501220703125,
+   "price": 42.70000076293945,
    "stop": 41.0781,
    "target": 47.1138,
    "half_done": false,
    "opened": "2026-09-29",
-   "pl_krw": -72550,
-   "pl_pct": -1.29,
-   "price_age_min": 8.8
+   "pl_krw": -51025,
+   "pl_pct": -0.91,
+   "price_age_min": 0.4
   },
   {
    "code": "TEL",
@@ -87,14 +87,14 @@
    "ccy": "USD",
    "q": 18,
    "avg": 213.675,
-   "price": 215.3699951171875,
+   "price": 214.7250061035156,
    "stop": 202.2342,
    "target": 236.5566,
    "half_done": false,
    "opened": "2026-09-30",
-   "pl_krw": 41359,
-   "pl_pct": 0.79,
-   "price_age_min": 9.1
+   "pl_krw": 25758,
+   "pl_pct": 0.49,
+   "price_age_min": 0.4
   },
   {
    "code": "DOV",
@@ -102,14 +102,14 @@
    "ccy": "USD",
    "q": 31,
    "avg": 189.45,
-   "price": 188.69000244140625,
+   "price": 187.47999572753903,
    "stop": 181.2117,
    "target": 205.9266,
    "half_done": false,
    "opened": "2026-09-30",
-   "pl_krw": -31937,
-   "pl_pct": -0.4,
-   "price_age_min": 9.1
+   "pl_krw": -83230,
+   "pl_pct": -1.04,
+   "price_age_min": 0.4
   },
   {
    "code": "CRAI",
@@ -117,14 +117,14 @@
    "ccy": "USD",
    "q": 31,
    "avg": 164.4,
-   "price": 171.52999877929688,
+   "price": 172.97000122070312,
    "stop": 153.1602,
    "target": 186.8795,
    "half_done": false,
    "opened": "2026-10-01",
-   "pl_krw": 299624,
-   "pl_pct": 4.34,
-   "price_age_min": 9.0
+   "pl_krw": 362071,
+   "pl_pct": 5.21,
+   "price_age_min": 0.4
   },
   {
    "code": "GE",
@@ -132,14 +132,14 @@
    "ccy": "USD",
    "q": 1,
    "avg": 314.62,
-   "price": 311.9349975585937,
+   "price": 312.5799865722656,
    "stop": 297.5081,
    "target": 348.8438,
    "half_done": false,
    "opened": "2026-10-01",
-   "pl_krw": -3640,
-   "pl_pct": -0.85,
-   "price_age_min": 9.4
+   "pl_krw": -2780,
+   "pl_pct": -0.65,
+   "price_age_min": 0.4
   },
   {
    "code": "088980",
@@ -154,16 +154,59 @@
    "opened": "2026-10-01",
    "pl_krw": -25680,
    "pl_pct": -0.41,
-   "price_age_min": 8.7
+   "price_age_min": 0.4
+  },
+  {
+   "code": "LEVI",
+   "name": "Levi Strauss & Co",
+   "ccy": "USD",
+   "q": 1,
+   "avg": 19.8,
+   "price": 19.799999237060547,
+   "stop": 18.788,
+   "target": 21.824,
+   "half_done": false,
+   "opened": "2026-10-02",
+   "pl_krw": 0,
+   "pl_pct": -0.0,
+   "price_age_min": 0.3
   }
  ],
- "pending": [],
+ "pending": [
+  {
+   "code": "WS",
+   "name": "Worthington Steel, Inc.",
+   "ccy": "USD",
+   "limit": 32.2806,
+   "stop": 31.9095,
+   "target": 40.5661,
+   "q": 225,
+   "created": "2026-10-02",
+   "atr": 1.4428,
+   "plan": {
+    "entry": 34.795,
+    "stop": 31.9095,
+    "target": 40.5661,
+    "pb": 32.2806,
+    "tactic": "pullback"
+   },
+   "ctx": {
+    "mode": "pullback",
+    "fresh": true,
+    "stage": 3,
+    "rp": 35,
+    "rec": 4,
+    "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권35% · 체크4/6 · 손절폭8.3%"
+   },
+   "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권35% · 체크4/6 · 손절폭8.3%"
+  }
+ ],
  "trades": 40,
  "win_trades": 22,
  "pos_cap_pct": 33.3,
  "cap_violations": [],
  "rule_violations": [],
- "fx": 1355.58,
+ "fx": 1362.86,
  "stats": {
   "all": {
    "n": 40,
@@ -1744,9 +1787,37 @@
   {
    "d": "2026-10-01",
    "v": 94991018
+  },
+  {
+   "d": "2026-10-02",
+   "v": 95167772
   }
  ],
  "log": [
+  {
+   "d": "2026-10-02",
+   "type": "buy",
+   "code": "LEVI",
+   "name": "Levi Strauss & Co",
+   "q": 1,
+   "price": 19.8,
+   "ccy": "USD",
+   "amt": 26985,
+   "note": "즉시 분할 — 🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권26% · 체크3/6 · 손절폭5.1%",
+   "stop": 18.788,
+   "target": 21.824
+  },
+  {
+   "d": "2026-10-02",
+   "type": "order",
+   "code": "WS",
+   "name": "Worthington Steel, Inc.",
+   "q": 225,
+   "price": 32.2806,
+   "ccy": "USD",
+   "amt": 9898636,
+   "note": "눌림 지정가 주문(추격 금지) — 🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권35% · 체크4/6 · 손절폭8.3%"
+  },
   {
    "d": "2026-10-01",
    "type": "sell",
@@ -2362,35 +2433,8 @@
    "ccy": "KRW",
    "amt": 6508906,
    "note": "눌림 지정가 주문(추격 금지) — 🔥 갓 전환(추세선 부근) · ④ 전환 확정 ⭐ · 저점권24% · 체크4/6 · 손절폭9.6%"
-  },
-  {
-   "d": "2026-09-11",
-   "type": "sell",
-   "code": "030200",
-   "name": "KT",
-   "q": 126,
-   "price": 52000.0,
-   "ccy": "KRW",
-   "amt": 6552000,
-   "note": "손절",
-   "pl": -340200,
-   "pl_pct": -4.9,
-   "r": -1.12
-  },
-  {
-   "d": "2026-09-11",
-   "type": "buy",
-   "code": "ALG",
-   "name": "Alamo Group, Inc.",
-   "q": 12,
-   "price": 168.23,
-   "ccy": "USD",
-   "amt": 2715798,
-   "note": "즉시 분할 — 🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권30% · 체크4/6 · 손절폭6.0%",
-   "stop": 158.2099,
-   "target": 188.2702
   }
  ],
- "lane": "bulk",
+ "lane": "fast",
  "data_stale": []
 }
