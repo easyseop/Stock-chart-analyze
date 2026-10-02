@@ -1,8 +1,16 @@
 {
  "version": 1,
- "generated_at": "2026-10-03T05:42:53+09:00",
+ "generated_at": "2026-10-03T06:26:02+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "a_ablation": [
+  {
+   "code": "CRAI",
+   "gate": "rp",
+   "range_pos": 0.4017,
+   "runup63": 0.0965,
+   "stage": 4,
+   "price": 170.3800048828125
+  },
   {
    "code": "ADEA",
    "gate": "rp",
@@ -18,14 +26,6 @@
    "runup63": -0.1056,
    "stage": 3,
    "price": 57.27000045776367
-  },
-  {
-   "code": "CRAI",
-   "gate": "rp",
-   "range_pos": 0.4017,
-   "runup63": 0.0965,
-   "stage": 3,
-   "price": 170.3800048828125
   },
   {
    "code": "ECG",
