@@ -1,9 +1,9 @@
 {
- "generated_at": "2026-10-03T02:44:54.120073+09:00",
+ "generated_at": "2026-10-03T03:01:53.982992+09:00",
  "updated": "2026-10-03",
  "start": 100000000,
  "cash": 24176724,
- "equity": 95308278,
+ "equity": 95307733,
  "ret_pct": -4.69,
  "positions": [
   {
@@ -19,7 +19,7 @@
    "opened": "2026-09-16",
    "pl_krw": -276315,
    "pl_pct": -1.32,
-   "price_age_min": 9.5
+   "price_age_min": 0.4
   },
   {
    "code": "064400",
@@ -34,7 +34,7 @@
    "opened": "2026-09-21",
    "pl_krw": 327343,
    "pl_pct": 3.52,
-   "price_age_min": 7.1
+   "price_age_min": 0.4
   },
   {
    "code": "204320",
@@ -49,7 +49,7 @@
    "opened": "2026-09-22",
    "pl_krw": 47644,
    "pl_pct": 0.84,
-   "price_age_min": 7.1
+   "price_age_min": 0.4
   },
   {
    "code": "CNM",
@@ -57,14 +57,14 @@
    "ccy": "USD",
    "q": 44,
    "avg": 42.97,
-   "price": 41.29999923706055,
+   "price": 41.40999984741211,
    "stop": 40.5224,
    "target": 47.8653,
    "half_done": false,
    "opened": "2026-09-23",
-   "pl_krw": -98895,
-   "pl_pct": -3.89,
-   "price_age_min": 7.1
+   "pl_krw": -92381,
+   "pl_pct": -3.63,
+   "price_age_min": 0.4
   },
   {
    "code": "BKE",
@@ -72,14 +72,14 @@
    "ccy": "USD",
    "q": 96,
    "avg": 43.09,
-   "price": 43.119998931884766,
+   "price": 43.060001373291016,
    "stop": 41.0781,
    "target": 47.1138,
    "half_done": false,
    "opened": "2026-09-29",
-   "pl_krw": 3876,
-   "pl_pct": 0.07,
-   "price_age_min": 9.7
+   "pl_krw": -3876,
+   "pl_pct": -0.07,
+   "price_age_min": 0.4
   },
   {
    "code": "TEL",
@@ -87,14 +87,14 @@
    "ccy": "USD",
    "q": 18,
    "avg": 213.675,
-   "price": 220.88999938964844,
+   "price": 220.6450042724609,
    "stop": 202.2342,
    "target": 236.5566,
    "half_done": false,
    "opened": "2026-09-30",
-   "pl_krw": 174789,
-   "pl_pct": 3.38,
-   "price_age_min": 9.7
+   "pl_krw": 168854,
+   "pl_pct": 3.26,
+   "price_age_min": 0.4
   },
   {
    "code": "DOV",
@@ -102,14 +102,14 @@
    "ccy": "USD",
    "q": 31,
    "avg": 189.45,
-   "price": 190.4600067138672,
+   "price": 190.3699951171875,
    "stop": 181.2117,
    "target": 205.9266,
    "half_done": false,
    "opened": "2026-09-30",
-   "pl_krw": 42140,
-   "pl_pct": 0.53,
-   "price_age_min": 9.0
+   "pl_krw": 38384,
+   "pl_pct": 0.49,
+   "price_age_min": 0.4
   },
   {
    "code": "CRAI",
@@ -117,14 +117,14 @@
    "ccy": "USD",
    "q": 31,
    "avg": 164.4,
-   "price": 170.85000610351562,
+   "price": 171.10000610351562,
    "stop": 153.1602,
    "target": 186.8795,
    "half_done": false,
    "opened": "2026-10-01",
-   "pl_krw": 269109,
-   "pl_pct": 3.92,
-   "price_age_min": 9.7
+   "pl_krw": 279540,
+   "pl_pct": 4.08,
+   "price_age_min": 0.4
   },
   {
    "code": "GE",
@@ -132,14 +132,14 @@
    "ccy": "USD",
    "q": 1,
    "avg": 314.62,
-   "price": 311.94000244140625,
+   "price": 311.8999938964844,
    "stop": 297.5081,
    "target": 348.8438,
    "half_done": false,
    "opened": "2026-10-01",
-   "pl_krw": -3607,
-   "pl_pct": -0.85,
-   "price_age_min": 7.1
+   "pl_krw": -3661,
+   "pl_pct": -0.86,
+   "price_age_min": 0.4
   },
   {
    "code": "088980",
@@ -154,7 +154,7 @@
    "opened": "2026-10-01",
    "pl_krw": 0,
    "pl_pct": 0.0,
-   "price_age_min": 10.0
+   "price_age_min": 0.4
   },
   {
    "code": "LEVI",
@@ -162,14 +162,14 @@
    "ccy": "USD",
    "q": 1,
    "avg": 19.8,
-   "price": 19.68000030517578,
+   "price": 19.684999465942383,
    "stop": 18.788,
    "target": 21.824,
    "half_done": false,
    "opened": "2026-10-02",
-   "pl_krw": -162,
-   "pl_pct": -0.61,
-   "price_age_min": 9.5
+   "pl_krw": -155,
+   "pl_pct": -0.58,
+   "price_age_min": 0.4
   }
  ],
  "pending": [
@@ -1794,7 +1794,7 @@
   },
   {
    "d": "2026-10-03",
-   "v": 95308278
+   "v": 95307733
   }
  ],
  "log": [
@@ -2439,6 +2439,6 @@
    "note": "눌림 지정가 주문(추격 금지) — 🔥 갓 전환(추세선 부근) · ④ 전환 확정 ⭐ · 저점권24% · 체크4/6 · 손절폭9.6%"
   }
  ],
- "lane": "bulk",
+ "lane": "fast",
  "data_stale": []
 }
