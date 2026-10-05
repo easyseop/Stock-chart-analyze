@@ -1,10 +1,10 @@
 {
- "generated_at": "2026-10-05T23:56:52.470131+09:00",
- "updated": "2026-10-05",
+ "generated_at": "2026-10-06T00:00:05.706529+09:00",
+ "updated": "2026-10-06",
  "start": 100000000,
  "cash": 24176724,
- "equity": 95205795,
- "ret_pct": -4.79,
+ "equity": 95203356,
+ "ret_pct": -4.8,
  "positions": [
   {
    "code": "032640",
@@ -19,7 +19,7 @@
    "opened": "2026-09-16",
    "pl_krw": -276315,
    "pl_pct": -1.32,
-   "price_age_min": 0.4
+   "price_age_min": 9.8
   },
   {
    "code": "064400",
@@ -34,7 +34,7 @@
    "opened": "2026-09-21",
    "pl_krw": 327343,
    "pl_pct": 3.52,
-   "price_age_min": 0.4
+   "price_age_min": 7.5
   },
   {
    "code": "204320",
@@ -49,7 +49,7 @@
    "opened": "2026-09-22",
    "pl_krw": 47644,
    "pl_pct": 0.84,
-   "price_age_min": 0.4
+   "price_age_min": 7.5
   },
   {
    "code": "CNM",
@@ -57,14 +57,14 @@
    "ccy": "USD",
    "q": 44,
    "avg": 42.97,
-   "price": 41.54999923706055,
+   "price": 41.470001220703125,
    "stop": 40.5224,
    "target": 47.8653,
    "half_done": false,
    "opened": "2026-09-23",
-   "pl_krw": -83880,
-   "pl_pct": -3.3,
-   "price_age_min": 0.4
+   "pl_krw": -88602,
+   "pl_pct": -3.49,
+   "price_age_min": 7.5
   },
   {
    "code": "BKE",
@@ -72,14 +72,14 @@
    "ccy": "USD",
    "q": 96,
    "avg": 43.09,
-   "price": 42.83000183105469,
+   "price": 42.91999816894531,
    "stop": 41.0781,
    "target": 47.1138,
    "half_done": false,
    "opened": "2026-09-29",
-   "pl_krw": -33509,
-   "pl_pct": -0.6,
-   "price_age_min": 0.4
+   "pl_krw": -21909,
+   "pl_pct": -0.39,
+   "price_age_min": 10.0
   },
   {
    "code": "TEL",
@@ -87,14 +87,14 @@
    "ccy": "USD",
    "q": 18,
    "avg": 213.675,
-   "price": 220.27999877929688,
+   "price": 219.8999938964844,
    "stop": 202.2342,
    "target": 236.5566,
    "half_done": false,
    "opened": "2026-09-30",
-   "pl_krw": 159611,
-   "pl_pct": 3.09,
-   "price_age_min": 0.4
+   "pl_krw": 150421,
+   "pl_pct": 2.91,
+   "price_age_min": 10.1
   },
   {
    "code": "DOV",
@@ -102,14 +102,14 @@
    "ccy": "USD",
    "q": 31,
    "avg": 189.45,
-   "price": 190.1499938964844,
+   "price": 190.19000244140625,
    "stop": 181.2117,
    "target": 205.9266,
    "half_done": false,
    "opened": "2026-09-30",
-   "pl_krw": 29132,
-   "pl_pct": 0.37,
-   "price_age_min": 0.4
+   "pl_krw": 30796,
+   "pl_pct": 0.39,
+   "price_age_min": 9.2
   },
   {
    "code": "CRAI",
@@ -122,9 +122,9 @@
    "target": 186.8795,
    "half_done": false,
    "opened": "2026-10-01",
-   "pl_krw": 292989,
+   "pl_krw": 292976,
    "pl_pct": 4.28,
-   "price_age_min": 0.4
+   "price_age_min": 10.2
   },
   {
    "code": "GE",
@@ -132,14 +132,14 @@
    "ccy": "USD",
    "q": 1,
    "avg": 314.62,
-   "price": 308.25,
+   "price": 307.8575134277344,
    "stop": 297.5081,
    "target": 348.8438,
    "half_done": false,
    "opened": "2026-10-01",
-   "pl_krw": -8552,
-   "pl_pct": -2.02,
-   "price_age_min": 0.4
+   "pl_krw": -9078,
+   "pl_pct": -2.15,
+   "price_age_min": 7.5
   },
   {
    "code": "088980",
@@ -154,7 +154,7 @@
    "opened": "2026-10-01",
    "pl_krw": 0,
    "pl_pct": 0.0,
-   "price_age_min": 0.4
+   "price_age_min": 10.4
   },
   {
    "code": "LEVI",
@@ -162,14 +162,14 @@
    "ccy": "USD",
    "q": 1,
    "avg": 19.8,
-   "price": 20.05500030517578,
+   "price": 20.06999969482422,
    "stop": 18.788,
    "target": 21.824,
    "half_done": false,
    "opened": "2026-10-02",
-   "pl_krw": 342,
-   "pl_pct": 1.29,
-   "price_age_min": 0.4
+   "pl_krw": 362,
+   "pl_pct": 1.36,
+   "price_age_min": 9.7
   }
  ],
  "pending": [
@@ -206,7 +206,7 @@
  "pos_cap_pct": 33.3,
  "cap_violations": [],
  "rule_violations": [],
- "fx": 1342.51,
+ "fx": 1342.45,
  "stats": {
   "all": {
    "n": 40,
@@ -1803,6 +1803,10 @@
   {
    "d": "2026-10-05",
    "v": 95205795
+  },
+  {
+   "d": "2026-10-06",
+   "v": 95203356
   }
  ],
  "log": [
@@ -2447,6 +2451,6 @@
    "note": "눌림 지정가 주문(추격 금지) — 🔥 갓 전환(추세선 부근) · ④ 전환 확정 ⭐ · 저점권24% · 체크4/6 · 손절폭9.6%"
   }
  ],
- "lane": "fast",
+ "lane": "bulk",
  "data_stale": []
 }
