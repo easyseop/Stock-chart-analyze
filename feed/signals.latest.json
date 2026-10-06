@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated_at": "2026-10-07T06:58:40+09:00",
+ "generated_at": "2026-10-07T07:46:18+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "a_ablation": [
   {
@@ -3619,6 +3619,27 @@
    }
   },
   {
+   "id": "TAC-2026-10-07-watch",
+   "code": "TAC",
+   "name": "TransAlta Corporation",
+   "ccy": "USD",
+   "group": "watch",
+   "entry_kind": "pullback",
+   "stage": 4,
+   "price": 13.12,
+   "entry": 11.4217,
+   "stop": 10.6596,
+   "target": 12.9458,
+   "shares_1pct": 131,
+   "range_pos": 0.2677,
+   "norm": 18.9,
+   "bear_share": 0.375,
+   "fresh": false,
+   "break_gap": 0.104,
+   "earnings_d": 30,
+   "tactic": null
+  },
+  {
    "id": "STRL-2026-10-07-watch",
    "code": "STRL",
    "name": "Sterling Infrastructure, Inc.",
@@ -3784,27 +3805,6 @@
    "fresh": false,
    "break_gap": 0.1935,
    "earnings_d": 29,
-   "tactic": null
-  },
-  {
-   "id": "TAC-2026-10-07-watch",
-   "code": "TAC",
-   "name": "TransAlta Corporation",
-   "ccy": "USD",
-   "group": "watch",
-   "entry_kind": "pullback",
-   "stage": 3,
-   "price": 13.12,
-   "entry": 11.4217,
-   "stop": 10.6596,
-   "target": 12.9458,
-   "shares_1pct": 131,
-   "range_pos": 0.2677,
-   "norm": 17.0,
-   "bear_share": 0.375,
-   "fresh": false,
-   "break_gap": 0.104,
-   "earnings_d": 30,
    "tactic": null
   },
   {
