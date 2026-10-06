@@ -1,8 +1,16 @@
 {
  "version": 1,
- "generated_at": "2026-10-07T08:07:53+09:00",
+ "generated_at": "2026-10-07T08:45:58+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "a_ablation": [
+  {
+   "code": "GTX",
+   "gate": "rp",
+   "range_pos": 0.5764,
+   "runup63": -0.199,
+   "stage": 4,
+   "price": 26.09000015258789
+  },
   {
    "code": "ADEA",
    "gate": "rp",
@@ -98,14 +106,6 @@
    "runup63": 0.0107,
    "stage": 3,
    "price": 118.13999938964844
-  },
-  {
-   "code": "GTX",
-   "gate": "rp",
-   "range_pos": 0.5764,
-   "runup63": -0.199,
-   "stage": 3,
-   "price": 26.09000015258789
   },
   {
    "code": "HRI",
@@ -441,9 +441,9 @@
    "stage": 3,
    "price": 66.96,
    "entry": 66.96,
-   "stop": 61.9627,
-   "target": 76.9546,
-   "shares_1pct": 20,
+   "stop": 61.957,
+   "target": 76.966,
+   "shares_1pct": 19,
    "range_pos": 0.3494,
    "norm": -8.2,
    "bear_share": 0.25,
@@ -2039,8 +2039,8 @@
    "stage": 2,
    "price": 60.95,
    "entry": 60.95,
-   "stop": 57.6513,
-   "target": 67.5475,
+   "stop": 57.6456,
+   "target": 67.5589,
    "shares_1pct": 30,
    "range_pos": 0.357,
    "norm": 34.0,
@@ -2403,8 +2403,8 @@
    "stage": 2,
    "price": 121.67,
    "entry": 121.67,
-   "stop": 117.6299,
-   "target": 129.7503,
+   "stop": 117.6291,
+   "target": 129.7517,
    "shares_1pct": 24,
    "range_pos": 0.3256,
    "norm": -17.0,
