@@ -1,10 +1,10 @@
 {
- "generated_at": "2026-10-06T22:31:53.385137+09:00",
+ "generated_at": "2026-10-06T22:35:31.845469+09:00",
  "updated": "2026-10-06",
  "start": 100000000,
  "cash": 24176724,
- "equity": 95724191,
- "ret_pct": -4.28,
+ "equity": 95571027,
+ "ret_pct": -4.43,
  "positions": [
   {
    "code": "032640",
@@ -19,7 +19,7 @@
    "opened": "2026-09-16",
    "pl_krw": -262145,
    "pl_pct": -1.25,
-   "price_age_min": 0.5
+   "price_age_min": 9.4
   },
   {
    "code": "064400",
@@ -34,7 +34,7 @@
    "opened": "2026-09-21",
    "pl_krw": 555143,
    "pl_pct": 5.96,
-   "price_age_min": 0.5
+   "price_age_min": 9.4
   },
   {
    "code": "204320",
@@ -49,7 +49,7 @@
    "opened": "2026-09-22",
    "pl_krw": 108144,
    "pl_pct": 1.91,
-   "price_age_min": 0.5
+   "price_age_min": 9.0
   },
   {
    "code": "CNM",
@@ -57,14 +57,14 @@
    "ccy": "USD",
    "q": 44,
    "avg": 42.97,
-   "price": 41.95899963378906,
+   "price": 41.81999969482422,
    "stop": 40.5224,
    "target": 47.8653,
    "half_done": false,
    "opened": "2026-09-23",
-   "pl_krw": -59718,
-   "pl_pct": -2.35,
-   "price_age_min": 0.5
+   "pl_krw": -67928,
+   "pl_pct": -2.68,
+   "price_age_min": 29.8
   },
   {
    "code": "BKE",
@@ -72,14 +72,14 @@
    "ccy": "USD",
    "q": 96,
    "avg": 43.09,
-   "price": 43.2599983215332,
+   "price": 43.45000076293945,
    "stop": 41.0781,
    "target": 47.1138,
    "half_done": false,
    "opened": "2026-09-29",
-   "pl_krw": 21909,
-   "pl_pct": 0.39,
-   "price_age_min": 0.5
+   "pl_krw": 46395,
+   "pl_pct": 0.84,
+   "price_age_min": 31.7
   },
   {
    "code": "TEL",
@@ -87,14 +87,14 @@
    "ccy": "USD",
    "q": 18,
    "avg": 213.675,
-   "price": 222.2100067138672,
+   "price": 218.92999267578125,
    "stop": 202.2342,
    "target": 236.5566,
    "half_done": false,
    "opened": "2026-09-30",
-   "pl_krw": 206241,
-   "pl_pct": 3.99,
-   "price_age_min": 0.5
+   "pl_krw": 126982,
+   "pl_pct": 2.46,
+   "price_age_min": 32.2
   },
   {
    "code": "DOV",
@@ -102,14 +102,14 @@
    "ccy": "USD",
    "q": 31,
    "avg": 189.45,
-   "price": 192.25,
+   "price": 191.3000030517578,
    "stop": 181.2117,
    "target": 205.9266,
    "half_done": false,
    "opened": "2026-09-30",
-   "pl_krw": 116525,
-   "pl_pct": 1.48,
-   "price_age_min": 0.5
+   "pl_krw": 76990,
+   "pl_pct": 0.98,
+   "price_age_min": 31.1
   },
   {
    "code": "CRAI",
@@ -117,14 +117,14 @@
    "ccy": "USD",
    "q": 31,
    "avg": 164.4,
-   "price": 172.5,
+   "price": 171.2899932861328,
    "stop": 153.1602,
    "target": 186.8795,
    "half_done": false,
    "opened": "2026-10-01",
-   "pl_krw": 337089,
-   "pl_pct": 4.93,
-   "price_age_min": 0.5
+   "pl_krw": 286734,
+   "pl_pct": 4.19,
+   "price_age_min": 32.3
   },
   {
    "code": "GE",
@@ -132,14 +132,14 @@
    "ccy": "USD",
    "q": 1,
    "avg": 314.62,
-   "price": 306.385009765625,
+   "price": 306.3399963378906,
    "stop": 297.5081,
    "target": 348.8438,
    "half_done": false,
    "opened": "2026-10-01",
-   "pl_krw": -11055,
-   "pl_pct": -2.62,
-   "price_age_min": 0.5
+   "pl_krw": -11115,
+   "pl_pct": -2.63,
+   "price_age_min": 29.6
   },
   {
    "code": "088980",
@@ -154,7 +154,7 @@
    "opened": "2026-10-01",
    "pl_krw": -38520,
    "pl_pct": -0.61,
-   "price_age_min": 0.5
+   "price_age_min": 9.3
   },
   {
    "code": "LEVI",
@@ -162,14 +162,14 @@
    "ccy": "USD",
    "q": 1,
    "avg": 19.8,
-   "price": 20.441600799560547,
+   "price": 20.270000457763672,
    "stop": 18.788,
    "target": 21.824,
    "half_done": false,
    "opened": "2026-10-02",
-   "pl_krw": 861,
-   "pl_pct": 3.24,
-   "price_age_min": 0.5
+   "pl_krw": 631,
+   "pl_pct": 2.37,
+   "price_age_min": 32.7
   }
  ],
  "pending": [
@@ -1806,7 +1806,7 @@
   },
   {
    "d": "2026-10-06",
-   "v": 95724191
+   "v": 95571027
   }
  ],
  "log": [
@@ -2451,6 +2451,12 @@
    "note": "눌림 지정가 주문(추격 금지) — 🔥 갓 전환(추세선 부근) · ④ 전환 확정 ⭐ · 저점권24% · 체크4/6 · 손절폭9.6%"
   }
  ],
- "lane": "fast",
- "data_stale": []
+ "lane": "bulk",
+ "data_stale": [
+  "BKE",
+  "TEL",
+  "DOV",
+  "CRAI",
+  "LEVI"
+ ]
 }
