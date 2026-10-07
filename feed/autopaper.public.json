@@ -1,10 +1,10 @@
 {
- "generated_at": "2026-10-07T23:11:34.768728+09:00",
+ "generated_at": "2026-10-07T23:31:52.633156+09:00",
  "updated": "2026-10-07",
  "start": 100000000,
- "cash": 24064344,
- "equity": 94024513,
- "ret_pct": -5.98,
+ "cash": 23904725,
+ "equity": 93995052,
+ "ret_pct": -6.0,
  "positions": [
   {
    "code": "064400",
@@ -19,7 +19,7 @@
    "opened": "2026-09-21",
    "pl_krw": -47857,
    "pl_pct": -0.51,
-   "price_age_min": 4.6
+   "price_age_min": 0.5
   },
   {
    "code": "204320",
@@ -34,22 +34,7 @@
    "opened": "2026-09-22",
    "pl_krw": -139906,
    "pl_pct": -2.47,
-   "price_age_min": 4.6
-  },
-  {
-   "code": "CNM",
-   "name": "Core & Main, Inc.",
-   "ccy": "USD",
-   "q": 44,
-   "avg": 42.97,
-   "price": 40.31999969482422,
-   "stop": 40.5224,
-   "target": 47.8653,
-   "half_done": false,
-   "opened": "2026-09-23",
-   "pl_krw": -156071,
-   "pl_pct": -6.17,
-   "price_age_min": 4.6
+   "price_age_min": 0.5
   },
   {
    "code": "BKE",
@@ -57,14 +42,14 @@
    "ccy": "USD",
    "q": 96,
    "avg": 43.09,
-   "price": 43.36000061035156,
+   "price": 43.26499938964844,
    "stop": 41.0781,
    "target": 47.1138,
    "half_done": false,
    "opened": "2026-09-29",
-   "pl_krw": 34695,
-   "pl_pct": 0.63,
-   "price_age_min": 4.6
+   "pl_krw": 22487,
+   "pl_pct": 0.41,
+   "price_age_min": 0.5
   },
   {
    "code": "TEL",
@@ -72,14 +57,14 @@
    "ccy": "USD",
    "q": 18,
    "avg": 213.675,
-   "price": 215.0249938964844,
+   "price": 214.6300048828125,
    "stop": 202.2342,
    "target": 236.5566,
    "half_done": false,
    "opened": "2026-09-30",
-   "pl_krw": 32526,
-   "pl_pct": 0.63,
-   "price_age_min": 7.4
+   "pl_krw": 23009,
+   "pl_pct": 0.45,
+   "price_age_min": 0.5
   },
   {
    "code": "DOV",
@@ -87,14 +72,14 @@
    "ccy": "USD",
    "q": 31,
    "avg": 189.45,
-   "price": 188.02999877929688,
+   "price": 188.55999755859372,
    "stop": 181.2117,
    "target": 205.9266,
    "half_done": false,
    "opened": "2026-09-30",
-   "pl_krw": -58922,
-   "pl_pct": -0.75,
-   "price_age_min": 7.4
+   "pl_krw": -36930,
+   "pl_pct": -0.47,
+   "price_age_min": 0.4
   },
   {
    "code": "CRAI",
@@ -102,14 +87,14 @@
    "ccy": "USD",
    "q": 31,
    "avg": 164.4,
-   "price": 172.35499572753906,
+   "price": 171.875,
    "stop": 153.1602,
    "target": 186.8795,
    "half_done": false,
    "opened": "2026-10-01",
-   "pl_krw": 330086,
-   "pl_pct": 4.84,
-   "price_age_min": 7.2
+   "pl_krw": 310169,
+   "pl_pct": 4.55,
+   "price_age_min": 0.4
   },
   {
    "code": "GE",
@@ -117,14 +102,14 @@
    "ccy": "USD",
    "q": 1,
    "avg": 314.62,
-   "price": 304.9200134277344,
+   "price": 304.8399963378906,
    "stop": 297.5081,
    "target": 348.8438,
    "half_done": false,
    "opened": "2026-10-01",
-   "pl_krw": -12984,
-   "pl_pct": -3.08,
-   "price_age_min": 4.6
+   "pl_krw": -13091,
+   "pl_pct": -3.11,
+   "price_age_min": 0.4
   },
   {
    "code": "088980",
@@ -139,7 +124,7 @@
    "opened": "2026-10-01",
    "pl_krw": 6420,
    "pl_pct": 0.1,
-   "price_age_min": 5.7
+   "price_age_min": 0.4
   },
   {
    "code": "LEVI",
@@ -147,14 +132,14 @@
    "ccy": "USD",
    "q": 1,
    "avg": 19.8,
-   "price": 19.86000061035156,
+   "price": 19.8700008392334,
    "stop": 18.788,
    "target": 21.824,
    "half_done": false,
    "opened": "2026-10-02",
-   "pl_krw": 80,
-   "pl_pct": 0.3,
-   "price_age_min": 6.6
+   "pl_krw": 94,
+   "pl_pct": 0.35,
+   "price_age_min": 0.4
   },
   {
    "code": "017800",
@@ -169,7 +154,22 @@
    "opened": "2026-10-07",
    "pl_krw": -367900,
    "pl_pct": -1.77,
-   "price_age_min": 6.5
+   "price_age_min": 0.4
+  },
+  {
+   "code": "COST",
+   "name": "Costco Wholesale Corporation",
+   "ccy": "USD",
+   "q": 2,
+   "avg": 943.035,
+   "price": 943.0349731445312,
+   "stop": 912.978,
+   "target": 1003.1489,
+   "half_done": false,
+   "opened": "2026-10-07",
+   "pl_krw": 0,
+   "pl_pct": -0.0,
+   "price_age_min": 0.4
   }
  ],
  "pending": [
@@ -201,7 +201,7 @@
    "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권35% · 체크4/6 · 손절폭8.3%"
   }
  ],
- "trades": 41,
+ "trades": 42,
  "win_trades": 22,
  "pos_cap_pct": 33.3,
  "cap_violations": [],
@@ -209,17 +209,17 @@
  "fx": 1338.52,
  "stats": {
   "all": {
-   "n": 41,
+   "n": 42,
    "win": 22,
-   "win_rate": 54,
-   "avg_r": -0.09
+   "win_rate": 52,
+   "avg_r": -0.12
   },
   "by_mode": {
    "full": {
-    "n": 20,
+    "n": 21,
     "win": 9,
-    "win_rate": 45,
-    "avg_r": -0.19
+    "win_rate": 43,
+    "avg_r": -0.24
    },
    "half": {
     "n": 14,
@@ -235,10 +235,10 @@
    }
   },
   "fresh": {
-   "n": 40,
+   "n": 41,
    "win": 21,
-   "win_rate": 52,
-   "avg_r": -0.11
+   "win_rate": 51,
+   "avg_r": -0.13
   },
   "stale": {
    "n": 1,
@@ -248,10 +248,10 @@
   },
   "by_stage": {
    "3": {
-    "n": 39,
+    "n": 40,
     "win": 21,
-    "win_rate": 54,
-    "avg_r": -0.08
+    "win_rate": 52,
+    "avg_r": -0.11
    },
    "4": {
     "n": 2,
@@ -268,16 +268,52 @@
     "avg_r": -0.13
    },
    "USD": {
-    "n": 33,
+    "n": 34,
     "win": 18,
-    "win_rate": 55,
-    "avg_r": -0.08
+    "win_rate": 53,
+    "avg_r": -0.12
    }
   },
-  "slip_entry_pct": -0.5,
-  "slip_stop_pct": -0.7
+  "slip_entry_pct": -0.49,
+  "slip_stop_pct": -0.71
  },
  "closed": [
+  {
+   "code": "CNM",
+   "name": "Core & Main, Inc.",
+   "ccy": "USD",
+   "ctx": {
+    "mode": "full",
+    "fresh": true,
+    "stage": 3,
+    "rp": 15,
+    "rec": 4,
+    "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권15% · 체크4/6 · 손절폭5.7%"
+   },
+   "plan": {
+    "entry": 42.97,
+    "stop": 40.5224,
+    "target": 47.8653,
+    "pb": null,
+    "tactic": "full"
+   },
+   "fill": {
+    "avg": 42.97,
+    "q": 44
+   },
+   "exits": [
+    {
+     "d": "2026-10-07",
+     "q": 44,
+     "price": 40.155,
+     "note": "손절"
+    }
+   ],
+   "opened": "2026-09-23",
+   "closed": "2026-10-07",
+   "pl": -165789,
+   "r": -1.13
+  },
   {
    "code": "032640",
    "name": "LG유플러스",
@@ -1387,42 +1423,6 @@
    "closed": "2026-08-27",
    "pl": 13202,
    "r": 2.0
-  },
-  {
-   "code": "FND",
-   "name": "Floor & Decor Holdings, Inc.",
-   "ccy": "USD",
-   "ctx": {
-    "mode": "pullback",
-    "fresh": true,
-    "stage": 3,
-    "rp": 35,
-    "rec": 6,
-    "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권35% · 체크6/6 · 손절폭9.6%"
-   },
-   "plan": {
-    "entry": 60.025,
-    "stop": 54.2692,
-    "target": 71.5365,
-    "pb": 54.6923,
-    "tactic": "pullback"
-   },
-   "fill": {
-    "avg": 54.6923,
-    "q": 103
-   },
-   "exits": [
-    {
-     "d": "2026-08-22",
-     "q": 103,
-     "price": 54.2675,
-     "note": "손절"
-    }
-   ],
-   "opened": "2026-08-21",
-   "closed": "2026-08-22",
-   "pl": -60649,
-   "r": -1.0
   }
  ],
  "hist": [
@@ -1804,10 +1804,37 @@
   },
   {
    "d": "2026-10-07",
-   "v": 94024513
+   "v": 93995052
   }
  ],
  "log": [
+  {
+   "d": "2026-10-07",
+   "type": "buy",
+   "code": "COST",
+   "name": "Costco Wholesale Corporation",
+   "q": 2,
+   "price": 943.035,
+   "ccy": "USD",
+   "amt": 2524542,
+   "note": "즉시 분할 — 🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권39% · 체크4/6 · 손절폭3.2%",
+   "stop": 912.978,
+   "target": 1003.1489
+  },
+  {
+   "d": "2026-10-07",
+   "type": "sell",
+   "code": "CNM",
+   "name": "Core & Main, Inc.",
+   "q": 44,
+   "price": 40.155,
+   "ccy": "USD",
+   "amt": 2364924,
+   "note": "손절",
+   "pl": -165789,
+   "pl_pct": -6.6,
+   "r": -1.13
+  },
   {
    "d": "2026-10-07",
    "type": "buy",
@@ -2426,32 +2453,8 @@
    "ccy": "KRW",
    "amt": 3337,
    "note": "눌림 지정가 주문(추격 금지) — ↗ 돌파후 진행(승률↓) · ③ 돌파후 횡보(대기) · 저점권21% · 체크4/6 · 손절폭8.6%"
-  },
-  {
-   "d": "2026-09-12",
-   "type": "cancel",
-   "code": "003380",
-   "name": "하림지주",
-   "q": 0,
-   "price": 11460.0,
-   "ccy": "KRW",
-   "amt": 0,
-   "note": "지정가 취소 — 신호 부패: 제외 게이트 — 이미 폭등"
-  },
-  {
-   "d": "2026-09-12",
-   "type": "buy",
-   "code": "TKC",
-   "name": "Turkcell Iletisim Hizmetleri AS",
-   "q": 39,
-   "price": 5.385,
-   "ccy": "USD",
-   "amt": 281613,
-   "note": "즉시 분할 — 🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권21% · 체크4/6 · 손절폭4.5%",
-   "stop": 5.1447,
-   "target": 5.8655
   }
  ],
- "lane": "bulk",
+ "lane": "fast",
  "data_stale": []
 }
