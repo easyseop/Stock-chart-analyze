@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated_at": "2026-10-08T21:56:46+09:00",
+ "generated_at": "2026-10-08T22:28:29+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "a_ablation": [
   {
@@ -165,17 +165,17 @@
   }
  ],
  "shelf_debug": {
-  "ok": 7,
+  "ok": 8,
   "watch": 161,
   "reasons": {
    "밸류영역 밖(지지대 아님)": 465,
-   "추락 중(범위 1%)": 253,
-   "추락 중(범위 0%)": 200,
-   "추락 중(범위 2%)": 175,
-   "추락 중(범위 3%)": 163,
+   "추락 중(범위 1%)": 249,
+   "추락 중(범위 0%)": 204,
+   "추락 중(범위 2%)": 177,
+   "추락 중(범위 3%)": 161,
    "매물대 정보 없음": 146,
-   "추락 중(범위 4%)": 135,
-   "추락 중(범위 5%)": 108
+   "추락 중(범위 4%)": 134,
+   "추락 중(범위 5%)": 109
   }
  },
  "signals": [
@@ -1328,6 +1328,38 @@
    }
   },
   {
+   "id": "051900-2026-10-08-shelf",
+   "code": "051900",
+   "name": "LG생활건강",
+   "ccy": "KRW",
+   "group": "shelf",
+   "entry_kind": "shelf",
+   "stage": 0,
+   "price": 269500.0,
+   "entry": 269500.0,
+   "stop": 255780.0,
+   "target": 291052.0833,
+   "shares_1pct": 0,
+   "range_pos": 0.4741,
+   "norm": -0.0,
+   "bear_share": 0.25,
+   "shelf": {
+    "poc": 264906.25,
+    "val": 243989.5833,
+    "vah": 291052.0833,
+    "rr": 1.57,
+    "overhead": 0.546,
+    "history_bars": 1903,
+    "profile_pnl_proxy": -0.0076,
+    "runup252": -0.0511
+   },
+   "fresh": true,
+   "break_gap": null,
+   "earnings_d": null,
+   "tactic": "full",
+   "trend_above_200": true
+  },
+  {
    "id": "FCEL-2026-10-08-shelf",
    "code": "FCEL",
    "name": "FuelCell Energy, Inc.",
@@ -1812,36 +1844,36 @@
    "trend_above_200": true
   },
   {
-   "id": "068270-2026-10-08-shelf-watch",
-   "code": "068270",
-   "name": "셀트리온",
+   "id": "047050-2026-10-08-shelf-watch",
+   "code": "047050",
+   "name": "포스코인터내셔널",
    "ccy": "KRW",
    "group": "shelf_watch",
    "entry_kind": "shelf_watch",
    "stage": 0,
-   "price": 180900.0,
-   "entry": 180900.0,
-   "stop": 175910.0,
-   "target": 197095.737,
+   "price": 57100.0,
+   "entry": 57100.0,
+   "stop": 54782.0,
+   "target": 68990.625,
    "shares_1pct": 0,
-   "range_pos": 0.2781,
+   "range_pos": 0.2643,
    "norm": -0.0,
    "bear_share": 0.25,
    "shelf": {
-    "poc": 176958.8307,
-    "val": 170246.5286,
-    "vah": 197095.737,
-    "rr": 3.25,
-    "overhead": 0.545,
-    "reason": "반등 미확인(거래량)",
+    "poc": 53540.625,
+    "val": 47746.875,
+    "vah": 68990.625,
+    "rr": 5.13,
+    "overhead": 0.527,
+    "reason": "반등 미확인(상단마감)",
     "history_bars": 1903,
-    "profile_pnl_proxy": -0.0309,
-    "runup252": 0.0312,
+    "profile_pnl_proxy": -0.0804,
+    "runup252": 0.1713,
     "checks": {
      "터치": true,
      "회복": true,
-     "상단마감": true,
-     "거래량": false,
+     "상단마감": false,
+     "거래량": true,
      "신저가아님": true
     }
    },
@@ -2915,6 +2947,34 @@
     "mode": "full",
     "label": "⚡ 즉시 분할",
     "desc": "손절폭 4.0%로 타이트 — 현재가에서 1~2회 분할 매수. 기다리는 이득보다 놓치는 비용이 큼"
+   }
+  },
+  {
+   "id": "030200-2026-10-08-watch",
+   "code": "030200",
+   "name": "KT",
+   "ccy": "KRW",
+   "group": "watch",
+   "entry_kind": "now",
+   "stage": 1,
+   "price": 52100.0,
+   "entry": 52100.0,
+   "stop": 50136.6531,
+   "target": 56026.6937,
+   "shares_1pct": 50,
+   "range_pos": 0.1878,
+   "norm": 13.2,
+   "bear_share": 0.25,
+   "fresh": true,
+   "break_gap": -0.0143,
+   "earnings_d": null,
+   "tactic": {
+    "stop_pct": 3.8,
+    "pb_price": 51343.3333,
+    "pb_stop_pct": 2.4,
+    "mode": "full",
+    "label": "⚡ 즉시 분할",
+    "desc": "손절폭 3.8%로 타이트 — 현재가에서 1~2회 분할 매수. 기다리는 이득보다 놓치는 비용이 큼"
    }
   },
   {
