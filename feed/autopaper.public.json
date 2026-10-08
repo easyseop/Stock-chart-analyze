@@ -1,10 +1,10 @@
 {
- "generated_at": "2026-10-09T02:46:50.031480+09:00",
+ "generated_at": "2026-10-09T03:02:02.200005+09:00",
  "updated": "2026-10-09",
  "start": 100000000,
- "cash": 23709689,
- "equity": 93300648,
- "ret_pct": -6.7,
+ "cash": 27255938,
+ "equity": 93269873,
+ "ret_pct": -6.73,
  "positions": [
   {
    "code": "064400",
@@ -19,7 +19,7 @@
    "opened": "2026-09-21",
    "pl_krw": -262257,
    "pl_pct": -2.82,
-   "price_age_min": 0.5
+   "price_age_min": 0.4
   },
   {
    "code": "204320",
@@ -34,7 +34,7 @@
    "opened": "2026-09-22",
    "pl_krw": -279056,
    "pl_pct": -4.93,
-   "price_age_min": 0.5
+   "price_age_min": 0.4
   },
   {
    "code": "BKE",
@@ -42,14 +42,14 @@
    "ccy": "USD",
    "q": 96,
    "avg": 43.09,
-   "price": 43.68000030517578,
+   "price": 43.625,
    "stop": 41.0781,
    "target": 47.1138,
    "half_done": false,
    "opened": "2026-09-29",
-   "pl_krw": 76010,
-   "pl_pct": 1.37,
-   "price_age_min": 0.5
+   "pl_krw": 68924,
+   "pl_pct": 1.24,
+   "price_age_min": 0.4
   },
   {
    "code": "TEL",
@@ -57,14 +57,14 @@
    "ccy": "USD",
    "q": 18,
    "avg": 213.675,
-   "price": 212.0800018310547,
+   "price": 211.8999938964844,
    "stop": 202.2342,
    "target": 236.5566,
    "half_done": false,
    "opened": "2026-09-30",
-   "pl_krw": -38528,
-   "pl_pct": -0.75,
-   "price_age_min": 0.5
+   "pl_krw": -42876,
+   "pl_pct": -0.83,
+   "price_age_min": 0.4
   },
   {
    "code": "DOV",
@@ -72,29 +72,29 @@
    "ccy": "USD",
    "q": 31,
    "avg": 189.45,
-   "price": 188.8800048828125,
+   "price": 188.72999572753903,
    "stop": 181.2117,
    "target": 205.9266,
    "half_done": false,
    "opened": "2026-09-30",
-   "pl_krw": -23713,
-   "pl_pct": -0.3,
-   "price_age_min": 0.5
+   "pl_krw": -29953,
+   "pl_pct": -0.38,
+   "price_age_min": 0.4
   },
   {
    "code": "CRAI",
    "name": "CRA International,Inc.",
    "ccy": "USD",
-   "q": 31,
+   "q": 16,
    "avg": 164.4,
-   "price": 176.42750549316406,
-   "stop": 153.1602,
+   "price": 176.1699981689453,
+   "stop": 164.4,
    "target": 186.8795,
-   "half_done": false,
+   "half_done": true,
    "opened": "2026-10-01",
-   "pl_krw": 500361,
-   "pl_pct": 7.32,
-   "price_age_min": 0.5
+   "pl_krw": 252722,
+   "pl_pct": 7.16,
+   "price_age_min": 0.4
   },
   {
    "code": "GE",
@@ -102,14 +102,14 @@
    "ccy": "USD",
    "q": 1,
    "avg": 314.62,
-   "price": 305.7900085449219,
+   "price": 305.42999267578125,
    "stop": 297.5081,
    "target": 348.8438,
    "half_done": false,
    "opened": "2026-10-01",
-   "pl_krw": -11850,
-   "pl_pct": -2.81,
-   "price_age_min": 0.5
+   "pl_krw": -12333,
+   "pl_pct": -2.92,
+   "price_age_min": 0.4
   },
   {
    "code": "088980",
@@ -124,7 +124,7 @@
    "opened": "2026-10-01",
    "pl_krw": -25680,
    "pl_pct": -0.41,
-   "price_age_min": 0.5
+   "price_age_min": 0.4
   },
   {
    "code": "017800",
@@ -139,7 +139,7 @@
    "opened": "2026-10-07",
    "pl_krw": -962200,
    "pl_pct": -4.64,
-   "price_age_min": 0.5
+   "price_age_min": 0.4
   },
   {
    "code": "COST",
@@ -147,14 +147,14 @@
    "ccy": "USD",
    "q": 2,
    "avg": 943.035,
-   "price": 949.409423828125,
+   "price": 948.7000122070312,
    "stop": 912.978,
    "target": 1003.1489,
    "half_done": false,
    "opened": "2026-10-07",
-   "pl_krw": 17109,
-   "pl_pct": 0.68,
-   "price_age_min": 0.5
+   "pl_krw": 15205,
+   "pl_pct": 0.6,
+   "price_age_min": 0.3
   },
   {
    "code": "AES",
@@ -169,7 +169,7 @@
    "opened": "2026-10-09",
    "pl_krw": 0,
    "pl_pct": 0.0,
-   "price_age_min": 0.5
+   "price_age_min": 0.3
   }
  ],
  "pending": [
@@ -1806,10 +1806,23 @@
   },
   {
    "d": "2026-10-09",
-   "v": 93300648
+   "v": 93269873
   }
  ],
  "log": [
+  {
+   "d": "2026-10-09",
+   "type": "sell",
+   "code": "CRAI",
+   "name": "CRA International,Inc.",
+   "q": 15,
+   "price": 176.17,
+   "ccy": "USD",
+   "amt": 3546249,
+   "note": "+1R 절반 익절",
+   "pl": 236927,
+   "pl_pct": 7.2
+  },
   {
    "d": "2026-10-09",
    "type": "buy",
@@ -2446,17 +2459,6 @@
    "note": "+1R 절반 익절",
    "pl": 180906,
    "pl_pct": 7.7
-  },
-  {
-   "d": "2026-09-15",
-   "type": "order",
-   "code": "LBRT",
-   "name": "Liberty Energy Inc.",
-   "q": 342,
-   "price": 17.9,
-   "ccy": "USD",
-   "amt": 8252309,
-   "note": "눌림 지정가 주문(추격 금지) — ↗ 돌파후 진행(승률↓) · ③ 돌파후 횡보(대기) · 저점권37% · 체크3/6 · 손절폭10.8%"
   }
  ],
  "lane": "fast",
