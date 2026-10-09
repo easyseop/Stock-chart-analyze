@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated_at": "2026-10-10T06:28:04+09:00",
+ "generated_at": "2026-10-10T07:17:03+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "a_ablation": [
   {
@@ -413,8 +413,8 @@
    "stage": 3,
    "price": 65.85,
    "entry": 65.85,
-   "stop": 63.739,
-   "target": 70.072,
+   "stop": 63.7404,
+   "target": 70.0691,
    "shares_1pct": 47,
    "range_pos": 0.2034,
    "norm": 0.0,
@@ -2112,8 +2112,8 @@
    "stage": 2,
    "price": 28.72,
    "entry": 28.72,
-   "stop": 26.9203,
-   "target": 32.3195,
+   "stop": 26.9288,
+   "target": 32.3023,
    "shares_1pct": 55,
    "range_pos": 0.4454,
    "norm": 5.7,
@@ -2122,12 +2122,12 @@
    "break_gap": 0.0179,
    "earnings_d": null,
    "tactic": {
-    "stop_pct": 6.3,
+    "stop_pct": 6.2,
     "pb_price": 28.0069,
-    "pb_stop_pct": 3.9,
+    "pb_stop_pct": 3.8,
     "mode": "half",
     "label": "⚖ 반반 진입",
-    "desc": "손절폭 6.3% — 절반은 현재가, 절반은 눌림 $28.01 지정가(거기선 손절폭 3.9%)"
+    "desc": "손절폭 6.2% — 절반은 현재가, 절반은 눌림 $28.01 지정가(거기선 손절폭 3.8%)"
    }
   },
   {
