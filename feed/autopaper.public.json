@@ -1,26 +1,11 @@
 {
- "generated_at": "2026-10-12T08:25:06.441273+09:00",
+ "generated_at": "2026-10-12T09:11:03.007688+09:00",
  "updated": "2026-10-12",
  "start": 100000000,
- "cash": 30331597,
+ "cash": 39376597,
  "equity": 93513403,
  "ret_pct": -6.49,
  "positions": [
-  {
-   "code": "064400",
-   "name": "LG씨엔에스",
-   "ccy": "KRW",
-   "q": 134,
-   "avg": 69457.1429,
-   "price": 67500.0,
-   "stop": 63538.1081,
-   "target": 81723.7838,
-   "half_done": false,
-   "opened": "2026-09-21",
-   "pl_krw": -262257,
-   "pl_pct": -2.82,
-   "price_age_min": 4.3
-  },
   {
    "code": "204320",
    "name": "HL만도",
@@ -34,7 +19,7 @@
    "opened": "2026-09-22",
    "pl_krw": -279056,
    "pl_pct": -4.93,
-   "price_age_min": 4.3
+   "price_age_min": 5.0
   },
   {
    "code": "BKE",
@@ -49,7 +34,7 @@
    "opened": "2026-09-29",
    "pl_krw": 137647,
    "pl_pct": 2.48,
-   "price_age_min": 4.3
+   "price_age_min": 5.0
   },
   {
    "code": "TEL",
@@ -64,7 +49,7 @@
    "opened": "2026-09-30",
    "pl_krw": 111315,
    "pl_pct": 2.16,
-   "price_age_min": 7.2
+   "price_age_min": 7.8
   },
   {
    "code": "DOV",
@@ -79,7 +64,7 @@
    "opened": "2026-09-30",
    "pl_krw": -25755,
    "pl_pct": -0.33,
-   "price_age_min": 7.0
+   "price_age_min": 7.7
   },
   {
    "code": "CRAI",
@@ -94,7 +79,7 @@
    "opened": "2026-10-01",
    "pl_krw": 264359,
    "pl_pct": 7.5,
-   "price_age_min": 6.4
+   "price_age_min": 7.0
   },
   {
    "code": "GE",
@@ -109,7 +94,7 @@
    "opened": "2026-10-01",
    "pl_krw": -8603,
    "pl_pct": -2.04,
-   "price_age_min": 4.9
+   "price_age_min": 5.5
   },
   {
    "code": "088980",
@@ -124,7 +109,7 @@
    "opened": "2026-10-01",
    "pl_krw": -25680,
    "pl_pct": -0.41,
-   "price_age_min": 4.5
+   "price_age_min": 5.2
   },
   {
    "code": "COST",
@@ -139,7 +124,7 @@
    "opened": "2026-10-07",
    "pl_krw": 10412,
    "pl_pct": 0.41,
-   "price_age_min": 6.4
+   "price_age_min": 7.0
   },
   {
    "code": "AES",
@@ -154,7 +139,7 @@
    "opened": "2026-10-09",
    "pl_krw": 295,
    "pl_pct": 0.13,
-   "price_age_min": 4.3
+   "price_age_min": 5.0
   },
   {
    "code": "TRMB",
@@ -169,7 +154,7 @@
    "opened": "2026-10-09",
    "pl_krw": 66894,
    "pl_pct": 0.4,
-   "price_age_min": 7.0
+   "price_age_min": 7.7
   }
  ],
  "pending": [
@@ -201,7 +186,7 @@
    "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권35% · 체크4/6 · 손절폭8.3%"
   }
  ],
- "trades": 44,
+ "trades": 45,
  "win_trades": 22,
  "pos_cap_pct": 33.3,
  "cap_violations": [],
@@ -209,9 +194,9 @@
  "fx": 1340.02,
  "stats": {
   "all": {
-   "n": 44,
+   "n": 45,
    "win": 22,
-   "win_rate": 50,
+   "win_rate": 49,
    "avg_r": -0.16
   },
   "by_mode": {
@@ -228,10 +213,10 @@
     "avg_r": 0.08
    },
    "pullback": {
-    "n": 7,
+    "n": 8,
     "win": 4,
-    "win_rate": 57,
-    "avg_r": -0.16
+    "win_rate": 50,
+    "avg_r": -0.18
    }
   },
   "fresh": {
@@ -241,17 +226,17 @@
    "avg_r": -0.17
   },
   "stale": {
-   "n": 1,
+   "n": 2,
    "win": 1,
-   "win_rate": 100,
-   "avg_r": 0.38
+   "win_rate": 50,
+   "avg_r": 0.02
   },
   "by_stage": {
    "3": {
-    "n": 42,
+    "n": 43,
     "win": 21,
-    "win_rate": 50,
-    "avg_r": -0.15
+    "win_rate": 49,
+    "avg_r": -0.16
    },
    "4": {
     "n": 2,
@@ -262,10 +247,10 @@
   },
   "by_ccy": {
    "KRW": {
-    "n": 9,
+    "n": 10,
     "win": 4,
-    "win_rate": 44,
-    "avg_r": -0.23
+    "win_rate": 40,
+    "avg_r": -0.24
    },
    "USD": {
     "n": 35,
@@ -278,6 +263,42 @@
   "slip_stop_pct": -0.64
  },
  "closed": [
+  {
+   "code": "064400",
+   "name": "LG씨엔에스",
+   "ccy": "KRW",
+   "ctx": {
+    "mode": "pullback",
+    "fresh": false,
+    "stage": 3,
+    "rp": 16,
+    "rec": 4,
+    "basis": "↗ 돌파후 진행(승률↓) · ③ 돌파후 횡보(대기) · 저점권16% · 체크4/6 · 손절폭8.7%"
+   },
+   "plan": {
+    "entry": 69600.0,
+    "stop": 63538.1081,
+    "target": 81723.7838,
+    "pb": 69457.1429,
+    "tactic": "pullback"
+   },
+   "fill": {
+    "avg": 69457.1429,
+    "q": 134
+   },
+   "exits": [
+    {
+     "d": "2026-10-12",
+     "q": 134,
+     "price": 67500.0,
+     "note": "타임 스탑(+1R 미도달)"
+    }
+   ],
+   "opened": "2026-09-21",
+   "closed": "2026-10-12",
+   "pl": -262257,
+   "r": -0.33
+  },
   {
    "code": "017800",
    "name": "현대엘리베이터",
@@ -1381,42 +1402,6 @@
    "closed": "2026-09-04",
    "pl": 227900,
    "r": 0.45
-  },
-  {
-   "code": "UFPI",
-   "name": "UFP Industries, Inc.",
-   "ccy": "USD",
-   "ctx": {
-    "mode": "half",
-    "fresh": true,
-    "stage": 3,
-    "rp": 31,
-    "rec": 6,
-    "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권31% · 체크6/6 · 손절폭7.1%"
-   },
-   "plan": {
-    "entry": 90.485,
-    "stop": 84.0446,
-    "target": 103.3659,
-    "pb": 89.606,
-    "tactic": "half"
-   },
-   "fill": {
-    "avg": 90.485,
-    "q": 24
-   },
-   "exits": [
-    {
-     "d": "2026-09-01",
-     "q": 24,
-     "price": 85.155,
-     "note": "타임 스탑(+1R 미도달)"
-    }
-   ],
-   "opened": "2026-08-11",
-   "closed": "2026-09-01",
-   "pl": -175048,
-   "r": -0.8
   }
  ],
  "hist": [
@@ -1822,6 +1807,20 @@
   }
  ],
  "log": [
+  {
+   "d": "2026-10-12",
+   "type": "sell",
+   "code": "064400",
+   "name": "LG씨엔에스",
+   "q": 134,
+   "price": 67500.0,
+   "ccy": "KRW",
+   "amt": 9045000,
+   "note": "타임 스탑(+1R 미도달)",
+   "pl": -262257,
+   "pl_pct": -2.8,
+   "r": -0.33
+  },
   {
    "d": "2026-10-09",
    "type": "buy",
@@ -2458,19 +2457,6 @@
    "ccy": "KRW",
    "amt": 0,
    "note": "지정가 취소 — 신호 부패: 제외 게이트 — 하락추세/방어선 이탈"
-  },
-  {
-   "d": "2026-09-16",
-   "type": "buy",
-   "code": "032640",
-   "name": "LG유플러스",
-   "q": 1417,
-   "price": 14745.0,
-   "ccy": "KRW",
-   "amt": 20893665,
-   "note": "즉시 분할 — 🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권19% · 체크4/6 · 손절폭4.7%",
-   "stop": 14053.4865,
-   "target": 16128.0269
   }
  ],
  "lane": "bulk",
