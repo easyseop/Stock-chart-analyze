@@ -1,10 +1,10 @@
 {
- "generated_at": "2026-10-12T22:25:13.784166+09:00",
+ "generated_at": "2026-10-12T22:41:47.800171+09:00",
  "updated": "2026-10-12",
  "start": 100000000,
- "cash": 44531197,
- "equity": 93251033,
- "ret_pct": -6.75,
+ "cash": 30603016,
+ "equity": 93154835,
+ "ret_pct": -6.85,
  "positions": [
   {
    "code": "BKE",
@@ -12,14 +12,14 @@
    "ccy": "USD",
    "q": 96,
    "avg": 43.09,
-   "price": 44.15999984741211,
+   "price": 43.71500015258789,
    "stop": 41.0781,
    "target": 47.1138,
    "half_done": false,
    "opened": "2026-09-29",
-   "pl_krw": 137647,
-   "pl_pct": 2.48,
-   "price_age_min": 4.4
+   "pl_krw": 80401,
+   "pl_pct": 1.45,
+   "price_age_min": 0.5
   },
   {
    "code": "TEL",
@@ -27,14 +27,14 @@
    "ccy": "USD",
    "q": 18,
    "avg": 213.675,
-   "price": 218.2899932861328,
+   "price": 215.1114959716797,
    "stop": 202.2342,
    "target": 236.5566,
    "half_done": false,
    "opened": "2026-09-30",
-   "pl_krw": 111315,
-   "pl_pct": 2.16,
-   "price_age_min": 7.3
+   "pl_krw": 34649,
+   "pl_pct": 0.67,
+   "price_age_min": 0.5
   },
   {
    "code": "DOV",
@@ -42,14 +42,14 @@
    "ccy": "USD",
    "q": 31,
    "avg": 189.45,
-   "price": 188.8300018310547,
+   "price": 189.63499450683597,
    "stop": 181.2117,
    "target": 205.9266,
    "half_done": false,
    "opened": "2026-09-30",
-   "pl_krw": -25755,
-   "pl_pct": -0.33,
-   "price_age_min": 7.2
+   "pl_krw": 7685,
+   "pl_pct": 0.1,
+   "price_age_min": 0.5
   },
   {
    "code": "CRAI",
@@ -57,14 +57,14 @@
    "ccy": "USD",
    "q": 16,
    "avg": 164.4,
-   "price": 176.72999572753906,
+   "price": 178.02499389648438,
    "stop": 164.4,
    "target": 186.8795,
    "half_done": true,
    "opened": "2026-10-01",
-   "pl_krw": 264359,
-   "pl_pct": 7.5,
-   "price_age_min": 6.5
+   "pl_krw": 292124,
+   "pl_pct": 8.29,
+   "price_age_min": 0.5
   },
   {
    "code": "GE",
@@ -72,14 +72,14 @@
    "ccy": "USD",
    "q": 1,
    "avg": 314.62,
-   "price": 308.20001220703125,
+   "price": 309.3399963378906,
    "stop": 297.5081,
    "target": 348.8438,
    "half_done": false,
    "opened": "2026-10-01",
-   "pl_krw": -8603,
-   "pl_pct": -2.04,
-   "price_age_min": 5.0
+   "pl_krw": -7075,
+   "pl_pct": -1.68,
+   "price_age_min": 0.5
   },
   {
    "code": "088980",
@@ -94,7 +94,7 @@
    "opened": "2026-10-01",
    "pl_krw": -64200,
    "pl_pct": -1.02,
-   "price_age_min": 4.7
+   "price_age_min": 0.4
   },
   {
    "code": "COST",
@@ -102,14 +102,14 @@
    "ccy": "USD",
    "q": 2,
    "avg": 943.035,
-   "price": 946.9199829101562,
+   "price": 947.0,
    "stop": 912.978,
    "target": 1003.1489,
    "half_done": false,
    "opened": "2026-10-07",
-   "pl_krw": 10412,
-   "pl_pct": 0.41,
-   "price_age_min": 6.5
+   "pl_krw": 10626,
+   "pl_pct": 0.42,
+   "price_age_min": 0.4
   },
   {
    "code": "AES",
@@ -117,14 +117,14 @@
    "ccy": "USD",
    "q": 11,
    "avg": 14.92,
-   "price": 14.9399995803833,
+   "price": 14.93000030517578,
    "stop": 14.4724,
    "target": 15.8152,
    "half_done": false,
    "opened": "2026-10-09",
-   "pl_krw": 295,
-   "pl_pct": 0.13,
-   "price_age_min": 4.4
+   "pl_krw": 147,
+   "pl_pct": 0.07,
+   "price_age_min": 0.4
   },
   {
    "code": "TRMB",
@@ -132,14 +132,44 @@
    "ccy": "USD",
    "q": 208,
    "avg": 59.85,
-   "price": 60.09000015258789,
+   "price": 60.0,
    "stop": 56.5187,
    "target": 66.5126,
    "half_done": false,
    "opened": "2026-10-09",
-   "pl_krw": 66894,
-   "pl_pct": 0.4,
-   "price_age_min": 7.2
+   "pl_krw": 41809,
+   "pl_pct": 0.25,
+   "price_age_min": 0.4
+  },
+  {
+   "code": "TSCO",
+   "name": "Tractor Supply Company",
+   "ccy": "USD",
+   "q": 175,
+   "avg": 32.84,
+   "price": 32.84000015258789,
+   "stop": 30.8609,
+   "target": 36.7983,
+   "half_done": false,
+   "opened": "2026-10-12",
+   "pl_krw": 0,
+   "pl_pct": 0.0,
+   "price_age_min": 0.1
+  },
+  {
+   "code": "BDC",
+   "name": "Belden Inc",
+   "ccy": "USD",
+   "q": 43,
+   "avg": 108.07,
+   "price": 108.06999969482422,
+   "stop": 100.1546,
+   "target": 123.9009,
+   "half_done": false,
+   "opened": "2026-10-12",
+   "pl_krw": 0,
+   "pl_pct": -0.0,
+   "price_age_min": 0.4
   }
  ],
  "pending": [
@@ -169,6 +199,33 @@
     "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권35% · 체크4/6 · 손절폭8.3%"
    },
    "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권35% · 체크4/6 · 손절폭8.3%"
+  },
+  {
+   "code": "BDC",
+   "name": "Belden Inc",
+   "ccy": "USD",
+   "limit": 105.6987,
+   "stop": 100.1546,
+   "target": 123.9009,
+   "q": 44,
+   "created": "2026-10-12",
+   "atr": 3.9577,
+   "plan": {
+    "entry": 108.07,
+    "stop": 100.1546,
+    "target": 123.9009,
+    "pb": 105.6987,
+    "tactic": "half"
+   },
+   "ctx": {
+    "mode": "half",
+    "fresh": true,
+    "stage": 3,
+    "rp": 16,
+    "rec": 6,
+    "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권16% · 체크6/6 · 손절폭7.3%"
+   },
+   "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권16% · 체크6/6 · 손절폭7.3%"
   }
  ],
  "trades": 46,
@@ -1782,10 +1839,36 @@
   },
   {
    "d": "2026-10-12",
-   "v": 93251033
+   "v": 93154835
   }
  ],
  "log": [
+  {
+   "d": "2026-10-12",
+   "type": "buy",
+   "code": "BDC",
+   "name": "Belden Inc",
+   "q": 43,
+   "price": 108.07,
+   "ccy": "USD",
+   "amt": 6227086,
+   "note": "반반 1차 — 🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권16% · 체크6/6 · 손절폭7.3%",
+   "stop": 100.1546,
+   "target": 123.9009
+  },
+  {
+   "d": "2026-10-12",
+   "type": "buy",
+   "code": "TSCO",
+   "name": "Tractor Supply Company",
+   "q": 175,
+   "price": 32.84,
+   "ccy": "USD",
+   "amt": 7701095,
+   "note": "반반 1차 — 🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권15% · 체크6/6 · 손절폭6.0%",
+   "stop": 30.8609,
+   "target": 36.7983
+  },
   {
    "d": "2026-10-12",
    "type": "sell",
@@ -2414,33 +2497,8 @@
    "ccy": "USD",
    "amt": 320129,
    "note": "눌림 지정가 주문(추격 금지) — 🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권39% · 체크4/6 · 손절폭6.4%"
-  },
-  {
-   "d": "2026-09-16",
-   "type": "sell",
-   "code": "TKC",
-   "name": "Turkcell Iletisim Hizmetleri AS",
-   "q": 39,
-   "price": 4.955,
-   "ccy": "USD",
-   "amt": 262871,
-   "note": "손절(급락 즉시)",
-   "pl": -22812,
-   "pl_pct": -8.0,
-   "r": -1.82
-  },
-  {
-   "d": "2026-09-16",
-   "type": "order",
-   "code": "204320",
-   "name": "HL만도",
-   "q": 121,
-   "price": 46756.25,
-   "ccy": "KRW",
-   "amt": 5657506,
-   "note": "눌림 지정가 주문(추격 금지) — 🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권34% · 체크4/6 · 손절폭9.9%"
   }
  ],
- "lane": "bulk",
+ "lane": "fast",
  "data_stale": []
 }
