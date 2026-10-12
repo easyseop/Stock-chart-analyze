@@ -1,10 +1,10 @@
 {
- "generated_at": "2026-10-12T11:32:08.468228+09:00",
+ "generated_at": "2026-10-12T12:01:37.538615+09:00",
  "updated": "2026-10-12",
  "start": 100000000,
  "cash": 44531197,
- "equity": 93276713,
- "ret_pct": -6.72,
+ "equity": 93273503,
+ "ret_pct": -6.73,
  "positions": [
   {
    "code": "BKE",
@@ -19,7 +19,7 @@
    "opened": "2026-09-29",
    "pl_krw": 137647,
    "pl_pct": 2.48,
-   "price_age_min": 92.6
+   "price_age_min": 122.1
   },
   {
    "code": "TEL",
@@ -34,7 +34,7 @@
    "opened": "2026-09-30",
    "pl_krw": 111315,
    "pl_pct": 2.16,
-   "price_age_min": 96.0
+   "price_age_min": 125.5
   },
   {
    "code": "DOV",
@@ -49,7 +49,7 @@
    "opened": "2026-09-30",
    "pl_krw": -25755,
    "pl_pct": -0.33,
-   "price_age_min": 95.8
+   "price_age_min": 125.3
   },
   {
    "code": "CRAI",
@@ -64,7 +64,7 @@
    "opened": "2026-10-01",
    "pl_krw": 264359,
    "pl_pct": 7.5,
-   "price_age_min": 95.1
+   "price_age_min": 124.6
   },
   {
    "code": "GE",
@@ -79,7 +79,7 @@
    "opened": "2026-10-01",
    "pl_krw": -8603,
    "pl_pct": -2.04,
-   "price_age_min": 93.2
+   "price_age_min": 122.7
   },
   {
    "code": "088980",
@@ -87,14 +87,14 @@
    "ccy": "KRW",
    "q": 642,
    "avg": 9790.0,
-   "price": 9730.0,
+   "price": 9725.0,
    "stop": 9496.3,
    "target": 10377.4,
    "half_done": false,
    "opened": "2026-10-01",
-   "pl_krw": -38520,
-   "pl_pct": -0.61,
-   "price_age_min": 7.7
+   "pl_krw": -41730,
+   "pl_pct": -0.66,
+   "price_age_min": 9.6
   },
   {
    "code": "COST",
@@ -109,7 +109,7 @@
    "opened": "2026-10-07",
    "pl_krw": 10412,
    "pl_pct": 0.41,
-   "price_age_min": 95.1
+   "price_age_min": 124.6
   },
   {
    "code": "AES",
@@ -124,7 +124,7 @@
    "opened": "2026-10-09",
    "pl_krw": 295,
    "pl_pct": 0.13,
-   "price_age_min": 92.6
+   "price_age_min": 122.1
   },
   {
    "code": "TRMB",
@@ -139,7 +139,7 @@
    "opened": "2026-10-09",
    "pl_krw": 66894,
    "pl_pct": 0.4,
-   "price_age_min": 95.8
+   "price_age_min": 125.3
   }
  ],
  "pending": [
@@ -1782,7 +1782,7 @@
   },
   {
    "d": "2026-10-12",
-   "v": 93276713
+   "v": 93273503
   }
  ],
  "log": [
