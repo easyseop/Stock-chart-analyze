@@ -1,15 +1,15 @@
 {
  "version": 1,
- "generated_at": "2026-10-12T11:22:47+09:00",
+ "generated_at": "2026-10-12T11:32:24+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "a_ablation": [
   {
    "code": "161390",
    "gate": "rp",
-   "range_pos": 0.6123,
-   "runup63": -0.1425,
+   "range_pos": 0.6049,
+   "runup63": -0.1466,
    "stage": 3,
-   "price": 62600.0
+   "price": 62300.0
   },
   {
    "code": "ACGL",
@@ -166,16 +166,16 @@
  ],
  "shelf_debug": {
   "ok": 6,
-  "watch": 138,
+  "watch": 139,
   "reasons": {
-   "밸류영역 밖(지지대 아님)": 481,
-   "추락 중(범위 1%)": 251,
-   "추락 중(범위 0%)": 197,
-   "추락 중(범위 2%)": 164,
+   "밸류영역 밖(지지대 아님)": 482,
+   "추락 중(범위 1%)": 250,
+   "추락 중(범위 0%)": 199,
+   "추락 중(범위 2%)": 163,
    "매물대 정보 없음": 146,
-   "추락 중(범위 3%)": 139,
-   "추락 중(범위 4%)": 121,
-   "추락 중(범위 5%)": 110
+   "추락 중(범위 3%)": 138,
+   "추락 중(범위 4%)": 123,
+   "추락 중(범위 6%)": 109
   }
  },
  "signals": [
@@ -775,24 +775,24 @@
    "group": "now",
    "entry_kind": "now",
    "stage": 3,
-   "price": 157200.0,
-   "entry": 157200.0,
-   "stop": 143414.6727,
-   "target": 184770.6545,
+   "price": 156700.0,
+   "entry": 156700.0,
+   "stop": 142914.6727,
+   "target": 184270.6545,
    "shares_1pct": 7,
-   "range_pos": 0.0155,
-   "norm": -52.8,
+   "range_pos": 0.0135,
+   "norm": -49.1,
    "bear_share": 0.5,
    "fresh": true,
-   "break_gap": 0.0105,
+   "break_gap": 0.0073,
    "earnings_d": null,
    "tactic": {
     "stop_pct": 8.8,
     "pb_price": 153300.0,
-    "pb_stop_pct": 6.4,
+    "pb_stop_pct": 6.8,
     "mode": "pullback",
     "label": "⏳ 눌림 지정가만",
-    "desc": "지금 추격 금지(손절폭 8.8%) — <b>153,300원 눌림 지정가만</b>. 눌리면 손절폭 6.4%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
+    "desc": "지금 추격 금지(손절폭 8.8%) — <b>153,300원 눌림 지정가만</b>. 눌리면 손절폭 6.8%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
    }
   },
   {
@@ -859,24 +859,24 @@
    "group": "now",
    "entry_kind": "now",
    "stage": 3,
-   "price": 47450.0,
-   "entry": 47450.0,
-   "stop": 42698.3355,
-   "target": 56953.3289,
+   "price": 47200.0,
+   "entry": 47200.0,
+   "stop": 42448.3355,
+   "target": 56703.3289,
    "shares_1pct": 21,
-   "range_pos": 0.2465,
+   "range_pos": 0.2427,
    "norm": -15.1,
    "bear_share": 0.375,
    "fresh": false,
-   "break_gap": 0.1832,
+   "break_gap": 0.177,
    "earnings_d": null,
    "tactic": {
-    "stop_pct": 10.0,
+    "stop_pct": 10.1,
     "pb_price": 43200.0,
-    "pb_stop_pct": 1.2,
+    "pb_stop_pct": 1.7,
     "mode": "pullback",
     "label": "⏳ 눌림 지정가만",
-    "desc": "지금 추격 금지(손절폭 10.0% · 돌파후 진행) — <b>43,200원 눌림 지정가만</b>. 눌리면 손절폭 1.2%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
+    "desc": "지금 추격 금지(손절폭 10.1% · 돌파후 진행) — <b>43,200원 눌림 지정가만</b>. 눌리면 손절폭 1.7%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
    }
   },
   {
@@ -4586,16 +4586,16 @@
    "group": "watch",
    "entry_kind": "pullback",
    "stage": 3,
-   "price": 401500.0,
+   "price": 401000.0,
    "entry": 348724.3333,
    "stop": 315246.6234,
    "target": 415679.7531,
    "shares_1pct": 2,
-   "range_pos": 0.4693,
+   "range_pos": 0.4672,
    "norm": 10.4,
    "bear_share": 0.25,
    "fresh": false,
-   "break_gap": 0.1384,
+   "break_gap": 0.1369,
    "earnings_d": null,
    "tactic": null
   },
@@ -4628,16 +4628,16 @@
    "group": "watch",
    "entry_kind": "pullback",
    "stage": 3,
-   "price": 34950.0,
+   "price": 34750.0,
    "entry": 34495.8333,
    "stop": 30418.4274,
    "target": 42650.6452,
    "shares_1pct": 24,
-   "range_pos": 0.3472,
+   "range_pos": 0.3418,
    "norm": 9.4,
    "bear_share": 0.25,
    "fresh": false,
-   "break_gap": 0.2339,
+   "break_gap": 0.2269,
    "earnings_d": null,
    "tactic": null
   },
