@@ -1,26 +1,11 @@
 {
- "generated_at": "2026-10-12T10:18:43.551167+09:00",
+ "generated_at": "2026-10-12T10:46:31.696374+09:00",
  "updated": "2026-10-12",
  "start": 100000000,
- "cash": 39376597,
- "equity": 93336843,
- "ret_pct": -6.66,
+ "cash": 44531197,
+ "equity": 93270293,
+ "ret_pct": -6.73,
  "positions": [
-  {
-   "code": "204320",
-   "name": "HL만도",
-   "ccy": "KRW",
-   "q": 121,
-   "avg": 46756.25,
-   "price": 43150.0,
-   "stop": 43257.4781,
-   "target": 57485.0438,
-   "half_done": false,
-   "opened": "2026-09-22",
-   "pl_krw": -436356,
-   "pl_pct": -7.71,
-   "price_age_min": 8.9
-  },
   {
    "code": "BKE",
    "name": "Buckle, Inc.",
@@ -34,7 +19,7 @@
    "opened": "2026-09-29",
    "pl_krw": 137647,
    "pl_pct": 2.48,
-   "price_age_min": 19.2
+   "price_age_min": 47.0
   },
   {
    "code": "TEL",
@@ -49,7 +34,7 @@
    "opened": "2026-09-30",
    "pl_krw": 111315,
    "pl_pct": 2.16,
-   "price_age_min": 22.6
+   "price_age_min": 50.4
   },
   {
    "code": "DOV",
@@ -64,7 +49,7 @@
    "opened": "2026-09-30",
    "pl_krw": -25755,
    "pl_pct": -0.33,
-   "price_age_min": 22.4
+   "price_age_min": 50.2
   },
   {
    "code": "CRAI",
@@ -79,7 +64,7 @@
    "opened": "2026-10-01",
    "pl_krw": 264359,
    "pl_pct": 7.5,
-   "price_age_min": 21.7
+   "price_age_min": 49.5
   },
   {
    "code": "GE",
@@ -94,7 +79,7 @@
    "opened": "2026-10-01",
    "pl_krw": -8603,
    "pl_pct": -2.04,
-   "price_age_min": 19.8
+   "price_age_min": 47.6
   },
   {
    "code": "088980",
@@ -109,7 +94,7 @@
    "opened": "2026-10-01",
    "pl_krw": -44940,
    "pl_pct": -0.72,
-   "price_age_min": 9.2
+   "price_age_min": 9.6
   },
   {
    "code": "COST",
@@ -124,7 +109,7 @@
    "opened": "2026-10-07",
    "pl_krw": 10412,
    "pl_pct": 0.41,
-   "price_age_min": 21.7
+   "price_age_min": 49.5
   },
   {
    "code": "AES",
@@ -139,7 +124,7 @@
    "opened": "2026-10-09",
    "pl_krw": 295,
    "pl_pct": 0.13,
-   "price_age_min": 19.2
+   "price_age_min": 47.0
   },
   {
    "code": "TRMB",
@@ -154,7 +139,7 @@
    "opened": "2026-10-09",
    "pl_krw": 66894,
    "pl_pct": 0.4,
-   "price_age_min": 22.4
+   "price_age_min": 50.2
   }
  ],
  "pending": [
@@ -186,7 +171,7 @@
    "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권35% · 체크4/6 · 손절폭8.3%"
   }
  ],
- "trades": 45,
+ "trades": 46,
  "win_trades": 22,
  "pos_cap_pct": 33.3,
  "cap_violations": [],
@@ -194,10 +179,10 @@
  "fx": 1340.02,
  "stats": {
   "all": {
-   "n": 45,
+   "n": 46,
    "win": 22,
-   "win_rate": 49,
-   "avg_r": -0.16
+   "win_rate": 48,
+   "avg_r": -0.19
   },
   "by_mode": {
    "full": {
@@ -213,17 +198,17 @@
     "avg_r": 0.08
    },
    "pullback": {
-    "n": 8,
+    "n": 9,
     "win": 4,
-    "win_rate": 50,
-    "avg_r": -0.18
+    "win_rate": 44,
+    "avg_r": -0.29
    }
   },
   "fresh": {
-   "n": 43,
+   "n": 44,
    "win": 21,
-   "win_rate": 49,
-   "avg_r": -0.17
+   "win_rate": 48,
+   "avg_r": -0.19
   },
   "stale": {
    "n": 2,
@@ -233,10 +218,10 @@
   },
   "by_stage": {
    "3": {
-    "n": 43,
+    "n": 44,
     "win": 21,
-    "win_rate": 49,
-    "avg_r": -0.16
+    "win_rate": 48,
+    "avg_r": -0.18
    },
    "4": {
     "n": 2,
@@ -247,10 +232,10 @@
   },
   "by_ccy": {
    "KRW": {
-    "n": 10,
+    "n": 11,
     "win": 4,
-    "win_rate": 40,
-    "avg_r": -0.24
+    "win_rate": 36,
+    "avg_r": -0.33
    },
    "USD": {
     "n": 35,
@@ -259,10 +244,46 @@
     "avg_r": -0.14
    }
   },
-  "slip_entry_pct": -0.46,
-  "slip_stop_pct": -0.64
+  "slip_entry_pct": -0.51,
+  "slip_stop_pct": -0.68
  },
  "closed": [
+  {
+   "code": "204320",
+   "name": "HL만도",
+   "ccy": "KRW",
+   "ctx": {
+    "mode": "pullback",
+    "fresh": true,
+    "stage": 3,
+    "rp": 34,
+    "rec": 4,
+    "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권34% · 체크4/6 · 손절폭9.9%"
+   },
+   "plan": {
+    "entry": 48000.0,
+    "stop": 43257.4781,
+    "target": 57485.0438,
+    "pb": 46756.25,
+    "tactic": "pullback"
+   },
+   "fill": {
+    "avg": 46756.25,
+    "q": 121
+   },
+   "exits": [
+    {
+     "d": "2026-10-12",
+     "q": 121,
+     "price": 42600.0,
+     "note": "손절"
+    }
+   ],
+   "opened": "2026-09-22",
+   "closed": "2026-10-12",
+   "pl": -502906,
+   "r": -1.19
+  },
   {
    "code": "064400",
    "name": "LG씨엔에스",
@@ -1360,48 +1381,6 @@
    "closed": "2026-09-04",
    "pl": -219065,
    "r": -1.01
-  },
-  {
-   "code": "036460",
-   "name": "한국가스공사",
-   "ccy": "KRW",
-   "ctx": {
-    "mode": "half",
-    "fresh": true,
-    "stage": 3,
-    "rp": 28,
-    "rec": 4,
-    "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권28% · 체크4/6 · 손절폭6.7%"
-   },
-   "plan": {
-    "entry": 35250.0,
-    "stop": 32875.0305,
-    "target": 39999.939,
-    "pb": 34050.0,
-    "tactic": "half"
-   },
-   "fill": {
-    "avg": 35250.0,
-    "q": 212
-   },
-   "exits": [
-    {
-     "d": "2026-09-01",
-     "q": 106,
-     "price": 37650.0,
-     "note": "+1R 절반 익절"
-    },
-    {
-     "d": "2026-09-04",
-     "q": 106,
-     "price": 35000.0,
-     "note": "본전 스탑"
-    }
-   ],
-   "opened": "2026-08-19",
-   "closed": "2026-09-04",
-   "pl": 227900,
-   "r": 0.45
   }
  ],
  "hist": [
@@ -1803,10 +1782,24 @@
   },
   {
    "d": "2026-10-12",
-   "v": 93336843
+   "v": 93270293
   }
  ],
  "log": [
+  {
+   "d": "2026-10-12",
+   "type": "sell",
+   "code": "204320",
+   "name": "HL만도",
+   "q": 121,
+   "price": 42600.0,
+   "ccy": "KRW",
+   "amt": 5154600,
+   "note": "손절",
+   "pl": -502906,
+   "pl_pct": -8.9,
+   "r": -1.19
+  },
   {
    "d": "2026-10-12",
    "type": "sell",
@@ -2446,17 +2439,6 @@
    "ccy": "KRW",
    "amt": 5657506,
    "note": "눌림 지정가 주문(추격 금지) — 🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권34% · 체크4/6 · 손절폭9.9%"
-  },
-  {
-   "d": "2026-09-16",
-   "type": "cancel",
-   "code": "018880",
-   "name": "한온시스템",
-   "q": 0,
-   "price": 3350.0,
-   "ccy": "KRW",
-   "amt": 0,
-   "note": "지정가 취소 — 신호 부패: 제외 게이트 — 하락추세/방어선 이탈"
   }
  ],
  "lane": "bulk",
