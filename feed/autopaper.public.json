@@ -1,10 +1,10 @@
 {
- "generated_at": "2026-10-12T10:58:21.731091+09:00",
+ "generated_at": "2026-10-12T11:22:35.317646+09:00",
  "updated": "2026-10-12",
  "start": 100000000,
  "cash": 44531197,
- "equity": 93270293,
- "ret_pct": -6.73,
+ "equity": 93276713,
+ "ret_pct": -6.72,
  "positions": [
   {
    "code": "BKE",
@@ -19,7 +19,7 @@
    "opened": "2026-09-29",
    "pl_krw": 137647,
    "pl_pct": 2.48,
-   "price_age_min": 58.8
+   "price_age_min": 83.0
   },
   {
    "code": "TEL",
@@ -34,7 +34,7 @@
    "opened": "2026-09-30",
    "pl_krw": 111315,
    "pl_pct": 2.16,
-   "price_age_min": 62.2
+   "price_age_min": 86.4
   },
   {
    "code": "DOV",
@@ -49,7 +49,7 @@
    "opened": "2026-09-30",
    "pl_krw": -25755,
    "pl_pct": -0.33,
-   "price_age_min": 62.0
+   "price_age_min": 86.3
   },
   {
    "code": "CRAI",
@@ -64,7 +64,7 @@
    "opened": "2026-10-01",
    "pl_krw": 264359,
    "pl_pct": 7.5,
-   "price_age_min": 61.3
+   "price_age_min": 85.6
   },
   {
    "code": "GE",
@@ -79,7 +79,7 @@
    "opened": "2026-10-01",
    "pl_krw": -8603,
    "pl_pct": -2.04,
-   "price_age_min": 59.4
+   "price_age_min": 83.6
   },
   {
    "code": "088980",
@@ -87,14 +87,14 @@
    "ccy": "KRW",
    "q": 642,
    "avg": 9790.0,
-   "price": 9720.0,
+   "price": 9730.0,
    "stop": 9496.3,
    "target": 10377.4,
    "half_done": false,
    "opened": "2026-10-01",
-   "pl_krw": -44940,
-   "pl_pct": -0.72,
-   "price_age_min": 9.7
+   "pl_krw": -38520,
+   "pl_pct": -0.61,
+   "price_age_min": 5.8
   },
   {
    "code": "COST",
@@ -109,7 +109,7 @@
    "opened": "2026-10-07",
    "pl_krw": 10412,
    "pl_pct": 0.41,
-   "price_age_min": 61.3
+   "price_age_min": 85.5
   },
   {
    "code": "AES",
@@ -124,7 +124,7 @@
    "opened": "2026-10-09",
    "pl_krw": 295,
    "pl_pct": 0.13,
-   "price_age_min": 58.8
+   "price_age_min": 83.0
   },
   {
    "code": "TRMB",
@@ -139,7 +139,7 @@
    "opened": "2026-10-09",
    "pl_krw": 66894,
    "pl_pct": 0.4,
-   "price_age_min": 62.0
+   "price_age_min": 86.3
   }
  ],
  "pending": [
@@ -1782,7 +1782,7 @@
   },
   {
    "d": "2026-10-12",
-   "v": 93270293
+   "v": 93276713
   }
  ],
  "log": [
