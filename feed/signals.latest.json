@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated_at": "2026-10-13T10:20:53+09:00",
+ "generated_at": "2026-10-13T10:46:50+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "a_ablation": [
   {
@@ -14,18 +14,18 @@
   {
    "code": "161390",
    "gate": "rp",
-   "range_pos": 0.5755,
-   "runup63": -0.1358,
+   "range_pos": 0.5607,
+   "runup63": -0.1443,
    "stage": 3,
-   "price": 61100.0
+   "price": 60500.0
   },
   {
    "code": "373220",
    "gate": "rp",
-   "range_pos": 0.4271,
-   "runup63": 0.2488,
+   "range_pos": 0.4059,
+   "runup63": 0.2329,
    "stage": 3,
-   "price": 391500.0
+   "price": 386500.0
   },
   {
    "code": "ACHC",
@@ -166,16 +166,16 @@
  ],
  "shelf_debug": {
   "ok": 5,
-  "watch": 125,
+  "watch": 124,
   "reasons": {
-   "밸류영역 밖(지지대 아님)": 475,
+   "밸류영역 밖(지지대 아님)": 471,
    "추락 중(범위 1%)": 253,
-   "추락 중(범위 0%)": 202,
-   "추락 중(범위 2%)": 170,
+   "추락 중(범위 0%)": 200,
+   "추락 중(범위 2%)": 166,
+   "추락 중(범위 3%)": 147,
    "매물대 정보 없음": 146,
-   "추락 중(범위 3%)": 144,
-   "추락 중(범위 4%)": 124,
-   "추락 중(범위 5%)": 108
+   "추락 중(범위 4%)": 126,
+   "추락 중(범위 5%)": 107
   }
  },
  "signals": [
@@ -880,34 +880,6 @@
    }
   },
   {
-   "id": "352820-2026-10-13-now",
-   "code": "352820",
-   "name": "하이브",
-   "ccy": "KRW",
-   "group": "now",
-   "entry_kind": "now",
-   "stage": 3,
-   "price": 159400.0,
-   "entry": 159400.0,
-   "stop": 145266.6859,
-   "target": 187666.6282,
-   "shares_1pct": 7,
-   "range_pos": 0.0253,
-   "norm": -45.3,
-   "bear_share": 0.5,
-   "fresh": true,
-   "break_gap": 0.0353,
-   "earnings_d": null,
-   "tactic": {
-    "stop_pct": 8.9,
-    "pb_price": 153300.0,
-    "pb_stop_pct": 5.2,
-    "mode": "pullback",
-    "label": "⏳ 눌림 지정가만",
-    "desc": "지금 추격 금지(손절폭 8.9%) — <b>153,300원 눌림 지정가만</b>. 눌리면 손절폭 5.2%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
-   }
-  },
-  {
    "id": "WMT-2026-10-13-now",
    "code": "WMT",
    "name": "Walmart Inc.",
@@ -1356,6 +1328,34 @@
    }
   },
   {
+   "id": "352820-2026-10-13-now",
+   "code": "352820",
+   "name": "하이브",
+   "ccy": "KRW",
+   "group": "now",
+   "entry_kind": "now",
+   "stage": 3,
+   "price": 162200.0,
+   "entry": 162200.0,
+   "stop": 147909.543,
+   "target": 190780.9139,
+   "shares_1pct": 6,
+   "range_pos": 0.0364,
+   "norm": -52.8,
+   "bear_share": 0.5,
+   "fresh": false,
+   "break_gap": 0.0535,
+   "earnings_d": null,
+   "tactic": {
+    "stop_pct": 8.8,
+    "pb_price": 153300.0,
+    "pb_stop_pct": 3.5,
+    "mode": "pullback",
+    "label": "⏳ 눌림 지정가만",
+    "desc": "지금 추격 금지(손절폭 8.8% · 돌파후 진행) — <b>153,300원 눌림 지정가만</b>. 눌리면 손절폭 3.5%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
+   }
+  },
+  {
    "id": "RDDT-2026-10-13-b0-shadow",
    "code": "RDDT",
    "name": "Reddit, Inc.",
@@ -1695,46 +1695,6 @@
    "trend_above_200": false
   },
   {
-   "id": "014680-2026-10-13-shelf-watch",
-   "code": "014680",
-   "name": "한솔케미칼",
-   "ccy": "KRW",
-   "group": "shelf_watch",
-   "entry_kind": "shelf_watch",
-   "stage": 0,
-   "price": 257000.0,
-   "entry": 257000.0,
-   "stop": 240100.0,
-   "target": 300052.0833,
-   "shares_1pct": 0,
-   "range_pos": 0.4781,
-   "norm": 11.5,
-   "bear_share": 0.375,
-   "shelf": {
-    "poc": 285760.4167,
-    "val": 221447.9167,
-    "vah": 300052.0833,
-    "rr": 2.55,
-    "overhead": 0.539,
-    "reason": "반등 미확인(거래량)",
-    "history_bars": 1905,
-    "profile_pnl_proxy": -0.0015,
-    "runup252": 0.2094,
-    "checks": {
-     "터치": true,
-     "회복": true,
-     "상단마감": true,
-     "거래량": false,
-     "신저가아님": true
-    }
-   },
-   "fresh": false,
-   "break_gap": null,
-   "earnings_d": null,
-   "tactic": "watch",
-   "trend_above_200": false
-  },
-  {
    "id": "BZ-2026-10-13-shelf-watch",
    "code": "BZ",
    "name": "KANZHUN LIMITED",
@@ -1851,6 +1811,46 @@
    "fresh": false,
    "break_gap": null,
    "earnings_d": 49,
+   "tactic": "watch",
+   "trend_above_200": false
+  },
+  {
+   "id": "014680-2026-10-13-shelf-watch",
+   "code": "014680",
+   "name": "한솔케미칼",
+   "ccy": "KRW",
+   "group": "shelf_watch",
+   "entry_kind": "shelf_watch",
+   "stage": 0,
+   "price": 255000.0,
+   "entry": 255000.0,
+   "stop": 240100.0,
+   "target": 300052.0833,
+   "shares_1pct": 0,
+   "range_pos": 0.4665,
+   "norm": 3.3,
+   "bear_share": 0.25,
+   "shelf": {
+    "poc": 285760.4167,
+    "val": 221447.9167,
+    "vah": 300052.0833,
+    "rr": 3.02,
+    "overhead": 0.539,
+    "reason": "반등 미확인(거래량)",
+    "history_bars": 1905,
+    "profile_pnl_proxy": -0.0093,
+    "runup252": 0.2,
+    "checks": {
+     "터치": true,
+     "회복": true,
+     "상단마감": true,
+     "거래량": false,
+     "신저가아님": true
+    }
+   },
+   "fresh": false,
+   "break_gap": null,
+   "earnings_d": null,
    "tactic": "watch",
    "trend_above_200": false
   },
@@ -2449,34 +2449,6 @@
    }
   },
   {
-   "id": "319400-2026-10-13-watch",
-   "code": "319400",
-   "name": "현대무벡스",
-   "ccy": "KRW",
-   "group": "watch",
-   "entry_kind": "now",
-   "stage": 2,
-   "price": 20450.0,
-   "entry": 20450.0,
-   "stop": 18165.2293,
-   "target": 25019.5413,
-   "shares_1pct": 43,
-   "range_pos": 0.2921,
-   "norm": -9.4,
-   "bear_share": 0.375,
-   "fresh": true,
-   "break_gap": 0.0178,
-   "earnings_d": null,
-   "tactic": {
-    "stop_pct": 11.2,
-    "pb_price": 20068.75,
-    "pb_stop_pct": 9.5,
-    "mode": "pullback",
-    "label": "⏳ 눌림 지정가만",
-    "desc": "지금 추격 금지(손절폭 11.2%) — <b>20,069원 눌림 지정가만</b>. 눌리면 손절폭 9.5%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
-   }
-  },
-  {
    "id": "BBWI-2026-10-13-watch",
    "code": "BBWI",
    "name": "Bath & Body Works, Inc.",
@@ -2642,6 +2614,34 @@
     "mode": "pullback",
     "label": "⏳ 눌림 지정가만",
     "desc": "지금 추격 금지(손절폭 11.4% · 단기 이격) — <b>$30.05 눌림 지정가만</b>. 눌리면 손절폭 9.7%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
+   }
+  },
+  {
+   "id": "319400-2026-10-13-watch",
+   "code": "319400",
+   "name": "현대무벡스",
+   "ccy": "KRW",
+   "group": "watch",
+   "entry_kind": "now",
+   "stage": 2,
+   "price": 20450.0,
+   "entry": 20450.0,
+   "stop": 18165.2293,
+   "target": 25019.5413,
+   "shares_1pct": 43,
+   "range_pos": 0.2921,
+   "norm": -17.0,
+   "bear_share": 0.375,
+   "fresh": true,
+   "break_gap": 0.0178,
+   "earnings_d": null,
+   "tactic": {
+    "stop_pct": 11.2,
+    "pb_price": 20068.75,
+    "pb_stop_pct": 9.5,
+    "mode": "pullback",
+    "label": "⏳ 눌림 지정가만",
+    "desc": "지금 추격 금지(손절폭 11.2%) — <b>20,069원 눌림 지정가만</b>. 눌리면 손절폭 9.5%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
    }
   },
   {
@@ -2946,34 +2946,6 @@
    }
   },
   {
-   "id": "036460-2026-10-13-watch",
-   "code": "036460",
-   "name": "한국가스공사",
-   "ccy": "KRW",
-   "group": "watch",
-   "entry_kind": "now",
-   "stage": 1,
-   "price": 35550.0,
-   "entry": 35550.0,
-   "stop": 33716.033,
-   "target": 39217.934,
-   "shares_1pct": 54,
-   "range_pos": 0.3024,
-   "norm": 13.2,
-   "bear_share": 0.125,
-   "fresh": true,
-   "break_gap": -0.0123,
-   "earnings_d": null,
-   "tactic": {
-    "stop_pct": 5.2,
-    "pb_price": 34420.4292,
-    "pb_stop_pct": 2.0,
-    "mode": "full",
-    "label": "⚡ 즉시 분할",
-    "desc": "손절폭 5.2%로 타이트 — 현재가에서 1~2회 분할 매수. 기다리는 이득보다 놓치는 비용이 큼"
-   }
-  },
-  {
    "id": "CHKP-2026-10-13-watch",
    "code": "CHKP",
    "name": "Check Point Software Technologies Ltd.",
@@ -3153,6 +3125,34 @@
     "mode": "full",
     "label": "⚡ 즉시 분할",
     "desc": "손절폭 3.0%로 타이트 — 현재가에서 1~2회 분할 매수. 기다리는 이득보다 놓치는 비용이 큼"
+   }
+  },
+  {
+   "id": "036460-2026-10-13-watch",
+   "code": "036460",
+   "name": "한국가스공사",
+   "ccy": "KRW",
+   "group": "watch",
+   "entry_kind": "now",
+   "stage": 1,
+   "price": 35650.0,
+   "entry": 35650.0,
+   "stop": 33816.033,
+   "target": 39317.934,
+   "shares_1pct": 54,
+   "range_pos": 0.3093,
+   "norm": 5.7,
+   "bear_share": 0.125,
+   "fresh": true,
+   "break_gap": -0.0095,
+   "earnings_d": null,
+   "tactic": {
+    "stop_pct": 5.1,
+    "pb_price": 34420.4292,
+    "pb_stop_pct": 1.8,
+    "mode": "full",
+    "label": "⚡ 즉시 분할",
+    "desc": "손절폭 5.1%로 타이트 — 현재가에서 1~2회 분할 매수. 기다리는 이득보다 놓치는 비용이 큼"
    }
   },
   {
