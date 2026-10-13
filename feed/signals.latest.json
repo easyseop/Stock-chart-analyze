@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated_at": "2026-10-13T14:48:22+09:00",
+ "generated_at": "2026-10-13T15:16:34+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "a_ablation": [
   {
@@ -14,10 +14,10 @@
   {
    "code": "161390",
    "gate": "rp",
-   "range_pos": 0.5706,
-   "runup63": -0.1386,
+   "range_pos": 0.5656,
+   "runup63": -0.1414,
    "stage": 3,
-   "price": 60900.0
+   "price": 60700.0
   },
   {
    "code": "ACHC",
@@ -166,16 +166,16 @@
  ],
  "shelf_debug": {
   "ok": 4,
-  "watch": 146,
+  "watch": 148,
   "reasons": {
    "밸류영역 밖(지지대 아님)": 481,
    "추락 중(범위 0%)": 283,
-   "추락 중(범위 1%)": 219,
-   "추락 중(범위 2%)": 172,
+   "추락 중(범위 1%)": 220,
+   "추락 중(범위 2%)": 174,
    "매물대 정보 없음": 146,
-   "추락 중(범위 3%)": 137,
-   "추락 중(범위 4%)": 113,
-   "추락 중(범위 6%)": 105
+   "추락 중(범위 3%)": 134,
+   "추락 중(범위 4%)": 112,
+   "추락 중(범위 6%)": 106
   }
  },
  "signals": [
@@ -1335,24 +1335,24 @@
    "group": "now",
    "entry_kind": "now",
    "stage": 3,
-   "price": 161900.0,
-   "entry": 161900.0,
-   "stop": 147609.543,
-   "target": 190480.9139,
+   "price": 162300.0,
+   "entry": 162300.0,
+   "stop": 148009.543,
+   "target": 190880.9139,
    "shares_1pct": 6,
-   "range_pos": 0.0352,
-   "norm": -45.3,
+   "range_pos": 0.0368,
+   "norm": -52.8,
    "bear_share": 0.5,
    "fresh": false,
-   "break_gap": 0.0515,
+   "break_gap": 0.0541,
    "earnings_d": null,
    "tactic": {
     "stop_pct": 8.8,
     "pb_price": 153300.0,
-    "pb_stop_pct": 3.7,
+    "pb_stop_pct": 3.5,
     "mode": "pullback",
     "label": "⏳ 눌림 지정가만",
-    "desc": "지금 추격 금지(손절폭 8.8% · 돌파후 진행) — <b>153,300원 눌림 지정가만</b>. 눌리면 손절폭 3.7%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
+    "desc": "지금 추격 금지(손절폭 8.8% · 돌파후 진행) — <b>153,300원 눌림 지정가만</b>. 눌리면 손절폭 3.5%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
    }
   },
   {
@@ -1405,7 +1405,7 @@
    "stop": 26166.0,
    "target": 32268.0,
    "stage": 0,
-   "norm": 3.3,
+   "norm": -4.9,
    "range_pos": 0.3869,
    "runup252": 0.2181,
    "fresh": false,
@@ -1490,46 +1490,6 @@
    "earnings_d": 16,
    "tactic": "watch",
    "trend_above_200": true
-  },
-  {
-   "id": "AEM-2026-10-13-shelf-watch",
-   "code": "AEM",
-   "name": "Agnico Eagle Mines Limited",
-   "ccy": "USD",
-   "group": "shelf_watch",
-   "entry_kind": "shelf_watch",
-   "stage": 0,
-   "price": 188.18,
-   "entry": 188.18,
-   "stop": 176.0766,
-   "target": 207.3996,
-   "shares_1pct": 0,
-   "range_pos": 0.4451,
-   "norm": 28.3,
-   "bear_share": 0.125,
-   "shelf": {
-    "poc": 177.1846,
-    "val": 157.0413,
-    "vah": 207.3996,
-    "rr": 1.59,
-    "overhead": 0.394,
-    "reason": "반등 미확인(거래량)",
-    "history_bars": 1955,
-    "profile_pnl_proxy": 0.0222,
-    "runup252": 0.1448,
-    "checks": {
-     "터치": true,
-     "회복": true,
-     "상단마감": true,
-     "거래량": false,
-     "신저가아님": true
-    }
-   },
-   "fresh": false,
-   "break_gap": null,
-   "earnings_d": 15,
-   "tactic": "watch",
-   "trend_above_200": false
   },
   {
    "id": "ISRG-2026-10-13-shelf-watch",
@@ -1848,6 +1808,46 @@
    "fresh": false,
    "break_gap": null,
    "earnings_d": -68,
+   "tactic": "watch",
+   "trend_above_200": false
+  },
+  {
+   "id": "042700-2026-10-13-shelf-watch",
+   "code": "042700",
+   "name": "한미반도체",
+   "ccy": "KRW",
+   "group": "shelf_watch",
+   "entry_kind": "shelf_watch",
+   "stage": 0,
+   "price": 228500.0,
+   "entry": 228500.0,
+   "stop": 211680.0,
+   "target": 278781.25,
+   "shares_1pct": 0,
+   "range_pos": 0.4131,
+   "norm": -1.9,
+   "bear_share": 0.25,
+   "shelf": {
+    "poc": 124552.0833,
+    "val": 124552.0833,
+    "vah": 278781.25,
+    "rr": 2.99,
+    "overhead": 0.388,
+    "reason": "반등 미확인(터치)",
+    "history_bars": 1905,
+    "profile_pnl_proxy": 0.0531,
+    "runup252": 1.4283,
+    "checks": {
+     "터치": false,
+     "회복": true,
+     "상단마감": true,
+     "거래량": true,
+     "신저가아님": true
+    }
+   },
+   "fresh": false,
+   "break_gap": null,
+   "earnings_d": null,
    "tactic": "watch",
    "trend_above_200": false
   },
@@ -2507,34 +2507,6 @@
    }
   },
   {
-   "id": "319400-2026-10-13-watch",
-   "code": "319400",
-   "name": "현대무벡스",
-   "ccy": "KRW",
-   "group": "watch",
-   "entry_kind": "now",
-   "stage": 2,
-   "price": 20450.0,
-   "entry": 20450.0,
-   "stop": 18165.2293,
-   "target": 25019.5413,
-   "shares_1pct": 43,
-   "range_pos": 0.2921,
-   "norm": -9.4,
-   "bear_share": 0.375,
-   "fresh": true,
-   "break_gap": 0.0178,
-   "earnings_d": null,
-   "tactic": {
-    "stop_pct": 11.2,
-    "pb_price": 20068.75,
-    "pb_stop_pct": 9.5,
-    "mode": "pullback",
-    "label": "⏳ 눌림 지정가만",
-    "desc": "지금 추격 금지(손절폭 11.2%) — <b>20,069원 눌림 지정가만</b>. 눌리면 손절폭 9.5%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
-   }
-  },
-  {
    "id": "BBWI-2026-10-13-watch",
    "code": "BBWI",
    "name": "Bath & Body Works, Inc.",
@@ -2721,6 +2693,34 @@
     "mode": "pullback",
     "label": "⏳ 눌림 지정가만",
     "desc": "지금 추격 금지(손절폭 11.5% · 단기 이격) — <b>$30.05 눌림 지정가만</b>. 눌리면 손절폭 9.7%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
+   }
+  },
+  {
+   "id": "319400-2026-10-13-watch",
+   "code": "319400",
+   "name": "현대무벡스",
+   "ccy": "KRW",
+   "group": "watch",
+   "entry_kind": "now",
+   "stage": 2,
+   "price": 20450.0,
+   "entry": 20450.0,
+   "stop": 18165.2293,
+   "target": 25019.5413,
+   "shares_1pct": 43,
+   "range_pos": 0.2921,
+   "norm": -17.0,
+   "bear_share": 0.375,
+   "fresh": true,
+   "break_gap": 0.0178,
+   "earnings_d": null,
+   "tactic": {
+    "stop_pct": 11.2,
+    "pb_price": 20068.75,
+    "pb_stop_pct": 9.5,
+    "mode": "pullback",
+    "label": "⏳ 눌림 지정가만",
+    "desc": "지금 추격 금지(손절폭 11.2%) — <b>20,069원 눌림 지정가만</b>. 눌리면 손절폭 9.5%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
    }
   },
   {
@@ -2997,34 +2997,6 @@
    }
   },
   {
-   "id": "017800-2026-10-13-watch",
-   "code": "017800",
-   "name": "현대엘리베이터",
-   "ccy": "KRW",
-   "group": "watch",
-   "entry_kind": "now",
-   "stage": 1,
-   "price": 70200.0,
-   "entry": 70200.0,
-   "stop": 66629.9086,
-   "target": 77340.1828,
-   "shares_1pct": 28,
-   "range_pos": 0.1628,
-   "norm": 20.8,
-   "bear_share": 0.375,
-   "fresh": true,
-   "break_gap": -0.0008,
-   "earnings_d": null,
-   "tactic": {
-    "stop_pct": 5.1,
-    "pb_price": 67184.7222,
-    "pb_stop_pct": 0.8,
-    "mode": "full",
-    "label": "⚡ 즉시 분할",
-    "desc": "손절폭 5.1%로 타이트 — 현재가에서 1~2회 분할 매수. 기다리는 이득보다 놓치는 비용이 큼"
-   }
-  },
-  {
    "id": "TSLA-2026-10-13-watch",
    "code": "TSLA",
    "name": "Tesla, Inc.",
@@ -3053,28 +3025,28 @@
    }
   },
   {
-   "id": "036460-2026-10-13-watch",
-   "code": "036460",
-   "name": "한국가스공사",
+   "id": "017800-2026-10-13-watch",
+   "code": "017800",
+   "name": "현대엘리베이터",
    "ccy": "KRW",
    "group": "watch",
    "entry_kind": "now",
    "stage": 1,
-   "price": 36100.0,
-   "entry": 36100.0,
-   "stop": 34251.7473,
-   "target": 39796.5054,
-   "shares_1pct": 54,
-   "range_pos": 0.3402,
+   "price": 70400.0,
+   "entry": 70400.0,
+   "stop": 66787.0514,
+   "target": 77625.8971,
+   "shares_1pct": 27,
+   "range_pos": 0.1667,
    "norm": 13.2,
-   "bear_share": 0.125,
+   "bear_share": 0.375,
    "fresh": true,
-   "break_gap": 0.003,
+   "break_gap": 0.002,
    "earnings_d": null,
    "tactic": {
     "stop_pct": 5.1,
-    "pb_price": 34420.4292,
-    "pb_stop_pct": 0.5,
+    "pb_price": 67184.7222,
+    "pb_stop_pct": 0.6,
     "mode": "full",
     "label": "⚡ 즉시 분할",
     "desc": "손절폭 5.1%로 타이트 — 현재가에서 1~2회 분할 매수. 기다리는 이득보다 놓치는 비용이 큼"
@@ -3309,6 +3281,34 @@
     "mode": "full",
     "label": "⚡ 즉시 분할",
     "desc": "손절폭 3.0%로 타이트 — 현재가에서 1~2회 분할 매수. 기다리는 이득보다 놓치는 비용이 큼"
+   }
+  },
+  {
+   "id": "036460-2026-10-13-watch",
+   "code": "036460",
+   "name": "한국가스공사",
+   "ccy": "KRW",
+   "group": "watch",
+   "entry_kind": "now",
+   "stage": 1,
+   "price": 36100.0,
+   "entry": 36100.0,
+   "stop": 34244.6044,
+   "target": 39810.7911,
+   "shares_1pct": 53,
+   "range_pos": 0.3402,
+   "norm": 5.7,
+   "bear_share": 0.125,
+   "fresh": true,
+   "break_gap": 0.003,
+   "earnings_d": null,
+   "tactic": {
+    "stop_pct": 5.1,
+    "pb_price": 34420.4292,
+    "pb_stop_pct": 0.5,
+    "mode": "full",
+    "label": "⚡ 즉시 분할",
+    "desc": "손절폭 5.1%로 타이트 — 현재가에서 1~2회 분할 매수. 기다리는 이득보다 놓치는 비용이 큼"
    }
   },
   {
@@ -4387,6 +4387,34 @@
     "mode": "pullback",
     "label": "⏳ 눌림 지정가만",
     "desc": "지금 추격 금지(손절폭 9.1%) — <b>$52.06 눌림 지정가만</b>. 눌리면 손절폭 9.0%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
+   }
+  },
+  {
+   "id": "081660-2026-10-13-watch",
+   "code": "081660",
+   "name": "미스토홀딩스",
+   "ccy": "KRW",
+   "group": "watch",
+   "entry_kind": "now",
+   "stage": 1,
+   "price": 37850.0,
+   "entry": 37850.0,
+   "stop": 35083.7176,
+   "target": 43382.5648,
+   "shares_1pct": 36,
+   "range_pos": 0.0934,
+   "norm": -38.7,
+   "bear_share": 0.5,
+   "fresh": true,
+   "break_gap": -0.0191,
+   "earnings_d": null,
+   "tactic": {
+    "stop_pct": 7.3,
+    "pb_price": 37091.6667,
+    "pb_stop_pct": 5.4,
+    "mode": "half",
+    "label": "⚖ 반반 진입",
+    "desc": "손절폭 7.3% — 절반은 현재가, 절반은 눌림 37,092원 지정가(거기선 손절폭 5.4%)"
    }
   },
   {
