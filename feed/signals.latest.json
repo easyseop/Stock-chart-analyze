@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated_at": "2026-10-13T15:50:11+09:00",
+ "generated_at": "2026-10-13T16:31:13+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "a_ablation": [
   {
@@ -1335,24 +1335,24 @@
    "group": "now",
    "entry_kind": "now",
    "stage": 3,
-   "price": 162800.0,
-   "entry": 162800.0,
-   "stop": 148452.4002,
-   "target": 191495.1996,
+   "price": 163400.0,
+   "entry": 163400.0,
+   "stop": 148980.9716,
+   "target": 192238.0568,
    "shares_1pct": 6,
-   "range_pos": 0.0388,
-   "norm": -45.3,
+   "range_pos": 0.0412,
+   "norm": -35.8,
    "bear_share": 0.5,
    "fresh": false,
-   "break_gap": 0.0574,
+   "break_gap": 0.0613,
    "earnings_d": null,
    "tactic": {
     "stop_pct": 8.8,
     "pb_price": 153300.0,
-    "pb_stop_pct": 3.2,
+    "pb_stop_pct": 2.8,
     "mode": "pullback",
     "label": "⏳ 눌림 지정가만",
-    "desc": "지금 추격 금지(손절폭 8.8% · 돌파후 진행) — <b>153,300원 눌림 지정가만</b>. 눌리면 손절폭 3.2%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
+    "desc": "지금 추격 금지(손절폭 8.8% · 돌파후 진행) — <b>153,300원 눌림 지정가만</b>. 눌리면 손절폭 2.8%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
    }
   },
   {
@@ -2325,34 +2325,6 @@
    "tactic": null
   },
   {
-   "id": "017800-2026-10-13-watch",
-   "code": "017800",
-   "name": "현대엘리베이터",
-   "ccy": "KRW",
-   "group": "watch",
-   "entry_kind": "now",
-   "stage": 2,
-   "price": 70800.0,
-   "entry": 70800.0,
-   "stop": 67172.7657,
-   "target": 78054.4685,
-   "shares_1pct": 27,
-   "range_pos": 0.1744,
-   "norm": 15.1,
-   "bear_share": 0.375,
-   "fresh": true,
-   "break_gap": 0.0077,
-   "earnings_d": null,
-   "tactic": {
-    "stop_pct": 5.1,
-    "pb_price": 67184.7222,
-    "pb_stop_pct": 0.0,
-    "mode": "full",
-    "label": "⚡ 즉시 분할",
-    "desc": "손절폭 5.1%로 타이트 — 현재가에서 1~2회 분할 매수. 기다리는 이득보다 놓치는 비용이 큼"
-   }
-  },
-  {
    "id": "036460-2026-10-13-watch",
    "code": "036460",
    "name": "한국가스공사",
@@ -2360,21 +2332,21 @@
    "group": "watch",
    "entry_kind": "now",
    "stage": 2,
-   "price": 36200.0,
-   "entry": 36200.0,
-   "stop": 34337.4616,
-   "target": 39925.0768,
+   "price": 36250.0,
+   "entry": 36250.0,
+   "stop": 34387.4616,
+   "target": 39975.0768,
    "shares_1pct": 53,
-   "range_pos": 0.3471,
+   "range_pos": 0.3505,
    "norm": 11.3,
    "bear_share": 0.125,
    "fresh": true,
-   "break_gap": 0.0058,
+   "break_gap": 0.0072,
    "earnings_d": null,
    "tactic": {
     "stop_pct": 5.1,
     "pb_price": 34420.4292,
-    "pb_stop_pct": 0.2,
+    "pb_stop_pct": 0.1,
     "mode": "full",
     "label": "⚡ 즉시 분할",
     "desc": "손절폭 5.1%로 타이트 — 현재가에서 1~2회 분할 매수. 기다리는 이득보다 놓치는 비용이 큼"
@@ -3050,6 +3022,34 @@
     "mode": "half",
     "label": "⚖ 반반 진입",
     "desc": "손절폭 4.8% · 단기 이격 — 절반은 현재가, 절반은 눌림 $52.43 지정가(거기선 손절폭 3.4%)"
+   }
+  },
+  {
+   "id": "017800-2026-10-13-watch",
+   "code": "017800",
+   "name": "현대엘리베이터",
+   "ccy": "KRW",
+   "group": "watch",
+   "entry_kind": "now",
+   "stage": 1,
+   "price": 70600.0,
+   "entry": 70600.0,
+   "stop": 66972.7657,
+   "target": 77854.4685,
+   "shares_1pct": 27,
+   "range_pos": 0.1705,
+   "norm": 20.8,
+   "bear_share": 0.375,
+   "fresh": true,
+   "break_gap": 0.0049,
+   "earnings_d": null,
+   "tactic": {
+    "stop_pct": 5.1,
+    "pb_price": 67184.7222,
+    "pb_stop_pct": 0.3,
+    "mode": "full",
+    "label": "⚡ 즉시 분할",
+    "desc": "손절폭 5.1%로 타이트 — 현재가에서 1~2회 분할 매수. 기다리는 이득보다 놓치는 비용이 큼"
    }
   },
   {
