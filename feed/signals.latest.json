@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated_at": "2026-10-13T14:12:54+09:00",
+ "generated_at": "2026-10-13T14:38:12+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "a_ablation": [
   {
@@ -14,10 +14,10 @@
   {
    "code": "161390",
    "gate": "rp",
-   "range_pos": 0.5534,
-   "runup63": -0.1485,
+   "range_pos": 0.5656,
+   "runup63": -0.1414,
    "stage": 3,
-   "price": 60200.0
+   "price": 60700.0
   },
   {
    "code": "ACHC",
@@ -166,16 +166,16 @@
  ],
  "shelf_debug": {
   "ok": 4,
-  "watch": 148,
+  "watch": 147,
   "reasons": {
-   "밸류영역 밖(지지대 아님)": 481,
-   "추락 중(범위 0%)": 284,
-   "추락 중(범위 1%)": 234,
-   "추락 중(범위 2%)": 170,
+   "밸류영역 밖(지지대 아님)": 482,
+   "추락 중(범위 0%)": 283,
+   "추락 중(범위 1%)": 220,
+   "추락 중(범위 2%)": 174,
    "매물대 정보 없음": 146,
-   "추락 중(범위 3%)": 130,
-   "추락 중(범위 4%)": 113,
-   "추락 중(범위 6%)": 99
+   "추락 중(범위 3%)": 136,
+   "추락 중(범위 4%)": 112,
+   "추락 중(범위 6%)": 103
   }
  },
  "signals": [
@@ -880,34 +880,6 @@
    }
   },
   {
-   "id": "352820-2026-10-13-now",
-   "code": "352820",
-   "name": "하이브",
-   "ccy": "KRW",
-   "group": "now",
-   "entry_kind": "now",
-   "stage": 3,
-   "price": 161400.0,
-   "entry": 161400.0,
-   "stop": 147109.543,
-   "target": 189980.9139,
-   "shares_1pct": 6,
-   "range_pos": 0.0333,
-   "norm": -43.4,
-   "bear_share": 0.5,
-   "fresh": true,
-   "break_gap": 0.0483,
-   "earnings_d": null,
-   "tactic": {
-    "stop_pct": 8.9,
-    "pb_price": 153300.0,
-    "pb_stop_pct": 4.0,
-    "mode": "pullback",
-    "label": "⏳ 눌림 지정가만",
-    "desc": "지금 추격 금지(손절폭 8.9%) — <b>153,300원 눌림 지정가만</b>. 눌리면 손절폭 4.0%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
-   }
-  },
-  {
    "id": "WMT-2026-10-13-now",
    "code": "WMT",
    "name": "Walmart Inc.",
@@ -1353,6 +1325,34 @@
     "mode": "pullback",
     "label": "⏳ 눌림 지정가만",
     "desc": "지금 추격 금지(손절폭 10.1% · 돌파후 진행) — 받칠 지지에 눌릴 때까지 대기"
+   }
+  },
+  {
+   "id": "352820-2026-10-13-now",
+   "code": "352820",
+   "name": "하이브",
+   "ccy": "KRW",
+   "group": "now",
+   "entry_kind": "now",
+   "stage": 3,
+   "price": 161700.0,
+   "entry": 161700.0,
+   "stop": 147409.543,
+   "target": 190280.9139,
+   "shares_1pct": 6,
+   "range_pos": 0.0345,
+   "norm": -45.3,
+   "bear_share": 0.5,
+   "fresh": false,
+   "break_gap": 0.0502,
+   "earnings_d": null,
+   "tactic": {
+    "stop_pct": 8.8,
+    "pb_price": 153300.0,
+    "pb_stop_pct": 3.8,
+    "mode": "pullback",
+    "label": "⏳ 눌림 지정가만",
+    "desc": "지금 추격 금지(손절폭 8.8% · 돌파후 진행) — <b>153,300원 눌림 지정가만</b>. 눌리면 손절폭 3.8%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
    }
   },
   {
@@ -2489,6 +2489,34 @@
    }
   },
   {
+   "id": "319400-2026-10-13-watch",
+   "code": "319400",
+   "name": "현대무벡스",
+   "ccy": "KRW",
+   "group": "watch",
+   "entry_kind": "now",
+   "stage": 2,
+   "price": 20450.0,
+   "entry": 20450.0,
+   "stop": 18165.2293,
+   "target": 25019.5413,
+   "shares_1pct": 43,
+   "range_pos": 0.2921,
+   "norm": -9.4,
+   "bear_share": 0.375,
+   "fresh": true,
+   "break_gap": 0.0178,
+   "earnings_d": null,
+   "tactic": {
+    "stop_pct": 11.2,
+    "pb_price": 20068.75,
+    "pb_stop_pct": 9.5,
+    "mode": "pullback",
+    "label": "⏳ 눌림 지정가만",
+    "desc": "지금 추격 금지(손절폭 11.2%) — <b>20,069원 눌림 지정가만</b>. 눌리면 손절폭 9.5%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
+   }
+  },
+  {
    "id": "BBWI-2026-10-13-watch",
    "code": "BBWI",
    "name": "Bath & Body Works, Inc.",
@@ -2675,34 +2703,6 @@
     "mode": "pullback",
     "label": "⏳ 눌림 지정가만",
     "desc": "지금 추격 금지(손절폭 11.5% · 단기 이격) — <b>$30.05 눌림 지정가만</b>. 눌리면 손절폭 9.7%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
-   }
-  },
-  {
-   "id": "319400-2026-10-13-watch",
-   "code": "319400",
-   "name": "현대무벡스",
-   "ccy": "KRW",
-   "group": "watch",
-   "entry_kind": "now",
-   "stage": 2,
-   "price": 20450.0,
-   "entry": 20450.0,
-   "stop": 18165.2293,
-   "target": 25019.5413,
-   "shares_1pct": 43,
-   "range_pos": 0.2921,
-   "norm": -17.0,
-   "bear_share": 0.375,
-   "fresh": true,
-   "break_gap": 0.0178,
-   "earnings_d": null,
-   "tactic": {
-    "stop_pct": 11.2,
-    "pb_price": 20068.75,
-    "pb_stop_pct": 9.5,
-    "mode": "pullback",
-    "label": "⏳ 눌림 지정가만",
-    "desc": "지금 추격 금지(손절폭 11.2%) — <b>20,069원 눌림 지정가만</b>. 눌리면 손절폭 9.5%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
    }
   },
   {
@@ -2979,6 +2979,34 @@
    }
   },
   {
+   "id": "017800-2026-10-13-watch",
+   "code": "017800",
+   "name": "현대엘리베이터",
+   "ccy": "KRW",
+   "group": "watch",
+   "entry_kind": "now",
+   "stage": 1,
+   "price": 70000.0,
+   "entry": 70000.0,
+   "stop": 66458.48,
+   "target": 77083.04,
+   "shares_1pct": 28,
+   "range_pos": 0.1589,
+   "norm": 20.8,
+   "bear_share": 0.375,
+   "fresh": true,
+   "break_gap": -0.0037,
+   "earnings_d": null,
+   "tactic": {
+    "stop_pct": 5.1,
+    "pb_price": 67184.7222,
+    "pb_stop_pct": 1.1,
+    "mode": "full",
+    "label": "⚡ 즉시 분할",
+    "desc": "손절폭 5.1%로 타이트 — 현재가에서 1~2회 분할 매수. 기다리는 이득보다 놓치는 비용이 큼"
+   }
+  },
+  {
    "id": "TSLA-2026-10-13-watch",
    "code": "TSLA",
    "name": "Tesla, Inc.",
@@ -3004,6 +3032,34 @@
     "mode": "half",
     "label": "⚖ 반반 진입",
     "desc": "손절폭 6.0% — 절반만 현재가, 나머지는 눌림 확인 후 추가"
+   }
+  },
+  {
+   "id": "036460-2026-10-13-watch",
+   "code": "036460",
+   "name": "한국가스공사",
+   "ccy": "KRW",
+   "group": "watch",
+   "entry_kind": "now",
+   "stage": 1,
+   "price": 35950.0,
+   "entry": 35950.0,
+   "stop": 34116.033,
+   "target": 39617.934,
+   "shares_1pct": 54,
+   "range_pos": 0.3299,
+   "norm": 13.2,
+   "bear_share": 0.125,
+   "fresh": true,
+   "break_gap": -0.0012,
+   "earnings_d": null,
+   "tactic": {
+    "stop_pct": 5.1,
+    "pb_price": 34420.4292,
+    "pb_stop_pct": 0.9,
+    "mode": "full",
+    "label": "⚡ 즉시 분할",
+    "desc": "손절폭 5.1%로 타이트 — 현재가에서 1~2회 분할 매수. 기다리는 이득보다 놓치는 비용이 큼"
    }
   },
   {
@@ -3235,34 +3291,6 @@
     "mode": "full",
     "label": "⚡ 즉시 분할",
     "desc": "손절폭 3.0%로 타이트 — 현재가에서 1~2회 분할 매수. 기다리는 이득보다 놓치는 비용이 큼"
-   }
-  },
-  {
-   "id": "036460-2026-10-13-watch",
-   "code": "036460",
-   "name": "한국가스공사",
-   "ccy": "KRW",
-   "group": "watch",
-   "entry_kind": "now",
-   "stage": 1,
-   "price": 35800.0,
-   "entry": 35800.0,
-   "stop": 33966.033,
-   "target": 39467.934,
-   "shares_1pct": 54,
-   "range_pos": 0.3196,
-   "norm": 5.7,
-   "bear_share": 0.125,
-   "fresh": true,
-   "break_gap": -0.0053,
-   "earnings_d": null,
-   "tactic": {
-    "stop_pct": 5.1,
-    "pb_price": 34420.4292,
-    "pb_stop_pct": 1.3,
-    "mode": "full",
-    "label": "⚡ 즉시 분할",
-    "desc": "손절폭 5.1%로 타이트 — 현재가에서 1~2회 분할 매수. 기다리는 이득보다 놓치는 비용이 큼"
    }
   },
   {
