@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated_at": "2026-10-13T09:11:03+09:00",
+ "generated_at": "2026-10-13T09:36:38+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "a_ablation": [
   {
@@ -14,10 +14,10 @@
   {
    "code": "161390",
    "gate": "rp",
-   "range_pos": 0.6049,
-   "runup63": -0.1466,
+   "range_pos": 0.5485,
+   "runup63": -0.1513,
    "stage": 3,
-   "price": 62300.0
+   "price": 60000.0
   },
   {
    "code": "ACHC",
@@ -166,16 +166,16 @@
  ],
  "shelf_debug": {
   "ok": 5,
-  "watch": 125,
+  "watch": 126,
   "reasons": {
-   "밸류영역 밖(지지대 아님)": 473,
-   "추락 중(범위 1%)": 249,
-   "추락 중(범위 0%)": 205,
-   "추락 중(범위 2%)": 160,
+   "밸류영역 밖(지지대 아님)": 472,
+   "추락 중(범위 1%)": 243,
+   "추락 중(범위 0%)": 223,
+   "추락 중(범위 2%)": 165,
    "매물대 정보 없음": 146,
-   "추락 중(범위 3%)": 144,
-   "추락 중(범위 4%)": 126,
-   "추락 중(범위 5%)": 110
+   "추락 중(범위 3%)": 141,
+   "추락 중(범위 4%)": 123,
+   "추락 중(범위 5%)": 109
   }
  },
  "signals": [
@@ -887,24 +887,52 @@
    "group": "now",
    "entry_kind": "now",
    "stage": 3,
-   "price": 156500.0,
-   "entry": 156500.0,
-   "stop": 142571.8156,
-   "target": 184356.3688,
+   "price": 156000.0,
+   "entry": 156000.0,
+   "stop": 142566.6859,
+   "target": 182866.6282,
    "shares_1pct": 7,
-   "range_pos": 0.0127,
-   "norm": -49.1,
+   "range_pos": 0.0119,
+   "norm": -30.2,
    "bear_share": 0.5,
    "fresh": true,
-   "break_gap": 0.006,
+   "break_gap": 0.0132,
    "earnings_d": null,
    "tactic": {
-    "stop_pct": 8.9,
+    "stop_pct": 8.6,
     "pb_price": 153300.0,
     "pb_stop_pct": 7.0,
     "mode": "pullback",
     "label": "⏳ 눌림 지정가만",
-    "desc": "지금 추격 금지(손절폭 8.9%) — <b>153,300원 눌림 지정가만</b>. 눌리면 손절폭 7.0%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
+    "desc": "지금 추격 금지(손절폭 8.6%) — <b>153,300원 눌림 지정가만</b>. 눌리면 손절폭 7.0%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
+   }
+  },
+  {
+   "id": "373220-2026-10-13-now",
+   "code": "373220",
+   "name": "LG에너지솔루션",
+   "ccy": "KRW",
+   "group": "now",
+   "entry_kind": "now",
+   "stage": 3,
+   "price": 378500.0,
+   "entry": 378500.0,
+   "stop": 344158.4531,
+   "target": 447183.0939,
+   "shares_1pct": 2,
+   "range_pos": 0.3721,
+   "norm": 4.7,
+   "bear_share": 0.25,
+   "fresh": false,
+   "break_gap": 0.0782,
+   "earnings_d": null,
+   "tactic": {
+    "stop_pct": 9.1,
+    "pb_price": 348849.3333,
+    "pb_stop_pct": 1.3,
+    "mode": "pullback",
+    "label": "⏳ 눌림 지정가만",
+    "desc": "지금 추격 금지(손절폭 9.1% · 돌파후 진행) — <b>348,849원 눌림 지정가만</b>. 눌리면 손절폭 1.3%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
    }
   },
   {
@@ -1241,34 +1269,6 @@
     "mode": "pullback",
     "label": "⏳ 눌림 지정가만",
     "desc": "지금 추격 금지(손절폭 6.0% · 돌파후 진행) — <b>$139.67 눌림 지정가만</b>. 눌리면 손절폭 5.9%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
-   }
-  },
-  {
-   "id": "489790-2026-10-13-now",
-   "code": "489790",
-   "name": "한화비전",
-   "ccy": "KRW",
-   "group": "now",
-   "entry_kind": "now",
-   "stage": 3,
-   "price": 46250.0,
-   "entry": 46250.0,
-   "stop": 41348.3355,
-   "target": 56053.3289,
-   "shares_1pct": 20,
-   "range_pos": 0.2285,
-   "norm": -24.5,
-   "bear_share": 0.375,
-   "fresh": false,
-   "break_gap": 0.1533,
-   "earnings_d": null,
-   "tactic": {
-    "stop_pct": 10.6,
-    "pb_price": 43200.0,
-    "pb_stop_pct": 4.3,
-    "mode": "pullback",
-    "label": "⏳ 눌림 지정가만",
-    "desc": "지금 추격 금지(손절폭 10.6% · 돌파후 진행) — <b>43,200원 눌림 지정가만</b>. 눌리면 손절폭 4.3%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
    }
   },
   {
@@ -1723,46 +1723,6 @@
    "trend_above_200": false
   },
   {
-   "id": "373220-2026-10-13-shelf-watch",
-   "code": "373220",
-   "name": "LG에너지솔루션",
-   "ccy": "KRW",
-   "group": "shelf_watch",
-   "entry_kind": "shelf_watch",
-   "stage": 0,
-   "price": 398000.0,
-   "entry": 398000.0,
-   "stop": 370440.0,
-   "target": 443239.5833,
-   "shares_1pct": 0,
-   "range_pos": 0.4545,
-   "norm": 10.4,
-   "bear_share": 0.25,
-   "shelf": {
-    "poc": 364406.25,
-    "val": 354552.0833,
-    "vah": 443239.5833,
-    "rr": 1.64,
-    "overhead": 0.525,
-    "reason": "반등 미확인(상단마감)",
-    "history_bars": 1145,
-    "profile_pnl_proxy": -0.0161,
-    "runup252": 0.1437,
-    "checks": {
-     "터치": true,
-     "회복": true,
-     "상단마감": false,
-     "거래량": true,
-     "신저가아님": true
-    }
-   },
-   "fresh": false,
-   "break_gap": null,
-   "earnings_d": null,
-   "tactic": "watch",
-   "trend_above_200": true
-  },
-  {
    "id": "BZ-2026-10-13-shelf-watch",
    "code": "BZ",
    "name": "KANZHUN LIMITED",
@@ -1879,6 +1839,46 @@
    "fresh": false,
    "break_gap": null,
    "earnings_d": 49,
+   "tactic": "watch",
+   "trend_above_200": false
+  },
+  {
+   "id": "014680-2026-10-13-shelf-watch",
+   "code": "014680",
+   "name": "한솔케미칼",
+   "ccy": "KRW",
+   "group": "shelf_watch",
+   "entry_kind": "shelf_watch",
+   "stage": 0,
+   "price": 251500.0,
+   "entry": 251500.0,
+   "stop": 240100.0,
+   "target": 300052.0833,
+   "shares_1pct": 0,
+   "range_pos": 0.4461,
+   "norm": 3.3,
+   "bear_share": 0.25,
+   "shelf": {
+    "poc": 285760.4167,
+    "val": 221447.9167,
+    "vah": 300052.0833,
+    "rr": 4.26,
+    "overhead": 0.539,
+    "reason": "반등 미확인(거래량)",
+    "history_bars": 1905,
+    "profile_pnl_proxy": -0.0229,
+    "runup252": 0.1835,
+    "checks": {
+     "터치": true,
+     "회복": true,
+     "상단마감": true,
+     "거래량": false,
+     "신저가아님": true
+    }
+   },
+   "fresh": false,
+   "break_gap": null,
+   "earnings_d": null,
    "tactic": "watch",
    "trend_above_200": false
   },
@@ -3163,24 +3163,24 @@
    "group": "watch",
    "entry_kind": "now",
    "stage": 1,
-   "price": 36050.0,
-   "entry": 36050.0,
-   "stop": 34236.4971,
-   "target": 39677.0058,
+   "price": 35350.0,
+   "entry": 35350.0,
+   "stop": 33551.7473,
+   "target": 38946.5054,
    "shares_1pct": 55,
-   "range_pos": 0.3368,
+   "range_pos": 0.2887,
    "norm": 5.7,
    "bear_share": 0.125,
    "fresh": true,
-   "break_gap": -0.0001,
+   "break_gap": -0.0178,
    "earnings_d": null,
    "tactic": {
-    "stop_pct": 5.0,
+    "stop_pct": 5.1,
     "pb_price": 34420.4292,
-    "pb_stop_pct": 0.5,
+    "pb_stop_pct": 2.5,
     "mode": "full",
     "label": "⚡ 즉시 분할",
-    "desc": "손절폭 5.0%로 타이트 — 현재가에서 1~2회 분할 매수. 기다리는 이득보다 놓치는 비용이 큼"
+    "desc": "손절폭 5.1%로 타이트 — 현재가에서 1~2회 분할 매수. 기다리는 이득보다 놓치는 비용이 큼"
    }
   },
   {
@@ -3520,34 +3520,6 @@
    }
   },
   {
-   "id": "017800-2026-10-13-watch",
-   "code": "017800",
-   "name": "현대엘리베이터",
-   "ccy": "KRW",
-   "group": "watch",
-   "entry_kind": "now",
-   "stage": 1,
-   "price": 69900.0,
-   "entry": 69900.0,
-   "stop": 66470.6708,
-   "target": 76758.6584,
-   "shares_1pct": 29,
-   "range_pos": 0.157,
-   "norm": -15.1,
-   "bear_share": 0.375,
-   "fresh": true,
-   "break_gap": -0.009,
-   "earnings_d": null,
-   "tactic": {
-    "stop_pct": 4.9,
-    "pb_price": 66927.0833,
-    "pb_stop_pct": 0.7,
-    "mode": "full",
-    "label": "⚡ 즉시 분할",
-    "desc": "손절폭 4.9%로 타이트 — 현재가에서 1~2회 분할 매수. 기다리는 이득보다 놓치는 비용이 큼"
-   }
-  },
-  {
    "id": "CBU-2026-10-13-watch",
    "code": "CBU",
    "name": "Community Financial System, Inc.",
@@ -3688,34 +3660,6 @@
    }
   },
   {
-   "id": "088980-2026-10-13-watch",
-   "code": "088980",
-   "name": "맥쿼리인프라",
-   "ccy": "KRW",
-   "group": "watch",
-   "entry_kind": "now",
-   "stage": 1,
-   "price": 9690.0,
-   "entry": 9690.0,
-   "stop": 9399.3,
-   "target": 10271.4,
-   "shares_1pct": 343,
-   "range_pos": 0.144,
-   "norm": -22.6,
-   "bear_share": 0.25,
-   "fresh": true,
-   "break_gap": -0.0129,
-   "earnings_d": null,
-   "tactic": {
-    "stop_pct": 3.0,
-    "pb_price": null,
-    "pb_stop_pct": null,
-    "mode": "full",
-    "label": "⚡ 즉시 분할",
-    "desc": "손절폭 3.0%로 타이트 — 현재가에서 1~2회 분할 매수. 기다리는 이득보다 놓치는 비용이 큼"
-   }
-  },
-  {
    "id": "DRS-2026-10-13-watch",
    "code": "DRS",
    "name": "Leonardo DRS, Inc.",
@@ -3828,6 +3772,34 @@
    }
   },
   {
+   "id": "081660-2026-10-13-watch",
+   "code": "081660",
+   "name": "미스토홀딩스",
+   "ccy": "KRW",
+   "group": "watch",
+   "entry_kind": "now",
+   "stage": 1,
+   "price": 37850.0,
+   "entry": 37850.0,
+   "stop": 35133.7176,
+   "target": 43282.5648,
+   "shares_1pct": 36,
+   "range_pos": 0.0934,
+   "norm": -38.7,
+   "bear_share": 0.5,
+   "fresh": true,
+   "break_gap": -0.0191,
+   "earnings_d": null,
+   "tactic": {
+    "stop_pct": 7.2,
+    "pb_price": 37091.6667,
+    "pb_stop_pct": 5.3,
+    "mode": "half",
+    "label": "⚖ 반반 진입",
+    "desc": "손절폭 7.2% — 절반은 현재가, 절반은 눌림 37,092원 지정가(거기선 손절폭 5.3%)"
+   }
+  },
+  {
    "id": "AI-2026-10-13-watch",
    "code": "AI",
    "name": "C3.ai, Inc.",
@@ -3888,48 +3860,6 @@
    "fresh": false,
    "break_gap": 0.317,
    "earnings_d": -61,
-   "tactic": null
-  },
-  {
-   "id": "112610-2026-10-13-watch",
-   "code": "112610",
-   "name": "씨에스윈드",
-   "ccy": "KRW",
-   "group": "watch",
-   "entry_kind": "pullback",
-   "stage": 3,
-   "price": 55400.0,
-   "entry": 45048.2,
-   "stop": 39302.6559,
-   "target": 56539.2882,
-   "shares_1pct": 17,
-   "range_pos": 0.4655,
-   "norm": 14.8,
-   "bear_share": 0.375,
-   "fresh": false,
-   "break_gap": 0.0889,
-   "earnings_d": null,
-   "tactic": null
-  },
-  {
-   "id": "373220-2026-10-13-watch",
-   "code": "373220",
-   "name": "LG에너지솔루션",
-   "ccy": "KRW",
-   "group": "watch",
-   "entry_kind": "pullback",
-   "stage": 3,
-   "price": 398000.0,
-   "entry": 348724.3333,
-   "stop": 314818.052,
-   "target": 416536.896,
-   "shares_1pct": 2,
-   "range_pos": 0.4545,
-   "norm": 10.4,
-   "bear_share": 0.25,
-   "fresh": false,
-   "break_gap": 0.1284,
-   "earnings_d": null,
    "tactic": null
   },
   {
