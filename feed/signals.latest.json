@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated_at": "2026-10-13T14:38:12+09:00",
+ "generated_at": "2026-10-13T14:48:22+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "a_ablation": [
   {
@@ -14,10 +14,10 @@
   {
    "code": "161390",
    "gate": "rp",
-   "range_pos": 0.5656,
-   "runup63": -0.1414,
+   "range_pos": 0.5706,
+   "runup63": -0.1386,
    "stage": 3,
-   "price": 60700.0
+   "price": 60900.0
   },
   {
    "code": "ACHC",
@@ -166,16 +166,16 @@
  ],
  "shelf_debug": {
   "ok": 4,
-  "watch": 147,
+  "watch": 146,
   "reasons": {
-   "밸류영역 밖(지지대 아님)": 482,
+   "밸류영역 밖(지지대 아님)": 481,
    "추락 중(범위 0%)": 283,
-   "추락 중(범위 1%)": 220,
-   "추락 중(범위 2%)": 174,
+   "추락 중(범위 1%)": 219,
+   "추락 중(범위 2%)": 172,
    "매물대 정보 없음": 146,
-   "추락 중(범위 3%)": 136,
-   "추락 중(범위 4%)": 112,
-   "추락 중(범위 6%)": 103
+   "추락 중(범위 3%)": 137,
+   "추락 중(범위 4%)": 113,
+   "추락 중(범위 6%)": 105
   }
  },
  "signals": [
@@ -1335,24 +1335,24 @@
    "group": "now",
    "entry_kind": "now",
    "stage": 3,
-   "price": 161700.0,
-   "entry": 161700.0,
-   "stop": 147409.543,
-   "target": 190280.9139,
+   "price": 161900.0,
+   "entry": 161900.0,
+   "stop": 147609.543,
+   "target": 190480.9139,
    "shares_1pct": 6,
-   "range_pos": 0.0345,
+   "range_pos": 0.0352,
    "norm": -45.3,
    "bear_share": 0.5,
    "fresh": false,
-   "break_gap": 0.0502,
+   "break_gap": 0.0515,
    "earnings_d": null,
    "tactic": {
     "stop_pct": 8.8,
     "pb_price": 153300.0,
-    "pb_stop_pct": 3.8,
+    "pb_stop_pct": 3.7,
     "mode": "pullback",
     "label": "⏳ 눌림 지정가만",
-    "desc": "지금 추격 금지(손절폭 8.8% · 돌파후 진행) — <b>153,300원 눌림 지정가만</b>. 눌리면 손절폭 3.8%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
+    "desc": "지금 추격 금지(손절폭 8.8% · 돌파후 진행) — <b>153,300원 눌림 지정가만</b>. 눌리면 손절폭 3.7%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
    }
   },
   {
@@ -1390,6 +1390,24 @@
    "range_pos": 0.2819,
    "b0_reject_reason": "200일선 아래(B1)",
    "trend_above_200": false,
+   "fresh": false,
+   "tactic": "shadow"
+  },
+  {
+   "id": "175330-2026-10-13-b2-shadow",
+   "code": "175330",
+   "name": "JB금융지주",
+   "ccy": "KRW",
+   "group": "shelf_shadow_b2",
+   "shadow": true,
+   "orderable": false,
+   "entry": 28200.0,
+   "stop": 26166.0,
+   "target": 32268.0,
+   "stage": 0,
+   "norm": 3.3,
+   "range_pos": 0.3869,
+   "runup252": 0.2181,
    "fresh": false,
    "tactic": "shadow"
   },
@@ -2986,21 +3004,21 @@
    "group": "watch",
    "entry_kind": "now",
    "stage": 1,
-   "price": 70000.0,
-   "entry": 70000.0,
-   "stop": 66458.48,
-   "target": 77083.04,
+   "price": 70200.0,
+   "entry": 70200.0,
+   "stop": 66629.9086,
+   "target": 77340.1828,
    "shares_1pct": 28,
-   "range_pos": 0.1589,
+   "range_pos": 0.1628,
    "norm": 20.8,
    "bear_share": 0.375,
    "fresh": true,
-   "break_gap": -0.0037,
+   "break_gap": -0.0008,
    "earnings_d": null,
    "tactic": {
     "stop_pct": 5.1,
     "pb_price": 67184.7222,
-    "pb_stop_pct": 1.1,
+    "pb_stop_pct": 0.8,
     "mode": "full",
     "label": "⚡ 즉시 분할",
     "desc": "손절폭 5.1%로 타이트 — 현재가에서 1~2회 분할 매수. 기다리는 이득보다 놓치는 비용이 큼"
@@ -3042,21 +3060,21 @@
    "group": "watch",
    "entry_kind": "now",
    "stage": 1,
-   "price": 35950.0,
-   "entry": 35950.0,
-   "stop": 34116.033,
-   "target": 39617.934,
+   "price": 36100.0,
+   "entry": 36100.0,
+   "stop": 34251.7473,
+   "target": 39796.5054,
    "shares_1pct": 54,
-   "range_pos": 0.3299,
+   "range_pos": 0.3402,
    "norm": 13.2,
    "bear_share": 0.125,
    "fresh": true,
-   "break_gap": -0.0012,
+   "break_gap": 0.003,
    "earnings_d": null,
    "tactic": {
     "stop_pct": 5.1,
     "pb_price": 34420.4292,
-    "pb_stop_pct": 0.9,
+    "pb_stop_pct": 0.5,
     "mode": "full",
     "label": "⚡ 즉시 분할",
     "desc": "손절폭 5.1%로 타이트 — 현재가에서 1~2회 분할 매수. 기다리는 이득보다 놓치는 비용이 큼"
