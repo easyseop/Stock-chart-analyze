@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated_at": "2026-10-13T10:46:50+09:00",
+ "generated_at": "2026-10-13T10:55:32+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "a_ablation": [
   {
@@ -14,18 +14,10 @@
   {
    "code": "161390",
    "gate": "rp",
-   "range_pos": 0.5607,
-   "runup63": -0.1443,
+   "range_pos": 0.5534,
+   "runup63": -0.1485,
    "stage": 3,
-   "price": 60500.0
-  },
-  {
-   "code": "373220",
-   "gate": "rp",
-   "range_pos": 0.4059,
-   "runup63": 0.2329,
-   "stage": 3,
-   "price": 386500.0
+   "price": 60200.0
   },
   {
    "code": "ACHC",
@@ -162,20 +154,28 @@
    "runup63": -0.1049,
    "stage": 3,
    "price": 22.530000686645508
+  },
+  {
+   "code": "MGA",
+   "gate": "rp",
+   "range_pos": 0.6792,
+   "runup63": -0.0412,
+   "stage": 3,
+   "price": 63.560001373291016
   }
  ],
  "shelf_debug": {
   "ok": 5,
-  "watch": 124,
+  "watch": 126,
   "reasons": {
    "밸류영역 밖(지지대 아님)": 471,
-   "추락 중(범위 1%)": 253,
-   "추락 중(범위 0%)": 200,
+   "추락 중(범위 1%)": 247,
+   "추락 중(범위 0%)": 215,
    "추락 중(범위 2%)": 166,
-   "추락 중(범위 3%)": 147,
    "매물대 정보 없음": 146,
-   "추락 중(범위 4%)": 126,
-   "추락 중(범위 5%)": 107
+   "추락 중(범위 3%)": 142,
+   "추락 중(범위 4%)": 124,
+   "추락 중(범위 5%)": 110
   }
  },
  "signals": [
@@ -880,6 +880,62 @@
    }
   },
   {
+   "id": "352820-2026-10-13-now",
+   "code": "352820",
+   "name": "하이브",
+   "ccy": "KRW",
+   "group": "now",
+   "entry_kind": "now",
+   "stage": 3,
+   "price": 161300.0,
+   "entry": 161300.0,
+   "stop": 147009.543,
+   "target": 189880.9139,
+   "shares_1pct": 6,
+   "range_pos": 0.0329,
+   "norm": -52.8,
+   "bear_share": 0.5,
+   "fresh": true,
+   "break_gap": 0.0476,
+   "earnings_d": null,
+   "tactic": {
+    "stop_pct": 8.9,
+    "pb_price": 153300.0,
+    "pb_stop_pct": 4.1,
+    "mode": "pullback",
+    "label": "⏳ 눌림 지정가만",
+    "desc": "지금 추격 금지(손절폭 8.9%) — <b>153,300원 눌림 지정가만</b>. 눌리면 손절폭 4.1%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
+   }
+  },
+  {
+   "id": "373220-2026-10-13-now",
+   "code": "373220",
+   "name": "LG에너지솔루션",
+   "ccy": "KRW",
+   "group": "now",
+   "entry_kind": "now",
+   "stage": 3,
+   "price": 382000.0,
+   "entry": 382000.0,
+   "stop": 347658.4531,
+   "target": 450683.0939,
+   "shares_1pct": 2,
+   "range_pos": 0.3869,
+   "norm": 4.7,
+   "bear_share": 0.25,
+   "fresh": false,
+   "break_gap": 0.0882,
+   "earnings_d": null,
+   "tactic": {
+    "stop_pct": 9.0,
+    "pb_price": 348849.3333,
+    "pb_stop_pct": 0.3,
+    "mode": "pullback",
+    "label": "⏳ 눌림 지정가만",
+    "desc": "지금 추격 금지(손절폭 9.0% · 돌파후 진행) — <b>348,849원 눌림 지정가만</b>. 눌리면 손절폭 0.3%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
+   }
+  },
+  {
    "id": "WMT-2026-10-13-now",
    "code": "WMT",
    "name": "Walmart Inc.",
@@ -1328,34 +1384,6 @@
    }
   },
   {
-   "id": "352820-2026-10-13-now",
-   "code": "352820",
-   "name": "하이브",
-   "ccy": "KRW",
-   "group": "now",
-   "entry_kind": "now",
-   "stage": 3,
-   "price": 162200.0,
-   "entry": 162200.0,
-   "stop": 147909.543,
-   "target": 190780.9139,
-   "shares_1pct": 6,
-   "range_pos": 0.0364,
-   "norm": -52.8,
-   "bear_share": 0.5,
-   "fresh": false,
-   "break_gap": 0.0535,
-   "earnings_d": null,
-   "tactic": {
-    "stop_pct": 8.8,
-    "pb_price": 153300.0,
-    "pb_stop_pct": 3.5,
-    "mode": "pullback",
-    "label": "⏳ 눌림 지정가만",
-    "desc": "지금 추격 금지(손절폭 8.8% · 돌파후 진행) — <b>153,300원 눌림 지정가만</b>. 눌리면 손절폭 3.5%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
-   }
-  },
-  {
    "id": "RDDT-2026-10-13-b0-shadow",
    "code": "RDDT",
    "name": "Reddit, Inc.",
@@ -1735,6 +1763,46 @@
    "trend_above_200": true
   },
   {
+   "id": "NAVI-2026-10-13-shelf-watch",
+   "code": "NAVI",
+   "name": "Navient Corporation",
+   "ccy": "USD",
+   "group": "shelf_watch",
+   "entry_kind": "shelf_watch",
+   "stage": 0,
+   "price": 9.11,
+   "entry": 9.11,
+   "stop": 8.6436,
+   "target": 10.0206,
+   "shares_1pct": 0,
+   "range_pos": 0.2894,
+   "norm": 9.4,
+   "bear_share": 0.125,
+   "shelf": {
+    "poc": 8.4831,
+    "val": 7.9706,
+    "vah": 10.0206,
+    "rr": 1.95,
+    "overhead": 0.503,
+    "reason": "반등 미확인(상단마감·거래량)",
+    "history_bars": 1954,
+    "profile_pnl_proxy": -0.0572,
+    "runup252": -0.2606,
+    "checks": {
+     "터치": true,
+     "회복": true,
+     "상단마감": false,
+     "거래량": false,
+     "신저가아님": true
+    }
+   },
+   "fresh": false,
+   "break_gap": null,
+   "earnings_d": -68,
+   "tactic": "watch",
+   "trend_above_200": false
+  },
+  {
    "id": "TYL-2026-10-13-shelf-watch",
    "code": "TYL",
    "name": "Tyler Technologies, Inc.",
@@ -1811,46 +1879,6 @@
    "fresh": false,
    "break_gap": null,
    "earnings_d": 49,
-   "tactic": "watch",
-   "trend_above_200": false
-  },
-  {
-   "id": "014680-2026-10-13-shelf-watch",
-   "code": "014680",
-   "name": "한솔케미칼",
-   "ccy": "KRW",
-   "group": "shelf_watch",
-   "entry_kind": "shelf_watch",
-   "stage": 0,
-   "price": 255000.0,
-   "entry": 255000.0,
-   "stop": 240100.0,
-   "target": 300052.0833,
-   "shares_1pct": 0,
-   "range_pos": 0.4665,
-   "norm": 3.3,
-   "bear_share": 0.25,
-   "shelf": {
-    "poc": 285760.4167,
-    "val": 221447.9167,
-    "vah": 300052.0833,
-    "rr": 3.02,
-    "overhead": 0.539,
-    "reason": "반등 미확인(거래량)",
-    "history_bars": 1905,
-    "profile_pnl_proxy": -0.0093,
-    "runup252": 0.2,
-    "checks": {
-     "터치": true,
-     "회복": true,
-     "상단마감": true,
-     "거래량": false,
-     "신저가아님": true
-    }
-   },
-   "fresh": false,
-   "break_gap": null,
-   "earnings_d": null,
    "tactic": "watch",
    "trend_above_200": false
   },
@@ -3135,24 +3163,24 @@
    "group": "watch",
    "entry_kind": "now",
    "stage": 1,
-   "price": 35650.0,
-   "entry": 35650.0,
-   "stop": 33816.033,
-   "target": 39317.934,
+   "price": 35550.0,
+   "entry": 35550.0,
+   "stop": 33716.033,
+   "target": 39217.934,
    "shares_1pct": 54,
-   "range_pos": 0.3093,
+   "range_pos": 0.3024,
    "norm": 5.7,
    "bear_share": 0.125,
    "fresh": true,
-   "break_gap": -0.0095,
+   "break_gap": -0.0123,
    "earnings_d": null,
    "tactic": {
-    "stop_pct": 5.1,
+    "stop_pct": 5.2,
     "pb_price": 34420.4292,
-    "pb_stop_pct": 1.8,
+    "pb_stop_pct": 2.0,
     "mode": "full",
     "label": "⚡ 즉시 분할",
-    "desc": "손절폭 5.1%로 타이트 — 현재가에서 1~2회 분할 매수. 기다리는 이득보다 놓치는 비용이 큼"
+    "desc": "손절폭 5.2%로 타이트 — 현재가에서 1~2회 분할 매수. 기다리는 이득보다 놓치는 비용이 큼"
    }
   },
   {
