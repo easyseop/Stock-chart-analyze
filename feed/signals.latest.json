@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated_at": "2026-10-13T09:44:02+09:00",
+ "generated_at": "2026-10-13T10:10:00+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "a_ablation": [
   {
@@ -14,18 +14,18 @@
   {
    "code": "161390",
    "gate": "rp",
-   "range_pos": 0.5411,
-   "runup63": -0.1556,
+   "range_pos": 0.5681,
+   "runup63": -0.14,
    "stage": 3,
-   "price": 59700.0
+   "price": 60800.0
   },
   {
    "code": "373220",
    "gate": "rp",
-   "range_pos": 0.4038,
-   "runup63": 0.2313,
+   "range_pos": 0.4228,
+   "runup63": 0.2456,
    "stage": 3,
-   "price": 386000.0
+   "price": 390500.0
   },
   {
    "code": "ACHC",
@@ -166,16 +166,16 @@
  ],
  "shelf_debug": {
   "ok": 5,
-  "watch": 124,
+  "watch": 122,
   "reasons": {
-   "밸류영역 밖(지지대 아님)": 472,
-   "추락 중(범위 1%)": 256,
-   "추락 중(범위 0%)": 199,
-   "추락 중(범위 2%)": 170,
-   "추락 중(범위 3%)": 146,
+   "밸류영역 밖(지지대 아님)": 474,
+   "추락 중(범위 1%)": 254,
+   "추락 중(범위 0%)": 201,
+   "추락 중(범위 2%)": 171,
    "매물대 정보 없음": 146,
-   "추락 중(범위 4%)": 122,
-   "추락 중(범위 5%)": 110
+   "추락 중(범위 3%)": 144,
+   "추락 중(범위 4%)": 125,
+   "추락 중(범위 5%)": 106
   }
  },
  "signals": [
@@ -887,24 +887,24 @@
    "group": "now",
    "entry_kind": "now",
    "stage": 3,
-   "price": 158700.0,
-   "entry": 158700.0,
-   "stop": 144880.9716,
-   "target": 186338.0568,
+   "price": 159800.0,
+   "entry": 159800.0,
+   "stop": 145666.6859,
+   "target": 188066.6282,
    "shares_1pct": 7,
-   "range_pos": 0.0226,
+   "range_pos": 0.0269,
    "norm": -45.3,
    "bear_share": 0.5,
    "fresh": true,
-   "break_gap": 0.0307,
+   "break_gap": 0.0379,
    "earnings_d": null,
    "tactic": {
-    "stop_pct": 8.7,
+    "stop_pct": 8.8,
     "pb_price": 153300.0,
-    "pb_stop_pct": 5.5,
+    "pb_stop_pct": 5.0,
     "mode": "pullback",
     "label": "⏳ 눌림 지정가만",
-    "desc": "지금 추격 금지(손절폭 8.7%) — <b>153,300원 눌림 지정가만</b>. 눌리면 손절폭 5.5%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
+    "desc": "지금 추격 금지(손절폭 8.8%) — <b>153,300원 눌림 지정가만</b>. 눌리면 손절폭 5.0%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
    }
   },
   {
@@ -1575,6 +1575,46 @@
    "trend_above_200": true
   },
   {
+   "id": "BSY-2026-10-13-shelf-watch",
+   "code": "BSY",
+   "name": "Bentley Systems, Incorporated",
+   "ccy": "USD",
+   "group": "shelf_watch",
+   "entry_kind": "shelf_watch",
+   "stage": 0,
+   "price": 34.97,
+   "entry": 34.97,
+   "stop": 33.5356,
+   "target": 38.9152,
+   "shares_1pct": 0,
+   "range_pos": 0.2782,
+   "norm": 18.9,
+   "bear_share": 0.125,
+   "shelf": {
+    "poc": 32.7219,
+    "val": 30.6575,
+    "vah": 38.9152,
+    "rr": 2.75,
+    "overhead": 0.432,
+    "reason": "반등 미확인(상단마감·거래량)",
+    "history_bars": 1519,
+    "profile_pnl_proxy": -0.0227,
+    "runup252": -0.3106,
+    "checks": {
+     "터치": true,
+     "회복": true,
+     "상단마감": false,
+     "거래량": false,
+     "신저가아님": true
+    }
+   },
+   "fresh": false,
+   "break_gap": null,
+   "earnings_d": 23,
+   "tactic": "watch",
+   "trend_above_200": true
+  },
+  {
    "id": "CSW-2026-10-13-shelf-watch",
    "code": "CSW",
    "name": "CSW Industrials, Inc.",
@@ -1662,24 +1702,24 @@
    "group": "shelf_watch",
    "entry_kind": "shelf_watch",
    "stage": 0,
-   "price": 259000.0,
-   "entry": 259000.0,
+   "price": 258000.0,
+   "entry": 258000.0,
    "stop": 240100.0,
    "target": 300052.0833,
    "shares_1pct": 0,
-   "range_pos": 0.4898,
+   "range_pos": 0.484,
    "norm": 11.5,
    "bear_share": 0.375,
    "shelf": {
     "poc": 285760.4167,
     "val": 221447.9167,
     "vah": 300052.0833,
-    "rr": 2.17,
+    "rr": 2.35,
     "overhead": 0.499,
     "reason": "반등 미확인(거래량)",
     "history_bars": 1905,
-    "profile_pnl_proxy": 0.0062,
-    "runup252": 0.2188,
+    "profile_pnl_proxy": 0.0023,
+    "runup252": 0.2141,
     "checks": {
      "터치": true,
      "회복": true,
@@ -1692,7 +1732,7 @@
    "break_gap": null,
    "earnings_d": null,
    "tactic": "watch",
-   "trend_above_200": true
+   "trend_above_200": false
   },
   {
    "id": "BZ-2026-10-13-shelf-watch",
@@ -1813,46 +1853,6 @@
    "earnings_d": 49,
    "tactic": "watch",
    "trend_above_200": false
-  },
-  {
-   "id": "282330-2026-10-13-shelf-watch",
-   "code": "282330",
-   "name": "BGF리테일",
-   "ccy": "KRW",
-   "group": "shelf_watch",
-   "entry_kind": "shelf_watch",
-   "stage": 0,
-   "price": 128200.0,
-   "entry": 128200.0,
-   "stop": 122304.0,
-   "target": 143904.1667,
-   "shares_1pct": 0,
-   "range_pos": 0.4874,
-   "norm": 3.3,
-   "bear_share": 0.25,
-   "shelf": {
-    "poc": 125437.5,
-    "val": 113895.8333,
-    "vah": 143904.1667,
-    "rr": 2.66,
-    "overhead": 0.422,
-    "reason": "반등 미확인(거래량)",
-    "history_bars": 1905,
-    "profile_pnl_proxy": 0.0211,
-    "runup252": 0.1827,
-    "checks": {
-     "터치": true,
-     "회복": true,
-     "상단마감": true,
-     "거래량": false,
-     "신저가아님": true
-    }
-   },
-   "fresh": false,
-   "break_gap": null,
-   "earnings_d": null,
-   "tactic": "watch",
-   "trend_above_200": true
   },
   {
    "id": "ROP-2026-10-13-shelf-watch",
@@ -2953,21 +2953,21 @@
    "group": "watch",
    "entry_kind": "now",
    "stage": 1,
-   "price": 35450.0,
-   "entry": 35450.0,
-   "stop": 33616.033,
-   "target": 39117.934,
+   "price": 35600.0,
+   "entry": 35600.0,
+   "stop": 33766.033,
+   "target": 39267.934,
    "shares_1pct": 54,
-   "range_pos": 0.2955,
+   "range_pos": 0.3058,
    "norm": 13.2,
    "bear_share": 0.125,
    "fresh": true,
-   "break_gap": -0.0151,
+   "break_gap": -0.0109,
    "earnings_d": null,
    "tactic": {
     "stop_pct": 5.2,
     "pb_price": 34420.4292,
-    "pb_stop_pct": 2.3,
+    "pb_stop_pct": 1.9,
     "mode": "full",
     "label": "⚡ 즉시 분할",
     "desc": "손절폭 5.2%로 타이트 — 현재가에서 1~2회 분할 매수. 기다리는 이득보다 놓치는 비용이 큼"
