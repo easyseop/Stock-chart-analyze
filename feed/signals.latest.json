@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated_at": "2026-10-13T12:48:11+09:00",
+ "generated_at": "2026-10-13T12:59:11+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "a_ablation": [
   {
@@ -14,10 +14,18 @@
   {
    "code": "161390",
    "gate": "rp",
-   "range_pos": 0.5387,
-   "runup63": -0.157,
+   "range_pos": 0.5436,
+   "runup63": -0.1542,
    "stage": 3,
-   "price": 59600.0
+   "price": 59800.0
+  },
+  {
+   "code": "373220",
+   "gate": "rp",
+   "range_pos": 0.4038,
+   "runup63": 0.2313,
+   "stage": 3,
+   "price": 386000.0
   },
   {
    "code": "ACHC",
@@ -154,28 +162,20 @@
    "runup63": -0.0404,
    "stage": 3,
    "price": 100.11000061035156
-  },
-  {
-   "code": "MAC",
-   "gate": "rp",
-   "range_pos": 0.6103,
-   "runup63": -0.1049,
-   "stage": 3,
-   "price": 22.530000686645508
   }
  ],
  "shelf_debug": {
   "ok": 4,
-  "watch": 150,
+  "watch": 148,
   "reasons": {
    "밸류영역 밖(지지대 아님)": 478,
-   "추락 중(범위 0%)": 314,
-   "추락 중(범위 1%)": 223,
+   "추락 중(범위 0%)": 285,
+   "추락 중(범위 1%)": 241,
    "추락 중(범위 2%)": 165,
    "매물대 정보 없음": 146,
-   "추락 중(범위 3%)": 129,
+   "추락 중(범위 3%)": 134,
    "추락 중(범위 4%)": 110,
-   "추락 중(범위 6%)": 101
+   "추락 중(범위 6%)": 100
   }
  },
  "signals": [
@@ -887,52 +887,24 @@
    "group": "now",
    "entry_kind": "now",
    "stage": 3,
-   "price": 159600.0,
-   "entry": 159600.0,
-   "stop": 145309.543,
-   "target": 188180.9139,
+   "price": 161200.0,
+   "entry": 161200.0,
+   "stop": 146909.543,
+   "target": 189780.9139,
    "shares_1pct": 6,
-   "range_pos": 0.0261,
+   "range_pos": 0.0325,
    "norm": -52.8,
    "bear_share": 0.5,
    "fresh": true,
-   "break_gap": 0.0366,
+   "break_gap": 0.047,
    "earnings_d": null,
    "tactic": {
-    "stop_pct": 9.0,
+    "stop_pct": 8.9,
     "pb_price": 153300.0,
-    "pb_stop_pct": 5.2,
+    "pb_stop_pct": 4.2,
     "mode": "pullback",
     "label": "⏳ 눌림 지정가만",
-    "desc": "지금 추격 금지(손절폭 9.0%) — <b>153,300원 눌림 지정가만</b>. 눌리면 손절폭 5.2%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
-   }
-  },
-  {
-   "id": "373220-2026-10-13-now",
-   "code": "373220",
-   "name": "LG에너지솔루션",
-   "ccy": "KRW",
-   "group": "now",
-   "entry_kind": "now",
-   "stage": 3,
-   "price": 380000.0,
-   "entry": 380000.0,
-   "stop": 345658.4531,
-   "target": 448683.0939,
-   "shares_1pct": 2,
-   "range_pos": 0.3784,
-   "norm": 4.7,
-   "bear_share": 0.25,
-   "fresh": false,
-   "break_gap": 0.0825,
-   "earnings_d": null,
-   "tactic": {
-    "stop_pct": 9.0,
-    "pb_price": 348849.3333,
-    "pb_stop_pct": 0.9,
-    "mode": "pullback",
-    "label": "⏳ 눌림 지정가만",
-    "desc": "지금 추격 금지(손절폭 9.0% · 돌파후 진행) — <b>348,849원 눌림 지정가만</b>. 눌리면 손절폭 0.9%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
+    "desc": "지금 추격 금지(손절폭 8.9%) — <b>153,300원 눌림 지정가만</b>. 눌리면 손절폭 4.2%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
    }
   },
   {
@@ -3273,21 +3245,21 @@
    "group": "watch",
    "entry_kind": "now",
    "stage": 1,
-   "price": 35400.0,
-   "entry": 35400.0,
-   "stop": 33566.033,
-   "target": 39067.934,
+   "price": 35600.0,
+   "entry": 35600.0,
+   "stop": 33766.033,
+   "target": 39267.934,
    "shares_1pct": 54,
-   "range_pos": 0.2921,
+   "range_pos": 0.3058,
    "norm": 5.7,
    "bear_share": 0.125,
    "fresh": true,
-   "break_gap": -0.0165,
+   "break_gap": -0.0109,
    "earnings_d": null,
    "tactic": {
     "stop_pct": 5.2,
     "pb_price": 34420.4292,
-    "pb_stop_pct": 2.5,
+    "pb_stop_pct": 1.9,
     "mode": "full",
     "label": "⚡ 즉시 분할",
     "desc": "손절폭 5.2%로 타이트 — 현재가에서 1~2회 분할 매수. 기다리는 이득보다 놓치는 비용이 큼"
