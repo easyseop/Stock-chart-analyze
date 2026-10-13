@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated_at": "2026-10-13T10:55:32+09:00",
+ "generated_at": "2026-10-13T11:21:32+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "a_ablation": [
   {
@@ -14,10 +14,10 @@
   {
    "code": "161390",
    "gate": "rp",
-   "range_pos": 0.5534,
-   "runup63": -0.1485,
+   "range_pos": 0.5509,
+   "runup63": -0.1499,
    "stage": 3,
-   "price": 60200.0
+   "price": 60100.0
   },
   {
    "code": "ACHC",
@@ -166,16 +166,16 @@
  ],
  "shelf_debug": {
   "ok": 5,
-  "watch": 126,
+  "watch": 124,
   "reasons": {
-   "밸류영역 밖(지지대 아님)": 471,
-   "추락 중(범위 1%)": 247,
-   "추락 중(범위 0%)": 215,
-   "추락 중(범위 2%)": 166,
+   "밸류영역 밖(지지대 아님)": 470,
+   "추락 중(범위 1%)": 252,
+   "추락 중(범위 0%)": 212,
+   "추락 중(범위 2%)": 164,
    "매물대 정보 없음": 146,
-   "추락 중(범위 3%)": 142,
-   "추락 중(범위 4%)": 124,
-   "추락 중(범위 5%)": 110
+   "추락 중(범위 3%)": 143,
+   "추락 중(범위 4%)": 125,
+   "추락 중(범위 5%)": 109
   }
  },
  "signals": [
@@ -887,24 +887,24 @@
    "group": "now",
    "entry_kind": "now",
    "stage": 3,
-   "price": 161300.0,
-   "entry": 161300.0,
-   "stop": 147009.543,
-   "target": 189880.9139,
+   "price": 159450.0,
+   "entry": 159450.0,
+   "stop": 145159.543,
+   "target": 188030.9139,
    "shares_1pct": 6,
-   "range_pos": 0.0329,
+   "range_pos": 0.0255,
    "norm": -52.8,
    "bear_share": 0.5,
    "fresh": true,
-   "break_gap": 0.0476,
+   "break_gap": 0.0356,
    "earnings_d": null,
    "tactic": {
-    "stop_pct": 8.9,
+    "stop_pct": 9.0,
     "pb_price": 153300.0,
-    "pb_stop_pct": 4.1,
+    "pb_stop_pct": 5.3,
     "mode": "pullback",
     "label": "⏳ 눌림 지정가만",
-    "desc": "지금 추격 금지(손절폭 8.9%) — <b>153,300원 눌림 지정가만</b>. 눌리면 손절폭 4.1%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
+    "desc": "지금 추격 금지(손절폭 9.0%) — <b>153,300원 눌림 지정가만</b>. 눌리면 손절폭 5.3%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
    }
   },
   {
@@ -915,24 +915,24 @@
    "group": "now",
    "entry_kind": "now",
    "stage": 3,
-   "price": 382000.0,
-   "entry": 382000.0,
-   "stop": 347658.4531,
-   "target": 450683.0939,
+   "price": 381000.0,
+   "entry": 381000.0,
+   "stop": 346658.4531,
+   "target": 449683.0939,
    "shares_1pct": 2,
-   "range_pos": 0.3869,
+   "range_pos": 0.3827,
    "norm": 4.7,
    "bear_share": 0.25,
    "fresh": false,
-   "break_gap": 0.0882,
+   "break_gap": 0.0854,
    "earnings_d": null,
    "tactic": {
     "stop_pct": 9.0,
     "pb_price": 348849.3333,
-    "pb_stop_pct": 0.3,
+    "pb_stop_pct": 0.6,
     "mode": "pullback",
     "label": "⏳ 눌림 지정가만",
-    "desc": "지금 추격 금지(손절폭 9.0% · 돌파후 진행) — <b>348,849원 눌림 지정가만</b>. 눌리면 손절폭 0.3%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
+    "desc": "지금 추격 금지(손절폭 9.0% · 돌파후 진행) — <b>348,849원 눌림 지정가만</b>. 눌리면 손절폭 0.6%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
    }
   },
   {
@@ -1763,46 +1763,6 @@
    "trend_above_200": true
   },
   {
-   "id": "NAVI-2026-10-13-shelf-watch",
-   "code": "NAVI",
-   "name": "Navient Corporation",
-   "ccy": "USD",
-   "group": "shelf_watch",
-   "entry_kind": "shelf_watch",
-   "stage": 0,
-   "price": 9.11,
-   "entry": 9.11,
-   "stop": 8.6436,
-   "target": 10.0206,
-   "shares_1pct": 0,
-   "range_pos": 0.2894,
-   "norm": 9.4,
-   "bear_share": 0.125,
-   "shelf": {
-    "poc": 8.4831,
-    "val": 7.9706,
-    "vah": 10.0206,
-    "rr": 1.95,
-    "overhead": 0.503,
-    "reason": "반등 미확인(상단마감·거래량)",
-    "history_bars": 1954,
-    "profile_pnl_proxy": -0.0572,
-    "runup252": -0.2606,
-    "checks": {
-     "터치": true,
-     "회복": true,
-     "상단마감": false,
-     "거래량": false,
-     "신저가아님": true
-    }
-   },
-   "fresh": false,
-   "break_gap": null,
-   "earnings_d": -68,
-   "tactic": "watch",
-   "trend_above_200": false
-  },
-  {
    "id": "TYL-2026-10-13-shelf-watch",
    "code": "TYL",
    "name": "Tyler Technologies, Inc.",
@@ -1879,6 +1839,46 @@
    "fresh": false,
    "break_gap": null,
    "earnings_d": 49,
+   "tactic": "watch",
+   "trend_above_200": false
+  },
+  {
+   "id": "014680-2026-10-13-shelf-watch",
+   "code": "014680",
+   "name": "한솔케미칼",
+   "ccy": "KRW",
+   "group": "shelf_watch",
+   "entry_kind": "shelf_watch",
+   "stage": 0,
+   "price": 256500.0,
+   "entry": 256500.0,
+   "stop": 240100.0,
+   "target": 300052.0833,
+   "shares_1pct": 0,
+   "range_pos": 0.4752,
+   "norm": 3.3,
+   "bear_share": 0.375,
+   "shelf": {
+    "poc": 285760.4167,
+    "val": 221447.9167,
+    "vah": 300052.0833,
+    "rr": 2.66,
+    "overhead": 0.539,
+    "reason": "반등 미확인(거래량)",
+    "history_bars": 1905,
+    "profile_pnl_proxy": -0.0035,
+    "runup252": 0.2071,
+    "checks": {
+     "터치": true,
+     "회복": true,
+     "상단마감": true,
+     "거래량": false,
+     "신저가아님": true
+    }
+   },
+   "fresh": false,
+   "break_gap": null,
+   "earnings_d": null,
    "tactic": "watch",
    "trend_above_200": false
   },
