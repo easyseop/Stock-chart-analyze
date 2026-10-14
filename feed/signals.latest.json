@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated_at": "2026-10-15T07:07:00+09:00",
+ "generated_at": "2026-10-15T07:40:57+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "a_ablation": [
   {
@@ -169,10 +169,10 @@
   "watch": 124,
   "reasons": {
    "밸류영역 밖(지지대 아님)": 465,
-   "추락 중(범위 0%)": 279,
+   "추락 중(범위 0%)": 278,
    "추락 중(범위 1%)": 237,
    "추락 중(범위 2%)": 181,
-   "매물대 정보 없음": 147,
+   "매물대 정보 없음": 159,
    "추락 중(범위 3%)": 143,
    "추락 중(범위 4%)": 118,
    "추락 중(범위 7%)": 99
@@ -740,6 +740,34 @@
    }
   },
   {
+   "id": "TAC-2026-10-15-now",
+   "code": "TAC",
+   "name": "TransAlta Corporation",
+   "ccy": "USD",
+   "group": "now",
+   "entry_kind": "now",
+   "stage": 4,
+   "price": 12.66,
+   "entry": 12.66,
+   "stop": 11.8845,
+   "target": 14.211,
+   "shares_1pct": 128,
+   "range_pos": 0.1969,
+   "norm": -13.2,
+   "bear_share": 0.25,
+   "fresh": false,
+   "break_gap": 0.0917,
+   "earnings_d": 22,
+   "tactic": {
+    "stop_pct": 6.1,
+    "pb_price": null,
+    "pb_stop_pct": null,
+    "mode": "pullback",
+    "label": "⏳ 눌림 지정가만",
+    "desc": "지금 추격 금지(손절폭 6.1% · 돌파후 진행) — 받칠 지지에 눌릴 때까지 대기"
+   }
+  },
+  {
    "id": "CSGP-2026-10-15-now",
    "code": "CSGP",
    "name": "CoStar Group, Inc.",
@@ -905,34 +933,6 @@
     "mode": "half",
     "label": "⚖ 반반 진입",
     "desc": "손절폭 3.2% · 돌파후 진행 — 절반만 현재가, 나머지는 눌림 확인 후 추가"
-   }
-  },
-  {
-   "id": "TAC-2026-10-15-now",
-   "code": "TAC",
-   "name": "TransAlta Corporation",
-   "ccy": "USD",
-   "group": "now",
-   "entry_kind": "now",
-   "stage": 3,
-   "price": 12.66,
-   "entry": 12.66,
-   "stop": 11.8845,
-   "target": 14.211,
-   "shares_1pct": 128,
-   "range_pos": 0.1969,
-   "norm": -15.1,
-   "bear_share": 0.25,
-   "fresh": false,
-   "break_gap": 0.0917,
-   "earnings_d": 22,
-   "tactic": {
-    "stop_pct": 6.1,
-    "pb_price": null,
-    "pb_stop_pct": null,
-    "mode": "pullback",
-    "label": "⏳ 눌림 지정가만",
-    "desc": "지금 추격 금지(손절폭 6.1% · 돌파후 진행) — 받칠 지지에 눌릴 때까지 대기"
    }
   },
   {
@@ -2220,8 +2220,8 @@
    "stage": 2,
    "price": 93.12,
    "entry": 93.88,
-   "stop": 87.0334,
-   "target": 107.5731,
+   "stop": 87.0256,
+   "target": 107.5888,
    "shares_1pct": 14,
    "range_pos": 0.4498,
    "norm": 32.0,
@@ -3611,6 +3611,27 @@
    "tactic": null
   },
   {
+   "id": "PFGC-2026-10-15-watch",
+   "code": "PFGC",
+   "name": "Performance Food Group Company",
+   "ccy": "USD",
+   "group": "watch",
+   "entry_kind": "breakout",
+   "stage": 4,
+   "price": 95.08,
+   "entry": 95.725,
+   "stop": 91.5634,
+   "target": 104.0483,
+   "shares_1pct": 24,
+   "range_pos": 0.389,
+   "norm": -9.0,
+   "bear_share": 0.25,
+   "fresh": false,
+   "break_gap": 0.1287,
+   "earnings_d": -63,
+   "tactic": null
+  },
+  {
    "id": "SHAK-2026-10-15-watch",
    "code": "SHAK",
    "name": "Shake Shack, Inc.",
@@ -3755,27 +3776,6 @@
    "fresh": false,
    "break_gap": 0.0731,
    "earnings_d": null,
-   "tactic": null
-  },
-  {
-   "id": "PFGC-2026-10-15-watch",
-   "code": "PFGC",
-   "name": "Performance Food Group Company",
-   "ccy": "USD",
-   "group": "watch",
-   "entry_kind": "breakout",
-   "stage": 3,
-   "price": 95.08,
-   "entry": 95.725,
-   "stop": 91.5634,
-   "target": 104.0483,
-   "shares_1pct": 24,
-   "range_pos": 0.389,
-   "norm": -12.3,
-   "bear_share": 0.25,
-   "fresh": false,
-   "break_gap": 0.1287,
-   "earnings_d": -63,
    "tactic": null
   },
   {
