@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated_at": "2026-10-14T18:31:52+09:00",
+ "generated_at": "2026-10-14T18:53:56+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "a_ablation": [
   {
@@ -168,14 +168,14 @@
   "ok": 3,
   "watch": 150,
   "reasons": {
-   "밸류영역 밖(지지대 아님)": 462,
-   "추락 중(범위 0%)": 277,
-   "추락 중(범위 1%)": 241,
+   "밸류영역 밖(지지대 아님)": 461,
+   "추락 중(범위 0%)": 275,
+   "추락 중(범위 1%)": 239,
    "추락 중(범위 2%)": 181,
    "매물대 정보 없음": 147,
-   "추락 중(범위 3%)": 138,
-   "추락 중(범위 4%)": 120,
-   "추락 중(범위 8%)": 98
+   "추락 중(범위 3%)": 141,
+   "추락 중(범위 4%)": 117,
+   "추락 중(범위 7%)": 98
   }
  },
  "signals": [
@@ -1293,6 +1293,46 @@
    "trend_above_200": true
   },
   {
+   "id": "047050-2026-10-14-shelf-watch",
+   "code": "047050",
+   "name": "포스코인터내셔널",
+   "ccy": "KRW",
+   "group": "shelf_watch",
+   "entry_kind": "shelf_watch",
+   "stage": 0,
+   "price": 57500.0,
+   "entry": 57500.0,
+   "stop": 51940.0,
+   "target": 68990.625,
+   "shares_1pct": 0,
+   "range_pos": 0.2729,
+   "norm": 7.5,
+   "bear_share": 0.25,
+   "shelf": {
+    "poc": 53540.625,
+    "val": 47746.875,
+    "vah": 68990.625,
+    "rr": 2.07,
+    "overhead": 0.472,
+    "reason": "반등 미확인(거래량)",
+    "history_bars": 1906,
+    "profile_pnl_proxy": -0.0745,
+    "runup252": 0.1771,
+    "checks": {
+     "터치": true,
+     "회복": true,
+     "상단마감": true,
+     "거래량": false,
+     "신저가아님": true
+    }
+   },
+   "fresh": false,
+   "break_gap": null,
+   "earnings_d": null,
+   "tactic": "watch",
+   "trend_above_200": false
+  },
+  {
    "id": "SW-2026-10-14-shelf-watch",
    "code": "SW",
    "name": "Smurfit WestRock plc",
@@ -1451,46 +1491,6 @@
    "earnings_d": 20,
    "tactic": "watch",
    "trend_above_200": false
-  },
-  {
-   "id": "KRC-2026-10-14-shelf-watch",
-   "code": "KRC",
-   "name": "Kilroy Realty Corporation",
-   "ccy": "USD",
-   "group": "shelf_watch",
-   "entry_kind": "shelf_watch",
-   "stage": 0,
-   "price": 34.93,
-   "entry": 34.93,
-   "stop": 33.0358,
-   "target": 38.5113,
-   "shares_1pct": 0,
-   "range_pos": 0.4667,
-   "norm": -4.1,
-   "bear_share": 0.25,
-   "shelf": {
-    "poc": 34.4563,
-    "val": 28.3738,
-    "vah": 38.5113,
-    "rr": 1.89,
-    "overhead": 0.516,
-    "reason": "반등 미확인(상단마감)",
-    "history_bars": 1956,
-    "profile_pnl_proxy": -0.0076,
-    "runup252": -0.1345,
-    "checks": {
-     "터치": true,
-     "회복": true,
-     "상단마감": false,
-     "거래량": true,
-     "신저가아님": true
-    }
-   },
-   "fresh": false,
-   "break_gap": null,
-   "earnings_d": 12,
-   "tactic": "watch",
-   "trend_above_200": true
   },
   {
    "id": "POWL-2026-10-14-shelf-watch",
@@ -3430,6 +3430,34 @@
    }
   },
   {
+   "id": "251270-2026-10-14-watch",
+   "code": "251270",
+   "name": "넷마블",
+   "ccy": "KRW",
+   "group": "watch",
+   "entry_kind": "now",
+   "stage": 1,
+   "price": 33900.0,
+   "entry": 33900.0,
+   "stop": 31723.3094,
+   "target": 38253.3811,
+   "shares_1pct": 45,
+   "range_pos": 0.027,
+   "norm": -1.9,
+   "bear_share": 0.375,
+   "fresh": true,
+   "break_gap": -0.0194,
+   "earnings_d": null,
+   "tactic": {
+    "stop_pct": 6.4,
+    "pb_price": 33050.0,
+    "pb_stop_pct": 4.0,
+    "mode": "half",
+    "label": "⚖ 반반 진입",
+    "desc": "손절폭 6.4% — 절반은 현재가, 절반은 눌림 33,050원 지정가(거기선 손절폭 4.0%)"
+   }
+  },
+  {
    "id": "ELAN-2026-10-14-watch",
    "code": "ELAN",
    "name": "Elanco Animal Health Incorporated",
@@ -3910,6 +3938,34 @@
     "mode": "half",
     "label": "⚖ 반반 진입",
     "desc": "손절폭 6.5% — 절반은 현재가, 절반은 눌림 30,250원 지정가(거기선 손절폭 2.1%)"
+   }
+  },
+  {
+   "id": "081660-2026-10-14-watch",
+   "code": "081660",
+   "name": "미스토홀딩스",
+   "ccy": "KRW",
+   "group": "watch",
+   "entry_kind": "now",
+   "stage": 1,
+   "price": 37700.0,
+   "entry": 37700.0,
+   "stop": 34967.0235,
+   "target": 43165.9531,
+   "shares_1pct": 36,
+   "range_pos": 0.0859,
+   "norm": -19.8,
+   "bear_share": 0.375,
+   "fresh": true,
+   "break_gap": -0.0173,
+   "earnings_d": null,
+   "tactic": {
+    "stop_pct": 7.2,
+    "pb_price": 37137.7778,
+    "pb_stop_pct": 5.8,
+    "mode": "half",
+    "label": "⚖ 반반 진입",
+    "desc": "손절폭 7.2% — 절반은 현재가, 절반은 눌림 37,138원 지정가(거기선 손절폭 5.8%)"
    }
   },
   {
