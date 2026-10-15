@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated_at": "2026-10-15T13:01:29+09:00",
+ "generated_at": "2026-10-15T13:08:46+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "a_ablation": [
   {
@@ -166,16 +166,16 @@
  ],
  "shelf_debug": {
   "ok": 4,
-  "watch": 165,
+  "watch": 164,
   "reasons": {
    "밸류영역 밖(지지대 아님)": 471,
    "추락 중(범위 0%)": 329,
-   "추락 중(범위 1%)": 252,
-   "추락 중(범위 2%)": 188,
+   "추락 중(범위 1%)": 254,
+   "추락 중(범위 2%)": 185,
    "매물대 정보 없음": 165,
-   "추락 중(범위 3%)": 127,
+   "추락 중(범위 3%)": 129,
    "추락 중(범위 4%)": 123,
-   "추락 중(범위 5%)": 116
+   "추락 중(범위 5%)": 115
   }
  },
  "signals": [
@@ -3123,21 +3123,21 @@
    "group": "watch",
    "entry_kind": "now",
    "stage": 1,
-   "price": 69400.0,
-   "entry": 69400.0,
-   "stop": 65706.1092,
-   "target": 76787.7815,
+   "price": 69100.0,
+   "entry": 69100.0,
+   "stop": 65406.1092,
+   "target": 76487.7815,
    "shares_1pct": 27,
-   "range_pos": 0.1473,
+   "range_pos": 0.1415,
    "norm": -5.7,
    "bear_share": 0.375,
    "fresh": true,
-   "break_gap": -0.0043,
+   "break_gap": -0.0086,
    "earnings_d": null,
    "tactic": {
     "stop_pct": 5.3,
     "pb_price": 67184.7222,
-    "pb_stop_pct": 2.2,
+    "pb_stop_pct": 2.6,
     "mode": "full",
     "label": "⚡ 즉시 분할",
     "desc": "손절폭 5.3%로 타이트 — 현재가에서 1~2회 분할 매수. 기다리는 이득보다 놓치는 비용이 큼"
@@ -4320,16 +4320,16 @@
    "group": "watch",
    "entry_kind": "now",
    "stage": 1,
-   "price": 162100.0,
-   "entry": 162100.0,
-   "stop": 147728.4908,
-   "target": 190843.0183,
+   "price": 162200.0,
+   "entry": 162200.0,
+   "stop": 147828.4908,
+   "target": 190943.0183,
    "shares_1pct": 6,
-   "range_pos": 0.036,
+   "range_pos": 0.0364,
    "norm": -43.4,
    "bear_share": 0.5,
    "fresh": true,
-   "break_gap": 0.0032,
+   "break_gap": 0.0039,
    "earnings_d": null,
    "tactic": {
     "stop_pct": 8.9,
