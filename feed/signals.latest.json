@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated_at": "2026-10-15T10:39:55+09:00",
+ "generated_at": "2026-10-15T11:04:06+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "a_ablation": [
   {
@@ -14,10 +14,10 @@
   {
    "code": "161390",
    "gate": "rp",
-   "range_pos": 0.5737,
-   "runup63": -0.122,
+   "range_pos": 0.5564,
+   "runup63": -0.132,
    "stage": 3,
-   "price": 61200.0
+   "price": 60500.0
   },
   {
    "code": "AEP",
@@ -166,16 +166,16 @@
  ],
  "shelf_debug": {
   "ok": 4,
-  "watch": 164,
+  "watch": 163,
   "reasons": {
-   "밸류영역 밖(지지대 아님)": 467,
-   "추락 중(범위 0%)": 327,
-   "추락 중(범위 1%)": 254,
-   "추락 중(범위 2%)": 185,
+   "밸류영역 밖(지지대 아님)": 471,
+   "추락 중(범위 0%)": 323,
+   "추락 중(범위 1%)": 253,
+   "추락 중(범위 2%)": 186,
    "매물대 정보 없음": 165,
-   "추락 중(범위 3%)": 131,
-   "추락 중(범위 4%)": 118,
-   "추락 중(범위 5%)": 116
+   "추락 중(범위 3%)": 132,
+   "추락 중(범위 4%)": 123,
+   "추락 중(범위 5%)": 115
   }
  },
  "signals": [
@@ -2675,24 +2675,24 @@
    "group": "watch",
    "entry_kind": "now",
    "stage": 2,
-   "price": 163900.0,
-   "entry": 163900.0,
-   "stop": 149528.4908,
-   "target": 192643.0183,
+   "price": 162400.0,
+   "entry": 162400.0,
+   "stop": 148028.4908,
+   "target": 191143.0183,
    "shares_1pct": 6,
-   "range_pos": 0.0432,
+   "range_pos": 0.0372,
    "norm": -45.3,
    "bear_share": 0.5,
    "fresh": true,
-   "break_gap": 0.0144,
+   "break_gap": 0.0051,
    "earnings_d": null,
    "tactic": {
     "stop_pct": 8.8,
     "pb_price": 153000.0,
-    "pb_stop_pct": 2.3,
+    "pb_stop_pct": 3.2,
     "mode": "pullback",
     "label": "⏳ 눌림 지정가만",
-    "desc": "지금 추격 금지(손절폭 8.8%) — <b>153,000원 눌림 지정가만</b>. 눌리면 손절폭 2.3%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
+    "desc": "지금 추격 금지(손절폭 8.8%) — <b>153,000원 눌림 지정가만</b>. 눌리면 손절폭 3.2%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
    }
   },
   {
@@ -3095,24 +3095,52 @@
    "group": "watch",
    "entry_kind": "now",
    "stage": 1,
-   "price": 69400.0,
-   "entry": 69400.0,
-   "stop": 65706.1092,
-   "target": 76787.7815,
+   "price": 69300.0,
+   "entry": 69300.0,
+   "stop": 65606.1092,
+   "target": 76687.7815,
    "shares_1pct": 27,
-   "range_pos": 0.1473,
+   "range_pos": 0.1453,
    "norm": -5.7,
    "bear_share": 0.375,
    "fresh": true,
-   "break_gap": -0.0043,
+   "break_gap": -0.0058,
    "earnings_d": null,
    "tactic": {
     "stop_pct": 5.3,
     "pb_price": 67184.7222,
-    "pb_stop_pct": 2.2,
+    "pb_stop_pct": 2.3,
     "mode": "full",
     "label": "⚡ 즉시 분할",
     "desc": "손절폭 5.3%로 타이트 — 현재가에서 1~2회 분할 매수. 기다리는 이득보다 놓치는 비용이 큼"
+   }
+  },
+  {
+   "id": "251270-2026-10-15-watch",
+   "code": "251270",
+   "name": "넷마블",
+   "ccy": "KRW",
+   "group": "watch",
+   "entry_kind": "now",
+   "stage": 1,
+   "price": 33750.0,
+   "entry": 33750.0,
+   "stop": 31578.7873,
+   "target": 38092.4254,
+   "shares_1pct": 46,
+   "range_pos": 0.0255,
+   "norm": -5.7,
+   "bear_share": 0.375,
+   "fresh": true,
+   "break_gap": -0.0194,
+   "earnings_d": null,
+   "tactic": {
+    "stop_pct": 6.4,
+    "pb_price": 33050.0,
+    "pb_stop_pct": 4.5,
+    "mode": "half",
+    "label": "⚖ 반반 진입",
+    "desc": "손절폭 6.4% — 절반은 현재가, 절반은 눌림 33,050원 지정가(거기선 손절폭 4.5%)"
    }
   },
   {
@@ -3291,52 +3319,24 @@
    "group": "watch",
    "entry_kind": "now",
    "stage": 1,
-   "price": 73900.0,
-   "entry": 73900.0,
-   "stop": 68885.6956,
-   "target": 83928.6089,
+   "price": 73700.0,
+   "entry": 73700.0,
+   "stop": 68685.6956,
+   "target": 83728.6089,
    "shares_1pct": 19,
-   "range_pos": 0.1386,
+   "range_pos": 0.1355,
    "norm": -9.4,
    "bear_share": 0.375,
    "fresh": true,
-   "break_gap": -0.0087,
+   "break_gap": -0.0114,
    "earnings_d": null,
    "tactic": {
     "stop_pct": 6.8,
     "pb_price": 72984.375,
-    "pb_stop_pct": 5.6,
+    "pb_stop_pct": 5.9,
     "mode": "half",
     "label": "⚖ 반반 진입",
-    "desc": "손절폭 6.8% — 절반은 현재가, 절반은 눌림 72,984원 지정가(거기선 손절폭 5.6%)"
-   }
-  },
-  {
-   "id": "251270-2026-10-15-watch",
-   "code": "251270",
-   "name": "넷마블",
-   "ccy": "KRW",
-   "group": "watch",
-   "entry_kind": "now",
-   "stage": 1,
-   "price": 33900.0,
-   "entry": 33900.0,
-   "stop": 31728.7873,
-   "target": 38242.4254,
-   "shares_1pct": 46,
-   "range_pos": 0.0303,
-   "norm": -9.4,
-   "bear_share": 0.375,
-   "fresh": true,
-   "break_gap": -0.0151,
-   "earnings_d": null,
-   "tactic": {
-    "stop_pct": 6.4,
-    "pb_price": 33050.0,
-    "pb_stop_pct": 4.0,
-    "mode": "half",
-    "label": "⚖ 반반 진입",
-    "desc": "손절폭 6.4% — 절반은 현재가, 절반은 눌림 33,050원 지정가(거기선 손절폭 4.0%)"
+    "desc": "손절폭 6.8% — 절반은 현재가, 절반은 눌림 72,984원 지정가(거기선 손절폭 5.9%)"
    }
   },
   {
@@ -3613,6 +3613,34 @@
    }
   },
   {
+   "id": "081660-2026-10-15-watch",
+   "code": "081660",
+   "name": "미스토홀딩스",
+   "ccy": "KRW",
+   "group": "watch",
+   "entry_kind": "now",
+   "stage": 1,
+   "price": 37500.0,
+   "entry": 37500.0,
+   "stop": 34805.0932,
+   "target": 42889.8136,
+   "shares_1pct": 37,
+   "range_pos": 0.0758,
+   "norm": -16.0,
+   "bear_share": 0.375,
+   "fresh": true,
+   "break_gap": -0.0168,
+   "earnings_d": null,
+   "tactic": {
+    "stop_pct": 7.2,
+    "pb_price": 37221.519,
+    "pb_stop_pct": 6.5,
+    "mode": "half",
+    "label": "⚖ 반반 진입",
+    "desc": "손절폭 7.2% — 절반은 현재가, 절반은 눌림 37,222원 지정가(거기선 손절폭 6.5%)"
+   }
+  },
+  {
    "id": "DOW-2026-10-15-watch",
    "code": "DOW",
    "name": "Dow Inc.",
@@ -3778,34 +3806,6 @@
     "mode": "pullback",
     "label": "⏳ 눌림 지정가만",
     "desc": "지금 추격 금지(손절폭 11.3%) — <b>$157.91 눌림 지정가만</b>. 눌리면 손절폭 10.9%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
-   }
-  },
-  {
-   "id": "081660-2026-10-15-watch",
-   "code": "081660",
-   "name": "미스토홀딩스",
-   "ccy": "KRW",
-   "group": "watch",
-   "entry_kind": "now",
-   "stage": 1,
-   "price": 37750.0,
-   "entry": 37750.0,
-   "stop": 35055.0932,
-   "target": 43139.8136,
-   "shares_1pct": 37,
-   "range_pos": 0.0884,
-   "norm": -17.9,
-   "bear_share": 0.375,
-   "fresh": true,
-   "break_gap": -0.0102,
-   "earnings_d": null,
-   "tactic": {
-    "stop_pct": 7.1,
-    "pb_price": 37221.519,
-    "pb_stop_pct": 5.8,
-    "mode": "half",
-    "label": "⚖ 반반 진입",
-    "desc": "손절폭 7.1% — 절반은 현재가, 절반은 눌림 37,222원 지정가(거기선 손절폭 5.8%)"
    }
   },
   {
