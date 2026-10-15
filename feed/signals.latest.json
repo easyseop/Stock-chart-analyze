@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated_at": "2026-10-15T18:14:12+09:00",
+ "generated_at": "2026-10-15T18:31:35+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "a_ablation": [
   {
@@ -166,16 +166,16 @@
  ],
  "shelf_debug": {
   "ok": 4,
-  "watch": 160,
+  "watch": 161,
   "reasons": {
-   "밸류영역 밖(지지대 아님)": 465,
-   "추락 중(범위 0%)": 317,
-   "추락 중(범위 1%)": 252,
-   "추락 중(범위 2%)": 190,
+   "밸류영역 밖(지지대 아님)": 464,
+   "추락 중(범위 0%)": 318,
+   "추락 중(범위 1%)": 251,
+   "추락 중(범위 2%)": 193,
    "매물대 정보 없음": 152,
-   "추락 중(범위 3%)": 131,
-   "추락 중(범위 4%)": 122,
-   "추락 중(범위 5%)": 117
+   "추락 중(범위 3%)": 132,
+   "추락 중(범위 5%)": 119,
+   "추락 중(범위 4%)": 118
   }
  },
  "signals": [
@@ -1310,24 +1310,6 @@
    "tactic": "shadow"
   },
   {
-   "id": "180640-2026-10-15-b2-shadow",
-   "code": "180640",
-   "name": "한진칼",
-   "ccy": "KRW",
-   "group": "shelf_shadow_b2",
-   "shadow": true,
-   "orderable": false,
-   "entry": 124800.0,
-   "stop": 118482.0,
-   "target": 137436.0,
-   "stage": 0,
-   "norm": 20.8,
-   "range_pos": 0.3829,
-   "runup252": 0.2418,
-   "fresh": false,
-   "tactic": "shadow"
-  },
-  {
    "id": "CPK-2026-10-15-b2-shadow",
    "code": "CPK",
    "name": "Chesapeake Utilities Corporation",
@@ -1342,6 +1324,24 @@
    "norm": 6.6,
    "range_pos": 0.4907,
    "runup252": -0.0347,
+   "fresh": false,
+   "tactic": "shadow"
+  },
+  {
+   "id": "180640-2026-10-15-b2-shadow",
+   "code": "180640",
+   "name": "한진칼",
+   "ccy": "KRW",
+   "group": "shelf_shadow_b2",
+   "shadow": true,
+   "orderable": false,
+   "entry": 124500.0,
+   "stop": 118482.0,
+   "target": 136536.0,
+   "stage": 0,
+   "norm": 1.9,
+   "range_pos": 0.3792,
+   "runup252": 0.2388,
    "fresh": false,
    "tactic": "shadow"
   },
@@ -1504,46 +1504,6 @@
    "earnings_d": 0,
    "tactic": "watch",
    "trend_above_200": true
-  },
-  {
-   "id": "ESNT-2026-10-15-shelf-watch",
-   "code": "ESNT",
-   "name": "Essent Group Ltd.",
-   "ccy": "USD",
-   "group": "shelf_watch",
-   "entry_kind": "shelf_watch",
-   "stage": 0,
-   "price": 62.04,
-   "entry": 62.04,
-   "stop": 60.1328,
-   "target": 65.0469,
-   "shares_1pct": 0,
-   "range_pos": 0.4458,
-   "norm": -1.6,
-   "bear_share": 0.125,
-   "shelf": {
-    "poc": 61.2894,
-    "val": 58.1581,
-    "vah": 65.0469,
-    "rr": 1.58,
-    "overhead": 0.451,
-    "reason": "반등 미확인(거래량)",
-    "history_bars": 1956,
-    "profile_pnl_proxy": -0.0053,
-    "runup252": 0.0471,
-    "checks": {
-     "터치": true,
-     "회복": true,
-     "상단마감": true,
-     "거래량": false,
-     "신저가아님": true
-    }
-   },
-   "fresh": false,
-   "break_gap": null,
-   "earnings_d": -69,
-   "tactic": "watch",
-   "trend_above_200": false
   },
   {
    "id": "MCO-2026-10-15-shelf-watch",
@@ -1976,6 +1936,46 @@
      "회복": true,
      "상단마감": true,
      "거래량": false,
+     "신저가아님": true
+    }
+   },
+   "fresh": false,
+   "break_gap": null,
+   "earnings_d": null,
+   "tactic": "watch",
+   "trend_above_200": false
+  },
+  {
+   "id": "278470-2026-10-15-shelf-watch",
+   "code": "278470",
+   "name": "에이피알",
+   "ccy": "KRW",
+   "group": "shelf_watch",
+   "entry_kind": "shelf_watch",
+   "stage": 0,
+   "price": 298000.0,
+   "entry": 298000.0,
+   "stop": 261170.0,
+   "target": 356437.5,
+   "shares_1pct": 0,
+   "range_pos": 0.3469,
+   "norm": -41.5,
+   "bear_share": 0.5,
+   "shelf": {
+    "poc": 243520.8333,
+    "val": 209645.8333,
+    "vah": 356437.5,
+    "rr": 1.59,
+    "overhead": 0.464,
+    "reason": "반등 미확인(터치)",
+    "history_bars": 638,
+    "profile_pnl_proxy": -0.0332,
+    "runup252": 0.2089,
+    "checks": {
+     "터치": false,
+     "회복": true,
+     "상단마감": true,
+     "거래량": true,
      "신저가아님": true
     }
    },
@@ -4321,6 +4321,34 @@
     "mode": "half",
     "label": "⚖ 반반 진입",
     "desc": "손절폭 6.8% — 절반은 현재가, 절반은 눌림 $56.39 지정가(거기선 손절폭 3.6%)"
+   }
+  },
+  {
+   "id": "259960-2026-10-15-watch",
+   "code": "259960",
+   "name": "크래프톤",
+   "ccy": "KRW",
+   "group": "watch",
+   "entry_kind": "now",
+   "stage": 1,
+   "price": 193300.0,
+   "entry": 193300.0,
+   "stop": 178514.7198,
+   "target": 222870.5604,
+   "shares_1pct": 6,
+   "range_pos": 0.1033,
+   "norm": -37.7,
+   "bear_share": 0.375,
+   "fresh": true,
+   "break_gap": -0.0198,
+   "earnings_d": null,
+   "tactic": {
+    "stop_pct": 7.6,
+    "pb_price": 180600.0,
+    "pb_stop_pct": 1.2,
+    "mode": "half",
+    "label": "⚖ 반반 진입",
+    "desc": "손절폭 7.6% — 절반은 현재가, 절반은 눌림 180,600원 지정가(거기선 손절폭 1.2%)"
    }
   },
   {
