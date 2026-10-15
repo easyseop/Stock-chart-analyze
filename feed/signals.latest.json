@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated_at": "2026-10-15T12:32:10+09:00",
+ "generated_at": "2026-10-15T13:01:29+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "a_ablation": [
   {
@@ -166,16 +166,16 @@
  ],
  "shelf_debug": {
   "ok": 4,
-  "watch": 164,
+  "watch": 165,
   "reasons": {
    "밸류영역 밖(지지대 아님)": 471,
-   "추락 중(범위 0%)": 330,
-   "추락 중(범위 1%)": 251,
-   "추락 중(범위 2%)": 185,
+   "추락 중(범위 0%)": 329,
+   "추락 중(범위 1%)": 252,
+   "추락 중(범위 2%)": 188,
    "매물대 정보 없음": 165,
-   "추락 중(범위 3%)": 130,
-   "추락 중(범위 4%)": 120,
-   "추락 중(범위 5%)": 119
+   "추락 중(범위 3%)": 127,
+   "추락 중(범위 4%)": 123,
+   "추락 중(범위 5%)": 116
   }
  },
  "signals": [
@@ -2402,6 +2402,34 @@
    }
   },
   {
+   "id": "000100-2026-10-15-watch",
+   "code": "000100",
+   "name": "유한양행",
+   "ccy": "KRW",
+   "group": "watch",
+   "entry_kind": "now",
+   "stage": 2,
+   "price": 75100.0,
+   "entry": 75100.0,
+   "stop": 69942.8384,
+   "target": 85414.3232,
+   "shares_1pct": 19,
+   "range_pos": 0.1573,
+   "norm": -11.3,
+   "bear_share": 0.375,
+   "fresh": true,
+   "break_gap": 0.0074,
+   "earnings_d": null,
+   "tactic": {
+    "stop_pct": 6.9,
+    "pb_price": 72984.375,
+    "pb_stop_pct": 4.2,
+    "mode": "half",
+    "label": "⚖ 반반 진입",
+    "desc": "손절폭 6.9% — 절반은 현재가, 절반은 눌림 72,984원 지정가(거기선 손절폭 4.2%)"
+   }
+  },
+  {
    "id": "ELAN-2026-10-15-watch",
    "code": "ELAN",
    "name": "Elanco Animal Health Incorporated",
@@ -2668,31 +2696,31 @@
    }
   },
   {
-   "id": "352820-2026-10-15-watch",
-   "code": "352820",
-   "name": "하이브",
+   "id": "088980-2026-10-15-watch",
+   "code": "088980",
+   "name": "맥쿼리인프라",
    "ccy": "KRW",
    "group": "watch",
    "entry_kind": "now",
-   "stage": 2,
-   "price": 162400.0,
-   "entry": 162400.0,
-   "stop": 148028.4908,
-   "target": 191143.0183,
-   "shares_1pct": 6,
-   "range_pos": 0.0372,
-   "norm": -45.3,
-   "bear_share": 0.5,
+   "stage": 1,
+   "price": 9590.0,
+   "entry": 9590.0,
+   "stop": 9302.3,
+   "target": 10165.4,
+   "shares_1pct": 347,
+   "range_pos": 0.1051,
+   "norm": 18.9,
+   "bear_share": 0.25,
    "fresh": true,
-   "break_gap": 0.0051,
+   "break_gap": -0.019,
    "earnings_d": null,
    "tactic": {
-    "stop_pct": 8.8,
-    "pb_price": 153000.0,
-    "pb_stop_pct": 3.2,
-    "mode": "pullback",
-    "label": "⏳ 눌림 지정가만",
-    "desc": "지금 추격 금지(손절폭 8.8%) — <b>153,000원 눌림 지정가만</b>. 눌리면 손절폭 3.2%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
+    "stop_pct": 3.0,
+    "pb_price": 9475.25,
+    "pb_stop_pct": 1.8,
+    "mode": "full",
+    "label": "⚡ 즉시 분할",
+    "desc": "손절폭 3.0%로 타이트 — 현재가에서 1~2회 분할 매수. 기다리는 이득보다 놓치는 비용이 큼"
    }
   },
   {
@@ -3095,52 +3123,24 @@
    "group": "watch",
    "entry_kind": "now",
    "stage": 1,
-   "price": 69200.0,
-   "entry": 69200.0,
-   "stop": 65506.1092,
-   "target": 76587.7815,
+   "price": 69400.0,
+   "entry": 69400.0,
+   "stop": 65706.1092,
+   "target": 76787.7815,
    "shares_1pct": 27,
-   "range_pos": 0.1434,
+   "range_pos": 0.1473,
    "norm": -5.7,
    "bear_share": 0.375,
    "fresh": true,
-   "break_gap": -0.0072,
+   "break_gap": -0.0043,
    "earnings_d": null,
    "tactic": {
     "stop_pct": 5.3,
     "pb_price": 67184.7222,
-    "pb_stop_pct": 2.5,
+    "pb_stop_pct": 2.2,
     "mode": "full",
     "label": "⚡ 즉시 분할",
     "desc": "손절폭 5.3%로 타이트 — 현재가에서 1~2회 분할 매수. 기다리는 이득보다 놓치는 비용이 큼"
-   }
-  },
-  {
-   "id": "251270-2026-10-15-watch",
-   "code": "251270",
-   "name": "넷마블",
-   "ccy": "KRW",
-   "group": "watch",
-   "entry_kind": "now",
-   "stage": 1,
-   "price": 33750.0,
-   "entry": 33750.0,
-   "stop": 31578.7873,
-   "target": 38092.4254,
-   "shares_1pct": 46,
-   "range_pos": 0.0255,
-   "norm": -5.7,
-   "bear_share": 0.375,
-   "fresh": true,
-   "break_gap": -0.0194,
-   "earnings_d": null,
-   "tactic": {
-    "stop_pct": 6.4,
-    "pb_price": 33050.0,
-    "pb_stop_pct": 4.5,
-    "mode": "half",
-    "label": "⚖ 반반 진입",
-    "desc": "손절폭 6.4% — 절반은 현재가, 절반은 눌림 33,050원 지정가(거기선 손절폭 4.5%)"
    }
   },
   {
@@ -3309,34 +3309,6 @@
     "mode": "full",
     "label": "⚡ 즉시 분할",
     "desc": "손절폭 3.1%로 타이트 — 현재가에서 1~2회 분할 매수. 기다리는 이득보다 놓치는 비용이 큼"
-   }
-  },
-  {
-   "id": "000100-2026-10-15-watch",
-   "code": "000100",
-   "name": "유한양행",
-   "ccy": "KRW",
-   "group": "watch",
-   "entry_kind": "now",
-   "stage": 1,
-   "price": 74900.0,
-   "entry": 74900.0,
-   "stop": 69757.1241,
-   "target": 85185.7517,
-   "shares_1pct": 19,
-   "range_pos": 0.1542,
-   "norm": -9.4,
-   "bear_share": 0.375,
-   "fresh": true,
-   "break_gap": 0.0047,
-   "earnings_d": null,
-   "tactic": {
-    "stop_pct": 6.9,
-    "pb_price": 72984.375,
-    "pb_stop_pct": 4.4,
-    "mode": "half",
-    "label": "⚖ 반반 진입",
-    "desc": "손절폭 6.9% — 절반은 현재가, 절반은 눌림 72,984원 지정가(거기선 손절폭 4.4%)"
    }
   },
   {
@@ -4338,6 +4310,34 @@
     "mode": "half",
     "label": "⚖ 반반 진입",
     "desc": "손절폭 6.8% — 절반은 현재가, 절반은 눌림 $56.39 지정가(거기선 손절폭 3.6%)"
+   }
+  },
+  {
+   "id": "352820-2026-10-15-watch",
+   "code": "352820",
+   "name": "하이브",
+   "ccy": "KRW",
+   "group": "watch",
+   "entry_kind": "now",
+   "stage": 1,
+   "price": 162100.0,
+   "entry": 162100.0,
+   "stop": 147728.4908,
+   "target": 190843.0183,
+   "shares_1pct": 6,
+   "range_pos": 0.036,
+   "norm": -43.4,
+   "bear_share": 0.5,
+   "fresh": true,
+   "break_gap": 0.0032,
+   "earnings_d": null,
+   "tactic": {
+    "stop_pct": 8.9,
+    "pb_price": 153000.0,
+    "pb_stop_pct": 3.4,
+    "mode": "pullback",
+    "label": "⏳ 눌림 지정가만",
+    "desc": "지금 추격 금지(손절폭 8.9%) — <b>153,000원 눌림 지정가만</b>. 눌리면 손절폭 3.4%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
    }
   },
   {
