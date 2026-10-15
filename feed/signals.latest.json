@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated_at": "2026-10-15T15:10:15+09:00",
+ "generated_at": "2026-10-15T15:36:50+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "a_ablation": [
   {
@@ -14,10 +14,10 @@
   {
    "code": "161390",
    "gate": "rp",
-   "range_pos": 0.5923,
-   "runup63": -0.1112,
+   "range_pos": 0.5911,
+   "runup63": -0.1119,
    "stage": 3,
-   "price": 61950.0
+   "price": 61900.0
   },
   {
    "code": "AEP",
@@ -166,16 +166,16 @@
  ],
  "shelf_debug": {
   "ok": 4,
-  "watch": 160,
+  "watch": 161,
   "reasons": {
    "밸류영역 밖(지지대 아님)": 470,
-   "추락 중(범위 0%)": 336,
-   "추락 중(범위 1%)": 252,
-   "추락 중(범위 2%)": 185,
+   "추락 중(범위 0%)": 339,
+   "추락 중(범위 1%)": 251,
+   "추락 중(범위 2%)": 184,
    "매물대 정보 없음": 152,
-   "추락 중(범위 3%)": 128,
+   "추락 중(범위 3%)": 129,
    "추락 중(범위 4%)": 123,
-   "추락 중(범위 5%)": 114
+   "추락 중(범위 5%)": 112
   }
  },
  "signals": [
@@ -2409,24 +2409,24 @@
    "group": "watch",
    "entry_kind": "now",
    "stage": 2,
-   "price": 75650.0,
-   "entry": 75650.0,
-   "stop": 70321.4098,
-   "target": 86307.1803,
+   "price": 75300.0,
+   "entry": 75300.0,
+   "stop": 69971.4098,
+   "target": 85957.1803,
    "shares_1pct": 18,
-   "range_pos": 0.1659,
+   "range_pos": 0.1604,
    "norm": -11.3,
    "bear_share": 0.375,
    "fresh": true,
-   "break_gap": 0.0148,
+   "break_gap": 0.0101,
    "earnings_d": null,
    "tactic": {
-    "stop_pct": 7.0,
+    "stop_pct": 7.1,
     "pb_price": 72984.375,
-    "pb_stop_pct": 3.6,
+    "pb_stop_pct": 4.1,
     "mode": "half",
     "label": "⚖ 반반 진입",
-    "desc": "손절폭 7.0% — 절반은 현재가, 절반은 눌림 72,984원 지정가(거기선 손절폭 3.6%)"
+    "desc": "손절폭 7.1% — 절반은 현재가, 절반은 눌림 72,984원 지정가(거기선 손절폭 4.1%)"
    }
   },
   {
@@ -2675,24 +2675,24 @@
    "group": "watch",
    "entry_kind": "now",
    "stage": 2,
-   "price": 164200.0,
-   "entry": 164200.0,
-   "stop": 149314.2051,
-   "target": 193971.5898,
+   "price": 164300.0,
+   "entry": 164300.0,
+   "stop": 149414.2051,
+   "target": 194071.5898,
    "shares_1pct": 6,
-   "range_pos": 0.0444,
+   "range_pos": 0.0448,
    "norm": -35.8,
    "bear_share": 0.375,
    "fresh": true,
-   "break_gap": 0.0162,
+   "break_gap": 0.0169,
    "earnings_d": null,
    "tactic": {
     "stop_pct": 9.1,
     "pb_price": 153000.0,
-    "pb_stop_pct": 2.4,
+    "pb_stop_pct": 2.3,
     "mode": "pullback",
     "label": "⏳ 눌림 지정가만",
-    "desc": "지금 추격 금지(손절폭 9.1%) — <b>153,000원 눌림 지정가만</b>. 눌리면 손절폭 2.4%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
+    "desc": "지금 추격 금지(손절폭 9.1%) — <b>153,000원 눌림 지정가만</b>. 눌리면 손절폭 2.3%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
    }
   },
   {
@@ -2721,34 +2721,6 @@
     "mode": "half",
     "label": "⚖ 반반 진입",
     "desc": "손절폭 6.9% — 절반은 현재가, 절반은 눌림 $14.99 지정가(거기선 손절폭 4.1%)"
-   }
-  },
-  {
-   "id": "088980-2026-10-15-watch",
-   "code": "088980",
-   "name": "맥쿼리인프라",
-   "ccy": "KRW",
-   "group": "watch",
-   "entry_kind": "now",
-   "stage": 1,
-   "price": 9600.0,
-   "entry": 9600.0,
-   "stop": 9312.0,
-   "target": 10176.0,
-   "shares_1pct": 347,
-   "range_pos": 0.1089,
-   "norm": 18.9,
-   "bear_share": 0.25,
-   "fresh": true,
-   "break_gap": -0.018,
-   "earnings_d": null,
-   "tactic": {
-    "stop_pct": 3.0,
-    "pb_price": 9475.25,
-    "pb_stop_pct": 1.7,
-    "mode": "full",
-    "label": "⚡ 즉시 분할",
-    "desc": "손절폭 3.0%로 타이트 — 현재가에서 1~2회 분할 매수. 기다리는 이득보다 놓치는 비용이 큼"
    }
   },
   {
@@ -3123,21 +3095,21 @@
    "group": "watch",
    "entry_kind": "now",
    "stage": 1,
-   "price": 69200.0,
-   "entry": 69200.0,
-   "stop": 65506.1092,
-   "target": 76587.7815,
+   "price": 69100.0,
+   "entry": 69100.0,
+   "stop": 65406.1092,
+   "target": 76487.7815,
    "shares_1pct": 27,
-   "range_pos": 0.1434,
+   "range_pos": 0.1415,
    "norm": -5.7,
    "bear_share": 0.375,
    "fresh": true,
-   "break_gap": -0.0072,
+   "break_gap": -0.0086,
    "earnings_d": null,
    "tactic": {
     "stop_pct": 5.3,
     "pb_price": 67184.7222,
-    "pb_stop_pct": 2.5,
+    "pb_stop_pct": 2.6,
     "mode": "full",
     "label": "⚡ 즉시 분할",
     "desc": "손절폭 5.3%로 타이트 — 현재가에서 1~2회 분할 매수. 기다리는 이득보다 놓치는 비용이 큼"
@@ -3330,34 +3302,6 @@
     "mode": "full",
     "label": "⚡ 즉시 분할",
     "desc": "손절폭 3.1%로 타이트 — 현재가에서 1~2회 분할 매수. 기다리는 이득보다 놓치는 비용이 큼"
-   }
-  },
-  {
-   "id": "251270-2026-10-15-watch",
-   "code": "251270",
-   "name": "넷마블",
-   "ccy": "KRW",
-   "group": "watch",
-   "entry_kind": "now",
-   "stage": 1,
-   "price": 33900.0,
-   "entry": 33900.0,
-   "stop": 31685.9302,
-   "target": 38328.1396,
-   "shares_1pct": 45,
-   "range_pos": 0.0303,
-   "norm": -9.4,
-   "bear_share": 0.375,
-   "fresh": true,
-   "break_gap": -0.0151,
-   "earnings_d": null,
-   "tactic": {
-    "stop_pct": 6.5,
-    "pb_price": 33050.0,
-    "pb_stop_pct": 4.1,
-    "mode": "half",
-    "label": "⚖ 반반 진입",
-    "desc": "손절폭 6.5% — 절반은 현재가, 절반은 눌림 33,050원 지정가(거기선 손절폭 4.1%)"
    }
   },
   {
@@ -3575,34 +3519,6 @@
     "mode": "half",
     "label": "⚖ 반반 진입",
     "desc": "손절폭 7.2% — 절반은 현재가, 절반은 눌림 $348.32 지정가(거기선 손절폭 5.5%)"
-   }
-  },
-  {
-   "id": "081660-2026-10-15-watch",
-   "code": "081660",
-   "name": "미스토홀딩스",
-   "ccy": "KRW",
-   "group": "watch",
-   "entry_kind": "now",
-   "stage": 1,
-   "price": 37400.0,
-   "entry": 37400.0,
-   "stop": 34690.8075,
-   "target": 42818.385,
-   "shares_1pct": 36,
-   "range_pos": 0.0707,
-   "norm": -16.0,
-   "bear_share": 0.375,
-   "fresh": true,
-   "break_gap": -0.0194,
-   "earnings_d": null,
-   "tactic": {
-    "stop_pct": 7.2,
-    "pb_price": 37221.519,
-    "pb_stop_pct": 6.8,
-    "mode": "half",
-    "label": "⚖ 반반 진입",
-    "desc": "손절폭 7.2% — 절반은 현재가, 절반은 눌림 37,222원 지정가(거기선 손절폭 6.8%)"
    }
   },
   {
@@ -4303,34 +4219,6 @@
     "mode": "half",
     "label": "⚖ 반반 진입",
     "desc": "손절폭 6.8% — 절반은 현재가, 절반은 눌림 $56.39 지정가(거기선 손절폭 3.6%)"
-   }
-  },
-  {
-   "id": "008770-2026-10-15-watch",
-   "code": "008770",
-   "name": "호텔신라",
-   "ccy": "KRW",
-   "group": "watch",
-   "entry_kind": "now",
-   "stage": 1,
-   "price": 36550.0,
-   "entry": 36550.0,
-   "stop": 34531.8047,
-   "target": 40586.3907,
-   "shares_1pct": 49,
-   "range_pos": 0.0,
-   "norm": -47.5,
-   "bear_share": 0.5,
-   "fresh": true,
-   "break_gap": -0.0157,
-   "earnings_d": null,
-   "tactic": {
-    "stop_pct": 5.5,
-    "pb_price": null,
-    "pb_stop_pct": null,
-    "mode": "full",
-    "label": "⚡ 즉시 분할",
-    "desc": "손절폭 5.5%로 타이트 — 현재가에서 1~2회 분할 매수. 기다리는 이득보다 놓치는 비용이 큼"
    }
   },
   {
