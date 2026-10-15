@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated_at": "2026-10-15T15:36:50+09:00",
+ "generated_at": "2026-10-15T15:45:54+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "a_ablation": [
   {
@@ -10,14 +10,6 @@
    "runup63": 0.0167,
    "stage": 3,
    "price": 274000.0
-  },
-  {
-   "code": "161390",
-   "gate": "rp",
-   "range_pos": 0.5911,
-   "runup63": -0.1119,
-   "stage": 3,
-   "price": 61900.0
   },
   {
    "code": "AEP",
@@ -162,20 +154,28 @@
    "runup63": 0.099,
    "stage": 3,
    "price": 86.66999816894531
+  },
+  {
+   "code": "ICUI",
+   "gate": "rp",
+   "range_pos": 0.6205,
+   "runup63": 0.0329,
+   "stage": 3,
+   "price": 162.69000244140625
   }
  ],
  "shelf_debug": {
   "ok": 4,
-  "watch": 161,
+  "watch": 160,
   "reasons": {
-   "밸류영역 밖(지지대 아님)": 470,
-   "추락 중(범위 0%)": 339,
+   "밸류영역 밖(지지대 아님)": 466,
+   "추락 중(범위 0%)": 317,
    "추락 중(범위 1%)": 251,
-   "추락 중(범위 2%)": 184,
+   "추락 중(범위 2%)": 191,
    "매물대 정보 없음": 152,
-   "추락 중(범위 3%)": 129,
-   "추락 중(범위 4%)": 123,
-   "추락 중(범위 5%)": 112
+   "추락 중(범위 3%)": 131,
+   "추락 중(범위 4%)": 122,
+   "추락 중(범위 5%)": 117
   }
  },
  "signals": [
@@ -1310,6 +1310,24 @@
    "tactic": "shadow"
   },
   {
+   "id": "180640-2026-10-15-b2-shadow",
+   "code": "180640",
+   "name": "한진칼",
+   "ccy": "KRW",
+   "group": "shelf_shadow_b2",
+   "shadow": true,
+   "orderable": false,
+   "entry": 124800.0,
+   "stop": 118482.0,
+   "target": 137436.0,
+   "stage": 0,
+   "norm": 20.8,
+   "range_pos": 0.3829,
+   "runup252": 0.2418,
+   "fresh": false,
+   "tactic": "shadow"
+  },
+  {
    "id": "CPK-2026-10-15-b2-shadow",
    "code": "CPK",
    "name": "Chesapeake Utilities Corporation",
@@ -2409,24 +2427,24 @@
    "group": "watch",
    "entry_kind": "now",
    "stage": 2,
-   "price": 75300.0,
-   "entry": 75300.0,
-   "stop": 69971.4098,
-   "target": 85957.1803,
+   "price": 76400.0,
+   "entry": 76400.0,
+   "stop": 71071.4098,
+   "target": 87057.1803,
    "shares_1pct": 18,
-   "range_pos": 0.1604,
+   "range_pos": 0.1776,
    "norm": -11.3,
    "bear_share": 0.375,
    "fresh": true,
-   "break_gap": 0.0101,
+   "break_gap": 0.0249,
    "earnings_d": null,
    "tactic": {
-    "stop_pct": 7.1,
+    "stop_pct": 7.0,
     "pb_price": 72984.375,
-    "pb_stop_pct": 4.1,
-    "mode": "half",
-    "label": "⚖ 반반 진입",
-    "desc": "손절폭 7.1% — 절반은 현재가, 절반은 눌림 72,984원 지정가(거기선 손절폭 4.1%)"
+    "pb_stop_pct": 2.6,
+    "mode": "pullback",
+    "label": "⏳ 눌림 지정가만",
+    "desc": "지금 추격 금지(손절폭 7.0% · 단기 이격) — <b>72,984원 눌림 지정가만</b>. 눌리면 손절폭 2.6%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
    }
   },
   {
@@ -2612,6 +2630,34 @@
    }
   },
   {
+   "id": "352820-2026-10-15-watch",
+   "code": "352820",
+   "name": "하이브",
+   "ccy": "KRW",
+   "group": "watch",
+   "entry_kind": "now",
+   "stage": 2,
+   "price": 165500.0,
+   "entry": 165500.0,
+   "stop": 150614.2051,
+   "target": 195271.5898,
+   "shares_1pct": 6,
+   "range_pos": 0.0495,
+   "norm": -26.4,
+   "bear_share": 0.25,
+   "fresh": true,
+   "break_gap": 0.0243,
+   "earnings_d": null,
+   "tactic": {
+    "stop_pct": 9.0,
+    "pb_price": 153000.0,
+    "pb_stop_pct": 1.6,
+    "mode": "pullback",
+    "label": "⏳ 눌림 지정가만",
+    "desc": "지금 추격 금지(손절폭 9.0%) — <b>153,000원 눌림 지정가만</b>. 눌리면 손절폭 1.6%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
+   }
+  },
+  {
    "id": "ORLA-2026-10-15-watch",
    "code": "ORLA",
    "name": "Orla Mining Ltd.",
@@ -2668,34 +2714,6 @@
    }
   },
   {
-   "id": "352820-2026-10-15-watch",
-   "code": "352820",
-   "name": "하이브",
-   "ccy": "KRW",
-   "group": "watch",
-   "entry_kind": "now",
-   "stage": 2,
-   "price": 164300.0,
-   "entry": 164300.0,
-   "stop": 149414.2051,
-   "target": 194071.5898,
-   "shares_1pct": 6,
-   "range_pos": 0.0448,
-   "norm": -35.8,
-   "bear_share": 0.375,
-   "fresh": true,
-   "break_gap": 0.0169,
-   "earnings_d": null,
-   "tactic": {
-    "stop_pct": 9.1,
-    "pb_price": 153000.0,
-    "pb_stop_pct": 2.3,
-    "mode": "pullback",
-    "label": "⏳ 눌림 지정가만",
-    "desc": "지금 추격 금지(손절폭 9.1%) — <b>153,000원 눌림 지정가만</b>. 눌리면 손절폭 2.3%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
-   }
-  },
-  {
    "id": "UPBD-2026-10-15-watch",
    "code": "UPBD",
    "name": "Upbound Group, Inc.",
@@ -2721,6 +2739,34 @@
     "mode": "half",
     "label": "⚖ 반반 진입",
     "desc": "손절폭 6.9% — 절반은 현재가, 절반은 눌림 $14.99 지정가(거기선 손절폭 4.1%)"
+   }
+  },
+  {
+   "id": "088980-2026-10-15-watch",
+   "code": "088980",
+   "name": "맥쿼리인프라",
+   "ccy": "KRW",
+   "group": "watch",
+   "entry_kind": "now",
+   "stage": 1,
+   "price": 9600.0,
+   "entry": 9600.0,
+   "stop": 9312.0,
+   "target": 10176.0,
+   "shares_1pct": 347,
+   "range_pos": 0.1089,
+   "norm": 18.9,
+   "bear_share": 0.25,
+   "fresh": true,
+   "break_gap": -0.018,
+   "earnings_d": null,
+   "tactic": {
+    "stop_pct": 3.0,
+    "pb_price": 9475.25,
+    "pb_stop_pct": 1.7,
+    "mode": "full",
+    "label": "⚡ 즉시 분할",
+    "desc": "손절폭 3.0%로 타이트 — 현재가에서 1~2회 분할 매수. 기다리는 이득보다 놓치는 비용이 큼"
    }
   },
   {
@@ -3095,21 +3141,21 @@
    "group": "watch",
    "entry_kind": "now",
    "stage": 1,
-   "price": 69100.0,
-   "entry": 69100.0,
-   "stop": 65406.1092,
-   "target": 76487.7815,
+   "price": 69700.0,
+   "entry": 69700.0,
+   "stop": 66006.1092,
+   "target": 77087.7815,
    "shares_1pct": 27,
-   "range_pos": 0.1415,
+   "range_pos": 0.1531,
    "norm": -5.7,
    "bear_share": 0.375,
    "fresh": true,
-   "break_gap": -0.0086,
+   "break_gap": -0.0,
    "earnings_d": null,
    "tactic": {
     "stop_pct": 5.3,
     "pb_price": 67184.7222,
-    "pb_stop_pct": 2.6,
+    "pb_stop_pct": 1.8,
     "mode": "full",
     "label": "⚡ 즉시 분할",
     "desc": "손절폭 5.3%로 타이트 — 현재가에서 1~2회 분할 매수. 기다리는 이득보다 놓치는 비용이 큼"
@@ -3302,6 +3348,34 @@
     "mode": "full",
     "label": "⚡ 즉시 분할",
     "desc": "손절폭 3.1%로 타이트 — 현재가에서 1~2회 분할 매수. 기다리는 이득보다 놓치는 비용이 큼"
+   }
+  },
+  {
+   "id": "251270-2026-10-15-watch",
+   "code": "251270",
+   "name": "넷마블",
+   "ccy": "KRW",
+   "group": "watch",
+   "entry_kind": "now",
+   "stage": 1,
+   "price": 34050.0,
+   "entry": 34050.0,
+   "stop": 31835.9302,
+   "target": 38478.1396,
+   "shares_1pct": 45,
+   "range_pos": 0.0351,
+   "norm": -9.4,
+   "bear_share": 0.375,
+   "fresh": true,
+   "break_gap": -0.0107,
+   "earnings_d": null,
+   "tactic": {
+    "stop_pct": 6.5,
+    "pb_price": 33050.0,
+    "pb_stop_pct": 3.7,
+    "mode": "half",
+    "label": "⚖ 반반 진입",
+    "desc": "손절폭 6.5% — 절반은 현재가, 절반은 눌림 33,050원 지정가(거기선 손절폭 3.7%)"
    }
   },
   {
@@ -3631,6 +3705,34 @@
     "mode": "pullback",
     "label": "⏳ 눌림 지정가만",
     "desc": "지금 추격 금지(손절폭 11.3%) — <b>$157.91 눌림 지정가만</b>. 눌리면 손절폭 10.9%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
+   }
+  },
+  {
+   "id": "081660-2026-10-15-watch",
+   "code": "081660",
+   "name": "미스토홀딩스",
+   "ccy": "KRW",
+   "group": "watch",
+   "entry_kind": "now",
+   "stage": 1,
+   "price": 37700.0,
+   "entry": 37700.0,
+   "stop": 34990.8075,
+   "target": 43118.385,
+   "shares_1pct": 36,
+   "range_pos": 0.0859,
+   "norm": -17.9,
+   "bear_share": 0.375,
+   "fresh": true,
+   "break_gap": -0.0115,
+   "earnings_d": null,
+   "tactic": {
+    "stop_pct": 7.2,
+    "pb_price": 37221.519,
+    "pb_stop_pct": 6.0,
+    "mode": "half",
+    "label": "⚖ 반반 진입",
+    "desc": "손절폭 7.2% — 절반은 현재가, 절반은 눌림 37,222원 지정가(거기선 손절폭 6.0%)"
    }
   },
   {
@@ -4219,6 +4321,34 @@
     "mode": "half",
     "label": "⚖ 반반 진입",
     "desc": "손절폭 6.8% — 절반은 현재가, 절반은 눌림 $56.39 지정가(거기선 손절폭 3.6%)"
+   }
+  },
+  {
+   "id": "008770-2026-10-15-watch",
+   "code": "008770",
+   "name": "호텔신라",
+   "ccy": "KRW",
+   "group": "watch",
+   "entry_kind": "now",
+   "stage": 1,
+   "price": 37000.0,
+   "entry": 37000.0,
+   "stop": 34953.2332,
+   "target": 41093.5335,
+   "shares_1pct": 48,
+   "range_pos": 0.0191,
+   "norm": -47.5,
+   "bear_share": 0.5,
+   "fresh": true,
+   "break_gap": -0.0036,
+   "earnings_d": null,
+   "tactic": {
+    "stop_pct": 5.5,
+    "pb_price": 36550.0,
+    "pb_stop_pct": 4.4,
+    "mode": "full",
+    "label": "⚡ 즉시 분할",
+    "desc": "손절폭 5.5%로 타이트 — 현재가에서 1~2회 분할 매수. 기다리는 이득보다 놓치는 비용이 큼"
    }
   },
   {
