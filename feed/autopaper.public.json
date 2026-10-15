@@ -1,25 +1,25 @@
 {
- "generated_at": "2026-10-15T22:31:53.204865+09:00",
+ "generated_at": "2026-10-15T22:46:55.793094+09:00",
  "updated": "2026-10-15",
  "start": 100000000,
- "cash": 31914088,
- "equity": 93625699,
- "ret_pct": -6.37,
+ "cash": 34854155,
+ "equity": 93394632,
+ "ret_pct": -6.61,
  "positions": [
   {
    "code": "BKE",
    "name": "Buckle, Inc.",
    "ccy": "USD",
-   "q": 96,
+   "q": 48,
    "avg": 43.09,
-   "price": 45.53499984741211,
-   "stop": 41.0781,
+   "price": 45.595001220703125,
+   "stop": 43.09,
    "target": 47.1138,
-   "half_done": false,
+   "half_done": true,
    "opened": "2026-09-29",
-   "pl_krw": 315318,
-   "pl_pct": 5.67,
-   "price_age_min": 0.4
+   "pl_krw": 161528,
+   "pl_pct": 5.81,
+   "price_age_min": 0.3
   },
   {
    "code": "TEL",
@@ -27,14 +27,14 @@
    "ccy": "USD",
    "q": 18,
    "avg": 213.675,
-   "price": 208.72999572753903,
+   "price": 209.83999633789065,
    "stop": 202.2342,
    "target": 236.5566,
    "half_done": false,
    "opened": "2026-09-30",
-   "pl_krw": -119574,
-   "pl_pct": -2.31,
-   "price_age_min": 0.4
+   "pl_krw": -92734,
+   "pl_pct": -1.79,
+   "price_age_min": 0.3
   },
   {
    "code": "DOV",
@@ -42,14 +42,14 @@
    "ccy": "USD",
    "q": 31,
    "avg": 189.45,
-   "price": 193.9900054931641,
+   "price": 194.08999633789065,
    "stop": 181.2117,
    "target": 205.9266,
    "half_done": false,
    "opened": "2026-09-30",
-   "pl_krw": 189068,
-   "pl_pct": 2.4,
-   "price_age_min": 0.4
+   "pl_krw": 193232,
+   "pl_pct": 2.45,
+   "price_age_min": 0.3
   },
   {
    "code": "CRAI",
@@ -57,14 +57,14 @@
    "ccy": "USD",
    "q": 16,
    "avg": 164.4,
-   "price": 179.3800048828125,
+   "price": 180.0,
    "stop": 164.4,
    "target": 186.8795,
    "half_done": true,
    "opened": "2026-10-01",
-   "pl_krw": 321981,
-   "pl_pct": 9.11,
-   "price_age_min": 0.4
+   "pl_krw": 335308,
+   "pl_pct": 9.49,
+   "price_age_min": 0.3
   },
   {
    "code": "GE",
@@ -72,14 +72,14 @@
    "ccy": "USD",
    "q": 1,
    "avg": 314.62,
-   "price": 307.44000244140625,
+   "price": 306.31500244140625,
    "stop": 297.5081,
    "target": 348.8438,
    "half_done": false,
    "opened": "2026-10-01",
-   "pl_krw": -9645,
-   "pl_pct": -2.28,
-   "price_age_min": 0.4
+   "pl_krw": -11157,
+   "pl_pct": -2.64,
+   "price_age_min": 0.3
   },
   {
    "code": "088980",
@@ -94,7 +94,7 @@
    "opened": "2026-10-01",
    "pl_krw": -109140,
    "pl_pct": -1.74,
-   "price_age_min": 0.4
+   "price_age_min": 0.3
   },
   {
    "code": "COST",
@@ -102,14 +102,14 @@
    "ccy": "USD",
    "q": 1,
    "avg": 943.035,
-   "price": 999.4746704101562,
-   "stop": 954.3891704101562,
+   "price": 1001.2550048828124,
+   "stop": 956.1695048828124,
    "target": 1003.1489,
    "half_done": true,
    "opened": "2026-10-07",
-   "pl_krw": 75820,
-   "pl_pct": 5.98,
-   "price_age_min": 0.4
+   "pl_krw": 78212,
+   "pl_pct": 6.17,
+   "price_age_min": 0.3
   },
   {
    "code": "AES",
@@ -117,14 +117,14 @@
    "ccy": "USD",
    "q": 11,
    "avg": 14.92,
-   "price": 14.96500015258789,
+   "price": 14.960100173950195,
    "stop": 14.4724,
    "target": 15.8152,
    "half_done": false,
    "opened": "2026-10-09",
-   "pl_krw": 665,
-   "pl_pct": 0.3,
-   "price_age_min": 0.4
+   "pl_krw": 593,
+   "pl_pct": 0.27,
+   "price_age_min": 0.3
   },
   {
    "code": "TRMB",
@@ -132,14 +132,14 @@
    "ccy": "USD",
    "q": 208,
    "avg": 59.85,
-   "price": 60.51499938964844,
+   "price": 59.8849983215332,
    "stop": 56.5187,
    "target": 66.5126,
    "half_done": false,
    "opened": "2026-10-09",
-   "pl_krw": 185816,
-   "pl_pct": 1.11,
-   "price_age_min": 0.4
+   "pl_krw": 9779,
+   "pl_pct": 0.06,
+   "price_age_min": 0.3
   },
   {
    "code": "TSCO",
@@ -147,14 +147,14 @@
    "ccy": "USD",
    "q": 175,
    "avg": 32.84,
-   "price": 33.540000915527344,
+   "price": 33.08100128173828,
    "stop": 30.8609,
    "target": 36.7983,
    "half_done": false,
    "opened": "2026-10-12",
-   "pl_krw": 164564,
-   "pl_pct": 2.13,
-   "price_age_min": 0.4
+   "pl_krw": 56657,
+   "pl_pct": 0.73,
+   "price_age_min": 0.3
   },
   {
    "code": "BDC",
@@ -169,7 +169,7 @@
    "opened": "2026-10-12",
    "pl_krw": -332151,
    "pl_pct": -5.32,
-   "price_age_min": 0.4
+   "price_age_min": 0.3
   }
  ],
  "pending": [
@@ -1824,10 +1824,23 @@
   },
   {
    "d": "2026-10-15",
-   "v": 93625699
+   "v": 93394632
   }
  ],
  "log": [
+  {
+   "d": "2026-10-15",
+   "type": "sell",
+   "code": "BKE",
+   "name": "Buckle, Inc.",
+   "q": 48,
+   "price": 45.595,
+   "ccy": "USD",
+   "amt": 2940068,
+   "note": "+1R 절반 익절",
+   "pl": 161528,
+   "pl_pct": 5.8
+  },
   {
    "d": "2026-10-15",
    "type": "sell",
@@ -2468,19 +2481,6 @@
    "note": "즉시 분할 — 🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권21% · 체크6/6 · 손절폭5.2%",
    "stop": 145.224,
    "target": 169.242
-  },
-  {
-   "d": "2026-09-17",
-   "type": "buy",
-   "code": "BAH",
-   "name": "Booz Allen Hamilton Holding Corporation",
-   "q": 3,
-   "price": 78.4457,
-   "ccy": "USD",
-   "amt": 321642,
-   "note": "눌림 지정가 체결 — 🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권39% · 체크4/6 · 손절폭6.4%",
-   "stop": 73.5895,
-   "target": 88.756
   }
  ],
  "lane": "fast",
