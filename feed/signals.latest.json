@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated_at": "2026-10-16T15:54:55+09:00",
+ "generated_at": "2026-10-16T16:31:41+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "a_ablation": [
   {
@@ -3332,6 +3332,34 @@
    }
   },
   {
+   "id": "005385-2026-10-16-watch",
+   "code": "005385",
+   "name": "현대차우",
+   "ccy": "KRW",
+   "group": "watch",
+   "entry_kind": "now",
+   "stage": 2,
+   "price": 164900.0,
+   "entry": 164900.0,
+   "stop": 152120.4308,
+   "target": 190459.1384,
+   "shares_1pct": 7,
+   "range_pos": 0.0807,
+   "norm": -32.1,
+   "bear_share": 0.375,
+   "fresh": true,
+   "break_gap": 0.019,
+   "earnings_d": null,
+   "tactic": {
+    "stop_pct": 7.7,
+    "pb_price": null,
+    "pb_stop_pct": null,
+    "mode": "half",
+    "label": "⚖ 반반 진입",
+    "desc": "손절폭 7.7% — 절반만 현재가, 나머지는 눌림 확인 후 추가"
+   }
+  },
+  {
    "id": "ACM-2026-10-16-watch",
    "code": "ACM",
    "name": "AECOM",
@@ -3388,34 +3416,6 @@
    }
   },
   {
-   "id": "005385-2026-10-16-watch",
-   "code": "005385",
-   "name": "현대차우",
-   "ccy": "KRW",
-   "group": "watch",
-   "entry_kind": "now",
-   "stage": 2,
-   "price": 164400.0,
-   "entry": 164400.0,
-   "stop": 151620.4308,
-   "target": 189959.1384,
-   "shares_1pct": 7,
-   "range_pos": 0.0779,
-   "norm": -39.6,
-   "bear_share": 0.375,
-   "fresh": true,
-   "break_gap": 0.0159,
-   "earnings_d": null,
-   "tactic": {
-    "stop_pct": 7.8,
-    "pb_price": null,
-    "pb_stop_pct": null,
-    "mode": "half",
-    "label": "⚖ 반반 진입",
-    "desc": "손절폭 7.8% — 절반만 현재가, 나머지는 눌림 확인 후 추가"
-   }
-  },
-  {
    "id": "008770-2026-10-16-watch",
    "code": "008770",
    "name": "호텔신라",
@@ -3423,21 +3423,21 @@
    "group": "watch",
    "entry_kind": "now",
    "stage": 2,
-   "price": 37600.0,
-   "entry": 37600.0,
-   "stop": 35499.9411,
-   "target": 41800.1179,
+   "price": 37500.0,
+   "entry": 37500.0,
+   "stop": 35399.9411,
+   "target": 41700.1179,
    "shares_1pct": 47,
-   "range_pos": 0.0382,
+   "range_pos": 0.0353,
    "norm": -50.8,
    "bear_share": 0.5,
    "fresh": true,
-   "break_gap": 0.0208,
+   "break_gap": 0.0181,
    "earnings_d": null,
    "tactic": {
     "stop_pct": 5.6,
     "pb_price": 36300.0,
-    "pb_stop_pct": 2.2,
+    "pb_stop_pct": 2.5,
     "mode": "full",
     "label": "⚡ 즉시 분할",
     "desc": "손절폭 5.6%로 타이트 — 현재가에서 1~2회 분할 매수. 기다리는 이득보다 놓치는 비용이 큼"
