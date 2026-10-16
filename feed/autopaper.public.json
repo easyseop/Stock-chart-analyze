@@ -1,9 +1,9 @@
 {
- "generated_at": "2026-10-16T12:31:56.566687+09:00",
+ "generated_at": "2026-10-16T12:58:55.857775+09:00",
  "updated": "2026-10-16",
  "start": 100000000,
  "cash": 34854155,
- "equity": 94003305,
+ "equity": 93996885,
  "ret_pct": -6.0,
  "positions": [
   {
@@ -19,7 +19,7 @@
    "opened": "2026-09-29",
    "pl_krw": 224365,
    "pl_pct": 8.08,
-   "price_age_min": 4.3
+   "price_age_min": 31.3
   },
   {
    "code": "TEL",
@@ -34,7 +34,7 @@
    "opened": "2026-09-30",
    "pl_krw": -16561,
    "pl_pct": -0.32,
-   "price_age_min": 4.3
+   "price_age_min": 31.3
   },
   {
    "code": "DOV",
@@ -49,7 +49,7 @@
    "opened": "2026-09-30",
    "pl_krw": 193203,
    "pl_pct": 2.45,
-   "price_age_min": 6.5
+   "price_age_min": 33.5
   },
   {
    "code": "CRAI",
@@ -64,7 +64,7 @@
    "opened": "2026-10-01",
    "pl_krw": 278307,
    "pl_pct": 7.88,
-   "price_age_min": 7.0
+   "price_age_min": 34.0
   },
   {
    "code": "GE",
@@ -79,7 +79,7 @@
    "opened": "2026-10-01",
    "pl_krw": -3519,
    "pl_pct": -0.83,
-   "price_age_min": 5.9
+   "price_age_min": 32.9
   },
   {
    "code": "088980",
@@ -87,14 +87,14 @@
    "ccy": "KRW",
    "q": 642,
    "avg": 9790.0,
-   "price": 9740.0,
+   "price": 9730.0,
    "stop": 9496.3,
    "target": 10377.4,
    "half_done": false,
    "opened": "2026-10-01",
-   "pl_krw": -32100,
-   "pl_pct": -0.51,
-   "price_age_min": 4.3
+   "pl_krw": -38520,
+   "pl_pct": -0.61,
+   "price_age_min": 6.9
   },
   {
    "code": "COST",
@@ -109,7 +109,7 @@
    "opened": "2026-10-07",
    "pl_krw": 46978,
    "pl_pct": 3.71,
-   "price_age_min": 6.8
+   "price_age_min": 33.7
   },
   {
    "code": "AES",
@@ -124,7 +124,7 @@
    "opened": "2026-10-09",
    "pl_krw": 739,
    "pl_pct": 0.34,
-   "price_age_min": 4.3
+   "price_age_min": 31.3
   },
   {
    "code": "TRMB",
@@ -139,7 +139,7 @@
    "opened": "2026-10-09",
    "pl_krw": 312908,
    "pl_pct": 1.87,
-   "price_age_min": 4.3
+   "price_age_min": 31.3
   },
   {
    "code": "TSCO",
@@ -154,7 +154,7 @@
    "opened": "2026-10-12",
    "pl_krw": 124580,
    "pl_pct": 1.61,
-   "price_age_min": 4.3
+   "price_age_min": 31.3
   },
   {
    "code": "BDC",
@@ -169,7 +169,7 @@
    "opened": "2026-10-12",
    "pl_krw": -222363,
    "pl_pct": -3.56,
-   "price_age_min": 4.3
+   "price_age_min": 31.3
   }
  ],
  "pending": [
@@ -1828,7 +1828,7 @@
   },
   {
    "d": "2026-10-16",
-   "v": 94003305
+   "v": 93996885
   }
  ],
  "log": [
