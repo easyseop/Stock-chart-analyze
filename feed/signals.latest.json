@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated_at": "2026-10-17T08:58:07+09:00",
+ "generated_at": "2026-10-17T10:14:32+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "a_ablation": [
   {
@@ -74,6 +74,14 @@
    "runup63": 0.238,
    "stage": 3,
    "price": 293.8699951171875
+  },
+  {
+   "code": "DFIN",
+   "gate": "rp",
+   "range_pos": 0.7573,
+   "runup63": 0.0477,
+   "stage": 3,
+   "price": 51.369998931884766
   },
   {
    "code": "DOV",
@@ -154,28 +162,20 @@
    "runup63": -0.0869,
    "stage": 3,
    "price": 282.6400146484375
-  },
-  {
-   "code": "SKYT",
-   "gate": "rp",
-   "range_pos": 0.7618,
-   "runup63": -0.0181,
-   "stage": 3,
-   "price": 32.459999084472656
   }
  ],
  "shelf_debug": {
-  "ok": 5,
-  "watch": 120,
+  "ok": 10,
+  "watch": 125,
   "reasons": {
-   "밸류영역 밖(지지대 아님)": 477,
-   "추락 중(범위 1%)": 292,
-   "추락 중(범위 0%)": 285,
-   "추락 중(범위 2%)": 178,
-   "매물대 정보 없음": 145,
-   "추락 중(범위 4%)": 123,
-   "추락 중(범위 3%)": 123,
-   "추락 중(범위 5%)": 111
+   "밸류영역 밖(지지대 아님)": 476,
+   "추락 중(범위 1%)": 241,
+   "추락 중(범위 0%)": 182,
+   "추락 중(범위 2%)": 173,
+   "추락 중(범위 3%)": 162,
+   "매물대 정보 없음": 146,
+   "추락 중(범위 4%)": 130,
+   "추락 중(범위 5%)": 116
   }
  },
  "signals": [
@@ -197,7 +197,7 @@
    "bear_share": 0.375,
    "fresh": true,
    "break_gap": 0.0369,
-   "earnings_d": -71,
+   "earnings_d": -72,
    "tactic": {
     "stop_pct": 4.9,
     "pb_price": null,
@@ -225,7 +225,7 @@
    "bear_share": 0.25,
    "fresh": true,
    "break_gap": 0.0344,
-   "earnings_d": -15,
+   "earnings_d": -16,
    "tactic": {
     "stop_pct": 5.2,
     "pb_price": 94.6687,
@@ -253,7 +253,7 @@
    "bear_share": 0.25,
    "fresh": true,
    "break_gap": 0.0318,
-   "earnings_d": 11,
+   "earnings_d": 10,
    "tactic": {
     "stop_pct": 4.1,
     "pb_price": null,
@@ -281,7 +281,7 @@
    "bear_share": 0.25,
    "fresh": true,
    "break_gap": 0.0337,
-   "earnings_d": 4,
+   "earnings_d": 3,
    "tactic": {
     "stop_pct": 4.8,
     "pb_price": null,
@@ -309,7 +309,7 @@
    "bear_share": 0.375,
    "fresh": true,
    "break_gap": 0.0135,
-   "earnings_d": -67,
+   "earnings_d": -68,
    "tactic": {
     "stop_pct": 7.1,
     "pb_price": null,
@@ -337,7 +337,7 @@
    "bear_share": 0.375,
    "fresh": true,
    "break_gap": 0.0414,
-   "earnings_d": -71,
+   "earnings_d": -72,
    "tactic": {
     "stop_pct": 3.5,
     "pb_price": 83.41,
@@ -365,7 +365,7 @@
    "bear_share": 0.5,
    "fresh": true,
    "break_gap": 0.0217,
-   "earnings_d": 20,
+   "earnings_d": 19,
    "tactic": {
     "stop_pct": 9.5,
     "pb_price": 31.12,
@@ -393,7 +393,7 @@
    "bear_share": 0.5,
    "fresh": true,
    "break_gap": 0.0405,
-   "earnings_d": -71,
+   "earnings_d": -72,
    "tactic": {
     "stop_pct": 7.4,
     "pb_price": 60.012,
@@ -421,7 +421,7 @@
    "bear_share": 0.375,
    "fresh": true,
    "break_gap": 0.036,
-   "earnings_d": 11,
+   "earnings_d": 10,
    "tactic": {
     "stop_pct": 4.7,
     "pb_price": 16.74,
@@ -449,7 +449,7 @@
    "bear_share": 0.375,
    "fresh": true,
    "break_gap": 0.0271,
-   "earnings_d": 11,
+   "earnings_d": 10,
    "tactic": {
     "stop_pct": 3.8,
     "pb_price": 60.1012,
@@ -477,7 +477,7 @@
    "bear_share": 0.375,
    "fresh": false,
    "break_gap": 0.1202,
-   "earnings_d": 13,
+   "earnings_d": 12,
    "tactic": {
     "stop_pct": 5.7,
     "pb_price": null,
@@ -505,7 +505,7 @@
    "bear_share": 0.375,
    "fresh": false,
    "break_gap": 0.0734,
-   "earnings_d": 12,
+   "earnings_d": 11,
    "tactic": {
     "stop_pct": 4.0,
     "pb_price": 69.8612,
@@ -533,7 +533,7 @@
    "bear_share": 0.375,
    "fresh": false,
    "break_gap": 0.1173,
-   "earnings_d": 20,
+   "earnings_d": 19,
    "tactic": {
     "stop_pct": 6.0,
     "pb_price": null,
@@ -589,7 +589,7 @@
    "bear_share": 0.375,
    "fresh": false,
    "break_gap": 0.0918,
-   "earnings_d": 11,
+   "earnings_d": 10,
    "tactic": {
     "stop_pct": 5.7,
     "pb_price": 81.196,
@@ -617,7 +617,7 @@
    "bear_share": 0.375,
    "fresh": false,
    "break_gap": 0.0857,
-   "earnings_d": 13,
+   "earnings_d": 12,
    "tactic": {
     "stop_pct": 6.6,
     "pb_price": 40.3679,
@@ -645,7 +645,7 @@
    "bear_share": 0.375,
    "fresh": false,
    "break_gap": 0.0579,
-   "earnings_d": 13,
+   "earnings_d": 10,
    "tactic": {
     "stop_pct": 3.3,
     "pb_price": null,
@@ -701,7 +701,7 @@
    "bear_share": 0.375,
    "fresh": false,
    "break_gap": 0.0828,
-   "earnings_d": 13,
+   "earnings_d": 12,
    "tactic": {
     "stop_pct": 5.8,
     "pb_price": null,
@@ -729,7 +729,7 @@
    "bear_share": 0.375,
    "fresh": false,
    "break_gap": 0.0854,
-   "earnings_d": 13,
+   "earnings_d": 12,
    "tactic": {
     "stop_pct": 10.5,
     "pb_price": 151.6389,
@@ -757,7 +757,7 @@
    "bear_share": 0.375,
    "fresh": false,
    "break_gap": 0.2932,
-   "earnings_d": -71,
+   "earnings_d": -72,
    "tactic": {
     "stop_pct": 9.3,
     "pb_price": null,
@@ -785,7 +785,7 @@
    "bear_share": 0.375,
    "fresh": false,
    "break_gap": 0.0529,
-   "earnings_d": 12,
+   "earnings_d": 11,
    "tactic": {
     "stop_pct": 7.1,
     "pb_price": 64.9093,
@@ -813,7 +813,7 @@
    "bear_share": 0.375,
    "fresh": false,
    "break_gap": 0.2284,
-   "earnings_d": -57,
+   "earnings_d": -58,
    "tactic": {
     "stop_pct": 7.5,
     "pb_price": null,
@@ -841,7 +841,7 @@
    "bear_share": 0.375,
    "fresh": false,
    "break_gap": 0.0757,
-   "earnings_d": -1,
+   "earnings_d": -2,
    "tactic": {
     "stop_pct": 4.0,
     "pb_price": 43.2145,
@@ -869,7 +869,7 @@
    "bear_share": 0.5,
    "fresh": false,
    "break_gap": 0.0645,
-   "earnings_d": 40,
+   "earnings_d": 39,
    "tactic": {
     "stop_pct": 6.6,
     "pb_price": 54.7677,
@@ -897,7 +897,7 @@
    "bear_share": 0.5,
    "fresh": false,
    "break_gap": 0.1015,
-   "earnings_d": -71,
+   "earnings_d": -72,
    "tactic": {
     "stop_pct": 6.0,
     "pb_price": 211.08,
@@ -925,7 +925,7 @@
    "bear_share": 0.5,
    "fresh": false,
    "break_gap": 0.0612,
-   "earnings_d": 10,
+   "earnings_d": 9,
    "tactic": {
     "stop_pct": 7.1,
     "pb_price": 50.13,
@@ -953,7 +953,7 @@
    "bear_share": 0.5,
    "fresh": false,
    "break_gap": 0.0875,
-   "earnings_d": 13,
+   "earnings_d": 12,
    "tactic": {
     "stop_pct": 7.0,
     "pb_price": null,
@@ -981,7 +981,7 @@
    "bear_share": 0.5,
    "fresh": false,
    "break_gap": 0.0963,
-   "earnings_d": 13,
+   "earnings_d": 12,
    "tactic": {
     "stop_pct": 9.0,
     "pb_price": 3.06,
@@ -1009,7 +1009,7 @@
    "bear_share": 0.5,
    "fresh": false,
    "break_gap": 0.6601,
-   "earnings_d": -67,
+   "earnings_d": -68,
    "tactic": {
     "stop_pct": 9.9,
     "pb_price": 21.08,
@@ -1018,6 +1018,38 @@
     "label": "⏳ 눌림 지정가만",
     "desc": "지금 추격 금지(손절폭 9.9% · 돌파후 진행) — <b>$21.08 눌림 지정가만</b>. 눌리면 손절폭 5.0%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
    }
+  },
+  {
+   "id": "PTON-2026-10-17-shelf",
+   "code": "PTON",
+   "name": "Peloton Interactive, Inc.",
+   "ccy": "USD",
+   "group": "shelf",
+   "entry_kind": "shelf",
+   "stage": 0,
+   "price": 5.33,
+   "entry": 5.33,
+   "stop": 4.8706,
+   "target": 6.5821,
+   "shares_1pct": 0,
+   "range_pos": 0.37,
+   "norm": -37.7,
+   "bear_share": 0.375,
+   "shelf": {
+    "poc": 5.6362,
+    "val": 4.3121,
+    "vah": 6.5821,
+    "rr": 2.73,
+    "overhead": 0.549,
+    "history_bars": 1773,
+    "profile_pnl_proxy": -0.0348,
+    "runup252": -0.3005
+   },
+   "fresh": true,
+   "break_gap": null,
+   "earnings_d": -72,
+   "tactic": "full",
+   "trend_above_200": true
   },
   {
    "id": "139130-2026-10-17-b0-shadow",
@@ -1077,6 +1109,25 @@
    "tactic": "shadow"
   },
   {
+   "id": "FWRG-2026-10-17-b0-shadow",
+   "code": "FWRG",
+   "name": "First Watch Restaurant Group, Inc.",
+   "ccy": "USD",
+   "group": "shelf_shadow_b0",
+   "shadow": true,
+   "orderable": false,
+   "entry": 12.36,
+   "stop": 11.1622,
+   "target": 15.2831,
+   "stage": 0,
+   "norm": -24.6,
+   "range_pos": 0.2773,
+   "b0_reject_reason": "200일선 아래(B1)",
+   "trend_above_200": false,
+   "fresh": false,
+   "tactic": "shadow"
+  },
+  {
    "id": "KIM-2026-10-17-b0-shadow",
    "code": "KIM",
    "name": "Kimco Realty Corporation",
@@ -1090,6 +1141,25 @@
    "stage": 0,
    "norm": -32.8,
    "range_pos": 0.4572,
+   "b0_reject_reason": "200일선 아래(B1)",
+   "trend_above_200": false,
+   "fresh": false,
+   "tactic": "shadow"
+  },
+  {
+   "id": "ESI-2026-10-17-b0-shadow",
+   "code": "ESI",
+   "name": "Element Solutions Inc.",
+   "ccy": "USD",
+   "group": "shelf_shadow_b0",
+   "shadow": true,
+   "orderable": false,
+   "entry": 35.53,
+   "stop": 33.516,
+   "target": 44.3019,
+   "stage": 0,
+   "norm": -39.6,
+   "range_pos": 0.4801,
    "b0_reject_reason": "200일선 아래(B1)",
    "trend_above_200": false,
    "fresh": false,
@@ -1151,44 +1221,62 @@
    "tactic": "shadow"
   },
   {
-   "id": "007340-2026-10-17-shelf-watch",
-   "code": "007340",
-   "name": "DN오토모티브",
-   "ccy": "KRW",
+   "id": "AGIO-2026-10-17-b2-shadow",
+   "code": "AGIO",
+   "name": "Agios Pharmaceuticals, Inc.",
+   "ccy": "USD",
+   "group": "shelf_shadow_b2",
+   "shadow": true,
+   "orderable": false,
+   "entry": 32.32,
+   "stop": 29.0766,
+   "target": 38.8068,
+   "stage": 0,
+   "norm": -37.7,
+   "range_pos": 0.4242,
+   "runup252": -0.2189,
+   "fresh": false,
+   "tactic": "shadow"
+  },
+  {
+   "id": "EPAM-2026-10-17-shelf-watch",
+   "code": "EPAM",
+   "name": "EPAM Systems, Inc.",
+   "ccy": "USD",
    "group": "shelf_watch",
    "entry_kind": "shelf_watch",
    "stage": 0,
-   "price": 39750.0,
-   "entry": 39750.0,
-   "stop": 36750.0,
-   "target": 51226.0417,
+   "price": 122.26,
+   "entry": 122.26,
+   "stop": 111.8964,
+   "target": 138.4531,
    "shares_1pct": 0,
-   "range_pos": 0.3961,
-   "norm": 6.6,
-   "bear_share": 0.25,
+   "range_pos": 0.3292,
+   "norm": 5.7,
+   "bear_share": 0.375,
    "shelf": {
-    "poc": 37823.9583,
-    "val": 28251.0417,
-    "vah": 51226.0417,
-    "rr": 3.83,
-    "overhead": 0.369,
-    "reason": "반등 미확인(거래량)",
-    "history_bars": 1908,
-    "profile_pnl_proxy": 0.0562,
-    "runup252": 0.7396,
+    "poc": 101.0856,
+    "val": 82.4019,
+    "vah": 138.4531,
+    "rr": 1.56,
+    "overhead": 0.415,
+    "reason": "반등 미확인(터치)",
+    "history_bars": 1958,
+    "profile_pnl_proxy": -0.0343,
+    "runup252": -0.1449,
     "checks": {
-     "터치": true,
+     "터치": false,
      "회복": true,
      "상단마감": true,
-     "거래량": false,
+     "거래량": true,
      "신저가아님": true
     }
    },
    "fresh": false,
    "break_gap": null,
-   "earnings_d": null,
+   "earnings_d": -72,
    "tactic": "watch",
-   "trend_above_200": true
+   "trend_above_200": false
   },
   {
    "id": "062040-2026-10-17-shelf-watch",
@@ -1221,86 +1309,6 @@
      "회복": true,
      "상단마감": true,
      "거래량": true,
-     "신저가아님": true
-    }
-   },
-   "fresh": false,
-   "break_gap": null,
-   "earnings_d": null,
-   "tactic": "watch",
-   "trend_above_200": false
-  },
-  {
-   "id": "003550-2026-10-17-shelf-watch",
-   "code": "003550",
-   "name": "LG",
-   "ccy": "KRW",
-   "group": "shelf_watch",
-   "entry_kind": "shelf_watch",
-   "stage": 0,
-   "price": 103200.0,
-   "entry": 103200.0,
-   "stop": 98392.0,
-   "target": 115937.5,
-   "shares_1pct": 0,
-   "range_pos": 0.2858,
-   "norm": 1.9,
-   "bear_share": 0.25,
-   "shelf": {
-    "poc": 82162.5,
-    "val": 82162.5,
-    "vah": 115937.5,
-    "rr": 2.65,
-    "overhead": 0.458,
-    "reason": "반등 미확인(터치·상단마감)",
-    "history_bars": 1908,
-    "profile_pnl_proxy": -0.0255,
-    "runup252": 0.4333,
-    "checks": {
-     "터치": false,
-     "회복": true,
-     "상단마감": false,
-     "거래량": true,
-     "신저가아님": true
-    }
-   },
-   "fresh": false,
-   "break_gap": null,
-   "earnings_d": null,
-   "tactic": "watch",
-   "trend_above_200": true
-  },
-  {
-   "id": "047050-2026-10-17-shelf-watch",
-   "code": "047050",
-   "name": "포스코인터내셔널",
-   "ccy": "KRW",
-   "group": "shelf_watch",
-   "entry_kind": "shelf_watch",
-   "stage": 0,
-   "price": 56000.0,
-   "entry": 56000.0,
-   "stop": 53018.0,
-   "target": 68990.625,
-   "shares_1pct": 0,
-   "range_pos": 0.2406,
-   "norm": -0.0,
-   "bear_share": 0.25,
-   "shelf": {
-    "poc": 53540.625,
-    "val": 47746.875,
-    "vah": 68990.625,
-    "rr": 4.36,
-    "overhead": 0.531,
-    "reason": "반등 미확인(상단마감·거래량)",
-    "history_bars": 1908,
-    "profile_pnl_proxy": -0.099,
-    "runup252": 0.1558,
-    "checks": {
-     "터치": true,
-     "회복": true,
-     "상단마감": false,
-     "거래량": false,
      "신저가아님": true
     }
    },
@@ -1346,7 +1354,47 @@
    },
    "fresh": false,
    "break_gap": null,
-   "earnings_d": -56,
+   "earnings_d": -57,
+   "tactic": "watch",
+   "trend_above_200": false
+  },
+  {
+   "id": "CNXC-2026-10-17-shelf-watch",
+   "code": "CNXC",
+   "name": "Concentrix Corporation",
+   "ccy": "USD",
+   "group": "shelf_watch",
+   "entry_kind": "shelf_watch",
+   "stage": 0,
+   "price": 27.67,
+   "entry": 27.67,
+   "stop": 25.0978,
+   "target": 32.9967,
+   "shares_1pct": 0,
+   "range_pos": 0.2952,
+   "norm": -1.9,
+   "bear_share": 0.25,
+   "shelf": {
+    "poc": 25.7567,
+    "val": 23.3433,
+    "vah": 32.9967,
+    "rr": 2.07,
+    "overhead": 0.49,
+    "reason": "반등 미확인(거래량)",
+    "history_bars": 1479,
+    "profile_pnl_proxy": -0.0638,
+    "runup252": -0.3768,
+    "checks": {
+     "터치": true,
+     "회복": true,
+     "상단마감": true,
+     "거래량": false,
+     "신저가아님": true
+    }
+   },
+   "fresh": false,
+   "break_gap": null,
+   "earnings_d": -18,
    "tactic": "watch",
    "trend_above_200": false
   },
@@ -1386,38 +1434,38 @@
    },
    "fresh": false,
    "break_gap": null,
-   "earnings_d": -65,
+   "earnings_d": -66,
    "tactic": "watch",
    "trend_above_200": false
   },
   {
-   "id": "018260-2026-10-17-shelf-watch",
-   "code": "018260",
-   "name": "삼성에스디에스",
-   "ccy": "KRW",
+   "id": "VERX-2026-10-17-shelf-watch",
+   "code": "VERX",
+   "name": "Vertex, Inc.",
+   "ccy": "USD",
    "group": "shelf_watch",
    "entry_kind": "shelf_watch",
    "stage": 0,
-   "price": 199900.0,
-   "entry": 199900.0,
-   "stop": 187278.0,
-   "target": 221850.0,
+   "price": 13.66,
+   "entry": 13.66,
+   "stop": 12.3186,
+   "target": 15.9935,
    "shares_1pct": 0,
-   "range_pos": 0.2219,
-   "norm": -7.5,
+   "range_pos": 0.2113,
+   "norm": -5.7,
    "bear_share": 0.375,
    "shelf": {
-    "poc": 171350.0,
-    "val": 161250.0,
-    "vah": 221850.0,
+    "poc": 12.5915,
+    "val": 11.2306,
+    "vah": 15.9935,
     "rr": 1.74,
-    "overhead": 0.452,
-    "reason": "반등 미확인(터치·거래량)",
-    "history_bars": 1908,
-    "profile_pnl_proxy": -0.0357,
-    "runup252": 0.2174,
+    "overhead": 0.442,
+    "reason": "반등 미확인(거래량)",
+    "history_bars": 1562,
+    "profile_pnl_proxy": -0.0846,
+    "runup252": -0.4472,
     "checks": {
-     "터치": false,
+     "터치": true,
      "회복": true,
      "상단마감": true,
      "거래량": false,
@@ -1426,49 +1474,9 @@
    },
    "fresh": false,
    "break_gap": null,
-   "earnings_d": null,
+   "earnings_d": 16,
    "tactic": "watch",
    "trend_above_200": true
-  },
-  {
-   "id": "180640-2026-10-17-shelf-watch",
-   "code": "180640",
-   "name": "한진칼",
-   "ccy": "KRW",
-   "group": "shelf_watch",
-   "entry_kind": "shelf_watch",
-   "stage": 0,
-   "price": 116900.0,
-   "entry": 116900.0,
-   "stop": 114366.0,
-   "target": 129325.0,
-   "shares_1pct": 0,
-   "range_pos": 0.2874,
-   "norm": -7.5,
-   "bear_share": 0.375,
-   "shelf": {
-    "poc": 115525.0,
-    "val": 105175.0,
-    "vah": 129325.0,
-    "rr": 4.9,
-    "overhead": 0.497,
-    "reason": "반등 미확인(상단마감·신저가아님)",
-    "history_bars": 1908,
-    "profile_pnl_proxy": -0.0229,
-    "runup252": 0.1632,
-    "checks": {
-     "터치": true,
-     "회복": true,
-     "상단마감": false,
-     "거래량": true,
-     "신저가아님": false
-    }
-   },
-   "fresh": false,
-   "break_gap": null,
-   "earnings_d": null,
-   "tactic": "watch",
-   "trend_above_200": false
   },
   {
    "id": "TM-2026-10-17-shelf-watch",
@@ -1506,7 +1514,7 @@
    },
    "fresh": false,
    "break_gap": null,
-   "earnings_d": 20,
+   "earnings_d": 19,
    "tactic": "watch",
    "trend_above_200": false
   },
@@ -1546,78 +1554,38 @@
    },
    "fresh": false,
    "break_gap": null,
-   "earnings_d": 4,
+   "earnings_d": 3,
    "tactic": "watch",
    "trend_above_200": false
   },
   {
-   "id": "AEO-2026-10-17-shelf-watch",
-   "code": "AEO",
-   "name": "American Eagle Outfitters, Inc.",
+   "id": "CNR-2026-10-17-shelf-watch",
+   "code": "CNR",
+   "name": "Core Natural Resources, Inc.",
    "ccy": "USD",
    "group": "shelf_watch",
    "entry_kind": "shelf_watch",
    "stage": 0,
-   "price": 17.9,
-   "entry": 17.9,
-   "stop": 16.954,
-   "target": 20.9808,
+   "price": 89.0,
+   "entry": 89.0,
+   "stop": 86.1567,
+   "target": 95.6094,
    "shares_1pct": 0,
-   "range_pos": 0.2646,
-   "norm": -13.2,
-   "bear_share": 0.25,
+   "range_pos": 0.3558,
+   "norm": -15.1,
+   "bear_share": 0.125,
    "shelf": {
-    "poc": 17.3908,
-    "val": 14.3992,
-    "vah": 20.9808,
-    "rr": 3.26,
-    "overhead": 0.524,
-    "reason": "반등 미확인(상단마감·거래량)",
-    "history_bars": 1959,
-    "profile_pnl_proxy": -0.0783,
-    "runup252": 0.2013,
+    "poc": 88.9344,
+    "val": 80.5906,
+    "vah": 95.6094,
+    "rr": 2.32,
+    "overhead": 0.459,
+    "reason": "반등 미확인(거래량)",
+    "history_bars": 1958,
+    "profile_pnl_proxy": -0.0111,
+    "runup252": -0.0271,
     "checks": {
      "터치": true,
-     "회복": true,
-     "상단마감": false,
-     "거래량": false,
-     "신저가아님": true
-    }
-   },
-   "fresh": false,
-   "break_gap": null,
-   "earnings_d": 46,
-   "tactic": "watch",
-   "trend_above_200": false
-  },
-  {
-   "id": "000150-2026-10-17-shelf-watch",
-   "code": "000150",
-   "name": "두산",
-   "ccy": "KRW",
-   "group": "shelf_watch",
-   "entry_kind": "shelf_watch",
-   "stage": 0,
-   "price": 1024000.0,
-   "entry": 1024000.0,
-   "stop": 944720.0,
-   "target": 1305437.5,
-   "shares_1pct": 0,
-   "range_pos": 0.2522,
-   "norm": -17.0,
-   "bear_share": 0.25,
-   "shelf": {
-    "poc": 897312.5,
-    "val": 734062.5,
-    "vah": 1305437.5,
-    "rr": 3.55,
-    "overhead": 0.501,
-    "reason": "반등 미확인(터치·거래량)",
-    "history_bars": 1908,
-    "profile_pnl_proxy": -0.0789,
-    "runup252": 0.8928,
-    "checks": {
-     "터치": false,
      "회복": true,
      "상단마감": true,
      "거래량": false,
@@ -1626,7 +1594,7 @@
    },
    "fresh": false,
    "break_gap": null,
-   "earnings_d": null,
+   "earnings_d": 19,
    "tactic": "watch",
    "trend_above_200": false
   },
@@ -1671,122 +1639,242 @@
    "trend_above_200": false
   },
   {
-   "id": "ETN-2026-10-17-shelf-watch",
-   "code": "ETN",
-   "name": "Eaton Corporation, PLC",
+   "id": "GENI-2026-10-17-shelf-watch",
+   "code": "GENI",
+   "name": "Genius Sports Limited",
    "ccy": "USD",
    "group": "shelf_watch",
    "entry_kind": "shelf_watch",
    "stage": 0,
-   "price": 391.25,
-   "entry": 391.25,
-   "stop": 378.2898,
-   "target": 419.18,
+   "price": 6.58,
+   "entry": 6.58,
+   "stop": 5.9094,
+   "target": 7.9291,
    "shares_1pct": 0,
-   "range_pos": 0.4777,
-   "norm": -18.9,
+   "range_pos": 0.3217,
+   "norm": -20.8,
    "bear_share": 0.25,
    "shelf": {
-    "poc": 405.34,
-    "val": 343.06,
-    "vah": 419.18,
-    "rr": 2.16,
-    "overhead": 0.461,
-    "reason": "반등 미확인(상단마감)",
-    "history_bars": 1959,
-    "profile_pnl_proxy": 0.0275,
-    "runup252": 0.0417,
+    "poc": 6.1447,
+    "val": 4.3603,
+    "vah": 7.9291,
+    "rr": 2.01,
+    "overhead": 0.458,
+    "reason": "반등 미확인(거래량)",
+    "history_bars": 1515,
+    "profile_pnl_proxy": -0.0848,
+    "runup252": -0.4624,
     "checks": {
      "터치": true,
      "회복": true,
-     "상단마감": false,
+     "상단마감": true,
+     "거래량": false,
+     "신저가아님": true
+    }
+   },
+   "fresh": false,
+   "break_gap": null,
+   "earnings_d": -72,
+   "tactic": "watch",
+   "trend_above_200": true
+  },
+  {
+   "id": "VRDN-2026-10-17-shelf-watch",
+   "code": "VRDN",
+   "name": "Viridian Therapeutics, Inc.",
+   "ccy": "USD",
+   "group": "shelf_watch",
+   "entry_kind": "shelf_watch",
+   "stage": 0,
+   "price": 19.56,
+   "entry": 19.56,
+   "stop": 17.6008,
+   "target": 25.0544,
+   "shares_1pct": 0,
+   "range_pos": 0.3022,
+   "norm": -24.6,
+   "bear_share": 0.25,
+   "shelf": {
+    "poc": 17.1381,
+    "val": 13.6198,
+    "vah": 25.0544,
+    "rr": 2.8,
+    "overhead": 0.549,
+    "reason": "반등 미확인(거래량)",
+    "history_bars": 1958,
+    "profile_pnl_proxy": -0.1147,
+    "runup252": -0.1217,
+    "checks": {
+     "터치": true,
+     "회복": true,
+     "상단마감": true,
+     "거래량": false,
+     "신저가아님": true
+    }
+   },
+   "fresh": false,
+   "break_gap": null,
+   "earnings_d": -72,
+   "tactic": "watch",
+   "trend_above_200": false
+  },
+  {
+   "id": "WGS-2026-10-17-shelf-watch",
+   "code": "WGS",
+   "name": "GeneDx Holdings Corp.",
+   "ccy": "USD",
+   "group": "shelf_watch",
+   "entry_kind": "shelf_watch",
+   "stage": 0,
+   "price": 70.22,
+   "entry": 70.22,
+   "stop": 60.7698,
+   "target": 92.8737,
+   "shares_1pct": 0,
+   "range_pos": 0.2741,
+   "norm": -31.1,
+   "bear_share": 0.375,
+   "shelf": {
+    "poc": 63.9862,
+    "val": 35.0987,
+    "vah": 92.8737,
+    "rr": 2.4,
+    "overhead": 0.455,
+    "reason": "반등 미확인(거래량)",
+    "history_bars": 1493,
+    "profile_pnl_proxy": -0.0915,
+    "runup252": -0.3994,
+    "checks": {
+     "터치": true,
+     "회복": true,
+     "상단마감": true,
+     "거래량": false,
+     "신저가아님": true
+    }
+   },
+   "fresh": false,
+   "break_gap": null,
+   "earnings_d": 10,
+   "tactic": "watch",
+   "trend_above_200": false
+  },
+  {
+   "id": "RBLX-2026-10-17-shelf-watch",
+   "code": "RBLX",
+   "name": "Roblox Corporation",
+   "ccy": "USD",
+   "group": "shelf_watch",
+   "entry_kind": "shelf_watch",
+   "stage": 0,
+   "price": 51.13,
+   "entry": 51.13,
+   "stop": 46.06,
+   "target": 63.149,
+   "shares_1pct": 0,
+   "range_pos": 0.1596,
+   "norm": -36.8,
+   "bear_share": 0.5,
+   "shelf": {
+    "poc": 45.1373,
+    "val": 36.1315,
+    "vah": 63.149,
+    "rr": 2.37,
+    "overhead": 0.526,
+    "reason": "반등 미확인(거래량)",
+    "history_bars": 1408,
+    "profile_pnl_proxy": -0.1521,
+    "runup252": -0.631,
+    "checks": {
+     "터치": true,
+     "회복": true,
+     "상단마감": true,
+     "거래량": false,
+     "신저가아님": true
+    }
+   },
+   "fresh": false,
+   "break_gap": null,
+   "earnings_d": 12,
+   "tactic": "watch",
+   "trend_above_200": false
+  },
+  {
+   "id": "HIMS-2026-10-17-shelf-watch",
+   "code": "HIMS",
+   "name": "Hims & Hers Health, Inc.",
+   "ccy": "USD",
+   "group": "shelf_watch",
+   "entry_kind": "shelf_watch",
+   "stage": 0,
+   "price": 29.38,
+   "entry": 29.38,
+   "stop": 25.8034,
+   "target": 36.2971,
+   "shares_1pct": 0,
+   "range_pos": 0.3033,
+   "norm": -43.4,
+   "bear_share": 0.375,
+   "shelf": {
+    "poc": 27.7039,
+    "val": 19.1107,
+    "vah": 36.2971,
+    "rr": 1.93,
+    "overhead": 0.459,
+    "reason": "반등 미확인(신저가아님)",
+    "history_bars": 1782,
+    "profile_pnl_proxy": 0.0033,
+    "runup252": -0.5319,
+    "checks": {
+     "터치": true,
+     "회복": true,
+     "상단마감": true,
      "거래량": true,
-     "신저가아님": true
+     "신저가아님": false
     }
    },
    "fresh": false,
    "break_gap": null,
-   "earnings_d": 18,
+   "earnings_d": -68,
    "tactic": "watch",
-   "trend_above_200": false
+   "trend_above_200": true
   },
   {
-   "id": "LRN-2026-10-17-shelf-watch",
-   "code": "LRN",
-   "name": "Stride, Inc.",
+   "id": "BHVN-2026-10-17-shelf-watch",
+   "code": "BHVN",
+   "name": "Biohaven Ltd.",
    "ccy": "USD",
    "group": "shelf_watch",
    "entry_kind": "shelf_watch",
    "stage": 0,
-   "price": 82.39,
-   "entry": 82.39,
-   "stop": 79.2624,
-   "target": 90.1256,
+   "price": 11.43,
+   "entry": 11.43,
+   "stop": 10.6036,
+   "target": 13.7159,
    "shares_1pct": 0,
-   "range_pos": 0.2306,
-   "norm": -28.3,
+   "range_pos": 0.3563,
+   "norm": -43.4,
    "bear_share": 0.375,
    "shelf": {
-    "poc": 86.1902,
-    "val": 66.5131,
-    "vah": 90.1256,
-    "rr": 2.47,
-    "overhead": 0.398,
-    "reason": "반등 미확인(상단마감·거래량)",
-    "history_bars": 1959,
-    "profile_pnl_proxy": 0.0107,
-    "runup252": -0.4143,
+    "poc": 11.4063,
+    "val": 8.1729,
+    "vah": 13.7159,
+    "rr": 2.77,
+    "overhead": 0.45,
+    "reason": "반등 미확인(거래량)",
+    "history_bars": 1019,
+    "profile_pnl_proxy": -0.031,
+    "runup252": -0.3416,
     "checks": {
      "터치": true,
      "회복": true,
-     "상단마감": false,
+     "상단마감": true,
      "거래량": false,
      "신저가아님": true
     }
    },
    "fresh": false,
    "break_gap": null,
-   "earnings_d": 11,
-   "tactic": "watch",
-   "trend_above_200": false
-  },
-  {
-   "id": "GFS-2026-10-17-shelf-watch",
-   "code": "GFS",
-   "name": "GlobalFoundries Inc.",
-   "ccy": "USD",
-   "group": "shelf_watch",
-   "entry_kind": "shelf_watch",
-   "stage": 0,
-   "price": 47.215,
-   "entry": 47.215,
-   "stop": 44.6949,
-   "target": 53.4577,
-   "shares_1pct": 0,
-   "range_pos": 0.251,
-   "norm": -33.0,
-   "bear_share": 0.375,
-   "shelf": {
-    "poc": 48.4135,
-    "val": 33.281,
-    "vah": 53.4577,
-    "rr": 2.48,
-    "overhead": 0.516,
-    "reason": "반등 미확인(상단마감·거래량)",
-    "history_bars": 1247,
-    "profile_pnl_proxy": -0.0974,
-    "runup252": 0.3656,
-    "checks": {
-     "터치": true,
-     "회복": true,
-     "상단마감": false,
-     "거래량": false,
-     "신저가아님": true
-    }
-   },
-   "fresh": false,
-   "break_gap": null,
-   "earnings_d": null,
+   "earnings_d": 23,
    "tactic": "watch",
    "trend_above_200": false
   },
@@ -1808,7 +1896,7 @@
    "bear_share": 0.5,
    "fresh": true,
    "break_gap": 0.0473,
-   "earnings_d": 4,
+   "earnings_d": 3,
    "tactic": null
   },
   {
@@ -1829,7 +1917,7 @@
    "bear_share": 0.5,
    "fresh": true,
    "break_gap": 0.0483,
-   "earnings_d": 19,
+   "earnings_d": 18,
    "tactic": null
   },
   {
@@ -1850,7 +1938,7 @@
    "bear_share": 0.5,
    "fresh": true,
    "break_gap": 0.0489,
-   "earnings_d": 26,
+   "earnings_d": 25,
    "tactic": null
   },
   {
@@ -1871,7 +1959,7 @@
    "bear_share": 0.375,
    "fresh": true,
    "break_gap": 0.0413,
-   "earnings_d": 18,
+   "earnings_d": 17,
    "tactic": null
   },
   {
@@ -1892,7 +1980,7 @@
    "bear_share": 0.25,
    "fresh": true,
    "break_gap": 0.0067,
-   "earnings_d": -65,
+   "earnings_d": -66,
    "tactic": null
   },
   {
@@ -1913,7 +2001,7 @@
    "bear_share": 0.25,
    "fresh": true,
    "break_gap": 0.019,
-   "earnings_d": 18,
+   "earnings_d": 17,
    "tactic": null
   },
   {
@@ -1934,7 +2022,7 @@
    "bear_share": 0.375,
    "fresh": true,
    "break_gap": 0.0376,
-   "earnings_d": 5,
+   "earnings_d": 4,
    "tactic": null
   },
   {
@@ -1955,7 +2043,7 @@
    "bear_share": 0.375,
    "fresh": true,
    "break_gap": 0.0368,
-   "earnings_d": 12,
+   "earnings_d": 11,
    "tactic": null
   },
   {
@@ -1976,7 +2064,7 @@
    "bear_share": 0.5,
    "fresh": true,
    "break_gap": 0.0473,
-   "earnings_d": 20,
+   "earnings_d": 19,
    "tactic": null
   },
   {
@@ -1997,7 +2085,7 @@
    "bear_share": 0.375,
    "fresh": true,
    "break_gap": 0.0424,
-   "earnings_d": 12,
+   "earnings_d": 11,
    "tactic": null
   },
   {
@@ -2018,7 +2106,7 @@
    "bear_share": 0.5,
    "fresh": true,
    "break_gap": 0.0229,
-   "earnings_d": 20,
+   "earnings_d": 19,
    "tactic": null
   },
   {
@@ -2039,7 +2127,7 @@
    "bear_share": 0.25,
    "fresh": true,
    "break_gap": 0.0129,
-   "earnings_d": 17,
+   "earnings_d": 16,
    "tactic": null
   },
   {
@@ -2060,7 +2148,7 @@
    "bear_share": 0.25,
    "fresh": true,
    "break_gap": 0.0216,
-   "earnings_d": 20,
+   "earnings_d": 19,
    "tactic": {
     "stop_pct": 3.2,
     "pb_price": null,
@@ -2088,7 +2176,7 @@
    "bear_share": 0.375,
    "fresh": true,
    "break_gap": 0.0207,
-   "earnings_d": 26,
+   "earnings_d": 25,
    "tactic": null
   },
   {
@@ -2137,7 +2225,7 @@
    "bear_share": 0.25,
    "fresh": true,
    "break_gap": 0.0219,
-   "earnings_d": 17,
+   "earnings_d": 16,
    "tactic": {
     "stop_pct": 6.6,
     "pb_price": 135.4194,
@@ -2165,7 +2253,7 @@
    "bear_share": 0.25,
    "fresh": true,
    "break_gap": 0.0269,
-   "earnings_d": 5,
+   "earnings_d": 4,
    "tactic": {
     "stop_pct": 5.4,
     "pb_price": 230.5414,
@@ -2173,6 +2261,34 @@
     "mode": "full",
     "label": "⚡ 즉시 분할",
     "desc": "손절폭 5.4%로 타이트 — 현재가에서 1~2회 분할 매수. 기다리는 이득보다 놓치는 비용이 큼"
+   }
+  },
+  {
+   "id": "PAY-2026-10-17-watch",
+   "code": "PAY",
+   "name": "Paymentus Holdings, Inc.",
+   "ccy": "USD",
+   "group": "watch",
+   "entry_kind": "now",
+   "stage": 2,
+   "price": 32.13,
+   "entry": 32.13,
+   "stop": 29.4847,
+   "target": 37.4207,
+   "shares_1pct": 37,
+   "range_pos": 0.477,
+   "norm": -14.8,
+   "bear_share": 0.25,
+   "fresh": true,
+   "break_gap": 0.0097,
+   "earnings_d": 16,
+   "tactic": {
+    "stop_pct": 8.2,
+    "pb_price": 29.7976,
+    "pb_stop_pct": 1.1,
+    "mode": "pullback",
+    "label": "⏳ 눌림 지정가만",
+    "desc": "지금 추격 금지(손절폭 8.2%) — <b>$29.80 눌림 지정가만</b>. 눌리면 손절폭 1.1%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
    }
   },
   {
@@ -2214,7 +2330,7 @@
    "bear_share": 0.25,
    "fresh": true,
    "break_gap": 0.0167,
-   "earnings_d": 18,
+   "earnings_d": 17,
    "tactic": {
     "stop_pct": 5.6,
     "pb_price": 100.9618,
@@ -2270,7 +2386,7 @@
    "bear_share": 0.25,
    "fresh": true,
    "break_gap": 0.0114,
-   "earnings_d": 12,
+   "earnings_d": 11,
    "tactic": {
     "stop_pct": 6.7,
     "pb_price": null,
@@ -2298,7 +2414,7 @@
    "bear_share": 0.25,
    "fresh": true,
    "break_gap": 0.0183,
-   "earnings_d": 4,
+   "earnings_d": 3,
    "tactic": null
   },
   {
@@ -2319,7 +2435,7 @@
    "bear_share": 0.375,
    "fresh": true,
    "break_gap": 0.045,
-   "earnings_d": 1,
+   "earnings_d": 0,
    "tactic": {
     "stop_pct": 4.5,
     "pb_price": 23.6571,
@@ -2347,7 +2463,7 @@
    "bear_share": 0.25,
    "fresh": true,
    "break_gap": 0.0225,
-   "earnings_d": 12,
+   "earnings_d": 11,
    "tactic": {
     "stop_pct": 5.6,
     "pb_price": 42.6574,
@@ -2431,7 +2547,7 @@
    "bear_share": 0.375,
    "fresh": true,
    "break_gap": 0.0174,
-   "earnings_d": 0,
+   "earnings_d": null,
    "tactic": null
   },
   {
@@ -2452,7 +2568,7 @@
    "bear_share": 0.375,
    "fresh": true,
    "break_gap": 0.0159,
-   "earnings_d": 13,
+   "earnings_d": 12,
    "tactic": {
     "stop_pct": 5.8,
     "pb_price": 134.3454,
@@ -2508,7 +2624,7 @@
    "bear_share": 0.25,
    "fresh": true,
    "break_gap": 0.0225,
-   "earnings_d": 83,
+   "earnings_d": 82,
    "tactic": {
     "stop_pct": 5.8,
     "pb_price": 294.665,
@@ -2536,7 +2652,7 @@
    "bear_share": 0.25,
    "fresh": true,
    "break_gap": 0.0163,
-   "earnings_d": -1,
+   "earnings_d": -2,
    "tactic": {
     "stop_pct": 3.1,
     "pb_price": 359.3264,
@@ -2564,7 +2680,7 @@
    "bear_share": 0.5,
    "fresh": true,
    "break_gap": 0.0084,
-   "earnings_d": 24,
+   "earnings_d": 23,
    "tactic": null
   },
   {
@@ -2585,7 +2701,7 @@
    "bear_share": 0.25,
    "fresh": true,
    "break_gap": 0.0652,
-   "earnings_d": 13,
+   "earnings_d": 12,
    "tactic": {
     "stop_pct": 5.0,
     "pb_price": 250.9212,
@@ -2593,6 +2709,34 @@
     "mode": "full",
     "label": "⚡ 즉시 분할",
     "desc": "손절폭 5.0%로 타이트 — 현재가에서 1~2회 분할 매수. 기다리는 이득보다 놓치는 비용이 큼"
+   }
+  },
+  {
+   "id": "CNM-2026-10-17-watch",
+   "code": "CNM",
+   "name": "Core & Main, Inc.",
+   "ccy": "USD",
+   "group": "watch",
+   "entry_kind": "now",
+   "stage": 2,
+   "price": 41.79,
+   "entry": 41.79,
+   "stop": 39.3716,
+   "target": 46.6268,
+   "shares_1pct": 41,
+   "range_pos": 0.1173,
+   "norm": -39.6,
+   "bear_share": 0.5,
+   "fresh": true,
+   "break_gap": 0.0079,
+   "earnings_d": null,
+   "tactic": {
+    "stop_pct": 5.8,
+    "pb_price": 39.415,
+    "pb_stop_pct": 0.1,
+    "mode": "full",
+    "label": "⚡ 즉시 분할",
+    "desc": "손절폭 5.8%로 타이트 — 현재가에서 1~2회 분할 매수. 기다리는 이득보다 놓치는 비용이 큼"
    }
   },
   {
@@ -2613,7 +2757,7 @@
    "bear_share": 0.375,
    "fresh": true,
    "break_gap": 0.0065,
-   "earnings_d": 26,
+   "earnings_d": 25,
    "tactic": {
     "stop_pct": 7.1,
     "pb_price": null,
@@ -2641,7 +2785,7 @@
    "bear_share": 0.5,
    "fresh": true,
    "break_gap": 0.0195,
-   "earnings_d": -71,
+   "earnings_d": -72,
    "tactic": {
     "stop_pct": 7.4,
     "pb_price": 100.8993,
@@ -2669,7 +2813,7 @@
    "bear_share": 0.375,
    "fresh": true,
    "break_gap": 0.0139,
-   "earnings_d": -71,
+   "earnings_d": -72,
    "tactic": null
   },
   {
@@ -2718,7 +2862,7 @@
    "bear_share": 0.375,
    "fresh": true,
    "break_gap": 0.1161,
-   "earnings_d": 19,
+   "earnings_d": 18,
    "tactic": {
     "stop_pct": 7.1,
     "pb_price": 52.0867,
@@ -2746,7 +2890,7 @@
    "bear_share": 0.375,
    "fresh": true,
    "break_gap": 0.0097,
-   "earnings_d": 13,
+   "earnings_d": 12,
    "tactic": {
     "stop_pct": 3.8,
     "pb_price": 45.0741,
@@ -2774,7 +2918,7 @@
    "bear_share": 0.5,
    "fresh": true,
    "break_gap": 0.0072,
-   "earnings_d": 13,
+   "earnings_d": 12,
    "tactic": {
     "stop_pct": 5.2,
     "pb_price": 54.6404,
@@ -2802,7 +2946,7 @@
    "bear_share": 0.5,
    "fresh": true,
    "break_gap": 0.0247,
-   "earnings_d": 11,
+   "earnings_d": 10,
    "tactic": {
     "stop_pct": 8.5,
     "pb_price": 225.51,
@@ -2830,7 +2974,7 @@
    "bear_share": 0.5,
    "fresh": true,
    "break_gap": 0.037,
-   "earnings_d": 13,
+   "earnings_d": 12,
    "tactic": {
     "stop_pct": 5.3,
     "pb_price": null,
@@ -2858,7 +3002,7 @@
    "bear_share": 0.375,
    "fresh": true,
    "break_gap": 0.0179,
-   "earnings_d": -70,
+   "earnings_d": -71,
    "tactic": {
     "stop_pct": 3.4,
     "pb_price": null,
@@ -2886,7 +3030,7 @@
    "bear_share": 0.375,
    "fresh": true,
    "break_gap": 0.0108,
-   "earnings_d": 7,
+   "earnings_d": 6,
    "tactic": {
     "stop_pct": 3.6,
     "pb_price": 24.3415,
@@ -2914,7 +3058,7 @@
    "bear_share": 0.375,
    "fresh": true,
    "break_gap": 0.0242,
-   "earnings_d": 17,
+   "earnings_d": 16,
    "tactic": {
     "stop_pct": 5.1,
     "pb_price": null,
@@ -2970,7 +3114,7 @@
    "bear_share": 0.5,
    "fresh": true,
    "break_gap": 0.0321,
-   "earnings_d": 10,
+   "earnings_d": 9,
    "tactic": null
   },
   {
@@ -2991,7 +3135,7 @@
    "bear_share": 0.5,
    "fresh": true,
    "break_gap": 0.0225,
-   "earnings_d": 18,
+   "earnings_d": 17,
    "tactic": {
     "stop_pct": 9.3,
     "pb_price": 47.16,
@@ -3047,7 +3191,7 @@
    "bear_share": 0.5,
    "fresh": true,
    "break_gap": 0.0118,
-   "earnings_d": -23,
+   "earnings_d": -24,
    "tactic": {
     "stop_pct": 7.6,
     "pb_price": null,
@@ -3075,7 +3219,7 @@
    "bear_share": 0.625,
    "fresh": true,
    "break_gap": 0.061,
-   "earnings_d": 18,
+   "earnings_d": 17,
    "tactic": null
   },
   {
@@ -3096,7 +3240,7 @@
    "bear_share": 0.5,
    "fresh": true,
    "break_gap": 0.0072,
-   "earnings_d": 5,
+   "earnings_d": 4,
    "tactic": {
     "stop_pct": 4.6,
     "pb_price": 70.1733,
@@ -3124,7 +3268,7 @@
    "bear_share": 0.5,
    "fresh": true,
    "break_gap": 0.0134,
-   "earnings_d": 13,
+   "earnings_d": 12,
    "tactic": {
     "stop_pct": 5.5,
     "pb_price": null,
@@ -3152,7 +3296,7 @@
    "bear_share": 0.5,
    "fresh": true,
    "break_gap": 0.0123,
-   "earnings_d": 13,
+   "earnings_d": 12,
    "tactic": {
     "stop_pct": 5.5,
     "pb_price": 34.8625,
@@ -3160,6 +3304,34 @@
     "mode": "full",
     "label": "⚡ 즉시 분할",
     "desc": "손절폭 5.5%로 타이트 — 현재가에서 1~2회 분할 매수. 기다리는 이득보다 놓치는 비용이 큼"
+   }
+  },
+  {
+   "id": "KNF-2026-10-17-watch",
+   "code": "KNF",
+   "name": "Knife Riv Holding Co.",
+   "ccy": "USD",
+   "group": "watch",
+   "entry_kind": "now",
+   "stage": 2,
+   "price": 49.95,
+   "entry": 49.95,
+   "stop": 45.4958,
+   "target": 58.8583,
+   "shares_1pct": 22,
+   "range_pos": 0.0445,
+   "norm": -60.7,
+   "bear_share": 0.5,
+   "fresh": true,
+   "break_gap": 0.0272,
+   "earnings_d": 17,
+   "tactic": {
+    "stop_pct": 8.9,
+    "pb_price": 47.79,
+    "pb_stop_pct": 4.8,
+    "mode": "pullback",
+    "label": "⏳ 눌림 지정가만",
+    "desc": "지금 추격 금지(손절폭 8.9%) — <b>$47.79 눌림 지정가만</b>. 눌리면 손절폭 4.8%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
    }
   },
   {
@@ -3180,7 +3352,7 @@
    "bear_share": 0.5,
    "fresh": true,
    "break_gap": 0.0165,
-   "earnings_d": -57,
+   "earnings_d": -58,
    "tactic": {
     "stop_pct": 5.6,
     "pb_price": 190.595,
@@ -3264,7 +3436,7 @@
    "bear_share": 0.5,
    "fresh": true,
    "break_gap": 0.0192,
-   "earnings_d": 32,
+   "earnings_d": 31,
    "tactic": {
     "stop_pct": 6.5,
     "pb_price": 56.39,
@@ -3292,7 +3464,7 @@
    "bear_share": 0.5,
    "fresh": true,
    "break_gap": 0.0058,
-   "earnings_d": 20,
+   "earnings_d": 19,
    "tactic": {
     "stop_pct": 8.9,
     "pb_price": 20.105,
@@ -3300,6 +3472,34 @@
     "mode": "pullback",
     "label": "⏳ 눌림 지정가만",
     "desc": "지금 추격 금지(손절폭 8.9%) — <b>$20.10 눌림 지정가만</b>. 눌리면 손절폭 1.3%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
+   }
+  },
+  {
+   "id": "ARRY-2026-10-17-watch",
+   "code": "ARRY",
+   "name": "Array Technologies, Inc.",
+   "ccy": "USD",
+   "group": "watch",
+   "entry_kind": "now",
+   "stage": 2,
+   "price": 3.57,
+   "entry": 3.57,
+   "stop": 3.1449,
+   "target": 4.4202,
+   "shares_1pct": 235,
+   "range_pos": 0.0281,
+   "norm": -68.9,
+   "bear_share": 0.5,
+   "fresh": true,
+   "break_gap": 0.0552,
+   "earnings_d": 19,
+   "tactic": {
+    "stop_pct": 11.9,
+    "pb_price": 3.32,
+    "pb_stop_pct": 5.3,
+    "mode": "pullback",
+    "label": "⏳ 눌림 지정가만",
+    "desc": "지금 추격 금지(손절폭 11.9%) — <b>$3.32 눌림 지정가만</b>. 눌리면 손절폭 5.3%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
    }
   },
   {
@@ -3320,7 +3520,7 @@
    "bear_share": 0.5,
    "fresh": true,
    "break_gap": 0.078,
-   "earnings_d": 13,
+   "earnings_d": 12,
    "tactic": {
     "stop_pct": 8.8,
     "pb_price": null,
@@ -3329,6 +3529,55 @@
     "label": "⏳ 눌림 지정가만",
     "desc": "지금 추격 금지(손절폭 8.8% · 단기 이격) — 받칠 지지에 눌릴 때까지 대기"
    }
+  },
+  {
+   "id": "QS-2026-10-17-watch",
+   "code": "QS",
+   "name": "QuantumScape Corporation",
+   "ccy": "USD",
+   "group": "watch",
+   "entry_kind": "now",
+   "stage": 2,
+   "price": 4.23,
+   "entry": 4.23,
+   "stop": 3.7161,
+   "target": 5.2578,
+   "shares_1pct": 194,
+   "range_pos": 0.0282,
+   "norm": -68.9,
+   "bear_share": 0.5,
+   "fresh": true,
+   "break_gap": 0.0147,
+   "earnings_d": 4,
+   "tactic": {
+    "stop_pct": 12.1,
+    "pb_price": 3.85,
+    "pb_stop_pct": 3.5,
+    "mode": "pullback",
+    "label": "⏳ 눌림 지정가만",
+    "desc": "지금 추격 금지(손절폭 12.1% · 단기 이격) — <b>$3.85 눌림 지정가만</b>. 눌리면 손절폭 3.5%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
+   }
+  },
+  {
+   "id": "EPAM-2026-10-17-watch",
+   "code": "EPAM",
+   "name": "EPAM Systems, Inc.",
+   "ccy": "USD",
+   "group": "watch",
+   "entry_kind": "pullback",
+   "stage": 1,
+   "price": 122.26,
+   "entry": 108.7334,
+   "stop": 98.6073,
+   "target": 128.9858,
+   "shares_1pct": 9,
+   "range_pos": 0.3292,
+   "norm": 5.7,
+   "bear_share": 0.375,
+   "fresh": true,
+   "break_gap": -0.0035,
+   "earnings_d": -72,
+   "tactic": null
   },
   {
    "id": "017800-2026-10-17-watch",
@@ -3432,7 +3681,7 @@
    "bear_share": 0.25,
    "fresh": true,
    "break_gap": -0.0049,
-   "earnings_d": -71,
+   "earnings_d": -72,
    "tactic": {
     "stop_pct": 7.0,
     "pb_price": null,
@@ -3440,6 +3689,62 @@
     "mode": "half",
     "label": "⚖ 반반 진입",
     "desc": "손절폭 7.0% — 절반만 현재가, 나머지는 눌림 확인 후 추가"
+   }
+  },
+  {
+   "id": "319400-2026-10-17-watch",
+   "code": "319400",
+   "name": "현대무벡스",
+   "ccy": "KRW",
+   "group": "watch",
+   "entry_kind": "now",
+   "stage": 1,
+   "price": 18810.0,
+   "entry": 18810.0,
+   "stop": 16450.0257,
+   "target": 23529.9486,
+   "shares_1pct": 42,
+   "range_pos": 0.2534,
+   "norm": -11.3,
+   "bear_share": 0.375,
+   "fresh": true,
+   "break_gap": -0.0178,
+   "earnings_d": null,
+   "tactic": {
+    "stop_pct": 12.5,
+    "pb_price": 17500.0,
+    "pb_stop_pct": 6.0,
+    "mode": "pullback",
+    "label": "⏳ 눌림 지정가만",
+    "desc": "지금 추격 금지(손절폭 12.5%) — <b>17,500원 눌림 지정가만</b>. 눌리면 손절폭 6.0%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
+   }
+  },
+  {
+   "id": "APG-2026-10-17-watch",
+   "code": "APG",
+   "name": "APi Group Corporation",
+   "ccy": "USD",
+   "group": "watch",
+   "entry_kind": "now",
+   "stage": 1,
+   "price": 40.33,
+   "entry": 40.33,
+   "stop": 38.1689,
+   "target": 44.6523,
+   "shares_1pct": 46,
+   "range_pos": 0.4135,
+   "norm": -13.2,
+   "bear_share": 0.125,
+   "fresh": true,
+   "break_gap": -0.0174,
+   "earnings_d": 12,
+   "tactic": {
+    "stop_pct": 5.4,
+    "pb_price": 39.9057,
+    "pb_stop_pct": 4.4,
+    "mode": "full",
+    "label": "⚡ 즉시 분할",
+    "desc": "손절폭 5.4%로 타이트 — 현재가에서 1~2회 분할 매수. 기다리는 이득보다 놓치는 비용이 큼"
    }
   },
   {
@@ -3471,6 +3776,27 @@
    }
   },
   {
+   "id": "BIRK-2026-10-17-watch",
+   "code": "BIRK",
+   "name": "Birkenstock Holding plc",
+   "ccy": "USD",
+   "group": "watch",
+   "entry_kind": "pullback",
+   "stage": 1,
+   "price": 35.89,
+   "entry": 34.9194,
+   "stop": 32.6059,
+   "target": 39.5464,
+   "shares_1pct": 43,
+   "range_pos": 0.2865,
+   "norm": -22.6,
+   "bear_share": 0.5,
+   "fresh": true,
+   "break_gap": -0.0186,
+   "earnings_d": 61,
+   "tactic": null
+  },
+  {
    "id": "CSR-2026-10-17-watch",
    "code": "CSR",
    "name": "D/B/A Centerspace",
@@ -3488,7 +3814,7 @@
    "bear_share": 0.25,
    "fresh": true,
    "break_gap": -0.002,
-   "earnings_d": 17,
+   "earnings_d": 16,
    "tactic": null
   },
   {
@@ -3509,7 +3835,7 @@
    "bear_share": 0.25,
    "fresh": true,
    "break_gap": 0.0014,
-   "earnings_d": 10,
+   "earnings_d": 9,
    "tactic": {
     "stop_pct": 4.3,
     "pb_price": 173.3146,
@@ -3537,7 +3863,7 @@
    "bear_share": 0.5,
    "fresh": true,
    "break_gap": -0.0002,
-   "earnings_d": -71,
+   "earnings_d": -72,
    "tactic": null
   },
   {
@@ -3569,6 +3895,27 @@
    }
   },
   {
+   "id": "DOLE-2026-10-17-watch",
+   "code": "DOLE",
+   "name": "Dole plc",
+   "ccy": "USD",
+   "group": "watch",
+   "entry_kind": "breakout",
+   "stage": 1,
+   "price": 13.41,
+   "entry": 13.54,
+   "stop": 13.0038,
+   "target": 14.6124,
+   "shares_1pct": 186,
+   "range_pos": 0.2198,
+   "norm": -26.4,
+   "bear_share": 0.375,
+   "fresh": true,
+   "break_gap": -0.0176,
+   "earnings_d": -68,
+   "tactic": null
+  },
+  {
    "id": "KBR-2026-10-17-watch",
    "code": "KBR",
    "name": "KBR, Inc.",
@@ -3586,7 +3933,7 @@
    "bear_share": 0.375,
    "fresh": true,
    "break_gap": -0.0051,
-   "earnings_d": 6,
+   "earnings_d": 5,
    "tactic": null
   },
   {
@@ -3607,7 +3954,7 @@
    "bear_share": 0.25,
    "fresh": true,
    "break_gap": -0.0132,
-   "earnings_d": 5,
+   "earnings_d": 4,
    "tactic": {
     "stop_pct": 3.8,
     "pb_price": 38.854,
@@ -3615,6 +3962,34 @@
     "mode": "full",
     "label": "⚡ 즉시 분할",
     "desc": "손절폭 3.8%로 타이트 — 현재가에서 1~2회 분할 매수. 기다리는 이득보다 놓치는 비용이 큼"
+   }
+  },
+  {
+   "id": "KHC-2026-10-17-watch",
+   "code": "KHC",
+   "name": "The Kraft Heinz Company",
+   "ccy": "USD",
+   "group": "watch",
+   "entry_kind": "now",
+   "stage": 1,
+   "price": 23.28,
+   "entry": 23.28,
+   "stop": 22.0942,
+   "target": 25.6516,
+   "shares_1pct": 84,
+   "range_pos": 0.3182,
+   "norm": -32.8,
+   "bear_share": 0.25,
+   "fresh": true,
+   "break_gap": -0.0114,
+   "earnings_d": null,
+   "tactic": {
+    "stop_pct": 5.1,
+    "pb_price": null,
+    "pb_stop_pct": null,
+    "mode": "full",
+    "label": "⚡ 즉시 분할",
+    "desc": "손절폭 5.1%로 타이트 — 현재가에서 1~2회 분할 매수. 기다리는 이득보다 놓치는 비용이 큼"
    }
   },
   {
@@ -3635,7 +4010,7 @@
    "bear_share": 0.25,
    "fresh": true,
    "break_gap": -0.0093,
-   "earnings_d": -2,
+   "earnings_d": -3,
    "tactic": {
     "stop_pct": 4.9,
     "pb_price": 92.1274,
@@ -3691,7 +4066,7 @@
    "bear_share": 0.5,
    "fresh": true,
    "break_gap": -0.0164,
-   "earnings_d": -43,
+   "earnings_d": -44,
    "tactic": null
   },
   {
@@ -3740,7 +4115,7 @@
    "bear_share": 0.375,
    "fresh": true,
    "break_gap": -0.0001,
-   "earnings_d": 14,
+   "earnings_d": 13,
    "tactic": null
   },
   {
@@ -3761,7 +4136,7 @@
    "bear_share": 0.5,
    "fresh": true,
    "break_gap": 0.0042,
-   "earnings_d": 13,
+   "earnings_d": 12,
    "tactic": null
   },
   {
@@ -3782,7 +4157,7 @@
    "bear_share": 0.375,
    "fresh": true,
    "break_gap": 0.0015,
-   "earnings_d": 10,
+   "earnings_d": 9,
    "tactic": null
   },
   {
@@ -3803,7 +4178,7 @@
    "bear_share": 0.375,
    "fresh": true,
    "break_gap": -0.014,
-   "earnings_d": 12,
+   "earnings_d": 11,
    "tactic": {
     "stop_pct": 9.6,
     "pb_price": null,
@@ -3831,7 +4206,7 @@
    "bear_share": 0.5,
    "fresh": true,
    "break_gap": 0.0018,
-   "earnings_d": 20,
+   "earnings_d": 19,
    "tactic": {
     "stop_pct": 7.6,
     "pb_price": 76.3982,
@@ -3859,7 +4234,7 @@
    "bear_share": 0.375,
    "fresh": true,
    "break_gap": -0.0041,
-   "earnings_d": -71,
+   "earnings_d": -72,
    "tactic": {
     "stop_pct": 6.8,
     "pb_price": 60.08,
@@ -3887,7 +4262,7 @@
    "bear_share": 0.375,
    "fresh": true,
    "break_gap": -0.0133,
-   "earnings_d": -65,
+   "earnings_d": -66,
    "tactic": {
     "stop_pct": 8.9,
     "pb_price": 19.965,
@@ -3915,7 +4290,7 @@
    "bear_share": 0.375,
    "fresh": true,
    "break_gap": 0.0047,
-   "earnings_d": -65,
+   "earnings_d": -66,
    "tactic": {
     "stop_pct": 4.8,
     "pb_price": 66.4575,
@@ -3923,6 +4298,34 @@
     "mode": "full",
     "label": "⚡ 즉시 분할",
     "desc": "손절폭 4.8%로 타이트 — 현재가에서 1~2회 분할 매수. 기다리는 이득보다 놓치는 비용이 큼"
+   }
+  },
+  {
+   "id": "ROOT-2026-10-17-watch",
+   "code": "ROOT",
+   "name": "Root, Inc.",
+   "ccy": "USD",
+   "group": "watch",
+   "entry_kind": "now",
+   "stage": 1,
+   "price": 50.53,
+   "entry": 50.53,
+   "stop": 46.9717,
+   "target": 57.6466,
+   "shares_1pct": 28,
+   "range_pos": 0.1921,
+   "norm": -40.6,
+   "bear_share": 0.375,
+   "fresh": true,
+   "break_gap": -0.0028,
+   "earnings_d": null,
+   "tactic": {
+    "stop_pct": 7.0,
+    "pb_price": 50.0456,
+    "pb_stop_pct": 6.1,
+    "mode": "pullback",
+    "label": "⏳ 눌림 지정가만",
+    "desc": "지금 추격 금지(손절폭 7.0% · 단기 이격) — <b>$50.05 눌림 지정가만</b>. 눌리면 손절폭 6.1%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
    }
   },
   {
@@ -3943,7 +4346,7 @@
    "bear_share": 0.375,
    "fresh": true,
    "break_gap": -0.0068,
-   "earnings_d": 21,
+   "earnings_d": 20,
    "tactic": {
     "stop_pct": 3.7,
     "pb_price": null,
@@ -3951,6 +4354,90 @@
     "mode": "full",
     "label": "⚡ 즉시 분할",
     "desc": "손절폭 3.7%로 타이트 — 현재가에서 1~2회 분할 매수. 기다리는 이득보다 놓치는 비용이 큼"
+   }
+  },
+  {
+   "id": "HIMS-2026-10-17-watch",
+   "code": "HIMS",
+   "name": "Hims & Hers Health, Inc.",
+   "ccy": "USD",
+   "group": "watch",
+   "entry_kind": "now",
+   "stage": 1,
+   "price": 29.38,
+   "entry": 29.38,
+   "stop": 25.5761,
+   "target": 36.9878,
+   "shares_1pct": 26,
+   "range_pos": 0.3033,
+   "norm": -43.4,
+   "bear_share": 0.375,
+   "fresh": true,
+   "break_gap": -0.0069,
+   "earnings_d": -68,
+   "tactic": {
+    "stop_pct": 12.9,
+    "pb_price": 28.9891,
+    "pb_stop_pct": 11.8,
+    "mode": "pullback",
+    "label": "⏳ 눌림 지정가만",
+    "desc": "지금 추격 금지(손절폭 12.9% · 단기 이격) — <b>$28.99 눌림 지정가만</b>. 눌리면 손절폭 11.8%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
+   }
+  },
+  {
+   "id": "CWK-2026-10-17-watch",
+   "code": "CWK",
+   "name": "Cushman & Wakefield Ltd.",
+   "ccy": "USD",
+   "group": "watch",
+   "entry_kind": "now",
+   "stage": 1,
+   "price": 11.61,
+   "entry": 11.61,
+   "stop": 10.5679,
+   "target": 13.6941,
+   "shares_1pct": 95,
+   "range_pos": 0.112,
+   "norm": -47.2,
+   "bear_share": 0.5,
+   "fresh": true,
+   "break_gap": -0.0043,
+   "earnings_d": null,
+   "tactic": {
+    "stop_pct": 9.0,
+    "pb_price": 10.88,
+    "pb_stop_pct": 2.9,
+    "mode": "pullback",
+    "label": "⏳ 눌림 지정가만",
+    "desc": "지금 추격 금지(손절폭 9.0%) — <b>$10.88 눌림 지정가만</b>. 눌리면 손절폭 2.9%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
+   }
+  },
+  {
+   "id": "FTAI-2026-10-17-watch",
+   "code": "FTAI",
+   "name": "FTAI Aviation Ltd.",
+   "ccy": "USD",
+   "group": "watch",
+   "entry_kind": "now",
+   "stage": 1,
+   "price": 168.56,
+   "entry": 168.56,
+   "stop": 150.3756,
+   "target": 204.9288,
+   "shares_1pct": 5,
+   "range_pos": 0.1095,
+   "norm": -47.2,
+   "bear_share": 0.5,
+   "fresh": true,
+   "break_gap": -0.0079,
+   "earnings_d": 9,
+   "tactic": {
+    "stop_pct": 10.8,
+    "pb_price": 156.34,
+    "pb_stop_pct": 3.8,
+    "mode": "pullback",
+    "label": "⏳ 눌림 지정가만",
+    "desc": "지금 추격 금지(손절폭 10.8% · 단기 이격) — <b>$156.34 눌림 지정가만</b>. 눌리면 손절폭 3.8%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
    }
   },
   {
@@ -3971,7 +4458,7 @@
    "bear_share": 0.375,
    "fresh": true,
    "break_gap": -0.0162,
-   "earnings_d": 17,
+   "earnings_d": 16,
    "tactic": {
     "stop_pct": 4.9,
     "pb_price": 73.8012,
@@ -3979,6 +4466,34 @@
     "mode": "full",
     "label": "⚡ 즉시 분할",
     "desc": "손절폭 4.9%로 타이트 — 현재가에서 1~2회 분할 매수. 기다리는 이득보다 놓치는 비용이 큼"
+   }
+  },
+  {
+   "id": "NBHC-2026-10-17-watch",
+   "code": "NBHC",
+   "name": "National Bank Holdings Corporation",
+   "ccy": "USD",
+   "group": "watch",
+   "entry_kind": "now",
+   "stage": 1,
+   "price": 37.74,
+   "entry": 37.74,
+   "stop": 36.1983,
+   "target": 40.8233,
+   "shares_1pct": 64,
+   "range_pos": 0.2193,
+   "norm": -49.2,
+   "bear_share": 0.375,
+   "fresh": true,
+   "break_gap": -0.0109,
+   "earnings_d": 10,
+   "tactic": {
+    "stop_pct": 4.1,
+    "pb_price": 37.6159,
+    "pb_stop_pct": 3.8,
+    "mode": "full",
+    "label": "⚡ 즉시 분할",
+    "desc": "손절폭 4.1%로 타이트 — 현재가에서 1~2회 분할 매수. 기다리는 이득보다 놓치는 비용이 큼"
    }
   },
   {
@@ -3999,7 +4514,7 @@
    "bear_share": 0.375,
    "fresh": true,
    "break_gap": 0.0046,
-   "earnings_d": 11,
+   "earnings_d": 10,
    "tactic": {
     "stop_pct": 3.5,
     "pb_price": 63.4725,
@@ -4027,8 +4542,36 @@
    "bear_share": 0.5,
    "fresh": true,
    "break_gap": -0.0154,
-   "earnings_d": 11,
+   "earnings_d": 10,
    "tactic": null
+  },
+  {
+   "id": "AA-2026-10-17-watch",
+   "code": "AA",
+   "name": "Alcoa Corporation",
+   "ccy": "USD",
+   "group": "watch",
+   "entry_kind": "now",
+   "stage": 1,
+   "price": 40.42,
+   "entry": 40.42,
+   "stop": 37.3624,
+   "target": 46.5353,
+   "shares_1pct": 32,
+   "range_pos": 0.1076,
+   "norm": -55.7,
+   "bear_share": 0.5,
+   "fresh": true,
+   "break_gap": -0.0136,
+   "earnings_d": 96,
+   "tactic": {
+    "stop_pct": 7.6,
+    "pb_price": 39.9941,
+    "pb_stop_pct": 6.6,
+    "mode": "half",
+    "label": "⚖ 반반 진입",
+    "desc": "손절폭 7.6% — 절반은 현재가, 절반은 눌림 $39.99 지정가(거기선 손절폭 6.6%)"
+   }
   },
   {
    "id": "EVR-2026-10-17-watch",
@@ -4048,7 +4591,7 @@
    "bear_share": 0.5,
    "fresh": true,
    "break_gap": 0.0039,
-   "earnings_d": 12,
+   "earnings_d": 11,
    "tactic": {
     "stop_pct": 6.9,
     "pb_price": 250.25,
@@ -4076,7 +4619,7 @@
    "bear_share": 0.5,
    "fresh": true,
    "break_gap": -0.0105,
-   "earnings_d": 6,
+   "earnings_d": 5,
    "tactic": {
     "stop_pct": 6.1,
     "pb_price": 83.91,
@@ -4104,7 +4647,7 @@
    "bear_share": 0.5,
    "fresh": true,
    "break_gap": -0.0098,
-   "earnings_d": 13,
+   "earnings_d": 12,
    "tactic": {
     "stop_pct": 6.9,
     "pb_price": 58.95,
@@ -4132,7 +4675,7 @@
    "bear_share": 0.5,
    "fresh": false,
    "break_gap": 0.0821,
-   "earnings_d": 20,
+   "earnings_d": 19,
    "tactic": null
   },
   {
@@ -4174,7 +4717,7 @@
    "bear_share": 0.25,
    "fresh": false,
    "break_gap": 0.1015,
-   "earnings_d": 33,
+   "earnings_d": 32,
    "tactic": null
   },
   {
@@ -4195,7 +4738,7 @@
    "bear_share": 0.5,
    "fresh": false,
    "break_gap": 0.1383,
-   "earnings_d": 11,
+   "earnings_d": 10,
    "tactic": null
   },
   {
@@ -4216,7 +4759,7 @@
    "bear_share": 0.25,
    "fresh": false,
    "break_gap": 0.0892,
-   "earnings_d": 53,
+   "earnings_d": 52,
    "tactic": null
   },
   {
@@ -4237,7 +4780,7 @@
    "bear_share": 0.375,
    "fresh": false,
    "break_gap": 0.067,
-   "earnings_d": -36,
+   "earnings_d": -37,
    "tactic": null
   },
   {
@@ -4258,7 +4801,7 @@
    "bear_share": 0.375,
    "fresh": false,
    "break_gap": 0.0572,
-   "earnings_d": -11,
+   "earnings_d": -12,
    "tactic": null
   },
   {
@@ -4279,7 +4822,7 @@
    "bear_share": 0.375,
    "fresh": false,
    "break_gap": 0.1899,
-   "earnings_d": 34,
+   "earnings_d": 33,
    "tactic": null
   },
   {
@@ -4321,7 +4864,7 @@
    "bear_share": 0.5,
    "fresh": false,
    "break_gap": 0.0725,
-   "earnings_d": 13,
+   "earnings_d": 12,
    "tactic": null
   },
   {
@@ -4342,7 +4885,7 @@
    "bear_share": 0.5,
    "fresh": false,
    "break_gap": 0.0528,
-   "earnings_d": 6,
+   "earnings_d": 5,
    "tactic": null
   },
   {
@@ -4405,7 +4948,7 @@
    "bear_share": 0.375,
    "fresh": false,
    "break_gap": 0.0713,
-   "earnings_d": 21,
+   "earnings_d": 20,
    "tactic": null
   },
   {
@@ -4426,7 +4969,7 @@
    "bear_share": 0.375,
    "fresh": false,
    "break_gap": 0.1109,
-   "earnings_d": -43,
+   "earnings_d": -44,
    "tactic": null
   },
   {
@@ -4447,7 +4990,7 @@
    "bear_share": 0.5,
    "fresh": false,
    "break_gap": 0.1789,
-   "earnings_d": -65,
+   "earnings_d": -66,
    "tactic": null
   },
   {
@@ -4468,7 +5011,7 @@
    "bear_share": 0.375,
    "fresh": false,
    "break_gap": 0.081,
-   "earnings_d": 17,
+   "earnings_d": 16,
    "tactic": null
   },
   {
@@ -4489,7 +5032,7 @@
    "bear_share": 0.375,
    "fresh": false,
    "break_gap": 0.4438,
-   "earnings_d": -71,
+   "earnings_d": -72,
    "tactic": null
   },
   {
@@ -4510,7 +5053,7 @@
    "bear_share": 0.5,
    "fresh": false,
    "break_gap": 0.098,
-   "earnings_d": 12,
+   "earnings_d": 11,
    "tactic": null
   },
   {
@@ -4531,7 +5074,7 @@
    "bear_share": 0.375,
    "fresh": false,
    "break_gap": 0.0549,
-   "earnings_d": 19,
+   "earnings_d": 18,
    "tactic": null
   },
   {
@@ -4552,7 +5095,7 @@
    "bear_share": 0.5,
    "fresh": false,
    "break_gap": 0.1324,
-   "earnings_d": -71,
+   "earnings_d": -72,
    "tactic": null
   },
   {
@@ -4573,7 +5116,7 @@
    "bear_share": 0.5,
    "fresh": false,
    "break_gap": 0.0875,
-   "earnings_d": 20,
+   "earnings_d": 19,
    "tactic": null
   },
   {
@@ -4594,7 +5137,7 @@
    "bear_share": 0.625,
    "fresh": false,
    "break_gap": 0.1631,
-   "earnings_d": 13,
+   "earnings_d": 12,
    "tactic": null
   },
   {
@@ -4615,7 +5158,7 @@
    "bear_share": 0.5,
    "fresh": false,
    "break_gap": 0.1741,
-   "earnings_d": 6,
+   "earnings_d": 5,
    "tactic": null
   },
   {
@@ -4636,7 +5179,7 @@
    "bear_share": 0.5,
    "fresh": false,
    "break_gap": 0.1187,
-   "earnings_d": -17,
+   "earnings_d": -18,
    "tactic": null
   },
   {
@@ -4657,7 +5200,7 @@
    "bear_share": 0.5,
    "fresh": false,
    "break_gap": 0.0784,
-   "earnings_d": 18,
+   "earnings_d": 17,
    "tactic": null
   },
   {
