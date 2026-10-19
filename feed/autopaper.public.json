@@ -1,10 +1,10 @@
 {
- "generated_at": "2026-10-19T22:02:29.544196+09:00",
+ "generated_at": "2026-10-19T22:31:38.297409+09:00",
  "updated": "2026-10-19",
  "start": 100000000,
- "cash": 34854155,
- "equity": 93166747,
- "ret_pct": -6.83,
+ "cash": 27882774,
+ "equity": 93241569,
+ "ret_pct": -6.76,
  "positions": [
   {
    "code": "BKE",
@@ -12,14 +12,14 @@
    "ccy": "USD",
    "q": 48,
    "avg": 43.09,
-   "price": 46.5,
+   "price": 46.45000076293945,
    "stop": 44.17199862670898,
    "target": 47.1138,
    "half_done": true,
    "opened": "2026-09-29",
-   "pl_krw": 218382,
-   "pl_pct": 7.91,
-   "price_age_min": 7.9
+   "pl_krw": 215180,
+   "pl_pct": 7.8,
+   "price_age_min": 0.4
   },
   {
    "code": "TEL",
@@ -27,14 +27,14 @@
    "ccy": "USD",
    "q": 18,
    "avg": 213.675,
-   "price": 212.63999938964844,
+   "price": 215.2400054931641,
    "stop": 202.2342,
    "target": 236.5566,
    "half_done": false,
    "opened": "2026-09-30",
-   "pl_krw": -24856,
-   "pl_pct": -0.48,
-   "price_age_min": 7.9
+   "pl_krw": 37585,
+   "pl_pct": 0.73,
+   "price_age_min": 0.4
   },
   {
    "code": "DOV",
@@ -49,7 +49,7 @@
    "opened": "2026-09-30",
    "pl_krw": 262637,
    "pl_pct": 3.35,
-   "price_age_min": 10.7
+   "price_age_min": 0.4
   },
   {
    "code": "CRAI",
@@ -57,29 +57,14 @@
    "ccy": "USD",
    "q": 16,
    "avg": 164.4,
-   "price": 178.08999633789062,
+   "price": 176.89500427246094,
    "stop": 164.4,
    "target": 186.8795,
    "half_done": true,
    "opened": "2026-10-01",
-   "pl_krw": 292243,
-   "pl_pct": 8.33,
-   "price_age_min": 7.9
-  },
-  {
-   "code": "GE",
-   "name": "GE Aerospace",
-   "ccy": "USD",
-   "q": 1,
-   "avg": 314.62,
-   "price": 313.8299865722656,
-   "stop": 297.5081,
-   "target": 348.8438,
-   "half_done": false,
-   "opened": "2026-10-01",
-   "pl_krw": -1054,
-   "pl_pct": -0.25,
-   "price_age_min": 10.9
+   "pl_krw": 266733,
+   "pl_pct": 7.6,
+   "price_age_min": 0.4
   },
   {
    "code": "088980",
@@ -94,7 +79,7 @@
    "opened": "2026-10-01",
    "pl_krw": -57780,
    "pl_pct": -0.92,
-   "price_age_min": 7.9
+   "price_age_min": 0.4
   },
   {
    "code": "COST",
@@ -102,14 +87,14 @@
    "ccy": "USD",
    "q": 1,
    "avg": 943.035,
-   "price": 989.1099853515624,
+   "price": 986.177978515625,
    "stop": 958.3645122070312,
    "target": 1003.1489,
    "half_done": true,
    "opened": "2026-10-07",
-   "pl_krw": 61473,
-   "pl_pct": 4.89,
-   "price_age_min": 11.0
+   "pl_krw": 57561,
+   "pl_pct": 4.57,
+   "price_age_min": 0.4
   },
   {
    "code": "AES",
@@ -117,14 +102,14 @@
    "ccy": "USD",
    "q": 11,
    "avg": 14.92,
-   "price": 14.949999809265137,
+   "price": 14.95199966430664,
    "stop": 14.4724,
    "target": 15.8152,
    "half_done": false,
    "opened": "2026-10-09",
-   "pl_krw": 440,
-   "pl_pct": 0.2,
-   "price_age_min": 7.9
+   "pl_krw": 470,
+   "pl_pct": 0.21,
+   "price_age_min": 0.4
   },
   {
    "code": "TRMB",
@@ -132,14 +117,14 @@
    "ccy": "USD",
    "q": 208,
    "avg": 59.85,
-   "price": 59.459999084472656,
+   "price": 59.619998931884766,
    "stop": 56.5187,
    "target": 66.5126,
    "half_done": false,
    "opened": "2026-10-09",
-   "pl_krw": -108231,
-   "pl_pct": -0.65,
-   "price_age_min": 7.8
+   "pl_krw": -63828,
+   "pl_pct": -0.38,
+   "price_age_min": 0.4
   },
   {
    "code": "TSCO",
@@ -154,7 +139,7 @@
    "opened": "2026-10-12",
    "pl_krw": 74715,
    "pl_pct": 0.97,
-   "price_age_min": 7.8
+   "price_age_min": 0.4
   },
   {
    "code": "BDC",
@@ -169,7 +154,22 @@
    "opened": "2026-10-12",
    "pl_krw": -300622,
    "pl_pct": -4.85,
-   "price_age_min": 7.8
+   "price_age_min": 0.4
+  },
+  {
+   "code": "CHKP",
+   "name": "Check Point Software Technologies Ltd.",
+   "ccy": "USD",
+   "q": 40,
+   "avg": 138.485,
+   "price": 138.48500061035156,
+   "stop": 129.88,
+   "target": 155.695,
+   "half_done": false,
+   "opened": "2026-10-19",
+   "pl_krw": 0,
+   "pl_pct": 0.0,
+   "price_age_min": 0.2
   }
  ],
  "pending": [
@@ -199,9 +199,36 @@
     "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권35% · 체크4/6 · 손절폭8.3%"
    },
    "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권35% · 체크4/6 · 손절폭8.3%"
+  },
+  {
+   "code": "CHKP",
+   "name": "Check Point Software Technologies Ltd.",
+   "ccy": "USD",
+   "limit": 135.4194,
+   "stop": 129.88,
+   "target": 155.695,
+   "q": 23,
+   "created": "2026-10-19",
+   "atr": 4.3025,
+   "plan": {
+    "entry": 138.485,
+    "stop": 129.88,
+    "target": 155.695,
+    "pb": 135.4194,
+    "tactic": "half"
+   },
+   "ctx": {
+    "mode": "half",
+    "fresh": true,
+    "stage": 3,
+    "rp": 27,
+    "rec": 4,
+    "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권27% · 체크4/6 · 손절폭6.2%"
+   },
+   "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권27% · 체크4/6 · 손절폭6.2%"
   }
  ],
- "trades": 46,
+ "trades": 47,
  "win_trades": 22,
  "pos_cap_pct": 33.3,
  "cap_violations": [],
@@ -209,17 +236,17 @@
  "fx": 1334.2,
  "stats": {
   "all": {
-   "n": 46,
+   "n": 47,
    "win": 22,
-   "win_rate": 48,
-   "avg_r": -0.19
+   "win_rate": 47,
+   "avg_r": -0.18
   },
   "by_mode": {
    "full": {
-    "n": 23,
+    "n": 24,
     "win": 9,
-    "win_rate": 39,
-    "avg_r": -0.3
+    "win_rate": 38,
+    "avg_r": -0.29
    },
    "half": {
     "n": 14,
@@ -235,9 +262,9 @@
    }
   },
   "fresh": {
-   "n": 44,
+   "n": 45,
    "win": 21,
-   "win_rate": 48,
+   "win_rate": 47,
    "avg_r": -0.19
   },
   "stale": {
@@ -248,9 +275,9 @@
   },
   "by_stage": {
    "3": {
-    "n": 44,
+    "n": 45,
     "win": 21,
-    "win_rate": 48,
+    "win_rate": 47,
     "avg_r": -0.18
    },
    "4": {
@@ -268,16 +295,52 @@
     "avg_r": -0.33
    },
    "USD": {
-    "n": 35,
+    "n": 36,
     "win": 18,
-    "win_rate": 51,
+    "win_rate": 50,
     "avg_r": -0.14
    }
   },
-  "slip_entry_pct": -0.51,
+  "slip_entry_pct": -0.49,
   "slip_stop_pct": -0.68
  },
  "closed": [
+  {
+   "code": "GE",
+   "name": "GE Aerospace",
+   "ccy": "USD",
+   "ctx": {
+    "mode": "full",
+    "fresh": true,
+    "stage": 3,
+    "rp": 38,
+    "rec": 4,
+    "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권38% · 체크4/6 · 손절폭5.4%"
+   },
+   "plan": {
+    "entry": 314.62,
+    "stop": 297.5081,
+    "target": 348.8438,
+    "pb": 313.0304,
+    "tactic": "full"
+   },
+   "fill": {
+    "avg": 314.62,
+    "q": 1
+   },
+   "exits": [
+    {
+     "d": "2026-10-19",
+     "q": 1,
+     "price": 314.26,
+     "note": "어닝 회피 — 전량(진행 없음, MFE<0.5R)"
+    }
+   ],
+   "opened": "2026-10-01",
+   "closed": "2026-10-19",
+   "pl": -480,
+   "r": -0.02
+  },
   {
    "code": "204320",
    "name": "HL만도",
@@ -1375,42 +1438,6 @@
    "closed": "2026-09-07",
    "pl": 709000,
    "r": 1.45
-  },
-  {
-   "code": "BSY",
-   "name": "Bentley Systems, Incorporated",
-   "ccy": "USD",
-   "ctx": {
-    "mode": "half",
-    "fresh": true,
-    "stage": 3,
-    "rp": 30,
-    "rec": 6,
-    "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권30% · 체크6/6 · 손절폭7.4%"
-   },
-   "plan": {
-    "entry": 36.9546,
-    "stop": 34.2145,
-    "target": 42.4347,
-    "pb": 35.1196,
-    "tactic": "half"
-   },
-   "fill": {
-    "avg": 36.9546,
-    "q": 58
-   },
-   "exits": [
-    {
-     "d": "2026-09-04",
-     "q": 58,
-     "price": 34.17,
-     "note": "손절"
-    }
-   ],
-   "opened": "2026-09-01",
-   "closed": "2026-09-04",
-   "pl": -219065,
-   "r": -1.01
   }
  ],
  "hist": [
@@ -1840,10 +1867,37 @@
   },
   {
    "d": "2026-10-19",
-   "v": 93166747
+   "v": 93241569
   }
  ],
  "log": [
+  {
+   "d": "2026-10-19",
+   "type": "buy",
+   "code": "CHKP",
+   "name": "Check Point Software Technologies Ltd.",
+   "q": 40,
+   "price": 138.485,
+   "ccy": "USD",
+   "amt": 7390667,
+   "note": "반반 1차 — 🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권27% · 체크4/6 · 손절폭6.2%",
+   "stop": 129.88,
+   "target": 155.695
+  },
+  {
+   "d": "2026-10-19",
+   "type": "sell",
+   "code": "GE",
+   "name": "GE Aerospace",
+   "q": 1,
+   "price": 314.26,
+   "ccy": "USD",
+   "amt": 419286,
+   "note": "어닝 회피 — 전량(진행 없음, MFE<0.5R)",
+   "pl": -480,
+   "pl_pct": -0.1,
+   "r": -0.02
+  },
   {
    "d": "2026-10-15",
    "type": "sell",
@@ -2473,32 +2527,8 @@
    "note": "즉시 분할 — 🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권38% · 체크4/6 · 손절폭3.7%",
    "stop": 24.7327,
    "target": 27.5447
-  },
-  {
-   "d": "2026-09-17",
-   "type": "cancel",
-   "code": "LBRT",
-   "name": "Liberty Energy Inc.",
-   "q": 0,
-   "price": 19.66,
-   "ccy": "USD",
-   "amt": 0,
-   "note": "지정가 취소 — 신호 부패: 제외 게이트 — 하락추세/방어선 이탈"
-  },
-  {
-   "d": "2026-09-17",
-   "type": "buy",
-   "code": "LOPE",
-   "name": "Grand Canyon Education, Inc.",
-   "q": 40,
-   "price": 153.23,
-   "ccy": "USD",
-   "amt": 8376961,
-   "note": "즉시 분할 — 🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권21% · 체크6/6 · 손절폭5.2%",
-   "stop": 145.224,
-   "target": 169.242
   }
  ],
- "lane": "bulk",
+ "lane": "fast",
  "data_stale": []
 }
