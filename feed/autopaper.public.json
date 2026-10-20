@@ -1,9 +1,9 @@
 {
- "generated_at": "2026-10-20T10:14:51.728917+09:00",
+ "generated_at": "2026-10-20T10:37:17.911405+09:00",
  "updated": "2026-10-20",
  "start": 100000000,
  "cash": 27882774,
- "equity": 93158172,
+ "equity": 93164592,
  "ret_pct": -6.84,
  "positions": [
   {
@@ -19,7 +19,7 @@
    "opened": "2026-09-29",
    "pl_krw": 246593,
    "pl_pct": 8.96,
-   "price_age_min": 81.9
+   "price_age_min": 104.4
   },
   {
    "code": "TEL",
@@ -34,7 +34,7 @@
    "opened": "2026-09-30",
    "pl_krw": -32222,
    "pl_pct": -0.63,
-   "price_age_min": 81.9
+   "price_age_min": 104.4
   },
   {
    "code": "DOV",
@@ -49,7 +49,7 @@
    "opened": "2026-09-30",
    "pl_krw": 244250,
    "pl_pct": 3.12,
-   "price_age_min": 83.9
+   "price_age_min": 106.4
   },
   {
    "code": "CRAI",
@@ -64,7 +64,7 @@
    "opened": "2026-10-01",
    "pl_krw": 289395,
    "pl_pct": 8.27,
-   "price_age_min": 81.9
+   "price_age_min": 104.4
   },
   {
    "code": "088980",
@@ -72,14 +72,14 @@
    "ccy": "KRW",
    "q": 642,
    "avg": 9790.0,
-   "price": 9700.0,
+   "price": 9710.0,
    "stop": 9496.3,
    "target": 10377.4,
    "half_done": false,
    "opened": "2026-10-01",
-   "pl_krw": -57780,
-   "pl_pct": -0.92,
-   "price_age_min": 7.0
+   "pl_krw": -51360,
+   "pl_pct": -0.82,
+   "price_age_min": 6.0
   },
   {
    "code": "COST",
@@ -94,7 +94,7 @@
    "opened": "2026-10-07",
    "pl_krw": 69867,
    "pl_pct": 5.57,
-   "price_age_min": 85.1
+   "price_age_min": 107.5
   },
   {
    "code": "AES",
@@ -109,7 +109,7 @@
    "opened": "2026-10-09",
    "pl_krw": 586,
    "pl_pct": 0.27,
-   "price_age_min": 81.9
+   "price_age_min": 104.4
   },
   {
    "code": "TRMB",
@@ -124,7 +124,7 @@
    "opened": "2026-10-09",
    "pl_krw": 27683,
    "pl_pct": 0.17,
-   "price_age_min": 82.6
+   "price_age_min": 105.1
   },
   {
    "code": "TSCO",
@@ -139,7 +139,7 @@
    "opened": "2026-10-12",
    "pl_krw": -6987,
    "pl_pct": -0.09,
-   "price_age_min": 81.9
+   "price_age_min": 104.4
   },
   {
    "code": "BDC",
@@ -154,7 +154,7 @@
    "opened": "2026-10-12",
    "pl_krw": -251810,
    "pl_pct": -4.07,
-   "price_age_min": 81.9
+   "price_age_min": 104.3
   },
   {
    "code": "CHKP",
@@ -169,7 +169,7 @@
    "opened": "2026-10-19",
    "pl_krw": 23690,
    "pl_pct": 0.32,
-   "price_age_min": 84.1
+   "price_age_min": 106.6
   }
  ],
  "pending": [
@@ -1871,7 +1871,7 @@
   },
   {
    "d": "2026-10-20",
-   "v": 93158172
+   "v": 93164592
   }
  ],
  "log": [
