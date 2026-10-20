@@ -1,9 +1,9 @@
 {
- "generated_at": "2026-10-21T05:15:44.591962+09:00",
+ "generated_at": "2026-10-21T05:32:21.760161+09:00",
  "updated": "2026-10-21",
  "start": 100000000,
  "cash": 28054443,
- "equity": 93869864,
+ "equity": 93872489,
  "ret_pct": -6.13,
  "positions": [
   {
@@ -19,7 +19,7 @@
    "opened": "2026-09-29",
    "pl_krw": 221502,
    "pl_pct": 8.08,
-   "price_age_min": 7.8
+   "price_age_min": 8.1
   },
   {
    "code": "CRAI",
@@ -34,7 +34,7 @@
    "opened": "2026-10-01",
    "pl_krw": 328646,
    "pl_pct": 9.42,
-   "price_age_min": 7.8
+   "price_age_min": 8.1
   },
   {
    "code": "088980",
@@ -49,7 +49,7 @@
    "opened": "2026-10-01",
    "pl_krw": -64200,
    "pl_pct": -1.02,
-   "price_age_min": 8.2
+   "price_age_min": 8.5
   },
   {
    "code": "COST",
@@ -64,7 +64,7 @@
    "opened": "2026-10-07",
    "pl_krw": 68390,
    "pl_pct": 5.47,
-   "price_age_min": 10.6
+   "price_age_min": 10.8
   },
   {
    "code": "AES",
@@ -72,14 +72,14 @@
    "ccy": "USD",
    "q": 11,
    "avg": 14.92,
-   "price": 14.960000038146973,
+   "price": 14.970000267028809,
    "stop": 14.4724,
    "target": 15.8152,
    "half_done": false,
    "opened": "2026-10-09",
-   "pl_krw": 583,
-   "pl_pct": 0.27,
-   "price_age_min": 7.8
+   "pl_krw": 729,
+   "pl_pct": 0.34,
+   "price_age_min": 8.1
   },
   {
    "code": "TRMB",
@@ -94,7 +94,7 @@
    "opened": "2026-10-09",
    "pl_krw": 626103,
    "pl_pct": 3.79,
-   "price_age_min": 9.0
+   "price_age_min": 9.2
   },
   {
    "code": "TSCO",
@@ -109,7 +109,7 @@
    "opened": "2026-10-12",
    "pl_krw": 16244,
    "pl_pct": 0.21,
-   "price_age_min": 7.8
+   "price_age_min": 8.1
   },
   {
    "code": "BDC",
@@ -117,14 +117,14 @@
    "ccy": "USD",
    "q": 43,
    "avg": 108.07,
-   "price": 105.26000213623048,
+   "price": 105.3499984741211,
    "stop": 100.1546,
    "target": 123.9009,
    "half_done": false,
    "opened": "2026-10-12",
-   "pl_krw": -160225,
-   "pl_pct": -2.6,
-   "price_age_min": 7.8
+   "pl_krw": -155094,
+   "pl_pct": -2.52,
+   "price_age_min": 8.1
   },
   {
    "code": "CHKP",
@@ -139,7 +139,7 @@
    "opened": "2026-10-19",
    "pl_krw": 125444,
    "pl_pct": 1.71,
-   "price_age_min": 9.5
+   "price_age_min": 9.7
   },
   {
    "code": "TM",
@@ -147,14 +147,14 @@
    "ccy": "USD",
    "q": 50,
    "avg": 197.05,
-   "price": 196.57000732421875,
+   "price": 196.52999877929688,
    "stop": 190.922,
    "target": 209.306,
    "half_done": false,
    "opened": "2026-10-21",
-   "pl_krw": -31824,
-   "pl_pct": -0.24,
-   "price_age_min": 9.8
+   "pl_krw": -34477,
+   "pl_pct": -0.26,
+   "price_age_min": 10.1
   }
  ],
  "pending": [
@@ -1848,7 +1848,7 @@
   },
   {
    "d": "2026-10-21",
-   "v": 93869864
+   "v": 93872489
   }
  ],
  "log": [
