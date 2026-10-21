@@ -1,8 +1,8 @@
 {
- "generated_at": "2026-10-21T22:17:15.059787+09:00",
+ "generated_at": "2026-10-21T22:33:26.875078+09:00",
  "updated": "2026-10-21",
  "start": 100000000,
- "cash": 28054443,
+ "cash": 31851121,
  "equity": 93898169,
  "ret_pct": -6.1,
  "positions": [
@@ -64,7 +64,7 @@
    "opened": "2026-10-07",
    "pl_krw": 68390,
    "pl_pct": 5.47,
-   "price_age_min": 11.9
+   "price_age_min": 10.7
   },
   {
    "code": "AES",
@@ -94,22 +94,22 @@
    "opened": "2026-10-09",
    "pl_krw": 626103,
    "pl_pct": 3.79,
-   "price_age_min": 9.5
+   "price_age_min": 9.1
   },
   {
    "code": "TSCO",
    "name": "Tractor Supply Company",
    "ccy": "USD",
-   "q": 175,
+   "q": 88,
    "avg": 32.84,
    "price": 32.90999984741211,
    "stop": 30.8609,
    "target": 36.7983,
    "half_done": false,
    "opened": "2026-10-12",
-   "pl_krw": 16244,
+   "pl_krw": 8168,
    "pl_pct": 0.21,
-   "price_age_min": 7.8
+   "price_age_min": 7.9
   },
   {
    "code": "BDC",
@@ -124,7 +124,7 @@
    "opened": "2026-10-12",
    "pl_krw": -155094,
    "pl_pct": -2.52,
-   "price_age_min": 7.8
+   "price_age_min": 7.9
   },
   {
    "code": "CHKP",
@@ -139,7 +139,7 @@
    "opened": "2026-10-19",
    "pl_krw": 125444,
    "pl_pct": 1.71,
-   "price_age_min": 10.2
+   "price_age_min": 9.6
   },
   {
    "code": "TM",
@@ -154,7 +154,7 @@
    "opened": "2026-10-21",
    "pl_krw": -34477,
    "pl_pct": -0.26,
-   "price_age_min": 10.8
+   "price_age_min": 9.9
   }
  ],
  "pending": [
@@ -1854,6 +1854,19 @@
  "log": [
   {
    "d": "2026-10-21",
+   "type": "sell",
+   "code": "TSCO",
+   "name": "Tractor Supply Company",
+   "q": 87,
+   "price": 32.91,
+   "ccy": "USD",
+   "amt": 3796678,
+   "note": "어닝 축소 — 절반(MFE<1R)",
+   "pl": 8076,
+   "pl_pct": 0.2
+  },
+  {
+   "d": "2026-10-21",
    "type": "buy",
    "code": "TM",
    "name": "Toyota Motor Corporation",
@@ -2498,19 +2511,6 @@
    "note": "눌림 지정가 체결 — 🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권34% · 체크4/6 · 손절폭9.9%",
    "stop": 43257.4781,
    "target": 57485.0438
-  },
-  {
-   "d": "2026-09-21",
-   "type": "buy",
-   "code": "064400",
-   "name": "LG씨엔에스",
-   "q": 134,
-   "price": 69457.1429,
-   "ccy": "KRW",
-   "amt": 9307257,
-   "note": "눌림 지정가 체결 — ↗ 돌파후 진행(승률↓) · ③ 돌파후 횡보(대기) · 저점권16% · 체크4/6 · 손절폭8.7%",
-   "stop": 63538.1081,
-   "target": 81723.7838
   }
  ],
  "lane": "bulk",
