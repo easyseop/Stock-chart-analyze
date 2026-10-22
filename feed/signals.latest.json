@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated_at": "2026-10-22T20:40:57+09:00",
+ "generated_at": "2026-10-22T21:29:54+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "a_ablation": [
   {
@@ -97,7 +97,7 @@
    "range_pos": 0.463,
    "runup63": -0.0117,
    "stage": 3,
-   "price": 199.83999633789065
+   "price": 199.83999633789062
   },
   {
    "code": "EDU",
@@ -145,7 +145,7 @@
    "range_pos": 0.4966,
    "runup63": -0.1324,
    "stage": 3,
-   "price": 52.09999847412109
+   "price": 52.099998474121094
   },
   {
    "code": "PRK",
@@ -2960,27 +2960,6 @@
    "tactic": null
   },
   {
-   "id": "000100-2026-10-22-watch",
-   "code": "000100",
-   "name": "유한양행",
-   "ccy": "KRW",
-   "group": "watch",
-   "entry_kind": "pullback",
-   "stage": 4,
-   "price": 84000.0,
-   "entry": 80525.6,
-   "stop": 73849.9544,
-   "target": 93876.8912,
-   "shares_1pct": 14,
-   "range_pos": 0.296,
-   "norm": 7.5,
-   "bear_share": 0.375,
-   "fresh": false,
-   "break_gap": 0.1573,
-   "earnings_d": null,
-   "tactic": null
-  },
-  {
    "id": "SSD-2026-10-22-watch",
    "code": "SSD",
    "name": "Simpson Manufacturing Company, Inc.",
@@ -3188,6 +3167,27 @@
    "fresh": false,
    "break_gap": 0.0714,
    "earnings_d": -17,
+   "tactic": null
+  },
+  {
+   "id": "000100-2026-10-22-watch",
+   "code": "000100",
+   "name": "유한양행",
+   "ccy": "KRW",
+   "group": "watch",
+   "entry_kind": "pullback",
+   "stage": 3,
+   "price": 84000.0,
+   "entry": 80525.6,
+   "stop": 73849.9544,
+   "target": 93876.8912,
+   "shares_1pct": 14,
+   "range_pos": 0.296,
+   "norm": 2.8,
+   "bear_share": 0.375,
+   "fresh": false,
+   "break_gap": 0.1573,
+   "earnings_d": null,
    "tactic": null
   },
   {
