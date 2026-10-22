@@ -1,10 +1,10 @@
 {
- "generated_at": "2026-10-22T09:19:34.642703+09:00",
+ "generated_at": "2026-10-22T09:46:07.465441+09:00",
  "updated": "2026-10-22",
  "start": 100000000,
  "cash": 31001081,
- "equity": 94270417,
- "ret_pct": -5.73,
+ "equity": 94198317,
+ "ret_pct": -5.8,
  "positions": [
   {
    "code": "BKE",
@@ -19,7 +19,7 @@
    "opened": "2026-09-29",
    "pl_krw": 186694,
    "pl_pct": 6.8,
-   "price_age_min": 42.7
+   "price_age_min": 69.3
   },
   {
    "code": "CRAI",
@@ -34,7 +34,7 @@
    "opened": "2026-10-01",
    "pl_krw": 402698,
    "pl_pct": 11.53,
-   "price_age_min": 42.7
+   "price_age_min": 69.3
   },
   {
    "code": "COST",
@@ -49,7 +49,7 @@
    "opened": "2026-10-07",
    "pl_krw": 73375,
    "pl_pct": 5.86,
-   "price_age_min": 45.7
+   "price_age_min": 72.2
   },
   {
    "code": "AES",
@@ -64,7 +64,7 @@
    "opened": "2026-10-09",
    "pl_krw": 730,
    "pl_pct": 0.34,
-   "price_age_min": 42.7
+   "price_age_min": 69.3
   },
   {
    "code": "TRMB",
@@ -79,7 +79,7 @@
    "opened": "2026-10-09",
    "pl_krw": 756546,
    "pl_pct": 4.58,
-   "price_age_min": 44.1
+   "price_age_min": 70.6
   },
   {
    "code": "TSCO",
@@ -94,7 +94,7 @@
    "opened": "2026-10-12",
    "pl_krw": -17523,
    "pl_pct": -0.46,
-   "price_age_min": 42.7
+   "price_age_min": 69.3
   },
   {
    "code": "BDC",
@@ -109,7 +109,7 @@
    "opened": "2026-10-12",
    "pl_krw": -16553,
    "pl_pct": -0.27,
-   "price_age_min": 42.7
+   "price_age_min": 69.3
   },
   {
    "code": "CHKP",
@@ -124,7 +124,7 @@
    "opened": "2026-10-19",
    "pl_krw": 262571,
    "pl_pct": 3.57,
-   "price_age_min": 46.0
+   "price_age_min": 72.6
   },
   {
    "code": "TM",
@@ -139,7 +139,7 @@
    "opened": "2026-10-21",
    "pl_krw": -145357,
    "pl_pct": -1.11,
-   "price_age_min": 44.6
+   "price_age_min": 71.2
   },
   {
    "code": "251270",
@@ -147,14 +147,14 @@
    "ccy": "KRW",
    "q": 206,
    "avg": 34450.0,
-   "price": 34450.0,
+   "price": 34100.0,
    "stop": 32163.7847,
    "target": 39022.4307,
    "half_done": false,
    "opened": "2026-10-22",
-   "pl_krw": 0,
-   "pl_pct": 0.0,
-   "price_age_min": 6.0
+   "pl_krw": -72100,
+   "pl_pct": -1.02,
+   "price_age_min": 9.3
   }
  ],
  "pending": [
@@ -211,33 +211,6 @@
     "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권27% · 체크4/6 · 손절폭6.2%"
    },
    "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권27% · 체크4/6 · 손절폭6.2%"
-  },
-  {
-   "code": "251270",
-   "name": "넷마블",
-   "ccy": "KRW",
-   "limit": 34271.875,
-   "stop": 32163.7847,
-   "target": 39022.4307,
-   "q": 89,
-   "created": "2026-10-22",
-   "atr": 1143.1077,
-   "plan": {
-    "entry": 34450.0,
-    "stop": 32163.7847,
-    "target": 39022.4307,
-    "pb": 34271.875,
-    "tactic": "half"
-   },
-   "ctx": {
-    "mode": "half",
-    "fresh": true,
-    "stage": 3,
-    "rp": 6,
-    "rec": 4,
-    "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권6% · 체크4/6 · 손절폭6.6%"
-   },
-   "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권6% · 체크4/6 · 손절폭6.6%"
   }
  ],
  "trades": 50,
@@ -1873,10 +1846,21 @@
   },
   {
    "d": "2026-10-22",
-   "v": 94270417
+   "v": 94198317
   }
  ],
  "log": [
+  {
+   "d": "2026-10-22",
+   "type": "cancel",
+   "code": "251270",
+   "name": "넷마블",
+   "q": 0,
+   "price": 34100.0,
+   "ccy": "KRW",
+   "amt": 0,
+   "note": "지정가 취소 — 신호 부패: 제외 게이트 — 저유동성(잡주)"
+  },
   {
    "d": "2026-10-22",
    "type": "buy",
@@ -2523,20 +2507,6 @@
    "note": "즉시 분할 — 🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권15% · 체크4/6 · 손절폭5.7%",
    "stop": 40.5224,
    "target": 47.8653
-  },
-  {
-   "d": "2026-09-23",
-   "type": "sell",
-   "code": "NAVI",
-   "name": "Navient Corporation",
-   "q": 186,
-   "price": 9.205,
-   "ccy": "USD",
-   "amt": 2324644,
-   "note": "본전 스탑",
-   "pl": -8839,
-   "pl_pct": -0.4,
-   "r": 0.47
   }
  ],
  "lane": "bulk",
