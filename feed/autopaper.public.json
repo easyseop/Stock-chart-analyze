@@ -1,10 +1,10 @@
 {
- "generated_at": "2026-10-23T00:46:24.965813+09:00",
+ "generated_at": "2026-10-23T01:06:18.092655+09:00",
  "updated": "2026-10-23",
  "start": 100000000,
- "cash": 22293831,
- "equity": 94689043,
- "ret_pct": -5.31,
+ "cash": 31056902,
+ "equity": 94924359,
+ "ret_pct": -5.08,
  "positions": [
   {
    "code": "BKE",
@@ -12,14 +12,14 @@
    "ccy": "USD",
    "q": 48,
    "avg": 43.09,
-   "price": 47.09000015258789,
+   "price": 47.029998779296875,
    "stop": 44.17199862670898,
    "target": 47.1138,
    "half_done": true,
    "opened": "2026-09-29",
-   "pl_krw": 254431,
-   "pl_pct": 9.28,
-   "price_age_min": 0.5
+   "pl_krw": 250614,
+   "pl_pct": 9.14,
+   "price_age_min": 0.4
   },
   {
    "code": "CRAI",
@@ -27,14 +27,14 @@
    "ccy": "USD",
    "q": 16,
    "avg": 164.4,
-   "price": 195.3300018310547,
-   "stop": 178.47030183105468,
+   "price": 195.5449981689453,
+   "stop": 178.6852981689453,
    "target": 186.8795,
    "half_done": true,
    "opened": "2026-10-01",
-   "pl_krw": 655795,
-   "pl_pct": 18.81,
-   "price_age_min": 0.5
+   "pl_krw": 660354,
+   "pl_pct": 18.94,
+   "price_age_min": 0.4
   },
   {
    "code": "COST",
@@ -42,14 +42,14 @@
    "ccy": "USD",
    "q": 1,
    "avg": 943.035,
-   "price": 1010.97998046875,
-   "stop": 965.89448046875,
+   "price": 1011.22998046875,
+   "stop": 966.14448046875,
    "target": 1003.1489,
    "half_done": true,
    "opened": "2026-10-07",
-   "pl_krw": 90038,
-   "pl_pct": 7.2,
-   "price_age_min": 0.5
+   "pl_krw": 90369,
+   "pl_pct": 7.23,
+   "price_age_min": 0.4
   },
   {
    "code": "AES",
@@ -57,29 +57,29 @@
    "ccy": "USD",
    "q": 11,
    "avg": 14.92,
-   "price": 14.96500015258789,
+   "price": 14.979999542236328,
    "stop": 14.4724,
    "target": 15.8152,
    "half_done": false,
    "opened": "2026-10-09",
-   "pl_krw": 656,
-   "pl_pct": 0.3,
-   "price_age_min": 0.5
+   "pl_krw": 875,
+   "pl_pct": 0.4,
+   "price_age_min": 0.4
   },
   {
    "code": "TRMB",
    "name": "Trimble Inc.",
    "ccy": "USD",
-   "q": 208,
+   "q": 104,
    "avg": 59.85,
-   "price": 63.2400016784668,
-   "stop": 56.5187,
+   "price": 63.584999084472656,
+   "stop": 59.85,
    "target": 66.5126,
-   "half_done": false,
+   "half_done": true,
    "opened": "2026-10-09",
-   "pl_krw": 934397,
-   "pl_pct": 5.66,
-   "price_age_min": 0.5
+   "pl_krw": 514745,
+   "pl_pct": 6.24,
+   "price_age_min": 0.4
   },
   {
    "code": "BDC",
@@ -87,14 +87,14 @@
    "ccy": "USD",
    "q": 43,
    "avg": 108.07,
-   "price": 103.5,
+   "price": 104.16000366210938,
    "stop": 100.1546,
    "target": 123.9009,
    "half_done": false,
    "opened": "2026-10-12",
-   "pl_krw": -260407,
-   "pl_pct": -4.23,
-   "price_age_min": 0.5
+   "pl_krw": -222799,
+   "pl_pct": -3.62,
+   "price_age_min": 0.4
   },
   {
    "code": "CHKP",
@@ -102,14 +102,14 @@
    "ccy": "USD",
    "q": 20,
    "avg": 138.485,
-   "price": 149.4949951171875,
+   "price": 149.77999877929688,
    "stop": 138.485,
    "target": 155.695,
    "half_done": true,
    "opened": "2026-10-19",
-   "pl_krw": 291800,
-   "pl_pct": 7.95,
-   "price_age_min": 0.5
+   "pl_krw": 299354,
+   "pl_pct": 8.16,
+   "price_age_min": 0.4
   },
   {
    "code": "TM",
@@ -117,14 +117,14 @@
    "ccy": "USD",
    "q": 50,
    "avg": 197.05,
-   "price": 197.89999389648438,
+   "price": 198.0500030517578,
    "stop": 190.922,
    "target": 209.306,
    "half_done": false,
    "opened": "2026-10-21",
-   "pl_krw": 56319,
-   "pl_pct": 0.43,
-   "price_age_min": 0.5
+   "pl_krw": 66258,
+   "pl_pct": 0.51,
+   "price_age_min": 0.4
   },
   {
    "code": "251270",
@@ -139,7 +139,7 @@
    "opened": "2026-10-22",
    "pl_krw": 0,
    "pl_pct": 0.0,
-   "price_age_min": 0.5
+   "price_age_min": 0.4
   },
   {
    "code": "LOPE",
@@ -147,14 +147,14 @@
    "ccy": "USD",
    "q": 31,
    "avg": 159.76,
-   "price": 162.42999267578125,
+   "price": 162.99000549316406,
    "stop": 151.7975,
    "target": 175.6851,
    "half_done": false,
    "opened": "2026-10-22",
-   "pl_krw": 109683,
-   "pl_pct": 1.67,
-   "price_age_min": 0.5
+   "pl_krw": 132688,
+   "pl_pct": 2.02,
+   "price_age_min": 0.4
   },
   {
    "code": "EQT",
@@ -162,14 +162,14 @@
    "ccy": "USD",
    "q": 135,
    "avg": 53.69,
-   "price": 53.2599983215332,
+   "price": 53.599998474121094,
    "stop": 51.0906,
    "target": 58.8889,
    "half_done": false,
    "opened": "2026-10-23",
-   "pl_krw": -76926,
-   "pl_pct": -0.8,
-   "price_age_min": 0.5
+   "pl_krw": -16101,
+   "pl_pct": -0.17,
+   "price_age_min": 0.4
   }
  ],
  "pending": [
@@ -1838,10 +1838,23 @@
   },
   {
    "d": "2026-10-23",
-   "v": 94689043
+   "v": 94924359
   }
  ],
  "log": [
+  {
+   "d": "2026-10-23",
+   "type": "sell",
+   "code": "TRMB",
+   "name": "Trimble Inc.",
+   "q": 104,
+   "price": 63.585,
+   "ccy": "USD",
+   "amt": 8763071,
+   "note": "+1R 절반 익절",
+   "pl": 514745,
+   "pl_pct": 6.2
+  },
   {
    "d": "2026-10-23",
    "type": "sell",
@@ -2482,20 +2495,6 @@
    "ccy": "USD",
    "amt": 5629445,
    "note": "눌림 지정가 주문(추격 금지) — 🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권9% · 체크3/6 · 손절폭9.0%"
-  },
-  {
-   "d": "2026-09-25",
-   "type": "sell",
-   "code": "MDT",
-   "name": "Medtronic plc.",
-   "q": 47,
-   "price": 87.255,
-   "ccy": "USD",
-   "amt": 5609040,
-   "note": "트레일 스탑",
-   "pl": 72961,
-   "pl_pct": 1.3,
-   "r": 0.62
   }
  ],
  "lane": "fast",
