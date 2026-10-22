@@ -1,10 +1,10 @@
 {
- "generated_at": "2026-10-22T22:46:17.897223+09:00",
+ "generated_at": "2026-10-22T22:46:15.429728+09:00",
  "updated": "2026-10-22",
  "start": 100000000,
- "cash": 31001081,
- "equity": 94311647,
- "ret_pct": -5.69,
+ "cash": 27937091,
+ "equity": 94363583,
+ "ret_pct": -5.64,
  "positions": [
   {
    "code": "BKE",
@@ -12,14 +12,14 @@
    "ccy": "USD",
    "q": 48,
    "avg": 43.09,
-   "price": 46.33000183105469,
+   "price": 46.209999084472656,
    "stop": 44.17199862670898,
    "target": 47.1138,
    "half_done": true,
    "opened": "2026-09-29",
-   "pl_krw": 206447,
-   "pl_pct": 7.52,
-   "price_age_min": 0.4
+   "pl_krw": 198800,
+   "pl_pct": 7.24,
+   "price_age_min": 7.2
   },
   {
    "code": "CRAI",
@@ -27,14 +27,14 @@
    "ccy": "USD",
    "q": 16,
    "avg": 164.4,
-   "price": 187.58999633789062,
-   "stop": 167.61030122070312,
+   "price": 186.61000061035156,
+   "stop": 169.75030061035156,
    "target": 186.8795,
    "half_done": true,
    "opened": "2026-10-01",
-   "pl_krw": 492541,
-   "pl_pct": 14.11,
-   "price_age_min": 0.4
+   "pl_krw": 471726,
+   "pl_pct": 13.51,
+   "price_age_min": 7.2
   },
   {
    "code": "COST",
@@ -42,14 +42,14 @@
    "ccy": "USD",
    "q": 1,
    "avg": 943.035,
-   "price": 1004.760009765625,
-   "stop": 958.3645122070312,
+   "price": 1005.280029296875,
+   "stop": 960.194529296875,
    "target": 1003.1489,
    "half_done": true,
    "opened": "2026-10-07",
-   "pl_krw": 81937,
-   "pl_pct": 6.55,
-   "price_age_min": 0.4
+   "pl_krw": 82628,
+   "pl_pct": 6.6,
+   "price_age_min": 11.4
   },
   {
    "code": "AES",
@@ -57,14 +57,14 @@
    "ccy": "USD",
    "q": 11,
    "avg": 14.92,
-   "price": 14.975000381469727,
+   "price": 14.96500015258789,
    "stop": 14.4724,
    "target": 15.8152,
    "half_done": false,
    "opened": "2026-10-09",
-   "pl_krw": 803,
-   "pl_pct": 0.37,
-   "price_age_min": 0.4
+   "pl_krw": 657,
+   "pl_pct": 0.3,
+   "price_age_min": 7.2
   },
   {
    "code": "TRMB",
@@ -72,29 +72,14 @@
    "ccy": "USD",
    "q": 208,
    "avg": 59.85,
-   "price": 62.85300064086914,
+   "price": 62.76100158691406,
    "stop": 56.5187,
    "target": 66.5126,
    "half_done": false,
    "opened": "2026-10-09",
-   "pl_krw": 829164,
-   "pl_pct": 5.02,
-   "price_age_min": 0.4
-  },
-  {
-   "code": "TSCO",
-   "name": "Tractor Supply Company",
-   "ccy": "USD",
-   "q": 88,
-   "avg": 32.84,
-   "price": 30.450000762939453,
-   "stop": 30.8609,
-   "target": 36.7983,
-   "half_done": false,
-   "opened": "2026-10-12",
-   "pl_krw": -279191,
-   "pl_pct": -7.28,
-   "price_age_min": 0.4
+   "pl_krw": 803762,
+   "pl_pct": 4.86,
+   "price_age_min": 9.1
   },
   {
    "code": "BDC",
@@ -102,14 +87,14 @@
    "ccy": "USD",
    "q": 43,
    "avg": 108.07,
-   "price": 103.6500015258789,
+   "price": 106.37999725341797,
    "stop": 100.1546,
    "target": 123.9009,
    "half_done": false,
    "opened": "2026-10-12",
-   "pl_krw": -252297,
-   "pl_pct": -4.09,
-   "price_age_min": 0.4
+   "pl_krw": -96467,
+   "pl_pct": -1.56,
+   "price_age_min": 7.1
   },
   {
    "code": "CHKP",
@@ -117,14 +102,14 @@
    "ccy": "USD",
    "q": 40,
    "avg": 138.485,
-   "price": 147.3300018310547,
+   "price": 147.52000427246094,
    "stop": 129.88,
    "target": 155.695,
    "half_done": false,
    "opened": "2026-10-19",
-   "pl_krw": 469655,
-   "pl_pct": 6.39,
-   "price_age_min": 0.4
+   "pl_krw": 479744,
+   "pl_pct": 6.52,
+   "price_age_min": 11.9
   },
   {
    "code": "TM",
@@ -132,14 +117,14 @@
    "ccy": "USD",
    "q": 50,
    "avg": 197.05,
-   "price": 196.97999572753906,
+   "price": 196.77000427246094,
    "stop": 190.922,
    "target": 209.306,
    "half_done": false,
    "opened": "2026-10-21",
-   "pl_krw": -4646,
-   "pl_pct": -0.04,
-   "price_age_min": 0.4
+   "pl_krw": -18584,
+   "pl_pct": -0.14,
+   "price_age_min": 9.9
   },
   {
    "code": "251270",
@@ -154,7 +139,22 @@
    "opened": "2026-10-22",
    "pl_krw": 0,
    "pl_pct": 0.0,
-   "price_age_min": 0.4
+   "price_age_min": 9.5
+  },
+  {
+   "code": "LOPE",
+   "name": "Grand Canyon Education, Inc.",
+   "ccy": "USD",
+   "q": 31,
+   "avg": 159.76,
+   "price": 159.75999450683594,
+   "stop": 151.7975,
+   "target": 175.6851,
+   "half_done": false,
+   "opened": "2026-10-22",
+   "pl_krw": 0,
+   "pl_pct": -0.0,
+   "price_age_min": 11.0
   }
  ],
  "pending": [
@@ -213,7 +213,7 @@
    "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권27% · 체크4/6 · 손절폭6.2%"
   }
  ],
- "trades": 50,
+ "trades": 51,
  "win_trades": 24,
  "pos_cap_pct": 33.3,
  "cap_violations": [],
@@ -221,10 +221,10 @@
  "fx": 1327.46,
  "stats": {
   "all": {
-   "n": 50,
+   "n": 51,
    "win": 24,
-   "win_rate": 48,
-   "avg_r": -0.15
+   "win_rate": 47,
+   "avg_r": -0.16
   },
   "by_mode": {
    "full": {
@@ -234,10 +234,10 @@
     "avg_r": -0.23
    },
    "half": {
-    "n": 14,
+    "n": 15,
     "win": 9,
-    "win_rate": 64,
-    "avg_r": 0.08
+    "win_rate": 60,
+    "avg_r": 0.03
    },
    "pullback": {
     "n": 9,
@@ -247,10 +247,10 @@
    }
   },
   "fresh": {
-   "n": 48,
+   "n": 49,
    "win": 23,
-   "win_rate": 48,
-   "avg_r": -0.16
+   "win_rate": 47,
+   "avg_r": -0.17
   },
   "stale": {
    "n": 2,
@@ -260,10 +260,10 @@
   },
   "by_stage": {
    "3": {
-    "n": 48,
+    "n": 49,
     "win": 23,
-    "win_rate": 48,
-    "avg_r": -0.15
+    "win_rate": 47,
+    "avg_r": -0.16
    },
    "4": {
     "n": 2,
@@ -280,16 +280,58 @@
     "avg_r": -0.32
    },
    "USD": {
-    "n": 38,
+    "n": 39,
     "win": 20,
-    "win_rate": 53,
-    "avg_r": -0.1
+    "win_rate": 51,
+    "avg_r": -0.12
    }
   },
   "slip_entry_pct": -0.46,
-  "slip_stop_pct": -0.68
+  "slip_stop_pct": -0.78
  },
  "closed": [
+  {
+   "code": "TSCO",
+   "name": "Tractor Supply Company",
+   "ccy": "USD",
+   "ctx": {
+    "mode": "half",
+    "fresh": true,
+    "stage": 3,
+    "rp": 15,
+    "rec": 6,
+    "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권15% · 체크6/6 · 손절폭6.0%"
+   },
+   "plan": {
+    "entry": 32.84,
+    "stop": 30.8609,
+    "target": 36.7983,
+    "pb": null,
+    "tactic": "half"
+   },
+   "fill": {
+    "avg": 32.84,
+    "q": 175
+   },
+   "exits": [
+    {
+     "d": "2026-10-21",
+     "q": 87,
+     "price": 32.91,
+     "note": "어닝 축소 — 절반(MFE<1R)"
+    },
+    {
+     "d": "2026-10-22",
+     "q": 88,
+     "price": 30.05,
+     "note": "손절(급락 즉시)"
+    }
+   ],
+   "opened": "2026-10-12",
+   "closed": "2026-10-22",
+   "pl": -317842,
+   "r": -0.68
+  },
   {
    "code": "088980",
    "name": "맥쿼리인프라",
@@ -1363,48 +1405,6 @@
    "closed": "2026-09-10",
    "pl": 1039766,
    "r": 1.48
-  },
-  {
-   "code": "AVY",
-   "name": "Avery Dennison Corporation",
-   "ccy": "USD",
-   "ctx": {
-    "mode": "half",
-    "fresh": true,
-    "stage": 4,
-    "rp": 37,
-    "rec": 5,
-    "basis": "🔥 갓 전환(추세선 부근) · ④ 전환 확정 ⭐ · 저점권37% · 체크5/6 · 손절폭6.7%"
-   },
-   "plan": {
-    "entry": 169.73,
-    "stop": 158.3847,
-    "target": 192.4206,
-    "pb": null,
-    "tactic": "half"
-   },
-   "fill": {
-    "avg": 169.73,
-    "q": 28
-   },
-   "exits": [
-    {
-     "d": "2026-08-19",
-     "q": 14,
-     "price": 181.88,
-     "note": "+1R 절반 익절"
-    },
-    {
-     "d": "2026-09-09",
-     "q": 14,
-     "price": 169.54,
-     "note": "본전 스탑"
-    }
-   ],
-   "opened": "2026-08-03",
-   "closed": "2026-09-09",
-   "pl": 236554,
-   "r": 0.52
   }
  ],
  "hist": [
@@ -1846,10 +1846,37 @@
   },
   {
    "d": "2026-10-22",
-   "v": 94270417
+   "v": 94363583
   }
  ],
  "log": [
+  {
+   "d": "2026-10-22",
+   "type": "buy",
+   "code": "LOPE",
+   "name": "Grand Canyon Education, Inc.",
+   "q": 31,
+   "price": 159.76,
+   "ccy": "USD",
+   "amt": 6574325,
+   "note": "즉시 분할 — 🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권29% · 체크3/6 · 손절폭5.0%",
+   "stop": 151.7975,
+   "target": 175.6851
+  },
+  {
+   "d": "2026-10-22",
+   "type": "sell",
+   "code": "TSCO",
+   "name": "Tractor Supply Company",
+   "q": 88,
+   "price": 30.05,
+   "ccy": "USD",
+   "amt": 3510335,
+   "note": "손절(급락 즉시)",
+   "pl": -325918,
+   "pl_pct": -8.5,
+   "r": -0.68
+  },
   {
    "d": "2026-10-22",
    "type": "cancel",
@@ -2480,36 +2507,8 @@
    "note": "즉시 분할 — 🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권27% · 체크4/6 · 손절폭3.9%",
    "stop": 104.4167,
    "target": 117.0566
-  },
-  {
-   "d": "2026-09-25",
-   "type": "sell",
-   "code": "ALG",
-   "name": "Alamo Group, Inc.",
-   "q": 12,
-   "price": 158.19,
-   "ccy": "USD",
-   "amt": 2596335,
-   "note": "손절",
-   "pl": -164784,
-   "pl_pct": -6.0,
-   "r": -1.02
-  },
-  {
-   "d": "2026-09-23",
-   "type": "buy",
-   "code": "CNM",
-   "name": "Core & Main, Inc.",
-   "q": 44,
-   "price": 42.97,
-   "ccy": "USD",
-   "amt": 2567071,
-   "note": "즉시 분할 — 🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권15% · 체크4/6 · 손절폭5.7%",
-   "stop": 40.5224,
-   "target": 47.8653
   }
  ],
- "lane": "fast",
- "data_stale": [],
- "lock_skipped": true
+ "lane": "bulk",
+ "data_stale": []
 }
