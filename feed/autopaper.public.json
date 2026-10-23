@@ -1,10 +1,10 @@
 {
- "generated_at": "2026-10-23T14:26:49.729672+09:00",
+ "generated_at": "2026-10-23T14:54:32.690820+09:00",
  "updated": "2026-10-23",
  "start": 100000000,
  "cash": 31056902,
- "equity": 95334017,
- "ret_pct": -4.67,
+ "equity": 95323717,
+ "ret_pct": -4.68,
  "positions": [
   {
    "code": "BKE",
@@ -19,7 +19,7 @@
    "opened": "2026-09-29",
    "pl_krw": 279238,
    "pl_pct": 10.19,
-   "price_age_min": 86.0
+   "price_age_min": 113.7
   },
   {
    "code": "CRAI",
@@ -34,7 +34,7 @@
    "opened": "2026-10-01",
    "pl_krw": 774742,
    "pl_pct": 22.23,
-   "price_age_min": 86.0
+   "price_age_min": 113.7
   },
   {
    "code": "COST",
@@ -49,7 +49,7 @@
    "opened": "2026-10-07",
    "pl_krw": 99619,
    "pl_pct": 7.97,
-   "price_age_min": 88.8
+   "price_age_min": 116.5
   },
   {
    "code": "AES",
@@ -64,7 +64,7 @@
    "opened": "2026-10-09",
    "pl_krw": 729,
    "pl_pct": 0.34,
-   "price_age_min": 86.0
+   "price_age_min": 113.7
   },
   {
    "code": "TRMB",
@@ -79,7 +79,7 @@
    "opened": "2026-10-09",
    "pl_krw": 573318,
    "pl_pct": 6.95,
-   "price_age_min": 89.0
+   "price_age_min": 116.8
   },
   {
    "code": "BDC",
@@ -94,7 +94,7 @@
    "opened": "2026-10-12",
    "pl_krw": -262687,
    "pl_pct": -4.27,
-   "price_age_min": 86.0
+   "price_age_min": 113.7
   },
   {
    "code": "CHKP",
@@ -109,7 +109,7 @@
    "opened": "2026-10-19",
    "pl_krw": 357661,
    "pl_pct": 9.74,
-   "price_age_min": 88.9
+   "price_age_min": 116.7
   },
   {
    "code": "TM",
@@ -124,7 +124,7 @@
    "opened": "2026-10-21",
    "pl_krw": 77522,
    "pl_pct": 0.59,
-   "price_age_min": 87.8
+   "price_age_min": 115.5
   },
   {
    "code": "251270",
@@ -132,14 +132,14 @@
    "ccy": "KRW",
    "q": 206,
    "avg": 34450.0,
-   "price": 33850.0,
+   "price": 33800.0,
    "stop": 32163.7847,
    "target": 39022.4307,
    "half_done": false,
    "opened": "2026-10-22",
-   "pl_krw": -123600,
-   "pl_pct": -1.74,
-   "price_age_min": 8.6
+   "pl_krw": -133900,
+   "pl_pct": -1.89,
+   "price_age_min": 6.8
   },
   {
    "code": "LOPE",
@@ -154,7 +154,7 @@
    "opened": "2026-10-22",
    "pl_krw": 234156,
    "pl_pct": 3.57,
-   "price_age_min": 87.9
+   "price_age_min": 115.6
   },
   {
    "code": "EQT",
@@ -169,7 +169,7 @@
    "opened": "2026-10-23",
    "pl_krw": 175318,
    "pl_pct": 1.83,
-   "price_age_min": 89.4
+   "price_age_min": 117.1
   }
  ],
  "pending": [
@@ -1838,7 +1838,7 @@
   },
   {
    "d": "2026-10-23",
-   "v": 95334017
+   "v": 95323717
   }
  ],
  "log": [
