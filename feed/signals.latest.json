@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated_at": "2026-10-23T10:55:39+09:00",
+ "generated_at": "2026-10-23T11:06:20+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "a_ablation": [
   {
@@ -62,10 +62,10 @@
   {
    "code": "161390",
    "gate": "rp",
-   "range_pos": 0.5321,
-   "runup63": -0.174,
+   "range_pos": 0.5346,
+   "runup63": -0.1727,
    "stage": 3,
-   "price": 59800.0
+   "price": 59900.0
   },
   {
    "code": "BANF",
@@ -168,14 +168,14 @@
   "ok": 16,
   "watch": 116,
   "reasons": {
-   "밸류영역 밖(지지대 아님)": 467,
-   "추락 중(범위 1%)": 262,
-   "추락 중(범위 0%)": 224,
-   "추락 중(범위 2%)": 223,
+   "밸류영역 밖(지지대 아님)": 466,
+   "추락 중(범위 1%)": 266,
+   "추락 중(범위 2%)": 221,
+   "추락 중(범위 0%)": 220,
    "매물대 정보 없음": 163,
    "추락 중(범위 3%)": 133,
-   "추락 중(범위 4%)": 122,
-   "추락 중(범위 5%)": 108
+   "추락 중(범위 4%)": 124,
+   "추락 중(범위 6%)": 108
   }
  },
  "signals": [
@@ -243,24 +243,24 @@
    "group": "now",
    "entry_kind": "now",
    "stage": 3,
-   "price": 157800.0,
-   "entry": 157800.0,
-   "stop": 144537.3148,
-   "target": 184325.3703,
+   "price": 157200.0,
+   "entry": 157200.0,
+   "stop": 143937.3148,
+   "target": 183725.3703,
    "shares_1pct": 7,
-   "range_pos": 0.0409,
+   "range_pos": 0.0375,
    "norm": -30.2,
    "bear_share": 0.375,
    "fresh": true,
-   "break_gap": 0.025,
+   "break_gap": 0.0211,
    "earnings_d": null,
    "tactic": {
     "stop_pct": 8.4,
     "pb_price": 150500.0,
-    "pb_stop_pct": 4.0,
+    "pb_stop_pct": 4.4,
     "mode": "pullback",
     "label": "⏳ 눌림 지정가만",
-    "desc": "지금 추격 금지(손절폭 8.4%) — <b>150,500원 눌림 지정가만</b>. 눌리면 손절폭 4.0%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
+    "desc": "지금 추격 금지(손절폭 8.4%) — <b>150,500원 눌림 지정가만</b>. 눌리면 손절폭 4.4%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
    }
   },
   {
@@ -1371,31 +1371,31 @@
    "tactic": "shadow"
   },
   {
-   "id": "ALEC-2026-10-23-shelf-watch",
-   "code": "ALEC",
-   "name": "Alector, Inc.",
-   "ccy": "USD",
+   "id": "003230-2026-10-23-shelf-watch",
+   "code": "003230",
+   "name": "삼양식품",
+   "ccy": "KRW",
    "group": "shelf_watch",
    "entry_kind": "shelf_watch",
    "stage": 0,
-   "price": 1.84,
-   "entry": 1.84,
-   "stop": 1.7052,
-   "target": 2.3077,
+   "price": 1237000.0,
+   "entry": 1237000.0,
+   "stop": 1190700.0,
+   "target": 1353000.0,
    "shares_1pct": 0,
-   "range_pos": 0.4491,
-   "norm": -0.0,
-   "bear_share": 0.25,
+   "range_pos": 0.4444,
+   "norm": 5.7,
+   "bear_share": 0.125,
    "shelf": {
-    "poc": 1.9598,
-    "val": 1.4727,
-    "vah": 2.3077,
-    "rr": 3.47,
-    "overhead": 0.548,
+    "poc": 1233000.0,
+    "val": 1137000.0,
+    "vah": 1353000.0,
+    "rr": 2.51,
+    "overhead": 0.499,
     "reason": "반등 미확인(거래량)",
-    "history_bars": 1938,
-    "profile_pnl_proxy": -0.0307,
-    "runup252": 0.1429,
+    "history_bars": 1913,
+    "profile_pnl_proxy": -0.0108,
+    "runup252": -0.1145,
     "checks": {
      "터치": true,
      "회복": true,
@@ -1406,9 +1406,9 @@
    },
    "fresh": false,
    "break_gap": null,
-   "earnings_d": 13,
+   "earnings_d": null,
    "tactic": "watch",
-   "trend_above_200": false
+   "trend_above_200": true
   },
   {
    "id": "CSGP-2026-10-23-shelf-watch",
@@ -2963,34 +2963,6 @@
    }
   },
   {
-   "id": "088980-2026-10-23-watch",
-   "code": "088980",
-   "name": "맥쿼리인프라",
-   "ccy": "KRW",
-   "group": "watch",
-   "entry_kind": "now",
-   "stage": 1,
-   "price": 9700.0,
-   "entry": 9700.0,
-   "stop": 9409.0,
-   "target": 10282.0,
-   "shares_1pct": 343,
-   "range_pos": 0.1479,
-   "norm": -3.8,
-   "bear_share": 0.25,
-   "fresh": true,
-   "break_gap": 0.0004,
-   "earnings_d": null,
-   "tactic": {
-    "stop_pct": 3.0,
-    "pb_price": 9474.125,
-    "pb_stop_pct": 0.7,
-    "mode": "full",
-    "label": "⚡ 즉시 분할",
-    "desc": "손절폭 3.0%로 타이트 — 현재가에서 1~2회 분할 매수. 기다리는 이득보다 놓치는 비용이 큼"
-   }
-  },
-  {
    "id": "LDOS-2026-10-23-watch",
    "code": "LDOS",
    "name": "Leidos Holdings, Inc.",
@@ -3038,6 +3010,27 @@
     "label": "⏳ 눌림 지정가만",
     "desc": "지금 추격 금지(손절폭 12.3%) — <b>17,500원 눌림 지정가만</b>. 눌리면 손절폭 10.3%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
    }
+  },
+  {
+   "id": "088980-2026-10-23-watch",
+   "code": "088980",
+   "name": "맥쿼리인프라",
+   "ccy": "KRW",
+   "group": "watch",
+   "entry_kind": "breakout",
+   "stage": 1,
+   "price": 9720.0,
+   "entry": 9910.0,
+   "stop": 9612.7,
+   "target": 10504.6,
+   "shares_1pct": 336,
+   "range_pos": 0.1556,
+   "norm": -13.2,
+   "bear_share": 0.375,
+   "fresh": true,
+   "break_gap": 0.0025,
+   "earnings_d": null,
+   "tactic": null
   },
   {
    "id": "APG-2026-10-23-watch",
@@ -3411,24 +3404,24 @@
    "group": "watch",
    "entry_kind": "now",
    "stage": 1,
-   "price": 188200.0,
-   "entry": 188200.0,
-   "stop": 173755.0563,
-   "target": 217089.8873,
+   "price": 188700.0,
+   "entry": 188700.0,
+   "stop": 174255.0563,
+   "target": 217589.8873,
    "shares_1pct": 6,
-   "range_pos": 0.0618,
+   "range_pos": 0.0659,
    "norm": -36.8,
    "bear_share": 0.5,
    "fresh": true,
-   "break_gap": -0.0075,
+   "break_gap": -0.0049,
    "earnings_d": null,
    "tactic": {
     "stop_pct": 7.7,
     "pb_price": 180600.0,
-    "pb_stop_pct": 3.8,
+    "pb_stop_pct": 3.5,
     "mode": "half",
     "label": "⚖ 반반 진입",
-    "desc": "손절폭 7.7% — 절반은 현재가, 절반은 눌림 180,600원 지정가(거기선 손절폭 3.8%)"
+    "desc": "손절폭 7.7% — 절반은 현재가, 절반은 눌림 180,600원 지정가(거기선 손절폭 3.5%)"
    }
   },
   {
@@ -4804,16 +4797,16 @@
    "group": "watch",
    "entry_kind": "pullback",
    "stage": 3,
-   "price": 177500.0,
+   "price": 177400.0,
    "entry": 153000.0,
    "stop": 135118.7739,
    "target": 188762.4522,
    "shares_1pct": 5,
-   "range_pos": 0.097,
+   "range_pos": 0.0966,
    "norm": -25.5,
    "bear_share": 0.25,
    "fresh": false,
-   "break_gap": 0.1645,
+   "break_gap": 0.1638,
    "earnings_d": null,
    "tactic": null
   },
