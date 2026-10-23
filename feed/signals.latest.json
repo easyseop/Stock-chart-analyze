@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated_at": "2026-10-23T10:27:53+09:00",
+ "generated_at": "2026-10-23T10:55:39+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "a_ablation": [
   {
@@ -62,10 +62,10 @@
   {
    "code": "161390",
    "gate": "rp",
-   "range_pos": 0.5346,
-   "runup63": -0.1727,
+   "range_pos": 0.5321,
+   "runup63": -0.174,
    "stage": 3,
-   "price": 59900.0
+   "price": 59800.0
   },
   {
    "code": "BANF",
@@ -166,15 +166,15 @@
  ],
  "shelf_debug": {
   "ok": 16,
-  "watch": 117,
+  "watch": 116,
   "reasons": {
-   "밸류영역 밖(지지대 아님)": 466,
-   "추락 중(범위 1%)": 264,
-   "추락 중(범위 2%)": 224,
-   "추락 중(범위 0%)": 221,
+   "밸류영역 밖(지지대 아님)": 467,
+   "추락 중(범위 1%)": 262,
+   "추락 중(범위 0%)": 224,
+   "추락 중(범위 2%)": 223,
    "매물대 정보 없음": 163,
-   "추락 중(범위 3%)": 129,
-   "추락 중(범위 4%)": 125,
+   "추락 중(범위 3%)": 133,
+   "추락 중(범위 4%)": 122,
    "추락 중(범위 5%)": 108
   }
  },
@@ -243,24 +243,24 @@
    "group": "now",
    "entry_kind": "now",
    "stage": 3,
-   "price": 158300.0,
-   "entry": 158300.0,
-   "stop": 145037.3148,
-   "target": 184825.3703,
+   "price": 157800.0,
+   "entry": 157800.0,
+   "stop": 144537.3148,
+   "target": 184325.3703,
    "shares_1pct": 7,
-   "range_pos": 0.0437,
+   "range_pos": 0.0409,
    "norm": -30.2,
    "bear_share": 0.375,
    "fresh": true,
-   "break_gap": 0.0282,
+   "break_gap": 0.025,
    "earnings_d": null,
    "tactic": {
     "stop_pct": 8.4,
     "pb_price": 150500.0,
-    "pb_stop_pct": 3.6,
+    "pb_stop_pct": 4.0,
     "mode": "pullback",
     "label": "⏳ 눌림 지정가만",
-    "desc": "지금 추격 금지(손절폭 8.4%) — <b>150,500원 눌림 지정가만</b>. 눌리면 손절폭 3.6%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
+    "desc": "지금 추격 금지(손절폭 8.4%) — <b>150,500원 눌림 지정가만</b>. 눌리면 손절폭 4.0%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
    }
   },
   {
@@ -2963,6 +2963,34 @@
    }
   },
   {
+   "id": "088980-2026-10-23-watch",
+   "code": "088980",
+   "name": "맥쿼리인프라",
+   "ccy": "KRW",
+   "group": "watch",
+   "entry_kind": "now",
+   "stage": 1,
+   "price": 9700.0,
+   "entry": 9700.0,
+   "stop": 9409.0,
+   "target": 10282.0,
+   "shares_1pct": 343,
+   "range_pos": 0.1479,
+   "norm": -3.8,
+   "bear_share": 0.25,
+   "fresh": true,
+   "break_gap": 0.0004,
+   "earnings_d": null,
+   "tactic": {
+    "stop_pct": 3.0,
+    "pb_price": 9474.125,
+    "pb_stop_pct": 0.7,
+    "mode": "full",
+    "label": "⚡ 즉시 분할",
+    "desc": "손절폭 3.0%로 타이트 — 현재가에서 1~2회 분할 매수. 기다리는 이득보다 놓치는 비용이 큼"
+   }
+  },
+  {
    "id": "LDOS-2026-10-23-watch",
    "code": "LDOS",
    "name": "Leidos Holdings, Inc.",
@@ -3010,27 +3038,6 @@
     "label": "⏳ 눌림 지정가만",
     "desc": "지금 추격 금지(손절폭 12.3%) — <b>17,500원 눌림 지정가만</b>. 눌리면 손절폭 10.3%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
    }
-  },
-  {
-   "id": "088980-2026-10-23-watch",
-   "code": "088980",
-   "name": "맥쿼리인프라",
-   "ccy": "KRW",
-   "group": "watch",
-   "entry_kind": "breakout",
-   "stage": 1,
-   "price": 9720.0,
-   "entry": 9910.0,
-   "stop": 9612.7,
-   "target": 10504.6,
-   "shares_1pct": 336,
-   "range_pos": 0.1556,
-   "norm": -13.2,
-   "bear_share": 0.375,
-   "fresh": true,
-   "break_gap": 0.0025,
-   "earnings_d": null,
-   "tactic": null
   },
   {
    "id": "APG-2026-10-23-watch",
@@ -3404,24 +3411,24 @@
    "group": "watch",
    "entry_kind": "now",
    "stage": 1,
-   "price": 188900.0,
-   "entry": 188900.0,
-   "stop": 174569.3421,
-   "target": 217561.3159,
+   "price": 188200.0,
+   "entry": 188200.0,
+   "stop": 173755.0563,
+   "target": 217089.8873,
    "shares_1pct": 6,
-   "range_pos": 0.0675,
+   "range_pos": 0.0618,
    "norm": -36.8,
    "bear_share": 0.5,
    "fresh": true,
-   "break_gap": -0.0039,
+   "break_gap": -0.0075,
    "earnings_d": null,
    "tactic": {
-    "stop_pct": 7.6,
+    "stop_pct": 7.7,
     "pb_price": 180600.0,
-    "pb_stop_pct": 3.3,
+    "pb_stop_pct": 3.8,
     "mode": "half",
     "label": "⚖ 반반 진입",
-    "desc": "손절폭 7.6% — 절반은 현재가, 절반은 눌림 180,600원 지정가(거기선 손절폭 3.3%)"
+    "desc": "손절폭 7.7% — 절반은 현재가, 절반은 눌림 180,600원 지정가(거기선 손절폭 3.8%)"
    }
   },
   {
@@ -4797,16 +4804,16 @@
    "group": "watch",
    "entry_kind": "pullback",
    "stage": 3,
-   "price": 178700.0,
+   "price": 177500.0,
    "entry": 153000.0,
    "stop": 135118.7739,
    "target": 188762.4522,
    "shares_1pct": 5,
-   "range_pos": 0.1018,
+   "range_pos": 0.097,
    "norm": -25.5,
    "bear_share": 0.25,
    "fresh": false,
-   "break_gap": 0.1723,
+   "break_gap": 0.1645,
    "earnings_d": null,
    "tactic": null
   },
