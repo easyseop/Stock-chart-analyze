@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated_at": "2026-10-23T14:54:49+09:00",
+ "generated_at": "2026-10-23T15:05:08+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "a_ablation": [
   {
@@ -62,10 +62,10 @@
   {
    "code": "161390",
    "gate": "rp",
-   "range_pos": 0.5195,
-   "runup63": -0.1809,
+   "range_pos": 0.522,
+   "runup63": -0.1796,
    "stage": 3,
-   "price": 59300.0
+   "price": 59400.0
   },
   {
    "code": "BANF",
@@ -169,13 +169,13 @@
   "watch": 114,
   "reasons": {
    "밸류영역 밖(지지대 아님)": 470,
-   "추락 중(범위 1%)": 259,
-   "추락 중(범위 2%)": 227,
-   "추락 중(범위 0%)": 223,
+   "추락 중(범위 1%)": 256,
+   "추락 중(범위 2%)": 226,
+   "추락 중(범위 0%)": 224,
    "매물대 정보 없음": 157,
-   "추락 중(범위 3%)": 133,
-   "추락 중(범위 4%)": 125,
-   "추락 중(범위 6%)": 112
+   "추락 중(범위 3%)": 136,
+   "추락 중(범위 4%)": 124,
+   "추락 중(범위 6%)": 111
   }
  },
  "signals": [
@@ -299,24 +299,24 @@
    "group": "now",
    "entry_kind": "now",
    "stage": 3,
-   "price": 157000.0,
-   "entry": 157000.0,
-   "stop": 143680.172,
-   "target": 183639.656,
+   "price": 157300.0,
+   "entry": 157300.0,
+   "stop": 143980.172,
+   "target": 183939.656,
    "shares_1pct": 7,
-   "range_pos": 0.0364,
+   "range_pos": 0.0381,
    "norm": -30.2,
    "bear_share": 0.375,
    "fresh": true,
-   "break_gap": 0.0198,
+   "break_gap": 0.0217,
    "earnings_d": null,
    "tactic": {
     "stop_pct": 8.5,
     "pb_price": 150500.0,
-    "pb_stop_pct": 4.5,
+    "pb_stop_pct": 4.3,
     "mode": "pullback",
     "label": "⏳ 눌림 지정가만",
-    "desc": "지금 추격 금지(손절폭 8.5%) — <b>150,500원 눌림 지정가만</b>. 눌리면 손절폭 4.5%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
+    "desc": "지금 추격 금지(손절폭 8.5%) — <b>150,500원 눌림 지정가만</b>. 눌리면 손절폭 4.3%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
    }
   },
   {
@@ -1518,13 +1518,13 @@
    "group": "shelf_shadow_b2",
    "shadow": true,
    "orderable": false,
-   "entry": 214000.0,
+   "entry": 214500.0,
    "stop": 192766.0,
-   "target": 256468.0,
+   "target": 257968.0,
    "stage": 0,
    "norm": -0.0,
-   "range_pos": 0.2801,
-   "runup252": 0.2931,
+   "range_pos": 0.2822,
+   "runup252": 0.2961,
    "fresh": false,
    "tactic": "shadow"
   },
@@ -1616,24 +1616,24 @@
    "group": "shelf_watch",
    "entry_kind": "shelf_watch",
    "stage": 0,
-   "price": 40500.0,
-   "entry": 40500.0,
+   "price": 40550.0,
+   "entry": 40550.0,
    "stop": 37779.0,
    "target": 51226.0417,
    "shares_1pct": 0,
-   "range_pos": 0.4124,
+   "range_pos": 0.4135,
    "norm": -4.7,
    "bear_share": 0.375,
    "shelf": {
     "poc": 37823.9583,
     "val": 28251.0417,
     "vah": 51226.0417,
-    "rr": 3.94,
+    "rr": 3.85,
     "overhead": 0.373,
     "reason": "반등 미확인(거래량)",
     "history_bars": 1913,
-    "profile_pnl_proxy": 0.0718,
-    "runup252": 0.7308,
+    "profile_pnl_proxy": 0.0731,
+    "runup252": 0.7329,
     "checks": {
      "터치": true,
      "회복": true,
@@ -4696,16 +4696,16 @@
    "group": "watch",
    "entry_kind": "pullback",
    "stage": 3,
-   "price": 176300.0,
+   "price": 176000.0,
    "entry": 153000.0,
    "stop": 135118.7739,
    "target": 188762.4522,
    "shares_1pct": 5,
-   "range_pos": 0.0923,
+   "range_pos": 0.0911,
    "norm": -36.8,
    "bear_share": 0.375,
    "fresh": false,
-   "break_gap": 0.1566,
+   "break_gap": 0.1546,
    "earnings_d": null,
    "tactic": null
   },
