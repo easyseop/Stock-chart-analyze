@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated_at": "2026-10-24T10:56:43+09:00",
+ "generated_at": "2026-10-24T11:45:07+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "a_ablation": [
   {
@@ -168,13 +168,13 @@
   "ok": 9,
   "watch": 124,
   "reasons": {
-   "밸류영역 밖(지지대 아님)": 495,
+   "밸류영역 밖(지지대 아님)": 496,
    "추락 중(범위 1%)": 278,
    "추락 중(범위 0%)": 243,
    "추락 중(범위 2%)": 172,
    "매물대 정보 없음": 146,
    "추락 중(범위 3%)": 143,
-   "추락 중(범위 4%)": 139,
+   "추락 중(범위 4%)": 140,
    "추락 중(범위 5%)": 109
   }
  },
@@ -2356,6 +2356,27 @@
    "tactic": null
   },
   {
+   "id": "BMI-2026-10-24-watch",
+   "code": "BMI",
+   "name": "Badger Meter, Inc.",
+   "ccy": "USD",
+   "group": "watch",
+   "entry_kind": "pullback",
+   "stage": 2,
+   "price": 151.24,
+   "entry": 121.7032,
+   "stop": 110.1325,
+   "target": 144.8446,
+   "shares_1pct": 8,
+   "range_pos": 0.4882,
+   "norm": -3.8,
+   "bear_share": 0.25,
+   "fresh": true,
+   "break_gap": 0.0101,
+   "earnings_d": 96,
+   "tactic": null
+  },
+  {
    "id": "TSCO-2026-10-24-watch",
    "code": "TSCO",
    "name": "Tractor Supply Company",
@@ -3089,27 +3110,6 @@
     "label": "⚖ 반반 진입",
     "desc": "손절폭 6.8% — 절반만 현재가, 나머지는 눌림 확인 후 추가"
    }
-  },
-  {
-   "id": "BMI-2026-10-24-watch",
-   "code": "BMI",
-   "name": "Badger Meter, Inc.",
-   "ccy": "USD",
-   "group": "watch",
-   "entry_kind": "pullback",
-   "stage": 1,
-   "price": 149.64,
-   "entry": 121.7032,
-   "stop": 110.564,
-   "target": 143.9816,
-   "shares_1pct": 8,
-   "range_pos": 0.4638,
-   "norm": 32.1,
-   "bear_share": 0.25,
-   "fresh": true,
-   "break_gap": -0.0011,
-   "earnings_d": 96,
-   "tactic": null
   },
   {
    "id": "PEGA-2026-10-24-watch",
