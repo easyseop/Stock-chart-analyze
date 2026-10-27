@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated_at": "2026-10-27T14:57:42+09:00",
+ "generated_at": "2026-10-27T15:05:46+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "a_ablation": [
   {
@@ -166,16 +166,16 @@
  ],
  "shelf_debug": {
   "ok": 4,
-  "watch": 100,
+  "watch": 101,
   "reasons": {
    "밸류영역 밖(지지대 아님)": 509,
-   "추락 중(범위 1%)": 287,
-   "추락 중(범위 0%)": 255,
-   "추락 중(범위 2%)": 171,
+   "추락 중(범위 1%)": 290,
+   "추락 중(범위 0%)": 256,
+   "추락 중(범위 2%)": 173,
    "매물대 정보 없음": 146,
-   "추락 중(범위 3%)": 140,
-   "추락 중(범위 4%)": 130,
-   "추락 중(범위 5%)": 108
+   "추락 중(범위 3%)": 135,
+   "추락 중(범위 4%)": 129,
+   "추락 중(범위 5%)": 107
   }
  },
  "signals": [
@@ -1849,24 +1849,24 @@
    "group": "shelf_watch",
    "entry_kind": "shelf_watch",
    "stage": 0,
-   "price": 256000.0,
-   "entry": 256000.0,
+   "price": 254500.0,
+   "entry": 254500.0,
    "stop": 227850.0,
    "target": 306968.75,
    "shares_1pct": 0,
-   "range_pos": 0.3007,
+   "range_pos": 0.2966,
    "norm": -50.9,
    "bear_share": 0.5,
    "shelf": {
     "poc": 151760.4167,
     "val": 151760.4167,
     "vah": 306968.75,
-    "rr": 1.81,
+    "rr": 1.97,
     "overhead": 0.514,
     "reason": "반등 미확인(터치·거래량)",
     "history_bars": 1915,
-    "profile_pnl_proxy": -0.0397,
-    "runup252": 0.5696,
+    "profile_pnl_proxy": -0.0453,
+    "runup252": 0.5604,
     "checks": {
      "터치": false,
      "회복": true,
@@ -2636,6 +2636,34 @@
    }
   },
   {
+   "id": "088980-2026-10-27-watch",
+   "code": "088980",
+   "name": "맥쿼리인프라",
+   "ccy": "KRW",
+   "group": "watch",
+   "entry_kind": "now",
+   "stage": 1,
+   "price": 9580.0,
+   "entry": 9580.0,
+   "stop": 9292.6,
+   "target": 10154.8,
+   "shares_1pct": 347,
+   "range_pos": 0.1012,
+   "norm": -18.9,
+   "bear_share": 0.25,
+   "fresh": true,
+   "break_gap": -0.0092,
+   "earnings_d": null,
+   "tactic": {
+    "stop_pct": 3.0,
+    "pb_price": 9474.125,
+    "pb_stop_pct": 1.9,
+    "mode": "full",
+    "label": "⚡ 즉시 분할",
+    "desc": "손절폭 3.0%로 타이트 — 현재가에서 1~2회 분할 매수. 기다리는 이득보다 놓치는 비용이 큼"
+   }
+  },
+  {
    "id": "HLI-2026-10-27-watch",
    "code": "HLI",
    "name": "Houlihan Lokey, Inc.",
@@ -2920,34 +2948,6 @@
     "mode": "full",
     "label": "⚡ 즉시 분할",
     "desc": "손절폭 5.4%로 타이트 — 현재가에서 1~2회 분할 매수. 기다리는 이득보다 놓치는 비용이 큼"
-   }
-  },
-  {
-   "id": "088980-2026-10-27-watch",
-   "code": "088980",
-   "name": "맥쿼리인프라",
-   "ccy": "KRW",
-   "group": "watch",
-   "entry_kind": "now",
-   "stage": 1,
-   "price": 9580.0,
-   "entry": 9580.0,
-   "stop": 9292.6,
-   "target": 10154.8,
-   "shares_1pct": 347,
-   "range_pos": 0.1012,
-   "norm": -28.3,
-   "bear_share": 0.375,
-   "fresh": true,
-   "break_gap": -0.0092,
-   "earnings_d": null,
-   "tactic": {
-    "stop_pct": 3.0,
-    "pb_price": 9474.125,
-    "pb_stop_pct": 1.9,
-    "mode": "full",
-    "label": "⚡ 즉시 분할",
-    "desc": "손절폭 3.0%로 타이트 — 현재가에서 1~2회 분할 매수. 기다리는 이득보다 놓치는 비용이 큼"
    }
   },
   {
