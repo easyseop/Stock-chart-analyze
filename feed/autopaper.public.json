@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-10-28T10:25:38.339364+09:00",
+ "generated_at": "2026-10-28T11:11:23.796505+09:00",
  "updated": "2026-10-28",
  "start": 100000000,
  "cash": 31056902,
@@ -19,7 +19,7 @@
    "opened": "2026-09-29",
    "pl_krw": 210146,
    "pl_pct": 7.66,
-   "price_age_min": 3.9
+   "price_age_min": 39.0
   },
   {
    "code": "CRAI",
@@ -34,7 +34,7 @@
    "opened": "2026-10-01",
    "pl_krw": 634684,
    "pl_pct": 18.19,
-   "price_age_min": 3.9
+   "price_age_min": 36.3
   },
   {
    "code": "COST",
@@ -49,7 +49,7 @@
    "opened": "2026-10-07",
    "pl_krw": 65133,
    "pl_pct": 5.21,
-   "price_age_min": 3.9
+   "price_age_min": 36.4
   },
   {
    "code": "AES",
@@ -64,7 +64,7 @@
    "opened": "2026-10-09",
    "pl_krw": 1605,
    "pl_pct": 0.74,
-   "price_age_min": 3.9
+   "price_age_min": 42.0
   },
   {
    "code": "TRMB",
@@ -79,7 +79,7 @@
    "opened": "2026-10-09",
    "pl_krw": 456696,
    "pl_pct": 5.53,
-   "price_age_min": 5.7
+   "price_age_min": 17.8
   },
   {
    "code": "BDC",
@@ -94,7 +94,7 @@
    "opened": "2026-10-12",
    "pl_krw": -33658,
    "pl_pct": -0.55,
-   "price_age_min": 3.9
+   "price_age_min": 39.4
   },
   {
    "code": "CHKP",
@@ -109,7 +109,7 @@
    "opened": "2026-10-19",
    "pl_krw": 566625,
    "pl_pct": 15.42,
-   "price_age_min": 6.2
+   "price_age_min": 37.3
   },
   {
    "code": "TM",
@@ -124,7 +124,7 @@
    "opened": "2026-10-21",
    "pl_krw": -32504,
    "pl_pct": -0.25,
-   "price_age_min": 3.9
+   "price_age_min": 18.1
   },
   {
    "code": "251270",
@@ -139,7 +139,7 @@
    "opened": "2026-10-22",
    "pl_krw": -103000,
    "pl_pct": -1.45,
-   "price_age_min": 3.9
+   "price_age_min": 42.9
   },
   {
    "code": "LOPE",
@@ -154,7 +154,7 @@
    "opened": "2026-10-22",
    "pl_krw": -100761,
    "pl_pct": -1.53,
-   "price_age_min": 3.9
+   "price_age_min": 27.5
   },
   {
    "code": "EQT",
@@ -169,7 +169,7 @@
    "opened": "2026-10-23",
    "pl_krw": 462083,
    "pl_pct": 4.81,
-   "price_age_min": 6.8
+   "price_age_min": 33.8
   }
  ],
  "pending": [
@@ -2518,5 +2518,7 @@
   }
  ],
  "lane": "bulk",
- "data_stale": []
+ "data_stale": [
+  "251270"
+ ]
 }
