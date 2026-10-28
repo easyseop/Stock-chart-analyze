@@ -1,10 +1,10 @@
 {
- "generated_at": "2026-10-29T03:12:19.550874+09:00",
+ "generated_at": "2026-10-29T03:32:01.848122+09:00",
  "updated": "2026-10-29",
  "start": 100000000,
- "cash": 18402537,
- "equity": 95641126,
- "ret_pct": -4.36,
+ "cash": 23474268,
+ "equity": 95562561,
+ "ret_pct": -4.44,
  "positions": [
   {
    "code": "BKE",
@@ -12,14 +12,14 @@
    "ccy": "USD",
    "q": 48,
    "avg": 43.09,
-   "price": 45.790000915527344,
+   "price": 45.689998626708984,
    "stop": 44.482,
    "target": 47.1138,
    "half_done": true,
    "opened": "2026-09-29",
-   "pl_krw": 174005,
-   "pl_pct": 6.27,
-   "price_age_min": 0.5
+   "pl_krw": 167560,
+   "pl_pct": 6.03,
+   "price_age_min": 0.4
   },
   {
    "code": "CRAI",
@@ -27,14 +27,14 @@
    "ccy": "USD",
    "q": 16,
    "avg": 164.4,
-   "price": 193.17999267578125,
+   "price": 193.05999755859375,
    "stop": 187.97030183105468,
    "target": 186.8795,
    "half_done": true,
    "opened": "2026-10-01",
-   "pl_krw": 618254,
-   "pl_pct": 17.51,
-   "price_age_min": 0.5
+   "pl_krw": 615676,
+   "pl_pct": 17.43,
+   "price_age_min": 0.4
   },
   {
    "code": "COST",
@@ -42,14 +42,14 @@
    "ccy": "USD",
    "q": 1,
    "avg": 943.035,
-   "price": 987.1900024414062,
+   "price": 984.6400146484375,
    "stop": 976.3645122070312,
    "target": 1003.1489,
    "half_done": true,
    "opened": "2026-10-07",
-   "pl_krw": 59284,
-   "pl_pct": 4.68,
-   "price_age_min": 0.5
+   "pl_krw": 55860,
+   "pl_pct": 4.41,
+   "price_age_min": 0.4
   },
   {
    "code": "AES",
@@ -57,13 +57,13 @@
    "ccy": "USD",
    "q": 11,
    "avg": 14.92,
-   "price": 14.994099617004395,
+   "price": 15.0,
    "stop": 14.4724,
    "target": 15.8152,
    "half_done": false,
    "opened": "2026-10-09",
-   "pl_krw": 1094,
-   "pl_pct": 0.5,
+   "pl_krw": 1182,
+   "pl_pct": 0.54,
    "price_age_min": 0.4
   },
   {
@@ -72,13 +72,13 @@
    "ccy": "USD",
    "q": 104,
    "avg": 59.85,
-   "price": 64.00499725341797,
+   "price": 63.9900016784668,
    "stop": 59.85,
    "target": 66.5126,
    "half_done": true,
    "opened": "2026-10-09",
-   "pl_krw": 580177,
-   "pl_pct": 6.94,
+   "pl_krw": 578083,
+   "pl_pct": 6.92,
    "price_age_min": 0.4
   },
   {
@@ -87,13 +87,13 @@
    "ccy": "USD",
    "q": 20,
    "avg": 138.485,
-   "price": 155.31500244140625,
+   "price": 155.42999267578125,
    "stop": 148.5424969482422,
    "target": 155.695,
    "half_done": true,
    "opened": "2026-10-19",
-   "pl_krw": 451929,
-   "pl_pct": 12.15,
+   "pl_krw": 455017,
+   "pl_pct": 12.24,
    "price_age_min": 0.4
   },
   {
@@ -102,13 +102,13 @@
    "ccy": "USD",
    "q": 50,
    "avg": 197.05,
-   "price": 193.6300048828125,
+   "price": 193.3800048828125,
    "stop": 190.922,
    "target": 209.306,
    "half_done": false,
    "opened": "2026-10-21",
-   "pl_krw": -229589,
-   "pl_pct": -1.74,
+   "pl_krw": -246372,
+   "pl_pct": -1.86,
    "price_age_min": 0.4
   },
   {
@@ -132,28 +132,28 @@
    "ccy": "USD",
    "q": 31,
    "avg": 159.76,
-   "price": 152.66000366210938,
+   "price": 152.42999267578125,
    "stop": 151.7975,
    "target": 175.6851,
    "half_done": false,
    "opened": "2026-10-22",
-   "pl_krw": -295513,
-   "pl_pct": -4.44,
+   "pl_krw": -305086,
+   "pl_pct": -4.59,
    "price_age_min": 0.4
   },
   {
    "code": "EQT",
    "name": "EQT Corporation",
    "ccy": "USD",
-   "q": 135,
+   "q": 68,
    "avg": 53.69,
-   "price": 56.400001525878906,
-   "stop": 51.0906,
+   "price": 56.380001068115234,
+   "stop": 53.69,
    "target": 58.8889,
-   "half_done": false,
+   "half_done": true,
    "opened": "2026-10-23",
-   "pl_krw": 491201,
-   "pl_pct": 5.05,
+   "pl_krw": 245594,
+   "pl_pct": 5.01,
    "price_age_min": 0.4
   },
   {
@@ -162,13 +162,13 @@
    "ccy": "USD",
    "q": 252,
    "avg": 56.24,
-   "price": 56.14500045776367,
+   "price": 56.03499984741211,
    "stop": 54.1293,
    "target": 60.4614,
    "half_done": false,
    "opened": "2026-10-28",
-   "pl_krw": -32142,
-   "pl_pct": -0.17,
+   "pl_krw": -69360,
+   "pl_pct": -0.36,
    "price_age_min": 0.4
   }
  ],
@@ -1856,10 +1856,23 @@
   },
   {
    "d": "2026-10-29",
-   "v": 95641126
+   "v": 95562561
   }
  ],
  "log": [
+  {
+   "d": "2026-10-29",
+   "type": "sell",
+   "code": "EQT",
+   "name": "EQT Corporation",
+   "q": 67,
+   "price": 56.38,
+   "ccy": "USD",
+   "amt": 5071731,
+   "note": "+1R 절반 익절",
+   "pl": 241982,
+   "pl_pct": 5.0
+  },
   {
    "d": "2026-10-28",
    "type": "buy",
@@ -2502,19 +2515,6 @@
    "ccy": "USD",
    "amt": 0,
    "note": "지정가 취소 — 신호 부패: 제외 게이트 — 하락추세/방어선 이탈"
-  },
-  {
-   "d": "2026-09-29",
-   "type": "buy",
-   "code": "GBCI",
-   "name": "Glacier Bancorp, Inc.",
-   "q": 133,
-   "price": 44.17,
-   "ccy": "USD",
-   "amt": 7992289,
-   "note": "즉시 분할 — 🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권29% · 체크4/6 · 손절폭4.0%",
-   "stop": 42.3931,
-   "target": 47.7239
   }
  ],
  "lane": "fast",
