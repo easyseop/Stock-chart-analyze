@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated_at": "2026-10-29T11:29:44+09:00",
+ "generated_at": "2026-10-29T11:36:25+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "a_ablation": [
   {
@@ -166,16 +166,16 @@
  ],
  "shelf_debug": {
   "ok": 15,
-  "watch": 125,
+  "watch": 127,
   "reasons": {
-   "밸류영역 밖(지지대 아님)": 460,
-   "추락 중(범위 1%)": 207,
-   "추락 중(범위 2%)": 172,
-   "추락 중(범위 0%)": 167,
+   "밸류영역 밖(지지대 아님)": 456,
+   "추락 중(범위 1%)": 206,
+   "추락 중(범위 2%)": 171,
+   "추락 중(범위 0%)": 171,
    "매물대 정보 없음": 163,
-   "추락 중(범위 3%)": 140,
    "추락 중(범위 4%)": 139,
-   "추락 중(범위 6%)": 117
+   "추락 중(범위 3%)": 139,
+   "추락 중(범위 6%)": 115
   }
  },
  "signals": [
@@ -2265,6 +2265,46 @@
    "trend_above_200": true
   },
   {
+   "id": "003550-2026-10-29-shelf-watch",
+   "code": "003550",
+   "name": "LG",
+   "ccy": "KRW",
+   "group": "shelf_watch",
+   "entry_kind": "shelf_watch",
+   "stage": 0,
+   "price": 99000.0,
+   "entry": 99000.0,
+   "stop": 95060.0,
+   "target": 113050.0,
+   "shares_1pct": 0,
+   "range_pos": 0.2296,
+   "norm": -4.9,
+   "bear_share": 0.25,
+   "shelf": {
+    "poc": 98950.0,
+    "val": 80150.0,
+    "vah": 113050.0,
+    "rr": 3.57,
+    "overhead": 0.521,
+    "reason": "반등 미확인(거래량)",
+    "history_bars": 1917,
+    "profile_pnl_proxy": -0.0744,
+    "runup252": 0.2874,
+    "checks": {
+     "터치": true,
+     "회복": true,
+     "상단마감": true,
+     "거래량": false,
+     "신저가아님": true
+    }
+   },
+   "fresh": false,
+   "break_gap": null,
+   "earnings_d": null,
+   "tactic": "watch",
+   "trend_above_200": false
+  },
+  {
    "id": "IDXX-2026-10-29-shelf-watch",
    "code": "IDXX",
    "name": "IDEXX Laboratories, Inc.",
@@ -2381,46 +2421,6 @@
    "fresh": false,
    "break_gap": null,
    "earnings_d": -77,
-   "tactic": "watch",
-   "trend_above_200": false
-  },
-  {
-   "id": "TRVI-2026-10-29-shelf-watch",
-   "code": "TRVI",
-   "name": "Trevi Therapeutics, Inc.",
-   "ccy": "USD",
-   "group": "shelf_watch",
-   "entry_kind": "shelf_watch",
-   "stage": 0,
-   "price": 13.52,
-   "entry": 13.52,
-   "stop": 12.0932,
-   "target": 15.67,
-   "shares_1pct": 0,
-   "range_pos": 0.3558,
-   "norm": -11.5,
-   "bear_share": 0.25,
-   "shelf": {
-    "poc": 13.07,
-    "val": 10.0367,
-    "vah": 15.67,
-    "rr": 1.51,
-    "overhead": 0.493,
-    "reason": "반등 미확인(거래량)",
-    "history_bars": 1881,
-    "profile_pnl_proxy": -0.0501,
-    "runup252": 0.284,
-    "checks": {
-     "터치": true,
-     "회복": true,
-     "상단마감": true,
-     "거래량": false,
-     "신저가아님": true
-    }
-   },
-   "fresh": false,
-   "break_gap": null,
-   "earnings_d": -84,
    "tactic": "watch",
    "trend_above_200": false
   },
@@ -3317,16 +3317,16 @@
    "group": "watch",
    "entry_kind": "pullback",
    "stage": 2,
-   "price": 538000.0,
+   "price": 537000.0,
    "entry": 500306.25,
-   "stop": 430091.2517,
-   "target": 640736.2467,
+   "stop": 429376.9659,
+   "target": 642164.8181,
    "shares_1pct": 1,
-   "range_pos": 0.4828,
+   "range_pos": 0.4813,
    "norm": -20.8,
    "bear_share": 0.375,
    "fresh": true,
-   "break_gap": 0.0157,
+   "break_gap": 0.0138,
    "earnings_d": null,
    "tactic": null
   },
@@ -3744,24 +3744,24 @@
    "group": "watch",
    "entry_kind": "now",
    "stage": 2,
-   "price": 347000.0,
-   "entry": 347000.0,
-   "stop": 313758.3725,
-   "target": 413483.2549,
+   "price": 343500.0,
+   "entry": 343500.0,
+   "stop": 310186.944,
+   "target": 410126.1121,
    "shares_1pct": 3,
-   "range_pos": 0.1187,
+   "range_pos": 0.1122,
    "norm": -68.9,
    "bear_share": 0.5,
    "fresh": true,
-   "break_gap": 0.0333,
+   "break_gap": 0.0229,
    "earnings_d": null,
    "tactic": {
-    "stop_pct": 9.6,
+    "stop_pct": 9.7,
     "pb_price": 317500.0,
-    "pb_stop_pct": 1.2,
+    "pb_stop_pct": 2.3,
     "mode": "pullback",
     "label": "⏳ 눌림 지정가만",
-    "desc": "지금 추격 금지(손절폭 9.6%) — <b>317,500원 눌림 지정가만</b>. 눌리면 손절폭 1.2%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
+    "desc": "지금 추격 금지(손절폭 9.7%) — <b>317,500원 눌림 지정가만</b>. 눌리면 손절폭 2.3%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
    }
   },
   {
@@ -4675,24 +4675,24 @@
    "group": "watch",
    "entry_kind": "now",
    "stage": 1,
-   "price": 66800.0,
-   "entry": 66800.0,
-   "stop": 63200.9985,
-   "target": 73998.003,
+   "price": 66200.0,
+   "entry": 66200.0,
+   "stop": 62586.7128,
+   "target": 73426.5744,
    "shares_1pct": 27,
-   "range_pos": 0.0969,
+   "range_pos": 0.0853,
    "norm": -18.0,
    "bear_share": 0.375,
    "fresh": true,
-   "break_gap": -0.0018,
+   "break_gap": -0.0107,
    "earnings_d": null,
    "tactic": {
-    "stop_pct": 5.4,
+    "stop_pct": 5.5,
     "pb_price": 65100.0,
-    "pb_stop_pct": 2.9,
+    "pb_stop_pct": 3.9,
     "mode": "full",
     "label": "⚡ 즉시 분할",
-    "desc": "손절폭 5.4%로 타이트 — 현재가에서 1~2회 분할 매수. 기다리는 이득보다 놓치는 비용이 큼"
+    "desc": "손절폭 5.5%로 타이트 — 현재가에서 1~2회 분할 매수. 기다리는 이득보다 놓치는 비용이 큼"
    }
   },
   {
@@ -4945,34 +4945,6 @@
     "mode": "pullback",
     "label": "⏳ 눌림 지정가만",
     "desc": "지금 추격 금지(손절폭 11.7% · 단기 이격) — <b>$19.13 눌림 지정가만</b>. 눌리면 손절폭 2.7%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
-   }
-  },
-  {
-   "id": "035420-2026-10-29-watch",
-   "code": "035420",
-   "name": "NAVER",
-   "ccy": "KRW",
-   "group": "watch",
-   "entry_kind": "now",
-   "stage": 1,
-   "price": 173400.0,
-   "entry": 173400.0,
-   "stop": 160697.0529,
-   "target": 198805.8942,
-   "shares_1pct": 7,
-   "range_pos": 0.0188,
-   "norm": -34.0,
-   "bear_share": 0.5,
-   "fresh": true,
-   "break_gap": -0.0155,
-   "earnings_d": null,
-   "tactic": {
-    "stop_pct": 7.3,
-    "pb_price": 170900.0,
-    "pb_stop_pct": 6.0,
-    "mode": "half",
-    "label": "⚖ 반반 진입",
-    "desc": "손절폭 7.3% — 절반은 현재가, 절반은 눌림 170,900원 지정가(거기선 손절폭 6.0%)"
    }
   },
   {
