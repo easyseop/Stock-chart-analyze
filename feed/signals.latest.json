@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated_at": "2026-10-29T13:15:20+09:00",
+ "generated_at": "2026-10-29T13:25:50+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "a_ablation": [
   {
@@ -169,11 +169,11 @@
   "watch": 125,
   "reasons": {
    "밸류영역 밖(지지대 아님)": 457,
-   "추락 중(범위 1%)": 208,
-   "추락 중(범위 2%)": 173,
-   "추락 중(범위 0%)": 168,
+   "추락 중(범위 1%)": 206,
+   "추락 중(범위 2%)": 172,
+   "추락 중(범위 0%)": 170,
    "매물대 정보 없음": 163,
-   "추락 중(범위 3%)": 137,
+   "추락 중(범위 3%)": 138,
    "추락 중(범위 4%)": 136,
    "추락 중(범위 5%)": 118
   }
@@ -3744,24 +3744,24 @@
    "group": "watch",
    "entry_kind": "now",
    "stage": 2,
-   "price": 344500.0,
-   "entry": 344500.0,
-   "stop": 311044.0868,
-   "target": 411411.8263,
+   "price": 345000.0,
+   "entry": 345000.0,
+   "stop": 311544.0868,
+   "target": 411911.8263,
    "shares_1pct": 2,
-   "range_pos": 0.1141,
+   "range_pos": 0.115,
    "norm": -68.9,
    "bear_share": 0.5,
    "fresh": true,
-   "break_gap": 0.0259,
+   "break_gap": 0.0274,
    "earnings_d": null,
    "tactic": {
     "stop_pct": 9.7,
     "pb_price": 317500.0,
-    "pb_stop_pct": 2.0,
+    "pb_stop_pct": 1.9,
     "mode": "pullback",
     "label": "⏳ 눌림 지정가만",
-    "desc": "지금 추격 금지(손절폭 9.7%) — <b>317,500원 눌림 지정가만</b>. 눌리면 손절폭 2.0%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
+    "desc": "지금 추격 금지(손절폭 9.7%) — <b>317,500원 눌림 지정가만</b>. 눌리면 손절폭 1.9%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
    }
   },
   {
@@ -4675,21 +4675,21 @@
    "group": "watch",
    "entry_kind": "now",
    "stage": 1,
-   "price": 66650.0,
-   "entry": 66650.0,
-   "stop": 63022.4271,
-   "target": 73905.1458,
+   "price": 66700.0,
+   "entry": 66700.0,
+   "stop": 63072.4271,
+   "target": 73955.1458,
    "shares_1pct": 27,
-   "range_pos": 0.094,
+   "range_pos": 0.095,
    "norm": -18.0,
    "bear_share": 0.375,
    "fresh": true,
-   "break_gap": -0.004,
+   "break_gap": -0.0033,
    "earnings_d": null,
    "tactic": {
     "stop_pct": 5.4,
     "pb_price": 65100.0,
-    "pb_stop_pct": 3.2,
+    "pb_stop_pct": 3.1,
     "mode": "full",
     "label": "⚡ 즉시 분할",
     "desc": "손절폭 5.4%로 타이트 — 현재가에서 1~2회 분할 매수. 기다리는 이득보다 놓치는 비용이 큼"
@@ -4955,24 +4955,24 @@
    "group": "watch",
    "entry_kind": "now",
    "stage": 1,
-   "price": 173300.0,
-   "entry": 173300.0,
-   "stop": 160468.4815,
-   "target": 198963.037,
+   "price": 173400.0,
+   "entry": 173400.0,
+   "stop": 160568.4815,
+   "target": 199063.037,
    "shares_1pct": 7,
-   "range_pos": 0.018,
+   "range_pos": 0.0188,
    "norm": -34.0,
    "bear_share": 0.5,
    "fresh": true,
-   "break_gap": -0.0161,
+   "break_gap": -0.0155,
    "earnings_d": null,
    "tactic": {
     "stop_pct": 7.4,
     "pb_price": 170900.0,
-    "pb_stop_pct": 6.1,
+    "pb_stop_pct": 6.0,
     "mode": "half",
     "label": "⚖ 반반 진입",
-    "desc": "손절폭 7.4% — 절반은 현재가, 절반은 눌림 170,900원 지정가(거기선 손절폭 6.1%)"
+    "desc": "손절폭 7.4% — 절반은 현재가, 절반은 눌림 170,900원 지정가(거기선 손절폭 6.0%)"
    }
   },
   {
