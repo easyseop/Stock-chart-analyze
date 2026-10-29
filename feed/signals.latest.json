@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated_at": "2026-10-29T11:36:25+09:00",
+ "generated_at": "2026-10-29T11:48:55+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "a_ablation": [
   {
@@ -2265,46 +2265,6 @@
    "trend_above_200": true
   },
   {
-   "id": "003550-2026-10-29-shelf-watch",
-   "code": "003550",
-   "name": "LG",
-   "ccy": "KRW",
-   "group": "shelf_watch",
-   "entry_kind": "shelf_watch",
-   "stage": 0,
-   "price": 99000.0,
-   "entry": 99000.0,
-   "stop": 95060.0,
-   "target": 113050.0,
-   "shares_1pct": 0,
-   "range_pos": 0.2296,
-   "norm": -4.9,
-   "bear_share": 0.25,
-   "shelf": {
-    "poc": 98950.0,
-    "val": 80150.0,
-    "vah": 113050.0,
-    "rr": 3.57,
-    "overhead": 0.521,
-    "reason": "반등 미확인(거래량)",
-    "history_bars": 1917,
-    "profile_pnl_proxy": -0.0744,
-    "runup252": 0.2874,
-    "checks": {
-     "터치": true,
-     "회복": true,
-     "상단마감": true,
-     "거래량": false,
-     "신저가아님": true
-    }
-   },
-   "fresh": false,
-   "break_gap": null,
-   "earnings_d": null,
-   "tactic": "watch",
-   "trend_above_200": false
-  },
-  {
    "id": "IDXX-2026-10-29-shelf-watch",
    "code": "IDXX",
    "name": "IDEXX Laboratories, Inc.",
@@ -2421,6 +2381,46 @@
    "fresh": false,
    "break_gap": null,
    "earnings_d": -77,
+   "tactic": "watch",
+   "trend_above_200": false
+  },
+  {
+   "id": "003550-2026-10-29-shelf-watch",
+   "code": "003550",
+   "name": "LG",
+   "ccy": "KRW",
+   "group": "shelf_watch",
+   "entry_kind": "shelf_watch",
+   "stage": 0,
+   "price": 99000.0,
+   "entry": 99000.0,
+   "stop": 95060.0,
+   "target": 113050.0,
+   "shares_1pct": 0,
+   "range_pos": 0.2296,
+   "norm": -14.8,
+   "bear_share": 0.25,
+   "shelf": {
+    "poc": 98950.0,
+    "val": 80150.0,
+    "vah": 113050.0,
+    "rr": 3.57,
+    "overhead": 0.521,
+    "reason": "반등 미확인(거래량)",
+    "history_bars": 1917,
+    "profile_pnl_proxy": -0.0744,
+    "runup252": 0.2874,
+    "checks": {
+     "터치": true,
+     "회복": true,
+     "상단마감": true,
+     "거래량": false,
+     "신저가아님": true
+    }
+   },
+   "fresh": false,
+   "break_gap": null,
+   "earnings_d": null,
    "tactic": "watch",
    "trend_above_200": false
   },
@@ -4668,34 +4668,6 @@
    }
   },
   {
-   "id": "017800-2026-10-29-watch",
-   "code": "017800",
-   "name": "현대엘리베이터",
-   "ccy": "KRW",
-   "group": "watch",
-   "entry_kind": "now",
-   "stage": 1,
-   "price": 66200.0,
-   "entry": 66200.0,
-   "stop": 62586.7128,
-   "target": 73426.5744,
-   "shares_1pct": 27,
-   "range_pos": 0.0853,
-   "norm": -18.0,
-   "bear_share": 0.375,
-   "fresh": true,
-   "break_gap": -0.0107,
-   "earnings_d": null,
-   "tactic": {
-    "stop_pct": 5.5,
-    "pb_price": 65100.0,
-    "pb_stop_pct": 3.9,
-    "mode": "full",
-    "label": "⚡ 즉시 분할",
-    "desc": "손절폭 5.5%로 타이트 — 현재가에서 1~2회 분할 매수. 기다리는 이득보다 놓치는 비용이 큼"
-   }
-  },
-  {
    "id": "HLIO-2026-10-29-watch",
    "code": "HLIO",
    "name": "Helios Technologies, Inc.",
@@ -4917,6 +4889,34 @@
     "mode": "pullback",
     "label": "⏳ 눌림 지정가만",
     "desc": "지금 추격 금지(손절폭 9.1%) — <b>$48.84 눌림 지정가만</b>. 눌리면 손절폭 0.7%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
+   }
+  },
+  {
+   "id": "017800-2026-10-29-watch",
+   "code": "017800",
+   "name": "현대엘리베이터",
+   "ccy": "KRW",
+   "group": "watch",
+   "entry_kind": "now",
+   "stage": 1,
+   "price": 66200.0,
+   "entry": 66200.0,
+   "stop": 62586.7128,
+   "target": 73426.5744,
+   "shares_1pct": 27,
+   "range_pos": 0.0853,
+   "norm": -27.9,
+   "bear_share": 0.375,
+   "fresh": true,
+   "break_gap": -0.0107,
+   "earnings_d": null,
+   "tactic": {
+    "stop_pct": 5.5,
+    "pb_price": 65100.0,
+    "pb_stop_pct": 3.9,
+    "mode": "full",
+    "label": "⚡ 즉시 분할",
+    "desc": "손절폭 5.5%로 타이트 — 현재가에서 1~2회 분할 매수. 기다리는 이득보다 놓치는 비용이 큼"
    }
   },
   {
