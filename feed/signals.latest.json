@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated_at": "2026-10-30T13:57:01+09:00",
+ "generated_at": "2026-10-30T14:07:25+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "a_ablation": [
   {
@@ -168,14 +168,14 @@
   "ok": 14,
   "watch": 115,
   "reasons": {
-   "밸류영역 밖(지지대 아님)": 484,
+   "밸류영역 밖(지지대 아님)": 485,
    "추락 중(범위 1%)": 221,
    "추락 중(범위 0%)": 177,
-   "추락 중(범위 2%)": 155,
+   "추락 중(범위 2%)": 156,
    "매물대 정보 없음": 148,
-   "추락 중(범위 3%)": 132,
+   "추락 중(범위 3%)": 129,
    "추락 중(범위 5%)": 124,
-   "추락 중(범위 4%)": 119
+   "추락 중(범위 4%)": 121
   }
  },
  "signals": [
@@ -551,24 +551,24 @@
    "group": "now",
    "entry_kind": "now",
    "stage": 3,
-   "price": 341000.0,
-   "entry": 341000.0,
-   "stop": 306349.6112,
-   "target": 410300.7775,
+   "price": 340500.0,
+   "entry": 340500.0,
+   "stop": 305849.6112,
+   "target": 409800.7775,
    "shares_1pct": 2,
-   "range_pos": 0.1076,
+   "range_pos": 0.1067,
    "norm": -57.5,
    "bear_share": 0.5,
    "fresh": true,
-   "break_gap": 0.0302,
+   "break_gap": 0.0287,
    "earnings_d": null,
    "tactic": {
     "stop_pct": 10.2,
     "pb_price": 317500.0,
-    "pb_stop_pct": 3.5,
+    "pb_stop_pct": 3.7,
     "mode": "pullback",
     "label": "⏳ 눌림 지정가만",
-    "desc": "지금 추격 금지(손절폭 10.2%) — <b>317,500원 눌림 지정가만</b>. 눌리면 손절폭 3.5%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
+    "desc": "지금 추격 금지(손절폭 10.2%) — <b>317,500원 눌림 지정가만</b>. 눌리면 손절폭 3.7%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
    }
   },
   {
@@ -2031,24 +2031,24 @@
    "group": "shelf_watch",
    "entry_kind": "shelf_watch",
    "stage": 0,
-   "price": 315500.0,
-   "entry": 315500.0,
+   "price": 315000.0,
+   "entry": 315000.0,
    "stop": 295960.0,
    "target": 390343.75,
    "shares_1pct": 0,
-   "range_pos": 0.3155,
+   "range_pos": 0.3141,
    "norm": -11.3,
    "bear_share": 0.25,
    "shelf": {
     "poc": 299218.75,
     "val": 223281.25,
     "vah": 390343.75,
-    "rr": 3.83,
+    "rr": 3.96,
     "overhead": 0.52,
     "reason": "반등 미확인(거래량)",
     "history_bars": 1918,
-    "profile_pnl_proxy": -0.0775,
-    "runup252": 0.5428,
+    "profile_pnl_proxy": -0.079,
+    "runup252": 0.5403,
     "checks": {
      "터치": true,
      "회복": true,
@@ -3770,34 +3770,6 @@
    }
   },
   {
-   "id": "088980-2026-10-30-watch",
-   "code": "088980",
-   "name": "맥쿼리인프라",
-   "ccy": "KRW",
-   "group": "watch",
-   "entry_kind": "now",
-   "stage": 1,
-   "price": 9590.0,
-   "entry": 9590.0,
-   "stop": 9302.3,
-   "target": 10165.4,
-   "shares_1pct": 347,
-   "range_pos": 0.1051,
-   "norm": 5.7,
-   "bear_share": 0.25,
-   "fresh": true,
-   "break_gap": -0.0041,
-   "earnings_d": null,
-   "tactic": {
-    "stop_pct": 3.0,
-    "pb_price": 9384.75,
-    "pb_stop_pct": 0.9,
-    "mode": "full",
-    "label": "⚡ 즉시 분할",
-    "desc": "손절폭 3.0%로 타이트 — 현재가에서 1~2회 분할 매수. 기다리는 이득보다 놓치는 비용이 큼"
-   }
-  },
-  {
    "id": "FWRG-2026-10-30-watch",
    "code": "FWRG",
    "name": "First Watch Restaurant Group, Inc.",
@@ -4442,6 +4414,34 @@
    }
   },
   {
+   "id": "088980-2026-10-30-watch",
+   "code": "088980",
+   "name": "맥쿼리인프라",
+   "ccy": "KRW",
+   "group": "watch",
+   "entry_kind": "now",
+   "stage": 1,
+   "price": 9600.0,
+   "entry": 9600.0,
+   "stop": 9312.0,
+   "target": 10176.0,
+   "shares_1pct": 347,
+   "range_pos": 0.1089,
+   "norm": -13.2,
+   "bear_share": 0.25,
+   "fresh": true,
+   "break_gap": -0.003,
+   "earnings_d": null,
+   "tactic": {
+    "stop_pct": 3.0,
+    "pb_price": 9384.75,
+    "pb_stop_pct": 0.8,
+    "mode": "full",
+    "label": "⚡ 즉시 분할",
+    "desc": "손절폭 3.0%로 타이트 — 현재가에서 1~2회 분할 매수. 기다리는 이득보다 놓치는 비용이 큼"
+   }
+  },
+  {
    "id": "CBT-2026-10-30-watch",
    "code": "CBT",
    "name": "Cabot Corporation",
@@ -4680,24 +4680,24 @@
    "group": "watch",
    "entry_kind": "now",
    "stage": 1,
-   "price": 172400.0,
-   "entry": 172400.0,
-   "stop": 159885.0185,
-   "target": 197429.9629,
+   "price": 172300.0,
+   "entry": 172300.0,
+   "stop": 159785.0185,
+   "target": 197329.9629,
    "shares_1pct": 7,
-   "range_pos": 0.0128,
+   "range_pos": 0.012,
    "norm": -34.0,
    "bear_share": 0.5,
    "fresh": true,
-   "break_gap": -0.0141,
+   "break_gap": -0.0147,
    "earnings_d": null,
    "tactic": {
     "stop_pct": 7.3,
     "pb_price": 170900.0,
-    "pb_stop_pct": 6.4,
+    "pb_stop_pct": 6.5,
     "mode": "half",
     "label": "⚖ 반반 진입",
-    "desc": "손절폭 7.3% — 절반은 현재가, 절반은 눌림 170,900원 지정가(거기선 손절폭 6.4%)"
+    "desc": "손절폭 7.3% — 절반은 현재가, 절반은 눌림 170,900원 지정가(거기선 손절폭 6.5%)"
    }
   },
   {
