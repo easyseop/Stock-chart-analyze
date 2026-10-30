@@ -1,10 +1,10 @@
 {
- "generated_at": "2026-10-30T22:31:48.624906+09:00",
+ "generated_at": "2026-10-30T22:44:36.813945+09:00",
  "updated": "2026-10-30",
  "start": 100000000,
- "cash": 18642360,
- "equity": 97077560,
- "ret_pct": -2.92,
+ "cash": 28540425,
+ "equity": 96790370,
+ "ret_pct": -3.21,
  "positions": [
   {
    "code": "BKE",
@@ -12,14 +12,14 @@
    "ccy": "USD",
    "q": 48,
    "avg": 43.09,
-   "price": 47.4900016784668,
+   "price": 47.400001525878906,
    "stop": 44.482,
    "target": 47.1138,
    "half_done": true,
    "opened": "2026-09-29",
-   "pl_krw": 282497,
-   "pl_pct": 10.21,
-   "price_age_min": 0.5
+   "pl_krw": 276719,
+   "pl_pct": 10.0,
+   "price_age_min": 7.3
   },
   {
    "code": "CRAI",
@@ -34,7 +34,7 @@
    "opened": "2026-10-01",
    "pl_krw": 777508,
    "pl_pct": 22.1,
-   "price_age_min": 0.5
+   "price_age_min": 7.3
   },
   {
    "code": "COST",
@@ -42,14 +42,14 @@
    "ccy": "USD",
    "q": 1,
    "avg": 943.035,
-   "price": 1011.2150268554688,
+   "price": 1009.75,
    "stop": 976.3645122070312,
    "target": 1003.1489,
    "half_done": true,
    "opened": "2026-10-07",
-   "pl_krw": 91196,
-   "pl_pct": 7.23,
-   "price_age_min": 0.5
+   "pl_krw": 89237,
+   "pl_pct": 7.07,
+   "price_age_min": 7.3
   },
   {
    "code": "TRMB",
@@ -57,14 +57,14 @@
    "ccy": "USD",
    "q": 104,
    "avg": 59.85,
-   "price": 65.69999694824219,
+   "price": 65.53500366210938,
    "stop": 60.70319694824219,
    "target": 66.5126,
    "half_done": true,
    "opened": "2026-10-09",
-   "pl_krw": 813783,
-   "pl_pct": 9.77,
-   "price_age_min": 0.5
+   "pl_krw": 790831,
+   "pl_pct": 9.5,
+   "price_age_min": 9.6
   },
   {
    "code": "CHKP",
@@ -72,14 +72,14 @@
    "ccy": "USD",
    "q": 20,
    "avg": 138.485,
-   "price": 154.02000427246094,
+   "price": 153.4600067138672,
    "stop": 148.5424969482422,
    "target": 155.695,
    "half_done": true,
    "opened": "2026-10-19",
-   "pl_krw": 415586,
-   "pl_pct": 11.22,
-   "price_age_min": 0.5
+   "pl_krw": 400605,
+   "pl_pct": 10.81,
+   "price_age_min": 10.2
   },
   {
    "code": "TM",
@@ -87,14 +87,14 @@
    "ccy": "USD",
    "q": 50,
    "avg": 197.05,
-   "price": 196.6300048828125,
+   "price": 195.22250366210938,
    "stop": 190.922,
    "target": 209.306,
    "half_done": false,
    "opened": "2026-10-21",
-   "pl_krw": -28089,
-   "pl_pct": -0.21,
-   "price_age_min": 0.5
+   "pl_krw": -122221,
+   "pl_pct": -0.93,
+   "price_age_min": 7.3
   },
   {
    "code": "251270",
@@ -109,7 +109,7 @@
    "opened": "2026-10-22",
    "pl_krw": -144200,
    "pl_pct": -2.03,
-   "price_age_min": 0.5
+   "price_age_min": 7.3
   },
   {
    "code": "LOPE",
@@ -117,14 +117,14 @@
    "ccy": "USD",
    "q": 31,
    "avg": 159.76,
-   "price": 157.14999389648438,
+   "price": 150.85000610351562,
    "stop": 151.7975,
    "target": 175.6851,
    "half_done": false,
    "opened": "2026-10-22",
-   "pl_krw": -108224,
-   "pl_pct": -1.63,
-   "price_age_min": 0.5
+   "pl_krw": -369453,
+   "pl_pct": -5.58,
+   "price_age_min": 7.2
   },
   {
    "code": "EQT",
@@ -132,29 +132,29 @@
    "ccy": "USD",
    "q": 68,
    "avg": 53.69,
-   "price": 54.55500030517578,
+   "price": 55.29999923706055,
    "stop": 53.69,
    "target": 58.8889,
    "half_done": true,
    "opened": "2026-10-23",
-   "pl_krw": 78676,
-   "pl_pct": 1.61,
-   "price_age_min": 0.5
+   "pl_krw": 146438,
+   "pl_pct": 3.0,
+   "price_age_min": 9.1
   },
   {
    "code": "CSR",
    "name": "D/B/A Centerspace",
    "ccy": "USD",
-   "q": 252,
+   "q": 126,
    "avg": 56.24,
    "price": 58.72999954223633,
-   "stop": 54.1293,
+   "stop": 56.24,
    "target": 60.4614,
-   "half_done": false,
+   "half_done": true,
    "opened": "2026-10-28",
-   "pl_krw": 839305,
+   "pl_krw": 419652,
    "pl_pct": 4.43,
-   "price_age_min": 0.5
+   "price_age_min": 8.4
   },
   {
    "code": "ALC",
@@ -162,14 +162,14 @@
    "ccy": "USD",
    "q": 53,
    "avg": 71.28,
-   "price": 71.94999694824219,
+   "price": 72.5999984741211,
    "stop": 68.6849,
    "target": 76.4702,
    "half_done": false,
    "opened": "2026-10-30",
-   "pl_krw": 47497,
-   "pl_pct": 0.94,
-   "price_age_min": 0.5
+   "pl_krw": 93577,
+   "pl_pct": 1.85,
+   "price_age_min": 8.7
   }
  ],
  "pending": [
@@ -1854,10 +1854,23 @@
   },
   {
    "d": "2026-10-30",
-   "v": 97077560
+   "v": 96790370
   }
  ],
  "log": [
+  {
+   "d": "2026-10-30",
+   "type": "sell",
+   "code": "CSR",
+   "name": "D/B/A Centerspace",
+   "q": 126,
+   "price": 58.73,
+   "ccy": "USD",
+   "amt": 9898065,
+   "note": "+1R 절반 익절",
+   "pl": 419652,
+   "pl_pct": 4.4
+  },
   {
    "d": "2026-10-30",
    "type": "order",
@@ -2497,22 +2510,8 @@
    "note": "즉시 분할 — 🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권39% · 체크4/6 · 손절폭4.3%",
    "stop": 181.2117,
    "target": 205.9266
-  },
-  {
-   "d": "2026-09-30",
-   "type": "sell",
-   "code": "FHB",
-   "name": "First Hawaiian, Inc.",
-   "q": 241,
-   "price": 24.715,
-   "ccy": "USD",
-   "amt": 8077836,
-   "note": "손절",
-   "pl": -312132,
-   "pl_pct": -3.7,
-   "r": -1.01
   }
  ],
- "lane": "fast",
+ "lane": "bulk",
  "data_stale": []
 }
