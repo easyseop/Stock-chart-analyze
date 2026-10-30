@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-10-30T08:38:59.281412+09:00",
+ "generated_at": "2026-10-30T09:12:18.472035+09:00",
  "updated": "2026-10-30",
  "start": 100000000,
  "cash": 18642360,
@@ -19,7 +19,7 @@
    "opened": "2026-09-29",
    "pl_krw": 249111,
    "pl_pct": 9.0,
-   "price_age_min": 6.9
+   "price_age_min": 4.9
   },
   {
    "code": "CRAI",
@@ -34,7 +34,7 @@
    "opened": "2026-10-01",
    "pl_krw": 692760,
    "pl_pct": 19.69,
-   "price_age_min": 6.9
+   "price_age_min": 4.9
   },
   {
    "code": "COST",
@@ -49,7 +49,7 @@
    "opened": "2026-10-07",
    "pl_krw": 70952,
    "pl_pct": 5.62,
-   "price_age_min": 6.9
+   "price_age_min": 4.9
   },
   {
    "code": "TRMB",
@@ -64,7 +64,7 @@
    "opened": "2026-10-09",
    "pl_krw": 763704,
    "pl_pct": 9.17,
-   "price_age_min": 9.3
+   "price_age_min": 8.1
   },
   {
    "code": "CHKP",
@@ -79,7 +79,7 @@
    "opened": "2026-10-19",
    "pl_krw": 401675,
    "pl_pct": 10.84,
-   "price_age_min": 9.9
+   "price_age_min": 8.9
   },
   {
    "code": "TM",
@@ -94,7 +94,7 @@
    "opened": "2026-10-21",
    "pl_krw": -28089,
    "pl_pct": -0.21,
-   "price_age_min": 6.8
+   "price_age_min": 4.9
   },
   {
    "code": "251270",
@@ -109,7 +109,7 @@
    "opened": "2026-10-22",
    "pl_krw": -144200,
    "pl_pct": -2.03,
-   "price_age_min": 6.8
+   "price_age_min": 4.9
   },
   {
    "code": "LOPE",
@@ -124,7 +124,7 @@
    "opened": "2026-10-22",
    "pl_krw": -231789,
    "pl_pct": -3.5,
-   "price_age_min": 6.8
+   "price_age_min": 4.9
   },
   {
    "code": "EQT",
@@ -139,7 +139,7 @@
    "opened": "2026-10-23",
    "pl_krw": 77312,
    "pl_pct": 1.58,
-   "price_age_min": 8.9
+   "price_age_min": 7.5
   },
   {
    "code": "CSR",
@@ -154,7 +154,7 @@
    "opened": "2026-10-28",
    "pl_krw": 839305,
    "pl_pct": 4.43,
-   "price_age_min": 8.1
+   "price_age_min": 6.6
   },
   {
    "code": "ALC",
@@ -169,38 +169,10 @@
    "opened": "2026-10-30",
    "pl_krw": -10634,
    "pl_pct": -0.21,
-   "price_age_min": 8.4
+   "price_age_min": 7.0
   }
  ],
- "pending": [
-  {
-   "code": "CHKP",
-   "name": "Check Point Software Technologies Ltd.",
-   "ccy": "USD",
-   "limit": 135.4194,
-   "stop": 129.88,
-   "target": 155.695,
-   "q": 23,
-   "created": "2026-10-19",
-   "atr": 4.3025,
-   "plan": {
-    "entry": 138.485,
-    "stop": 129.88,
-    "target": 155.695,
-    "pb": 135.4194,
-    "tactic": "half"
-   },
-   "ctx": {
-    "mode": "half",
-    "fresh": true,
-    "stage": 3,
-    "rp": 27,
-    "rec": 4,
-    "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권27% · 체크4/6 · 손절폭6.2%"
-   },
-   "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권27% · 체크4/6 · 손절폭6.2%"
-  }
- ],
+ "pending": [],
  "trades": 53,
  "win_trades": 25,
  "pos_cap_pct": 33.3,
@@ -1860,6 +1832,17 @@
  "log": [
   {
    "d": "2026-10-30",
+   "type": "cancel",
+   "code": "CHKP",
+   "name": "Check Point Software Technologies Ltd.",
+   "q": 0,
+   "price": 153.5,
+   "ccy": "USD",
+   "amt": 0,
+   "note": "지정가 취소 — 신호 부패: 어닝 D-3 이내(신규 진입 금지 구간)"
+  },
+  {
+   "d": "2026-10-30",
    "type": "buy",
    "code": "ALC",
    "name": "Alcon Inc.",
@@ -2502,20 +2485,6 @@
    "note": "즉시 분할 — 🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권38% · 체크6/6 · 손절폭5.4%",
    "stop": 202.2342,
    "target": 236.5566
-  },
-  {
-   "d": "2026-09-30",
-   "type": "sell",
-   "code": "ULTA",
-   "name": "Ulta Beauty, Inc.",
-   "q": 7,
-   "price": 547.845,
-   "ccy": "USD",
-   "amt": 5200835,
-   "note": "타임 스탑(+1R 미도달)",
-   "pl": 45140,
-   "pl_pct": 0.9,
-   "r": 0.13
   }
  ],
  "lane": "bulk",
