@@ -1,10 +1,10 @@
 {
- "generated_at": "2026-10-31T01:56:38.672238+09:00",
+ "generated_at": "2026-10-31T02:11:58.782303+09:00",
  "updated": "2026-10-31",
  "start": 100000000,
- "cash": 27425596,
- "equity": 96297647,
- "ret_pct": -3.7,
+ "cash": 31384433,
+ "equity": 96270415,
+ "ret_pct": -3.73,
  "positions": [
   {
    "code": "BKE",
@@ -12,14 +12,14 @@
    "ccy": "USD",
    "q": 48,
    "avg": 43.09,
-   "price": 46.5099983215332,
+   "price": 46.470001220703125,
    "stop": 44.482,
    "target": 47.1138,
    "half_done": true,
    "opened": "2026-09-29",
-   "pl_krw": 218978,
-   "pl_pct": 7.94,
-   "price_age_min": 0.4
+   "pl_krw": 216417,
+   "pl_pct": 7.84,
+   "price_age_min": 5.0
   },
   {
    "code": "CRAI",
@@ -27,14 +27,14 @@
    "ccy": "USD",
    "q": 16,
    "avg": 164.4,
-   "price": 197.4550018310547,
+   "price": 196.98500061035156,
    "stop": 187.97030183105468,
    "target": 186.8795,
    "half_done": true,
    "opened": "2026-10-01",
-   "pl_krw": 705489,
-   "pl_pct": 20.11,
-   "price_age_min": 0.4
+   "pl_krw": 695458,
+   "pl_pct": 19.82,
+   "price_age_min": 5.0
   },
   {
    "code": "COST",
@@ -42,14 +42,14 @@
    "ccy": "USD",
    "q": 1,
    "avg": 943.035,
-   "price": 1017.7000122070312,
+   "price": 1019.6699829101562,
    "stop": 976.3645122070312,
    "target": 1003.1489,
    "half_done": true,
    "opened": "2026-10-07",
-   "pl_krw": 99598,
-   "pl_pct": 7.92,
-   "price_age_min": 0.4
+   "pl_krw": 102226,
+   "pl_pct": 8.13,
+   "price_age_min": 5.0
   },
   {
    "code": "TRMB",
@@ -57,29 +57,14 @@
    "ccy": "USD",
    "q": 104,
    "avg": 59.85,
-   "price": 65.19999694824219,
+   "price": 65.09249877929688,
    "stop": 60.70319694824219,
    "target": 66.5126,
    "half_done": true,
    "opened": "2026-10-09",
-   "pl_krw": 742198,
-   "pl_pct": 8.94,
-   "price_age_min": 0.4
-  },
-  {
-   "code": "CHKP",
-   "name": "Check Point Software Technologies Ltd.",
-   "ccy": "USD",
-   "q": 20,
-   "avg": 138.485,
-   "price": 148.14999389648438,
-   "stop": 148.5424969482422,
-   "target": 155.695,
-   "half_done": true,
-   "opened": "2026-10-19",
-   "pl_krw": 257849,
-   "pl_pct": 6.98,
-   "price_age_min": 0.4
+   "pl_krw": 727285,
+   "pl_pct": 8.76,
+   "price_age_min": 8.0
   },
   {
    "code": "TM",
@@ -87,14 +72,14 @@
    "ccy": "USD",
    "q": 50,
    "avg": 197.05,
-   "price": 195.99000549316406,
+   "price": 195.7550048828125,
    "stop": 190.922,
    "target": 209.306,
    "half_done": false,
    "opened": "2026-10-21",
-   "pl_krw": -70698,
-   "pl_pct": -0.54,
-   "price_age_min": 0.4
+   "pl_krw": -86372,
+   "pl_pct": -0.66,
+   "price_age_min": 5.0
   },
   {
    "code": "251270",
@@ -109,7 +94,7 @@
    "opened": "2026-10-22",
    "pl_krw": -144200,
    "pl_pct": -2.03,
-   "price_age_min": 0.4
+   "price_age_min": 5.0
   },
   {
    "code": "EQT",
@@ -117,14 +102,14 @@
    "ccy": "USD",
    "q": 68,
    "avg": 53.69,
-   "price": 55.625,
+   "price": 55.90999984741211,
    "stop": 53.69,
    "target": 58.8889,
    "half_done": true,
    "opened": "2026-10-23",
-   "pl_krw": 175519,
-   "pl_pct": 3.6,
-   "price_age_min": 0.4
+   "pl_krw": 201370,
+   "pl_pct": 4.13,
+   "price_age_min": 7.7
   },
   {
    "code": "CSR",
@@ -132,14 +117,14 @@
    "ccy": "USD",
    "q": 126,
    "avg": 56.24,
-   "price": 58.869998931884766,
+   "price": 58.79999923706055,
    "stop": 56.24,
    "target": 60.4614,
    "half_done": true,
    "opened": "2026-10-28",
-   "pl_krw": 442038,
-   "pl_pct": 4.68,
-   "price_age_min": 0.4
+   "pl_krw": 430272,
+   "pl_pct": 4.55,
+   "price_age_min": 6.8
   },
   {
    "code": "ALC",
@@ -147,14 +132,14 @@
    "ccy": "USD",
    "q": 53,
    "avg": 71.28,
-   "price": 71.7699966430664,
+   "price": 71.67990112304688,
    "stop": 68.6849,
    "target": 76.4702,
    "half_done": false,
    "opened": "2026-10-30",
-   "pl_krw": 34642,
-   "pl_pct": 0.69,
-   "price_age_min": 0.4
+   "pl_krw": 28272,
+   "pl_pct": 0.56,
+   "price_age_min": 7.2
   },
   {
    "code": "HLI",
@@ -162,14 +147,14 @@
    "ccy": "USD",
    "q": 40,
    "avg": 137.3297,
-   "price": 136.55499267578125,
+   "price": 136.5399932861328,
    "stop": 128.4545,
    "target": 155.0801,
    "half_done": false,
    "opened": "2026-10-31",
-   "pl_krw": -41336,
-   "pl_pct": -0.56,
-   "price_age_min": 0.4
+   "pl_krw": -42137,
+   "pl_pct": -0.58,
+   "price_age_min": 6.6
   }
  ],
  "pending": [
@@ -228,18 +213,18 @@
    "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권27% · 체크4/6 · 손절폭6.5%"
   }
  ],
- "trades": 54,
- "win_trades": 25,
+ "trades": 55,
+ "win_trades": 26,
  "pos_cap_pct": 33.3,
  "cap_violations": [],
  "rule_violations": [],
  "fx": 1333.93,
  "stats": {
   "all": {
-   "n": 54,
-   "win": 25,
-   "win_rate": 46,
-   "avg_r": -0.17
+   "n": 55,
+   "win": 26,
+   "win_rate": 47,
+   "avg_r": -0.15
   },
   "by_mode": {
    "full": {
@@ -249,10 +234,10 @@
     "avg_r": -0.25
    },
    "half": {
-    "n": 16,
-    "win": 9,
-    "win_rate": 56,
-    "avg_r": 0.02
+    "n": 17,
+    "win": 10,
+    "win_rate": 59,
+    "avg_r": 0.09
    },
    "pullback": {
     "n": 9,
@@ -262,10 +247,10 @@
    }
   },
   "fresh": {
-   "n": 52,
-   "win": 24,
-   "win_rate": 46,
-   "avg_r": -0.18
+   "n": 53,
+   "win": 25,
+   "win_rate": 47,
+   "avg_r": -0.16
   },
   "stale": {
    "n": 2,
@@ -275,10 +260,10 @@
   },
   "by_stage": {
    "3": {
-    "n": 52,
-    "win": 24,
-    "win_rate": 46,
-    "avg_r": -0.17
+    "n": 53,
+    "win": 25,
+    "win_rate": 47,
+    "avg_r": -0.14
    },
    "4": {
     "n": 2,
@@ -295,16 +280,58 @@
     "avg_r": -0.32
    },
    "USD": {
-    "n": 42,
-    "win": 21,
-    "win_rate": 50,
-    "avg_r": -0.13
+    "n": 43,
+    "win": 22,
+    "win_rate": 51,
+    "avg_r": -0.1
    }
   },
-  "slip_entry_pct": -0.43,
+  "slip_entry_pct": -0.42,
   "slip_stop_pct": -0.79
  },
  "closed": [
+  {
+   "code": "CHKP",
+   "name": "Check Point Software Technologies Ltd.",
+   "ccy": "USD",
+   "ctx": {
+    "mode": "half",
+    "fresh": true,
+    "stage": 3,
+    "rp": 27,
+    "rec": 4,
+    "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권27% · 체크4/6 · 손절폭6.2%"
+   },
+   "plan": {
+    "entry": 138.485,
+    "stop": 129.88,
+    "target": 155.695,
+    "pb": 135.4194,
+    "tactic": "half"
+   },
+   "fill": {
+    "avg": 138.485,
+    "q": 40
+   },
+   "exits": [
+    {
+     "d": "2026-10-23",
+     "q": 20,
+     "price": 149.48,
+     "note": "+1R 절반 익절"
+    },
+    {
+     "d": "2026-10-31",
+     "q": 20,
+     "price": 148.39,
+     "note": "트레일 스탑"
+    }
+   ],
+   "opened": "2026-10-19",
+   "closed": "2026-10-31",
+   "pl": 555654,
+   "r": 1.21
+  },
   {
    "code": "LOPE",
    "name": "Grand Canyon Education, Inc.",
@@ -1372,42 +1399,6 @@
    "closed": "2026-09-16",
    "pl": 295740,
    "r": 0.29
-  },
-  {
-   "code": "ADMA",
-   "name": "ADMA Biologics Inc",
-   "ccy": "USD",
-   "ctx": {
-    "mode": "half",
-    "fresh": true,
-    "stage": 3,
-    "rp": 18,
-    "rec": 5,
-    "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권18% · 체크5/6 · 손절폭6.2%"
-   },
-   "plan": {
-    "entry": 9.55,
-    "stop": 8.9618,
-    "target": 10.7264,
-    "pb": 9.2417,
-    "tactic": "half"
-   },
-   "fill": {
-    "avg": 9.5179,
-    "q": 701
-   },
-   "exits": [
-    {
-     "d": "2026-09-15",
-     "q": 701,
-     "price": 8.716,
-     "note": "손절(급락 즉시)"
-    }
-   ],
-   "opened": "2026-09-08",
-   "closed": "2026-09-15",
-   "pl": -757760,
-   "r": -1.44
   }
  ],
  "hist": [
@@ -1885,10 +1876,24 @@
   },
   {
    "d": "2026-10-31",
-   "v": 96297647
+   "v": 96270415
   }
  ],
  "log": [
+  {
+   "d": "2026-10-31",
+   "type": "sell",
+   "code": "CHKP",
+   "name": "Check Point Software Technologies Ltd.",
+   "q": 20,
+   "price": 148.39,
+   "ccy": "USD",
+   "amt": 3958838,
+   "note": "트레일 스탑",
+   "pl": 264252,
+   "pl_pct": 7.2,
+   "r": 1.21
+  },
   {
    "d": "2026-10-31",
    "type": "buy",
@@ -2531,21 +2536,8 @@
    "pl": -17812,
    "pl_pct": -5.1,
    "r": -1.0
-  },
-  {
-   "d": "2026-10-01",
-   "type": "buy",
-   "code": "CRAI",
-   "name": "CRA International,Inc.",
-   "q": 31,
-   "price": 164.4,
-   "ccy": "USD",
-   "amt": 6908578,
-   "note": "반반 1차 — 🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권34% · 체크6/6 · 손절폭6.8%",
-   "stop": 153.1602,
-   "target": 186.8795
   }
  ],
- "lane": "fast",
+ "lane": "bulk",
  "data_stale": []
 }
