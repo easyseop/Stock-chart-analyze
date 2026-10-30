@@ -1,10 +1,10 @@
 {
- "generated_at": "2026-10-31T00:16:52.985261+09:00",
+ "generated_at": "2026-10-31T00:36:38.376839+09:00",
  "updated": "2026-10-31",
  "start": 100000000,
- "cash": 28540425,
- "equity": 96503678,
- "ret_pct": -3.5,
+ "cash": 27425596,
+ "equity": 96461653,
+ "ret_pct": -3.54,
  "positions": [
   {
    "code": "BKE",
@@ -12,14 +12,14 @@
    "ccy": "USD",
    "q": 48,
    "avg": 43.09,
-   "price": 46.189998626708984,
+   "price": 46.18709945678711,
    "stop": 44.482,
    "target": 47.1138,
    "half_done": true,
    "opened": "2026-09-29",
-   "pl_krw": 198489,
+   "pl_krw": 198303,
    "pl_pct": 7.19,
-   "price_age_min": 0.6
+   "price_age_min": 0.4
   },
   {
    "code": "CRAI",
@@ -27,14 +27,14 @@
    "ccy": "USD",
    "q": 16,
    "avg": 164.4,
-   "price": 198.72999572753906,
+   "price": 199.24000549316406,
    "stop": 187.97030183105468,
    "target": 186.8795,
    "half_done": true,
    "opened": "2026-10-01",
-   "pl_krw": 732701,
-   "pl_pct": 20.88,
-   "price_age_min": 0.6
+   "pl_krw": 743586,
+   "pl_pct": 21.19,
+   "price_age_min": 0.4
   },
   {
    "code": "COST",
@@ -42,14 +42,14 @@
    "ccy": "USD",
    "q": 1,
    "avg": 943.035,
-   "price": 1011.989990234375,
+   "price": 1013.3300170898438,
    "stop": 976.3645122070312,
    "target": 1003.1489,
    "half_done": true,
    "opened": "2026-10-07",
-   "pl_krw": 91981,
-   "pl_pct": 7.31,
-   "price_age_min": 0.6
+   "pl_krw": 93769,
+   "pl_pct": 7.45,
+   "price_age_min": 0.4
   },
   {
    "code": "TRMB",
@@ -57,14 +57,14 @@
    "ccy": "USD",
    "q": 104,
    "avg": 59.85,
-   "price": 65.55000305175781,
+   "price": 65.65499877929688,
    "stop": 60.70319694824219,
    "target": 66.5126,
    "half_done": true,
    "opened": "2026-10-09",
-   "pl_krw": 790754,
-   "pl_pct": 9.52,
-   "price_age_min": 0.6
+   "pl_krw": 805320,
+   "pl_pct": 9.7,
+   "price_age_min": 0.4
   },
   {
    "code": "CHKP",
@@ -72,14 +72,14 @@
    "ccy": "USD",
    "q": 20,
    "avg": 138.485,
-   "price": 149.6999969482422,
+   "price": 149.8000030517578,
    "stop": 148.5424969482422,
    "target": 155.695,
    "half_done": true,
    "opened": "2026-10-19",
-   "pl_krw": 299200,
-   "pl_pct": 8.1,
-   "price_age_min": 0.6
+   "pl_krw": 301868,
+   "pl_pct": 8.17,
+   "price_age_min": 0.4
   },
   {
    "code": "TM",
@@ -87,14 +87,14 @@
    "ccy": "USD",
    "q": 50,
    "avg": 197.05,
-   "price": 196.0,
+   "price": 196.3249969482422,
    "stop": 190.922,
    "target": 209.306,
    "half_done": false,
    "opened": "2026-10-21",
-   "pl_krw": -70031,
-   "pl_pct": -0.53,
-   "price_age_min": 0.6
+   "pl_krw": -48355,
+   "pl_pct": -0.37,
+   "price_age_min": 0.4
   },
   {
    "code": "251270",
@@ -109,22 +109,7 @@
    "opened": "2026-10-22",
    "pl_krw": -144200,
    "pl_pct": -2.03,
-   "price_age_min": 0.6
-  },
-  {
-   "code": "LOPE",
-   "name": "Grand Canyon Education, Inc.",
-   "ccy": "USD",
-   "q": 31,
-   "avg": 159.76,
-   "price": 151.3699951171875,
-   "stop": 151.7975,
-   "target": 175.6851,
-   "half_done": false,
-   "opened": "2026-10-22",
-   "pl_krw": -346942,
-   "pl_pct": -5.25,
-   "price_age_min": 0.6
+   "price_age_min": 0.4
   },
   {
    "code": "EQT",
@@ -132,14 +117,14 @@
    "ccy": "USD",
    "q": 68,
    "avg": 53.69,
-   "price": 55.810001373291016,
+   "price": 55.5,
    "stop": 53.69,
    "target": 58.8889,
    "half_done": true,
    "opened": "2026-10-23",
-   "pl_krw": 192299,
-   "pl_pct": 3.95,
-   "price_age_min": 0.6
+   "pl_krw": 164180,
+   "pl_pct": 3.37,
+   "price_age_min": 0.4
   },
   {
    "code": "CSR",
@@ -147,14 +132,14 @@
    "ccy": "USD",
    "q": 126,
    "avg": 56.24,
-   "price": 58.970001220703125,
+   "price": 58.869998931884766,
    "stop": 56.24,
    "target": 60.4614,
    "half_done": true,
    "opened": "2026-10-28",
-   "pl_krw": 458845,
-   "pl_pct": 4.85,
-   "price_age_min": 0.6
+   "pl_krw": 442038,
+   "pl_pct": 4.68,
+   "price_age_min": 0.4
   },
   {
    "code": "ALC",
@@ -162,14 +147,29 @@
    "ccy": "USD",
    "q": 53,
    "avg": 71.28,
-   "price": 71.69499969482422,
+   "price": 71.66999816894531,
    "stop": 68.6849,
    "target": 76.4702,
    "half_done": false,
    "opened": "2026-10-30",
-   "pl_krw": 29340,
-   "pl_pct": 0.58,
-   "price_age_min": 0.6
+   "pl_krw": 27572,
+   "pl_pct": 0.55,
+   "price_age_min": 0.3
+  },
+  {
+   "code": "HLI",
+   "name": "Houlihan Lokey, Inc.",
+   "ccy": "USD",
+   "q": 40,
+   "avg": 137.3297,
+   "price": 137.32969665527344,
+   "stop": 128.4545,
+   "target": 155.0801,
+   "half_done": false,
+   "opened": "2026-10-31",
+   "pl_krw": 0,
+   "pl_pct": -0.0,
+   "price_age_min": 0.3
   }
  ],
  "pending": [
@@ -199,9 +199,36 @@
     "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권12% · 체크2/6 · 손절폭9.8%"
    },
    "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권12% · 체크2/6 · 손절폭9.8%"
+  },
+  {
+   "code": "HLI",
+   "name": "Houlihan Lokey, Inc.",
+   "ccy": "USD",
+   "limit": 132.7293,
+   "stop": 128.4545,
+   "target": 155.0801,
+   "q": 41,
+   "created": "2026-10-31",
+   "atr": 4.4376,
+   "plan": {
+    "entry": 137.3297,
+    "stop": 128.4545,
+    "target": 155.0801,
+    "pb": 132.7293,
+    "tactic": "half"
+   },
+   "ctx": {
+    "mode": "half",
+    "fresh": true,
+    "stage": 3,
+    "rp": 27,
+    "rec": 4,
+    "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권27% · 체크4/6 · 손절폭6.5%"
+   },
+   "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권27% · 체크4/6 · 손절폭6.5%"
   }
  ],
- "trades": 53,
+ "trades": 54,
  "win_trades": 25,
  "pos_cap_pct": 33.3,
  "cap_violations": [],
@@ -209,17 +236,17 @@
  "fx": 1333.93,
  "stats": {
   "all": {
-   "n": 53,
+   "n": 54,
    "win": 25,
-   "win_rate": 47,
-   "avg_r": -0.15
+   "win_rate": 46,
+   "avg_r": -0.17
   },
   "by_mode": {
    "full": {
-    "n": 28,
+    "n": 29,
     "win": 12,
-    "win_rate": 43,
-    "avg_r": -0.21
+    "win_rate": 41,
+    "avg_r": -0.25
    },
    "half": {
     "n": 16,
@@ -235,10 +262,10 @@
    }
   },
   "fresh": {
-   "n": 51,
+   "n": 52,
    "win": 24,
-   "win_rate": 47,
-   "avg_r": -0.16
+   "win_rate": 46,
+   "avg_r": -0.18
   },
   "stale": {
    "n": 2,
@@ -248,10 +275,10 @@
   },
   "by_stage": {
    "3": {
-    "n": 51,
+    "n": 52,
     "win": 24,
-    "win_rate": 47,
-    "avg_r": -0.15
+    "win_rate": 46,
+    "avg_r": -0.17
    },
    "4": {
     "n": 2,
@@ -268,16 +295,52 @@
     "avg_r": -0.32
    },
    "USD": {
-    "n": 41,
+    "n": 42,
     "win": 21,
-    "win_rate": 51,
-    "avg_r": -0.11
+    "win_rate": 50,
+    "avg_r": -0.13
    }
   },
-  "slip_entry_pct": -0.44,
-  "slip_stop_pct": -0.78
+  "slip_entry_pct": -0.43,
+  "slip_stop_pct": -0.79
  },
  "closed": [
+  {
+   "code": "LOPE",
+   "name": "Grand Canyon Education, Inc.",
+   "ccy": "USD",
+   "ctx": {
+    "mode": "full",
+    "fresh": true,
+    "stage": 3,
+    "rp": 29,
+    "rec": 3,
+    "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권29% · 체크3/6 · 손절폭5.0%"
+   },
+   "plan": {
+    "entry": 159.76,
+    "stop": 151.7975,
+    "target": 175.6851,
+    "pb": 154.3589,
+    "tactic": "full"
+   },
+   "fill": {
+    "avg": 159.76,
+    "q": 31
+   },
+   "exits": [
+    {
+     "d": "2026-10-31",
+     "q": 31,
+     "price": 150.24,
+     "note": "손절"
+    }
+   ],
+   "opened": "2026-10-22",
+   "closed": "2026-10-31",
+   "pl": -393669,
+   "r": -1.2
+  },
   {
    "code": "AES",
    "name": "The AES Corporation",
@@ -1345,42 +1408,6 @@
    "closed": "2026-09-15",
    "pl": -757760,
    "r": -1.44
-  },
-  {
-   "code": "030200",
-   "name": "KT",
-   "ccy": "KRW",
-   "ctx": {
-    "mode": "full",
-    "fresh": true,
-    "stage": 3,
-    "rp": 31,
-    "rec": 4,
-    "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권31% · 체크4/6 · 손절폭4.4%"
-   },
-   "plan": {
-    "entry": 54700.0,
-    "stop": 52281.2945,
-    "target": 59537.4111,
-    "pb": null,
-    "tactic": "full"
-   },
-   "fill": {
-    "avg": 54700.0,
-    "q": 126
-   },
-   "exits": [
-    {
-     "d": "2026-09-11",
-     "q": 126,
-     "price": 52000.0,
-     "note": "손절"
-    }
-   ],
-   "opened": "2026-09-07",
-   "closed": "2026-09-11",
-   "pl": -340200,
-   "r": -1.12
   }
  ],
  "hist": [
@@ -1858,10 +1885,37 @@
   },
   {
    "d": "2026-10-31",
-   "v": 96503678
+   "v": 96461653
   }
  ],
  "log": [
+  {
+   "d": "2026-10-31",
+   "type": "buy",
+   "code": "HLI",
+   "name": "Houlihan Lokey, Inc.",
+   "q": 40,
+   "price": 137.3297,
+   "ccy": "USD",
+   "amt": 7327529,
+   "note": "반반 1차 — 🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권27% · 체크4/6 · 손절폭6.5%",
+   "stop": 128.4545,
+   "target": 155.0801
+  },
+  {
+   "d": "2026-10-31",
+   "type": "sell",
+   "code": "LOPE",
+   "name": "Grand Canyon Education, Inc.",
+   "q": 31,
+   "price": 150.24,
+   "ccy": "USD",
+   "amt": 6212699,
+   "note": "손절",
+   "pl": -393669,
+   "pl_pct": -6.0,
+   "r": -1.2
+  },
   {
    "d": "2026-10-30",
    "type": "sell",
@@ -2490,30 +2544,6 @@
    "note": "반반 1차 — 🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권34% · 체크6/6 · 손절폭6.8%",
    "stop": 153.1602,
    "target": 186.8795
-  },
-  {
-   "d": "2026-10-01",
-   "type": "cancel",
-   "code": "AI",
-   "name": "C3.ai, Inc.",
-   "q": 0,
-   "price": 10.87,
-   "ccy": "USD",
-   "amt": 0,
-   "note": "지정가 만료 — 눌림 안 옴(놓침≠손실)"
-  },
-  {
-   "d": "2026-09-30",
-   "type": "buy",
-   "code": "DOV",
-   "name": "Dover Corporation",
-   "q": 31,
-   "price": 189.45,
-   "ccy": "USD",
-   "amt": 7964778,
-   "note": "즉시 분할 — 🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권39% · 체크4/6 · 손절폭4.3%",
-   "stop": 181.2117,
-   "target": 205.9266
   }
  ],
  "lane": "fast",
