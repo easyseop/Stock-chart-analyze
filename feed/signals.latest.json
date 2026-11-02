@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated_at": "2026-11-03T06:25:55+09:00",
+ "generated_at": "2026-11-03T07:14:43+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "a_ablation": [
   {
@@ -169,13 +169,13 @@
   "watch": 101,
   "reasons": {
    "밸류영역 밖(지지대 아님)": 438,
-   "추락 중(범위 1%)": 268,
-   "추락 중(범위 0%)": 256,
+   "추락 중(범위 1%)": 270,
+   "추락 중(범위 0%)": 254,
    "추락 중(범위 2%)": 173,
    "매물대 정보 없음": 173,
    "추락 중(범위 3%)": 142,
    "추락 중(범위 4%)": 136,
-   "추락 중(범위 5%)": 128
+   "추락 중(범위 5%)": 129
   }
  },
  "signals": [
@@ -345,34 +345,6 @@
     "mode": "full",
     "label": "⚡ 즉시 분할",
     "desc": "손절폭 4.2%로 타이트 — 현재가에서 1~2회 분할 매수. 기다리는 이득보다 놓치는 비용이 큼"
-   }
-  },
-  {
-   "id": "145020-2026-11-03-now",
-   "code": "145020",
-   "name": "휴젤",
-   "ccy": "KRW",
-   "group": "now",
-   "entry_kind": "now",
-   "stage": 3,
-   "price": 179800.0,
-   "entry": 179800.0,
-   "stop": 164856.2127,
-   "target": 209687.5746,
-   "shares_1pct": 6,
-   "range_pos": 0.1112,
-   "norm": -41.0,
-   "bear_share": 0.375,
-   "fresh": true,
-   "break_gap": 0.0416,
-   "earnings_d": null,
-   "tactic": {
-    "stop_pct": 8.3,
-    "pb_price": null,
-    "pb_stop_pct": null,
-    "mode": "pullback",
-    "label": "⏳ 눌림 지정가만",
-    "desc": "지금 추격 금지(손절폭 8.3%) — 받칠 지지에 눌릴 때까지 대기"
    }
   },
   {
@@ -849,6 +821,34 @@
     "mode": "pullback",
     "label": "⏳ 눌림 지정가만",
     "desc": "지금 추격 금지(손절폭 8.3% · 돌파후 진행) — 받칠 지지에 눌릴 때까지 대기"
+   }
+  },
+  {
+   "id": "145020-2026-11-03-now",
+   "code": "145020",
+   "name": "휴젤",
+   "ccy": "KRW",
+   "group": "now",
+   "entry_kind": "now",
+   "stage": 3,
+   "price": 183000.0,
+   "entry": 183000.0,
+   "stop": 168323.6261,
+   "target": 212352.7479,
+   "shares_1pct": 6,
+   "range_pos": 0.1333,
+   "norm": -41.0,
+   "bear_share": 0.375,
+   "fresh": false,
+   "break_gap": 0.0737,
+   "earnings_d": null,
+   "tactic": {
+    "stop_pct": 8.0,
+    "pb_price": null,
+    "pb_stop_pct": null,
+    "mode": "pullback",
+    "label": "⏳ 눌림 지정가만",
+    "desc": "지금 추격 금지(손절폭 8.0% · 돌파후 진행) — 받칠 지지에 눌릴 때까지 대기"
    }
   },
   {
@@ -2103,8 +2103,8 @@
    "stage": 2,
    "price": 57.08,
    "entry": 57.7,
-   "stop": 55.656,
-   "target": 61.788,
+   "stop": 55.6567,
+   "target": 61.7866,
    "shares_1pct": 48,
    "range_pos": 0.3648,
    "norm": -12.3,
@@ -2164,34 +2164,6 @@
    "tactic": null
   },
   {
-   "id": "017800-2026-11-03-watch",
-   "code": "017800",
-   "name": "현대엘리베이터",
-   "ccy": "KRW",
-   "group": "watch",
-   "entry_kind": "now",
-   "stage": 2,
-   "price": 68700.0,
-   "entry": 68700.0,
-   "stop": 64882.3478,
-   "target": 76335.3043,
-   "shares_1pct": 26,
-   "range_pos": 0.1337,
-   "norm": -21.3,
-   "bear_share": 0.375,
-   "fresh": true,
-   "break_gap": 0.0352,
-   "earnings_d": null,
-   "tactic": {
-    "stop_pct": 5.6,
-    "pb_price": 67000.0,
-    "pb_stop_pct": 3.2,
-    "mode": "full",
-    "label": "⚡ 즉시 분할",
-    "desc": "손절폭 5.6%로 타이트 — 현재가에서 1~2회 분할 매수. 기다리는 이득보다 놓치는 비용이 큼"
-   }
-  },
-  {
    "id": "FIS-2026-11-03-watch",
    "code": "FIS",
    "name": "Fidelity National Information Services, In",
@@ -2232,6 +2204,34 @@
    "break_gap": 0.0363,
    "earnings_d": null,
    "tactic": null
+  },
+  {
+   "id": "017800-2026-11-03-watch",
+   "code": "017800",
+   "name": "현대엘리베이터",
+   "ccy": "KRW",
+   "group": "watch",
+   "entry_kind": "now",
+   "stage": 2,
+   "price": 68500.0,
+   "entry": 68500.0,
+   "stop": 64682.3478,
+   "target": 76135.3043,
+   "shares_1pct": 26,
+   "range_pos": 0.1298,
+   "norm": -31.1,
+   "bear_share": 0.375,
+   "fresh": true,
+   "break_gap": 0.0322,
+   "earnings_d": null,
+   "tactic": {
+    "stop_pct": 5.6,
+    "pb_price": 67000.0,
+    "pb_stop_pct": 3.5,
+    "mode": "full",
+    "label": "⚡ 즉시 분할",
+    "desc": "손절폭 5.6%로 타이트 — 현재가에서 1~2회 분할 매수. 기다리는 이득보다 놓치는 비용이 큼"
+   }
   },
   {
    "id": "CBT-2026-11-03-watch",
@@ -4224,8 +4224,8 @@
    "stage": 3,
    "price": 218.15,
    "entry": 178.45,
-   "stop": 167.905,
-   "target": 199.5401,
+   "stop": 167.9064,
+   "target": 199.5372,
    "shares_1pct": 9,
    "range_pos": 0.3464,
    "norm": -13.1,
@@ -4329,8 +4329,8 @@
    "stage": 3,
    "price": 74.38,
    "entry": 74.42,
-   "stop": 71.8066,
-   "target": 79.6468,
+   "stop": 71.808,
+   "target": 79.6439,
    "shares_1pct": 38,
    "range_pos": 0.3831,
    "norm": -17.0,
@@ -4434,8 +4434,8 @@
    "stage": 3,
    "price": 313.7,
    "entry": 303.7725,
-   "stop": 284.316,
-   "target": 342.6854,
+   "stop": 284.3025,
+   "target": 342.7126,
    "shares_1pct": 5,
    "range_pos": 0.2851,
    "norm": -21.3,
@@ -4833,9 +4833,9 @@
    "stage": 3,
    "price": 5.53,
    "entry": 5.0189,
-   "stop": 4.4572,
-   "target": 6.1423,
-   "shares_1pct": 178,
+   "stop": 4.4615,
+   "target": 6.1337,
+   "shares_1pct": 179,
    "range_pos": 0.086,
    "norm": -65.6,
    "bear_share": 0.5,
