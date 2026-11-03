@@ -1,10 +1,10 @@
 {
- "generated_at": "2026-11-03T11:29:20.918915+09:00",
+ "generated_at": "2026-11-03T11:54:36.068622+09:00",
  "updated": "2026-11-03",
  "start": 100000000,
  "cash": 37894250,
- "equity": 97488060,
- "ret_pct": -2.51,
+ "equity": 97477760,
+ "ret_pct": -2.52,
  "positions": [
   {
    "code": "BKE",
@@ -19,7 +19,7 @@
    "opened": "2026-09-29",
    "pl_krw": 271919,
    "pl_pct": 9.79,
-   "price_age_min": 141.4
+   "price_age_min": 166.6
   },
   {
    "code": "CRAI",
@@ -34,7 +34,7 @@
    "opened": "2026-10-01",
    "pl_krw": 703852,
    "pl_pct": 19.93,
-   "price_age_min": 141.4
+   "price_age_min": 166.6
   },
   {
    "code": "COST",
@@ -49,7 +49,7 @@
    "opened": "2026-10-07",
    "pl_krw": 130905,
    "pl_pct": 10.34,
-   "price_age_min": 141.4
+   "price_age_min": 166.6
   },
   {
    "code": "TRMB",
@@ -64,7 +64,7 @@
    "opened": "2026-10-09",
    "pl_krw": 836267,
    "pl_pct": 10.01,
-   "price_age_min": 145.7
+   "price_age_min": 170.9
   },
   {
    "code": "TM",
@@ -79,7 +79,7 @@
    "opened": "2026-10-21",
    "pl_krw": -81887,
    "pl_pct": -0.62,
-   "price_age_min": 141.4
+   "price_age_min": 166.6
   },
   {
    "code": "251270",
@@ -87,14 +87,14 @@
    "ccy": "KRW",
    "q": 206,
    "avg": 34450.0,
-   "price": 33800.0,
+   "price": 33750.0,
    "stop": 32163.7847,
    "target": 39022.4307,
    "half_done": false,
    "opened": "2026-10-22",
-   "pl_krw": -133900,
-   "pl_pct": -1.89,
-   "price_age_min": 8.3
+   "pl_krw": -144200,
+   "pl_pct": -2.03,
+   "price_age_min": 7.8
   },
   {
    "code": "EQT",
@@ -109,7 +109,7 @@
    "opened": "2026-10-23",
    "pl_krw": 104976,
    "pl_pct": 2.14,
-   "price_age_min": 144.2
+   "price_age_min": 169.4
   },
   {
    "code": "CSR",
@@ -124,7 +124,7 @@
    "opened": "2026-10-28",
    "pl_krw": 495591,
    "pl_pct": 5.21,
-   "price_age_min": 143.3
+   "price_age_min": 168.6
   },
   {
    "code": "ALC",
@@ -139,7 +139,7 @@
    "opened": "2026-10-30",
    "pl_krw": 85176,
    "pl_pct": 3.3,
-   "price_age_min": 143.6
+   "price_age_min": 168.8
   },
   {
    "code": "HLI",
@@ -154,7 +154,7 @@
    "opened": "2026-10-31",
    "pl_krw": 244595,
    "pl_pct": 6.63,
-   "price_age_min": 143.3
+   "price_age_min": 168.6
   }
  ],
  "pending": [
@@ -1888,7 +1888,7 @@
   },
   {
    "d": "2026-11-03",
-   "v": 97488060
+   "v": 97477760
   }
  ],
  "log": [
