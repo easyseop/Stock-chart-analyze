@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated_at": "2026-11-04T08:28:55+09:00",
+ "generated_at": "2026-11-04T09:07:56+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "a_ablation": [
   {
@@ -166,16 +166,16 @@
  ],
  "shelf_debug": {
   "ok": 7,
-  "watch": 106,
+  "watch": 105,
   "reasons": {
-   "밸류영역 밖(지지대 아님)": 442,
-   "추락 중(범위 1%)": 276,
-   "추락 중(범위 0%)": 262,
+   "밸류영역 밖(지지대 아님)": 443,
+   "추락 중(범위 1%)": 277,
+   "추락 중(범위 0%)": 263,
    "매물대 정보 없음": 173,
-   "추락 중(범위 2%)": 170,
-   "추락 중(범위 3%)": 145,
-   "추락 중(범위 5%)": 134,
-   "추락 중(범위 4%)": 134
+   "추락 중(범위 2%)": 171,
+   "추락 중(범위 3%)": 147,
+   "추락 중(범위 4%)": 136,
+   "추락 중(범위 5%)": 132
   }
  },
  "signals": [
@@ -1321,35 +1321,35 @@
    "trend_above_200": true
   },
   {
-   "id": "323280-2026-11-04-shelf-watch",
-   "code": "323280",
-   "name": "태성",
-   "ccy": "KRW",
+   "id": "TM-2026-11-04-shelf-watch",
+   "code": "TM",
+   "name": "Toyota Motor Corporation",
+   "ccy": "USD",
    "group": "shelf_watch",
    "entry_kind": "shelf_watch",
    "stage": 0,
-   "price": 50900.0,
-   "entry": 50900.0,
-   "stop": 47383.0,
-   "target": 65895.8333,
+   "price": 193.0,
+   "entry": 193.0,
+   "stop": 189.14,
+   "target": 205.775,
    "shares_1pct": 0,
-   "range_pos": 0.393,
-   "norm": -1.9,
-   "bear_share": 0.25,
+   "range_pos": 0.3249,
+   "norm": 3.8,
+   "bear_share": 0.125,
    "shelf": {
-    "poc": 51104.1667,
-    "val": 33354.1667,
-    "vah": 65895.8333,
-    "rr": 4.26,
-    "overhead": 0.512,
-    "reason": "반등 미확인(거래량)",
-    "history_bars": 1803,
-    "profile_pnl_proxy": -0.0333,
-    "runup252": 1.0733,
+    "poc": 191.975,
+    "val": 171.275,
+    "vah": 205.775,
+    "rr": 3.31,
+    "overhead": 0.503,
+    "reason": "반등 미확인(상단마감·거래량)",
+    "history_bars": 1971,
+    "profile_pnl_proxy": -0.0235,
+    "runup252": -0.0618,
     "checks": {
      "터치": true,
      "회복": true,
-     "상단마감": true,
+     "상단마감": false,
      "거래량": false,
      "신저가아님": true
     }
@@ -1704,7 +1704,7 @@
     "overhead": 0.486,
     "reason": "반등 미확인(터치·거래량)",
     "history_bars": 1920,
-    "profile_pnl_proxy": -0.0231,
+    "profile_pnl_proxy": -0.0232,
     "runup252": 0.6132,
     "checks": {
      "터치": false,
