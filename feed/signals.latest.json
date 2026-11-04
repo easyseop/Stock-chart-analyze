@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated_at": "2026-11-04T10:46:52+09:00",
+ "generated_at": "2026-11-04T10:58:24+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "a_ablation": [
   {
@@ -411,21 +411,21 @@
    "group": "now",
    "entry_kind": "now",
    "stage": 3,
-   "price": 68700.0,
-   "entry": 68700.0,
-   "stop": 64907.2285,
-   "target": 76285.543,
+   "price": 68500.0,
+   "entry": 68500.0,
+   "stop": 64707.2285,
+   "target": 76085.543,
    "shares_1pct": 26,
-   "range_pos": 0.1337,
+   "range_pos": 0.1298,
    "norm": -27.9,
    "bear_share": 0.375,
    "fresh": true,
-   "break_gap": 0.044,
+   "break_gap": 0.041,
    "earnings_d": null,
    "tactic": {
     "stop_pct": 5.5,
     "pb_price": 67000.0,
-    "pb_stop_pct": 3.1,
+    "pb_stop_pct": 3.4,
     "mode": "full",
     "label": "⚡ 즉시 분할",
     "desc": "손절폭 5.5%로 타이트 — 현재가에서 1~2회 분할 매수. 기다리는 이득보다 놓치는 비용이 큼"
@@ -1197,8 +1197,8 @@
    "stage": 3,
    "price": 346000.0,
    "entry": 346000.0,
-   "stop": 309884.1978,
-   "target": 418231.6044,
+   "stop": 309669.9121,
+   "target": 418660.1758,
    "shares_1pct": 2,
    "range_pos": 0.1169,
    "norm": -57.5,
@@ -1207,12 +1207,12 @@
    "break_gap": 0.093,
    "earnings_d": null,
    "tactic": {
-    "stop_pct": 10.4,
+    "stop_pct": 10.5,
     "pb_price": 317500.0,
-    "pb_stop_pct": 2.4,
+    "pb_stop_pct": 2.5,
     "mode": "pullback",
     "label": "⏳ 눌림 지정가만",
-    "desc": "지금 추격 금지(손절폭 10.4% · 돌파후 진행) — <b>317,500원 눌림 지정가만</b>. 눌리면 손절폭 2.4%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
+    "desc": "지금 추격 금지(손절폭 10.5% · 돌파후 진행) — <b>317,500원 눌림 지정가만</b>. 눌리면 손절폭 2.5%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
    }
   },
   {
@@ -1223,24 +1223,24 @@
    "group": "now",
    "entry_kind": "now",
    "stage": 3,
-   "price": 88000.0,
-   "entry": 88000.0,
-   "stop": 78238.305,
-   "target": 107523.3899,
+   "price": 87500.0,
+   "entry": 87500.0,
+   "stop": 77652.5908,
+   "target": 107194.8185,
    "shares_1pct": 10,
-   "range_pos": 0.1706,
+   "range_pos": 0.1672,
    "norm": -57.5,
    "bear_share": 0.5,
    "fresh": false,
-   "break_gap": 0.1188,
+   "break_gap": 0.1125,
    "earnings_d": null,
    "tactic": {
-    "stop_pct": 11.1,
+    "stop_pct": 11.3,
     "pb_price": 80100.0,
-    "pb_stop_pct": 2.3,
+    "pb_stop_pct": 3.1,
     "mode": "pullback",
     "label": "⏳ 눌림 지정가만",
-    "desc": "지금 추격 금지(손절폭 11.1% · 돌파후 진행) — <b>80,100원 눌림 지정가만</b>. 눌리면 손절폭 2.3%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
+    "desc": "지금 추격 금지(손절폭 11.3% · 돌파후 진행) — <b>80,100원 눌림 지정가만</b>. 눌리면 손절폭 3.1%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
    }
   },
   {
@@ -2369,34 +2369,6 @@
    }
   },
   {
-   "id": "030000-2026-11-04-watch",
-   "code": "030000",
-   "name": "제일기획",
-   "ccy": "KRW",
-   "group": "watch",
-   "entry_kind": "now",
-   "stage": 1,
-   "price": 19400.0,
-   "entry": 19400.0,
-   "stop": 18399.9376,
-   "target": 21400.1247,
-   "shares_1pct": 99,
-   "range_pos": 0.371,
-   "norm": 12.3,
-   "bear_share": 0.125,
-   "fresh": true,
-   "break_gap": -0.018,
-   "earnings_d": null,
-   "tactic": {
-    "stop_pct": 5.2,
-    "pb_price": 18570.6,
-    "pb_stop_pct": 0.9,
-    "mode": "full",
-    "label": "⚡ 즉시 분할",
-    "desc": "손절폭 5.2%로 타이트 — 현재가에서 1~2회 분할 매수. 기다리는 이득보다 놓치는 비용이 큼"
-   }
-  },
-  {
    "id": "AZO-2026-11-04-watch",
    "code": "AZO",
    "name": "AutoZone, Inc.",
@@ -2502,6 +2474,34 @@
    "tactic": null
   },
   {
+   "id": "323410-2026-11-04-watch",
+   "code": "323410",
+   "name": "카카오뱅크",
+   "ccy": "KRW",
+   "group": "watch",
+   "entry_kind": "now",
+   "stage": 1,
+   "price": 19770.0,
+   "entry": 19770.0,
+   "stop": 18681.8135,
+   "target": 21946.373,
+   "shares_1pct": 91,
+   "range_pos": 0.0716,
+   "norm": -18.9,
+   "bear_share": 0.375,
+   "fresh": true,
+   "break_gap": -0.0132,
+   "earnings_d": null,
+   "tactic": {
+    "stop_pct": 5.5,
+    "pb_price": 19539.0411,
+    "pb_stop_pct": 4.4,
+    "mode": "full",
+    "label": "⚡ 즉시 분할",
+    "desc": "손절폭 5.5%로 타이트 — 현재가에서 1~2회 분할 매수. 기다리는 이득보다 놓치는 비용이 큼"
+   }
+  },
+  {
    "id": "LEA-2026-11-04-watch",
    "code": "LEA",
    "name": "Lear Corporation",
@@ -2555,34 +2555,6 @@
     "mode": "full",
     "label": "⚡ 즉시 분할",
     "desc": "손절폭 5.7%로 타이트 — 현재가에서 1~2회 분할 매수. 기다리는 이득보다 놓치는 비용이 큼"
-   }
-  },
-  {
-   "id": "323410-2026-11-04-watch",
-   "code": "323410",
-   "name": "카카오뱅크",
-   "ccy": "KRW",
-   "group": "watch",
-   "entry_kind": "now",
-   "stage": 1,
-   "price": 19770.0,
-   "entry": 19770.0,
-   "stop": 18681.8135,
-   "target": 21946.373,
-   "shares_1pct": 91,
-   "range_pos": 0.0716,
-   "norm": -28.3,
-   "bear_share": 0.375,
-   "fresh": true,
-   "break_gap": -0.0132,
-   "earnings_d": null,
-   "tactic": {
-    "stop_pct": 5.5,
-    "pb_price": 19539.0411,
-    "pb_stop_pct": 4.4,
-    "mode": "full",
-    "label": "⚡ 즉시 분할",
-    "desc": "손절폭 5.5%로 타이트 — 현재가에서 1~2회 분할 매수. 기다리는 이득보다 놓치는 비용이 큼"
    }
   },
   {
@@ -3699,16 +3671,16 @@
    "group": "watch",
    "entry_kind": "pullback",
    "stage": 3,
-   "price": 200000.0,
+   "price": 199200.0,
    "entry": 172640.0,
    "stop": 154251.201,
    "target": 209417.5981,
    "shares_1pct": 5,
-   "range_pos": 0.3138,
+   "range_pos": 0.3081,
    "norm": -9.4,
    "bear_share": 0.25,
    "fresh": false,
-   "break_gap": 0.0675,
+   "break_gap": 0.0632,
    "earnings_d": null,
    "tactic": null
   },
