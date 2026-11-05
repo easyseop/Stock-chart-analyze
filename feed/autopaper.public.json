@@ -1,40 +1,25 @@
 {
- "generated_at": "2026-11-06T02:31:49.893966+09:00",
+ "generated_at": "2026-11-06T02:51:48.685745+09:00",
  "updated": "2026-11-06",
  "start": 100000000,
- "cash": 43753212,
- "equity": 99819002,
+ "cash": 38822839,
+ "equity": 99824023,
  "ret_pct": -0.18,
  "positions": [
-  {
-   "code": "BKE",
-   "name": "Buckle, Inc.",
-   "ccy": "USD",
-   "q": 48,
-   "avg": 43.09,
-   "price": 45.380001068115234,
-   "stop": 45.38210070800781,
-   "target": 47.1138,
-   "half_done": true,
-   "opened": "2026-09-29",
-   "pl_krw": 148269,
-   "pl_pct": 5.31,
-   "price_age_min": 0.4
-  },
   {
    "code": "CRAI",
    "name": "CRA International,Inc.",
    "ccy": "USD",
    "q": 16,
    "avg": 164.4,
-   "price": 204.8350067138672,
+   "price": 206.59950256347656,
    "stop": 194.05030366210937,
    "target": 186.8795,
    "half_done": true,
    "opened": "2026-10-01",
-   "pl_krw": 872672,
-   "pl_pct": 24.6,
-   "price_age_min": 0.4
+   "pl_krw": 910753,
+   "pl_pct": 25.67,
+   "price_age_min": 0.5
   },
   {
    "code": "COST",
@@ -42,13 +27,13 @@
    "ccy": "USD",
    "q": 1,
    "avg": 943.035,
-   "price": 1065.280029296875,
+   "price": 1067.219970703125,
    "stop": 1034.864451171875,
    "target": 1003.1489,
    "half_done": true,
    "opened": "2026-10-07",
-   "pl_krw": 164894,
-   "pl_pct": 12.96,
+   "pl_krw": 167511,
+   "pl_pct": 13.17,
    "price_age_min": 0.4
   },
   {
@@ -57,13 +42,13 @@
    "ccy": "USD",
    "q": 25,
    "avg": 197.05,
-   "price": 219.80999755859375,
+   "price": 219.3300018310547,
    "stop": 211.79800549316406,
    "target": 209.306,
    "half_done": true,
    "opened": "2026-10-21",
-   "pl_krw": 767513,
-   "pl_pct": 11.55,
+   "pl_krw": 751326,
+   "pl_pct": 11.31,
    "price_age_min": 0.4
   },
   {
@@ -102,13 +87,13 @@
    "ccy": "USD",
    "q": 27,
    "avg": 71.28,
-   "price": 76.48500061035156,
+   "price": 76.45500183105469,
    "stop": 73.84250061035156,
    "target": 76.4702,
    "half_done": true,
    "opened": "2026-10-30",
-   "pl_krw": 189565,
-   "pl_pct": 7.3,
+   "pl_krw": 188472,
+   "pl_pct": 7.26,
    "price_age_min": 0.4
   },
   {
@@ -117,13 +102,13 @@
    "ccy": "USD",
    "q": 20,
    "avg": 137.3297,
-   "price": 146.18499755859375,
+   "price": 147.05999755859375,
    "stop": 142.13719694824218,
    "target": 155.0801,
    "half_done": true,
    "opened": "2026-10-31",
-   "pl_krw": 238895,
-   "pl_pct": 6.45,
+   "pl_krw": 262500,
+   "pl_pct": 7.09,
    "price_age_min": 0.4
   },
   {
@@ -132,13 +117,13 @@
    "ccy": "USD",
    "q": 707,
    "avg": 10.085,
-   "price": 10.704999923706055,
+   "price": 10.6850004196167,
    "stop": 10.271299732971192,
    "target": 11.0967,
    "half_done": true,
    "opened": "2026-11-04",
-   "pl_krw": 591268,
-   "pl_pct": 6.15,
+   "pl_krw": 572195,
+   "pl_pct": 5.95,
    "price_age_min": 0.4
   },
   {
@@ -147,13 +132,28 @@
    "ccy": "USD",
    "q": 55,
    "avg": 72.76,
-   "price": 72.45999908447266,
+   "price": 72.5,
    "stop": 70.1226,
    "target": 78.0347,
    "half_done": false,
    "opened": "2026-11-05",
-   "pl_krw": -22257,
-   "pl_pct": -0.41,
+   "pl_krw": -19289,
+   "pl_pct": -0.36,
+   "price_age_min": 0.4
+  },
+  {
+   "code": "ZTS",
+   "name": "Zoetis Inc.",
+   "ccy": "USD",
+   "q": 70,
+   "avg": 83.06,
+   "price": 83.05999755859375,
+   "stop": 77.8186,
+   "target": 93.5428,
+   "half_done": false,
+   "opened": "2026-11-06",
+   "pl_krw": 0,
+   "pl_pct": -0.0,
    "price_age_min": 0.4
   }
  ],
@@ -213,25 +213,25 @@
    "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권27% · 체크4/6 · 손절폭6.5%"
   }
  ],
- "trades": 57,
- "win_trades": 27,
+ "trades": 58,
+ "win_trades": 28,
  "pos_cap_pct": 33.3,
  "cap_violations": [],
  "rule_violations": [],
  "fx": 1348.88,
  "stats": {
   "all": {
-   "n": 57,
-   "win": 27,
-   "win_rate": 47,
-   "avg_r": -0.14
+   "n": 58,
+   "win": 28,
+   "win_rate": 48,
+   "avg_r": -0.12
   },
   "by_mode": {
    "full": {
-    "n": 31,
-    "win": 13,
-    "win_rate": 42,
-    "avg_r": -0.23
+    "n": 32,
+    "win": 14,
+    "win_rate": 44,
+    "avg_r": -0.18
    },
    "half": {
     "n": 17,
@@ -247,10 +247,10 @@
    }
   },
   "fresh": {
-   "n": 55,
-   "win": 26,
-   "win_rate": 47,
-   "avg_r": -0.15
+   "n": 56,
+   "win": 27,
+   "win_rate": 48,
+   "avg_r": -0.13
   },
   "stale": {
    "n": 2,
@@ -260,10 +260,10 @@
   },
   "by_stage": {
    "3": {
-    "n": 55,
-    "win": 26,
-    "win_rate": 47,
-    "avg_r": -0.14
+    "n": 56,
+    "win": 27,
+    "win_rate": 48,
+    "avg_r": -0.11
    },
    "4": {
     "n": 2,
@@ -280,16 +280,58 @@
     "avg_r": -0.32
    },
    "USD": {
-    "n": 45,
-    "win": 23,
-    "win_rate": 51,
-    "avg_r": -0.09
+    "n": 46,
+    "win": 24,
+    "win_rate": 52,
+    "avg_r": -0.07
    }
   },
-  "slip_entry_pct": -0.41,
+  "slip_entry_pct": -0.4,
   "slip_stop_pct": -0.79
  },
  "closed": [
+  {
+   "code": "BKE",
+   "name": "Buckle, Inc.",
+   "ccy": "USD",
+   "ctx": {
+    "mode": "full",
+    "fresh": true,
+    "stage": 3,
+    "rp": 18,
+    "rec": 4,
+    "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권18% · 체크4/6 · 손절폭4.7%"
+   },
+   "plan": {
+    "entry": 43.09,
+    "stop": 41.0781,
+    "target": 47.1138,
+    "pb": null,
+    "tactic": "full"
+   },
+   "fill": {
+    "avg": 43.09,
+    "q": 96
+   },
+   "exits": [
+    {
+     "d": "2026-10-15",
+     "q": 48,
+     "price": 45.595,
+     "note": "+1R 절반 익절"
+    },
+    {
+     "d": "2026-11-06",
+     "q": 48,
+     "price": 44.98,
+     "note": "트레일 스탑"
+    }
+   ],
+   "opened": "2026-09-29",
+   "closed": "2026-11-06",
+   "pl": 283898,
+   "r": 1.08
+  },
   {
    "code": "EQT",
    "name": "EQT Corporation",
@@ -1369,48 +1411,6 @@
    "closed": "2026-09-21",
    "pl": -670249,
    "r": -1.12
-  },
-  {
-   "code": "EQT",
-   "name": "EQT Corporation",
-   "ccy": "USD",
-   "ctx": {
-    "mode": "full",
-    "fresh": true,
-    "stage": 3,
-    "rp": 17,
-    "rec": 3,
-    "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권17% · 체크3/6 · 손절폭5.6%"
-   },
-   "plan": {
-    "entry": 51.375,
-    "stop": 48.5008,
-    "target": 57.1234,
-    "pb": 50.94,
-    "tactic": "full"
-   },
-   "fill": {
-    "avg": 51.375,
-    "q": 242
-   },
-   "exits": [
-    {
-     "d": "2026-08-12",
-     "q": 121,
-     "price": 54.34,
-     "note": "+1R 절반 익절"
-    },
-    {
-     "d": "2026-09-16",
-     "q": 121,
-     "price": 51.83,
-     "note": "트레일 스탑"
-    }
-   ],
-   "opened": "2026-07-29",
-   "closed": "2026-09-16",
-   "pl": 581514,
-   "r": 0.57
   }
  ],
  "hist": [
@@ -1912,10 +1912,37 @@
   },
   {
    "d": "2026-11-06",
-   "v": 99819002
+   "v": 99824023
   }
  ],
  "log": [
+  {
+   "d": "2026-11-06",
+   "type": "buy",
+   "code": "ZTS",
+   "name": "Zoetis Inc.",
+   "q": 70,
+   "price": 83.06,
+   "ccy": "USD",
+   "amt": 7842658,
+   "note": "반반 1차 — 🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권22% · 체크4/6 · 손절폭6.3%",
+   "stop": 77.8186,
+   "target": 93.5428
+  },
+  {
+   "d": "2026-11-06",
+   "type": "sell",
+   "code": "BKE",
+   "name": "Buckle, Inc.",
+   "q": 48,
+   "price": 44.98,
+   "ccy": "USD",
+   "amt": 2912286,
+   "note": "트레일 스탑",
+   "pl": 122370,
+   "pl_pct": 4.4,
+   "r": 1.08
+  },
   {
    "d": "2026-11-06",
    "type": "sell",
@@ -2545,33 +2572,6 @@
    "pl": -165789,
    "pl_pct": -6.6,
    "r": -1.13
-  },
-  {
-   "d": "2026-10-07",
-   "type": "buy",
-   "code": "017800",
-   "name": "현대엘리베이터",
-   "q": 283,
-   "price": 73300.0,
-   "ccy": "KRW",
-   "amt": 20743900,
-   "note": "즉시 분할 — 🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권22% · 체크5/6 · 손절폭4.6%",
-   "stop": 69956.0404,
-   "target": 79987.9193
-  },
-  {
-   "d": "2026-10-07",
-   "type": "sell",
-   "code": "032640",
-   "name": "LG유플러스",
-   "q": 1417,
-   "price": 14560.0,
-   "ccy": "KRW",
-   "amt": 20631520,
-   "note": "타임 스탑(+1R 미도달)",
-   "pl": -262145,
-   "pl_pct": -1.3,
-   "r": -0.27
   }
  ],
  "lane": "fast",
