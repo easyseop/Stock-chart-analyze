@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated_at": "2026-11-05T20:56:10+09:00",
+ "generated_at": "2026-11-05T21:45:32+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "a_ablation": [
   {
@@ -753,7 +753,7 @@
    "target": 41153.125,
    "shares_1pct": 0,
    "range_pos": 0.4399,
-   "norm": 3.8,
+   "norm": 1.9,
    "bear_share": 0.375,
    "shelf": {
     "poc": 36303.125,
@@ -2355,27 +2355,6 @@
    "tactic": null
   },
   {
-   "id": "036460-2026-11-05-watch",
-   "code": "036460",
-   "name": "한국가스공사",
-   "ccy": "KRW",
-   "group": "watch",
-   "entry_kind": "breakout",
-   "stage": 4,
-   "price": 37550.0,
-   "entry": 37850.0,
-   "stop": 36100.384,
-   "target": 41349.2319,
-   "shares_1pct": 57,
-   "range_pos": 0.4399,
-   "norm": 3.8,
-   "bear_share": 0.375,
-   "fresh": false,
-   "break_gap": 0.0507,
-   "earnings_d": null,
-   "tactic": null
-  },
-  {
    "id": "HLNE-2026-11-05-watch",
    "code": "HLNE",
    "name": "Hamilton Lane Incorporated",
@@ -2792,6 +2771,27 @@
    "bear_share": 0.375,
    "fresh": false,
    "break_gap": 0.2015,
+   "earnings_d": null,
+   "tactic": null
+  },
+  {
+   "id": "036460-2026-11-05-watch",
+   "code": "036460",
+   "name": "한국가스공사",
+   "ccy": "KRW",
+   "group": "watch",
+   "entry_kind": "breakout",
+   "stage": 3,
+   "price": 37550.0,
+   "entry": 37850.0,
+   "stop": 36100.384,
+   "target": 41349.2319,
+   "shares_1pct": 57,
+   "range_pos": 0.4399,
+   "norm": 1.9,
+   "bear_share": 0.375,
+   "fresh": false,
+   "break_gap": 0.0507,
    "earnings_d": null,
    "tactic": null
   },
