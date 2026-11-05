@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated_at": "2026-11-05T08:59:19+09:00",
+ "generated_at": "2026-11-05T09:25:09+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "a_ablation": [
   {
@@ -166,16 +166,16 @@
  ],
  "shelf_debug": {
   "ok": 13,
-  "watch": 91,
+  "watch": 92,
   "reasons": {
-   "밸류영역 밖(지지대 아님)": 449,
-   "추락 중(범위 1%)": 275,
-   "추락 중(범위 0%)": 255,
+   "밸류영역 밖(지지대 아님)": 448,
+   "추락 중(범위 1%)": 273,
+   "추락 중(범위 0%)": 254,
    "매물대 정보 없음": 173,
-   "추락 중(범위 2%)": 172,
-   "추락 중(범위 3%)": 145,
-   "추락 중(범위 5%)": 135,
-   "추락 중(범위 4%)": 135
+   "추락 중(범위 2%)": 171,
+   "추락 중(범위 3%)": 144,
+   "추락 중(범위 4%)": 137,
+   "추락 중(범위 5%)": 136
   }
  },
  "signals": [
@@ -1085,33 +1085,33 @@
    "trend_above_200": false
   },
   {
-   "id": "MMS-2026-11-05-shelf-watch",
-   "code": "MMS",
-   "name": "Maximus, Inc.",
-   "ccy": "USD",
+   "id": "323280-2026-11-05-shelf-watch",
+   "code": "323280",
+   "name": "태성",
+   "ccy": "KRW",
    "group": "shelf_watch",
    "entry_kind": "shelf_watch",
    "stage": 0,
-   "price": 65.945,
-   "entry": 65.945,
-   "stop": 61.7204,
-   "target": 74.5,
+   "price": 50900.0,
+   "entry": 50900.0,
+   "stop": 46060.0,
+   "target": 65895.8333,
    "shares_1pct": 0,
-   "range_pos": 0.3044,
-   "norm": -0.8,
-   "bear_share": 0.5,
+   "range_pos": 0.393,
+   "norm": -1.9,
+   "bear_share": 0.25,
    "shelf": {
-    "poc": 56.14,
-    "val": 52.06,
-    "vah": 74.5,
-    "rr": 2.03,
-    "overhead": 0.461,
-    "reason": "반등 미확인(터치·거래량)",
-    "history_bars": 1971,
-    "profile_pnl_proxy": -0.037,
-    "runup252": -0.2098,
+    "poc": 51104.1667,
+    "val": 33354.1667,
+    "vah": 65895.8333,
+    "rr": 3.1,
+    "overhead": 0.513,
+    "reason": "반등 미확인(거래량)",
+    "history_bars": 1805,
+    "profile_pnl_proxy": -0.0347,
+    "runup252": 1.1477,
     "checks": {
-     "터치": false,
+     "터치": true,
      "회복": true,
      "상단마감": true,
      "거래량": false,
@@ -1122,7 +1122,7 @@
    "break_gap": null,
    "earnings_d": null,
    "tactic": "watch",
-   "trend_above_200": true
+   "trend_above_200": false
   },
   {
    "id": "229640-2026-11-05-shelf-watch",
