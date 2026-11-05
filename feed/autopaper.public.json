@@ -1,10 +1,10 @@
 {
- "generated_at": "2026-11-05T23:42:08.252476+09:00",
- "updated": "2026-11-05",
+ "generated_at": "2026-11-06T00:01:38.854882+09:00",
+ "updated": "2026-11-06",
  "start": 100000000,
- "cash": 25782137,
- "equity": 100026372,
- "ret_pct": 0.03,
+ "cash": 43753212,
+ "equity": 100942245,
+ "ret_pct": 0.94,
  "positions": [
   {
    "code": "BKE",
@@ -12,14 +12,14 @@
    "ccy": "USD",
    "q": 48,
    "avg": 43.09,
-   "price": 47.82749938964844,
+   "price": 46.665000915527344,
    "stop": 45.38210070800781,
    "target": 47.1138,
    "half_done": true,
    "opened": "2026-09-29",
-   "pl_krw": 304575,
-   "pl_pct": 10.99,
-   "price_age_min": 0.6
+   "pl_krw": 231468,
+   "pl_pct": 8.3,
+   "price_age_min": 0.3
   },
   {
    "code": "CRAI",
@@ -27,14 +27,14 @@
    "ccy": "USD",
    "q": 16,
    "avg": 164.4,
-   "price": 210.91000366210938,
+   "price": 210.3000030517578,
    "stop": 194.05030366210937,
    "target": 186.8795,
    "half_done": true,
    "opened": "2026-10-01",
-   "pl_krw": 996713,
-   "pl_pct": 28.29,
-   "price_age_min": 0.6
+   "pl_krw": 990618,
+   "pl_pct": 27.92,
+   "price_age_min": 0.3
   },
   {
    "code": "COST",
@@ -42,29 +42,29 @@
    "ccy": "USD",
    "q": 1,
    "avg": 943.035,
-   "price": 1069.0899658203125,
+   "price": 1067.637451171875,
    "stop": 1024.0044658203126,
    "target": 1003.1489,
    "half_done": true,
    "opened": "2026-10-07",
-   "pl_krw": 168836,
-   "pl_pct": 13.37,
-   "price_age_min": 0.6
+   "pl_krw": 168074,
+   "pl_pct": 13.21,
+   "price_age_min": 0.3
   },
   {
    "code": "TM",
    "name": "Toyota Motor Corporation",
    "ccy": "USD",
-   "q": 50,
+   "q": 25,
    "avg": 197.05,
-   "price": 218.5050048828125,
-   "stop": 190.922,
+   "price": 220.99000549316406,
+   "stop": 211.79800549316406,
    "target": 209.306,
-   "half_done": false,
+   "half_done": true,
    "opened": "2026-10-21",
-   "pl_krw": 1436820,
-   "pl_pct": 10.89,
-   "price_age_min": 0.6
+   "pl_krw": 807305,
+   "pl_pct": 12.15,
+   "price_age_min": 0.3
   },
   {
    "code": "251270",
@@ -79,7 +79,7 @@
    "opened": "2026-10-22",
    "pl_krw": 463500,
    "pl_pct": 6.53,
-   "price_age_min": 0.6
+   "price_age_min": 0.3
   },
   {
    "code": "CSR",
@@ -87,14 +87,14 @@
    "ccy": "USD",
    "q": 126,
    "avg": 56.24,
-   "price": 60.5,
+   "price": 60.255001068115234,
    "stop": 57.3341,
    "target": 60.4614,
    "half_done": true,
    "opened": "2026-10-28",
-   "pl_krw": 718926,
-   "pl_pct": 7.57,
-   "price_age_min": 0.6
+   "pl_krw": 682385,
+   "pl_pct": 7.14,
+   "price_age_min": 0.3
   },
   {
    "code": "ALC",
@@ -102,14 +102,14 @@
    "ccy": "USD",
    "q": 27,
    "avg": 71.28,
-   "price": 77.34500122070312,
+   "price": 77.5999984741211,
    "stop": 73.84250061035156,
    "target": 76.4702,
    "half_done": true,
    "opened": "2026-10-30",
-   "pl_krw": 219330,
-   "pl_pct": 8.51,
-   "price_age_min": 0.6
+   "pl_krw": 230173,
+   "pl_pct": 8.87,
+   "price_age_min": 0.3
   },
   {
    "code": "HLI",
@@ -117,29 +117,29 @@
    "ccy": "USD",
    "q": 20,
    "avg": 137.3297,
-   "price": 155.0,
+   "price": 152.7550048828125,
    "stop": 142.13719694824218,
    "target": 155.0801,
    "half_done": true,
    "opened": "2026-10-31",
-   "pl_krw": 473345,
-   "pl_pct": 12.87,
-   "price_age_min": 0.6
+   "pl_krw": 416138,
+   "pl_pct": 11.23,
+   "price_age_min": 0.3
   },
   {
    "code": "ECVT",
    "name": "Ecovyst Inc.",
    "ccy": "USD",
-   "q": 1414,
+   "q": 707,
    "avg": 10.085,
-   "price": 10.795000076293945,
-   "stop": 9.5791,
+   "price": 11.029999732971191,
+   "stop": 10.271299732971192,
    "target": 11.0967,
-   "half_done": false,
+   "half_done": true,
    "opened": "2026-11-04",
-   "pl_krw": 1344657,
-   "pl_pct": 7.04,
-   "price_age_min": 0.6
+   "pl_krw": 901207,
+   "pl_pct": 9.37,
+   "price_age_min": 0.3
   },
   {
    "code": "PEG",
@@ -147,14 +147,14 @@
    "ccy": "USD",
    "q": 55,
    "avg": 72.76,
-   "price": 73.58499908447266,
+   "price": 73.7249984741211,
    "stop": 70.1226,
    "target": 78.0347,
    "half_done": false,
    "opened": "2026-11-05",
-   "pl_krw": 60774,
-   "pl_pct": 1.13,
-   "price_age_min": 0.6
+   "pl_krw": 71592,
+   "pl_pct": 1.33,
+   "price_age_min": 0.3
   }
  ],
  "pending": [
@@ -218,7 +218,7 @@
  "pos_cap_pct": 33.3,
  "cap_violations": [],
  "rule_violations": [],
- "fx": 1339.38,
+ "fx": 1348.88,
  "stats": {
   "all": {
    "n": 57,
@@ -1909,9 +1909,39 @@
   {
    "d": "2026-11-05",
    "v": 100026372
+  },
+  {
+   "d": "2026-11-06",
+   "v": 100942245
   }
  ],
  "log": [
+  {
+   "d": "2026-11-06",
+   "type": "sell",
+   "code": "ECVT",
+   "name": "Ecovyst Inc.",
+   "q": 707,
+   "price": 11.03,
+   "ccy": "USD",
+   "amt": 10518849,
+   "note": "+1R 절반 익절",
+   "pl": 901207,
+   "pl_pct": 9.4
+  },
+  {
+   "d": "2026-11-06",
+   "type": "sell",
+   "code": "TM",
+   "name": "Toyota Motor Corporation",
+   "q": 25,
+   "price": 220.99,
+   "ccy": "USD",
+   "amt": 7452225,
+   "note": "+1R 절반 익절",
+   "pl": 807305,
+   "pl_pct": 12.1
+  },
   {
    "d": "2026-11-05",
    "type": "buy",
@@ -2542,30 +2572,6 @@
    "pl": -262145,
    "pl_pct": -1.3,
    "r": -0.27
-  },
-  {
-   "d": "2026-10-02",
-   "type": "buy",
-   "code": "LEVI",
-   "name": "Levi Strauss & Co",
-   "q": 1,
-   "price": 19.8,
-   "ccy": "USD",
-   "amt": 26985,
-   "note": "즉시 분할 — 🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권26% · 체크3/6 · 손절폭5.1%",
-   "stop": 18.788,
-   "target": 21.824
-  },
-  {
-   "d": "2026-10-02",
-   "type": "order",
-   "code": "WS",
-   "name": "Worthington Steel, Inc.",
-   "q": 225,
-   "price": 32.2806,
-   "ccy": "USD",
-   "amt": 9898636,
-   "note": "눌림 지정가 주문(추격 금지) — 🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권35% · 체크4/6 · 손절폭8.3%"
   }
  ],
  "lane": "fast",
