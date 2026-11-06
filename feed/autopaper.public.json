@@ -1,10 +1,10 @@
 {
- "generated_at": "2026-11-07T05:26:53.223302+09:00",
+ "generated_at": "2026-11-07T05:46:53.875956+09:00",
  "updated": "2026-11-07",
  "start": 100000000,
- "cash": 48416641,
- "equity": 98180700,
- "ret_pct": -1.82,
+ "cash": 38258493,
+ "equity": 98205731,
+ "ret_pct": -1.79,
  "positions": [
   {
    "code": "CRAI",
@@ -12,14 +12,14 @@
    "ccy": "USD",
    "q": 16,
    "avg": 164.4,
-   "price": 196.02000427246094,
+   "price": 197.6999969482422,
    "stop": 194.05030366210937,
    "target": 186.8795,
    "half_done": true,
    "opened": "2026-10-01",
-   "pl_krw": 688598,
-   "pl_pct": 19.23,
-   "price_age_min": 0.4
+   "pl_krw": 725183,
+   "pl_pct": 20.26,
+   "price_age_min": 0.5
   },
   {
    "code": "COST",
@@ -27,14 +27,14 @@
    "ccy": "USD",
    "q": 1,
    "avg": 943.035,
-   "price": 1054.489990234375,
+   "price": 1057.2149658203125,
    "stop": 1034.864451171875,
    "target": 1003.1489,
    "half_done": true,
    "opened": "2026-10-07",
-   "pl_krw": 151699,
-   "pl_pct": 11.82,
-   "price_age_min": 0.4
+   "pl_krw": 155408,
+   "pl_pct": 12.11,
+   "price_age_min": 0.5
   },
   {
    "code": "TM",
@@ -42,14 +42,14 @@
    "ccy": "USD",
    "q": 25,
    "avg": 197.05,
-   "price": 215.2899932861328,
+   "price": 215.36000061035156,
    "stop": 211.79800549316406,
    "target": 209.306,
    "half_done": true,
    "opened": "2026-10-21",
-   "pl_krw": 620652,
-   "pl_pct": 9.26,
-   "price_age_min": 0.4
+   "pl_krw": 623034,
+   "pl_pct": 9.29,
+   "price_age_min": 0.5
   },
   {
    "code": "251270",
@@ -64,22 +64,7 @@
    "opened": "2026-10-22",
    "pl_krw": 41200,
    "pl_pct": 0.58,
-   "price_age_min": 0.4
-  },
-  {
-   "code": "CSR",
-   "name": "D/B/A Centerspace",
-   "ccy": "USD",
-   "q": 126,
-   "avg": 56.24,
-   "price": 57.310001373291016,
-   "stop": 57.3341,
-   "target": 60.4614,
-   "half_done": true,
-   "opened": "2026-10-28",
-   "pl_krw": 183501,
-   "pl_pct": 1.9,
-   "price_age_min": 0.4
+   "price_age_min": 0.5
   },
   {
    "code": "ALC",
@@ -87,14 +72,14 @@
    "ccy": "USD",
    "q": 27,
    "avg": 71.28,
-   "price": 74.75,
+   "price": 74.91999816894531,
    "stop": 73.84250061035156,
    "target": 76.4702,
    "half_done": true,
    "opened": "2026-10-30",
-   "pl_krw": 127520,
-   "pl_pct": 4.87,
-   "price_age_min": 0.4
+   "pl_krw": 133767,
+   "pl_pct": 5.11,
+   "price_age_min": 0.5
   },
   {
    "code": "HLI",
@@ -102,14 +87,14 @@
    "ccy": "USD",
    "q": 20,
    "avg": 137.3297,
-   "price": 146.11000061035156,
+   "price": 146.08999633789062,
    "stop": 142.13719694824218,
    "target": 155.0801,
    "half_done": true,
    "opened": "2026-10-31",
-   "pl_krw": 239014,
-   "pl_pct": 6.39,
-   "price_age_min": 0.4
+   "pl_krw": 238469,
+   "pl_pct": 6.38,
+   "price_age_min": 0.5
   },
   {
    "code": "PEG",
@@ -117,14 +102,14 @@
    "ccy": "USD",
    "q": 55,
    "avg": 72.76,
-   "price": 72.82499694824219,
+   "price": 72.83000183105469,
    "stop": 70.1226,
    "target": 78.0347,
    "half_done": false,
    "opened": "2026-11-05",
-   "pl_krw": 4866,
-   "pl_pct": 0.09,
-   "price_age_min": 0.4
+   "pl_krw": 5240,
+   "pl_pct": 0.1,
+   "price_age_min": 0.5
   },
   {
    "code": "ZTS",
@@ -132,14 +117,29 @@
    "ccy": "USD",
    "q": 70,
    "avg": 83.06,
-   "price": 79.68499755859375,
+   "price": 79.4000015258789,
    "stop": 77.8186,
    "target": 93.5428,
    "half_done": false,
    "opened": "2026-11-06",
-   "pl_krw": -321555,
-   "pl_pct": -4.06,
-   "price_age_min": 0.4
+   "pl_krw": -348709,
+   "pl_pct": -4.41,
+   "price_age_min": 0.5
+  },
+  {
+   "code": "PEP",
+   "name": "PepsiCo, Inc.",
+   "ccy": "USD",
+   "q": 104,
+   "avg": 141.22,
+   "price": 141.22000122070312,
+   "stop": 134.599,
+   "target": 154.462,
+   "half_done": false,
+   "opened": "2026-11-07",
+   "pl_krw": 0,
+   "pl_pct": 0.0,
+   "price_age_min": 0.5
   }
  ],
  "pending": [
@@ -225,25 +225,25 @@
    "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권17% · 체크4/6 · 손절폭8.0%"
   }
  ],
- "trades": 59,
- "win_trades": 29,
+ "trades": 60,
+ "win_trades": 30,
  "pos_cap_pct": 33.3,
  "cap_violations": [],
  "rule_violations": [],
  "fx": 1361.08,
  "stats": {
   "all": {
-   "n": 59,
-   "win": 29,
-   "win_rate": 49,
-   "avg_r": -0.1
+   "n": 60,
+   "win": 30,
+   "win_rate": 50,
+   "avg_r": -0.09
   },
   "by_mode": {
    "full": {
-    "n": 33,
-    "win": 15,
-    "win_rate": 45,
-    "avg_r": -0.15
+    "n": 34,
+    "win": 16,
+    "win_rate": 47,
+    "avg_r": -0.12
    },
    "half": {
     "n": 17,
@@ -259,10 +259,10 @@
    }
   },
   "fresh": {
-   "n": 57,
-   "win": 28,
-   "win_rate": 49,
-   "avg_r": -0.11
+   "n": 58,
+   "win": 29,
+   "win_rate": 50,
+   "avg_r": -0.09
   },
   "stale": {
    "n": 2,
@@ -272,10 +272,10 @@
   },
   "by_stage": {
    "3": {
-    "n": 57,
-    "win": 28,
-    "win_rate": 49,
-    "avg_r": -0.1
+    "n": 58,
+    "win": 29,
+    "win_rate": 50,
+    "avg_r": -0.08
    },
    "4": {
     "n": 2,
@@ -292,16 +292,58 @@
     "avg_r": -0.32
    },
    "USD": {
-    "n": 47,
-    "win": 25,
-    "win_rate": 53,
-    "avg_r": -0.05
+    "n": 48,
+    "win": 26,
+    "win_rate": 54,
+    "avg_r": -0.03
    }
   },
   "slip_entry_pct": -0.39,
   "slip_stop_pct": -0.79
  },
  "closed": [
+  {
+   "code": "CSR",
+   "name": "D/B/A Centerspace",
+   "ccy": "USD",
+   "ctx": {
+    "mode": "full",
+    "fresh": true,
+    "stage": 3,
+    "rp": 24,
+    "rec": 4,
+    "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권24% · 체크4/6 · 손절폭3.8%"
+   },
+   "plan": {
+    "entry": 56.24,
+    "stop": 54.1293,
+    "target": 60.4614,
+    "pb": 54.9875,
+    "tactic": "full"
+   },
+   "fill": {
+    "avg": 56.24,
+    "q": 252
+   },
+   "exits": [
+    {
+     "d": "2026-10-30",
+     "q": 126,
+     "price": 58.73,
+     "note": "+1R 절반 익절"
+    },
+    {
+     "d": "2026-11-07",
+     "q": 126,
+     "price": 57.33,
+     "note": "트레일 스탑"
+    }
+   ],
+   "opened": "2026-10-28",
+   "closed": "2026-11-07",
+   "pl": 606583,
+   "r": 0.86
+  },
   {
    "code": "ECVT",
    "name": "Ecovyst Inc.",
@@ -1387,48 +1429,6 @@
    "closed": "2026-09-25",
    "pl": -164784,
    "r": -1.02
-  },
-  {
-   "code": "NAVI",
-   "name": "Navient Corporation",
-   "ccy": "USD",
-   "ctx": {
-    "mode": "half",
-    "fresh": true,
-    "stage": 3,
-    "rp": 29,
-    "rec": 6,
-    "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권29% · 체크6/6 · 손절폭7.7%"
-   },
-   "plan": {
-    "entry": 9.24,
-    "stop": 8.5322,
-    "target": 10.6555,
-    "pb": 8.821,
-    "tactic": "half"
-   },
-   "fill": {
-    "avg": 9.24,
-    "q": 372
-   },
-   "exits": [
-    {
-     "d": "2026-09-16",
-     "q": 186,
-     "price": 9.955,
-     "note": "+1R 절반 익절"
-    },
-    {
-     "d": "2026-09-23",
-     "q": 186,
-     "price": 9.205,
-     "note": "본전 스탑"
-    }
-   ],
-   "opened": "2026-08-27",
-   "closed": "2026-09-23",
-   "pl": 172067,
-   "r": 0.47
   }
  ],
  "hist": [
@@ -1934,10 +1934,37 @@
   },
   {
    "d": "2026-11-07",
-   "v": 98180700
+   "v": 98205731
   }
  ],
  "log": [
+  {
+   "d": "2026-11-07",
+   "type": "buy",
+   "code": "PEP",
+   "name": "PepsiCo, Inc.",
+   "q": 104,
+   "price": 141.22,
+   "ccy": "USD",
+   "amt": 19990018,
+   "note": "즉시 분할 — 🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권37% · 체크4/6 · 손절폭4.7%",
+   "stop": 134.599,
+   "target": 154.462
+  },
+  {
+   "d": "2026-11-07",
+   "type": "sell",
+   "code": "CSR",
+   "name": "D/B/A Centerspace",
+   "q": 126,
+   "price": 57.33,
+   "ccy": "USD",
+   "amt": 9831870,
+   "note": "트레일 스탑",
+   "pl": 186931,
+   "pl_pct": 1.9,
+   "r": 0.86
+  },
   {
    "d": "2026-11-06",
    "type": "order",
@@ -2565,33 +2592,6 @@
    "note": "+1R 절반 익절",
    "pl": 236927,
    "pl_pct": 7.2
-  },
-  {
-   "d": "2026-10-09",
-   "type": "buy",
-   "code": "AES",
-   "name": "The AES Corporation",
-   "q": 11,
-   "price": 14.92,
-   "ccy": "USD",
-   "amt": 220246,
-   "note": "즉시 분할 — 🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권39% · 체크5/6 · 손절폭3.0%",
-   "stop": 14.4724,
-   "target": 15.8152
-  },
-  {
-   "d": "2026-10-09",
-   "type": "sell",
-   "code": "LEVI",
-   "name": "Levi Strauss & Co",
-   "q": 1,
-   "price": 18.785,
-   "ccy": "USD",
-   "amt": 25209,
-   "note": "손절",
-   "pl": -1362,
-   "pl_pct": -5.1,
-   "r": -0.99
   }
  ],
  "lane": "fast",
