@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated_at": "2026-11-06T08:41:33+09:00",
+ "generated_at": "2026-11-06T09:10:40+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "a_ablation": [
   {
@@ -166,16 +166,16 @@
  ],
  "shelf_debug": {
   "ok": 8,
-  "watch": 66,
+  "watch": 65,
   "reasons": {
-   "밸류영역 밖(지지대 아님)": 458,
-   "추락 중(범위 1%)": 290,
+   "밸류영역 밖(지지대 아님)": 462,
+   "추락 중(범위 1%)": 291,
    "추락 중(범위 0%)": 262,
    "추락 중(범위 2%)": 175,
    "매물대 정보 없음": 173,
-   "추락 중(범위 5%)": 137,
-   "추락 중(범위 4%)": 134,
-   "추락 중(범위 3%)": 134
+   "추락 중(범위 5%)": 138,
+   "추락 중(범위 3%)": 134,
+   "추락 중(범위 4%)": 132
   }
  },
  "signals": [
@@ -1516,46 +1516,6 @@
    "trend_above_200": true
   },
   {
-   "id": "323280-2026-11-06-shelf-watch",
-   "code": "323280",
-   "name": "태성",
-   "ccy": "KRW",
-   "group": "shelf_watch",
-   "entry_kind": "shelf_watch",
-   "stage": 0,
-   "price": 50900.0,
-   "entry": 50900.0,
-   "stop": 46060.0,
-   "target": 65895.8333,
-   "shares_1pct": 0,
-   "range_pos": 0.393,
-   "norm": -1.9,
-   "bear_share": 0.25,
-   "shelf": {
-    "poc": 51104.1667,
-    "val": 33354.1667,
-    "vah": 65895.8333,
-    "rr": 3.1,
-    "overhead": 0.513,
-    "reason": "반등 미확인(거래량)",
-    "history_bars": 1805,
-    "profile_pnl_proxy": -0.0347,
-    "runup252": 1.1477,
-    "checks": {
-     "터치": true,
-     "회복": true,
-     "상단마감": true,
-     "거래량": false,
-     "신저가아님": true
-    }
-   },
-   "fresh": false,
-   "break_gap": null,
-   "earnings_d": null,
-   "tactic": "watch",
-   "trend_above_200": false
-  },
-  {
    "id": "LDOS-2026-11-06-shelf-watch",
    "code": "LDOS",
    "name": "Leidos Holdings, Inc.",
@@ -1594,6 +1554,46 @@
    "earnings_d": null,
    "tactic": "watch",
    "trend_above_200": false
+  },
+  {
+   "id": "QTEX-2026-11-06-shelf-watch",
+   "code": "QTEX",
+   "name": "QTREX Quantum Ltd.",
+   "ccy": "USD",
+   "group": "shelf_watch",
+   "entry_kind": "shelf_watch",
+   "stage": 0,
+   "price": 1.12,
+   "entry": 1.12,
+   "stop": 1.078,
+   "target": 1.6949,
+   "shares_1pct": 0,
+   "range_pos": 0.2347,
+   "norm": -7.5,
+   "bear_share": 0.25,
+   "shelf": {
+    "poc": 1.1004,
+    "val": 0.5059,
+    "vah": 1.6949,
+    "rr": 13.69,
+    "overhead": 0.534,
+    "reason": "반등 미확인(상단마감·거래량·신저가아님)",
+    "history_bars": 1334,
+    "profile_pnl_proxy": -0.2089,
+    "runup252": 0.2613,
+    "checks": {
+     "터치": true,
+     "회복": true,
+     "상단마감": false,
+     "거래량": false,
+     "신저가아님": false
+    }
+   },
+   "fresh": false,
+   "break_gap": null,
+   "earnings_d": null,
+   "tactic": "watch",
+   "trend_above_200": true
   },
   {
    "id": "IVT-2026-11-06-shelf-watch",
@@ -1716,6 +1716,46 @@
    "trend_above_200": false
   },
   {
+   "id": "TSCO-2026-11-06-shelf-watch",
+   "code": "TSCO",
+   "name": "Tractor Supply Company",
+   "ccy": "USD",
+   "group": "shelf_watch",
+   "entry_kind": "shelf_watch",
+   "stage": 0,
+   "price": 34.76,
+   "entry": 34.76,
+   "stop": 32.8398,
+   "target": 43.2454,
+   "shares_1pct": 0,
+   "range_pos": 0.2239,
+   "norm": -27.4,
+   "bear_share": 0.375,
+   "shelf": {
+    "poc": 30.1463,
+    "val": 28.9554,
+    "vah": 43.2454,
+    "rr": 4.42,
+    "overhead": 0.453,
+    "reason": "반등 미확인(터치·상단마감·거래량)",
+    "history_bars": 1971,
+    "profile_pnl_proxy": -0.0886,
+    "runup252": -0.3378,
+    "checks": {
+     "터치": false,
+     "회복": true,
+     "상단마감": false,
+     "거래량": false,
+     "신저가아님": true
+    }
+   },
+   "fresh": false,
+   "break_gap": null,
+   "earnings_d": null,
+   "tactic": "watch",
+   "trend_above_200": false
+  },
+  {
    "id": "ITT-2026-11-06-shelf-watch",
    "code": "ITT",
    "name": "ITT Inc.",
@@ -1743,46 +1783,6 @@
     "runup252": 0.0395,
     "checks": {
      "터치": true,
-     "회복": true,
-     "상단마감": false,
-     "거래량": true,
-     "신저가아님": true
-    }
-   },
-   "fresh": false,
-   "break_gap": null,
-   "earnings_d": null,
-   "tactic": "watch",
-   "trend_above_200": false
-  },
-  {
-   "id": "000660-2026-11-06-shelf-watch",
-   "code": "000660",
-   "name": "SK하이닉스",
-   "ccy": "KRW",
-   "group": "shelf_watch",
-   "entry_kind": "shelf_watch",
-   "stage": 0,
-   "price": 1264000.0,
-   "entry": 1264000.0,
-   "stop": 1225000.0,
-   "target": 1795791.6667,
-   "shares_1pct": 0,
-   "range_pos": 0.3069,
-   "norm": -28.3,
-   "bear_share": 0.25,
-   "shelf": {
-    "poc": 552791.6667,
-    "val": 552791.6667,
-    "vah": 1795791.6667,
-    "rr": 13.64,
-    "overhead": 0.539,
-    "reason": "반등 미확인(터치·상단마감)",
-    "history_bars": 1922,
-    "profile_pnl_proxy": -0.0809,
-    "runup252": 1.3626,
-    "checks": {
-     "터치": false,
      "회복": true,
      "상단마감": false,
      "거래량": true,
