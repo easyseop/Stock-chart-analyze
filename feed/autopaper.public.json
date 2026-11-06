@@ -1,10 +1,10 @@
 {
- "generated_at": "2026-11-06T23:41:19.350423+09:00",
+ "generated_at": "2026-11-06T23:56:50.302419+09:00",
  "updated": "2026-11-06",
  "start": 100000000,
- "cash": 38822839,
- "equity": 98711107,
- "ret_pct": -1.29,
+ "cash": 48416641,
+ "equity": 97843845,
+ "ret_pct": -2.16,
  "positions": [
   {
    "code": "CRAI",
@@ -12,14 +12,14 @@
    "ccy": "USD",
    "q": 16,
    "avg": 164.4,
-   "price": 202.94000244140625,
+   "price": 201.83999633789062,
    "stop": 194.05030366210937,
    "target": 186.8795,
    "half_done": true,
    "opened": "2026-10-01",
-   "pl_krw": 831773,
-   "pl_pct": 23.44,
-   "price_age_min": 19.7
+   "pl_krw": 808033,
+   "pl_pct": 22.77,
+   "price_age_min": 0.4
   },
   {
    "code": "COST",
@@ -27,14 +27,14 @@
    "ccy": "USD",
    "q": 1,
    "avg": 943.035,
-   "price": 1065.5899658203125,
+   "price": 1056.449951171875,
    "stop": 1034.864451171875,
    "target": 1003.1489,
    "half_done": true,
    "opened": "2026-10-07",
-   "pl_krw": 165312,
-   "pl_pct": 13.0,
-   "price_age_min": 19.7
+   "pl_krw": 152983,
+   "pl_pct": 12.03,
+   "price_age_min": 0.4
   },
   {
    "code": "TM",
@@ -42,14 +42,14 @@
    "ccy": "USD",
    "q": 25,
    "avg": 197.05,
-   "price": 218.11000061035156,
+   "price": 214.38499450683594,
    "stop": 211.79800549316406,
    "target": 209.306,
    "half_done": true,
    "opened": "2026-10-21",
-   "pl_krw": 710185,
-   "pl_pct": 10.69,
-   "price_age_min": 19.7
+   "pl_krw": 584571,
+   "pl_pct": 8.8,
+   "price_age_min": 0.4
   },
   {
    "code": "251270",
@@ -64,7 +64,7 @@
    "opened": "2026-10-22",
    "pl_krw": 41200,
    "pl_pct": 0.58,
-   "price_age_min": 7.8
+   "price_age_min": 0.4
   },
   {
    "code": "CSR",
@@ -72,14 +72,14 @@
    "ccy": "USD",
    "q": 126,
    "avg": 56.24,
-   "price": 58.45000076293945,
+   "price": 57.36000061035156,
    "stop": 57.3341,
    "target": 60.4614,
    "half_done": true,
    "opened": "2026-10-28",
-   "pl_krw": 375609,
-   "pl_pct": 3.93,
-   "price_age_min": 21.7
+   "pl_krw": 190354,
+   "pl_pct": 1.99,
+   "price_age_min": 0.4
   },
   {
    "code": "ALC",
@@ -87,14 +87,14 @@
    "ccy": "USD",
    "q": 27,
    "avg": 71.28,
-   "price": 76.55000305175781,
+   "price": 74.70999908447266,
    "stop": 73.84250061035156,
    "target": 76.4702,
    "half_done": true,
    "opened": "2026-10-30",
-   "pl_krw": 191932,
-   "pl_pct": 7.39,
-   "price_age_min": 22.0
+   "pl_krw": 124920,
+   "pl_pct": 4.81,
+   "price_age_min": 0.4
   },
   {
    "code": "HLI",
@@ -102,29 +102,14 @@
    "ccy": "USD",
    "q": 20,
    "avg": 137.3297,
-   "price": 147.22000122070312,
+   "price": 145.1300048828125,
    "stop": 142.13719694824218,
    "target": 155.0801,
    "half_done": true,
    "opened": "2026-10-31",
-   "pl_krw": 266817,
-   "pl_pct": 7.2,
-   "price_age_min": 21.9
-  },
-  {
-   "code": "ECVT",
-   "name": "Ecovyst Inc.",
-   "ccy": "USD",
-   "q": 707,
-   "avg": 10.085,
-   "price": 10.180000305175781,
-   "stop": 10.271299732971192,
-   "target": 11.0967,
-   "half_done": true,
-   "opened": "2026-11-04",
-   "pl_krw": 90598,
-   "pl_pct": 0.94,
-   "price_age_min": 22.9
+   "pl_krw": 210434,
+   "pl_pct": 5.68,
+   "price_age_min": 0.4
   },
   {
    "code": "PEG",
@@ -132,14 +117,14 @@
    "ccy": "USD",
    "q": 55,
    "avg": 72.76,
-   "price": 73.0999984741211,
+   "price": 72.45500183105469,
    "stop": 70.1226,
    "target": 78.0347,
    "half_done": false,
    "opened": "2026-11-05",
-   "pl_krw": 25224,
-   "pl_pct": 0.47,
-   "price_age_min": 21.3
+   "pl_krw": -22627,
+   "pl_pct": -0.42,
+   "price_age_min": 0.4
   },
   {
    "code": "ZTS",
@@ -147,14 +132,14 @@
    "ccy": "USD",
    "q": 70,
    "avg": 83.06,
-   "price": 82.11000061035156,
+   "price": 79.625,
    "stop": 77.8186,
    "target": 93.5428,
    "half_done": false,
    "opened": "2026-11-06",
-   "pl_krw": -89700,
-   "pl_pct": -1.14,
-   "price_age_min": 21.1
+   "pl_krw": -324338,
+   "pl_pct": -4.14,
+   "price_age_min": 0.4
   }
  ],
  "pending": [
@@ -211,27 +196,54 @@
     "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권27% · 체크4/6 · 손절폭6.5%"
    },
    "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권27% · 체크4/6 · 손절폭6.5%"
+  },
+  {
+   "code": "SGI",
+   "name": "Somnigroup International Inc.",
+   "ccy": "USD",
+   "limit": 64.7551,
+   "stop": 61.4085,
+   "target": 77.433,
+   "q": 135,
+   "created": "2026-11-06",
+   "atr": 2.6708,
+   "plan": {
+    "entry": 66.75,
+    "stop": 61.4085,
+    "target": 77.433,
+    "pb": 64.7551,
+    "tactic": "pullback"
+   },
+   "ctx": {
+    "mode": "pullback",
+    "fresh": true,
+    "stage": 3,
+    "rp": 17,
+    "rec": 4,
+    "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권17% · 체크4/6 · 손절폭8.0%"
+   },
+   "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권17% · 체크4/6 · 손절폭8.0%"
   }
  ],
- "trades": 58,
- "win_trades": 28,
+ "trades": 59,
+ "win_trades": 29,
  "pos_cap_pct": 33.3,
  "cap_violations": [],
  "rule_violations": [],
  "fx": 1348.88,
  "stats": {
   "all": {
-   "n": 58,
-   "win": 28,
-   "win_rate": 48,
-   "avg_r": -0.12
+   "n": 59,
+   "win": 29,
+   "win_rate": 49,
+   "avg_r": -0.1
   },
   "by_mode": {
    "full": {
-    "n": 32,
-    "win": 14,
-    "win_rate": 44,
-    "avg_r": -0.18
+    "n": 33,
+    "win": 15,
+    "win_rate": 45,
+    "avg_r": -0.15
    },
    "half": {
     "n": 17,
@@ -247,10 +259,10 @@
    }
   },
   "fresh": {
-   "n": 56,
-   "win": 27,
-   "win_rate": 48,
-   "avg_r": -0.13
+   "n": 57,
+   "win": 28,
+   "win_rate": 49,
+   "avg_r": -0.11
   },
   "stale": {
    "n": 2,
@@ -260,10 +272,10 @@
   },
   "by_stage": {
    "3": {
-    "n": 56,
-    "win": 27,
-    "win_rate": 48,
-    "avg_r": -0.11
+    "n": 57,
+    "win": 28,
+    "win_rate": 49,
+    "avg_r": -0.1
    },
    "4": {
     "n": 2,
@@ -280,16 +292,58 @@
     "avg_r": -0.32
    },
    "USD": {
-    "n": 46,
-    "win": 24,
-    "win_rate": 52,
-    "avg_r": -0.07
+    "n": 47,
+    "win": 25,
+    "win_rate": 53,
+    "avg_r": -0.05
    }
   },
-  "slip_entry_pct": -0.4,
+  "slip_entry_pct": -0.39,
   "slip_stop_pct": -0.79
  },
  "closed": [
+  {
+   "code": "ECVT",
+   "name": "Ecovyst Inc.",
+   "ccy": "USD",
+   "ctx": {
+    "mode": "full",
+    "fresh": true,
+    "stage": 3,
+    "rp": 35,
+    "rec": 4,
+    "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권35% · 체크4/6 · 손절폭5.0%"
+   },
+   "plan": {
+    "entry": 10.085,
+    "stop": 9.5791,
+    "target": 11.0967,
+    "pb": 9.6796,
+    "tactic": "full"
+   },
+   "fill": {
+    "avg": 10.085,
+    "q": 1414
+   },
+   "exits": [
+    {
+     "d": "2026-11-06",
+     "q": 707,
+     "price": 11.03,
+     "note": "+1R 절반 익절"
+    },
+    {
+     "d": "2026-11-06",
+     "q": 707,
+     "price": 10.06,
+     "note": "트레일 스탑(급락 즉시)"
+    }
+   ],
+   "opened": "2026-11-04",
+   "closed": "2026-11-06",
+   "pl": 877366,
+   "r": 0.91
+  },
   {
    "code": "BKE",
    "name": "Buckle, Inc.",
@@ -1375,42 +1429,6 @@
    "closed": "2026-09-23",
    "pl": 172067,
    "r": 0.47
-  },
-  {
-   "code": "323410",
-   "name": "카카오뱅크",
-   "ccy": "KRW",
-   "ctx": {
-    "mode": "half",
-    "fresh": true,
-    "stage": 3,
-    "rp": 27,
-    "rec": 4,
-    "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권27% · 체크4/6 · 손절폭6.3%"
-   },
-   "plan": {
-    "entry": 21900.0,
-    "stop": 20511.373,
-    "target": 24677.254,
-    "pb": 21463.77,
-    "tactic": "half"
-   },
-   "fill": {
-    "avg": 21807.064,
-    "q": 460
-   },
-   "exits": [
-    {
-     "d": "2026-09-21",
-     "q": 460,
-     "price": 20350.0,
-     "note": "손절"
-    }
-   ],
-   "opened": "2026-09-04",
-   "closed": "2026-09-21",
-   "pl": -670249,
-   "r": -1.12
   }
  ],
  "hist": [
@@ -1912,10 +1930,35 @@
   },
   {
    "d": "2026-11-06",
-   "v": 98711107
+   "v": 97843845
   }
  ],
  "log": [
+  {
+   "d": "2026-11-06",
+   "type": "order",
+   "code": "SGI",
+   "name": "Somnigroup International Inc.",
+   "q": 135,
+   "price": 64.7551,
+   "ccy": "USD",
+   "amt": 11791826,
+   "note": "눌림 지정가 주문(추격 금지) — 🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권17% · 체크4/6 · 손절폭8.0%"
+  },
+  {
+   "d": "2026-11-06",
+   "type": "sell",
+   "code": "ECVT",
+   "name": "Ecovyst Inc.",
+   "q": 707,
+   "price": 10.06,
+   "ccy": "USD",
+   "amt": 9593802,
+   "note": "트레일 스탑(급락 즉시)",
+   "pl": -23841,
+   "pl_pct": -0.2,
+   "r": 0.91
+  },
   {
    "d": "2026-11-06",
    "type": "buy",
@@ -2545,35 +2588,8 @@
    "pl": -1362,
    "pl_pct": -5.1,
    "r": -0.99
-  },
-  {
-   "d": "2026-10-07",
-   "type": "buy",
-   "code": "COST",
-   "name": "Costco Wholesale Corporation",
-   "q": 2,
-   "price": 943.035,
-   "ccy": "USD",
-   "amt": 2524542,
-   "note": "즉시 분할 — 🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권39% · 체크4/6 · 손절폭3.2%",
-   "stop": 912.978,
-   "target": 1003.1489
-  },
-  {
-   "d": "2026-10-07",
-   "type": "sell",
-   "code": "CNM",
-   "name": "Core & Main, Inc.",
-   "q": 44,
-   "price": 40.155,
-   "ccy": "USD",
-   "amt": 2364924,
-   "note": "손절",
-   "pl": -165789,
-   "pl_pct": -6.6,
-   "r": -1.13
   }
  ],
- "lane": "bulk",
+ "lane": "fast",
  "data_stale": []
 }
