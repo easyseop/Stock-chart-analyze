@@ -1,10 +1,10 @@
 {
- "generated_at": "2026-11-06T12:56:36.012017+09:00",
+ "generated_at": "2026-11-06T13:24:53.067918+09:00",
  "updated": "2026-11-06",
  "start": 100000000,
  "cash": 38822839,
- "equity": 98556607,
- "ret_pct": -1.44,
+ "equity": 98618407,
+ "ret_pct": -1.38,
  "positions": [
   {
    "code": "CRAI",
@@ -19,7 +19,7 @@
    "opened": "2026-10-01",
    "pl_krw": 831773,
    "pl_pct": 23.44,
-   "price_age_min": 82.1
+   "price_age_min": 110.4
   },
   {
    "code": "COST",
@@ -34,7 +34,7 @@
    "opened": "2026-10-07",
    "pl_krw": 165312,
    "pl_pct": 13.0,
-   "price_age_min": 82.3
+   "price_age_min": 110.5
   },
   {
    "code": "TM",
@@ -49,7 +49,7 @@
    "opened": "2026-10-21",
    "pl_krw": 710185,
    "pl_pct": 10.69,
-   "price_age_min": 57.7
+   "price_age_min": 86.0
   },
   {
    "code": "251270",
@@ -57,14 +57,14 @@
    "ccy": "KRW",
    "q": 206,
    "avg": 34450.0,
-   "price": 33900.0,
+   "price": 34200.0,
    "stop": 32163.7847,
    "target": 39022.4307,
    "half_done": false,
    "opened": "2026-10-22",
-   "pl_krw": -113300,
-   "pl_pct": -1.6,
-   "price_age_min": 7.8
+   "pl_krw": -51500,
+   "pl_pct": -0.73,
+   "price_age_min": 7.7
   },
   {
    "code": "CSR",
@@ -79,7 +79,7 @@
    "opened": "2026-10-28",
    "pl_krw": 375609,
    "pl_pct": 3.93,
-   "price_age_min": 81.7
+   "price_age_min": 110.0
   },
   {
    "code": "ALC",
@@ -94,7 +94,7 @@
    "opened": "2026-10-30",
    "pl_krw": 191932,
    "pl_pct": 7.39,
-   "price_age_min": 89.0
+   "price_age_min": 117.3
   },
   {
    "code": "HLI",
@@ -109,7 +109,7 @@
    "opened": "2026-10-31",
    "pl_krw": 266817,
    "pl_pct": 7.2,
-   "price_age_min": 74.8
+   "price_age_min": 103.1
   },
   {
    "code": "ECVT",
@@ -124,7 +124,7 @@
    "opened": "2026-11-04",
    "pl_krw": 90598,
    "pl_pct": 0.94,
-   "price_age_min": 79.7
+   "price_age_min": 107.9
   },
   {
    "code": "PEG",
@@ -139,7 +139,7 @@
    "opened": "2026-11-05",
    "pl_krw": 25224,
    "pl_pct": 0.47,
-   "price_age_min": 64.6
+   "price_age_min": 92.9
   },
   {
    "code": "ZTS",
@@ -154,7 +154,7 @@
    "opened": "2026-11-06",
    "pl_krw": -89700,
    "pl_pct": -1.14,
-   "price_age_min": 53.5
+   "price_age_min": 81.8
   }
  ],
  "pending": [
@@ -1912,7 +1912,7 @@
   },
   {
    "d": "2026-11-06",
-   "v": 98556607
+   "v": 98618407
   }
  ],
  "log": [
