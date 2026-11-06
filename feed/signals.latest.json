@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated_at": "2026-11-06T19:26:07+09:00",
+ "generated_at": "2026-11-06T20:10:20+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "a_ablation": [
   {
@@ -233,6 +233,34 @@
     "mode": "half",
     "label": "⚖ 반반 진입",
     "desc": "손절폭 6.6% — 절반은 현재가, 절반은 눌림 $9.68 지정가(거기선 손절폭 1.7%)"
+   }
+  },
+  {
+   "id": "036460-2026-11-06-now",
+   "code": "036460",
+   "name": "한국가스공사",
+   "ccy": "KRW",
+   "group": "now",
+   "entry_kind": "now",
+   "stage": 3,
+   "price": 36500.0,
+   "entry": 36500.0,
+   "stop": 34657.4995,
+   "target": 40185.0011,
+   "shares_1pct": 54,
+   "range_pos": 0.3677,
+   "norm": 15.1,
+   "bear_share": 0.125,
+   "fresh": true,
+   "break_gap": 0.0229,
+   "earnings_d": null,
+   "tactic": {
+    "stop_pct": 5.0,
+    "pb_price": null,
+    "pb_stop_pct": null,
+    "mode": "full",
+    "label": "⚡ 즉시 분할",
+    "desc": "손절폭 5.0%로 타이트 — 현재가에서 1~2회 분할 매수. 기다리는 이득보다 놓치는 비용이 큼"
    }
   },
   {
