@@ -1,10 +1,10 @@
 {
- "generated_at": "2026-11-09T23:28:49.079868+09:00",
+ "generated_at": "2026-11-09T23:44:48.540141+09:00",
  "updated": "2026-11-09",
  "start": 100000000,
- "cash": 38258493,
- "equity": 98147769,
- "ret_pct": -1.85,
+ "cash": 26337549,
+ "equity": 98213008,
+ "ret_pct": -1.79,
  "positions": [
   {
    "code": "CRAI",
@@ -12,14 +12,14 @@
    "ccy": "USD",
    "q": 16,
    "avg": 164.4,
-   "price": 197.66000366210938,
+   "price": 198.6999969482422,
    "stop": 194.05030366210937,
    "target": 186.8795,
    "half_done": true,
    "opened": "2026-10-01",
-   "pl_krw": 725680,
-   "pl_pct": 20.23,
-   "price_age_min": 6.8
+   "pl_krw": 748371,
+   "pl_pct": 20.86,
+   "price_age_min": 6.5
   },
   {
    "code": "COST",
@@ -27,14 +27,14 @@
    "ccy": "USD",
    "q": 1,
    "avg": 943.035,
-   "price": 1053.56005859375,
+   "price": 1050.149169921875,
    "stop": 1034.864451171875,
    "target": 1003.1489,
    "half_done": true,
    "opened": "2026-10-07",
-   "pl_krw": 150717,
-   "pl_pct": 11.72,
-   "price_age_min": 6.8
+   "pl_krw": 146066,
+   "pl_pct": 11.36,
+   "price_age_min": 6.5
   },
   {
    "code": "TM",
@@ -42,14 +42,14 @@
    "ccy": "USD",
    "q": 25,
    "avg": 197.05,
-   "price": 216.19000244140625,
+   "price": 220.3300018310547,
    "stop": 211.79800549316406,
    "target": 209.306,
    "half_done": true,
    "opened": "2026-10-21",
-   "pl_krw": 652507,
-   "pl_pct": 9.71,
-   "price_age_min": 8.8
+   "pl_krw": 793644,
+   "pl_pct": 11.81,
+   "price_age_min": 9.3
   },
   {
    "code": "251270",
@@ -64,7 +64,7 @@
    "opened": "2026-10-22",
    "pl_krw": -133900,
    "pl_pct": -1.89,
-   "price_age_min": 6.8
+   "price_age_min": 6.5
   },
   {
    "code": "ALC",
@@ -72,14 +72,14 @@
    "ccy": "USD",
    "q": 27,
    "avg": 71.28,
-   "price": 74.94000244140625,
+   "price": 74.7300033569336,
    "stop": 73.84250061035156,
    "target": 76.4702,
    "half_done": true,
    "opened": "2026-10-30",
-   "pl_krw": 134756,
-   "pl_pct": 5.13,
-   "price_age_min": 9.1
+   "pl_krw": 127024,
+   "pl_pct": 4.84,
+   "price_age_min": 9.7
   },
   {
    "code": "HLI",
@@ -87,14 +87,14 @@
    "ccy": "USD",
    "q": 20,
    "avg": 137.3297,
-   "price": 145.86000061035156,
+   "price": 148.0,
    "stop": 142.13719694824218,
    "target": 155.0801,
    "half_done": true,
    "opened": "2026-10-31",
-   "pl_krw": 232647,
-   "pl_pct": 6.21,
-   "price_age_min": 8.4
+   "pl_krw": 291011,
+   "pl_pct": 7.77,
+   "price_age_min": 8.7
   },
   {
    "code": "PEG",
@@ -102,14 +102,14 @@
    "ccy": "USD",
    "q": 55,
    "avg": 72.76,
-   "price": 72.61000061035156,
+   "price": 73.08000183105469,
    "stop": 70.1226,
    "target": 78.0347,
    "half_done": false,
    "opened": "2026-11-05",
-   "pl_krw": -11250,
-   "pl_pct": -0.21,
-   "price_age_min": 8.7
+   "pl_krw": 24000,
+   "pl_pct": 0.44,
+   "price_age_min": 9.2
   },
   {
    "code": "ZTS",
@@ -117,14 +117,14 @@
    "ccy": "USD",
    "q": 70,
    "avg": 83.06,
-   "price": 79.4000015258789,
+   "price": 80.3499984741211,
    "stop": 77.8186,
    "target": 93.5428,
    "half_done": false,
    "opened": "2026-11-06",
-   "pl_krw": -349367,
-   "pl_pct": -4.41,
-   "price_age_min": 6.8
+   "pl_krw": -258685,
+   "pl_pct": -3.26,
+   "price_age_min": 6.5
   },
   {
    "code": "PEP",
@@ -132,14 +132,29 @@
    "ccy": "USD",
    "q": 104,
    "avg": 141.22,
-   "price": 141.33999633789062,
+   "price": 140.94500732421875,
    "stop": 134.599,
    "target": 154.462,
    "half_done": false,
    "opened": "2026-11-07",
-   "pl_krw": 17018,
-   "pl_pct": 0.08,
-   "price_age_min": 8.9
+   "pl_krw": -38999,
+   "pl_pct": -0.19,
+   "price_age_min": 9.5
+  },
+  {
+   "code": "SGI",
+   "name": "Somnigroup International Inc.",
+   "ccy": "USD",
+   "q": 135,
+   "avg": 64.7551,
+   "price": 63.59000015258789,
+   "stop": 61.4085,
+   "target": 77.433,
+   "half_done": false,
+   "opened": "2026-11-09",
+   "pl_krw": -214486,
+   "pl_pct": -1.8,
+   "price_age_min": 10.6
   }
  ],
  "pending": [
@@ -196,33 +211,6 @@
     "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권27% · 체크4/6 · 손절폭6.5%"
    },
    "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권27% · 체크4/6 · 손절폭6.5%"
-  },
-  {
-   "code": "SGI",
-   "name": "Somnigroup International Inc.",
-   "ccy": "USD",
-   "limit": 64.7551,
-   "stop": 61.4085,
-   "target": 77.433,
-   "q": 135,
-   "created": "2026-11-06",
-   "atr": 2.6708,
-   "plan": {
-    "entry": 66.75,
-    "stop": 61.4085,
-    "target": 77.433,
-    "pb": 64.7551,
-    "tactic": "pullback"
-   },
-   "ctx": {
-    "mode": "pullback",
-    "fresh": true,
-    "stage": 3,
-    "rp": 17,
-    "rec": 4,
-    "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권17% · 체크4/6 · 손절폭8.0%"
-   },
-   "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권17% · 체크4/6 · 손절폭8.0%"
   }
  ],
  "trades": 60,
@@ -1942,10 +1930,23 @@
   },
   {
    "d": "2026-11-09",
-   "v": 98147769
+   "v": 98213008
   }
  ],
  "log": [
+  {
+   "d": "2026-11-09",
+   "type": "buy",
+   "code": "SGI",
+   "name": "Somnigroup International Inc.",
+   "q": 135,
+   "price": 64.7551,
+   "ccy": "USD",
+   "amt": 11920945,
+   "note": "눌림 지정가 체결 — 🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권17% · 체크4/6 · 손절폭8.0%",
+   "stop": 61.4085,
+   "target": 77.433
+  },
   {
    "d": "2026-11-07",
    "type": "buy",
@@ -2587,19 +2588,6 @@
    "pl": -962200,
    "pl_pct": -4.6,
    "r": -1.02
-  },
-  {
-   "d": "2026-10-09",
-   "type": "sell",
-   "code": "CRAI",
-   "name": "CRA International,Inc.",
-   "q": 15,
-   "price": 176.17,
-   "ccy": "USD",
-   "amt": 3546249,
-   "note": "+1R 절반 익절",
-   "pl": 236927,
-   "pl_pct": 7.2
   }
  ],
  "lane": "bulk",
