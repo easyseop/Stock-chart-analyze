@@ -1,10 +1,10 @@
 {
- "generated_at": "2026-11-09T10:29:51.666491+09:00",
+ "generated_at": "2026-11-09T10:42:08.656673+09:00",
  "updated": "2026-11-09",
  "start": 100000000,
  "cash": 38258493,
- "equity": 98291969,
- "ret_pct": -1.71,
+ "equity": 98322869,
+ "ret_pct": -1.68,
  "positions": [
   {
    "code": "CRAI",
@@ -19,7 +19,7 @@
    "opened": "2026-10-01",
    "pl_krw": 725680,
    "pl_pct": 20.23,
-   "price_age_min": 6.6
+   "price_age_min": 5.6
   },
   {
    "code": "COST",
@@ -34,7 +34,7 @@
    "opened": "2026-10-07",
    "pl_krw": 150717,
    "pl_pct": 11.72,
-   "price_age_min": 6.6
+   "price_age_min": 5.6
   },
   {
    "code": "TM",
@@ -49,7 +49,7 @@
    "opened": "2026-10-21",
    "pl_krw": 652507,
    "pl_pct": 9.71,
-   "price_age_min": 8.5
+   "price_age_min": 7.5
   },
   {
    "code": "251270",
@@ -57,14 +57,14 @@
    "ccy": "KRW",
    "q": 206,
    "avg": 34450.0,
-   "price": 34500.0,
+   "price": 34650.0,
    "stop": 32163.7847,
    "target": 39022.4307,
    "half_done": false,
    "opened": "2026-10-22",
-   "pl_krw": 10300,
-   "pl_pct": 0.15,
-   "price_age_min": 7.7
+   "pl_krw": 41200,
+   "pl_pct": 0.58,
+   "price_age_min": 6.7
   },
   {
    "code": "ALC",
@@ -79,7 +79,7 @@
    "opened": "2026-10-30",
    "pl_krw": 134756,
    "pl_pct": 5.13,
-   "price_age_min": 8.8
+   "price_age_min": 7.8
   },
   {
    "code": "HLI",
@@ -94,7 +94,7 @@
    "opened": "2026-10-31",
    "pl_krw": 232647,
    "pl_pct": 6.21,
-   "price_age_min": 8.2
+   "price_age_min": 7.1
   },
   {
    "code": "PEG",
@@ -109,7 +109,7 @@
    "opened": "2026-11-05",
    "pl_krw": -11250,
    "pl_pct": -0.21,
-   "price_age_min": 8.4
+   "price_age_min": 7.4
   },
   {
    "code": "ZTS",
@@ -124,7 +124,7 @@
    "opened": "2026-11-06",
    "pl_krw": -349367,
    "pl_pct": -4.41,
-   "price_age_min": 6.6
+   "price_age_min": 5.6
   },
   {
    "code": "PEP",
@@ -139,7 +139,7 @@
    "opened": "2026-11-07",
    "pl_krw": 17018,
    "pl_pct": 0.08,
-   "price_age_min": 8.6
+   "price_age_min": 7.6
   }
  ],
  "pending": [
@@ -1942,7 +1942,7 @@
   },
   {
    "d": "2026-11-09",
-   "v": 98291969
+   "v": 98322869
   }
  ],
  "log": [
