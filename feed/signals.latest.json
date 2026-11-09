@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated_at": "2026-11-09T15:23:31+09:00",
+ "generated_at": "2026-11-09T15:33:19+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "a_ablation": [
   {
@@ -18,6 +18,14 @@
    "runup63": 0.0504,
    "stage": 4,
    "price": 248.2899932861328
+  },
+  {
+   "code": "068270",
+   "gate": "rp",
+   "range_pos": 0.6332,
+   "runup63": 0.0744,
+   "stage": 3,
+   "price": 209500.0
   },
   {
    "code": "ABCB",
@@ -154,14 +162,6 @@
    "runup63": -0.0628,
    "stage": 3,
    "price": 62.04999923706055
-  },
-  {
-   "code": "EMA",
-   "gate": "rp",
-   "range_pos": 0.5303,
-   "runup63": -0.0103,
-   "stage": 3,
-   "price": 50.689998626708984
   }
  ],
  "shelf_debug": {
@@ -175,7 +175,7 @@
    "추락 중(범위 4%)": 157,
    "매물대 정보 없음": 151,
    "추락 중(범위 3%)": 142,
-   "추락 중(범위 7%)": 95
+   "추락 중(범위 9%)": 96
   }
  },
  "signals": [
@@ -292,34 +292,6 @@
    }
   },
   {
-   "id": "017670-2026-11-09-now",
-   "code": "017670",
-   "name": "SK텔레콤",
-   "ccy": "KRW",
-   "group": "now",
-   "entry_kind": "now",
-   "stage": 3,
-   "price": 78000.0,
-   "entry": 78000.0,
-   "stop": 70318.6139,
-   "target": 93362.7722,
-   "shares_1pct": 13,
-   "range_pos": 0.3019,
-   "norm": 4.7,
-   "bear_share": 0.25,
-   "fresh": true,
-   "break_gap": 0.0479,
-   "earnings_d": null,
-   "tactic": {
-    "stop_pct": 9.8,
-    "pb_price": null,
-    "pb_stop_pct": null,
-    "mode": "pullback",
-    "label": "⏳ 눌림 지정가만",
-    "desc": "지금 추격 금지(손절폭 9.8% · 단기 이격) — 받칠 지지에 눌릴 때까지 대기"
-   }
-  },
-  {
    "id": "CSR-2026-11-09-now",
    "code": "CSR",
    "name": "D/B/A Centerspace",
@@ -383,21 +355,21 @@
    "group": "now",
    "entry_kind": "now",
    "stage": 3,
-   "price": 20250.0,
-   "entry": 20250.0,
-   "stop": 19056.4265,
-   "target": 22637.147,
+   "price": 20150.0,
+   "entry": 20150.0,
+   "stop": 18956.4265,
+   "target": 22537.147,
    "shares_1pct": 83,
-   "range_pos": 0.1174,
+   "range_pos": 0.1078,
    "norm": -0.0,
    "bear_share": 0.25,
    "fresh": true,
-   "break_gap": 0.0139,
+   "break_gap": 0.0089,
    "earnings_d": null,
    "tactic": {
     "stop_pct": 5.9,
     "pb_price": 20033.25,
-    "pb_stop_pct": 4.9,
+    "pb_stop_pct": 5.4,
     "mode": "full",
     "label": "⚡ 즉시 분할",
     "desc": "손절폭 5.9%로 타이트 — 현재가에서 1~2회 분할 매수. 기다리는 이득보다 놓치는 비용이 큼"
@@ -488,6 +460,34 @@
    }
   },
   {
+   "id": "017670-2026-11-09-now",
+   "code": "017670",
+   "name": "SK텔레콤",
+   "ccy": "KRW",
+   "group": "now",
+   "entry_kind": "now",
+   "stage": 3,
+   "price": 77800.0,
+   "entry": 77800.0,
+   "stop": 70118.6139,
+   "target": 93162.7722,
+   "shares_1pct": 13,
+   "range_pos": 0.2997,
+   "norm": -4.7,
+   "bear_share": 0.375,
+   "fresh": true,
+   "break_gap": 0.0452,
+   "earnings_d": null,
+   "tactic": {
+    "stop_pct": 9.9,
+    "pb_price": 70226.7,
+    "pb_stop_pct": 0.2,
+    "mode": "pullback",
+    "label": "⏳ 눌림 지정가만",
+    "desc": "지금 추격 금지(손절폭 9.9% · 단기 이격) — <b>70,227원 눌림 지정가만</b>. 눌리면 손절폭 0.2%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
+   }
+  },
+  {
    "id": "LDOS-2026-11-09-now",
    "code": "LDOS",
    "name": "Leidos Holdings, Inc.",
@@ -541,6 +541,34 @@
     "mode": "full",
     "label": "⚡ 즉시 분할",
     "desc": "손절폭 3.8%로 타이트 — 현재가에서 1~2회 분할 매수. 기다리는 이득보다 놓치는 비용이 큼"
+   }
+  },
+  {
+   "id": "251270-2026-11-09-now",
+   "code": "251270",
+   "name": "넷마블",
+   "ccy": "KRW",
+   "group": "now",
+   "entry_kind": "now",
+   "stage": 3,
+   "price": 33850.0,
+   "entry": 33850.0,
+   "stop": 30744.7176,
+   "target": 40060.5648,
+   "shares_1pct": 32,
+   "range_pos": 0.1022,
+   "norm": -9.4,
+   "bear_share": 0.25,
+   "fresh": true,
+   "break_gap": 0.0059,
+   "earnings_d": null,
+   "tactic": {
+    "stop_pct": 9.2,
+    "pb_price": 31000.0,
+    "pb_stop_pct": 0.8,
+    "mode": "pullback",
+    "label": "⏳ 눌림 지정가만",
+    "desc": "지금 추격 금지(손절폭 9.2%) — <b>31,000원 눌림 지정가만</b>. 눌리면 손절폭 0.8%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
    }
   },
   {
@@ -747,24 +775,24 @@
    "group": "now",
    "entry_kind": "now",
    "stage": 3,
-   "price": 66100.0,
-   "entry": 66100.0,
-   "stop": 62052.5805,
-   "target": 74194.8389,
+   "price": 66200.0,
+   "entry": 66200.0,
+   "stop": 62152.5805,
+   "target": 74294.8389,
    "shares_1pct": 24,
-   "range_pos": 0.0833,
+   "range_pos": 0.0853,
    "norm": -18.0,
    "bear_share": 0.375,
    "fresh": true,
-   "break_gap": 0.0174,
+   "break_gap": 0.0189,
    "earnings_d": null,
    "tactic": {
     "stop_pct": 6.1,
     "pb_price": 65000.0,
-    "pb_stop_pct": 4.5,
+    "pb_stop_pct": 4.4,
     "mode": "half",
     "label": "⚖ 반반 진입",
-    "desc": "손절폭 6.1% — 절반은 현재가, 절반은 눌림 65,000원 지정가(거기선 손절폭 4.5%)"
+    "desc": "손절폭 6.1% — 절반은 현재가, 절반은 눌림 65,000원 지정가(거기선 손절폭 4.4%)"
    }
   },
   {
@@ -2769,16 +2797,16 @@
    "group": "watch",
    "entry_kind": "breakout",
    "stage": 3,
-   "price": 9760.0,
+   "price": 9770.0,
    "entry": 9820.0,
    "stop": 9525.4,
    "target": 10409.2,
    "shares_1pct": 339,
-   "range_pos": 0.1712,
+   "range_pos": 0.1751,
    "norm": -3.8,
    "bear_share": 0.25,
    "fresh": true,
-   "break_gap": 0.0261,
+   "break_gap": 0.0272,
    "earnings_d": null,
    "tactic": null
   },
@@ -3257,34 +3285,6 @@
    "break_gap": -0.0021,
    "earnings_d": null,
    "tactic": null
-  },
-  {
-   "id": "251270-2026-11-09-watch",
-   "code": "251270",
-   "name": "넷마블",
-   "ccy": "KRW",
-   "group": "watch",
-   "entry_kind": "now",
-   "stage": 1,
-   "price": 33800.0,
-   "entry": 33800.0,
-   "stop": 30694.7176,
-   "target": 40010.5648,
-   "shares_1pct": 32,
-   "range_pos": 0.1004,
-   "norm": -9.4,
-   "bear_share": 0.25,
-   "fresh": true,
-   "break_gap": 0.0044,
-   "earnings_d": null,
-   "tactic": {
-    "stop_pct": 9.2,
-    "pb_price": 31000.0,
-    "pb_stop_pct": 1.0,
-    "mode": "pullback",
-    "label": "⏳ 눌림 지정가만",
-    "desc": "지금 추격 금지(손절폭 9.2%) — <b>31,000원 눌림 지정가만</b>. 눌리면 손절폭 1.0%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
-   }
   },
   {
    "id": "UI-2026-11-09-watch",
@@ -4127,16 +4127,16 @@
    "group": "watch",
    "entry_kind": "pullback",
    "stage": 3,
-   "price": 187700.0,
+   "price": 188100.0,
    "entry": 166000.0,
    "stop": 150442.2461,
    "target": 197115.5078,
    "shares_1pct": 6,
-   "range_pos": 0.1572,
+   "range_pos": 0.1601,
    "norm": -0.0,
    "bear_share": 0.25,
    "fresh": false,
-   "break_gap": 0.0548,
+   "break_gap": 0.057,
    "earnings_d": null,
    "tactic": null
   },
