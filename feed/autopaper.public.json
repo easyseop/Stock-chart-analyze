@@ -1,10 +1,10 @@
 {
- "generated_at": "2026-11-10T11:47:49.189085+09:00",
+ "generated_at": "2026-11-10T11:57:57.958414+09:00",
  "updated": "2026-11-10",
  "start": 100000000,
  "cash": 26337549,
- "equity": 98541165,
- "ret_pct": -1.46,
+ "equity": 98520565,
+ "ret_pct": -1.48,
  "positions": [
   {
    "code": "CRAI",
@@ -19,7 +19,7 @@
    "opened": "2026-10-01",
    "pl_krw": 710840,
    "pl_pct": 20.08,
-   "price_age_min": 38.3
+   "price_age_min": 48.5
   },
   {
    "code": "COST",
@@ -34,7 +34,7 @@
    "opened": "2026-10-07",
    "pl_krw": 165738,
    "pl_pct": 13.06,
-   "price_age_min": 38.3
+   "price_age_min": 48.5
   },
   {
    "code": "TM",
@@ -49,7 +49,7 @@
    "opened": "2026-10-21",
    "pl_krw": 722064,
    "pl_pct": 10.89,
-   "price_age_min": 41.2
+   "price_age_min": 51.3
   },
   {
    "code": "251270",
@@ -57,14 +57,14 @@
    "ccy": "KRW",
    "q": 206,
    "avg": 34450.0,
-   "price": 35100.0,
+   "price": 35000.0,
    "stop": 32163.7847,
    "target": 39022.4307,
    "half_done": false,
    "opened": "2026-10-22",
-   "pl_krw": 133900,
-   "pl_pct": 1.89,
-   "price_age_min": 5.9
+   "pl_krw": 113300,
+   "pl_pct": 1.6,
+   "price_age_min": 8.2
   },
   {
    "code": "ALC",
@@ -79,7 +79,7 @@
    "opened": "2026-10-30",
    "pl_krw": 140268,
    "pl_pct": 5.42,
-   "price_age_min": 41.8
+   "price_age_min": 52.0
   },
   {
    "code": "HLI",
@@ -94,7 +94,7 @@
    "opened": "2026-10-31",
    "pl_krw": 298255,
    "pl_pct": 8.07,
-   "price_age_min": 40.9
+   "price_age_min": 51.0
   },
   {
    "code": "PEG",
@@ -109,7 +109,7 @@
    "opened": "2026-11-05",
    "pl_krw": 168033,
    "pl_pct": 3.12,
-   "price_age_min": 40.8
+   "price_age_min": 50.9
   },
   {
    "code": "ZTS",
@@ -124,7 +124,7 @@
    "opened": "2026-11-06",
    "pl_krw": -69717,
    "pl_pct": -0.89,
-   "price_age_min": 38.3
+   "price_age_min": 48.5
   },
   {
    "code": "PEP",
@@ -139,7 +139,7 @@
    "opened": "2026-11-07",
    "pl_krw": 92382,
    "pl_pct": 0.47,
-   "price_age_min": 41.4
+   "price_age_min": 51.6
   },
   {
    "code": "SGI",
@@ -154,7 +154,7 @@
    "opened": "2026-11-09",
    "pl_krw": 275247,
    "pl_pct": 2.34,
-   "price_age_min": 42.7
+   "price_age_min": 52.9
   }
  ],
  "pending": [
@@ -1934,7 +1934,7 @@
   },
   {
    "d": "2026-11-10",
-   "v": 98541165
+   "v": 98520565
   }
  ],
  "log": [
