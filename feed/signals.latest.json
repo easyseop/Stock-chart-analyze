@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated_at": "2026-11-10T08:59:15+09:00",
+ "generated_at": "2026-11-10T09:24:07+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "a_ablation": [
   {
@@ -168,14 +168,14 @@
   "ok": 3,
   "watch": 115,
   "reasons": {
-   "밸류영역 밖(지지대 아님)": 471,
+   "밸류영역 밖(지지대 아님)": 473,
    "추락 중(범위 0%)": 335,
-   "추락 중(범위 1%)": 304,
-   "추락 중(범위 2%)": 231,
-   "추락 중(범위 4%)": 157,
+   "추락 중(범위 1%)": 308,
+   "추락 중(범위 2%)": 229,
+   "추락 중(범위 4%)": 156,
    "매물대 정보 없음": 151,
    "추락 중(범위 3%)": 141,
-   "추락 중(범위 9%)": 98
+   "추락 중(범위 7%)": 96
   }
  },
  "signals": [
@@ -533,7 +533,7 @@
    "bear_share": 0.25,
    "fresh": true,
    "break_gap": 0.0275,
-   "earnings_d": 100,
+   "earnings_d": 99,
    "tactic": {
     "stop_pct": 5.7,
     "pb_price": 17.2033,
@@ -813,7 +813,7 @@
    "bear_share": 0.25,
    "fresh": false,
    "break_gap": 0.0603,
-   "earnings_d": 77,
+   "earnings_d": 76,
    "tactic": {
     "stop_pct": 4.7,
     "pb_price": 69.9187,
@@ -953,7 +953,7 @@
    "bear_share": 0.375,
    "fresh": false,
    "break_gap": 0.1458,
-   "earnings_d": 16,
+   "earnings_d": 15,
    "tactic": {
     "stop_pct": 7.5,
     "pb_price": null,
@@ -1009,7 +1009,7 @@
    "bear_share": 0.375,
    "fresh": false,
    "break_gap": 0.06,
-   "earnings_d": 9,
+   "earnings_d": 8,
    "tactic": {
     "stop_pct": 11.5,
     "pb_price": null,
@@ -1121,7 +1121,7 @@
    "bear_share": 0.375,
    "fresh": false,
    "break_gap": 0.0938,
-   "earnings_d": 93,
+   "earnings_d": 92,
    "tactic": {
     "stop_pct": 7.9,
     "pb_price": null,
@@ -1442,24 +1442,24 @@
    "group": "shelf_watch",
    "entry_kind": "shelf_watch",
    "stage": 0,
-   "price": 64400.0,
-   "entry": 64400.0,
+   "price": 63200.0,
+   "entry": 63200.0,
    "stop": 55468.0,
    "target": 91425.0,
    "shares_1pct": 0,
-   "range_pos": 0.3546,
+   "range_pos": 0.3454,
    "norm": -7.5,
    "bear_share": 0.25,
    "shelf": {
     "poc": 64341.6667,
     "val": 31841.6667,
     "vah": 91425.0,
-    "rr": 3.03,
-    "overhead": 0.373,
+    "rr": 3.65,
+    "overhead": 0.471,
     "reason": "반등 미확인(거래량)",
     "history_bars": 1924,
-    "profile_pnl_proxy": 0.0825,
-    "runup252": 2.1415,
+    "profile_pnl_proxy": 0.0623,
+    "runup252": 2.0829,
     "checks": {
      "터치": true,
      "회복": true,
@@ -1630,7 +1630,7 @@
    },
    "fresh": false,
    "break_gap": null,
-   "earnings_d": 39,
+   "earnings_d": 38,
    "tactic": "watch",
    "trend_above_200": true
   },
@@ -1790,7 +1790,7 @@
    },
    "fresh": false,
    "break_gap": null,
-   "earnings_d": 112,
+   "earnings_d": 111,
    "tactic": "watch",
    "trend_above_200": true
   },
@@ -1976,7 +1976,7 @@
    "bear_share": 0.25,
    "fresh": true,
    "break_gap": 0.0371,
-   "earnings_d": 39,
+   "earnings_d": 38,
    "tactic": null
   },
   {
@@ -1997,7 +1997,7 @@
    "bear_share": 0.625,
    "fresh": true,
    "break_gap": 0.0377,
-   "earnings_d": 81,
+   "earnings_d": 80,
    "tactic": null
   },
   {
@@ -2039,7 +2039,7 @@
    "bear_share": 0.25,
    "fresh": true,
    "break_gap": 0.068,
-   "earnings_d": 114,
+   "earnings_d": 113,
    "tactic": null
   },
   {
@@ -2123,7 +2123,7 @@
    "bear_share": 0.125,
    "fresh": true,
    "break_gap": 0.0061,
-   "earnings_d": 87,
+   "earnings_d": 86,
    "tactic": {
     "stop_pct": 4.0,
     "pb_price": 68.8804,
@@ -2179,7 +2179,7 @@
    "bear_share": 0.375,
    "fresh": true,
    "break_gap": 0.0178,
-   "earnings_d": 100,
+   "earnings_d": 99,
    "tactic": null
   },
   {
@@ -2389,7 +2389,7 @@
    "bear_share": 0.25,
    "fresh": true,
    "break_gap": 0.0023,
-   "earnings_d": 86,
+   "earnings_d": 85,
    "tactic": {
     "stop_pct": 3.6,
     "pb_price": 169.2669,
@@ -2398,6 +2398,27 @@
     "label": "⚡ 즉시 분할",
     "desc": "손절폭 3.6%로 타이트 — 현재가에서 1~2회 분할 매수. 기다리는 이득보다 놓치는 비용이 큼"
    }
+  },
+  {
+   "id": "259960-2026-11-10-watch",
+   "code": "259960",
+   "name": "크래프톤",
+   "ccy": "KRW",
+   "group": "watch",
+   "entry_kind": "pullback",
+   "stage": 1,
+   "price": 217500.0,
+   "entry": 178500.0,
+   "stop": 160139.7626,
+   "target": 215220.4748,
+   "shares_1pct": 5,
+   "range_pos": 0.312,
+   "norm": -1.6,
+   "bear_share": 0.375,
+   "fresh": true,
+   "break_gap": -0.0171,
+   "earnings_d": null,
+   "tactic": null
   },
   {
    "id": "SNN-2026-11-10-watch",
@@ -2585,7 +2606,7 @@
    "bear_share": 0.25,
    "fresh": true,
    "break_gap": -0.0047,
-   "earnings_d": 73,
+   "earnings_d": 72,
    "tactic": {
     "stop_pct": 5.6,
     "pb_price": null,
@@ -2659,24 +2680,24 @@
    "group": "watch",
    "entry_kind": "now",
    "stage": 1,
-   "price": 34950.0,
-   "entry": 34950.0,
-   "stop": 32159.1593,
-   "target": 40531.6814,
+   "price": 35050.0,
+   "entry": 35050.0,
+   "stop": 32259.1593,
+   "target": 40631.6814,
    "shares_1pct": 35,
-   "range_pos": 0.0315,
+   "range_pos": 0.0342,
    "norm": -45.9,
    "bear_share": 0.375,
    "fresh": true,
-   "break_gap": -0.0177,
+   "break_gap": -0.0149,
    "earnings_d": null,
    "tactic": {
     "stop_pct": 8.0,
     "pb_price": 33800.0,
-    "pb_stop_pct": 4.9,
+    "pb_stop_pct": 4.6,
     "mode": "half",
     "label": "⚖ 반반 진입",
-    "desc": "손절폭 8.0% — 절반은 현재가, 절반은 눌림 33,800원 지정가(거기선 손절폭 4.9%)"
+    "desc": "손절폭 8.0% — 절반은 현재가, 절반은 눌림 33,800원 지정가(거기선 손절폭 4.6%)"
    }
   },
   {
@@ -3012,7 +3033,7 @@
    "bear_share": 0.25,
    "fresh": false,
    "break_gap": 0.2095,
-   "earnings_d": 78,
+   "earnings_d": 77,
    "tactic": null
   },
   {
@@ -3033,7 +3054,7 @@
    "bear_share": 0.25,
    "fresh": false,
    "break_gap": 0.141,
-   "earnings_d": 31,
+   "earnings_d": 30,
    "tactic": null
   },
   {
@@ -3201,7 +3222,7 @@
    "bear_share": 0.5,
    "fresh": false,
    "break_gap": 0.0802,
-   "earnings_d": 106,
+   "earnings_d": 105,
    "tactic": null
   },
   {
@@ -3243,7 +3264,7 @@
    "bear_share": 0.375,
    "fresh": false,
    "break_gap": 0.1145,
-   "earnings_d": 30,
+   "earnings_d": 29,
    "tactic": null
   },
   {
@@ -3264,7 +3285,7 @@
    "bear_share": 0.375,
    "fresh": false,
    "break_gap": 0.1042,
-   "earnings_d": 108,
+   "earnings_d": 107,
    "tactic": null
   },
   {
@@ -3306,7 +3327,7 @@
    "bear_share": 0.375,
    "fresh": false,
    "break_gap": 0.2326,
-   "earnings_d": 73,
+   "earnings_d": 72,
    "tactic": null
   },
   {
@@ -3495,7 +3516,7 @@
    "bear_share": 0.25,
    "fresh": false,
    "break_gap": 0.0684,
-   "earnings_d": 94,
+   "earnings_d": 93,
    "tactic": null
   },
   {
@@ -3684,7 +3705,7 @@
    "bear_share": 0.5,
    "fresh": false,
    "break_gap": 0.1699,
-   "earnings_d": 106,
+   "earnings_d": 105,
    "tactic": null
   },
   {
