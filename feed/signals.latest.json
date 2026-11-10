@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated_at": "2026-11-10T16:11:06+09:00",
+ "generated_at": "2026-11-10T16:36:47+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "a_ablation": [
   {
@@ -166,16 +166,16 @@
  ],
  "shelf_debug": {
   "ok": 20,
-  "watch": 75,
+  "watch": 74,
   "reasons": {
-   "밸류영역 밖(지지대 아님)": 496,
+   "밸류영역 밖(지지대 아님)": 498,
    "추락 중(범위 1%)": 196,
    "추락 중(범위 0%)": 175,
-   "추락 중(범위 2%)": 168,
+   "추락 중(범위 2%)": 166,
    "매물대 정보 없음": 161,
-   "추락 중(범위 3%)": 150,
-   "추락 중(범위 5%)": 126,
-   "추락 중(범위 4%)": 126
+   "추락 중(범위 3%)": 147,
+   "추락 중(범위 4%)": 130,
+   "추락 중(범위 5%)": 122
   }
  },
  "signals": [
@@ -2212,6 +2212,27 @@
    "tactic": null
   },
   {
+   "id": "030200-2026-11-10-watch",
+   "code": "030200",
+   "name": "KT",
+   "ccy": "KRW",
+   "group": "watch",
+   "entry_kind": "pullback",
+   "stage": 3,
+   "price": 51000.0,
+   "entry": 50226.4,
+   "stop": 46646.6472,
+   "target": 57385.9056,
+   "shares_1pct": 27,
+   "range_pos": 0.2581,
+   "norm": -1.6,
+   "bear_share": 0.25,
+   "fresh": true,
+   "break_gap": 0.0088,
+   "earnings_d": null,
+   "tactic": null
+  },
+  {
    "id": "THO-2026-11-10-watch",
    "code": "THO",
    "name": "Thor Industries, Inc.",
@@ -3066,24 +3087,24 @@
    "group": "watch",
    "entry_kind": "now",
    "stage": 1,
-   "price": 398500.0,
-   "entry": 398500.0,
-   "stop": 372631.4004,
-   "target": 450237.1991,
+   "price": 398000.0,
+   "entry": 398000.0,
+   "stop": 372131.4004,
+   "target": 449737.1991,
    "shares_1pct": 3,
-   "range_pos": 0.4923,
+   "range_pos": 0.4892,
    "norm": 5.7,
    "bear_share": 0.125,
    "fresh": true,
-   "break_gap": -0.0178,
+   "break_gap": -0.019,
    "earnings_d": null,
    "tactic": {
     "stop_pct": 6.5,
     "pb_price": 382703.2222,
-    "pb_stop_pct": 2.6,
+    "pb_stop_pct": 2.8,
     "mode": "half",
     "label": "⚖ 반반 진입",
-    "desc": "손절폭 6.5% — 절반은 현재가, 절반은 눌림 382,703원 지정가(거기선 손절폭 2.6%)"
+    "desc": "손절폭 6.5% — 절반은 현재가, 절반은 눌림 382,703원 지정가(거기선 손절폭 2.8%)"
    }
   },
   {
@@ -3115,34 +3136,6 @@
    }
   },
   {
-   "id": "030200-2026-11-10-watch",
-   "code": "030200",
-   "name": "KT",
-   "ccy": "KRW",
-   "group": "watch",
-   "entry_kind": "now",
-   "stage": 1,
-   "price": 50500.0,
-   "entry": 50500.0,
-   "stop": 46920.2472,
-   "target": 57659.5056,
-   "shares_1pct": 27,
-   "range_pos": 0.2379,
-   "norm": -1.6,
-   "bear_share": 0.25,
-   "fresh": true,
-   "break_gap": -0.0011,
-   "earnings_d": null,
-   "tactic": {
-    "stop_pct": 7.1,
-    "pb_price": 50226.4,
-    "pb_stop_pct": 6.6,
-    "mode": "pullback",
-    "label": "⏳ 눌림 지정가만",
-    "desc": "지금 추격 금지(손절폭 7.1% · 단기 이격) — <b>50,226원 눌림 지정가만</b>. 눌리면 손절폭 6.6%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
-   }
-  },
-  {
    "id": "259960-2026-11-10-watch",
    "code": "259960",
    "name": "크래프톤",
@@ -3150,16 +3143,16 @@
    "group": "watch",
    "entry_kind": "pullback",
    "stage": 1,
-   "price": 217000.0,
+   "price": 216500.0,
    "entry": 178500.0,
    "stop": 160451.2081,
    "target": 214597.5838,
    "shares_1pct": 5,
-   "range_pos": 0.308,
+   "range_pos": 0.304,
    "norm": -1.6,
    "bear_share": 0.375,
    "fresh": true,
-   "break_gap": -0.0164,
+   "break_gap": -0.0187,
    "earnings_d": null,
    "tactic": null
   },
@@ -3516,9 +3509,9 @@
    "stage": 1,
    "price": 35450.0,
    "entry": 35450.0,
-   "stop": 32744.2194,
-   "target": 40861.5613,
-   "shares_1pct": 36,
+   "stop": 32751.3622,
+   "target": 40847.2755,
+   "shares_1pct": 37,
    "range_pos": 0.0452,
    "norm": -27.4,
    "bear_share": 0.375,
