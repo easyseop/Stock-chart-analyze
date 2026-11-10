@@ -1,16 +1,8 @@
 {
  "version": 1,
- "generated_at": "2026-11-10T17:54:27+09:00",
+ "generated_at": "2026-11-10T18:28:46+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "a_ablation": [
-  {
-   "code": "068270",
-   "gate": "rp",
-   "range_pos": 0.5525,
-   "runup63": 0.0186,
-   "stage": 4,
-   "price": 203000.0
-  },
   {
    "code": "HIW",
    "gate": "rp",
@@ -34,6 +26,14 @@
    "runup63": -0.1634,
    "stage": 4,
    "price": 87.16999816894531
+  },
+  {
+   "code": "068270",
+   "gate": "rp",
+   "range_pos": 0.5525,
+   "runup63": 0.0186,
+   "stage": 3,
+   "price": 203000.0
   },
   {
    "code": "ABCB",
