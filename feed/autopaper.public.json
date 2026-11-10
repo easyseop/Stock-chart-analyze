@@ -1,10 +1,10 @@
 {
- "generated_at": "2026-11-11T03:43:44.073137+09:00",
+ "generated_at": "2026-11-11T04:01:18.091597+09:00",
  "updated": "2026-11-11",
  "start": 100000000,
- "cash": 26337549,
- "equity": 97802555,
- "ret_pct": -2.2,
+ "cash": 26114437,
+ "equity": 97789022,
+ "ret_pct": -2.21,
  "positions": [
   {
    "code": "CRAI",
@@ -12,14 +12,14 @@
    "ccy": "USD",
    "q": 16,
    "avg": 164.4,
-   "price": 199.28500366210938,
+   "price": 200.27999877929688,
    "stop": 194.05030366210937,
    "target": 186.8795,
    "half_done": true,
    "opened": "2026-10-01",
-   "pl_krw": 749436,
-   "pl_pct": 21.22,
-   "price_age_min": 6.0
+   "pl_krw": 770811,
+   "pl_pct": 21.82,
+   "price_age_min": 0.4
   },
   {
    "code": "COST",
@@ -27,14 +27,14 @@
    "ccy": "USD",
    "q": 1,
    "avg": 943.035,
-   "price": 1066.4300537109375,
+   "price": 1067.1600341796875,
    "stop": 1034.864451171875,
    "target": 1003.1489,
    "half_done": true,
    "opened": "2026-10-07",
-   "pl_krw": 165681,
-   "pl_pct": 13.08,
-   "price_age_min": 6.0
+   "pl_krw": 166661,
+   "pl_pct": 13.16,
+   "price_age_min": 0.4
   },
   {
    "code": "TM",
@@ -42,14 +42,14 @@
    "ccy": "USD",
    "q": 25,
    "avg": 197.05,
-   "price": 214.5749969482422,
+   "price": 214.39999389648438,
    "stop": 211.79800549316406,
    "target": 209.306,
    "half_done": true,
    "opened": "2026-10-21",
-   "pl_krw": 588266,
-   "pl_pct": 8.89,
-   "price_age_min": 8.9
+   "pl_krw": 582392,
+   "pl_pct": 8.8,
+   "price_age_min": 0.4
   },
   {
    "code": "251270",
@@ -64,22 +64,7 @@
    "opened": "2026-10-22",
    "pl_krw": 82400,
    "pl_pct": 1.16,
-   "price_age_min": 7.8
-  },
-  {
-   "code": "ALC",
-   "name": "Alcon Inc.",
-   "ccy": "USD",
-   "q": 27,
-   "avg": 71.28,
-   "price": 73.31999969482422,
-   "stop": 73.84250061035156,
-   "target": 76.4702,
-   "half_done": true,
-   "opened": "2026-10-30",
-   "pl_krw": 73955,
-   "pl_pct": 2.86,
-   "price_age_min": 9.2
+   "price_age_min": 0.4
   },
   {
    "code": "HLI",
@@ -87,14 +72,14 @@
    "ccy": "USD",
    "q": 20,
    "avg": 137.3297,
-   "price": 147.6300048828125,
+   "price": 147.9199981689453,
    "stop": 142.13719694824218,
    "target": 155.0801,
    "half_done": true,
    "opened": "2026-10-31",
-   "pl_krw": 276602,
-   "pl_pct": 7.5,
-   "price_age_min": 8.3
+   "pl_krw": 284390,
+   "pl_pct": 7.71,
+   "price_age_min": 0.4
   },
   {
    "code": "PEG",
@@ -102,14 +87,14 @@
    "ccy": "USD",
    "q": 55,
    "avg": 72.76,
-   "price": 74.82499694824219,
+   "price": 74.79000091552734,
    "stop": 70.1226,
    "target": 78.0347,
    "half_done": false,
    "opened": "2026-11-05",
-   "pl_krw": 152496,
-   "pl_pct": 2.84,
-   "price_age_min": 7.4
+   "pl_krw": 149911,
+   "pl_pct": 2.79,
+   "price_age_min": 0.4
   },
   {
    "code": "ZTS",
@@ -117,14 +102,14 @@
    "ccy": "USD",
    "q": 70,
    "avg": 83.06,
-   "price": 82.61499786376953,
+   "price": 82.7698974609375,
    "stop": 77.8186,
    "target": 93.5428,
    "half_done": false,
    "opened": "2026-11-06",
-   "pl_krw": -41825,
-   "pl_pct": -0.54,
-   "price_age_min": 6.0
+   "pl_krw": -27266,
+   "pl_pct": -0.35,
+   "price_age_min": 0.4
   },
   {
    "code": "PEP",
@@ -132,14 +117,14 @@
    "ccy": "USD",
    "q": 104,
    "avg": 141.22,
-   "price": 143.41000366210938,
+   "price": 143.2476043701172,
    "stop": 134.599,
    "target": 154.462,
    "half_done": false,
    "opened": "2026-11-07",
-   "pl_krw": 305812,
-   "pl_pct": 1.55,
-   "price_age_min": 8.7
+   "pl_krw": 283134,
+   "pl_pct": 1.44,
+   "price_age_min": 0.4
   },
   {
    "code": "SGI",
@@ -147,14 +132,29 @@
    "ccy": "USD",
    "q": 135,
    "avg": 64.7551,
-   "price": 63.064998626708984,
+   "price": 62.84000015258789,
    "stop": 61.4085,
    "target": 77.433,
    "half_done": false,
    "opened": "2026-11-09",
-   "pl_krw": -306353,
-   "pl_pct": -2.61,
-   "price_age_min": 6.0
+   "pl_krw": -347137,
+   "pl_pct": -2.96,
+   "price_age_min": 0.4
+  },
+  {
+   "code": "DOLE",
+   "name": "Dole plc",
+   "ccy": "USD",
+   "q": 154,
+   "avg": 14.0,
+   "price": 14.0,
+   "stop": 13.1868,
+   "target": 15.6265,
+   "half_done": false,
+   "opened": "2026-11-11",
+   "pl_krw": 0,
+   "pl_pct": 0.0,
+   "price_age_min": 0.4
   }
  ],
  "pending": [
@@ -213,18 +213,18 @@
    "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권27% · 체크4/6 · 손절폭6.5%"
   }
  ],
- "trades": 60,
- "win_trades": 30,
+ "trades": 61,
+ "win_trades": 31,
  "pos_cap_pct": 33.3,
  "cap_violations": [],
  "rule_violations": [],
  "fx": 1342.69,
  "stats": {
   "all": {
-   "n": 60,
-   "win": 30,
-   "win_rate": 50,
-   "avg_r": -0.09
+   "n": 61,
+   "win": 31,
+   "win_rate": 51,
+   "avg_r": -0.07
   },
   "by_mode": {
    "full": {
@@ -234,10 +234,10 @@
     "avg_r": -0.12
    },
    "half": {
-    "n": 17,
-    "win": 10,
-    "win_rate": 59,
-    "avg_r": 0.09
+    "n": 18,
+    "win": 11,
+    "win_rate": 61,
+    "avg_r": 0.14
    },
    "pullback": {
     "n": 9,
@@ -247,10 +247,10 @@
    }
   },
   "fresh": {
-   "n": 58,
-   "win": 29,
-   "win_rate": 50,
-   "avg_r": -0.09
+   "n": 59,
+   "win": 30,
+   "win_rate": 51,
+   "avg_r": -0.07
   },
   "stale": {
    "n": 2,
@@ -260,10 +260,10 @@
   },
   "by_stage": {
    "3": {
-    "n": 58,
-    "win": 29,
-    "win_rate": 50,
-    "avg_r": -0.08
+    "n": 59,
+    "win": 30,
+    "win_rate": 51,
+    "avg_r": -0.06
    },
    "4": {
     "n": 2,
@@ -280,16 +280,58 @@
     "avg_r": -0.32
    },
    "USD": {
-    "n": 48,
-    "win": 26,
-    "win_rate": 54,
-    "avg_r": -0.03
+    "n": 49,
+    "win": 27,
+    "win_rate": 55,
+    "avg_r": -0.01
    }
   },
-  "slip_entry_pct": -0.39,
+  "slip_entry_pct": -0.38,
   "slip_stop_pct": -0.79
  },
  "closed": [
+  {
+   "code": "ALC",
+   "name": "Alcon Inc.",
+   "ccy": "USD",
+   "ctx": {
+    "mode": "half",
+    "fresh": true,
+    "stage": 3,
+    "rp": 37,
+    "rec": 5,
+    "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권37% · 체크5/6 · 손절폭3.6%"
+   },
+   "plan": {
+    "entry": 71.28,
+    "stop": 68.6849,
+    "target": 76.4702,
+    "pb": 70.0474,
+    "tactic": "half"
+   },
+   "fill": {
+    "avg": 71.28,
+    "q": 53
+   },
+   "exits": [
+    {
+     "d": "2026-11-03",
+     "q": 26,
+     "price": 74.025,
+     "note": "+1R 절반 익절"
+    },
+    {
+     "d": "2026-11-11",
+     "q": 27,
+     "price": 73.6975,
+     "note": "트레일 스탑"
+    }
+   ],
+   "opened": "2026-10-30",
+   "closed": "2026-11-11",
+   "pl": 183449,
+   "r": 1.0
+  },
   {
    "code": "CSR",
    "name": "D/B/A Centerspace",
@@ -1381,42 +1423,6 @@
    "closed": "2026-09-25",
    "pl": -19944,
    "r": -1.0
-  },
-  {
-   "code": "ALG",
-   "name": "Alamo Group, Inc.",
-   "ccy": "USD",
-   "ctx": {
-    "mode": "full",
-    "fresh": true,
-    "stage": 3,
-    "rp": 30,
-    "rec": 4,
-    "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권30% · 체크4/6 · 손절폭6.0%"
-   },
-   "plan": {
-    "entry": 168.23,
-    "stop": 158.2099,
-    "target": 188.2702,
-    "pb": 158.821,
-    "tactic": "full"
-   },
-   "fill": {
-    "avg": 168.23,
-    "q": 12
-   },
-   "exits": [
-    {
-     "d": "2026-09-25",
-     "q": 12,
-     "price": 158.19,
-     "note": "손절"
-    }
-   ],
-   "opened": "2026-09-11",
-   "closed": "2026-09-25",
-   "pl": -164784,
-   "r": -1.02
   }
  ],
  "hist": [
@@ -1938,10 +1944,37 @@
   },
   {
    "d": "2026-11-11",
-   "v": 97802555
+   "v": 97789022
   }
  ],
  "log": [
+  {
+   "d": "2026-11-11",
+   "type": "buy",
+   "code": "DOLE",
+   "name": "Dole plc",
+   "q": 154,
+   "price": 14.0,
+   "ccy": "USD",
+   "amt": 2894840,
+   "note": "즉시 분할 — 🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권35% · 체크4/6 · 손절폭5.8%",
+   "stop": 13.1868,
+   "target": 15.6265
+  },
+  {
+   "d": "2026-11-11",
+   "type": "sell",
+   "code": "ALC",
+   "name": "Alcon Inc.",
+   "q": 27,
+   "price": 73.6975,
+   "ccy": "USD",
+   "amt": 2671728,
+   "note": "트레일 스탑",
+   "pl": 87641,
+   "pl_pct": 3.4,
+   "r": 1.0
+  },
   {
    "d": "2026-11-09",
    "type": "buy",
@@ -2569,35 +2602,8 @@
    "pl": -262257,
    "pl_pct": -2.8,
    "r": -0.33
-  },
-  {
-   "d": "2026-10-09",
-   "type": "buy",
-   "code": "TRMB",
-   "name": "Trimble Inc.",
-   "q": 208,
-   "price": 59.85,
-   "ccy": "USD",
-   "amt": 16706040,
-   "note": "즉시 분할 — 🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권33% · 체크6/6 · 손절폭5.6%",
-   "stop": 56.5187,
-   "target": 66.5126
-  },
-  {
-   "d": "2026-10-09",
-   "type": "sell",
-   "code": "017800",
-   "name": "현대엘리베이터",
-   "q": 283,
-   "price": 69900.0,
-   "ccy": "KRW",
-   "amt": 19781700,
-   "note": "손절",
-   "pl": -962200,
-   "pl_pct": -4.6,
-   "r": -1.02
   }
  ],
- "lane": "bulk",
+ "lane": "fast",
  "data_stale": []
 }
