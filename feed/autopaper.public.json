@@ -1,10 +1,10 @@
 {
- "generated_at": "2026-11-11T10:57:34.251186+09:00",
+ "generated_at": "2026-11-11T11:54:05.462215+09:00",
  "updated": "2026-11-11",
  "start": 100000000,
  "cash": 26114437,
- "equity": 97646335,
- "ret_pct": -2.35,
+ "equity": 97636035,
+ "ret_pct": -2.36,
  "positions": [
   {
    "code": "CRAI",
@@ -19,7 +19,7 @@
    "opened": "2026-10-01",
    "pl_krw": 743098,
    "pl_pct": 21.04,
-   "price_age_min": 4.7
+   "price_age_min": 43.0
   },
   {
    "code": "COST",
@@ -34,7 +34,7 @@
    "opened": "2026-10-07",
    "pl_krw": 165292,
    "pl_pct": 13.05,
-   "price_age_min": 4.7
+   "price_age_min": 43.2
   },
   {
    "code": "TM",
@@ -49,7 +49,7 @@
    "opened": "2026-10-21",
    "pl_krw": 595147,
    "pl_pct": 9.0,
-   "price_age_min": 7.4
+   "price_age_min": 17.3
   },
   {
    "code": "251270",
@@ -57,14 +57,14 @@
    "ccy": "KRW",
    "q": 206,
    "avg": 34450.0,
-   "price": 34150.0,
+   "price": 34100.0,
    "stop": 32163.7847,
    "target": 39022.4307,
    "half_done": false,
    "opened": "2026-10-22",
-   "pl_krw": -61800,
-   "pl_pct": -0.87,
-   "price_age_min": 6.4
+   "pl_krw": -72100,
+   "pl_pct": -1.02,
+   "price_age_min": 52.1
   },
   {
    "code": "HLI",
@@ -79,7 +79,7 @@
    "opened": "2026-10-31",
    "pl_krw": 287344,
    "pl_pct": 7.79,
-   "price_age_min": 6.9
+   "price_age_min": 35.0
   },
   {
    "code": "PEG",
@@ -94,7 +94,7 @@
    "opened": "2026-11-05",
    "pl_krw": 141788,
    "pl_pct": 2.64,
-   "price_age_min": 6.0
+   "price_age_min": 24.4
   },
   {
    "code": "ZTS",
@@ -109,7 +109,7 @@
    "opened": "2026-11-06",
    "pl_krw": -56393,
    "pl_pct": -0.72,
-   "price_age_min": 4.7
+   "price_age_min": 12.8
   },
   {
    "code": "PEP",
@@ -124,7 +124,7 @@
    "opened": "2026-11-07",
    "pl_krw": 333739,
    "pl_pct": 1.69,
-   "price_age_min": 7.1
+   "price_age_min": 24.3
   },
   {
    "code": "SGI",
@@ -139,7 +139,7 @@
    "opened": "2026-11-09",
    "pl_krw": -358013,
    "pl_pct": -3.05,
-   "price_age_min": 4.7
+   "price_age_min": 20.2
   },
   {
    "code": "DOLE",
@@ -154,7 +154,7 @@
    "opened": "2026-11-11",
    "pl_krw": 12407,
    "pl_pct": 0.43,
-   "price_age_min": 7.3
+   "price_age_min": 41.2
   }
  ],
  "pending": [
@@ -1944,7 +1944,7 @@
   },
   {
    "d": "2026-11-11",
-   "v": 97646335
+   "v": 97636035
   }
  ],
  "log": [
@@ -2605,5 +2605,7 @@
   }
  ],
  "lane": "bulk",
- "data_stale": []
+ "data_stale": [
+  "251270"
+ ]
 }
