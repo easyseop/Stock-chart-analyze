@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated_at": "2026-11-12T13:26:11+09:00",
+ "generated_at": "2026-11-12T13:44:39+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "a_ablation": [
   {
@@ -175,7 +175,7 @@
    "추락 중(범위 3%)": 156,
    "매물대 정보 없음": 155,
    "추락 중(범위 4%)": 126,
-   "추락 중(범위 6%)": 110
+   "추락 중(범위 6%)": 111
   }
  },
  "signals": [
@@ -187,16 +187,16 @@
    "group": "now",
    "entry_kind": "now",
    "stage": 3,
-   "price": 9710.0,
-   "entry": 9710.0,
-   "stop": 9418.7,
-   "target": 10292.6,
+   "price": 9690.0,
+   "entry": 9690.0,
+   "stop": 9399.3,
+   "target": 10271.4,
    "shares_1pct": 343,
-   "range_pos": 0.1518,
+   "range_pos": 0.144,
    "norm": 5.7,
    "bear_share": 0.125,
    "fresh": true,
-   "break_gap": 0.0257,
+   "break_gap": 0.0235,
    "earnings_d": null,
    "tactic": {
     "stop_pct": 3.0,
@@ -215,21 +215,21 @@
    "group": "now",
    "entry_kind": "now",
    "stage": 3,
-   "price": 20100.0,
-   "entry": 20100.0,
-   "stop": 18928.1046,
-   "target": 22443.7908,
+   "price": 20200.0,
+   "entry": 20200.0,
+   "stop": 19028.1046,
+   "target": 22543.7908,
    "shares_1pct": 85,
-   "range_pos": 0.1031,
+   "range_pos": 0.1126,
    "norm": -0.0,
    "bear_share": 0.25,
    "fresh": true,
-   "break_gap": 0.0138,
+   "break_gap": 0.0189,
    "earnings_d": null,
    "tactic": {
     "stop_pct": 5.8,
     "pb_price": 20033.25,
-    "pb_stop_pct": 5.5,
+    "pb_stop_pct": 5.0,
     "mode": "full",
     "label": "⚡ 즉시 분할",
     "desc": "손절폭 5.8%로 타이트 — 현재가에서 1~2회 분할 매수. 기다리는 이득보다 놓치는 비용이 큼"
@@ -243,24 +243,24 @@
    "group": "now",
    "entry_kind": "now",
    "stage": 3,
-   "price": 51200.0,
-   "entry": 51200.0,
-   "stop": 47755.2132,
-   "target": 58089.5737,
+   "price": 51400.0,
+   "entry": 51400.0,
+   "stop": 47955.2132,
+   "target": 58289.5737,
    "shares_1pct": 29,
-   "range_pos": 0.2661,
+   "range_pos": 0.2742,
    "norm": -1.6,
    "bear_share": 0.25,
    "fresh": true,
-   "break_gap": 0.0169,
+   "break_gap": 0.0209,
    "earnings_d": null,
    "tactic": {
     "stop_pct": 6.7,
     "pb_price": 50226.4,
-    "pb_stop_pct": 4.9,
+    "pb_stop_pct": 4.5,
     "mode": "pullback",
     "label": "⏳ 눌림 지정가만",
-    "desc": "지금 추격 금지(손절폭 6.7% · 단기 이격) — <b>50,226원 눌림 지정가만</b>. 눌리면 손절폭 4.9%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
+    "desc": "지금 추격 금지(손절폭 6.7% · 단기 이격) — <b>50,226원 눌림 지정가만</b>. 눌리면 손절폭 4.5%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
    }
   },
   {
@@ -289,34 +289,6 @@
     "mode": "full",
     "label": "⚡ 즉시 분할",
     "desc": "손절폭 4.0%로 타이트 — 현재가에서 1~2회 분할 매수. 기다리는 이득보다 놓치는 비용이 큼"
-   }
-  },
-  {
-   "id": "035420-2026-11-12-now",
-   "code": "035420",
-   "name": "NAVER",
-   "ccy": "KRW",
-   "group": "now",
-   "entry_kind": "now",
-   "stage": 3,
-   "price": 182600.0,
-   "entry": 182600.0,
-   "stop": 166218.81,
-   "target": 215362.38,
-   "shares_1pct": 6,
-   "range_pos": 0.1203,
-   "norm": -9.4,
-   "bear_share": 0.25,
-   "fresh": true,
-   "break_gap": 0.0458,
-   "earnings_d": null,
-   "tactic": {
-    "stop_pct": 9.0,
-    "pb_price": null,
-    "pb_stop_pct": null,
-    "mode": "pullback",
-    "label": "⏳ 눌림 지정가만",
-    "desc": "지금 추격 금지(손절폭 9.0% · 단기 이격) — 받칠 지지에 눌릴 때까지 대기"
    }
   },
   {
@@ -821,6 +793,34 @@
     "mode": "pullback",
     "label": "⏳ 눌림 지정가만",
     "desc": "지금 추격 금지(손절폭 8.0% · 돌파후 진행) — 받칠 지지에 눌릴 때까지 대기"
+   }
+  },
+  {
+   "id": "035420-2026-11-12-now",
+   "code": "035420",
+   "name": "NAVER",
+   "ccy": "KRW",
+   "group": "now",
+   "entry_kind": "now",
+   "stage": 3,
+   "price": 183400.0,
+   "entry": 183400.0,
+   "stop": 167018.81,
+   "target": 216162.38,
+   "shares_1pct": 6,
+   "range_pos": 0.1261,
+   "norm": -9.4,
+   "bear_share": 0.25,
+   "fresh": false,
+   "break_gap": 0.0504,
+   "earnings_d": null,
+   "tactic": {
+    "stop_pct": 8.9,
+    "pb_price": null,
+    "pb_stop_pct": null,
+    "mode": "pullback",
+    "label": "⏳ 눌림 지정가만",
+    "desc": "지금 추격 금지(손절폭 8.9% · 돌파후 진행) — 받칠 지지에 눌릴 때까지 대기"
    }
   },
   {
@@ -2134,27 +2134,6 @@
    "tactic": null
   },
   {
-   "id": "007390-2026-11-12-watch",
-   "code": "007390",
-   "name": "네이처셀",
-   "ccy": "KRW",
-   "group": "watch",
-   "entry_kind": "pullback",
-   "stage": 2,
-   "price": 22500.0,
-   "entry": 19925.0,
-   "stop": 17159.5103,
-   "target": 25455.9794,
-   "shares_1pct": 36,
-   "range_pos": 0.2917,
-   "norm": -9.4,
-   "bear_share": 0.375,
-   "fresh": true,
-   "break_gap": 0.0072,
-   "earnings_d": null,
-   "tactic": null
-  },
-  {
    "id": "GS-2026-11-12-watch",
    "code": "GS",
    "name": "Goldman Sachs Group, Inc.",
@@ -2260,24 +2239,24 @@
    "group": "watch",
    "entry_kind": "now",
    "stage": 2,
-   "price": 51400.0,
-   "entry": 51400.0,
-   "stop": 44406.398,
-   "target": 65387.2039,
+   "price": 51500.0,
+   "entry": 51500.0,
+   "stop": 44506.398,
+   "target": 65487.2039,
    "shares_1pct": 14,
-   "range_pos": 0.0369,
+   "range_pos": 0.0378,
    "norm": -68.9,
    "bear_share": 0.5,
    "fresh": true,
-   "break_gap": 0.0061,
+   "break_gap": 0.008,
    "earnings_d": null,
    "tactic": {
     "stop_pct": 13.6,
     "pb_price": 46850.0,
-    "pb_stop_pct": 5.2,
+    "pb_stop_pct": 5.0,
     "mode": "pullback",
     "label": "⏳ 눌림 지정가만",
-    "desc": "지금 추격 금지(손절폭 13.6%) — <b>46,850원 눌림 지정가만</b>. 눌리면 손절폭 5.2%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
+    "desc": "지금 추격 금지(손절폭 13.6%) — <b>46,850원 눌림 지정가만</b>. 눌리면 손절폭 5.0%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
    }
   },
   {
@@ -2306,6 +2285,34 @@
     "mode": "full",
     "label": "⚡ 즉시 분할",
     "desc": "손절폭 5.9%로 타이트 — 현재가에서 1~2회 분할 매수. 기다리는 이득보다 놓치는 비용이 큼"
+   }
+  },
+  {
+   "id": "007390-2026-11-12-watch",
+   "code": "007390",
+   "name": "네이처셀",
+   "ccy": "KRW",
+   "group": "watch",
+   "entry_kind": "now",
+   "stage": 1,
+   "price": 22400.0,
+   "entry": 22400.0,
+   "stop": 19634.5103,
+   "target": 27930.9794,
+   "shares_1pct": 36,
+   "range_pos": 0.2868,
+   "norm": -4.7,
+   "bear_share": 0.375,
+   "fresh": true,
+   "break_gap": 0.0027,
+   "earnings_d": null,
+   "tactic": {
+    "stop_pct": 12.3,
+    "pb_price": 19925.0,
+    "pb_stop_pct": 1.5,
+    "mode": "pullback",
+    "label": "⏳ 눌림 지정가만",
+    "desc": "지금 추격 금지(손절폭 12.3% · 단기 이격) — <b>19,925원 눌림 지정가만</b>. 눌리면 손절폭 1.5%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
    }
   },
   {
@@ -3023,16 +3030,16 @@
    "group": "watch",
    "entry_kind": "pullback",
    "stage": 3,
-   "price": 81200.0,
+   "price": 81300.0,
    "entry": 70383.9,
    "stop": 62692.936,
    "target": 85765.828,
    "shares_1pct": 13,
-   "range_pos": 0.3352,
+   "range_pos": 0.3364,
    "norm": -9.4,
    "bear_share": 0.25,
    "fresh": false,
-   "break_gap": 0.1183,
+   "break_gap": 0.1197,
    "earnings_d": null,
    "tactic": null
   },
