@@ -1,8 +1,8 @@
 {
- "generated_at": "2026-11-12T08:59:06.415231+09:00",
+ "generated_at": "2026-11-12T09:24:25.679620+09:00",
  "updated": "2026-11-12",
  "start": 100000000,
- "cash": 26114437,
+ "cash": 26011037,
  "equity": 97209000,
  "ret_pct": -2.79,
  "positions": [
@@ -19,7 +19,7 @@
    "opened": "2026-10-01",
    "pl_krw": 765276,
    "pl_pct": 21.74,
-   "price_age_min": 7.1
+   "price_age_min": 32.4
   },
   {
    "code": "COST",
@@ -34,7 +34,7 @@
    "opened": "2026-10-07",
    "pl_krw": 193480,
    "pl_pct": 15.33,
-   "price_age_min": 7.1
+   "price_age_min": 32.4
   },
   {
    "code": "TM",
@@ -49,22 +49,7 @@
    "opened": "2026-10-21",
    "pl_krw": 533635,
    "pl_pct": 8.09,
-   "price_age_min": 9.6
-  },
-  {
-   "code": "251270",
-   "name": "넷마블",
-   "ccy": "KRW",
-   "q": 206,
-   "avg": 34450.0,
-   "price": 33200.0,
-   "stop": 32163.7847,
-   "target": 39022.4307,
-   "half_done": false,
-   "opened": "2026-10-22",
-   "pl_krw": -257500,
-   "pl_pct": -3.63,
-   "price_age_min": 7.1
+   "price_age_min": 34.9
   },
   {
    "code": "HLI",
@@ -79,7 +64,7 @@
    "opened": "2026-10-31",
    "pl_krw": 236614,
    "pl_pct": 6.44,
-   "price_age_min": 8.6
+   "price_age_min": 34.0
   },
   {
    "code": "PEG",
@@ -94,7 +79,7 @@
    "opened": "2026-11-05",
    "pl_krw": 112615,
    "pl_pct": 2.1,
-   "price_age_min": 7.1
+   "price_age_min": 32.4
   },
   {
    "code": "ZTS",
@@ -109,7 +94,7 @@
    "opened": "2026-11-06",
    "pl_krw": -45903,
    "pl_pct": -0.59,
-   "price_age_min": 7.1
+   "price_age_min": 32.4
   },
   {
    "code": "PEP",
@@ -124,7 +109,7 @@
    "opened": "2026-11-07",
    "pl_krw": 378570,
    "pl_pct": 1.93,
-   "price_age_min": 9.3
+   "price_age_min": 34.7
   },
   {
    "code": "SGI",
@@ -139,7 +124,7 @@
    "opened": "2026-11-09",
    "pl_krw": -409227,
    "pl_pct": -3.5,
-   "price_age_min": 7.3
+   "price_age_min": 32.6
   },
   {
    "code": "DOLE",
@@ -154,7 +139,22 @@
    "opened": "2026-11-11",
    "pl_krw": 63889,
    "pl_pct": 2.21,
-   "price_age_min": 8.9
+   "price_age_min": 34.2
+  },
+  {
+   "code": "323410",
+   "name": "카카오뱅크",
+   "ccy": "KRW",
+   "q": 342,
+   "avg": 20300.0,
+   "price": 20300.0,
+   "stop": 19084.1126,
+   "target": 22731.7747,
+   "half_done": false,
+   "opened": "2026-11-12",
+   "pl_krw": 0,
+   "pl_pct": 0.0,
+   "price_age_min": 8.1
   }
  ],
  "pending": [
@@ -213,7 +213,7 @@
    "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권27% · 체크4/6 · 손절폭6.5%"
   }
  ],
- "trades": 61,
+ "trades": 62,
  "win_trades": 31,
  "pos_cap_pct": 33.3,
  "cap_violations": [],
@@ -221,10 +221,10 @@
  "fx": 1338.27,
  "stats": {
   "all": {
-   "n": 61,
+   "n": 62,
    "win": 31,
-   "win_rate": 51,
-   "avg_r": -0.07
+   "win_rate": 50,
+   "avg_r": -0.08
   },
   "by_mode": {
    "full": {
@@ -234,10 +234,10 @@
     "avg_r": -0.12
    },
    "half": {
-    "n": 18,
+    "n": 19,
     "win": 11,
-    "win_rate": 61,
-    "avg_r": 0.14
+    "win_rate": 58,
+    "avg_r": 0.11
    },
    "pullback": {
     "n": 9,
@@ -247,10 +247,10 @@
    }
   },
   "fresh": {
-   "n": 59,
+   "n": 60,
    "win": 30,
-   "win_rate": 51,
-   "avg_r": -0.07
+   "win_rate": 50,
+   "avg_r": -0.08
   },
   "stale": {
    "n": 2,
@@ -260,10 +260,10 @@
   },
   "by_stage": {
    "3": {
-    "n": 59,
+    "n": 60,
     "win": 30,
-    "win_rate": 51,
-    "avg_r": -0.06
+    "win_rate": 50,
+    "avg_r": -0.07
    },
    "4": {
     "n": 2,
@@ -274,10 +274,10 @@
   },
   "by_ccy": {
    "KRW": {
-    "n": 12,
+    "n": 13,
     "win": 4,
-    "win_rate": 33,
-    "avg_r": -0.32
+    "win_rate": 31,
+    "avg_r": -0.33
    },
    "USD": {
     "n": 49,
@@ -286,10 +286,46 @@
     "avg_r": -0.01
    }
   },
-  "slip_entry_pct": -0.38,
+  "slip_entry_pct": -0.37,
   "slip_stop_pct": -0.79
  },
  "closed": [
+  {
+   "code": "251270",
+   "name": "넷마블",
+   "ccy": "KRW",
+   "ctx": {
+    "mode": "half",
+    "fresh": true,
+    "stage": 3,
+    "rp": 6,
+    "rec": 4,
+    "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권6% · 체크4/6 · 손절폭6.6%"
+   },
+   "plan": {
+    "entry": 34450.0,
+    "stop": 32163.7847,
+    "target": 39022.4307,
+    "pb": 34271.875,
+    "tactic": "half"
+   },
+   "fill": {
+    "avg": 34450.0,
+    "q": 206
+   },
+   "exits": [
+    {
+     "d": "2026-11-12",
+     "q": 206,
+     "price": 33200.0,
+     "note": "타임 스탑(+1R 미도달)"
+    }
+   ],
+   "opened": "2026-10-22",
+   "closed": "2026-11-12",
+   "pl": -257500,
+   "r": -0.55
+  },
   {
    "code": "ALC",
    "name": "Alcon Inc.",
@@ -1387,42 +1423,6 @@
    "closed": "2026-09-25",
    "pl": 377464,
    "r": 0.62
-  },
-  {
-   "code": "BAH",
-   "name": "Booz Allen Hamilton Holding Corporation",
-   "ccy": "USD",
-   "ctx": {
-    "mode": "pullback",
-    "fresh": true,
-    "stage": 3,
-    "rp": 39,
-    "rec": 4,
-    "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권39% · 체크4/6 · 손절폭6.4%"
-   },
-   "plan": {
-    "entry": 78.645,
-    "stop": 73.5895,
-    "target": 88.756,
-    "pb": 78.4457,
-    "tactic": "pullback"
-   },
-   "fill": {
-    "avg": 78.4457,
-    "q": 3
-   },
-   "exits": [
-    {
-     "d": "2026-09-25",
-     "q": 3,
-     "price": 73.585,
-     "note": "손절"
-    }
-   ],
-   "opened": "2026-09-17",
-   "closed": "2026-09-25",
-   "pl": -19944,
-   "r": -1.0
   }
  ],
  "hist": [
@@ -1952,6 +1952,33 @@
   }
  ],
  "log": [
+  {
+   "d": "2026-11-12",
+   "type": "buy",
+   "code": "323410",
+   "name": "카카오뱅크",
+   "q": 342,
+   "price": 20300.0,
+   "ccy": "KRW",
+   "amt": 6942600,
+   "note": "즉시 분할 — 🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권12% · 체크4/6 · 손절폭6.0%",
+   "stop": 19084.1126,
+   "target": 22731.7747
+  },
+  {
+   "d": "2026-11-12",
+   "type": "sell",
+   "code": "251270",
+   "name": "넷마블",
+   "q": 206,
+   "price": 33200.0,
+   "ccy": "KRW",
+   "amt": 6839200,
+   "note": "타임 스탑(+1R 미도달)",
+   "pl": -257500,
+   "pl_pct": -3.6,
+   "r": -0.55
+  },
   {
    "d": "2026-11-11",
    "type": "buy",
@@ -2578,34 +2605,6 @@
    "note": "반반 1차 — 🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권15% · 체크6/6 · 손절폭6.0%",
    "stop": 30.8609,
    "target": 36.7983
-  },
-  {
-   "d": "2026-10-12",
-   "type": "sell",
-   "code": "204320",
-   "name": "HL만도",
-   "q": 121,
-   "price": 42600.0,
-   "ccy": "KRW",
-   "amt": 5154600,
-   "note": "손절",
-   "pl": -502906,
-   "pl_pct": -8.9,
-   "r": -1.19
-  },
-  {
-   "d": "2026-10-12",
-   "type": "sell",
-   "code": "064400",
-   "name": "LG씨엔에스",
-   "q": 134,
-   "price": 67500.0,
-   "ccy": "KRW",
-   "amt": 9045000,
-   "note": "타임 스탑(+1R 미도달)",
-   "pl": -262257,
-   "pl_pct": -2.8,
-   "r": -0.33
   }
  ],
  "lane": "bulk",
