@@ -1,10 +1,10 @@
 {
- "generated_at": "2026-11-13T23:46:11.735762+09:00",
+ "generated_at": "2026-11-13T23:54:59.138792+09:00",
  "updated": "2026-11-13",
  "start": 100000000,
  "cash": 25910965,
- "equity": 96846183,
- "ret_pct": -3.15,
+ "equity": 96826356,
+ "ret_pct": -3.17,
  "positions": [
   {
    "code": "CRAI",
@@ -12,14 +12,14 @@
    "ccy": "USD",
    "q": 16,
    "avg": 164.4,
-   "price": 201.1699981689453,
+   "price": 201.24000549316406,
    "stop": 194.05030366210937,
    "target": 186.8795,
    "half_done": true,
    "opened": "2026-10-01",
-   "pl_krw": 784942,
-   "pl_pct": 22.37,
-   "price_age_min": 0.5
+   "pl_krw": 786437,
+   "pl_pct": 22.41,
+   "price_age_min": 4.1
   },
   {
    "code": "COST",
@@ -27,14 +27,14 @@
    "ccy": "USD",
    "q": 1,
    "avg": 943.035,
-   "price": 1104.0550537109375,
-   "stop": 1058.9695537109376,
+   "price": 1105.5555419921875,
+   "stop": 1060.4700419921876,
    "target": 1003.1489,
    "half_done": true,
    "opened": "2026-10-07",
-   "pl_krw": 214835,
-   "pl_pct": 17.07,
-   "price_age_min": 0.5
+   "pl_krw": 216837,
+   "pl_pct": 17.23,
+   "price_age_min": 5.0
   },
   {
    "code": "HLI",
@@ -42,14 +42,14 @@
    "ccy": "USD",
    "q": 20,
    "avg": 137.3297,
-   "price": 144.2100067138672,
+   "price": 143.97999572753906,
    "stop": 142.13719694824218,
    "target": 155.0801,
    "half_done": true,
    "opened": "2026-10-31",
-   "pl_krw": 183595,
-   "pl_pct": 5.01,
-   "price_age_min": 0.5
+   "pl_krw": 177458,
+   "pl_pct": 4.84,
+   "price_age_min": 4.1
   },
   {
    "code": "PEG",
@@ -57,14 +57,14 @@
    "ccy": "USD",
    "q": 55,
    "avg": 72.76,
-   "price": 75.24500274658203,
+   "price": 75.38999938964844,
    "stop": 70.1226,
    "target": 78.0347,
    "half_done": false,
    "opened": "2026-11-05",
-   "pl_krw": 182353,
-   "pl_pct": 3.42,
-   "price_age_min": 0.5
+   "pl_krw": 192993,
+   "pl_pct": 3.61,
+   "price_age_min": 4.1
   },
   {
    "code": "ZTS",
@@ -72,14 +72,14 @@
    "ccy": "USD",
    "q": 70,
    "avg": 83.06,
-   "price": 82.94999694824219,
+   "price": 83.13040161132812,
    "stop": 77.8186,
    "target": 93.5428,
    "half_done": false,
    "opened": "2026-11-06",
-   "pl_krw": -10274,
-   "pl_pct": -0.13,
-   "price_age_min": 0.5
+   "pl_krw": 6575,
+   "pl_pct": 0.08,
+   "price_age_min": 4.1
   },
   {
    "code": "PEP",
@@ -87,14 +87,14 @@
    "ccy": "USD",
    "q": 104,
    "avg": 141.22,
-   "price": 144.07200622558594,
+   "price": 143.88499450683594,
    "stop": 134.599,
    "target": 154.462,
    "half_done": false,
    "opened": "2026-11-07",
-   "pl_krw": 395738,
-   "pl_pct": 2.02,
-   "price_age_min": 0.4
+   "pl_krw": 369789,
+   "pl_pct": 1.89,
+   "price_age_min": 5.4
   },
   {
    "code": "DOLE",
@@ -102,14 +102,14 @@
    "ccy": "USD",
    "q": 154,
    "avg": 14.0,
-   "price": 14.300000190734863,
+   "price": 14.270000457763672,
    "stop": 13.1868,
    "target": 15.6265,
    "half_done": false,
    "opened": "2026-11-11",
-   "pl_krw": 61641,
-   "pl_pct": 2.14,
-   "price_age_min": 0.4
+   "pl_krw": 55477,
+   "pl_pct": 1.93,
+   "price_age_min": 6.4
   },
   {
    "code": "323410",
@@ -124,7 +124,7 @@
    "opened": "2026-11-12",
    "pl_krw": 171000,
    "pl_pct": 2.46,
-   "price_age_min": 0.4
+   "price_age_min": 6.0
   },
   {
    "code": "LNN",
@@ -139,7 +139,7 @@
    "opened": "2026-11-13",
    "pl_krw": -76490,
    "pl_pct": -1.07,
-   "price_age_min": 0.4
+   "price_age_min": 5.2
   },
   {
    "code": "BEPC",
@@ -147,14 +147,14 @@
    "ccy": "USD",
    "q": 269,
    "avg": 30.7,
-   "price": 30.475000381469727,
+   "price": 30.440000534057617,
    "stop": 28.9076,
    "target": 34.2848,
    "half_done": false,
    "opened": "2026-11-13",
-   "pl_krw": -80753,
-   "pl_pct": -0.73,
-   "price_age_min": 0.4
+   "pl_krw": -93314,
+   "pl_pct": -0.85,
+   "price_age_min": 5.2
   }
  ],
  "pending": [
@@ -1952,7 +1952,7 @@
   },
   {
    "d": "2026-11-13",
-   "v": 96846183
+   "v": 96826356
   }
  ],
  "log": [
@@ -2615,6 +2615,6 @@
    "pl_pct": 5.8
   }
  ],
- "lane": "fast",
+ "lane": "bulk",
  "data_stale": []
 }
