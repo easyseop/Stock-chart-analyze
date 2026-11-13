@@ -1,10 +1,10 @@
 {
- "generated_at": "2026-11-14T00:57:13.914726+09:00",
+ "generated_at": "2026-11-14T01:16:27.139040+09:00",
  "updated": "2026-11-14",
  "start": 100000000,
  "cash": 28632524,
- "equity": 96879871,
- "ret_pct": -3.12,
+ "equity": 96872172,
+ "ret_pct": -3.13,
  "positions": [
   {
    "code": "CRAI",
@@ -12,14 +12,14 @@
    "ccy": "USD",
    "q": 16,
    "avg": 164.4,
-   "price": 202.57000732421875,
+   "price": 202.66000366210938,
    "stop": 194.05030366210937,
    "target": 186.8795,
    "half_done": true,
    "opened": "2026-10-01",
-   "pl_krw": 815684,
-   "pl_pct": 23.22,
-   "price_age_min": 5.6
+   "pl_krw": 817607,
+   "pl_pct": 23.27,
+   "price_age_min": 0.6
   },
   {
    "code": "COST",
@@ -27,14 +27,14 @@
    "ccy": "USD",
    "q": 1,
    "avg": 943.035,
-   "price": 1105.8592529296875,
-   "stop": 1061.904490234375,
+   "price": 1107.64501953125,
+   "stop": 1062.55951953125,
    "target": 1003.1489,
    "half_done": true,
    "opened": "2026-10-07",
-   "pl_krw": 217470,
-   "pl_pct": 17.27,
-   "price_age_min": 6.8
+   "pl_krw": 219855,
+   "pl_pct": 17.46,
+   "price_age_min": 0.6
   },
   {
    "code": "HLI",
@@ -42,14 +42,14 @@
    "ccy": "USD",
    "q": 20,
    "avg": 137.3297,
-   "price": 143.44000244140625,
+   "price": 143.2050018310547,
    "stop": 142.13719694824218,
    "target": 155.0801,
    "half_done": true,
    "opened": "2026-10-31",
-   "pl_krw": 163220,
-   "pl_pct": 4.45,
-   "price_age_min": 5.5
+   "pl_krw": 156942,
+   "pl_pct": 4.28,
+   "price_age_min": 0.6
   },
   {
    "code": "PEG",
@@ -64,7 +64,7 @@
    "opened": "2026-11-05",
    "pl_krw": 101346,
    "pl_pct": 3.72,
-   "price_age_min": 5.5
+   "price_age_min": 0.6
   },
   {
    "code": "ZTS",
@@ -72,14 +72,14 @@
    "ccy": "USD",
    "q": 70,
    "avg": 83.06,
-   "price": 82.56999969482422,
+   "price": 82.72000122070312,
    "stop": 77.8186,
    "target": 93.5428,
    "half_done": false,
    "opened": "2026-11-06",
-   "pl_krw": -45811,
-   "pl_pct": -0.59,
-   "price_age_min": 5.5
+   "pl_krw": -31787,
+   "pl_pct": -0.41,
+   "price_age_min": 0.6
   },
   {
    "code": "PEP",
@@ -87,14 +87,14 @@
    "ccy": "USD",
    "q": 104,
    "avg": 141.22,
-   "price": 144.66000366210938,
+   "price": 144.625,
    "stop": 134.599,
    "target": 154.462,
    "half_done": false,
    "opened": "2026-11-07",
-   "pl_krw": 477828,
-   "pl_pct": 2.44,
-   "price_age_min": 7.0
+   "pl_krw": 472966,
+   "pl_pct": 2.41,
+   "price_age_min": 0.6
   },
   {
    "code": "DOLE",
@@ -102,14 +102,14 @@
    "ccy": "USD",
    "q": 154,
    "avg": 14.0,
-   "price": 14.239999771118164,
+   "price": 14.319999694824219,
    "stop": 13.1868,
    "target": 15.6265,
    "half_done": false,
    "opened": "2026-11-11",
-   "pl_krw": 49364,
-   "pl_pct": 1.71,
-   "price_age_min": 8.2
+   "pl_krw": 65819,
+   "pl_pct": 2.29,
+   "price_age_min": 0.6
   },
   {
    "code": "323410",
@@ -124,7 +124,7 @@
    "opened": "2026-11-12",
    "pl_krw": 171000,
    "pl_pct": 2.46,
-   "price_age_min": 7.8
+   "price_age_min": 0.6
   },
   {
    "code": "LNN",
@@ -132,14 +132,14 @@
    "ccy": "USD",
    "q": 49,
    "avg": 109.32,
-   "price": 106.7750015258789,
+   "price": 106.84500122070312,
    "stop": 102.7678,
    "target": 122.4243,
    "half_done": false,
    "opened": "2026-11-13",
-   "pl_krw": -166557,
-   "pl_pct": -2.33,
-   "price_age_min": 6.9
+   "pl_krw": -161976,
+   "pl_pct": -2.26,
+   "price_age_min": 0.6
   },
   {
    "code": "BEPC",
@@ -147,14 +147,14 @@
    "ccy": "USD",
    "q": 269,
    "avg": 30.7,
-   "price": 30.459999084472656,
+   "price": 30.360000610351562,
    "stop": 28.9076,
    "target": 34.2848,
    "half_done": false,
    "opened": "2026-11-13",
-   "pl_krw": -86227,
-   "pl_pct": -0.78,
-   "price_age_min": 7.5
+   "pl_krw": -122155,
+   "pl_pct": -1.11,
+   "price_age_min": 0.6
   }
  ],
  "pending": [
@@ -1956,7 +1956,7 @@
   },
   {
    "d": "2026-11-14",
-   "v": 96879871
+   "v": 96872172
   }
  ],
  "log": [
@@ -2619,6 +2619,6 @@
    "r": -0.02
   }
  ],
- "lane": "bulk",
+ "lane": "fast",
  "data_stale": []
 }
