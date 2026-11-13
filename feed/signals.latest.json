@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated_at": "2026-11-13T23:55:08+09:00",
+ "generated_at": "2026-11-14T00:05:04+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "a_ablation": [
   {
@@ -149,22 +149,22 @@
   }
  ],
  "shelf_debug": {
-  "ok": 6,
+  "ok": 7,
   "watch": 92,
   "reasons": {
-   "밸류영역 밖(지지대 아님)": 481,
-   "추락 중(범위 1%)": 215,
-   "추락 중(범위 0%)": 195,
-   "추락 중(범위 2%)": 173,
+   "밸류영역 밖(지지대 아님)": 482,
+   "추락 중(범위 1%)": 216,
+   "추락 중(범위 0%)": 193,
+   "추락 중(범위 2%)": 172,
+   "추락 중(범위 3%)": 156,
    "매물대 정보 없음": 156,
-   "추락 중(범위 3%)": 155,
-   "추락 중(범위 4%)": 135,
-   "추락 중(범위 5%)": 113
+   "추락 중(범위 4%)": 137,
+   "추락 중(범위 5%)": 111
   }
  },
  "signals": [
   {
-   "id": "TKC-2026-11-13-now",
+   "id": "TKC-2026-11-14-now",
    "code": "TKC",
    "name": "Turkcell Iletisim Hizmetleri AS",
    "ccy": "USD",
@@ -192,7 +192,7 @@
    }
   },
   {
-   "id": "T-2026-11-13-now",
+   "id": "T-2026-11-14-now",
    "code": "T",
    "name": "AT&T Inc.",
    "ccy": "USD",
@@ -220,7 +220,7 @@
    }
   },
   {
-   "id": "AEM-2026-11-13-now",
+   "id": "AEM-2026-11-14-now",
    "code": "AEM",
    "name": "Agnico Eagle Mines Limited",
    "ccy": "USD",
@@ -248,7 +248,7 @@
    }
   },
   {
-   "id": "EQX-2026-11-13-now",
+   "id": "EQX-2026-11-14-now",
    "code": "EQX",
    "name": "Equinox Gold Corp.",
    "ccy": "USD",
@@ -276,7 +276,7 @@
    }
   },
   {
-   "id": "HCC-2026-11-13-now",
+   "id": "HCC-2026-11-14-now",
    "code": "HCC",
    "name": "Warrior Met Coal, Inc.",
    "ccy": "USD",
@@ -304,7 +304,7 @@
    }
   },
   {
-   "id": "MIR-2026-11-13-now",
+   "id": "MIR-2026-11-14-now",
    "code": "MIR",
    "name": "Mirion Technologies, Inc.",
    "ccy": "USD",
@@ -332,7 +332,7 @@
    }
   },
   {
-   "id": "BIRK-2026-11-13-now",
+   "id": "BIRK-2026-11-14-now",
    "code": "BIRK",
    "name": "Birkenstock Holding plc",
    "ccy": "USD",
@@ -360,7 +360,7 @@
    }
   },
   {
-   "id": "MCD-2026-11-13-now",
+   "id": "MCD-2026-11-14-now",
    "code": "MCD",
    "name": "McDonald's Corporation",
    "ccy": "USD",
@@ -388,7 +388,7 @@
    }
   },
   {
-   "id": "RKT-2026-11-13-now",
+   "id": "RKT-2026-11-14-now",
    "code": "RKT",
    "name": "Rocket Companies, Inc.",
    "ccy": "USD",
@@ -416,7 +416,7 @@
    }
   },
   {
-   "id": "ALK-2026-11-13-now",
+   "id": "ALK-2026-11-14-now",
    "code": "ALK",
    "name": "Alaska Air Group, Inc.",
    "ccy": "USD",
@@ -444,7 +444,7 @@
    }
   },
   {
-   "id": "CRI-2026-11-13-now",
+   "id": "CRI-2026-11-14-now",
    "code": "CRI",
    "name": "Carter's, Inc.",
    "ccy": "USD",
@@ -472,7 +472,7 @@
    }
   },
   {
-   "id": "AAL-2026-11-13-now",
+   "id": "AAL-2026-11-14-now",
    "code": "AAL",
    "name": "American Airlines Group, Inc.",
    "ccy": "USD",
@@ -500,7 +500,7 @@
    }
   },
   {
-   "id": "WWD-2026-11-13-now",
+   "id": "WWD-2026-11-14-now",
    "code": "WWD",
    "name": "Woodward, Inc.",
    "ccy": "USD",
@@ -528,7 +528,7 @@
    }
   },
   {
-   "id": "035720-2026-11-13-now",
+   "id": "035720-2026-11-14-now",
    "code": "035720",
    "name": "카카오",
    "ccy": "KRW",
@@ -556,7 +556,7 @@
    }
   },
   {
-   "id": "TFPM-2026-11-13-now",
+   "id": "TFPM-2026-11-14-now",
    "code": "TFPM",
    "name": "Triple Flag Precious Metals Corp.",
    "ccy": "USD",
@@ -584,7 +584,7 @@
    }
   },
   {
-   "id": "HLNE-2026-11-13-now",
+   "id": "HLNE-2026-11-14-now",
    "code": "HLNE",
    "name": "Hamilton Lane Incorporated",
    "ccy": "USD",
@@ -612,7 +612,7 @@
    }
   },
   {
-   "id": "STOK-2026-11-13-now",
+   "id": "STOK-2026-11-14-now",
    "code": "STOK",
    "name": "Stoke Therapeutics, Inc.",
    "ccy": "USD",
@@ -640,7 +640,7 @@
    }
   },
   {
-   "id": "KGC-2026-11-13-now",
+   "id": "KGC-2026-11-14-now",
    "code": "KGC",
    "name": "Kinross Gold Corporation",
    "ccy": "USD",
@@ -668,7 +668,7 @@
    }
   },
   {
-   "id": "NKTR-2026-11-13-now",
+   "id": "NKTR-2026-11-14-now",
    "code": "NKTR",
    "name": "Nektar Therapeutics",
    "ccy": "USD",
@@ -696,26 +696,76 @@
    }
   },
   {
-   "id": "005830-2026-11-13-b0-shadow",
+   "id": "006360-2026-11-14-shelf",
+   "code": "006360",
+   "name": "GS건설",
+   "ccy": "KRW",
+   "group": "shelf",
+   "entry_kind": "shelf",
+   "stage": 0,
+   "price": 31250.0,
+   "entry": 31250.0,
+   "stop": 29155.0,
+   "target": 39793.125,
+   "shares_1pct": 0,
+   "range_pos": 0.4957,
+   "norm": -4.9,
+   "bear_share": 0.25,
+   "shelf": {
+    "poc": 28555.625,
+    "val": 26308.125,
+    "vah": 39793.125,
+    "rr": 4.08,
+    "overhead": 0.484,
+    "history_bars": 1928,
+    "profile_pnl_proxy": 0.0136,
+    "runup252": 0.6747
+   },
+   "fresh": true,
+   "break_gap": null,
+   "earnings_d": null,
+   "tactic": "full",
+   "trend_above_200": true
+  },
+  {
+   "id": "005830-2026-11-14-b0-shadow",
    "code": "005830",
    "name": "DB손해보험",
    "ccy": "KRW",
    "group": "shelf_shadow_b0",
    "shadow": true,
    "orderable": false,
-   "entry": 163000.0,
+   "entry": 163600.0,
    "stop": 151508.0,
    "target": 192022.9167,
    "stage": 0,
    "norm": 7.5,
-   "range_pos": 0.4682,
+   "range_pos": 0.4745,
    "b0_reject_reason": "200일선 아래(B1)",
    "trend_above_200": false,
    "fresh": false,
    "tactic": "shadow"
   },
   {
-   "id": "UPWK-2026-11-13-shelf-watch",
+   "id": "006360-2026-11-14-b2-shadow",
+   "code": "006360",
+   "name": "GS건설",
+   "ccy": "KRW",
+   "group": "shelf_shadow_b2",
+   "shadow": true,
+   "orderable": false,
+   "entry": 31250.0,
+   "stop": 29155.0,
+   "target": 35440.0,
+   "stage": 0,
+   "norm": -4.9,
+   "range_pos": 0.4957,
+   "runup252": 0.6747,
+   "fresh": false,
+   "tactic": "shadow"
+  },
+  {
+   "id": "UPWK-2026-11-14-shelf-watch",
    "code": "UPWK",
    "name": "Upwork Inc.",
    "ccy": "USD",
@@ -755,35 +805,35 @@
    "trend_above_200": false
   },
   {
-   "id": "006360-2026-11-13-shelf-watch",
-   "code": "006360",
-   "name": "GS건설",
-   "ccy": "KRW",
+   "id": "WIT-2026-11-14-shelf-watch",
+   "code": "WIT",
+   "name": "Wipro Limited",
+   "ccy": "USD",
    "group": "shelf_watch",
    "entry_kind": "shelf_watch",
    "stage": 0,
-   "price": 31350.0,
-   "entry": 31350.0,
-   "stop": 29155.0,
-   "target": 39793.125,
+   "price": 2.13,
+   "entry": 2.13,
+   "stop": 2.0678,
+   "target": 2.3712,
    "shares_1pct": 0,
-   "range_pos": 0.4994,
+   "range_pos": 0.36,
    "norm": -4.9,
-   "bear_share": 0.25,
+   "bear_share": 0.375,
    "shelf": {
-    "poc": 28555.625,
-    "val": 26308.125,
-    "vah": 39793.125,
-    "rr": 3.85,
-    "overhead": 0.484,
-    "reason": "반등 미확인(거래량)",
-    "history_bars": 1928,
-    "profile_pnl_proxy": 0.0168,
-    "runup252": 0.6801,
+    "poc": 2.1837,
+    "val": 1.8088,
+    "vah": 2.3712,
+    "rr": 3.88,
+    "overhead": 0.506,
+    "reason": "반등 미확인(상단마감·거래량)",
+    "history_bars": 1978,
+    "profile_pnl_proxy": -0.0254,
+    "runup252": -0.1992,
     "checks": {
      "터치": true,
      "회복": true,
-     "상단마감": true,
+     "상단마감": false,
      "거래량": false,
      "신저가아님": true
     }
@@ -795,7 +845,7 @@
    "trend_above_200": true
   },
   {
-   "id": "323280-2026-11-13-shelf-watch",
+   "id": "323280-2026-11-14-shelf-watch",
    "code": "323280",
    "name": "태성",
    "ccy": "KRW",
@@ -835,7 +885,7 @@
    "trend_above_200": false
   },
   {
-   "id": "LPX-2026-11-13-shelf-watch",
+   "id": "LPX-2026-11-14-shelf-watch",
    "code": "LPX",
    "name": "Louisiana-Pacific Corporation",
    "ccy": "USD",
@@ -875,7 +925,7 @@
    "trend_above_200": true
   },
   {
-   "id": "THO-2026-11-13-shelf-watch",
+   "id": "THO-2026-11-14-shelf-watch",
    "code": "THO",
    "name": "Thor Industries, Inc.",
    "ccy": "USD",
@@ -915,7 +965,7 @@
    "trend_above_200": false
   },
   {
-   "id": "PEP-2026-11-13-shelf-watch",
+   "id": "PEP-2026-11-14-shelf-watch",
    "code": "PEP",
    "name": "PepsiCo, Inc.",
    "ccy": "USD",
@@ -955,7 +1005,7 @@
    "trend_above_200": false
   },
   {
-   "id": "INTU-2026-11-13-shelf-watch",
+   "id": "INTU-2026-11-14-shelf-watch",
    "code": "INTU",
    "name": "Intuit Inc.",
    "ccy": "USD",
@@ -995,7 +1045,7 @@
    "trend_above_200": false
   },
   {
-   "id": "017670-2026-11-13-shelf-watch",
+   "id": "017670-2026-11-14-shelf-watch",
    "code": "017670",
    "name": "SK텔레콤",
    "ccy": "KRW",
@@ -1035,7 +1085,7 @@
    "trend_above_200": false
   },
   {
-   "id": "STEP-2026-11-13-shelf-watch",
+   "id": "STEP-2026-11-14-shelf-watch",
    "code": "STEP",
    "name": "StepStone Group Inc.",
    "ccy": "USD",
@@ -1075,31 +1125,31 @@
    "trend_above_200": false
   },
   {
-   "id": "080220-2026-11-13-shelf-watch",
+   "id": "080220-2026-11-14-shelf-watch",
    "code": "080220",
    "name": "제주반도체",
    "ccy": "KRW",
    "group": "shelf_watch",
    "entry_kind": "shelf_watch",
    "stage": 0,
-   "price": 59800.0,
-   "entry": 59800.0,
+   "price": 60100.0,
+   "entry": 60100.0,
    "stop": 54586.0,
    "target": 75229.1667,
    "shares_1pct": 0,
-   "range_pos": 0.3511,
+   "range_pos": 0.3536,
    "norm": -35.8,
    "bear_share": 0.375,
    "shelf": {
     "poc": 45099.1667,
     "val": 19990.8333,
     "vah": 75229.1667,
-    "rr": 2.96,
-    "overhead": 0.445,
+    "rr": 2.74,
+    "overhead": 0.446,
     "reason": "반등 미확인(터치·상단마감)",
     "history_bars": 1928,
-    "profile_pnl_proxy": -0.0396,
-    "runup252": 1.875,
+    "profile_pnl_proxy": -0.0348,
+    "runup252": 1.8894,
     "checks": {
      "터치": false,
      "회복": true,
@@ -1115,7 +1165,7 @@
    "trend_above_200": false
   },
   {
-   "id": "LAD-2026-11-13-shelf-watch",
+   "id": "LAD-2026-11-14-shelf-watch",
    "code": "LAD",
    "name": "Lithia Motors, Inc.",
    "ccy": "USD",
@@ -1155,7 +1205,7 @@
    "trend_above_200": true
   },
   {
-   "id": "LQDA-2026-11-13-shelf-watch",
+   "id": "LQDA-2026-11-14-shelf-watch",
    "code": "LQDA",
    "name": "Liquidia Corporation",
    "ccy": "USD",
@@ -1195,7 +1245,7 @@
    "trend_above_200": false
   },
   {
-   "id": "MMYT-2026-11-13-shelf-watch",
+   "id": "MMYT-2026-11-14-shelf-watch",
    "code": "MMYT",
    "name": "MakeMyTrip Limited",
    "ccy": "USD",
@@ -1235,7 +1285,7 @@
    "trend_above_200": true
   },
   {
-   "id": "SCSC-2026-11-13-shelf-watch",
+   "id": "SCSC-2026-11-14-shelf-watch",
    "code": "SCSC",
    "name": "ScanSource, Inc.",
    "ccy": "USD",
@@ -1275,7 +1325,7 @@
    "trend_above_200": false
   },
   {
-   "id": "QURE-2026-11-13-shelf-watch",
+   "id": "QURE-2026-11-14-shelf-watch",
    "code": "QURE",
    "name": "uniQure N.V.",
    "ccy": "USD",
@@ -1315,7 +1365,7 @@
    "trend_above_200": false
   },
   {
-   "id": "ENVA-2026-11-13-shelf-watch",
+   "id": "ENVA-2026-11-14-shelf-watch",
    "code": "ENVA",
    "name": "Enova International, Inc.",
    "ccy": "USD",
@@ -1355,7 +1405,7 @@
    "trend_above_200": false
   },
   {
-   "id": "ACM-2026-11-13-watch",
+   "id": "ACM-2026-11-14-watch",
    "code": "ACM",
    "name": "AECOM",
    "ccy": "USD",
@@ -1376,7 +1426,7 @@
    "tactic": null
   },
   {
-   "id": "088980-2026-11-13-watch",
+   "id": "088980-2026-11-14-watch",
    "code": "088980",
    "name": "맥쿼리인프라",
    "ccy": "KRW",
@@ -1397,7 +1447,7 @@
    "tactic": null
   },
   {
-   "id": "NYT-2026-11-13-watch",
+   "id": "NYT-2026-11-14-watch",
    "code": "NYT",
    "name": "New York Times Company",
    "ccy": "USD",
@@ -1418,7 +1468,7 @@
    "tactic": null
   },
   {
-   "id": "MNKD-2026-11-13-watch",
+   "id": "MNKD-2026-11-14-watch",
    "code": "MNKD",
    "name": "MannKind Corporation",
    "ccy": "USD",
@@ -1439,7 +1489,7 @@
    "tactic": null
   },
   {
-   "id": "INSM-2026-11-13-watch",
+   "id": "INSM-2026-11-14-watch",
    "code": "INSM",
    "name": "Insmed Incorporated",
    "ccy": "USD",
@@ -1460,7 +1510,7 @@
    "tactic": null
   },
   {
-   "id": "DCI-2026-11-13-watch",
+   "id": "DCI-2026-11-14-watch",
    "code": "DCI",
    "name": "Donaldson Company, Inc.",
    "ccy": "USD",
@@ -1481,7 +1531,7 @@
    "tactic": null
   },
   {
-   "id": "NVMI-2026-11-13-watch",
+   "id": "NVMI-2026-11-14-watch",
    "code": "NVMI",
    "name": "Nova Ltd.",
    "ccy": "USD",
@@ -1502,7 +1552,7 @@
    "tactic": null
   },
   {
-   "id": "HWM-2026-11-13-watch",
+   "id": "HWM-2026-11-14-watch",
    "code": "HWM",
    "name": "Howmet Aerospace Inc.",
    "ccy": "USD",
@@ -1523,7 +1573,7 @@
    "tactic": null
   },
   {
-   "id": "036460-2026-11-13-watch",
+   "id": "036460-2026-11-14-watch",
    "code": "036460",
    "name": "한국가스공사",
    "ccy": "KRW",
@@ -1551,7 +1601,7 @@
    }
   },
   {
-   "id": "OR-2026-11-13-watch",
+   "id": "OR-2026-11-14-watch",
    "code": "OR",
    "name": "OR Royalties Inc.",
    "ccy": "USD",
@@ -1579,7 +1629,7 @@
    }
   },
   {
-   "id": "KT-2026-11-13-watch",
+   "id": "KT-2026-11-14-watch",
    "code": "KT",
    "name": "KT Corporation",
    "ccy": "USD",
@@ -1600,7 +1650,7 @@
    "tactic": null
   },
   {
-   "id": "ULS-2026-11-13-watch",
+   "id": "ULS-2026-11-14-watch",
    "code": "ULS",
    "name": "UL Solutions Inc.",
    "ccy": "USD",
@@ -1628,7 +1678,7 @@
    }
   },
   {
-   "id": "ECVT-2026-11-13-watch",
+   "id": "ECVT-2026-11-14-watch",
    "code": "ECVT",
    "name": "Ecovyst Inc.",
    "ccy": "USD",
@@ -1656,7 +1706,7 @@
    }
   },
   {
-   "id": "047050-2026-11-13-watch",
+   "id": "047050-2026-11-14-watch",
    "code": "047050",
    "name": "포스코인터내셔널",
    "ccy": "KRW",
@@ -1684,7 +1734,7 @@
    }
   },
   {
-   "id": "SOMN-2026-11-13-watch",
+   "id": "SOMN-2026-11-14-watch",
    "code": "SOMN",
    "name": "Southern Company (The) 2025 Series A Corpo",
    "ccy": "USD",
@@ -1712,7 +1762,7 @@
    }
   },
   {
-   "id": "PEP-2026-11-13-watch",
+   "id": "PEP-2026-11-14-watch",
    "code": "PEP",
    "name": "PepsiCo, Inc.",
    "ccy": "USD",
@@ -1733,7 +1783,7 @@
    "tactic": null
   },
   {
-   "id": "017800-2026-11-13-watch",
+   "id": "017800-2026-11-14-watch",
    "code": "017800",
    "name": "현대엘리베이터",
    "ccy": "KRW",
@@ -1761,35 +1811,7 @@
    }
   },
   {
-   "id": "035420-2026-11-13-watch",
-   "code": "035420",
-   "name": "NAVER",
-   "ccy": "KRW",
-   "group": "watch",
-   "entry_kind": "now",
-   "stage": 1,
-   "price": 172500.0,
-   "entry": 172500.0,
-   "stop": 155617.4664,
-   "target": 206265.0671,
-   "shares_1pct": 5,
-   "range_pos": 0.0471,
-   "norm": -18.9,
-   "bear_share": 0.375,
-   "fresh": true,
-   "break_gap": -0.0056,
-   "earnings_d": null,
-   "tactic": {
-    "stop_pct": 9.8,
-    "pb_price": 166000.0,
-    "pb_stop_pct": 6.3,
-    "mode": "pullback",
-    "label": "⏳ 눌림 지정가만",
-    "desc": "지금 추격 금지(손절폭 9.8%) — <b>166,000원 눌림 지정가만</b>. 눌리면 손절폭 6.3%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
-   }
-  },
-  {
-   "id": "O-2026-11-13-watch",
+   "id": "O-2026-11-14-watch",
    "code": "O",
    "name": "Realty Income Corporation",
    "ccy": "USD",
@@ -1810,7 +1832,7 @@
    "tactic": null
   },
   {
-   "id": "POR-2026-11-13-watch",
+   "id": "POR-2026-11-14-watch",
    "code": "POR",
    "name": "Portland General Electric Co",
    "ccy": "USD",
@@ -1838,7 +1860,7 @@
    }
   },
   {
-   "id": "GLPI-2026-11-13-watch",
+   "id": "GLPI-2026-11-14-watch",
    "code": "GLPI",
    "name": "Gaming and Leisure Properties, Inc.",
    "ccy": "USD",
@@ -1866,7 +1888,7 @@
    }
   },
   {
-   "id": "HSY-2026-11-13-watch",
+   "id": "HSY-2026-11-14-watch",
    "code": "HSY",
    "name": "The Hershey Company",
    "ccy": "USD",
@@ -1894,7 +1916,35 @@
    }
   },
   {
-   "id": "LNN-2026-11-13-watch",
+   "id": "035420-2026-11-14-watch",
+   "code": "035420",
+   "name": "NAVER",
+   "ccy": "KRW",
+   "group": "watch",
+   "entry_kind": "now",
+   "stage": 1,
+   "price": 172500.0,
+   "entry": 172500.0,
+   "stop": 155617.4664,
+   "target": 206265.0671,
+   "shares_1pct": 5,
+   "range_pos": 0.0471,
+   "norm": -28.3,
+   "bear_share": 0.375,
+   "fresh": true,
+   "break_gap": -0.0056,
+   "earnings_d": null,
+   "tactic": {
+    "stop_pct": 9.8,
+    "pb_price": 166000.0,
+    "pb_stop_pct": 6.3,
+    "mode": "pullback",
+    "label": "⏳ 눌림 지정가만",
+    "desc": "지금 추격 금지(손절폭 9.8%) — <b>166,000원 눌림 지정가만</b>. 눌리면 손절폭 6.3%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
+   }
+  },
+  {
+   "id": "LNN-2026-11-14-watch",
    "code": "LNN",
    "name": "Lindsay Corporation",
    "ccy": "USD",
@@ -1922,7 +1972,7 @@
    }
   },
   {
-   "id": "BEPC-2026-11-13-watch",
+   "id": "BEPC-2026-11-14-watch",
    "code": "BEPC",
    "name": "Brookfield Renewable Corporation Brookfiel",
    "ccy": "USD",
@@ -1950,7 +2000,7 @@
    }
   },
   {
-   "id": "GTY-2026-11-13-watch",
+   "id": "GTY-2026-11-14-watch",
    "code": "GTY",
    "name": "Getty Realty Corporation",
    "ccy": "USD",
@@ -1978,7 +2028,7 @@
    }
   },
   {
-   "id": "PCAR-2026-11-13-watch",
+   "id": "PCAR-2026-11-14-watch",
    "code": "PCAR",
    "name": "PACCAR Inc.",
    "ccy": "USD",
@@ -2006,7 +2056,7 @@
    }
   },
   {
-   "id": "CENX-2026-11-13-watch",
+   "id": "CENX-2026-11-14-watch",
    "code": "CENX",
    "name": "Century Aluminum Company",
    "ccy": "USD",
@@ -2027,7 +2077,7 @@
    "tactic": null
   },
   {
-   "id": "ETOR-2026-11-13-watch",
+   "id": "ETOR-2026-11-14-watch",
    "code": "ETOR",
    "name": "eToro Group Ltd.",
    "ccy": "USD",
@@ -2055,7 +2105,7 @@
    }
   },
   {
-   "id": "PAR-2026-11-13-watch",
+   "id": "PAR-2026-11-14-watch",
    "code": "PAR",
    "name": "PAR Technology Corporation",
    "ccy": "USD",
@@ -2076,7 +2126,7 @@
    "tactic": null
   },
   {
-   "id": "UI-2026-11-13-watch",
+   "id": "UI-2026-11-14-watch",
    "code": "UI",
    "name": "Ubiquiti Inc.",
    "ccy": "USD",
@@ -2097,7 +2147,28 @@
    "tactic": null
   },
   {
-   "id": "RHLD-2026-11-13-watch",
+   "id": "RRX-2026-11-14-watch",
+   "code": "RRX",
+   "name": "Regal Rexnord Corporation",
+   "ccy": "USD",
+   "group": "watch",
+   "entry_kind": "pullback",
+   "stage": 3,
+   "price": 180.06,
+   "entry": 178.4267,
+   "stop": 160.8338,
+   "target": 213.6123,
+   "shares_1pct": 5,
+   "range_pos": 0.4347,
+   "norm": 7.5,
+   "bear_share": 0.375,
+   "fresh": false,
+   "break_gap": 0.3134,
+   "earnings_d": null,
+   "tactic": null
+  },
+  {
+   "id": "RHLD-2026-11-14-watch",
    "code": "RHLD",
    "name": "Resolute Holdings Management",
    "ccy": "USD",
@@ -2118,28 +2189,7 @@
    "tactic": null
   },
   {
-   "id": "RRX-2026-11-13-watch",
-   "code": "RRX",
-   "name": "Regal Rexnord Corporation",
-   "ccy": "USD",
-   "group": "watch",
-   "entry_kind": "pullback",
-   "stage": 3,
-   "price": 180.06,
-   "entry": 178.4267,
-   "stop": 160.8338,
-   "target": 213.6123,
-   "shares_1pct": 5,
-   "range_pos": 0.4347,
-   "norm": -3.8,
-   "bear_share": 0.375,
-   "fresh": false,
-   "break_gap": 0.3134,
-   "earnings_d": null,
-   "tactic": null
-  },
-  {
-   "id": "PLNT-2026-11-13-watch",
+   "id": "PLNT-2026-11-14-watch",
    "code": "PLNT",
    "name": "Planet Fitness, Inc.",
    "ccy": "USD",
@@ -2160,7 +2210,7 @@
    "tactic": null
   },
   {
-   "id": "DOLE-2026-11-13-watch",
+   "id": "DOLE-2026-11-14-watch",
    "code": "DOLE",
    "name": "Dole plc",
    "ccy": "USD",
@@ -2181,7 +2231,7 @@
    "tactic": null
   },
   {
-   "id": "323410-2026-11-13-watch",
+   "id": "323410-2026-11-14-watch",
    "code": "323410",
    "name": "카카오뱅크",
    "ccy": "KRW",
@@ -2202,7 +2252,7 @@
    "tactic": null
   },
   {
-   "id": "CRUS-2026-11-13-watch",
+   "id": "CRUS-2026-11-14-watch",
    "code": "CRUS",
    "name": "Cirrus Logic, Inc.",
    "ccy": "USD",
@@ -2223,7 +2273,7 @@
    "tactic": null
   },
   {
-   "id": "017670-2026-11-13-watch",
+   "id": "017670-2026-11-14-watch",
    "code": "017670",
    "name": "SK텔레콤",
    "ccy": "KRW",
@@ -2244,7 +2294,7 @@
    "tactic": null
   },
   {
-   "id": "145020-2026-11-13-watch",
+   "id": "145020-2026-11-14-watch",
    "code": "145020",
    "name": "휴젤",
    "ccy": "KRW",
@@ -2265,7 +2315,7 @@
    "tactic": null
   },
   {
-   "id": "UTI-2026-11-13-watch",
+   "id": "UTI-2026-11-14-watch",
    "code": "UTI",
    "name": "Universal Technical Institute Inc",
    "ccy": "USD",
@@ -2286,7 +2336,7 @@
    "tactic": null
   },
   {
-   "id": "WPC-2026-11-13-watch",
+   "id": "WPC-2026-11-14-watch",
    "code": "WPC",
    "name": "W. P. Carey Inc. REIT",
    "ccy": "USD",
@@ -2307,7 +2357,7 @@
    "tactic": null
   },
   {
-   "id": "SPHR-2026-11-13-watch",
+   "id": "SPHR-2026-11-14-watch",
    "code": "SPHR",
    "name": "Sphere Entertainment Co.",
    "ccy": "USD",
@@ -2328,7 +2378,7 @@
    "tactic": null
   },
   {
-   "id": "VSEC-2026-11-13-watch",
+   "id": "VSEC-2026-11-14-watch",
    "code": "VSEC",
    "name": "VSE Corporation",
    "ccy": "USD",
@@ -2349,7 +2399,7 @@
    "tactic": null
   },
   {
-   "id": "KGS-2026-11-13-watch",
+   "id": "KGS-2026-11-14-watch",
    "code": "KGS",
    "name": "Kodiak Gas Services, Inc.",
    "ccy": "USD",
