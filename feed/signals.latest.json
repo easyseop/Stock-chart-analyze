@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated_at": "2026-11-13T15:19:50+09:00",
+ "generated_at": "2026-11-13T15:29:16+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "a_ablation": [
   {
@@ -148,10 +148,10 @@
    "추락 중(범위 1%)": 218,
    "추락 중(범위 0%)": 193,
    "추락 중(범위 2%)": 171,
-   "추락 중(범위 3%)": 159,
+   "추락 중(범위 3%)": 160,
    "매물대 정보 없음": 156,
-   "추락 중(범위 4%)": 135,
-   "추락 중(범위 5%)": 109
+   "추락 중(범위 4%)": 134,
+   "추락 중(범위 5%)": 110
   }
  },
  "signals": [
@@ -1326,16 +1326,16 @@
    "group": "watch",
    "entry_kind": "breakout",
    "stage": 3,
-   "price": 9810.0,
+   "price": 9820.0,
    "entry": 9920.0,
    "stop": 9618.9888,
    "target": 10522.0223,
    "shares_1pct": 332,
-   "range_pos": 0.1907,
+   "range_pos": 0.1946,
    "norm": -3.8,
    "bear_share": 0.25,
    "fresh": true,
-   "break_gap": 0.0378,
+   "break_gap": 0.0389,
    "earnings_d": null,
    "tactic": null
   },
@@ -1564,24 +1564,24 @@
    "group": "watch",
    "entry_kind": "now",
    "stage": 1,
-   "price": 22050.0,
-   "entry": 22050.0,
-   "stop": 19292.7596,
-   "target": 27564.4809,
+   "price": 21900.0,
+   "entry": 21900.0,
+   "stop": 19142.7596,
+   "target": 27414.4809,
    "shares_1pct": 36,
-   "range_pos": 0.2696,
+   "range_pos": 0.2623,
    "norm": -4.7,
    "bear_share": 0.375,
    "fresh": true,
-   "break_gap": -0.0073,
+   "break_gap": -0.014,
    "earnings_d": null,
    "tactic": {
-    "stop_pct": 12.5,
+    "stop_pct": 12.6,
     "pb_price": 19925.0,
-    "pb_stop_pct": 3.2,
+    "pb_stop_pct": 3.9,
     "mode": "pullback",
     "label": "⏳ 눌림 지정가만",
-    "desc": "지금 추격 금지(손절폭 12.5% · 단기 이격) — <b>19,925원 눌림 지정가만</b>. 눌리면 손절폭 3.2%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
+    "desc": "지금 추격 금지(손절폭 12.6% · 단기 이격) — <b>19,925원 눌림 지정가만</b>. 눌리면 손절폭 3.9%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
    }
   },
   {
@@ -1774,24 +1774,24 @@
    "group": "watch",
    "entry_kind": "now",
    "stage": 1,
-   "price": 68900.0,
-   "entry": 68900.0,
-   "stop": 64644.134,
-   "target": 77411.7319,
+   "price": 68800.0,
+   "entry": 68800.0,
+   "stop": 64544.134,
+   "target": 77311.7319,
    "shares_1pct": 23,
-   "range_pos": 0.1376,
+   "range_pos": 0.1357,
    "norm": -18.0,
    "bear_share": 0.375,
    "fresh": true,
-   "break_gap": -0.0057,
+   "break_gap": -0.0072,
    "earnings_d": null,
    "tactic": {
     "stop_pct": 6.2,
     "pb_price": 66675.0,
-    "pb_stop_pct": 3.0,
+    "pb_stop_pct": 3.2,
     "mode": "half",
     "label": "⚖ 반반 진입",
-    "desc": "손절폭 6.2% — 절반은 현재가, 절반은 눌림 66,675원 지정가(거기선 손절폭 3.0%)"
+    "desc": "손절폭 6.2% — 절반은 현재가, 절반은 눌림 66,675원 지정가(거기선 손절폭 3.2%)"
    }
   },
   {
@@ -1802,24 +1802,24 @@
    "group": "watch",
    "entry_kind": "now",
    "stage": 1,
-   "price": 172500.0,
-   "entry": 172500.0,
-   "stop": 155660.3236,
-   "target": 206179.3528,
+   "price": 172400.0,
+   "entry": 172400.0,
+   "stop": 155531.7522,
+   "target": 206136.4957,
    "shares_1pct": 5,
-   "range_pos": 0.0471,
+   "range_pos": 0.0464,
    "norm": -18.9,
    "bear_share": 0.375,
    "fresh": true,
-   "break_gap": -0.0056,
+   "break_gap": -0.0062,
    "earnings_d": null,
    "tactic": {
     "stop_pct": 9.8,
     "pb_price": 166000.0,
-    "pb_stop_pct": 6.2,
+    "pb_stop_pct": 6.3,
     "mode": "pullback",
     "label": "⏳ 눌림 지정가만",
-    "desc": "지금 추격 금지(손절폭 9.8%) — <b>166,000원 눌림 지정가만</b>. 눌리면 손절폭 6.2%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
+    "desc": "지금 추격 금지(손절폭 9.8%) — <b>166,000원 눌림 지정가만</b>. 눌리면 손절폭 6.3%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
    }
   },
   {
@@ -2264,6 +2264,27 @@
    "tactic": null
   },
   {
+   "id": "017670-2026-11-13-watch",
+   "code": "017670",
+   "name": "SK텔레콤",
+   "ccy": "KRW",
+   "group": "watch",
+   "entry_kind": "pullback",
+   "stage": 3,
+   "price": 84100.0,
+   "entry": 70619.7,
+   "stop": 62849.5191,
+   "target": 86160.0617,
+   "shares_1pct": 12,
+   "range_pos": 0.3683,
+   "norm": -9.4,
+   "bear_share": 0.25,
+   "fresh": false,
+   "break_gap": 0.168,
+   "earnings_d": null,
+   "tactic": null
+  },
+  {
    "id": "SLVM-2026-11-13-watch",
    "code": "SLVM",
    "name": "Sylvamo Corporation",
@@ -2324,27 +2345,6 @@
    "fresh": false,
    "break_gap": 0.1853,
    "earnings_d": 69,
-   "tactic": null
-  },
-  {
-   "id": "017670-2026-11-13-watch",
-   "code": "017670",
-   "name": "SK텔레콤",
-   "ccy": "KRW",
-   "group": "watch",
-   "entry_kind": "breakout",
-   "stage": 3,
-   "price": 83900.0,
-   "entry": 83900.0,
-   "stop": 76129.8191,
-   "target": 99440.3617,
-   "shares_1pct": 12,
-   "range_pos": 0.366,
-   "norm": -18.9,
-   "bear_share": 0.375,
-   "fresh": false,
-   "break_gap": 0.1652,
-   "earnings_d": null,
    "tactic": null
   },
   {
