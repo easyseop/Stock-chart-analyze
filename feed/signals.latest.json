@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated_at": "2026-11-14T08:54:32+09:00",
+ "generated_at": "2026-11-14T09:09:43+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "a_ablation": [
   {
@@ -253,7 +253,7 @@
    "bear_share": 0.375,
    "fresh": true,
    "break_gap": 0.0193,
-   "earnings_d": 90,
+   "earnings_d": 89,
    "tactic": {
     "stop_pct": 8.9,
     "pb_price": null,
@@ -421,7 +421,7 @@
    "bear_share": 0.25,
    "fresh": false,
    "break_gap": 0.0908,
-   "earnings_d": 27,
+   "earnings_d": 26,
    "tactic": {
     "stop_pct": 7.8,
     "pb_price": 34.9194,
@@ -449,7 +449,7 @@
    "bear_share": 0.125,
    "fresh": false,
    "break_gap": 0.071,
-   "earnings_d": 110,
+   "earnings_d": 109,
    "tactic": {
     "stop_pct": 8.6,
     "pb_price": 34.0848,
@@ -617,7 +617,7 @@
    "bear_share": 0.375,
    "fresh": false,
    "break_gap": 0.1561,
-   "earnings_d": 74,
+   "earnings_d": 73,
    "tactic": {
     "stop_pct": 9.1,
     "pb_price": null,
@@ -673,7 +673,7 @@
    "bear_share": 0.375,
    "fresh": false,
    "break_gap": 0.1786,
-   "earnings_d": 69,
+   "earnings_d": 68,
    "tactic": {
     "stop_pct": 9.9,
     "pb_price": null,
@@ -1522,7 +1522,7 @@
    "bear_share": 0.375,
    "fresh": true,
    "break_gap": 0.0456,
-   "earnings_d": 3,
+   "earnings_d": 2,
    "tactic": null
   },
   {
@@ -1683,7 +1683,7 @@
    "bear_share": 0.375,
    "fresh": true,
    "break_gap": 0.012,
-   "earnings_d": 77,
+   "earnings_d": 76,
    "tactic": {
     "stop_pct": 5.9,
     "pb_price": null,
@@ -1731,8 +1731,8 @@
    "stage": 1,
    "price": 80.36,
    "entry": 80.36,
-   "stop": 74.7051,
-   "target": 91.6699,
+   "stop": 74.6994,
+   "target": 91.6813,
    "shares_1pct": 17,
    "range_pos": 0.3874,
    "norm": -11.5,
@@ -1743,10 +1743,10 @@
    "tactic": {
     "stop_pct": 7.0,
     "pb_price": 75.88,
-    "pb_stop_pct": 1.5,
+    "pb_stop_pct": 1.6,
     "mode": "half",
     "label": "⚖ 반반 진입",
-    "desc": "손절폭 7.0% — 절반은 현재가, 절반은 눌림 $75.88 지정가(거기선 손절폭 1.5%)"
+    "desc": "손절폭 7.0% — 절반은 현재가, 절반은 눌림 $75.88 지정가(거기선 손절폭 1.6%)"
    }
   },
   {
@@ -2152,7 +2152,7 @@
    "bear_share": 0.375,
    "fresh": false,
    "break_gap": 0.5056,
-   "earnings_d": 82,
+   "earnings_d": 81,
    "tactic": null
   },
   {
