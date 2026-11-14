@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated_at": "2026-11-14T10:25:11+09:00",
+ "generated_at": "2026-11-14T10:40:59+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "a_ablation": [
   {
@@ -1855,6 +1855,34 @@
    }
   },
   {
+   "id": "035420-2026-11-14-watch",
+   "code": "035420",
+   "name": "NAVER",
+   "ccy": "KRW",
+   "group": "watch",
+   "entry_kind": "now",
+   "stage": 1,
+   "price": 172500.0,
+   "entry": 172500.0,
+   "stop": 155617.4664,
+   "target": 206265.0671,
+   "shares_1pct": 5,
+   "range_pos": 0.0471,
+   "norm": -18.9,
+   "bear_share": 0.375,
+   "fresh": true,
+   "break_gap": -0.0056,
+   "earnings_d": null,
+   "tactic": {
+    "stop_pct": 9.8,
+    "pb_price": 166000.0,
+    "pb_stop_pct": 6.3,
+    "mode": "pullback",
+    "label": "⏳ 눌림 지정가만",
+    "desc": "지금 추격 금지(손절폭 9.8%) — <b>166,000원 눌림 지정가만</b>. 눌리면 손절폭 6.3%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
+   }
+  },
+  {
    "id": "OR-2026-11-14-watch",
    "code": "OR",
    "name": "OR Royalties Inc.",
@@ -1958,34 +1986,6 @@
    "break_gap": -0.0086,
    "earnings_d": null,
    "tactic": null
-  },
-  {
-   "id": "035420-2026-11-14-watch",
-   "code": "035420",
-   "name": "NAVER",
-   "ccy": "KRW",
-   "group": "watch",
-   "entry_kind": "now",
-   "stage": 1,
-   "price": 172500.0,
-   "entry": 172500.0,
-   "stop": 155617.4664,
-   "target": 206265.0671,
-   "shares_1pct": 5,
-   "range_pos": 0.0471,
-   "norm": -28.3,
-   "bear_share": 0.375,
-   "fresh": true,
-   "break_gap": -0.0056,
-   "earnings_d": null,
-   "tactic": {
-    "stop_pct": 9.8,
-    "pb_price": 166000.0,
-    "pb_stop_pct": 6.3,
-    "mode": "pullback",
-    "label": "⏳ 눌림 지정가만",
-    "desc": "지금 추격 금지(손절폭 9.8%) — <b>166,000원 눌림 지정가만</b>. 눌리면 손절폭 6.3%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
-   }
   },
   {
    "id": "Q-2026-11-14-watch",
