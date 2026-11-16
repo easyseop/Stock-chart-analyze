@@ -1,10 +1,10 @@
 {
- "generated_at": "2026-11-16T13:29:27.695298+09:00",
+ "generated_at": "2026-11-16T13:37:48.337719+09:00",
  "updated": "2026-11-16",
  "start": 100000000,
  "cash": 28632524,
- "equity": 97430772,
- "ret_pct": -2.57,
+ "equity": 97396572,
+ "ret_pct": -2.6,
  "positions": [
   {
    "code": "CRAI",
@@ -19,7 +19,7 @@
    "opened": "2026-10-01",
    "pl_krw": 874837,
    "pl_pct": 24.89,
-   "price_age_min": 30.5
+   "price_age_min": 38.8
   },
   {
    "code": "COST",
@@ -34,7 +34,7 @@
    "opened": "2026-10-07",
    "pl_krw": 218034,
    "pl_pct": 17.3,
-   "price_age_min": 30.6
+   "price_age_min": 38.9
   },
   {
    "code": "HLI",
@@ -49,7 +49,7 @@
    "opened": "2026-10-31",
    "pl_krw": 147257,
    "pl_pct": 4.01,
-   "price_age_min": 30.5
+   "price_age_min": 38.8
   },
   {
    "code": "PEG",
@@ -64,7 +64,7 @@
    "opened": "2026-11-05",
    "pl_krw": 116730,
    "pl_pct": 4.29,
-   "price_age_min": 30.5
+   "price_age_min": 38.8
   },
   {
    "code": "ZTS",
@@ -79,7 +79,7 @@
    "opened": "2026-11-06",
    "pl_krw": 71086,
    "pl_pct": 0.92,
-   "price_age_min": 30.5
+   "price_age_min": 38.8
   },
   {
    "code": "PEP",
@@ -94,7 +94,7 @@
    "opened": "2026-11-07",
    "pl_krw": 586432,
    "pl_pct": 2.99,
-   "price_age_min": 31.1
+   "price_age_min": 39.4
   },
   {
    "code": "DOLE",
@@ -109,7 +109,7 @@
    "opened": "2026-11-11",
    "pl_krw": 65848,
    "pl_pct": 2.29,
-   "price_age_min": 32.8
+   "price_age_min": 41.1
   },
   {
    "code": "323410",
@@ -117,14 +117,14 @@
    "ccy": "KRW",
    "q": 342,
    "avg": 20300.0,
-   "price": 21100.0,
+   "price": 21000.0,
    "stop": 19084.1126,
    "target": 22731.7747,
    "half_done": false,
    "opened": "2026-11-12",
-   "pl_krw": 273600,
-   "pl_pct": 3.94,
-   "price_age_min": 8.3
+   "pl_krw": 239400,
+   "pl_pct": 3.45,
+   "price_age_min": 6.9
   },
   {
    "code": "LNN",
@@ -139,7 +139,7 @@
    "opened": "2026-11-13",
    "pl_krw": -135531,
    "pl_pct": -1.89,
-   "price_age_min": 30.8
+   "price_age_min": 39.1
   },
   {
    "code": "BEPC",
@@ -154,7 +154,7 @@
    "opened": "2026-11-13",
    "pl_krw": 3594,
    "pl_pct": 0.03,
-   "price_age_min": 31.9
+   "price_age_min": 40.2
   }
  ],
  "pending": [
@@ -1964,7 +1964,7 @@
   },
   {
    "d": "2026-11-16",
-   "v": 97430772
+   "v": 97396572
   }
  ],
  "log": [
