@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated_at": "2026-11-17T08:40:13+09:00",
+ "generated_at": "2026-11-17T09:07:31+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "a_ablation": [
   {
@@ -110,16 +110,16 @@
  ],
  "shelf_debug": {
   "ok": 3,
-  "watch": 103,
+  "watch": 102,
   "reasons": {
-   "밸류영역 밖(지지대 아님)": 461,
-   "추락 중(범위 0%)": 270,
-   "추락 중(범위 1%)": 259,
-   "추락 중(범위 2%)": 206,
+   "밸류영역 밖(지지대 아님)": 462,
+   "추락 중(범위 0%)": 268,
+   "추락 중(범위 1%)": 262,
+   "추락 중(범위 2%)": 208,
    "매물대 정보 없음": 167,
-   "추락 중(범위 3%)": 165,
-   "추락 중(범위 4%)": 120,
-   "추락 중(범위 6%)": 102
+   "추락 중(범위 3%)": 164,
+   "추락 중(범위 4%)": 117,
+   "추락 중(범위 5%)": 105
   }
  },
  "signals": [
@@ -169,7 +169,7 @@
    "bear_share": 0.375,
    "fresh": true,
    "break_gap": 0.0318,
-   "earnings_d": 72,
+   "earnings_d": 71,
    "tactic": {
     "stop_pct": 7.4,
     "pb_price": null,
@@ -337,7 +337,7 @@
    "bear_share": 0.375,
    "fresh": false,
    "break_gap": 0.1064,
-   "earnings_d": 99,
+   "earnings_d": 98,
    "tactic": {
     "stop_pct": 4.6,
     "pb_price": 257.14,
@@ -393,7 +393,7 @@
    "bear_share": 0.375,
    "fresh": false,
    "break_gap": 0.2023,
-   "earnings_d": 66,
+   "earnings_d": 65,
    "tactic": {
     "stop_pct": 9.7,
     "pb_price": null,
@@ -545,6 +545,24 @@
    "tactic": "shadow"
   },
   {
+   "id": "316140-2026-11-17-b2-shadow",
+   "code": "316140",
+   "name": "우리금융지주",
+   "ccy": "KRW",
+   "group": "shelf_shadow_b2",
+   "shadow": true,
+   "orderable": false,
+   "entry": 33000.0,
+   "stop": 30625.0,
+   "target": 37750.0,
+   "stage": 0,
+   "norm": 7.5,
+   "range_pos": 0.472,
+   "runup252": 0.2692,
+   "fresh": false,
+   "tactic": "shadow"
+  },
+  {
    "id": "ZTS-2026-11-17-shelf-watch",
    "code": "ZTS",
    "name": "Zoetis Inc.",
@@ -632,24 +650,24 @@
    "group": "shelf_watch",
    "entry_kind": "shelf_watch",
    "stage": 0,
-   "price": 129000.0,
-   "entry": 129000.0,
+   "price": 129600.0,
+   "entry": 129600.0,
    "stop": 121618.0,
    "target": 142437.5,
    "shares_1pct": 0,
-   "range_pos": 0.4667,
+   "range_pos": 0.4747,
    "norm": -0.0,
    "bear_share": 0.25,
    "shelf": {
     "poc": 129937.5,
     "val": 117437.5,
     "vah": 142437.5,
-    "rr": 1.82,
+    "rr": 1.61,
     "overhead": 0.549,
     "reason": "반등 미확인(거래량)",
     "history_bars": 1929,
-    "profile_pnl_proxy": -0.0126,
-    "runup252": 0.0741,
+    "profile_pnl_proxy": -0.008,
+    "runup252": 0.0791,
     "checks": {
      "터치": true,
      "회복": true,
@@ -825,46 +843,6 @@
    "trend_above_200": false
   },
   {
-   "id": "323280-2026-11-17-shelf-watch",
-   "code": "323280",
-   "name": "태성",
-   "ccy": "KRW",
-   "group": "shelf_watch",
-   "entry_kind": "shelf_watch",
-   "stage": 0,
-   "price": 48900.0,
-   "entry": 48900.0,
-   "stop": 43267.0,
-   "target": 60362.5,
-   "shares_1pct": 0,
-   "range_pos": 0.3575,
-   "norm": -6.6,
-   "bear_share": 0.375,
-   "shelf": {
-    "poc": 48662.5,
-    "val": 31112.5,
-    "vah": 60362.5,
-    "rr": 2.03,
-    "overhead": 0.488,
-    "reason": "반등 미확인(상단마감·거래량)",
-    "history_bars": 1812,
-    "profile_pnl_proxy": -0.0787,
-    "runup252": 0.6086,
-    "checks": {
-     "터치": true,
-     "회복": true,
-     "상단마감": false,
-     "거래량": false,
-     "신저가아님": true
-    }
-   },
-   "fresh": false,
-   "break_gap": null,
-   "earnings_d": null,
-   "tactic": "watch",
-   "trend_above_200": false
-  },
-  {
    "id": "017670-2026-11-17-shelf-watch",
    "code": "017670",
    "name": "SK텔레콤",
@@ -1025,6 +1003,46 @@
    "trend_above_200": true
   },
   {
+   "id": "APO-2026-11-17-shelf-watch",
+   "code": "APO",
+   "name": "Apollo Global Management, Inc.",
+   "ccy": "USD",
+   "group": "shelf_watch",
+   "entry_kind": "shelf_watch",
+   "stage": 0,
+   "price": 121.64,
+   "entry": 121.64,
+   "stop": 117.1296,
+   "target": 134.2606,
+   "shares_1pct": 0,
+   "range_pos": 0.4109,
+   "norm": -23.0,
+   "bear_share": 0.25,
+   "shelf": {
+    "poc": 129.7831,
+    "val": 109.6344,
+    "vah": 134.2606,
+    "rr": 2.8,
+    "overhead": 0.55,
+    "reason": "반등 미확인(상단마감·거래량)",
+    "history_bars": 1980,
+    "profile_pnl_proxy": -0.0172,
+    "runup252": -0.0686,
+    "checks": {
+     "터치": true,
+     "회복": true,
+     "상단마감": false,
+     "거래량": false,
+     "신저가아님": true
+    }
+   },
+   "fresh": false,
+   "break_gap": null,
+   "earnings_d": 83,
+   "tactic": "watch",
+   "trend_above_200": false
+  },
+  {
    "id": "KT-2026-11-17-shelf-watch",
    "code": "KT",
    "name": "KT Corporation",
@@ -1180,7 +1198,7 @@
    },
    "fresh": false,
    "break_gap": null,
-   "earnings_d": 108,
+   "earnings_d": 107,
    "tactic": "watch",
    "trend_above_200": false
   },
@@ -1272,7 +1290,7 @@
    "bear_share": 0.25,
    "fresh": true,
    "break_gap": 0.0086,
-   "earnings_d": 98,
+   "earnings_d": 97,
    "tactic": {
     "stop_pct": 6.3,
     "pb_price": null,
@@ -1475,7 +1493,7 @@
    "bear_share": 0.375,
    "fresh": true,
    "break_gap": 0.0043,
-   "earnings_d": 109,
+   "earnings_d": 108,
    "tactic": null
   },
   {
@@ -1524,7 +1542,7 @@
    "bear_share": 0.125,
    "fresh": true,
    "break_gap": -0.0049,
-   "earnings_d": 84,
+   "earnings_d": 83,
    "tactic": {
     "stop_pct": 4.1,
     "pb_price": null,
@@ -1629,7 +1647,7 @@
    "bear_share": 0.25,
    "fresh": true,
    "break_gap": -0.0083,
-   "earnings_d": 85,
+   "earnings_d": 84,
    "tactic": {
     "stop_pct": 3.4,
     "pb_price": null,
@@ -1685,7 +1703,7 @@
    "bear_share": 0.5,
    "fresh": true,
    "break_gap": 0.001,
-   "earnings_d": 101,
+   "earnings_d": 100,
    "tactic": {
     "stop_pct": 7.2,
     "pb_price": null,
@@ -1874,7 +1892,7 @@
    "bear_share": 0.375,
    "fresh": true,
    "break_gap": -0.0025,
-   "earnings_d": 23,
+   "earnings_d": 22,
    "tactic": null
   },
   {
@@ -2056,7 +2074,7 @@
    "bear_share": 0.375,
    "fresh": true,
    "break_gap": -0.0044,
-   "earnings_d": 51,
+   "earnings_d": 50,
    "tactic": {
     "stop_pct": 7.4,
     "pb_price": 64.76,
@@ -2259,7 +2277,7 @@
    "bear_share": 0.5,
    "fresh": false,
    "break_gap": 0.0775,
-   "earnings_d": 0,
+   "earnings_d": -1,
    "tactic": null
   },
   {
