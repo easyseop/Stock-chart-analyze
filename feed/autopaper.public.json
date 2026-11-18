@@ -1,10 +1,10 @@
 {
- "generated_at": "2026-11-18T09:54:26.869590+09:00",
+ "generated_at": "2026-11-18T10:18:08.201121+09:00",
  "updated": "2026-11-18",
  "start": 100000000,
  "cash": 25977968,
- "equity": 96056612,
- "ret_pct": -3.94,
+ "equity": 96039512,
+ "ret_pct": -3.96,
  "positions": [
   {
    "code": "CRAI",
@@ -19,7 +19,7 @@
    "opened": "2026-10-01",
    "pl_krw": 967579,
    "pl_pct": 27.53,
-   "price_age_min": 47.4
+   "price_age_min": 71.1
   },
   {
    "code": "COST",
@@ -34,7 +34,7 @@
    "opened": "2026-10-07",
    "pl_krw": 223195,
    "pl_pct": 17.71,
-   "price_age_min": 48.3
+   "price_age_min": 71.9
   },
   {
    "code": "PEG",
@@ -49,7 +49,7 @@
    "opened": "2026-11-05",
    "pl_krw": 69586,
    "pl_pct": 2.56,
-   "price_age_min": 47.0
+   "price_age_min": 70.7
   },
   {
    "code": "ZTS",
@@ -64,7 +64,7 @@
    "opened": "2026-11-06",
    "pl_krw": 39283,
    "pl_pct": 0.51,
-   "price_age_min": 47.0
+   "price_age_min": 70.7
   },
   {
    "code": "PEP",
@@ -79,7 +79,7 @@
    "opened": "2026-11-07",
    "pl_krw": 111167,
    "pl_pct": 0.57,
-   "price_age_min": 48.8
+   "price_age_min": 72.5
   },
   {
    "code": "DOLE",
@@ -94,7 +94,7 @@
    "opened": "2026-11-11",
    "pl_krw": -59672,
    "pl_pct": -2.07,
-   "price_age_min": 50.2
+   "price_age_min": 73.9
   },
   {
    "code": "323410",
@@ -102,14 +102,14 @@
    "ccy": "KRW",
    "q": 342,
    "avg": 20300.0,
-   "price": 20950.0,
+   "price": 20900.0,
    "stop": 19084.1126,
    "target": 22731.7747,
    "half_done": false,
    "opened": "2026-11-12",
-   "pl_krw": 222300,
-   "pl_pct": 3.2,
-   "price_age_min": 5.6
+   "pl_krw": 205200,
+   "pl_pct": 2.96,
+   "price_age_min": 6.3
   },
   {
    "code": "BEPC",
@@ -124,7 +124,7 @@
    "opened": "2026-11-13",
    "pl_krw": -39536,
    "pl_pct": -0.36,
-   "price_age_min": 47.0
+   "price_age_min": 70.7
   },
   {
    "code": "WWD",
@@ -139,7 +139,7 @@
    "opened": "2026-11-16",
    "pl_krw": -235415,
    "pl_pct": -3.9,
-   "price_age_min": 47.0
+   "price_age_min": 70.7
   },
   {
    "code": "DCI",
@@ -154,7 +154,7 @@
    "opened": "2026-11-18",
    "pl_krw": -67101,
    "pl_pct": -0.95,
-   "price_age_min": 48.5
+   "price_age_min": 72.2
   }
  ],
  "pending": [
@@ -1978,7 +1978,7 @@
   },
   {
    "d": "2026-11-18",
-   "v": 96056612
+   "v": 96039512
   }
  ],
  "log": [
