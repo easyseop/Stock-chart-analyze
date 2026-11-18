@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated_at": "2026-11-18T09:13:50+09:00",
+ "generated_at": "2026-11-18T09:24:10+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "a_ablation": [
   {
@@ -89,13 +89,13 @@
   "watch": 121,
   "reasons": {
    "밸류영역 밖(지지대 아님)": 465,
-   "추락 중(범위 0%)": 388,
-   "추락 중(범위 1%)": 332,
-   "추락 중(범위 2%)": 192,
+   "추락 중(범위 0%)": 389,
+   "추락 중(범위 1%)": 331,
+   "추락 중(범위 2%)": 194,
    "추락 중(범위 3%)": 168,
    "매물대 정보 없음": 163,
-   "추락 중(범위 6%)": 114,
-   "추락 중(범위 4%)": 110
+   "추락 중(범위 6%)": 115,
+   "추락 중(범위 4%)": 106
   }
  },
  "signals": [
@@ -759,6 +759,46 @@
    "trend_above_200": false
   },
   {
+   "id": "001450-2026-11-18-shelf-watch",
+   "code": "001450",
+   "name": "현대해상",
+   "ccy": "KRW",
+   "group": "shelf_watch",
+   "entry_kind": "shelf_watch",
+   "stage": 0,
+   "price": 36100.0,
+   "entry": 36100.0,
+   "stop": 34643.0,
+   "target": 38612.5,
+   "shares_1pct": 0,
+   "range_pos": 0.3497,
+   "norm": -18.9,
+   "bear_share": 0.25,
+   "shelf": {
+    "poc": 30270.8333,
+    "val": 26695.8333,
+    "vah": 38612.5,
+    "rr": 1.72,
+    "overhead": 0.492,
+    "reason": "반등 미확인(터치·상단마감)",
+    "history_bars": 1930,
+    "profile_pnl_proxy": -0.0042,
+    "runup252": 0.2363,
+    "checks": {
+     "터치": false,
+     "회복": true,
+     "상단마감": false,
+     "거래량": true,
+     "신저가아님": true
+    }
+   },
+   "fresh": false,
+   "break_gap": null,
+   "earnings_d": null,
+   "tactic": "watch",
+   "trend_above_200": false
+  },
+  {
    "id": "CAG-2026-11-18-shelf-watch",
    "code": "CAG",
    "name": "ConAgra Brands, Inc.",
@@ -904,46 +944,6 @@
     "history_bars": 1980,
     "profile_pnl_proxy": -0.0189,
     "runup252": 0.1325,
-    "checks": {
-     "터치": true,
-     "회복": true,
-     "상단마감": false,
-     "거래량": false,
-     "신저가아님": true
-    }
-   },
-   "fresh": false,
-   "break_gap": null,
-   "earnings_d": null,
-   "tactic": "watch",
-   "trend_above_200": false
-  },
-  {
-   "id": "INVH-2026-11-18-shelf-watch",
-   "code": "INVH",
-   "name": "Invitation Homes Inc.",
-   "ccy": "USD",
-   "group": "shelf_watch",
-   "entry_kind": "shelf_watch",
-   "stage": 0,
-   "price": 27.1,
-   "entry": 27.1,
-   "stop": 26.0729,
-   "target": 29.0939,
-   "shares_1pct": 0,
-   "range_pos": 0.429,
-   "norm": -37.7,
-   "bear_share": 0.5,
-   "shelf": {
-    "poc": 26.6027,
-    "val": 25.7724,
-    "vah": 29.0939,
-    "rr": 1.94,
-    "overhead": 0.549,
-    "reason": "반등 미확인(상단마감·거래량)",
-    "history_bars": 1980,
-    "profile_pnl_proxy": -0.0139,
-    "runup252": -0.0454,
     "checks": {
      "터치": true,
      "회복": true,
