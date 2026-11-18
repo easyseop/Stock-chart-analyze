@@ -1,10 +1,10 @@
 {
- "generated_at": "2026-11-19T04:16:27.305560+09:00",
+ "generated_at": "2026-11-19T04:31:34.180532+09:00",
  "updated": "2026-11-19",
  "start": 100000000,
- "cash": 25977968,
- "equity": 96343045,
- "ret_pct": -3.66,
+ "cash": 28671475,
+ "equity": 96288617,
+ "ret_pct": -3.71,
  "positions": [
   {
    "code": "CRAI",
@@ -12,13 +12,13 @@
    "ccy": "USD",
    "q": 16,
    "avg": 164.4,
-   "price": 214.97000122070312,
-   "stop": 198.11030122070312,
+   "price": 215.11000061035156,
+   "stop": 198.25030061035156,
    "target": 186.8795,
    "half_done": true,
    "opened": "2026-10-01",
-   "pl_krw": 1077408,
-   "pl_pct": 30.76,
+   "pl_krw": 1080391,
+   "pl_pct": 30.85,
    "price_age_min": 0.4
   },
   {
@@ -27,13 +27,13 @@
    "ccy": "USD",
    "q": 1,
    "avg": 943.035,
-   "price": 1108.4949951171875,
+   "price": 1105.7650146484375,
    "stop": 1075.529490234375,
    "target": 1003.1489,
    "half_done": true,
    "opened": "2026-10-07",
-   "pl_krw": 220323,
-   "pl_pct": 17.55,
+   "pl_krw": 216688,
+   "pl_pct": 17.26,
    "price_age_min": 0.4
   },
   {
@@ -42,13 +42,13 @@
    "ccy": "USD",
    "q": 28,
    "avg": 72.76,
-   "price": 74.5,
+   "price": 74.47000122070312,
    "stop": 72.76,
    "target": 78.0347,
    "half_done": true,
    "opened": "2026-11-05",
-   "pl_krw": 64875,
-   "pl_pct": 2.39,
+   "pl_krw": 63756,
+   "pl_pct": 2.35,
    "price_age_min": 0.4
   },
   {
@@ -57,14 +57,14 @@
    "ccy": "USD",
    "q": 70,
    "avg": 83.06,
-   "price": 85.43499755859375,
+   "price": 85.33000183105469,
    "stop": 77.8186,
    "target": 93.5428,
    "half_done": false,
    "opened": "2026-11-06",
-   "pl_krw": 221375,
-   "pl_pct": 2.86,
-   "price_age_min": 0.3
+   "pl_krw": 211588,
+   "pl_pct": 2.73,
+   "price_age_min": 0.4
   },
   {
    "code": "PEP",
@@ -72,29 +72,14 @@
    "ccy": "USD",
    "q": 104,
    "avg": 141.22,
-   "price": 141.5800018310547,
+   "price": 141.3300018310547,
    "stop": 134.599,
    "target": 154.462,
    "half_done": false,
    "opened": "2026-11-07",
-   "pl_krw": 49855,
-   "pl_pct": 0.25,
-   "price_age_min": 0.3
-  },
-  {
-   "code": "DOLE",
-   "name": "Dole plc",
-   "ccy": "USD",
-   "q": 154,
-   "avg": 14.0,
-   "price": 13.164999961853027,
-   "stop": 13.1868,
-   "target": 15.6265,
-   "half_done": false,
-   "opened": "2026-11-11",
-   "pl_krw": -171228,
-   "pl_pct": -5.96,
-   "price_age_min": 0.3
+   "pl_krw": 15234,
+   "pl_pct": 0.08,
+   "price_age_min": 0.4
   },
   {
    "code": "323410",
@@ -117,13 +102,13 @@
    "ccy": "USD",
    "q": 269,
    "avg": 30.7,
-   "price": 31.040000915527344,
+   "price": 31.065000534057617,
    "stop": 28.9076,
    "target": 34.2848,
    "half_done": false,
    "opened": "2026-11-13",
-   "pl_krw": 121787,
-   "pl_pct": 1.11,
+   "pl_krw": 130741,
+   "pl_pct": 1.19,
    "price_age_min": 0.3
   },
   {
@@ -132,12 +117,12 @@
    "ccy": "USD",
    "q": 14,
    "avg": 322.325,
-   "price": 320.3450012207031,
+   "price": 320.3500061035156,
    "stop": 296.6405,
    "target": 373.694,
    "half_done": false,
    "opened": "2026-11-16",
-   "pl_krw": -36911,
+   "pl_krw": -36818,
    "pl_pct": -0.61,
    "price_age_min": 0.3
   },
@@ -147,13 +132,13 @@
    "ccy": "USD",
    "q": 62,
    "avg": 85.36,
-   "price": 84.66000366210938,
+   "price": 84.5250015258789,
    "stop": 81.36,
    "target": 93.36,
    "half_done": false,
    "opened": "2026-11-18",
-   "pl_krw": -57790,
-   "pl_pct": -0.82,
+   "pl_krw": -68936,
+   "pl_pct": -0.98,
    "price_age_min": 0.3
   }
  ],
@@ -211,9 +196,36 @@
     "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권27% · 체크4/6 · 손절폭6.5%"
    },
    "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권27% · 체크4/6 · 손절폭6.5%"
+  },
+  {
+   "code": "TU",
+   "name": "Telus Corporation",
+   "ccy": "USD",
+   "limit": 9.45,
+   "stop": 8.9089,
+   "target": 10.8173,
+   "q": 226,
+   "created": "2026-11-19",
+   "atr": 0.3181,
+   "plan": {
+    "entry": 9.545,
+    "stop": 8.9089,
+    "target": 10.8173,
+    "pb": 9.45,
+    "tactic": "pullback"
+   },
+   "ctx": {
+    "mode": "pullback",
+    "fresh": true,
+    "stage": 3,
+    "rp": 28,
+    "rec": 4,
+    "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권28% · 체크4/6 · 손절폭6.7%"
+   },
+   "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권28% · 체크4/6 · 손절폭6.7%"
   }
  ],
- "trades": 66,
+ "trades": 67,
  "win_trades": 33,
  "pos_cap_pct": 33.3,
  "cap_violations": [],
@@ -221,17 +233,17 @@
  "fx": 1331.58,
  "stats": {
   "all": {
-   "n": 66,
+   "n": 67,
    "win": 33,
-   "win_rate": 50,
-   "avg_r": -0.05
+   "win_rate": 49,
+   "avg_r": -0.06
   },
   "by_mode": {
    "full": {
-    "n": 36,
+    "n": 37,
     "win": 17,
-    "win_rate": 47,
-    "avg_r": -0.06
+    "win_rate": 46,
+    "avg_r": -0.09
    },
    "half": {
     "n": 20,
@@ -247,10 +259,10 @@
    }
   },
   "fresh": {
-   "n": 64,
+   "n": 65,
    "win": 32,
-   "win_rate": 50,
-   "avg_r": -0.05
+   "win_rate": 49,
+   "avg_r": -0.06
   },
   "stale": {
    "n": 2,
@@ -260,10 +272,10 @@
   },
   "by_stage": {
    "3": {
-    "n": 64,
+    "n": 65,
     "win": 32,
-    "win_rate": 50,
-    "avg_r": -0.04
+    "win_rate": 49,
+    "avg_r": -0.05
    },
    "4": {
     "n": 2,
@@ -280,16 +292,52 @@
     "avg_r": -0.33
    },
    "USD": {
-    "n": 53,
+    "n": 54,
     "win": 29,
-    "win_rate": 55,
-    "avg_r": 0.02
+    "win_rate": 54,
+    "avg_r": 0.0
    }
   },
-  "slip_entry_pct": -0.4,
-  "slip_stop_pct": -0.78
+  "slip_entry_pct": -0.39,
+  "slip_stop_pct": -0.77
  },
  "closed": [
+  {
+   "code": "DOLE",
+   "name": "Dole plc",
+   "ccy": "USD",
+   "ctx": {
+    "mode": "full",
+    "fresh": true,
+    "stage": 3,
+    "rp": 35,
+    "rec": 4,
+    "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권35% · 체크4/6 · 손절폭5.8%"
+   },
+   "plan": {
+    "entry": 14.0,
+    "stop": 13.1868,
+    "target": 15.6265,
+    "pb": 13.8258,
+    "tactic": "full"
+   },
+   "fill": {
+    "avg": 14.0,
+    "q": 154
+   },
+   "exits": [
+    {
+     "d": "2026-11-19",
+     "q": 154,
+     "price": 13.135,
+     "note": "손절"
+    }
+   ],
+   "opened": "2026-11-11",
+   "closed": "2026-11-19",
+   "pl": -177380,
+   "r": -1.05
+  },
   {
    "code": "LNN",
    "name": "Lindsay Corporation",
@@ -1393,42 +1441,6 @@
    "closed": "2026-10-01",
    "pl": -333906,
    "r": -1.11
-  },
-  {
-   "code": "GBX",
-   "name": "Greenbrier Companies, Inc.",
-   "ccy": "USD",
-   "ctx": {
-    "mode": "full",
-    "fresh": true,
-    "stage": 3,
-    "rp": 21,
-    "rec": 4,
-    "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권21% · 체크4/6 · 손절폭5.1%"
-   },
-   "plan": {
-    "entry": 42.68,
-    "stop": 40.5054,
-    "target": 47.0292,
-    "pb": 41.27,
-    "tactic": "full"
-   },
-   "fill": {
-    "avg": 42.68,
-    "q": 6
-   },
-   "exits": [
-    {
-     "d": "2026-10-01",
-     "q": 6,
-     "price": 40.49,
-     "note": "손절"
-    }
-   ],
-   "opened": "2026-09-25",
-   "closed": "2026-10-01",
-   "pl": -17812,
-   "r": -1.0
   }
  ],
  "hist": [
@@ -1982,10 +1994,35 @@
   },
   {
    "d": "2026-11-19",
-   "v": 96343045
+   "v": 96288617
   }
  ],
  "log": [
+  {
+   "d": "2026-11-19",
+   "type": "order",
+   "code": "TU",
+   "name": "Telus Corporation",
+   "q": 226,
+   "price": 9.45,
+   "ccy": "USD",
+   "amt": 2843855,
+   "note": "눌림 지정가 주문(추격 금지) — 🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권28% · 체크4/6 · 손절폭6.7%"
+  },
+  {
+   "d": "2026-11-19",
+   "type": "sell",
+   "code": "DOLE",
+   "name": "Dole plc",
+   "q": 154,
+   "price": 13.135,
+   "ccy": "USD",
+   "amt": 2693507,
+   "note": "손절",
+   "pl": -177380,
+   "pl_pct": -6.2,
+   "r": -1.05
+  },
   {
    "d": "2026-11-18",
    "type": "buy",
@@ -2616,32 +2653,6 @@
    "pl": -38520,
    "pl_pct": -0.6,
    "r": -0.2
-  },
-  {
-   "d": "2026-10-21",
-   "type": "sell",
-   "code": "TSCO",
-   "name": "Tractor Supply Company",
-   "q": 87,
-   "price": 32.91,
-   "ccy": "USD",
-   "amt": 3796678,
-   "note": "어닝 축소 — 절반(MFE<1R)",
-   "pl": 8076,
-   "pl_pct": 0.2
-  },
-  {
-   "d": "2026-10-21",
-   "type": "buy",
-   "code": "TM",
-   "name": "Toyota Motor Corporation",
-   "q": 50,
-   "price": 197.05,
-   "ccy": "USD",
-   "amt": 13064809,
-   "note": "즉시 분할 — 🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권37% · 체크5/6 · 손절폭3.1%",
-   "stop": 190.922,
-   "target": 209.306
   }
  ],
  "lane": "fast",
