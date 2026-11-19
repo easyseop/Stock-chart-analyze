@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated_at": "2026-11-19T08:43:14+09:00",
+ "generated_at": "2026-11-19T09:09:57+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "a_ablation": [
   {
@@ -69,15 +69,15 @@
   }
  ],
  "shelf_debug": {
-  "ok": 3,
-  "watch": 119,
+  "ok": 4,
+  "watch": 118,
   "reasons": {
-   "밸류영역 밖(지지대 아님)": 481,
-   "추락 중(범위 1%)": 384,
-   "추락 중(범위 0%)": 353,
-   "추락 중(범위 2%)": 230,
+   "밸류영역 밖(지지대 아님)": 482,
+   "추락 중(범위 1%)": 385,
+   "추락 중(범위 0%)": 352,
+   "추락 중(범위 2%)": 228,
    "매물대 정보 없음": 161,
-   "추락 중(범위 3%)": 145,
+   "추락 중(범위 3%)": 147,
    "추락 중(범위 4%)": 133,
    "추락 중(범위 7%)": 107
   }
@@ -129,7 +129,7 @@
    "bear_share": 0.375,
    "fresh": true,
    "break_gap": 0.0321,
-   "earnings_d": 99,
+   "earnings_d": 98,
    "tactic": {
     "stop_pct": 7.1,
     "pb_price": null,
@@ -297,7 +297,7 @@
    "bear_share": 0.25,
    "fresh": false,
    "break_gap": 0.0841,
-   "earnings_d": 97,
+   "earnings_d": 96,
    "tactic": {
     "stop_pct": 4.9,
     "pb_price": 257.14,
@@ -325,7 +325,7 @@
    "bear_share": 0.375,
    "fresh": false,
    "break_gap": 0.0692,
-   "earnings_d": 70,
+   "earnings_d": 69,
    "tactic": {
     "stop_pct": 7.1,
     "pb_price": null,
@@ -362,6 +362,25 @@
     "label": "⚖ 반반 진입",
     "desc": "손절폭 5.1% · 돌파후 진행 — 절반만 현재가, 나머지는 눌림 확인 후 추가"
    }
+  },
+  {
+   "id": "090430-2026-11-19-b0-shadow",
+   "code": "090430",
+   "name": "아모레퍼시픽",
+   "ccy": "KRW",
+   "group": "shelf_shadow_b0",
+   "shadow": true,
+   "orderable": false,
+   "entry": 130700.0,
+   "stop": 123480.0,
+   "target": 142437.5,
+   "stage": 0,
+   "norm": -0.0,
+   "range_pos": 0.4893,
+   "b0_reject_reason": "200일선 아래(B1)",
+   "trend_above_200": false,
+   "fresh": false,
+   "tactic": "shadow"
   },
   {
    "id": "ZTS-2026-11-19-shelf-watch",
@@ -524,46 +543,6 @@
    "trend_above_200": true
   },
   {
-   "id": "090430-2026-11-19-shelf-watch",
-   "code": "090430",
-   "name": "아모레퍼시픽",
-   "ccy": "KRW",
-   "group": "shelf_watch",
-   "entry_kind": "shelf_watch",
-   "stage": 0,
-   "price": 130700.0,
-   "entry": 130700.0,
-   "stop": 123480.0,
-   "target": 142437.5,
-   "shares_1pct": 0,
-   "range_pos": 0.4893,
-   "norm": -0.0,
-   "bear_share": 0.25,
-   "shelf": {
-    "poc": 129937.5,
-    "val": 117437.5,
-    "vah": 142437.5,
-    "rr": 1.63,
-    "overhead": 0.441,
-    "reason": "반등 미확인(거래량)",
-    "history_bars": 1931,
-    "profile_pnl_proxy": -0.0001,
-    "runup252": 0.0332,
-    "checks": {
-     "터치": true,
-     "회복": true,
-     "상단마감": true,
-     "거래량": false,
-     "신저가아님": true
-    }
-   },
-   "fresh": false,
-   "break_gap": null,
-   "earnings_d": null,
-   "tactic": "watch",
-   "trend_above_200": false
-  },
-  {
    "id": "PLNT-2026-11-19-shelf-watch",
    "code": "PLNT",
    "name": "Planet Fitness, Inc.",
@@ -724,6 +703,46 @@
    "trend_above_200": false
   },
   {
+   "id": "CNH-2026-11-19-shelf-watch",
+   "code": "CNH",
+   "name": "CNH Industrial N.V.",
+   "ccy": "USD",
+   "group": "shelf_watch",
+   "entry_kind": "shelf_watch",
+   "stage": 0,
+   "price": 11.3,
+   "entry": 11.3,
+   "stop": 10.9858,
+   "target": 12.3462,
+   "shares_1pct": 0,
+   "range_pos": 0.4082,
+   "norm": -15.1,
+   "bear_share": 0.125,
+   "shelf": {
+    "poc": 10.7887,
+    "val": 10.1212,
+    "vah": 12.3462,
+    "rr": 3.33,
+    "overhead": 0.386,
+    "reason": "반등 미확인(상단마감·거래량)",
+    "history_bars": 1981,
+    "profile_pnl_proxy": 0.0039,
+    "runup252": 0.1578,
+    "checks": {
+     "터치": true,
+     "회복": true,
+     "상단마감": false,
+     "거래량": false,
+     "신저가아님": true
+    }
+   },
+   "fresh": false,
+   "break_gap": null,
+   "earnings_d": 90,
+   "tactic": "watch",
+   "trend_above_200": false
+  },
+  {
    "id": "CAG-2026-11-19-shelf-watch",
    "code": "CAG",
    "name": "ConAgra Brands, Inc.",
@@ -759,7 +778,7 @@
    },
    "fresh": false,
    "break_gap": null,
-   "earnings_d": 30,
+   "earnings_d": 29,
    "tactic": "watch",
    "trend_above_200": false
   },
@@ -799,7 +818,7 @@
    },
    "fresh": false,
    "break_gap": null,
-   "earnings_d": 78,
+   "earnings_d": 77,
    "tactic": "watch",
    "trend_above_200": true
   },
@@ -959,7 +978,7 @@
    },
    "fresh": false,
    "break_gap": null,
-   "earnings_d": 92,
+   "earnings_d": 91,
    "tactic": "watch",
    "trend_above_200": false
   },
@@ -999,7 +1018,7 @@
    },
    "fresh": false,
    "break_gap": null,
-   "earnings_d": 83,
+   "earnings_d": 82,
    "tactic": "watch",
    "trend_above_200": false
   },
@@ -1042,7 +1061,7 @@
    "bear_share": 0.25,
    "fresh": true,
    "break_gap": 0.0318,
-   "earnings_d": 21,
+   "earnings_d": 20,
    "tactic": null
   },
   {
@@ -1112,7 +1131,7 @@
    "bear_share": 0.25,
    "fresh": true,
    "break_gap": 0.0683,
-   "earnings_d": 21,
+   "earnings_d": 20,
    "tactic": null
   },
   {
@@ -1133,7 +1152,7 @@
    "bear_share": 0.25,
    "fresh": true,
    "break_gap": 0.0073,
-   "earnings_d": 83,
+   "earnings_d": 82,
    "tactic": null
   },
   {
@@ -1182,7 +1201,7 @@
    "bear_share": 0.25,
    "fresh": true,
    "break_gap": 0.0103,
-   "earnings_d": 131,
+   "earnings_d": 130,
    "tactic": null
   },
   {
@@ -1203,7 +1222,7 @@
    "bear_share": 0.375,
    "fresh": true,
    "break_gap": 0.0231,
-   "earnings_d": 91,
+   "earnings_d": 90,
    "tactic": null
   },
   {
@@ -1224,7 +1243,7 @@
    "bear_share": 0.5,
    "fresh": true,
    "break_gap": 0.0655,
-   "earnings_d": 49,
+   "earnings_d": 48,
    "tactic": null
   },
   {
@@ -1245,7 +1264,7 @@
    "bear_share": 0.375,
    "fresh": true,
    "break_gap": 0.0078,
-   "earnings_d": 92,
+   "earnings_d": 91,
    "tactic": {
     "stop_pct": 9.8,
     "pb_price": null,
@@ -1281,6 +1300,34 @@
     "mode": "pullback",
     "label": "⏳ 눌림 지정가만",
     "desc": "지금 추격 금지(손절폭 7.9% · 단기 이격) — 받칠 지지에 눌릴 때까지 대기"
+   }
+  },
+  {
+   "id": "319400-2026-11-19-watch",
+   "code": "319400",
+   "name": "현대무벡스",
+   "ccy": "KRW",
+   "group": "watch",
+   "entry_kind": "now",
+   "stage": 2,
+   "price": 15780.0,
+   "entry": 15780.0,
+   "stop": 13683.6904,
+   "target": 19972.6191,
+   "shares_1pct": 47,
+   "range_pos": 0.1818,
+   "norm": -59.0,
+   "bear_share": 0.5,
+   "fresh": true,
+   "break_gap": 0.0504,
+   "earnings_d": null,
+   "tactic": {
+    "stop_pct": 13.3,
+    "pb_price": 14350.0,
+    "pb_stop_pct": 4.6,
+    "mode": "pullback",
+    "label": "⏳ 눌림 지정가만",
+    "desc": "지금 추격 금지(손절폭 13.3%) — <b>14,350원 눌림 지정가만</b>. 눌리면 손절폭 4.6%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
    }
   },
   {
@@ -1413,7 +1460,7 @@
    "bear_share": 0.125,
    "fresh": true,
    "break_gap": -0.0149,
-   "earnings_d": 107,
+   "earnings_d": 106,
    "tactic": {
     "stop_pct": 4.1,
     "pb_price": 5.4515,
@@ -1651,7 +1698,7 @@
    "bear_share": 0.5,
    "fresh": false,
    "break_gap": 0.2294,
-   "earnings_d": 82,
+   "earnings_d": 81,
    "tactic": null
   },
   {
