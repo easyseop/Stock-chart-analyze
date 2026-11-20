@@ -1,10 +1,10 @@
 {
- "generated_at": "2026-11-20T23:55:04.651502+09:00",
- "updated": "2026-11-20",
+ "generated_at": "2026-11-21T00:11:27.614130+09:00",
+ "updated": "2026-11-21",
  "start": 100000000,
- "cash": 24487475,
- "equity": 96179934,
- "ret_pct": -3.82,
+ "cash": 17572175,
+ "equity": 96883912,
+ "ret_pct": -3.12,
  "positions": [
   {
    "code": "CRAI",
@@ -12,14 +12,14 @@
    "ccy": "USD",
    "q": 16,
    "avg": 164.4,
-   "price": 221.6999969482422,
+   "price": 221.60000610351562,
    "stop": 204.84029694824218,
    "target": 186.8795,
    "half_done": true,
    "opened": "2026-10-01",
-   "pl_krw": 1217831,
-   "pl_pct": 34.85,
-   "price_age_min": 4.6
+   "pl_krw": 1225032,
+   "pl_pct": 34.79,
+   "price_age_min": 0.3
   },
   {
    "code": "COST",
@@ -27,14 +27,14 @@
    "ccy": "USD",
    "q": 1,
    "avg": 943.035,
-   "price": 1108.1800537109375,
+   "price": 1112.25,
    "stop": 1075.529490234375,
    "target": 1003.1489,
    "half_done": true,
    "opened": "2026-10-07",
-   "pl_krw": 219370,
-   "pl_pct": 17.51,
-   "price_age_min": 5.8
+   "pl_krw": 226501,
+   "pl_pct": 17.94,
+   "price_age_min": 0.3
   },
   {
    "code": "PEG",
@@ -42,14 +42,14 @@
    "ccy": "USD",
    "q": 28,
    "avg": 72.76,
-   "price": 74.81999969482422,
+   "price": 75.06999969482422,
    "stop": 72.76,
    "target": 78.0347,
    "half_done": true,
    "opened": "2026-11-05",
-   "pl_krw": 76619,
-   "pl_pct": 2.83,
-   "price_age_min": 4.2
+   "pl_krw": 86577,
+   "pl_pct": 3.17,
+   "price_age_min": 0.3
   },
   {
    "code": "ZTS",
@@ -57,14 +57,14 @@
    "ccy": "USD",
    "q": 70,
    "avg": 83.06,
-   "price": 82.46499633789062,
+   "price": 82.63999938964844,
    "stop": 77.8186,
    "target": 93.5428,
    "half_done": false,
    "opened": "2026-11-06",
-   "pl_krw": -55326,
-   "pl_pct": -0.72,
-   "price_age_min": 4.2
+   "pl_krw": -39353,
+   "pl_pct": -0.51,
+   "price_age_min": 0.3
   },
   {
    "code": "PEP",
@@ -72,14 +72,14 @@
    "ccy": "USD",
    "q": 104,
    "avg": 141.22,
-   "price": 141.90499877929688,
+   "price": 142.83999633789062,
    "stop": 134.599,
    "target": 154.462,
    "half_done": false,
    "opened": "2026-11-07",
-   "pl_krw": 94631,
-   "pl_pct": 0.49,
-   "price_age_min": 4.2
+   "pl_krw": 225517,
+   "pl_pct": 1.15,
+   "price_age_min": 0.3
   },
   {
    "code": "323410",
@@ -94,7 +94,7 @@
    "opened": "2026-11-12",
    "pl_krw": 230850,
    "pl_pct": 6.65,
-   "price_age_min": 6.8
+   "price_age_min": 0.3
   },
   {
    "code": "BEPC",
@@ -102,14 +102,14 @@
    "ccy": "USD",
    "q": 269,
    "avg": 30.7,
-   "price": 30.40999984741211,
+   "price": 30.579999923706055,
    "stop": 28.9076,
    "target": 34.2848,
    "half_done": false,
    "opened": "2026-11-13",
-   "pl_krw": -103625,
-   "pl_pct": -0.94,
-   "price_age_min": 4.2
+   "pl_krw": -43208,
+   "pl_pct": -0.39,
+   "price_age_min": 0.3
   },
   {
    "code": "WWD",
@@ -117,14 +117,14 @@
    "ccy": "USD",
    "q": 14,
    "avg": 322.325,
-   "price": 334.239990234375,
+   "price": 333.4024963378906,
    "stop": 296.6405,
    "target": 373.694,
    "half_done": false,
    "opened": "2026-11-16",
-   "pl_krw": 221582,
-   "pl_pct": 3.7,
-   "price_age_min": 6.1
+   "pl_krw": 207587,
+   "pl_pct": 3.44,
+   "price_age_min": 0.3
   },
   {
    "code": "DCI",
@@ -132,14 +132,14 @@
    "ccy": "USD",
    "q": 62,
    "avg": 85.36,
-   "price": 82.98999786376953,
+   "price": 83.44499969482422,
    "stop": 81.36,
    "target": 93.36,
    "half_done": false,
    "opened": "2026-11-18",
-   "pl_krw": -195188,
-   "pl_pct": -2.78,
-   "price_age_min": 4.2
+   "pl_krw": -158925,
+   "pl_pct": -2.24,
+   "price_age_min": 0.3
   },
   {
    "code": "097950",
@@ -154,37 +154,25 @@
    "opened": "2026-11-20",
    "pl_krw": -43000,
    "pl_pct": -0.55,
-   "price_age_min": 6.9
+   "price_age_min": 0.3
+  },
+  {
+   "code": "COLL",
+   "name": "Collegium Pharmaceutical, Inc.",
+   "ccy": "USD",
+   "q": 204,
+   "avg": 25.325,
+   "price": 25.325000762939453,
+   "stop": 23.5582,
+   "target": 28.8587,
+   "half_done": false,
+   "opened": "2026-11-21",
+   "pl_krw": 0,
+   "pl_pct": 0.0,
+   "price_age_min": 0.3
   }
  ],
  "pending": [
-  {
-   "code": "HLI",
-   "name": "Houlihan Lokey, Inc.",
-   "ccy": "USD",
-   "limit": 132.7293,
-   "stop": 128.4545,
-   "target": 155.0801,
-   "q": 41,
-   "created": "2026-10-31",
-   "atr": 4.4376,
-   "plan": {
-    "entry": 137.3297,
-    "stop": 128.4545,
-    "target": 155.0801,
-    "pb": 132.7293,
-    "tactic": "half"
-   },
-   "ctx": {
-    "mode": "half",
-    "fresh": true,
-    "stage": 3,
-    "rp": 27,
-    "rec": 4,
-    "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권27% · 체크4/6 · 손절폭6.5%"
-   },
-   "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권27% · 체크4/6 · 손절폭6.5%"
-  },
   {
    "code": "TU",
    "name": "Telus Corporation",
@@ -218,7 +206,7 @@
  "pos_cap_pct": 33.3,
  "cap_violations": [],
  "rule_violations": [],
- "fx": 1328.35,
+ "fx": 1338.54,
  "stats": {
   "all": {
    "n": 67,
@@ -1987,9 +1975,37 @@
   {
    "d": "2026-11-20",
    "v": 96179934
+  },
+  {
+   "d": "2026-11-21",
+   "v": 96883912
   }
  ],
  "log": [
+  {
+   "d": "2026-11-21",
+   "type": "buy",
+   "code": "COLL",
+   "name": "Collegium Pharmaceutical, Inc.",
+   "q": 204,
+   "price": 25.325,
+   "ccy": "USD",
+   "amt": 6915299,
+   "note": "반반 1차 — 🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권13% · 체크3/6 · 손절폭7.0%",
+   "stop": 23.5582,
+   "target": 28.8587
+  },
+  {
+   "d": "2026-11-21",
+   "type": "cancel",
+   "code": "HLI",
+   "name": "Houlihan Lokey, Inc.",
+   "q": 0,
+   "price": 135.73,
+   "ccy": "USD",
+   "amt": 0,
+   "note": "지정가 만료 — 눌림 안 옴(놓침≠손실)"
+  },
   {
    "d": "2026-11-20",
    "type": "buy",
@@ -2615,32 +2631,8 @@
    "note": "+1R 절반 익절",
    "pl": 291403,
    "pl_pct": 7.9
-  },
-  {
-   "d": "2026-10-23",
-   "type": "buy",
-   "code": "EQT",
-   "name": "EQT Corporation",
-   "q": 135,
-   "price": 53.69,
-   "ccy": "USD",
-   "amt": 9604959,
-   "note": "즉시 분할 — 🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권28% · 체크3/6 · 손절폭4.8%",
-   "stop": 51.0906,
-   "target": 58.8889
-  },
-  {
-   "d": "2026-10-23",
-   "type": "cancel",
-   "code": "WS",
-   "name": "Worthington Steel, Inc.",
-   "q": 0,
-   "price": 39.2,
-   "ccy": "USD",
-   "amt": 0,
-   "note": "지정가 만료 — 눌림 안 옴(놓침≠손실)"
   }
  ],
- "lane": "bulk",
+ "lane": "fast",
  "data_stale": []
 }
