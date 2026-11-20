@@ -1,10 +1,10 @@
 {
- "generated_at": "2026-11-21T02:56:19.545934+09:00",
+ "generated_at": "2026-11-21T03:10:16.532598+09:00",
  "updated": "2026-11-21",
  "start": 100000000,
  "cash": 17572175,
- "equity": 96008861,
- "ret_pct": -3.99,
+ "equity": 96025539,
+ "ret_pct": -3.97,
  "positions": [
   {
    "code": "CRAI",
@@ -12,14 +12,14 @@
    "ccy": "USD",
    "q": 16,
    "avg": 164.4,
-   "price": 220.58999633789062,
+   "price": 221.02499389648438,
    "stop": 207.21030732421875,
    "target": 186.8795,
    "half_done": true,
    "opened": "2026-10-01",
-   "pl_krw": 1203401,
-   "pl_pct": 34.18,
-   "price_age_min": 0.3
+   "pl_krw": 1212717,
+   "pl_pct": 34.44,
+   "price_age_min": 5.3
   },
   {
    "code": "COST",
@@ -27,14 +27,14 @@
    "ccy": "USD",
    "q": 1,
    "avg": 943.035,
-   "price": 1113.9949951171875,
+   "price": 1114.9200439453125,
    "stop": 1076.2644755859376,
    "target": 1003.1489,
    "half_done": true,
    "opened": "2026-10-07",
-   "pl_krw": 228837,
-   "pl_pct": 18.13,
-   "price_age_min": 0.3
+   "pl_krw": 230075,
+   "pl_pct": 18.23,
+   "price_age_min": 5.9
   },
   {
    "code": "PEG",
@@ -42,14 +42,14 @@
    "ccy": "USD",
    "q": 28,
    "avg": 72.76,
-   "price": 74.87000274658203,
+   "price": 74.92500305175781,
    "stop": 72.76,
    "target": 78.0347,
    "half_done": true,
    "opened": "2026-11-05",
-   "pl_krw": 79081,
-   "pl_pct": 2.9,
-   "price_age_min": 0.3
+   "pl_krw": 81142,
+   "pl_pct": 2.98,
+   "price_age_min": 4.1
   },
   {
    "code": "ZTS",
@@ -64,7 +64,7 @@
    "opened": "2026-11-06",
    "pl_krw": -287652,
    "pl_pct": -3.7,
-   "price_age_min": 0.3
+   "price_age_min": 4.1
   },
   {
    "code": "PEP",
@@ -72,14 +72,14 @@
    "ccy": "USD",
    "q": 104,
    "avg": 141.22,
-   "price": 142.14999389648438,
+   "price": 142.13499450683594,
    "stop": 134.599,
    "target": 154.462,
    "half_done": false,
    "opened": "2026-11-07",
-   "pl_krw": 129463,
-   "pl_pct": 0.66,
-   "price_age_min": 0.3
+   "pl_krw": 127375,
+   "pl_pct": 0.65,
+   "price_age_min": 6.3
   },
   {
    "code": "323410",
@@ -94,7 +94,7 @@
    "opened": "2026-11-12",
    "pl_krw": 230850,
    "pl_pct": 6.65,
-   "price_age_min": 0.3
+   "price_age_min": 6.7
   },
   {
    "code": "BEPC",
@@ -102,14 +102,14 @@
    "ccy": "USD",
    "q": 269,
    "avg": 30.7,
-   "price": 30.104999542236328,
+   "price": 30.149999618530273,
    "stop": 28.9076,
    "target": 34.2848,
    "half_done": false,
    "opened": "2026-11-13",
-   "pl_krw": -214240,
-   "pl_pct": -1.94,
-   "price_age_min": 0.3
+   "pl_krw": -198037,
+   "pl_pct": -1.79,
+   "price_age_min": 4.1
   },
   {
    "code": "WWD",
@@ -117,14 +117,14 @@
    "ccy": "USD",
    "q": 14,
    "avg": 322.325,
-   "price": 327.1199951171875,
+   "price": 327.2550048828125,
    "stop": 296.6405,
    "target": 373.694,
    "half_done": false,
    "opened": "2026-11-16",
-   "pl_krw": 89856,
-   "pl_pct": 1.49,
-   "price_age_min": 0.3
+   "pl_krw": 92386,
+   "pl_pct": 1.53,
+   "price_age_min": 6.2
   },
   {
    "code": "DCI",
@@ -132,14 +132,14 @@
    "ccy": "USD",
    "q": 62,
    "avg": 85.36,
-   "price": 81.55999755859375,
+   "price": 81.54000091552734,
    "stop": 81.36,
    "target": 93.36,
    "half_done": false,
    "opened": "2026-11-18",
-   "pl_krw": -315360,
-   "pl_pct": -4.45,
-   "price_age_min": 0.3
+   "pl_krw": -317020,
+   "pl_pct": -4.48,
+   "price_age_min": 4.1
   },
   {
    "code": "097950",
@@ -154,7 +154,7 @@
    "opened": "2026-11-20",
    "pl_krw": -43000,
    "pl_pct": -0.55,
-   "price_age_min": 0.3
+   "price_age_min": 6.9
   },
   {
    "code": "COLL",
@@ -162,14 +162,14 @@
    "ccy": "USD",
    "q": 204,
    "avg": 25.325,
-   "price": 25.110000610351562,
+   "price": 25.06999969482422,
    "stop": 23.5582,
    "target": 28.8587,
    "half_done": false,
    "opened": "2026-11-21",
-   "pl_krw": -58708,
-   "pl_pct": -0.85,
-   "price_age_min": 0.3
+   "pl_krw": -69631,
+   "pl_pct": -1.01,
+   "price_age_min": 6.7
   }
  ],
  "pending": [
@@ -1978,7 +1978,7 @@
   },
   {
    "d": "2026-11-21",
-   "v": 96008861
+   "v": 96025539
   }
  ],
  "log": [
@@ -2633,6 +2633,6 @@
    "pl_pct": 7.9
   }
  ],
- "lane": "fast",
+ "lane": "bulk",
  "data_stale": []
 }
