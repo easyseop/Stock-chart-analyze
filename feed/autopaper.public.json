@@ -1,10 +1,10 @@
 {
- "generated_at": "2026-11-21T05:01:10.163372+09:00",
+ "generated_at": "2026-11-21T05:11:13.329441+09:00",
  "updated": "2026-11-21",
  "start": 100000000,
- "cash": 17572175,
- "equity": 95540272,
- "ret_pct": -4.46,
+ "cash": 17235961,
+ "equity": 95462630,
+ "ret_pct": -4.54,
  "positions": [
   {
    "code": "CRAI",
@@ -12,14 +12,14 @@
    "ccy": "USD",
    "q": 16,
    "avg": 164.4,
-   "price": 220.94000244140625,
+   "price": 220.7550048828125,
    "stop": 207.21030732421875,
    "target": 186.8795,
    "half_done": true,
    "opened": "2026-10-01",
-   "pl_krw": 1210897,
-   "pl_pct": 34.39,
-   "price_age_min": 0.3
+   "pl_krw": 1206935,
+   "pl_pct": 34.28,
+   "price_age_min": 6.0
   },
   {
    "code": "COST",
@@ -27,14 +27,14 @@
    "ccy": "USD",
    "q": 1,
    "avg": 943.035,
-   "price": 1107.625,
+   "price": 1107.4200439453125,
    "stop": 1076.2644755859376,
    "target": 1003.1489,
    "half_done": true,
    "opened": "2026-10-07",
-   "pl_krw": 220310,
-   "pl_pct": 17.45,
-   "price_age_min": 0.3
+   "pl_krw": 220036,
+   "pl_pct": 17.43,
+   "price_age_min": 6.6
   },
   {
    "code": "PEG",
@@ -42,14 +42,14 @@
    "ccy": "USD",
    "q": 28,
    "avg": 72.76,
-   "price": 74.20999908447266,
+   "price": 74.12999725341797,
    "stop": 72.76,
    "target": 78.0347,
    "half_done": true,
    "opened": "2026-11-05",
-   "pl_krw": 54345,
-   "pl_pct": 1.99,
-   "price_age_min": 0.3
+   "pl_krw": 51346,
+   "pl_pct": 1.88,
+   "price_age_min": 4.7
   },
   {
    "code": "ZTS",
@@ -57,14 +57,14 @@
    "ccy": "USD",
    "q": 70,
    "avg": 83.06,
-   "price": 79.81999969482422,
+   "price": 79.55000305175781,
    "stop": 77.8186,
    "target": 93.5428,
    "half_done": false,
    "opened": "2026-11-06",
-   "pl_krw": -303581,
-   "pl_pct": -3.9,
-   "price_age_min": 0.3
+   "pl_krw": -328879,
+   "pl_pct": -4.23,
+   "price_age_min": 4.7
   },
   {
    "code": "PEP",
@@ -72,14 +72,14 @@
    "ccy": "USD",
    "q": 104,
    "avg": 141.22,
-   "price": 140.83999633789062,
+   "price": 140.67999267578125,
    "stop": 134.599,
    "target": 154.462,
    "half_done": false,
    "opened": "2026-11-07",
-   "pl_krw": -52900,
-   "pl_pct": -0.27,
-   "price_age_min": 0.3
+   "pl_krw": -75173,
+   "pl_pct": -0.38,
+   "price_age_min": 4.7
   },
   {
    "code": "323410",
@@ -94,7 +94,7 @@
    "opened": "2026-11-12",
    "pl_krw": 230850,
    "pl_pct": 6.65,
-   "price_age_min": 0.3
+   "price_age_min": 7.5
   },
   {
    "code": "BEPC",
@@ -102,14 +102,14 @@
    "ccy": "USD",
    "q": 269,
    "avg": 30.7,
-   "price": 29.790000915527344,
+   "price": 29.780000686645508,
    "stop": 28.9076,
    "target": 34.2848,
    "half_done": false,
    "opened": "2026-11-13",
-   "pl_krw": -327661,
-   "pl_pct": -2.96,
-   "price_age_min": 0.3
+   "pl_krw": -331262,
+   "pl_pct": -3.0,
+   "price_age_min": 4.7
   },
   {
    "code": "WWD",
@@ -117,29 +117,14 @@
    "ccy": "USD",
    "q": 14,
    "avg": 322.325,
-   "price": 325.9949951171875,
+   "price": 326.8999938964844,
    "stop": 296.6405,
    "target": 373.694,
    "half_done": false,
    "opened": "2026-11-16",
-   "pl_krw": 68774,
-   "pl_pct": 1.14,
-   "price_age_min": 0.3
-  },
-  {
-   "code": "DCI",
-   "name": "Donaldson Company, Inc.",
-   "ccy": "USD",
-   "q": 62,
-   "avg": 85.36,
-   "price": 81.31999969482422,
-   "stop": 81.36,
-   "target": 93.36,
-   "half_done": false,
-   "opened": "2026-11-18",
-   "pl_krw": -335278,
-   "pl_pct": -4.73,
-   "price_age_min": 0.3
+   "pl_krw": 85733,
+   "pl_pct": 1.42,
+   "price_age_min": 6.9
   },
   {
    "code": "097950",
@@ -154,7 +139,7 @@
    "opened": "2026-11-20",
    "pl_krw": -43000,
    "pl_pct": -0.55,
-   "price_age_min": 0.3
+   "price_age_min": 7.6
   },
   {
    "code": "COLL",
@@ -162,14 +147,29 @@
    "ccy": "USD",
    "q": 204,
    "avg": 25.325,
-   "price": 24.780000686645508,
+   "price": 24.690000534057617,
    "stop": 23.5582,
    "target": 28.8587,
    "half_done": false,
    "opened": "2026-11-21",
-   "pl_krw": -148819,
-   "pl_pct": -2.15,
-   "price_age_min": 0.3
+   "pl_krw": -173394,
+   "pl_pct": -2.51,
+   "price_age_min": 6.9
+  },
+  {
+   "code": "ADC",
+   "name": "Agree Realty Corporation",
+   "ccy": "USD",
+   "q": 74,
+   "avg": 71.41,
+   "price": 71.41000366210938,
+   "stop": 68.8512,
+   "target": 76.5276,
+   "half_done": false,
+   "opened": "2026-11-21",
+   "pl_krw": 0,
+   "pl_pct": 0.0,
+   "price_age_min": 7.7
   }
  ],
  "pending": [
@@ -201,7 +201,7 @@
    "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권28% · 체크4/6 · 손절폭6.7%"
   }
  ],
- "trades": 67,
+ "trades": 68,
  "win_trades": 33,
  "pos_cap_pct": 33.3,
  "cap_violations": [],
@@ -209,17 +209,17 @@
  "fx": 1338.54,
  "stats": {
   "all": {
-   "n": 67,
+   "n": 68,
    "win": 33,
    "win_rate": 49,
-   "avg_r": -0.06
+   "avg_r": -0.08
   },
   "by_mode": {
    "full": {
-    "n": 37,
+    "n": 38,
     "win": 17,
-    "win_rate": 46,
-    "avg_r": -0.09
+    "win_rate": 45,
+    "avg_r": -0.11
    },
    "half": {
     "n": 20,
@@ -235,10 +235,10 @@
    }
   },
   "fresh": {
-   "n": 65,
+   "n": 66,
    "win": 32,
-   "win_rate": 49,
-   "avg_r": -0.06
+   "win_rate": 48,
+   "avg_r": -0.08
   },
   "stale": {
    "n": 2,
@@ -248,10 +248,10 @@
   },
   "by_stage": {
    "3": {
-    "n": 65,
+    "n": 66,
     "win": 32,
-    "win_rate": 49,
-    "avg_r": -0.05
+    "win_rate": 48,
+    "avg_r": -0.07
    },
    "4": {
     "n": 2,
@@ -268,16 +268,52 @@
     "avg_r": -0.33
    },
    "USD": {
-    "n": 54,
+    "n": 55,
     "win": 29,
-    "win_rate": 54,
-    "avg_r": 0.0
+    "win_rate": 53,
+    "avg_r": -0.01
    }
   },
   "slip_entry_pct": -0.39,
-  "slip_stop_pct": -0.77
+  "slip_stop_pct": -0.75
  },
  "closed": [
+  {
+   "code": "DCI",
+   "name": "Donaldson Company, Inc.",
+   "ccy": "USD",
+   "ctx": {
+    "mode": "full",
+    "fresh": true,
+    "stage": 3,
+    "rp": 17,
+    "rec": 3,
+    "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권17% · 체크3/6 · 손절폭4.7%"
+   },
+   "plan": {
+    "entry": 85.36,
+    "stop": 81.36,
+    "target": 93.36,
+    "pb": 82.7042,
+    "tactic": "full"
+   },
+   "fill": {
+    "avg": 85.36,
+    "q": 62
+   },
+   "exits": [
+    {
+     "d": "2026-11-21",
+     "q": 62,
+     "price": 81.18,
+     "note": "손절"
+    }
+   ],
+   "opened": "2026-11-18",
+   "closed": "2026-11-21",
+   "pl": -346896,
+   "r": -1.05
+  },
   {
    "code": "DOLE",
    "name": "Dole plc",
@@ -1381,42 +1417,6 @@
    "closed": "2026-10-01",
    "pl": -104163,
    "r": -1.06
-  },
-  {
-   "code": "039490",
-   "name": "키움증권",
-   "ccy": "KRW",
-   "ctx": {
-    "mode": "pullback",
-    "fresh": true,
-    "stage": 4,
-    "rp": 24,
-    "rec": 4,
-    "basis": "🔥 갓 전환(추세선 부근) · ④ 전환 확정 ⭐ · 저점권24% · 체크4/6 · 손절폭9.6%"
-   },
-   "plan": {
-    "entry": 274500.0,
-    "stop": 248272.3285,
-    "target": 326955.3429,
-    "pb": 260356.25,
-    "tactic": "pullback"
-   },
-   "fill": {
-    "avg": 260356.25,
-    "q": 25
-   },
-   "exits": [
-    {
-     "d": "2026-10-01",
-     "q": 25,
-     "price": 247000.0,
-     "note": "손절"
-    }
-   ],
-   "opened": "2026-09-22",
-   "closed": "2026-10-01",
-   "pl": -333906,
-   "r": -1.11
   }
  ],
  "hist": [
@@ -1978,10 +1978,37 @@
   },
   {
    "d": "2026-11-21",
-   "v": 95540272
+   "v": 95462630
   }
  ],
  "log": [
+  {
+   "d": "2026-11-21",
+   "type": "buy",
+   "code": "ADC",
+   "name": "Agree Realty Corporation",
+   "q": 74,
+   "price": 71.41,
+   "ccy": "USD",
+   "amt": 7073301,
+   "note": "즉시 분할 — 🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권40% · 체크3/6 · 손절폭3.6%",
+   "stop": 68.8512,
+   "target": 76.5276
+  },
+  {
+   "d": "2026-11-21",
+   "type": "sell",
+   "code": "DCI",
+   "name": "Donaldson Company, Inc.",
+   "q": 62,
+   "price": 81.18,
+   "ccy": "USD",
+   "amt": 6737086,
+   "note": "손절",
+   "pl": -346896,
+   "pl_pct": -4.9,
+   "r": -1.05
+  },
   {
    "d": "2026-11-21",
    "type": "buy",
@@ -2605,34 +2632,8 @@
    "pl": -17114,
    "pl_pct": -0.3,
    "r": -0.04
-  },
-  {
-   "d": "2026-10-23",
-   "type": "sell",
-   "code": "TRMB",
-   "name": "Trimble Inc.",
-   "q": 104,
-   "price": 63.585,
-   "ccy": "USD",
-   "amt": 8763071,
-   "note": "+1R 절반 익절",
-   "pl": 514745,
-   "pl_pct": 6.2
-  },
-  {
-   "d": "2026-10-23",
-   "type": "sell",
-   "code": "CHKP",
-   "name": "Check Point Software Technologies Ltd.",
-   "q": 20,
-   "price": 149.48,
-   "ccy": "USD",
-   "amt": 3961698,
-   "note": "+1R 절반 익절",
-   "pl": 291403,
-   "pl_pct": 7.9
   }
  ],
- "lane": "fast",
+ "lane": "bulk",
  "data_stale": []
 }
