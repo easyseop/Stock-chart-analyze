@@ -1,10 +1,10 @@
 {
- "generated_at": "2026-11-20T13:37:33.300776+09:00",
+ "generated_at": "2026-11-20T14:05:15.995202+09:00",
  "updated": "2026-11-20",
  "start": 100000000,
  "cash": 32365075,
- "equity": 95565304,
- "ret_pct": -4.43,
+ "equity": 95548204,
+ "ret_pct": -4.45,
  "positions": [
   {
    "code": "CRAI",
@@ -19,7 +19,7 @@
    "opened": "2026-10-01",
    "pl_krw": 1121978,
    "pl_pct": 32.11,
-   "price_age_min": 79.8
+   "price_age_min": 107.6
   },
   {
    "code": "COST",
@@ -34,7 +34,7 @@
    "opened": "2026-10-07",
    "pl_krw": 200308,
    "pl_pct": 15.99,
-   "price_age_min": 80.0
+   "price_age_min": 107.7
   },
   {
    "code": "PEG",
@@ -49,7 +49,7 @@
    "opened": "2026-11-05",
    "pl_krw": 50212,
    "pl_pct": 1.86,
-   "price_age_min": 64.8
+   "price_age_min": 92.5
   },
   {
    "code": "ZTS",
@@ -64,7 +64,7 @@
    "opened": "2026-11-06",
    "pl_krw": -211075,
    "pl_pct": -2.73,
-   "price_age_min": 55.2
+   "price_age_min": 83.0
   },
   {
    "code": "PEP",
@@ -79,7 +79,7 @@
    "opened": "2026-11-07",
    "pl_krw": -306689,
    "pl_pct": -1.57,
-   "price_age_min": 64.8
+   "price_age_min": 92.5
   },
   {
    "code": "323410",
@@ -87,14 +87,14 @@
    "ccy": "KRW",
    "q": 171,
    "avg": 20300.0,
-   "price": 21700.0,
+   "price": 21600.0,
    "stop": 20300.0,
    "target": 22731.7747,
    "half_done": true,
    "opened": "2026-11-12",
-   "pl_krw": 239400,
-   "pl_pct": 6.9,
-   "price_age_min": 5.0
+   "pl_krw": 222300,
+   "pl_pct": 6.4,
+   "price_age_min": 8.9
   },
   {
    "code": "BEPC",
@@ -109,7 +109,7 @@
    "opened": "2026-11-13",
    "pl_krw": -85759,
    "pl_pct": -0.78,
-   "price_age_min": 83.3
+   "price_age_min": 111.1
   },
   {
    "code": "WWD",
@@ -124,7 +124,7 @@
    "opened": "2026-11-16",
    "pl_krw": 249105,
    "pl_pct": 4.16,
-   "price_age_min": 55.9
+   "price_age_min": 83.6
   },
   {
    "code": "DCI",
@@ -139,7 +139,7 @@
    "opened": "2026-11-18",
    "pl_krw": -208365,
    "pl_pct": -2.96,
-   "price_age_min": 78.8
+   "price_age_min": 106.6
   }
  ],
  "pending": [
@@ -196,33 +196,6 @@
     "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권28% · 체크4/6 · 손절폭6.7%"
    },
    "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권28% · 체크4/6 · 손절폭6.7%"
-  },
-  {
-   "code": "017670",
-   "name": "SK텔레콤",
-   "ccy": "KRW",
-   "limit": 70619.7,
-   "stop": 64195.9292,
-   "target": 90008.1416,
-   "q": 60,
-   "created": "2026-11-20",
-   "atr": 4302.0354,
-   "plan": {
-    "entry": 72800.0,
-    "stop": 64195.9292,
-    "target": 90008.1416,
-    "pb": 70619.7,
-    "tactic": "pullback"
-   },
-   "ctx": {
-    "mode": "pullback",
-    "fresh": false,
-    "stage": 3,
-    "rp": 23,
-    "rec": 4,
-    "basis": "↗ 돌파후 진행(승률↓) · ③ 돌파후 횡보(대기) · 저점권23% · 체크4/6 · 손절폭11.8%"
-   },
-   "basis": "↗ 돌파후 진행(승률↓) · ③ 돌파후 횡보(대기) · 저점권23% · 체크4/6 · 손절폭11.8%"
   }
  ],
  "trades": 67,
@@ -1998,10 +1971,21 @@
   },
   {
    "d": "2026-11-20",
-   "v": 95565304
+   "v": 95548204
   }
  ],
  "log": [
+  {
+   "d": "2026-11-20",
+   "type": "cancel",
+   "code": "017670",
+   "name": "SK텔레콤",
+   "q": 0,
+   "price": 70100.0,
+   "ccy": "KRW",
+   "amt": 0,
+   "note": "지정가 취소 — 신호 부패: 제외 게이트 — 하락추세/방어선 이탈"
+  },
   {
    "d": "2026-11-20",
    "type": "sell",
@@ -2640,20 +2624,6 @@
    "note": "즉시 분할 — 🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권29% · 체크3/6 · 손절폭5.0%",
    "stop": 151.7975,
    "target": 175.6851
-  },
-  {
-   "d": "2026-10-22",
-   "type": "sell",
-   "code": "TSCO",
-   "name": "Tractor Supply Company",
-   "q": 88,
-   "price": 30.05,
-   "ccy": "USD",
-   "amt": 3510335,
-   "note": "손절(급락 즉시)",
-   "pl": -325918,
-   "pl_pct": -8.5,
-   "r": -0.68
   }
  ],
  "lane": "bulk",
