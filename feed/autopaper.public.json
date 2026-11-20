@@ -1,10 +1,10 @@
 {
- "generated_at": "2026-11-20T10:12:38.158848+09:00",
+ "generated_at": "2026-11-20T10:19:46.229217+09:00",
  "updated": "2026-11-20",
  "start": 100000000,
- "cash": 28671475,
- "equity": 95565304,
- "ret_pct": -4.43,
+ "cash": 32365075,
+ "equity": 95548204,
+ "ret_pct": -4.45,
  "positions": [
   {
    "code": "CRAI",
@@ -19,7 +19,7 @@
    "opened": "2026-10-01",
    "pl_krw": 1121978,
    "pl_pct": 32.11,
-   "price_age_min": 66.1
+   "price_age_min": 73.3
   },
   {
    "code": "COST",
@@ -34,7 +34,7 @@
    "opened": "2026-10-07",
    "pl_krw": 200308,
    "pl_pct": 15.99,
-   "price_age_min": 66.6
+   "price_age_min": 73.8
   },
   {
    "code": "PEG",
@@ -49,7 +49,7 @@
    "opened": "2026-11-05",
    "pl_krw": 50212,
    "pl_pct": 1.86,
-   "price_age_min": 65.5
+   "price_age_min": 72.7
   },
   {
    "code": "ZTS",
@@ -64,7 +64,7 @@
    "opened": "2026-11-06",
    "pl_krw": -211075,
    "pl_pct": -2.73,
-   "price_age_min": 65.5
+   "price_age_min": 72.7
   },
   {
    "code": "PEP",
@@ -79,22 +79,22 @@
    "opened": "2026-11-07",
    "pl_krw": -306689,
    "pl_pct": -1.57,
-   "price_age_min": 65.5
+   "price_age_min": 72.7
   },
   {
    "code": "323410",
    "name": "카카오뱅크",
    "ccy": "KRW",
-   "q": 342,
+   "q": 171,
    "avg": 20300.0,
-   "price": 21650.0,
-   "stop": 19084.1126,
+   "price": 21600.0,
+   "stop": 20300.0,
    "target": 22731.7747,
-   "half_done": false,
+   "half_done": true,
    "opened": "2026-11-12",
-   "pl_krw": 461700,
-   "pl_pct": 6.65,
-   "price_age_min": 6.4
+   "pl_krw": 222300,
+   "pl_pct": 6.4,
+   "price_age_min": 5.6
   },
   {
    "code": "BEPC",
@@ -109,7 +109,7 @@
    "opened": "2026-11-13",
    "pl_krw": -85759,
    "pl_pct": -0.78,
-   "price_age_min": 65.5
+   "price_age_min": 72.7
   },
   {
    "code": "WWD",
@@ -124,7 +124,7 @@
    "opened": "2026-11-16",
    "pl_krw": 249105,
    "pl_pct": 4.16,
-   "price_age_min": 68.4
+   "price_age_min": 75.5
   },
   {
    "code": "DCI",
@@ -139,7 +139,7 @@
    "opened": "2026-11-18",
    "pl_krw": -208365,
    "pl_pct": -2.96,
-   "price_age_min": 65.5
+   "price_age_min": 72.6
   }
  ],
  "pending": [
@@ -1998,10 +1998,23 @@
   },
   {
    "d": "2026-11-20",
-   "v": 95565304
+   "v": 95548204
   }
  ],
  "log": [
+  {
+   "d": "2026-11-20",
+   "type": "sell",
+   "code": "323410",
+   "name": "카카오뱅크",
+   "q": 171,
+   "price": 21600.0,
+   "ccy": "KRW",
+   "amt": 3693600,
+   "note": "+1R 절반 익절",
+   "pl": 222300,
+   "pl_pct": 6.4
+  },
   {
    "d": "2026-11-20",
    "type": "order",
@@ -2641,17 +2654,6 @@
    "pl": -325918,
    "pl_pct": -8.5,
    "r": -0.68
-  },
-  {
-   "d": "2026-10-22",
-   "type": "cancel",
-   "code": "251270",
-   "name": "넷마블",
-   "q": 0,
-   "price": 34100.0,
-   "ccy": "KRW",
-   "amt": 0,
-   "note": "지정가 취소 — 신호 부패: 제외 게이트 — 저유동성(잡주)"
   }
  ],
  "lane": "bulk",
