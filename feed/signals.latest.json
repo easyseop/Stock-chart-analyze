@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated_at": "2026-11-23T13:07:59+09:00",
+ "generated_at": "2026-11-23T13:17:25+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "a_ablation": [
   {
@@ -14,10 +14,10 @@
   {
    "code": "090430",
    "gate": "rp",
-   "range_pos": 0.5587,
-   "runup63": -0.0152,
+   "range_pos": 0.56,
+   "runup63": -0.0145,
    "stage": 3,
-   "price": 135900.0
+   "price": 136000.0
   },
   {
    "code": "BMRN",
@@ -92,9 +92,9 @@
    "밸류영역 밖(지지대 아님)": 535,
    "추락 중(범위 1%)": 469,
    "추락 중(범위 2%)": 224,
-   "추락 중(범위 3%)": 165,
+   "추락 중(범위 3%)": 164,
    "매물대 정보 없음": 160,
-   "추락 중(범위 4%)": 126,
+   "추락 중(범위 4%)": 127,
    "추락 중(범위 5%)": 101
   }
  },
@@ -191,16 +191,16 @@
    "group": "now",
    "entry_kind": "now",
    "stage": 3,
-   "price": 36950.0,
-   "entry": 36950.0,
-   "stop": 34061.5472,
-   "target": 42726.9057,
+   "price": 37050.0,
+   "entry": 37050.0,
+   "stop": 34161.5472,
+   "target": 42826.9057,
    "shares_1pct": 34,
-   "range_pos": 0.0863,
+   "range_pos": 0.089,
    "norm": 4.7,
    "bear_share": 0.25,
    "fresh": false,
-   "break_gap": 0.0759,
+   "break_gap": 0.0788,
    "earnings_d": null,
    "tactic": {
     "stop_pct": 7.8,
@@ -1185,24 +1185,24 @@
    "group": "watch",
    "entry_kind": "now",
    "stage": 1,
-   "price": 178400.0,
-   "entry": 178400.0,
-   "stop": 167639.32,
-   "target": 199921.36,
+   "price": 178200.0,
+   "entry": 178200.0,
+   "stop": 167439.32,
+   "target": 199721.36,
    "shares_1pct": 9,
-   "range_pos": 0.1175,
+   "range_pos": 0.1151,
    "norm": -0.0,
    "bear_share": 0.25,
    "fresh": true,
-   "break_gap": -0.0082,
+   "break_gap": -0.0094,
    "earnings_d": null,
    "tactic": {
     "stop_pct": 6.0,
     "pb_price": 172466.6667,
-    "pb_stop_pct": 2.8,
+    "pb_stop_pct": 2.9,
     "mode": "half",
     "label": "⚖ 반반 진입",
-    "desc": "손절폭 6.0% — 절반은 현재가, 절반은 눌림 172,467원 지정가(거기선 손절폭 2.8%)"
+    "desc": "손절폭 6.0% — 절반은 현재가, 절반은 눌림 172,467원 지정가(거기선 손절폭 2.9%)"
    }
   },
   {
