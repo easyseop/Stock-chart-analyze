@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated_at": "2026-11-23T15:29:58+09:00",
+ "generated_at": "2026-11-23T16:14:16+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "a_ablation": [
   {
@@ -14,10 +14,10 @@
   {
    "code": "090430",
    "gate": "rp",
-   "range_pos": 0.568,
-   "runup63": -0.0101,
+   "range_pos": 0.5573,
+   "runup63": -0.0159,
    "stage": 3,
-   "price": 136600.0
+   "price": 135800.0
   },
   {
    "code": "BMRN",
@@ -99,34 +99,6 @@
   }
  },
  "signals": [
-  {
-   "id": "051900-2026-11-23-now",
-   "code": "051900",
-   "name": "LG생활건강",
-   "ccy": "KRW",
-   "group": "now",
-   "entry_kind": "now",
-   "stage": 3,
-   "price": 246000.0,
-   "entry": 246000.0,
-   "stop": 225076.7091,
-   "target": 287846.5819,
-   "shares_1pct": 4,
-   "range_pos": 0.2869,
-   "norm": 4.7,
-   "bear_share": 0.25,
-   "fresh": true,
-   "break_gap": 0.0061,
-   "earnings_d": null,
-   "tactic": {
-    "stop_pct": 8.5,
-    "pb_price": 225173.6111,
-    "pb_stop_pct": 0.0,
-    "mode": "pullback",
-    "label": "⏳ 눌림 지정가만",
-    "desc": "지금 추격 금지(손절폭 8.5%) — <b>225,174원 눌림 지정가만</b>. 눌리면 손절폭 0.0%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
-   }
-  },
   {
    "id": "GTY-2026-11-23-now",
    "code": "GTY",
@@ -219,16 +191,16 @@
    "group": "now",
    "entry_kind": "now",
    "stage": 3,
-   "price": 37000.0,
-   "entry": 37000.0,
-   "stop": 34111.5472,
-   "target": 42776.9057,
+   "price": 36800.0,
+   "entry": 36800.0,
+   "stop": 33911.5472,
+   "target": 42576.9057,
    "shares_1pct": 34,
-   "range_pos": 0.0877,
+   "range_pos": 0.0822,
    "norm": 4.7,
    "bear_share": 0.25,
    "fresh": false,
-   "break_gap": 0.0773,
+   "break_gap": 0.0715,
    "earnings_d": null,
    "tactic": {
     "stop_pct": 7.8,
@@ -247,24 +219,24 @@
    "group": "now",
    "entry_kind": "now",
    "stage": 3,
-   "price": 20850.0,
-   "entry": 20850.0,
-   "stop": 19599.0331,
-   "target": 23351.9338,
+   "price": 20750.0,
+   "entry": 20750.0,
+   "stop": 19491.8903,
+   "target": 23266.2195,
    "shares_1pct": 79,
-   "range_pos": 0.1746,
+   "range_pos": 0.1651,
    "norm": -0.0,
    "bear_share": 0.25,
    "fresh": false,
-   "break_gap": 0.07,
+   "break_gap": 0.0649,
    "earnings_d": null,
    "tactic": {
-    "stop_pct": 6.0,
+    "stop_pct": 6.1,
     "pb_price": 20033.25,
-    "pb_stop_pct": 2.2,
-    "mode": "half",
-    "label": "⚖ 반반 진입",
-    "desc": "손절폭 6.0% · 돌파후 진행 — 절반은 현재가, 절반은 눌림 20,033원 지정가(거기선 손절폭 2.2%)"
+    "pb_stop_pct": 2.7,
+    "mode": "pullback",
+    "label": "⏳ 눌림 지정가만",
+    "desc": "지금 추격 금지(손절폭 6.1% · 돌파후 진행) — <b>20,033원 눌림 지정가만</b>. 눌리면 손절폭 2.7%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
    }
   },
   {
@@ -1178,6 +1150,34 @@
    }
   },
   {
+   "id": "051900-2026-11-23-watch",
+   "code": "051900",
+   "name": "LG생활건강",
+   "ccy": "KRW",
+   "group": "watch",
+   "entry_kind": "now",
+   "stage": 1,
+   "price": 245500.0,
+   "entry": 245500.0,
+   "stop": 224576.7091,
+   "target": 287346.5819,
+   "shares_1pct": 4,
+   "range_pos": 0.2829,
+   "norm": 4.7,
+   "bear_share": 0.25,
+   "fresh": true,
+   "break_gap": 0.0041,
+   "earnings_d": null,
+   "tactic": {
+    "stop_pct": 8.5,
+    "pb_price": 225173.6111,
+    "pb_stop_pct": 0.3,
+    "mode": "pullback",
+    "label": "⏳ 눌림 지정가만",
+    "desc": "지금 추격 금지(손절폭 8.5%) — <b>225,174원 눌림 지정가만</b>. 눌리면 손절폭 0.3%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
+   }
+  },
+  {
    "id": "O-2026-11-23-watch",
    "code": "O",
    "name": "Realty Income Corporation",
@@ -1203,34 +1203,6 @@
     "mode": "full",
     "label": "⚡ 즉시 분할",
     "desc": "손절폭 3.3%로 타이트 — 현재가에서 1~2회 분할 매수. 기다리는 이득보다 놓치는 비용이 큼"
-   }
-  },
-  {
-   "id": "097950-2026-11-23-watch",
-   "code": "097950",
-   "name": "CJ제일제당",
-   "ccy": "KRW",
-   "group": "watch",
-   "entry_kind": "now",
-   "stage": 1,
-   "price": 176700.0,
-   "entry": 176700.0,
-   "stop": 165939.32,
-   "target": 198221.36,
-   "shares_1pct": 9,
-   "range_pos": 0.0971,
-   "norm": -0.0,
-   "bear_share": 0.25,
-   "fresh": true,
-   "break_gap": -0.0177,
-   "earnings_d": null,
-   "tactic": {
-    "stop_pct": 6.1,
-    "pb_price": 172466.6667,
-    "pb_stop_pct": 3.8,
-    "mode": "half",
-    "label": "⚖ 반반 진입",
-    "desc": "손절폭 6.1% — 절반은 현재가, 절반은 눌림 172,467원 지정가(거기선 손절폭 3.8%)"
    }
   },
   {
