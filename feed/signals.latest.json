@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated_at": "2026-11-23T16:14:16+09:00",
+ "generated_at": "2026-11-23T16:28:48+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "a_ablation": [
   {
@@ -86,16 +86,16 @@
  ],
  "shelf_debug": {
   "ok": 3,
-  "watch": 121,
+  "watch": 122,
   "reasons": {
-   "추락 중(범위 0%)": 657,
-   "밸류영역 밖(지지대 아님)": 534,
-   "추락 중(범위 1%)": 455,
-   "추락 중(범위 2%)": 231,
-   "추락 중(범위 3%)": 168,
+   "추락 중(범위 0%)": 665,
+   "밸류영역 밖(지지대 아님)": 531,
+   "추락 중(범위 1%)": 467,
+   "추락 중(범위 2%)": 217,
+   "추락 중(범위 3%)": 167,
    "매물대 정보 없음": 160,
    "추락 중(범위 4%)": 126,
-   "추락 중(범위 5%)": 105
+   "추락 중(범위 5%)": 102
   }
  },
  "signals": [
@@ -474,6 +474,46 @@
    "trend_above_200": false
   },
   {
+   "id": "222800-2026-11-23-shelf-watch",
+   "code": "222800",
+   "name": "심텍",
+   "ccy": "KRW",
+   "group": "shelf_watch",
+   "entry_kind": "shelf_watch",
+   "stage": 0,
+   "price": 102100.0,
+   "entry": 102100.0,
+   "stop": 94962.0,
+   "target": 115468.75,
+   "shares_1pct": 0,
+   "range_pos": 0.4254,
+   "norm": -1.9,
+   "bear_share": 0.25,
+   "shelf": {
+    "poc": 51256.25,
+    "val": 45418.75,
+    "vah": 115468.75,
+    "rr": 1.87,
+    "overhead": 0.462,
+    "reason": "반등 미확인(터치)",
+    "history_bars": 1934,
+    "profile_pnl_proxy": 0.1328,
+    "runup252": 0.9264,
+    "checks": {
+     "터치": false,
+     "회복": true,
+     "상단마감": true,
+     "거래량": true,
+     "신저가아님": true
+    }
+   },
+   "fresh": false,
+   "break_gap": null,
+   "earnings_d": null,
+   "tactic": "watch",
+   "trend_above_200": true
+  },
+  {
    "id": "BAM-2026-11-23-shelf-watch",
    "code": "BAM",
    "name": "Brookfield Asset Management Inc",
@@ -544,46 +584,6 @@
      "회복": true,
      "상단마감": true,
      "거래량": true,
-     "신저가아님": true
-    }
-   },
-   "fresh": false,
-   "break_gap": null,
-   "earnings_d": null,
-   "tactic": "watch",
-   "trend_above_200": true
-  },
-  {
-   "id": "009420-2026-11-23-shelf-watch",
-   "code": "009420",
-   "name": "한올바이오파마",
-   "ccy": "KRW",
-   "group": "shelf_watch",
-   "entry_kind": "shelf_watch",
-   "stage": 0,
-   "price": 52200.0,
-   "entry": 52200.0,
-   "stop": 49490.0,
-   "target": 56418.75,
-   "shares_1pct": 0,
-   "range_pos": 0.4512,
-   "norm": -4.9,
-   "bear_share": 0.375,
-   "shelf": {
-    "poc": 48522.9167,
-    "val": 42206.25,
-    "vah": 56418.75,
-    "rr": 1.56,
-    "overhead": 0.414,
-    "reason": "반등 미확인(거래량)",
-    "history_bars": 1934,
-    "profile_pnl_proxy": 0.0159,
-    "runup252": 0.2826,
-    "checks": {
-     "터치": true,
-     "회복": true,
-     "상단마감": true,
-     "거래량": false,
      "신저가아님": true
     }
    },
