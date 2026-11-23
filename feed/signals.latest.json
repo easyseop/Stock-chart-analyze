@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated_at": "2026-11-23T14:57:30+09:00",
+ "generated_at": "2026-11-23T15:22:04+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "a_ablation": [
   {
@@ -14,10 +14,10 @@
   {
    "code": "090430",
    "gate": "rp",
-   "range_pos": 0.5653,
-   "runup63": -0.0116,
+   "range_pos": 0.5693,
+   "runup63": -0.0094,
    "stage": 3,
-   "price": 136400.0
+   "price": 136700.0
   },
   {
    "code": "BMRN",
@@ -88,14 +88,14 @@
   "ok": 3,
   "watch": 121,
   "reasons": {
-   "추락 중(범위 0%)": 655,
-   "밸류영역 밖(지지대 아님)": 535,
-   "추락 중(범위 1%)": 458,
-   "추락 중(범위 2%)": 227,
+   "추락 중(범위 0%)": 657,
+   "밸류영역 밖(지지대 아님)": 532,
+   "추락 중(범위 1%)": 453,
+   "추락 중(범위 2%)": 229,
    "추락 중(범위 3%)": 171,
    "매물대 정보 없음": 160,
-   "추락 중(범위 4%)": 126,
-   "추락 중(범위 5%)": 103
+   "추락 중(범위 4%)": 128,
+   "추락 중(범위 5%)": 104
   }
  },
  "signals": [
@@ -107,24 +107,24 @@
    "group": "now",
    "entry_kind": "now",
    "stage": 3,
-   "price": 246500.0,
-   "entry": 246500.0,
-   "stop": 225576.7091,
-   "target": 288346.5819,
+   "price": 246000.0,
+   "entry": 246000.0,
+   "stop": 225076.7091,
+   "target": 287846.5819,
    "shares_1pct": 4,
-   "range_pos": 0.2908,
+   "range_pos": 0.2869,
    "norm": 4.7,
    "bear_share": 0.25,
    "fresh": true,
-   "break_gap": 0.0082,
+   "break_gap": 0.0061,
    "earnings_d": null,
    "tactic": {
     "stop_pct": 8.5,
-    "pb_price": null,
-    "pb_stop_pct": null,
+    "pb_price": 225173.6111,
+    "pb_stop_pct": 0.0,
     "mode": "pullback",
     "label": "⏳ 눌림 지정가만",
-    "desc": "지금 추격 금지(손절폭 8.5%) — 받칠 지지에 눌릴 때까지 대기"
+    "desc": "지금 추격 금지(손절폭 8.5%) — <b>225,174원 눌림 지정가만</b>. 눌리면 손절폭 0.0%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
    }
   },
   {
@@ -240,6 +240,34 @@
    }
   },
   {
+   "id": "323410-2026-11-23-now",
+   "code": "323410",
+   "name": "카카오뱅크",
+   "ccy": "KRW",
+   "group": "now",
+   "entry_kind": "now",
+   "stage": 3,
+   "price": 20900.0,
+   "entry": 20900.0,
+   "stop": 19649.0331,
+   "target": 23401.9338,
+   "shares_1pct": 79,
+   "range_pos": 0.1794,
+   "norm": -0.0,
+   "bear_share": 0.25,
+   "fresh": false,
+   "break_gap": 0.0726,
+   "earnings_d": null,
+   "tactic": {
+    "stop_pct": 6.0,
+    "pb_price": 20033.25,
+    "pb_stop_pct": 1.9,
+    "mode": "half",
+    "label": "⚖ 반반 진입",
+    "desc": "손절폭 6.0% · 돌파후 진행 — 절반은 현재가, 절반은 눌림 20,033원 지정가(거기선 손절폭 1.9%)"
+   }
+  },
+  {
    "id": "CHRW-2026-11-23-now",
    "code": "CHRW",
    "name": "C.H. Robinson Worldwide, Inc.",
@@ -312,46 +340,6 @@
    "runup252": 0.1441,
    "fresh": false,
    "tactic": "shadow"
-  },
-  {
-   "id": "MIRM-2026-11-23-shelf-watch",
-   "code": "MIRM",
-   "name": "Mirum Pharmaceuticals, Inc.",
-   "ccy": "USD",
-   "group": "shelf_watch",
-   "entry_kind": "shelf_watch",
-   "stage": 0,
-   "price": 96.13,
-   "entry": 96.13,
-   "stop": 89.1408,
-   "target": 109.135,
-   "shares_1pct": 0,
-   "range_pos": 0.4927,
-   "norm": 7.5,
-   "bear_share": 0.375,
-   "shelf": {
-    "poc": 95.225,
-    "val": 84.097,
-    "vah": 109.135,
-    "rr": 1.86,
-    "overhead": 0.445,
-    "reason": "반등 미확인(상단마감)",
-    "history_bars": 1848,
-    "profile_pnl_proxy": 0.0091,
-    "runup252": 0.39,
-    "checks": {
-     "터치": true,
-     "회복": true,
-     "상단마감": false,
-     "거래량": true,
-     "신저가아님": true
-    }
-   },
-   "fresh": false,
-   "break_gap": null,
-   "earnings_d": null,
-   "tactic": "watch",
-   "trend_above_200": false
   },
   {
    "id": "CAE-2026-11-23-shelf-watch",
@@ -584,6 +572,46 @@
      "회복": true,
      "상단마감": true,
      "거래량": true,
+     "신저가아님": true
+    }
+   },
+   "fresh": false,
+   "break_gap": null,
+   "earnings_d": null,
+   "tactic": "watch",
+   "trend_above_200": true
+  },
+  {
+   "id": "009420-2026-11-23-shelf-watch",
+   "code": "009420",
+   "name": "한올바이오파마",
+   "ccy": "KRW",
+   "group": "shelf_watch",
+   "entry_kind": "shelf_watch",
+   "stage": 0,
+   "price": 52200.0,
+   "entry": 52200.0,
+   "stop": 49490.0,
+   "target": 56418.75,
+   "shares_1pct": 0,
+   "range_pos": 0.4512,
+   "norm": -4.9,
+   "bear_share": 0.375,
+   "shelf": {
+    "poc": 48522.9167,
+    "val": 42206.25,
+    "vah": 56418.75,
+    "rr": 1.56,
+    "overhead": 0.414,
+    "reason": "반등 미확인(거래량)",
+    "history_bars": 1934,
+    "profile_pnl_proxy": 0.0159,
+    "runup252": 0.2826,
+    "checks": {
+     "터치": true,
+     "회복": true,
+     "상단마감": true,
+     "거래량": false,
      "신저가아님": true
     }
    },
@@ -1185,24 +1213,24 @@
    "group": "watch",
    "entry_kind": "now",
    "stage": 1,
-   "price": 177700.0,
-   "entry": 177700.0,
-   "stop": 166939.32,
-   "target": 199221.36,
+   "price": 176900.0,
+   "entry": 176900.0,
+   "stop": 166139.32,
+   "target": 198421.36,
    "shares_1pct": 9,
-   "range_pos": 0.1091,
+   "range_pos": 0.0995,
    "norm": -0.0,
    "bear_share": 0.25,
    "fresh": true,
-   "break_gap": -0.0121,
+   "break_gap": -0.0166,
    "earnings_d": null,
    "tactic": {
     "stop_pct": 6.1,
     "pb_price": 172466.6667,
-    "pb_stop_pct": 3.2,
+    "pb_stop_pct": 3.7,
     "mode": "half",
     "label": "⚖ 반반 진입",
-    "desc": "손절폭 6.1% — 절반은 현재가, 절반은 눌림 172,467원 지정가(거기선 손절폭 3.2%)"
+    "desc": "손절폭 6.1% — 절반은 현재가, 절반은 눌림 172,467원 지정가(거기선 손절폭 3.7%)"
    }
   },
   {
