@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated_at": "2026-11-23T10:21:27+09:00",
+ "generated_at": "2026-11-23T10:46:24+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "a_ablation": [
   {
@@ -10,6 +10,14 @@
    "runup63": 0.0194,
    "stage": 4,
    "price": 94.0199966430664
+  },
+  {
+   "code": "090430",
+   "gate": "rp",
+   "range_pos": 0.58,
+   "runup63": -0.0036,
+   "stage": 3,
+   "price": 137500.0
   },
   {
    "code": "BMRN",
@@ -80,45 +88,17 @@
   "ok": 3,
   "watch": 121,
   "reasons": {
-   "추락 중(범위 0%)": 676,
-   "밸류영역 밖(지지대 아님)": 563,
-   "추락 중(범위 1%)": 439,
-   "추락 중(범위 2%)": 205,
-   "추락 중(범위 3%)": 164,
+   "추락 중(범위 0%)": 681,
+   "밸류영역 밖(지지대 아님)": 547,
+   "추락 중(범위 1%)": 449,
+   "추락 중(범위 2%)": 210,
+   "추락 중(범위 3%)": 161,
    "매물대 정보 없음": 160,
-   "추락 중(범위 4%)": 119,
-   "추락 중(범위 5%)": 97
+   "추락 중(범위 4%)": 122,
+   "추락 중(범위 5%)": 101
   }
  },
  "signals": [
-  {
-   "id": "051900-2026-11-23-now",
-   "code": "051900",
-   "name": "LG생활건강",
-   "ccy": "KRW",
-   "group": "now",
-   "entry_kind": "now",
-   "stage": 3,
-   "price": 249000.0,
-   "entry": 249000.0,
-   "stop": 228076.7091,
-   "target": 290846.5819,
-   "shares_1pct": 4,
-   "range_pos": 0.3108,
-   "norm": 4.7,
-   "bear_share": 0.25,
-   "fresh": true,
-   "break_gap": 0.0184,
-   "earnings_d": null,
-   "tactic": {
-    "stop_pct": 8.4,
-    "pb_price": 236616.0,
-    "pb_stop_pct": 3.6,
-    "mode": "pullback",
-    "label": "⏳ 눌림 지정가만",
-    "desc": "지금 추격 금지(손절폭 8.4% · 단기 이격) — <b>236,616원 눌림 지정가만</b>. 눌리면 손절폭 3.6%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
-   }
-  },
   {
    "id": "GTY-2026-11-23-now",
    "code": "GTY",
@@ -211,24 +191,24 @@
    "group": "now",
    "entry_kind": "now",
    "stage": 3,
-   "price": 37450.0,
-   "entry": 37450.0,
-   "stop": 34590.1186,
-   "target": 43169.7628,
+   "price": 37200.0,
+   "entry": 37200.0,
+   "stop": 34340.1186,
+   "target": 42919.7628,
    "shares_1pct": 34,
-   "range_pos": 0.1,
+   "range_pos": 0.0932,
    "norm": 4.7,
    "bear_share": 0.25,
    "fresh": false,
-   "break_gap": 0.0905,
+   "break_gap": 0.0832,
    "earnings_d": null,
    "tactic": {
-    "stop_pct": 7.6,
+    "stop_pct": 7.7,
     "pb_price": null,
     "pb_stop_pct": null,
     "mode": "pullback",
     "label": "⏳ 눌림 지정가만",
-    "desc": "지금 추격 금지(손절폭 7.6% · 돌파후 진행) — 받칠 지지에 눌릴 때까지 대기"
+    "desc": "지금 추격 금지(손절폭 7.7% · 돌파후 진행) — 받칠 지지에 눌릴 때까지 대기"
    }
   },
   {
@@ -1065,34 +1045,6 @@
    "tactic": null
   },
   {
-   "id": "024110-2026-11-23-watch",
-   "code": "024110",
-   "name": "기업은행",
-   "ccy": "KRW",
-   "group": "watch",
-   "entry_kind": "now",
-   "stage": 1,
-   "price": 18940.0,
-   "entry": 18940.0,
-   "stop": 18068.7064,
-   "target": 20682.5872,
-   "shares_1pct": 114,
-   "range_pos": 0.0302,
-   "norm": 18.9,
-   "bear_share": 0.25,
-   "fresh": true,
-   "break_gap": -0.0179,
-   "earnings_d": null,
-   "tactic": {
-    "stop_pct": 4.6,
-    "pb_price": 18658.3333,
-    "pb_stop_pct": 3.2,
-    "mode": "full",
-    "label": "⚡ 즉시 분할",
-    "desc": "손절폭 4.6%로 타이트 — 현재가에서 1~2회 분할 매수. 기다리는 이득보다 놓치는 비용이 큼"
-   }
-  },
-  {
    "id": "SOMN-2026-11-23-watch",
    "code": "SOMN",
    "name": "Southern Company (The) 2025 Series A Corpo",
@@ -1170,6 +1122,34 @@
    }
   },
   {
+   "id": "051900-2026-11-23-watch",
+   "code": "051900",
+   "name": "LG생활건강",
+   "ccy": "KRW",
+   "group": "watch",
+   "entry_kind": "now",
+   "stage": 1,
+   "price": 245500.0,
+   "entry": 245500.0,
+   "stop": 224576.7091,
+   "target": 287346.5819,
+   "shares_1pct": 4,
+   "range_pos": 0.2829,
+   "norm": 4.7,
+   "bear_share": 0.25,
+   "fresh": true,
+   "break_gap": 0.0041,
+   "earnings_d": null,
+   "tactic": {
+    "stop_pct": 8.5,
+    "pb_price": 236616.0,
+    "pb_stop_pct": 5.1,
+    "mode": "pullback",
+    "label": "⏳ 눌림 지정가만",
+    "desc": "지금 추격 금지(손절폭 8.5%) — <b>236,616원 눌림 지정가만</b>. 눌리면 손절폭 5.1%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
+   }
+  },
+  {
    "id": "O-2026-11-23-watch",
    "code": "O",
    "name": "Realty Income Corporation",
@@ -1205,24 +1185,24 @@
    "group": "watch",
    "entry_kind": "now",
    "stage": 1,
-   "price": 179700.0,
-   "entry": 179700.0,
-   "stop": 169039.32,
-   "target": 201021.36,
+   "price": 178200.0,
+   "entry": 178200.0,
+   "stop": 167539.32,
+   "target": 199521.36,
    "shares_1pct": 9,
-   "range_pos": 0.1331,
+   "range_pos": 0.1151,
    "norm": -0.0,
    "bear_share": 0.25,
    "fresh": true,
-   "break_gap": -0.001,
+   "break_gap": -0.0094,
    "earnings_d": null,
    "tactic": {
-    "stop_pct": 5.9,
+    "stop_pct": 6.0,
     "pb_price": 172466.6667,
-    "pb_stop_pct": 2.0,
+    "pb_stop_pct": 2.9,
     "mode": "full",
     "label": "⚡ 즉시 분할",
-    "desc": "손절폭 5.9%로 타이트 — 현재가에서 1~2회 분할 매수. 기다리는 이득보다 놓치는 비용이 큼"
+    "desc": "손절폭 6.0%로 타이트 — 현재가에서 1~2회 분할 매수. 기다리는 이득보다 놓치는 비용이 큼"
    }
   },
   {
