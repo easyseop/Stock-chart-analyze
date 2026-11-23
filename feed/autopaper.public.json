@@ -1,10 +1,10 @@
 {
- "generated_at": "2026-11-24T01:16:16.476238+09:00",
+ "generated_at": "2026-11-24T01:31:20.400634+09:00",
  "updated": "2026-11-24",
  "start": 100000000,
  "cash": 20530946,
- "equity": 95654707,
- "ret_pct": -4.35,
+ "equity": 95714224,
+ "ret_pct": -4.29,
  "positions": [
   {
    "code": "CRAI",
@@ -12,14 +12,14 @@
    "ccy": "USD",
    "q": 16,
    "avg": 164.4,
-   "price": 217.19000244140625,
+   "price": 218.5500030517578,
    "stop": 207.21030732421875,
    "target": 186.8795,
    "half_done": true,
    "opened": "2026-10-01",
-   "pl_krw": 1134199,
-   "pl_pct": 32.11,
-   "price_age_min": 0.3
+   "pl_krw": 1163419,
+   "pl_pct": 32.94,
+   "price_age_min": 0.4
   },
   {
    "code": "COST",
@@ -27,14 +27,14 @@
    "ccy": "USD",
    "q": 1,
    "avg": 943.035,
-   "price": 1095.43994140625,
+   "price": 1095.81494140625,
    "stop": 1076.2644755859376,
    "target": 1003.1489,
    "half_done": true,
    "opened": "2026-10-07",
-   "pl_krw": 204652,
-   "pl_pct": 16.16,
-   "price_age_min": 0.3
+   "pl_krw": 205156,
+   "pl_pct": 16.2,
+   "price_age_min": 0.4
   },
   {
    "code": "PEG",
@@ -42,14 +42,14 @@
    "ccy": "USD",
    "q": 28,
    "avg": 72.76,
-   "price": 74.1500015258789,
+   "price": 74.16000366210938,
    "stop": 72.76,
    "target": 78.0347,
    "half_done": true,
    "opened": "2026-11-05",
-   "pl_krw": 52263,
-   "pl_pct": 1.91,
-   "price_age_min": 0.3
+   "pl_krw": 52639,
+   "pl_pct": 1.92,
+   "price_age_min": 0.4
   },
   {
    "code": "ZTS",
@@ -57,14 +57,14 @@
    "ccy": "USD",
    "q": 70,
    "avg": 83.06,
-   "price": 79.90499877929688,
+   "price": 79.69000244140625,
    "stop": 77.8186,
    "target": 93.5428,
    "half_done": false,
    "opened": "2026-11-06",
-   "pl_krw": -296562,
-   "pl_pct": -3.8,
-   "price_age_min": 0.3
+   "pl_krw": -316771,
+   "pl_pct": -4.06,
+   "price_age_min": 0.4
   },
   {
    "code": "PEP",
@@ -72,14 +72,14 @@
    "ccy": "USD",
    "q": 104,
    "avg": 141.22,
-   "price": 140.42080688476562,
+   "price": 140.28500366210938,
    "stop": 134.599,
    "target": 154.462,
    "half_done": false,
    "opened": "2026-11-07",
-   "pl_krw": -111610,
-   "pl_pct": -0.57,
-   "price_age_min": 0.3
+   "pl_krw": -130575,
+   "pl_pct": -0.66,
+   "price_age_min": 0.4
   },
   {
    "code": "323410",
@@ -94,7 +94,7 @@
    "opened": "2026-11-12",
    "pl_krw": 76950,
    "pl_pct": 2.22,
-   "price_age_min": 0.3
+   "price_age_min": 0.4
   },
   {
    "code": "BEPC",
@@ -102,14 +102,14 @@
    "ccy": "USD",
    "q": 269,
    "avg": 30.7,
-   "price": 30.434999465942383,
+   "price": 30.530000686645508,
    "stop": 28.9076,
    "target": 34.2848,
    "half_done": false,
    "opened": "2026-11-13",
-   "pl_krw": -95723,
-   "pl_pct": -0.86,
-   "price_age_min": 0.3
+   "pl_krw": -61407,
+   "pl_pct": -0.55,
+   "price_age_min": 0.4
   },
   {
    "code": "WWD",
@@ -117,14 +117,14 @@
    "ccy": "USD",
    "q": 7,
    "avg": 322.325,
-   "price": 349.82000732421875,
+   "price": 350.2049865722656,
    "stop": 322.325,
    "target": 373.694,
    "half_done": true,
    "opened": "2026-11-16",
-   "pl_krw": 258446,
-   "pl_pct": 8.53,
-   "price_age_min": 0.3
+   "pl_krw": 262065,
+   "pl_pct": 8.65,
+   "price_age_min": 0.4
   },
   {
    "code": "097950",
@@ -147,13 +147,13 @@
    "ccy": "USD",
    "q": 204,
    "avg": 25.325,
-   "price": 24.25,
+   "price": 24.399999618530273,
    "stop": 23.5582,
    "target": 28.8587,
    "half_done": false,
    "opened": "2026-11-21",
-   "pl_krw": -294480,
-   "pl_pct": -4.24,
+   "pl_krw": -253390,
+   "pl_pct": -3.65,
    "price_age_min": 0.3
   },
   {
@@ -162,13 +162,13 @@
    "ccy": "USD",
    "q": 74,
    "avg": 71.41,
-   "price": 70.80999755859375,
+   "price": 70.70500183105469,
    "stop": 68.8512,
    "target": 76.5276,
    "half_done": false,
    "opened": "2026-11-21",
-   "pl_krw": -59621,
-   "pl_pct": -0.84,
+   "pl_krw": -70055,
+   "pl_pct": -0.99,
    "price_age_min": 0.3
   }
  ],
@@ -1990,7 +1990,7 @@
   },
   {
    "d": "2026-11-24",
-   "v": 95654707
+   "v": 95714224
   }
  ],
  "log": [
