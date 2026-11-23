@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated_at": "2026-11-23T09:47:26+09:00",
+ "generated_at": "2026-11-23T10:11:55+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "a_ablation": [
   {
@@ -78,16 +78,16 @@
  ],
  "shelf_debug": {
   "ok": 3,
-  "watch": 119,
+  "watch": 121,
   "reasons": {
-   "추락 중(범위 0%)": 656,
-   "밸류영역 밖(지지대 아님)": 601,
-   "추락 중(범위 1%)": 429,
-   "추락 중(범위 2%)": 196,
+   "추락 중(범위 0%)": 670,
+   "밸류영역 밖(지지대 아님)": 567,
+   "추락 중(범위 1%)": 442,
+   "추락 중(범위 2%)": 206,
+   "추락 중(범위 3%)": 160,
    "매물대 정보 없음": 160,
-   "추락 중(범위 3%)": 156,
-   "추락 중(범위 4%)": 117,
-   "추락 중(범위 5%)": 95
+   "추락 중(범위 4%)": 120,
+   "추락 중(범위 5%)": 97
   }
  },
  "signals": [
@@ -99,24 +99,24 @@
    "group": "now",
    "entry_kind": "now",
    "stage": 3,
-   "price": 248500.0,
-   "entry": 248500.0,
-   "stop": 227576.7091,
-   "target": 290346.5819,
+   "price": 247500.0,
+   "entry": 247500.0,
+   "stop": 226576.7091,
+   "target": 289346.5819,
    "shares_1pct": 4,
-   "range_pos": 0.3068,
+   "range_pos": 0.2988,
    "norm": 4.7,
    "bear_share": 0.25,
    "fresh": true,
-   "break_gap": 0.0164,
+   "break_gap": 0.0123,
    "earnings_d": null,
    "tactic": {
-    "stop_pct": 8.4,
+    "stop_pct": 8.5,
     "pb_price": 236616.0,
-    "pb_stop_pct": 3.8,
+    "pb_stop_pct": 4.2,
     "mode": "pullback",
     "label": "⏳ 눌림 지정가만",
-    "desc": "지금 추격 금지(손절폭 8.4% · 단기 이격) — <b>236,616원 눌림 지정가만</b>. 눌리면 손절폭 3.8%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
+    "desc": "지금 추격 금지(손절폭 8.5% · 단기 이격) — <b>236,616원 눌림 지정가만</b>. 눌리면 손절폭 4.2%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
    }
   },
   {
@@ -278,36 +278,36 @@
    "tactic": "shadow"
   },
   {
-   "id": "MIRM-2026-11-23-shelf-watch",
-   "code": "MIRM",
-   "name": "Mirum Pharmaceuticals, Inc.",
-   "ccy": "USD",
+   "id": "003230-2026-11-23-shelf-watch",
+   "code": "003230",
+   "name": "삼양식품",
+   "ccy": "KRW",
    "group": "shelf_watch",
    "entry_kind": "shelf_watch",
    "stage": 0,
-   "price": 96.13,
-   "entry": 96.13,
-   "stop": 89.1408,
-   "target": 109.135,
+   "price": 1230000.0,
+   "entry": 1230000.0,
+   "stop": 1176000.0,
+   "target": 1329000.0,
    "shares_1pct": 0,
-   "range_pos": 0.4927,
-   "norm": 7.5,
-   "bear_share": 0.375,
+   "range_pos": 0.4323,
+   "norm": 5.7,
+   "bear_share": 0.125,
    "shelf": {
-    "poc": 95.225,
-    "val": 84.097,
-    "vah": 109.135,
-    "rr": 1.86,
-    "overhead": 0.445,
-    "reason": "반등 미확인(상단마감)",
-    "history_bars": 1848,
-    "profile_pnl_proxy": 0.0091,
-    "runup252": 0.39,
+    "poc": 1209000.0,
+    "val": 1137000.0,
+    "vah": 1329000.0,
+    "rr": 1.83,
+    "overhead": 0.545,
+    "reason": "반등 미확인(거래량)",
+    "history_bars": 1934,
+    "profile_pnl_proxy": -0.0086,
+    "runup252": -0.0292,
     "checks": {
      "터치": true,
      "회복": true,
-     "상단마감": false,
-     "거래량": true,
+     "상단마감": true,
+     "거래량": false,
      "신저가아님": true
     }
    },
@@ -315,7 +315,7 @@
    "break_gap": null,
    "earnings_d": null,
    "tactic": "watch",
-   "trend_above_200": false
+   "trend_above_200": true
   },
   {
    "id": "CAE-2026-11-23-shelf-watch",
@@ -1139,6 +1139,34 @@
     "mode": "full",
     "label": "⚡ 즉시 분할",
     "desc": "손절폭 3.3%로 타이트 — 현재가에서 1~2회 분할 매수. 기다리는 이득보다 놓치는 비용이 큼"
+   }
+  },
+  {
+   "id": "097950-2026-11-23-watch",
+   "code": "097950",
+   "name": "CJ제일제당",
+   "ccy": "KRW",
+   "group": "watch",
+   "entry_kind": "now",
+   "stage": 1,
+   "price": 179600.0,
+   "entry": 179600.0,
+   "stop": 168939.32,
+   "target": 200921.36,
+   "shares_1pct": 9,
+   "range_pos": 0.1319,
+   "norm": -0.0,
+   "bear_share": 0.25,
+   "fresh": true,
+   "break_gap": -0.0016,
+   "earnings_d": null,
+   "tactic": {
+    "stop_pct": 5.9,
+    "pb_price": 172466.6667,
+    "pb_stop_pct": 2.0,
+    "mode": "full",
+    "label": "⚡ 즉시 분할",
+    "desc": "손절폭 5.9%로 타이트 — 현재가에서 1~2회 분할 매수. 기다리는 이득보다 놓치는 비용이 큼"
    }
   },
   {
