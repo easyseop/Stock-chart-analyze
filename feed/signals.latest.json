@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated_at": "2026-11-23T10:46:24+09:00",
+ "generated_at": "2026-11-23T10:54:42+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "a_ablation": [
   {
@@ -14,10 +14,10 @@
   {
    "code": "090430",
    "gate": "rp",
-   "range_pos": 0.58,
-   "runup63": -0.0036,
+   "range_pos": 0.5827,
+   "runup63": -0.0022,
    "stage": 3,
-   "price": 137500.0
+   "price": 137700.0
   },
   {
    "code": "BMRN",
@@ -88,13 +88,13 @@
   "ok": 3,
   "watch": 121,
   "reasons": {
-   "추락 중(범위 0%)": 681,
-   "밸류영역 밖(지지대 아님)": 547,
-   "추락 중(범위 1%)": 449,
-   "추락 중(범위 2%)": 210,
-   "추락 중(범위 3%)": 161,
+   "추락 중(범위 0%)": 669,
+   "밸류영역 밖(지지대 아님)": 545,
+   "추락 중(범위 1%)": 459,
+   "추락 중(범위 2%)": 214,
+   "추락 중(범위 3%)": 160,
    "매물대 정보 없음": 160,
-   "추락 중(범위 4%)": 122,
+   "추락 중(범위 4%)": 123,
    "추락 중(범위 5%)": 101
   }
  },
@@ -191,24 +191,24 @@
    "group": "now",
    "entry_kind": "now",
    "stage": 3,
-   "price": 37200.0,
-   "entry": 37200.0,
-   "stop": 34340.1186,
-   "target": 42919.7628,
+   "price": 37600.0,
+   "entry": 37600.0,
+   "stop": 34740.1186,
+   "target": 43319.7628,
    "shares_1pct": 34,
-   "range_pos": 0.0932,
+   "range_pos": 0.1041,
    "norm": 4.7,
    "bear_share": 0.25,
    "fresh": false,
-   "break_gap": 0.0832,
+   "break_gap": 0.0948,
    "earnings_d": null,
    "tactic": {
-    "stop_pct": 7.7,
+    "stop_pct": 7.6,
     "pb_price": null,
     "pb_stop_pct": null,
     "mode": "pullback",
     "label": "⏳ 눌림 지정가만",
-    "desc": "지금 추격 금지(손절폭 7.7% · 돌파후 진행) — 받칠 지지에 눌릴 때까지 대기"
+    "desc": "지금 추격 금지(손절폭 7.6% · 돌파후 진행) — 받칠 지지에 눌릴 때까지 대기"
    }
   },
   {
@@ -1185,16 +1185,16 @@
    "group": "watch",
    "entry_kind": "now",
    "stage": 1,
-   "price": 178200.0,
-   "entry": 178200.0,
-   "stop": 167539.32,
-   "target": 199521.36,
+   "price": 178100.0,
+   "entry": 178100.0,
+   "stop": 167439.32,
+   "target": 199421.36,
    "shares_1pct": 9,
-   "range_pos": 0.1151,
+   "range_pos": 0.1139,
    "norm": -0.0,
    "bear_share": 0.25,
    "fresh": true,
-   "break_gap": -0.0094,
+   "break_gap": -0.0099,
    "earnings_d": null,
    "tactic": {
     "stop_pct": 6.0,
