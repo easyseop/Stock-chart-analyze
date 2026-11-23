@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated_at": "2026-11-24T06:45:29+09:00",
+ "generated_at": "2026-11-24T06:56:41+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "a_ablation": [
   {
@@ -53,16 +53,16 @@
   }
  ],
  "shelf_debug": {
-  "ok": 3,
+  "ok": 4,
   "watch": 96,
   "reasons": {
    "추락 중(범위 0%)": 667,
-   "밸류영역 밖(지지대 아님)": 528,
+   "밸류영역 밖(지지대 아님)": 529,
    "추락 중(범위 1%)": 466,
    "추락 중(범위 2%)": 218,
-   "추락 중(범위 3%)": 164,
+   "추락 중(범위 3%)": 165,
    "매물대 정보 없음": 158,
-   "추락 중(범위 4%)": 127,
+   "추락 중(범위 4%)": 126,
    "추락 중(범위 5%)": 101
   }
  },
@@ -294,6 +294,46 @@
      "회복": true,
      "상단마감": true,
      "거래량": false,
+     "신저가아님": true
+    }
+   },
+   "fresh": false,
+   "break_gap": null,
+   "earnings_d": null,
+   "tactic": "watch",
+   "trend_above_200": true
+  },
+  {
+   "id": "OLLI-2026-11-24-shelf-watch",
+   "code": "OLLI",
+   "name": "Ollie's Bargain Outlet Holdings, Inc.",
+   "ccy": "USD",
+   "group": "shelf_watch",
+   "entry_kind": "shelf_watch",
+   "stage": 0,
+   "price": 88.65,
+   "entry": 88.65,
+   "stop": 86.0605,
+   "target": 94.678,
+   "shares_1pct": 0,
+   "range_pos": 0.4295,
+   "norm": 11.5,
+   "bear_share": 0.25,
+   "shelf": {
+    "poc": 75.4207,
+    "val": 64.4166,
+    "vah": 94.678,
+    "rr": 2.33,
+    "overhead": 0.448,
+    "reason": "반등 미확인(터치·상단마감)",
+    "history_bars": 1985,
+    "profile_pnl_proxy": 0.0026,
+    "runup252": -0.287,
+    "checks": {
+     "터치": false,
+     "회복": true,
+     "상단마감": false,
+     "거래량": true,
      "신저가아님": true
     }
    },
@@ -742,46 +782,6 @@
    "earnings_d": null,
    "tactic": "watch",
    "trend_above_200": false
-  },
-  {
-   "id": "EFX-2026-11-24-shelf-watch",
-   "code": "EFX",
-   "name": "Equifax, Inc.",
-   "ccy": "USD",
-   "group": "shelf_watch",
-   "entry_kind": "shelf_watch",
-   "stage": 0,
-   "price": 178.55,
-   "entry": 178.55,
-   "stop": 172.137,
-   "target": 196.2071,
-   "shares_1pct": 0,
-   "range_pos": 0.4532,
-   "norm": -16.4,
-   "bear_share": 0.125,
-   "shelf": {
-    "poc": 177.1112,
-    "val": 154.1962,
-    "vah": 196.2071,
-    "rr": 2.75,
-    "overhead": 0.491,
-    "reason": "반등 미확인(상단마감·거래량)",
-    "history_bars": 1985,
-    "profile_pnl_proxy": -0.0148,
-    "runup252": -0.1646,
-    "checks": {
-     "터치": true,
-     "회복": true,
-     "상단마감": false,
-     "거래량": false,
-     "신저가아님": true
-    }
-   },
-   "fresh": false,
-   "break_gap": null,
-   "earnings_d": null,
-   "tactic": "watch",
-   "trend_above_200": true
   },
   {
    "id": "FRPT-2026-11-24-shelf-watch",
