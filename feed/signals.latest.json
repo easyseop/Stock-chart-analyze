@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated_at": "2026-11-23T14:50:47+09:00",
+ "generated_at": "2026-11-23T14:57:30+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "a_ablation": [
   {
@@ -14,10 +14,10 @@
   {
    "code": "090430",
    "gate": "rp",
-   "range_pos": 0.5573,
-   "runup63": -0.0159,
+   "range_pos": 0.5653,
+   "runup63": -0.0116,
    "stage": 3,
-   "price": 135800.0
+   "price": 136400.0
   },
   {
    "code": "BMRN",
@@ -88,17 +88,45 @@
   "ok": 3,
   "watch": 121,
   "reasons": {
-   "추락 중(범위 0%)": 659,
+   "추락 중(범위 0%)": 655,
    "밸류영역 밖(지지대 아님)": 535,
-   "추락 중(범위 1%)": 459,
-   "추락 중(범위 2%)": 223,
-   "추락 중(범위 3%)": 170,
+   "추락 중(범위 1%)": 458,
+   "추락 중(범위 2%)": 227,
+   "추락 중(범위 3%)": 171,
    "매물대 정보 없음": 160,
-   "추락 중(범위 4%)": 127,
+   "추락 중(범위 4%)": 126,
    "추락 중(범위 5%)": 103
   }
  },
  "signals": [
+  {
+   "id": "051900-2026-11-23-now",
+   "code": "051900",
+   "name": "LG생활건강",
+   "ccy": "KRW",
+   "group": "now",
+   "entry_kind": "now",
+   "stage": 3,
+   "price": 246500.0,
+   "entry": 246500.0,
+   "stop": 225576.7091,
+   "target": 288346.5819,
+   "shares_1pct": 4,
+   "range_pos": 0.2908,
+   "norm": 4.7,
+   "bear_share": 0.25,
+   "fresh": true,
+   "break_gap": 0.0082,
+   "earnings_d": null,
+   "tactic": {
+    "stop_pct": 8.5,
+    "pb_price": null,
+    "pb_stop_pct": null,
+    "mode": "pullback",
+    "label": "⏳ 눌림 지정가만",
+    "desc": "지금 추격 금지(손절폭 8.5%) — 받칠 지지에 눌릴 때까지 대기"
+   }
+  },
   {
    "id": "GTY-2026-11-23-now",
    "code": "GTY",
@@ -191,16 +219,16 @@
    "group": "now",
    "entry_kind": "now",
    "stage": 3,
-   "price": 36900.0,
-   "entry": 36900.0,
-   "stop": 34011.5472,
-   "target": 42676.9057,
+   "price": 37000.0,
+   "entry": 37000.0,
+   "stop": 34111.5472,
+   "target": 42776.9057,
    "shares_1pct": 34,
-   "range_pos": 0.0849,
+   "range_pos": 0.0877,
    "norm": 4.7,
    "bear_share": 0.25,
    "fresh": false,
-   "break_gap": 0.0744,
+   "break_gap": 0.0773,
    "earnings_d": null,
    "tactic": {
     "stop_pct": 7.8,
@@ -1122,34 +1150,6 @@
    }
   },
   {
-   "id": "051900-2026-11-23-watch",
-   "code": "051900",
-   "name": "LG생활건강",
-   "ccy": "KRW",
-   "group": "watch",
-   "entry_kind": "now",
-   "stage": 1,
-   "price": 244500.0,
-   "entry": 244500.0,
-   "stop": 223576.7091,
-   "target": 286346.5819,
-   "shares_1pct": 4,
-   "range_pos": 0.2749,
-   "norm": 4.7,
-   "bear_share": 0.25,
-   "fresh": true,
-   "break_gap": 0.0,
-   "earnings_d": null,
-   "tactic": {
-    "stop_pct": 8.6,
-    "pb_price": 225173.6111,
-    "pb_stop_pct": 0.7,
-    "mode": "pullback",
-    "label": "⏳ 눌림 지정가만",
-    "desc": "지금 추격 금지(손절폭 8.6%) — <b>225,174원 눌림 지정가만</b>. 눌리면 손절폭 0.7%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
-   }
-  },
-  {
    "id": "O-2026-11-23-watch",
    "code": "O",
    "name": "Realty Income Corporation",
@@ -1185,24 +1185,24 @@
    "group": "watch",
    "entry_kind": "now",
    "stage": 1,
-   "price": 177400.0,
-   "entry": 177400.0,
-   "stop": 166639.32,
-   "target": 198921.36,
+   "price": 177700.0,
+   "entry": 177700.0,
+   "stop": 166939.32,
+   "target": 199221.36,
    "shares_1pct": 9,
-   "range_pos": 0.1055,
+   "range_pos": 0.1091,
    "norm": -0.0,
    "bear_share": 0.25,
    "fresh": true,
-   "break_gap": -0.0138,
+   "break_gap": -0.0121,
    "earnings_d": null,
    "tactic": {
     "stop_pct": 6.1,
     "pb_price": 172466.6667,
-    "pb_stop_pct": 3.4,
+    "pb_stop_pct": 3.2,
     "mode": "half",
     "label": "⚖ 반반 진입",
-    "desc": "손절폭 6.1% — 절반은 현재가, 절반은 눌림 172,467원 지정가(거기선 손절폭 3.4%)"
+    "desc": "손절폭 6.1% — 절반은 현재가, 절반은 눌림 172,467원 지정가(거기선 손절폭 3.2%)"
    }
   },
   {
