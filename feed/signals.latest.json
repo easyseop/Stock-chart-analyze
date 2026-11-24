@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated_at": "2026-11-25T07:14:03+09:00",
+ "generated_at": "2026-11-25T07:59:31+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "a_ablation": [
   {
@@ -34,6 +34,14 @@
    "runup63": 0.0935,
    "stage": 3,
    "price": 23.270000457763672
+  },
+  {
+   "code": "MKTX",
+   "gate": "rp",
+   "range_pos": 0.6497,
+   "runup63": 0.0182,
+   "stage": 3,
+   "price": 165.4199981689453
   }
  ],
  "shelf_debug": {
@@ -117,8 +125,8 @@
    "stage": 3,
    "price": 62.22,
    "entry": 62.22,
-   "stop": 59.2469,
-   "target": 68.1663,
+   "stop": 59.2461,
+   "target": 68.1677,
    "shares_1pct": 33,
    "range_pos": 0.3644,
    "norm": 6.6,
@@ -173,8 +181,8 @@
    "stage": 3,
    "price": 140.53,
    "entry": 140.53,
-   "stop": 130.3479,
-   "target": 160.8942,
+   "stop": 130.345,
+   "target": 160.8999,
    "shares_1pct": 9,
    "range_pos": 0.2079,
    "norm": -18.9,
