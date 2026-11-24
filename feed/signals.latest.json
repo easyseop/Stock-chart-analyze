@@ -1,15 +1,15 @@
 {
  "version": 1,
- "generated_at": "2026-11-24T09:36:03+09:00",
+ "generated_at": "2026-11-24T09:43:10+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "a_ablation": [
   {
    "code": "090430",
    "gate": "rp",
-   "range_pos": 0.5613,
-   "runup63": -0.0272,
+   "range_pos": 0.5893,
+   "runup63": -0.0122,
    "stage": 3,
-   "price": 136100.0
+   "price": 138200.0
   },
   {
    "code": "CCC",
@@ -56,14 +56,14 @@
   "ok": 6,
   "watch": 83,
   "reasons": {
-   "밸류영역 밖(지지대 아님)": 518,
-   "추락 중(범위 1%)": 331,
-   "추락 중(범위 0%)": 275,
-   "추락 중(범위 2%)": 258,
-   "추락 중(범위 3%)": 216,
-   "추락 중(범위 4%)": 190,
+   "밸류영역 밖(지지대 아님)": 524,
+   "추락 중(범위 1%)": 290,
+   "추락 중(범위 0%)": 265,
+   "추락 중(범위 2%)": 255,
+   "추락 중(범위 3%)": 228,
+   "추락 중(범위 4%)": 193,
    "매물대 정보 없음": 172,
-   "추락 중(범위 5%)": 144
+   "추락 중(범위 5%)": 151
   }
  },
  "signals": [
@@ -75,24 +75,24 @@
    "group": "now",
    "entry_kind": "now",
    "stage": 3,
-   "price": 244500.0,
-   "entry": 244500.0,
-   "stop": 224571.2299,
-   "target": 284357.5403,
-   "shares_1pct": 5,
-   "range_pos": 0.2749,
+   "price": 246000.0,
+   "entry": 246000.0,
+   "stop": 225928.3727,
+   "target": 286143.2546,
+   "shares_1pct": 4,
+   "range_pos": 0.2869,
    "norm": 4.7,
    "bear_share": 0.25,
    "fresh": true,
-   "break_gap": 0.0062,
+   "break_gap": 0.0123,
    "earnings_d": null,
    "tactic": {
     "stop_pct": 8.2,
     "pb_price": 236616.0,
-    "pb_stop_pct": 5.1,
+    "pb_stop_pct": 4.5,
     "mode": "pullback",
     "label": "⏳ 눌림 지정가만",
-    "desc": "지금 추격 금지(손절폭 8.2%) — <b>236,616원 눌림 지정가만</b>. 눌리면 손절폭 5.1%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
+    "desc": "지금 추격 금지(손절폭 8.2%) — <b>236,616원 눌림 지정가만</b>. 눌리면 손절폭 4.5%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
    }
   },
   {
@@ -131,16 +131,16 @@
    "group": "now",
    "entry_kind": "now",
    "stage": 3,
-   "price": 36950.0,
-   "entry": 36950.0,
-   "stop": 34153.5795,
-   "target": 42542.841,
+   "price": 36850.0,
+   "entry": 36850.0,
+   "stop": 34053.5795,
+   "target": 42442.841,
    "shares_1pct": 35,
-   "range_pos": 0.0863,
+   "range_pos": 0.0836,
    "norm": 4.7,
    "bear_share": 0.25,
    "fresh": false,
-   "break_gap": 0.0839,
+   "break_gap": 0.081,
    "earnings_d": null,
    "tactic": {
     "stop_pct": 7.6,
@@ -438,6 +438,46 @@
    "trend_above_200": false
   },
   {
+   "id": "003230-2026-11-24-shelf-watch",
+   "code": "003230",
+   "name": "삼양식품",
+   "ccy": "KRW",
+   "group": "shelf_watch",
+   "entry_kind": "shelf_watch",
+   "stage": 0,
+   "price": 1213000.0,
+   "entry": 1213000.0,
+   "stop": 1148560.0,
+   "target": 1329000.0,
+   "shares_1pct": 0,
+   "range_pos": 0.4028,
+   "norm": 5.7,
+   "bear_share": 0.125,
+   "shelf": {
+    "poc": 1209000.0,
+    "val": 1137000.0,
+    "vah": 1329000.0,
+    "rr": 1.8,
+    "overhead": 0.544,
+    "reason": "반등 미확인(거래량)",
+    "history_bars": 1935,
+    "profile_pnl_proxy": -0.0222,
+    "runup252": -0.1133,
+    "checks": {
+     "터치": true,
+     "회복": true,
+     "상단마감": true,
+     "거래량": false,
+     "신저가아님": true
+    }
+   },
+   "fresh": false,
+   "break_gap": null,
+   "earnings_d": null,
+   "tactic": "watch",
+   "trend_above_200": false
+  },
+  {
    "id": "LOW-2026-11-24-shelf-watch",
    "code": "LOW",
    "name": "Lowe's Companies, Inc.",
@@ -663,46 +703,6 @@
     "history_bars": 1985,
     "profile_pnl_proxy": -0.0277,
     "runup252": -0.1435,
-    "checks": {
-     "터치": true,
-     "회복": true,
-     "상단마감": true,
-     "거래량": false,
-     "신저가아님": true
-    }
-   },
-   "fresh": false,
-   "break_gap": null,
-   "earnings_d": null,
-   "tactic": "watch",
-   "trend_above_200": false
-  },
-  {
-   "id": "RGLD-2026-11-24-shelf-watch",
-   "code": "RGLD",
-   "name": "Royal Gold, Inc.",
-   "ccy": "USD",
-   "group": "shelf_watch",
-   "entry_kind": "shelf_watch",
-   "stage": 0,
-   "price": 234.91,
-   "entry": 234.91,
-   "stop": 216.4134,
-   "target": 272.8427,
-   "shares_1pct": 0,
-   "range_pos": 0.4216,
-   "norm": -17.9,
-   "bear_share": 0.25,
-   "shelf": {
-    "poc": 231.726,
-    "val": 216.3073,
-    "vah": 272.8427,
-    "rr": 2.05,
-    "overhead": 0.533,
-    "reason": "반등 미확인(거래량)",
-    "history_bars": 1985,
-    "profile_pnl_proxy": -0.0196,
-    "runup252": 0.2725,
     "checks": {
      "터치": true,
      "회복": true,
@@ -1117,6 +1117,34 @@
    }
   },
   {
+   "id": "039490-2026-11-24-watch",
+   "code": "039490",
+   "name": "키움증권",
+   "ccy": "KRW",
+   "group": "watch",
+   "entry_kind": "now",
+   "stage": 2,
+   "price": 199200.0,
+   "entry": 199200.0,
+   "stop": 176799.5336,
+   "target": 244000.9328,
+   "shares_1pct": 4,
+   "range_pos": 0.0614,
+   "norm": -49.2,
+   "bear_share": 0.375,
+   "fresh": true,
+   "break_gap": 0.0316,
+   "earnings_d": null,
+   "tactic": {
+    "stop_pct": 11.2,
+    "pb_price": 178400.0,
+    "pb_stop_pct": 0.9,
+    "mode": "pullback",
+    "label": "⏳ 눌림 지정가만",
+    "desc": "지금 추격 금지(손절폭 11.2%) — <b>178,400원 눌림 지정가만</b>. 눌리면 손절폭 0.9%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
+   }
+  },
+  {
    "id": "319400-2026-11-24-watch",
    "code": "319400",
    "name": "현대무벡스",
@@ -1226,6 +1254,34 @@
     "mode": "full",
     "label": "⚡ 즉시 분할",
     "desc": "손절폭 3.1%로 타이트 — 현재가에서 1~2회 분할 매수. 기다리는 이득보다 놓치는 비용이 큼"
+   }
+  },
+  {
+   "id": "097950-2026-11-24-watch",
+   "code": "097950",
+   "name": "CJ제일제당",
+   "ccy": "KRW",
+   "group": "watch",
+   "entry_kind": "now",
+   "stage": 1,
+   "price": 176500.0,
+   "entry": 176500.0,
+   "stop": 165886.5115,
+   "target": 197726.9771,
+   "shares_1pct": 9,
+   "range_pos": 0.0947,
+   "norm": -0.0,
+   "bear_share": 0.25,
+   "fresh": true,
+   "break_gap": -0.0159,
+   "earnings_d": null,
+   "tactic": {
+    "stop_pct": 6.0,
+    "pb_price": 172466.6667,
+    "pb_stop_pct": 3.8,
+    "mode": "half",
+    "label": "⚖ 반반 진입",
+    "desc": "손절폭 6.0% — 절반은 현재가, 절반은 눌림 172,467원 지정가(거기선 손절폭 3.8%)"
    }
   },
   {
@@ -2031,6 +2087,34 @@
     "mode": "pullback",
     "label": "⏳ 눌림 지정가만",
     "desc": "지금 추격 금지(손절폭 10.2%) — <b>$28.09 눌림 지정가만</b>. 눌리면 손절폭 4.4%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
+   }
+  },
+  {
+   "id": "204320-2026-11-24-watch",
+   "code": "204320",
+   "name": "HL만도",
+   "ccy": "KRW",
+   "group": "watch",
+   "entry_kind": "now",
+   "stage": 1,
+   "price": 32850.0,
+   "entry": 32850.0,
+   "stop": 29074.2455,
+   "target": 40401.509,
+   "shares_1pct": 26,
+   "range_pos": 0.0628,
+   "norm": -55.7,
+   "bear_share": 0.5,
+   "fresh": true,
+   "break_gap": -0.009,
+   "earnings_d": null,
+   "tactic": {
+    "stop_pct": 11.5,
+    "pb_price": 29875.0,
+    "pb_stop_pct": 2.7,
+    "mode": "pullback",
+    "label": "⏳ 눌림 지정가만",
+    "desc": "지금 추격 금지(손절폭 11.5% · 단기 이격) — <b>29,875원 눌림 지정가만</b>. 눌리면 손절폭 2.7%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
    }
   },
   {
