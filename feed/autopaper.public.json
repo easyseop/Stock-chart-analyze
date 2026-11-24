@@ -1,10 +1,10 @@
 {
- "generated_at": "2026-11-24T23:59:10.487524+09:00",
- "updated": "2026-11-24",
+ "generated_at": "2026-11-25T00:16:48.129781+09:00",
+ "updated": "2026-11-25",
  "start": 100000000,
  "cash": 20530946,
- "equity": 96583667,
- "ret_pct": -3.42,
+ "equity": 96861064,
+ "ret_pct": -3.14,
  "positions": [
   {
    "code": "CRAI",
@@ -12,14 +12,14 @@
    "ccy": "USD",
    "q": 16,
    "avg": 164.4,
-   "price": 225.8300018310547,
-   "stop": 208.97030183105468,
+   "price": 229.17999267578125,
+   "stop": 212.32029267578125,
    "target": 186.8795,
    "half_done": true,
    "opened": "2026-10-01",
-   "pl_krw": 1319831,
-   "pl_pct": 37.37,
-   "price_age_min": 8.5
+   "pl_krw": 1391350,
+   "pl_pct": 39.4,
+   "price_age_min": 0.4
   },
   {
    "code": "COST",
@@ -27,14 +27,14 @@
    "ccy": "USD",
    "q": 1,
    "avg": 943.035,
-   "price": 1079.9100341796875,
+   "price": 1094.10009765625,
    "stop": 1076.2644755859376,
    "target": 1003.1489,
    "half_done": true,
    "opened": "2026-10-07",
-   "pl_krw": 183799,
-   "pl_pct": 14.51,
-   "price_age_min": 7.9
+   "pl_krw": 202787,
+   "pl_pct": 16.02,
+   "price_age_min": 0.4
   },
   {
    "code": "PEG",
@@ -42,14 +42,14 @@
    "ccy": "USD",
    "q": 28,
    "avg": 72.76,
-   "price": 74.90899658203125,
+   "price": 75.33000183105469,
    "stop": 72.76,
    "target": 78.0347,
    "half_done": true,
    "opened": "2026-11-05",
-   "pl_krw": 80800,
-   "pl_pct": 2.95,
-   "price_age_min": 7.1
+   "pl_krw": 96598,
+   "pl_pct": 3.53,
+   "price_age_min": 0.4
   },
   {
    "code": "ZTS",
@@ -57,14 +57,14 @@
    "ccy": "USD",
    "q": 70,
    "avg": 83.06,
-   "price": 81.7301025390625,
+   "price": 81.97000122070312,
    "stop": 77.8186,
    "target": 93.5428,
    "half_done": false,
    "opened": "2026-11-06",
-   "pl_krw": -125007,
-   "pl_pct": -1.6,
-   "price_age_min": 7.1
+   "pl_krw": -102423,
+   "pl_pct": -1.31,
+   "price_age_min": 0.4
   },
   {
    "code": "PEP",
@@ -72,14 +72,14 @@
    "ccy": "USD",
    "q": 104,
    "avg": 141.22,
-   "price": 141.6699981689453,
+   "price": 142.99000549316406,
    "stop": 134.599,
    "target": 154.462,
    "half_done": false,
    "opened": "2026-11-07",
-   "pl_krw": 62844,
-   "pl_pct": 0.32,
-   "price_age_min": 7.1
+   "pl_krw": 247106,
+   "pl_pct": 1.25,
+   "price_age_min": 0.4
   },
   {
    "code": "323410",
@@ -94,7 +94,7 @@
    "opened": "2026-11-12",
    "pl_krw": 171000,
    "pl_pct": 4.93,
-   "price_age_min": 7.0
+   "price_age_min": 0.4
   },
   {
    "code": "BEPC",
@@ -102,14 +102,14 @@
    "ccy": "USD",
    "q": 269,
    "avg": 30.7,
-   "price": 30.155000686645508,
+   "price": 30.190000534057617,
    "stop": 28.9076,
    "target": 34.2848,
    "half_done": false,
    "opened": "2026-11-13",
-   "pl_krw": -196864,
-   "pl_pct": -1.78,
-   "price_age_min": 7.0
+   "pl_krw": -184161,
+   "pl_pct": -1.66,
+   "price_age_min": 0.4
   },
   {
    "code": "WWD",
@@ -117,14 +117,14 @@
    "ccy": "USD",
    "q": 7,
    "avg": 322.325,
-   "price": 343.7699890136719,
+   "price": 340.7300109863281,
    "stop": 322.325,
    "target": 373.694,
    "half_done": true,
    "opened": "2026-11-16",
-   "pl_krw": 201577,
-   "pl_pct": 6.65,
-   "price_age_min": 9.6
+   "pl_krw": 172946,
+   "pl_pct": 5.71,
+   "price_age_min": 0.4
   },
   {
    "code": "097950",
@@ -139,7 +139,7 @@
    "opened": "2026-11-20",
    "pl_krw": -129000,
    "pl_pct": -1.64,
-   "price_age_min": 8.9
+   "price_age_min": 0.3
   },
   {
    "code": "COLL",
@@ -147,14 +147,14 @@
    "ccy": "USD",
    "q": 204,
    "avg": 25.325,
-   "price": 24.959999084472656,
+   "price": 24.760000228881836,
    "stop": 23.5582,
    "target": 28.8587,
    "half_done": false,
    "opened": "2026-11-21",
-   "pl_krw": -99987,
-   "pl_pct": -1.44,
-   "price_age_min": 9.5
+   "pl_krw": -154723,
+   "pl_pct": -2.23,
+   "price_age_min": 0.3
   },
   {
    "code": "ADC",
@@ -162,14 +162,14 @@
    "ccy": "USD",
    "q": 74,
    "avg": 71.41,
-   "price": 71.5999984741211,
+   "price": 72.16000366210938,
    "stop": 68.8512,
    "target": 76.5276,
    "half_done": false,
    "opened": "2026-11-21",
-   "pl_krw": 18880,
-   "pl_pct": 0.27,
-   "price_age_min": 9.9
+   "pl_krw": 74502,
+   "pl_pct": 1.05,
+   "price_age_min": 0.3
   }
  ],
  "pending": [
@@ -206,7 +206,7 @@
  "pos_cap_pct": 33.3,
  "cap_violations": [],
  "rule_violations": [],
- "fx": 1342.82,
+ "fx": 1342.38,
  "stats": {
   "all": {
    "n": 68,
@@ -1991,6 +1991,10 @@
   {
    "d": "2026-11-24",
    "v": 96583667
+  },
+  {
+   "d": "2026-11-25",
+   "v": 96861064
   }
  ],
  "log": [
@@ -2645,6 +2649,6 @@
    "target": 60.4614
   }
  ],
- "lane": "bulk",
+ "lane": "fast",
  "data_stale": []
 }
