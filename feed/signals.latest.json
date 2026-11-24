@@ -1,15 +1,15 @@
 {
  "version": 1,
- "generated_at": "2026-11-24T13:54:07+09:00",
+ "generated_at": "2026-11-24T14:05:57+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "a_ablation": [
   {
    "code": "090430",
    "gate": "rp",
-   "range_pos": 0.5973,
-   "runup63": -0.0079,
+   "range_pos": 0.6,
+   "runup63": -0.0064,
    "stage": 3,
-   "price": 138800.0
+   "price": 139000.0
   },
   {
    "code": "CCC",
@@ -63,7 +63,7 @@
    "추락 중(범위 3%)": 221,
    "추락 중(범위 4%)": 195,
    "매물대 정보 없음": 172,
-   "추락 중(범위 5%)": 150
+   "추락 중(범위 5%)": 149
   }
  },
  "signals": [
@@ -131,16 +131,16 @@
    "group": "now",
    "entry_kind": "now",
    "stage": 3,
-   "price": 37550.0,
-   "entry": 37550.0,
-   "stop": 34653.5795,
-   "target": 43342.841,
+   "price": 37650.0,
+   "entry": 37650.0,
+   "stop": 34753.5795,
+   "target": 43442.841,
    "shares_1pct": 34,
-   "range_pos": 0.1027,
+   "range_pos": 0.1055,
    "norm": 4.7,
    "bear_share": 0.25,
    "fresh": false,
-   "break_gap": 0.1015,
+   "break_gap": 0.1045,
    "earnings_d": null,
    "tactic": {
     "stop_pct": 7.7,
@@ -1152,24 +1152,24 @@
    "group": "watch",
    "entry_kind": "now",
    "stage": 2,
-   "price": 199400.0,
-   "entry": 199400.0,
-   "stop": 176999.5336,
-   "target": 244200.9328,
+   "price": 199850.0,
+   "entry": 199850.0,
+   "stop": 177449.5336,
+   "target": 244650.9328,
    "shares_1pct": 4,
-   "range_pos": 0.062,
+   "range_pos": 0.0633,
    "norm": -49.2,
    "bear_share": 0.375,
    "fresh": true,
-   "break_gap": 0.0327,
+   "break_gap": 0.035,
    "earnings_d": null,
    "tactic": {
     "stop_pct": 11.2,
     "pb_price": 178400.0,
-    "pb_stop_pct": 0.8,
+    "pb_stop_pct": 0.5,
     "mode": "pullback",
     "label": "⏳ 눌림 지정가만",
-    "desc": "지금 추격 금지(손절폭 11.2%) — <b>178,400원 눌림 지정가만</b>. 눌리면 손절폭 0.8%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
+    "desc": "지금 추격 금지(손절폭 11.2%) — <b>178,400원 눌림 지정가만</b>. 눌리면 손절폭 0.5%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
    }
   },
   {
@@ -1285,24 +1285,24 @@
    "group": "watch",
    "entry_kind": "now",
    "stage": 1,
-   "price": 179400.0,
-   "entry": 179400.0,
-   "stop": 168515.0829,
-   "target": 201169.8342,
+   "price": 179500.0,
+   "entry": 179500.0,
+   "stop": 168615.0829,
+   "target": 201269.8342,
    "shares_1pct": 9,
-   "range_pos": 0.1295,
+   "range_pos": 0.1307,
    "norm": -0.0,
    "bear_share": 0.25,
    "fresh": true,
-   "break_gap": 0.0002,
+   "break_gap": 0.0008,
    "earnings_d": null,
    "tactic": {
     "stop_pct": 6.1,
     "pb_price": 172466.6667,
-    "pb_stop_pct": 2.3,
+    "pb_stop_pct": 2.2,
     "mode": "half",
     "label": "⚖ 반반 진입",
-    "desc": "손절폭 6.1% — 절반은 현재가, 절반은 눌림 172,467원 지정가(거기선 손절폭 2.3%)"
+    "desc": "손절폭 6.1% — 절반은 현재가, 절반은 눌림 172,467원 지정가(거기선 손절폭 2.2%)"
    }
   },
   {
