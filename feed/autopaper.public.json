@@ -1,10 +1,10 @@
 {
- "generated_at": "2026-11-26T01:36:36.798119+09:00",
+ "generated_at": "2026-11-26T01:44:41.554895+09:00",
  "updated": "2026-11-26",
  "start": 100000000,
  "cash": 20530946,
- "equity": 97814349,
- "ret_pct": -2.19,
+ "equity": 97838593,
+ "ret_pct": -2.16,
  "positions": [
   {
    "code": "CRAI",
@@ -19,7 +19,7 @@
    "opened": "2026-10-01",
    "pl_krw": 1311154,
    "pl_pct": 37.0,
-   "price_age_min": 0.5
+   "price_age_min": 8.3
   },
   {
    "code": "COST",
@@ -27,14 +27,14 @@
    "ccy": "USD",
    "q": 1,
    "avg": 943.035,
-   "price": 1091.2900390625,
+   "price": 1091.22998046875,
    "stop": 1076.2644755859376,
    "target": 1003.1489,
    "half_done": true,
    "opened": "2026-10-07",
-   "pl_krw": 199738,
-   "pl_pct": 15.72,
-   "price_age_min": 0.5
+   "pl_krw": 199657,
+   "pl_pct": 15.71,
+   "price_age_min": 7.8
   },
   {
    "code": "PEG",
@@ -42,14 +42,14 @@
    "ccy": "USD",
    "q": 28,
    "avg": 72.76,
-   "price": 74.83499908447266,
+   "price": 74.80999755859375,
    "stop": 72.76,
    "target": 78.0347,
    "half_done": true,
    "opened": "2026-11-05",
-   "pl_krw": 78276,
-   "pl_pct": 2.85,
-   "price_age_min": 0.4
+   "pl_krw": 77333,
+   "pl_pct": 2.82,
+   "price_age_min": 7.0
   },
   {
    "code": "ZTS",
@@ -57,14 +57,14 @@
    "ccy": "USD",
    "q": 70,
    "avg": 83.06,
-   "price": 81.62999725341797,
+   "price": 81.55000305175781,
    "stop": 77.8186,
    "target": 93.5428,
    "half_done": false,
    "opened": "2026-11-06",
-   "pl_krw": -134861,
-   "pl_pct": -1.72,
-   "price_age_min": 0.4
+   "pl_krw": -142405,
+   "pl_pct": -1.82,
+   "price_age_min": 7.0
   },
   {
    "code": "PEP",
@@ -72,14 +72,14 @@
    "ccy": "USD",
    "q": 104,
    "avg": 141.22,
-   "price": 144.58999633789062,
+   "price": 144.55999755859375,
    "stop": 134.599,
    "target": 154.462,
    "half_done": false,
    "opened": "2026-11-07",
-   "pl_krw": 472187,
-   "pl_pct": 2.39,
-   "price_age_min": 0.4
+   "pl_krw": 467984,
+   "pl_pct": 2.37,
+   "price_age_min": 7.0
   },
   {
    "code": "323410",
@@ -94,7 +94,7 @@
    "opened": "2026-11-12",
    "pl_krw": 290700,
    "pl_pct": 8.37,
-   "price_age_min": 0.4
+   "price_age_min": 7.0
   },
   {
    "code": "BEPC",
@@ -102,14 +102,14 @@
    "ccy": "USD",
    "q": 269,
    "avg": 30.7,
-   "price": 30.510000228881836,
+   "price": 30.549999237060547,
    "stop": 28.9076,
    "target": 34.2848,
    "half_done": false,
    "opened": "2026-11-13",
-   "pl_krw": -68858,
-   "pl_pct": -0.62,
-   "price_age_min": 0.4
+   "pl_krw": -54362,
+   "pl_pct": -0.49,
+   "price_age_min": 8.9
   },
   {
    "code": "WWD",
@@ -117,14 +117,14 @@
    "ccy": "USD",
    "q": 7,
    "avg": 322.325,
-   "price": 330.5799865722656,
+   "price": 330.9549865722656,
    "stop": 322.325,
    "target": 373.694,
    "half_done": true,
    "opened": "2026-11-16",
-   "pl_krw": 77851,
-   "pl_pct": 2.56,
-   "price_age_min": 0.4
+   "pl_krw": 81388,
+   "pl_pct": 2.68,
+   "price_age_min": 8.9
   },
   {
    "code": "097950",
@@ -139,7 +139,7 @@
    "opened": "2026-11-20",
    "pl_krw": 339700,
    "pl_pct": 4.31,
-   "price_age_min": 0.4
+   "price_age_min": 9.8
   },
   {
    "code": "COLL",
@@ -147,14 +147,14 @@
    "ccy": "USD",
    "q": 204,
    "avg": 25.325,
-   "price": 24.360000610351562,
+   "price": 24.420000076293945,
    "stop": 23.5582,
    "target": 28.8587,
    "half_done": false,
    "opened": "2026-11-21",
-   "pl_krw": -265221,
-   "pl_pct": -3.81,
-   "price_age_min": 0.4
+   "pl_krw": -248731,
+   "pl_pct": -3.57,
+   "price_age_min": 7.0
   },
   {
    "code": "ADC",
@@ -162,14 +162,14 @@
    "ccy": "USD",
    "q": 74,
    "avg": 71.41,
-   "price": 73.50499725341797,
+   "price": 73.52999877929688,
    "stop": 68.8512,
    "target": 76.5276,
    "half_done": false,
    "opened": "2026-11-21",
-   "pl_krw": 208865,
-   "pl_pct": 2.93,
-   "price_age_min": 0.4
+   "pl_krw": 211358,
+   "pl_pct": 2.97,
+   "price_age_min": 10.1
   }
  ],
  "pending": [
@@ -1998,7 +1998,7 @@
   },
   {
    "d": "2026-11-26",
-   "v": 97814349
+   "v": 97838593
   }
  ],
  "log": [
@@ -2653,6 +2653,6 @@
    "target": 60.4614
   }
  ],
- "lane": "fast",
+ "lane": "bulk",
  "data_stale": []
 }
