@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated_at": "2026-11-26T08:29:02+09:00",
+ "generated_at": "2026-11-26T09:07:17+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "a_ablation": [
   {
@@ -56,14 +56,14 @@
   "ok": 1,
   "watch": 34,
   "reasons": {
-   "밸류영역 밖(지지대 아님)": 547,
+   "밸류영역 밖(지지대 아님)": 544,
    "추락 중(범위 1%)": 336,
-   "추락 중(범위 0%)": 298,
-   "추락 중(범위 2%)": 257,
-   "추락 중(범위 3%)": 176,
+   "추락 중(범위 0%)": 299,
+   "추락 중(범위 2%)": 256,
+   "추락 중(범위 3%)": 174,
    "매물대 정보 없음": 165,
-   "추락 중(범위 4%)": 157,
-   "추락 중(범위 5%)": 129
+   "추락 중(범위 4%)": 159,
+   "추락 중(범위 5%)": 130
   }
  },
  "signals": [
@@ -197,7 +197,7 @@
    "bear_share": 0.375,
    "fresh": false,
    "break_gap": 0.0608,
-   "earnings_d": 42,
+   "earnings_d": 41,
    "tactic": {
     "stop_pct": 7.8,
     "pb_price": 64.76,
@@ -225,7 +225,7 @@
    "bear_share": 0.25,
    "fresh": false,
    "break_gap": 0.0565,
-   "earnings_d": 124,
+   "earnings_d": 123,
    "tactic": {
     "stop_pct": 8.9,
     "pb_price": 4.08,
@@ -1138,7 +1138,7 @@
    "bear_share": 0.25,
    "fresh": true,
    "break_gap": 0.0298,
-   "earnings_d": 23,
+   "earnings_d": 22,
    "tactic": {
     "stop_pct": 6.9,
     "pb_price": 15.037,
@@ -1187,7 +1187,7 @@
    "bear_share": 0.375,
    "fresh": true,
    "break_gap": 0.0088,
-   "earnings_d": 100,
+   "earnings_d": 99,
    "tactic": null
   },
   {
@@ -1474,7 +1474,7 @@
    "bear_share": 0.375,
    "fresh": true,
    "break_gap": 0.0061,
-   "earnings_d": 84,
+   "earnings_d": 83,
    "tactic": null
   },
   {
@@ -1537,7 +1537,7 @@
    "bear_share": 0.5,
    "fresh": true,
    "break_gap": 0.0177,
-   "earnings_d": 91,
+   "earnings_d": 90,
    "tactic": {
     "stop_pct": 9.0,
     "pb_price": 35.029,
@@ -1775,7 +1775,7 @@
    "bear_share": 0.25,
    "fresh": true,
    "break_gap": -0.0093,
-   "earnings_d": 65,
+   "earnings_d": 64,
    "tactic": {
     "stop_pct": 6.2,
     "pb_price": 29.8161,
@@ -1908,7 +1908,7 @@
    "bear_share": 0.5,
    "fresh": true,
    "break_gap": -0.012,
-   "earnings_d": 70,
+   "earnings_d": 69,
    "tactic": null
   },
   {
@@ -2048,7 +2048,7 @@
    "bear_share": 0.375,
    "fresh": false,
    "break_gap": 0.1706,
-   "earnings_d": 63,
+   "earnings_d": 62,
    "tactic": null
   },
   {
