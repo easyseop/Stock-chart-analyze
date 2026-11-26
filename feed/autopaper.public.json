@@ -1,10 +1,10 @@
 {
- "generated_at": "2026-11-26T23:54:09.266626+09:00",
- "updated": "2026-11-26",
+ "generated_at": "2026-11-27T00:11:37.995934+09:00",
+ "updated": "2026-11-27",
  "start": 100000000,
- "cash": 20530946,
- "equity": 98286691,
- "ret_pct": -1.71,
+ "cash": 18300409,
+ "equity": 98101567,
+ "ret_pct": -1.9,
  "positions": [
   {
    "code": "CRAI",
@@ -17,9 +17,9 @@
    "target": 186.8795,
    "half_done": true,
    "opened": "2026-10-01",
-   "pl_krw": 1394684,
+   "pl_krw": 1390760,
    "pl_pct": 39.36,
-   "price_age_min": 4.3
+   "price_age_min": 0.4
   },
   {
    "code": "COST",
@@ -32,9 +32,9 @@
    "target": 1003.1489,
    "half_done": true,
    "opened": "2026-10-07",
-   "pl_krw": 193702,
+   "pl_krw": 193157,
    "pl_pct": 15.25,
-   "price_age_min": 3.8
+   "price_age_min": 0.4
   },
   {
    "code": "PEG",
@@ -47,24 +47,9 @@
    "target": 78.0347,
    "half_done": true,
    "opened": "2026-11-05",
-   "pl_krw": 91668,
+   "pl_krw": 91410,
    "pl_pct": 3.34,
-   "price_age_min": 3.7
-  },
-  {
-   "code": "ZTS",
-   "name": "Zoetis Inc.",
-   "ccy": "USD",
-   "q": 70,
-   "avg": 83.06,
-   "price": 82.5999984741211,
-   "stop": 77.8186,
-   "target": 93.5428,
-   "half_done": false,
-   "opened": "2026-11-06",
-   "pl_krw": -43382,
-   "pl_pct": -0.55,
-   "price_age_min": 3.7
+   "price_age_min": 0.4
   },
   {
    "code": "PEP",
@@ -77,9 +62,9 @@
    "target": 154.462,
    "half_done": false,
    "opened": "2026-11-07",
-   "pl_krw": 379711,
+   "pl_krw": 378643,
    "pl_pct": 1.92,
-   "price_age_min": 3.7
+   "price_age_min": 0.4
   },
   {
    "code": "323410",
@@ -94,7 +79,7 @@
    "opened": "2026-11-12",
    "pl_krw": 307800,
    "pl_pct": 8.87,
-   "price_age_min": 3.7
+   "price_age_min": 0.4
   },
   {
    "code": "BEPC",
@@ -107,9 +92,9 @@
    "target": 34.2848,
    "half_done": false,
    "opened": "2026-11-13",
-   "pl_krw": 57986,
+   "pl_krw": 57823,
    "pl_pct": 0.52,
-   "price_age_min": 5.0
+   "price_age_min": 0.4
   },
   {
    "code": "WWD",
@@ -122,9 +107,9 @@
    "target": 373.694,
    "half_done": true,
    "opened": "2026-11-16",
-   "pl_krw": 206205,
+   "pl_krw": 205625,
    "pl_pct": 6.78,
-   "price_age_min": 6.5
+   "price_age_min": 0.4
   },
   {
    "code": "097950",
@@ -139,7 +124,7 @@
    "opened": "2026-11-20",
    "pl_krw": 292400,
    "pl_pct": 3.71,
-   "price_age_min": 6.4
+   "price_age_min": 0.4
   },
   {
    "code": "COLL",
@@ -152,9 +137,9 @@
    "target": 28.8587,
    "half_done": false,
    "opened": "2026-11-21",
-   "pl_krw": -89323,
+   "pl_krw": -89072,
    "pl_pct": -1.28,
-   "price_age_min": 3.7
+   "price_age_min": 0.4
   },
   {
    "code": "ADC",
@@ -167,9 +152,24 @@
    "target": 76.5276,
    "half_done": false,
    "opened": "2026-11-21",
-   "pl_krw": 190422,
+   "pl_krw": 189886,
    "pl_pct": 2.67,
-   "price_age_min": 6.6
+   "price_age_min": 0.4
+  },
+  {
+   "code": "T",
+   "name": "AT&T Inc.",
+   "ccy": "USD",
+   "q": 324,
+   "avg": 22.97,
+   "price": 22.969999313354492,
+   "stop": 21.8435,
+   "target": 25.2229,
+   "half_done": false,
+   "opened": "2026-11-27",
+   "pl_krw": 0,
+   "pl_pct": -0.0,
+   "price_age_min": 0.4
   }
  ],
  "pending": [
@@ -199,19 +199,46 @@
     "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권28% · 체크4/6 · 손절폭6.7%"
    },
    "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권28% · 체크4/6 · 손절폭6.7%"
+  },
+  {
+   "code": "T",
+   "name": "AT&T Inc.",
+   "ccy": "USD",
+   "limit": 22.1609,
+   "stop": 21.8435,
+   "target": 25.2229,
+   "q": 24,
+   "created": "2026-11-27",
+   "atr": 0.5632,
+   "plan": {
+    "entry": 22.97,
+    "stop": 21.8435,
+    "target": 25.2229,
+    "pb": 22.1609,
+    "tactic": "half"
+   },
+   "ctx": {
+    "mode": "half",
+    "fresh": false,
+    "stage": 3,
+    "rp": 32,
+    "rec": 3,
+    "basis": "↗ 돌파후 진행(승률↓) · ③ 돌파후 횡보(대기) · 저점권32% · 체크3/6 · 손절폭4.9%"
+   },
+   "basis": "↗ 돌파후 진행(승률↓) · ③ 돌파후 횡보(대기) · 저점권32% · 체크3/6 · 손절폭4.9%"
   }
  ],
- "trades": 68,
+ "trades": 69,
  "win_trades": 33,
  "pos_cap_pct": 33.3,
  "cap_violations": [],
  "rule_violations": [],
- "fx": 1347.26,
+ "fx": 1343.47,
  "stats": {
   "all": {
-   "n": 68,
+   "n": 69,
    "win": 33,
-   "win_rate": 49,
+   "win_rate": 48,
    "avg_r": -0.08
   },
   "by_mode": {
@@ -222,10 +249,10 @@
     "avg_r": -0.11
    },
    "half": {
-    "n": 20,
+    "n": 21,
     "win": 12,
-    "win_rate": 60,
-    "avg_r": 0.14
+    "win_rate": 57,
+    "avg_r": 0.13
    },
    "pullback": {
     "n": 10,
@@ -235,7 +262,7 @@
    }
   },
   "fresh": {
-   "n": 66,
+   "n": 67,
    "win": 32,
    "win_rate": 48,
    "avg_r": -0.08
@@ -248,7 +275,7 @@
   },
   "by_stage": {
    "3": {
-    "n": 66,
+    "n": 67,
     "win": 32,
     "win_rate": 48,
     "avg_r": -0.07
@@ -268,16 +295,52 @@
     "avg_r": -0.33
    },
    "USD": {
-    "n": 55,
+    "n": 56,
     "win": 29,
-    "win_rate": 53,
-    "avg_r": -0.01
+    "win_rate": 52,
+    "avg_r": -0.02
    }
   },
-  "slip_entry_pct": -0.39,
+  "slip_entry_pct": -0.38,
   "slip_stop_pct": -0.75
  },
  "closed": [
+  {
+   "code": "ZTS",
+   "name": "Zoetis Inc.",
+   "ccy": "USD",
+   "ctx": {
+    "mode": "half",
+    "fresh": true,
+    "stage": 3,
+    "rp": 22,
+    "rec": 4,
+    "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권22% · 체크4/6 · 손절폭6.3%"
+   },
+   "plan": {
+    "entry": 83.06,
+    "stop": 77.8186,
+    "target": 93.5428,
+    "pb": null,
+    "tactic": "half"
+   },
+   "fill": {
+    "avg": 83.06,
+    "q": 70
+   },
+   "exits": [
+    {
+     "d": "2026-11-27",
+     "q": 70,
+     "price": 82.6,
+     "note": "타임 스탑(+1R 미도달)"
+    }
+   ],
+   "opened": "2026-11-06",
+   "closed": "2026-11-27",
+   "pl": -43260,
+   "r": -0.09
+  },
   {
    "code": "DCI",
    "name": "Donaldson Company, Inc.",
@@ -1381,42 +1444,6 @@
    "closed": "2026-10-01",
    "pl": -324526,
    "r": -1.01
-  },
-  {
-   "code": "WMT",
-   "name": "Walmart Inc.",
-   "ccy": "USD",
-   "ctx": {
-    "mode": "full",
-    "fresh": true,
-    "stage": 3,
-    "rp": 27,
-    "rec": 4,
-    "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권27% · 체크4/6 · 손절폭3.9%"
-   },
-   "plan": {
-    "entry": 108.63,
-    "stop": 104.4167,
-    "target": 117.0566,
-    "pb": null,
-    "tactic": "full"
-   },
-   "fill": {
-    "avg": 108.63,
-    "q": 17
-   },
-   "exits": [
-    {
-     "d": "2026-10-01",
-     "q": 17,
-     "price": 104.11,
-     "note": "손절"
-    }
-   ],
-   "opened": "2026-09-25",
-   "closed": "2026-10-01",
-   "pl": -104163,
-   "r": -1.06
   }
  ],
  "hist": [
@@ -1999,9 +2026,40 @@
   {
    "d": "2026-11-26",
    "v": 98286691
+  },
+  {
+   "d": "2026-11-27",
+   "v": 98101567
   }
  ],
  "log": [
+  {
+   "d": "2026-11-27",
+   "type": "buy",
+   "code": "T",
+   "name": "AT&T Inc.",
+   "q": 324,
+   "price": 22.97,
+   "ccy": "USD",
+   "amt": 9998480,
+   "note": "반반 1차 — ↗ 돌파후 진행(승률↓) · ③ 돌파후 횡보(대기) · 저점권32% · 체크3/6 · 손절폭4.9%",
+   "stop": 21.8435,
+   "target": 25.2229
+  },
+  {
+   "d": "2026-11-27",
+   "type": "sell",
+   "code": "ZTS",
+   "name": "Zoetis Inc.",
+   "q": 70,
+   "price": 82.6,
+   "ccy": "USD",
+   "amt": 7767943,
+   "note": "타임 스탑(+1R 미도달)",
+   "pl": -43260,
+   "pl_pct": -0.6,
+   "r": -0.09
+  },
   {
    "d": "2026-11-24",
    "type": "sell",
@@ -2625,34 +2683,8 @@
    "pl": 1732,
    "pl_pct": 0.8,
    "r": 0.26
-  },
-  {
-   "d": "2026-10-29",
-   "type": "sell",
-   "code": "EQT",
-   "name": "EQT Corporation",
-   "q": 67,
-   "price": 56.38,
-   "ccy": "USD",
-   "amt": 5071731,
-   "note": "+1R 절반 익절",
-   "pl": 241982,
-   "pl_pct": 5.0
-  },
-  {
-   "d": "2026-10-28",
-   "type": "buy",
-   "code": "CSR",
-   "name": "D/B/A Centerspace",
-   "q": 252,
-   "price": 56.24,
-   "ccy": "USD",
-   "amt": 18802347,
-   "note": "즉시 분할 — 🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권24% · 체크4/6 · 손절폭3.8%",
-   "stop": 54.1293,
-   "target": 60.4614
   }
  ],
- "lane": "bulk",
+ "lane": "fast",
  "data_stale": []
 }
