@@ -1,10 +1,10 @@
 {
- "generated_at": "2026-11-27T23:46:13.843324+09:00",
- "updated": "2026-11-27",
+ "generated_at": "2026-11-28T00:06:09.814227+09:00",
+ "updated": "2026-11-28",
  "start": 100000000,
- "cash": 18300409,
- "equity": 98236955,
- "ret_pct": -1.76,
+ "cash": 38372893,
+ "equity": 97780664,
+ "ret_pct": -2.22,
  "positions": [
   {
    "code": "CRAI",
@@ -12,14 +12,14 @@
    "ccy": "USD",
    "q": 16,
    "avg": 164.4,
-   "price": 228.83999633789062,
+   "price": 228.88499450683594,
    "stop": 212.8102981689453,
    "target": 186.8795,
    "half_done": true,
    "opened": "2026-10-01",
-   "pl_krw": 1385171,
-   "pl_pct": 39.2,
-   "price_age_min": 0.5
+   "pl_krw": 1377998,
+   "pl_pct": 39.22,
+   "price_age_min": 0.4
   },
   {
    "code": "COST",
@@ -27,14 +27,14 @@
    "ccy": "USD",
    "q": 1,
    "avg": 943.035,
-   "price": 1095.0,
+   "price": 1095.885009765625,
    "stop": 1076.2644755859376,
    "target": 1003.1489,
    "half_done": true,
    "opened": "2026-10-07",
-   "pl_krw": 204160,
-   "pl_pct": 16.11,
-   "price_age_min": 0.5
+   "pl_krw": 204143,
+   "pl_pct": 16.21,
+   "price_age_min": 0.4
   },
   {
    "code": "PEG",
@@ -42,29 +42,14 @@
    "ccy": "USD",
    "q": 28,
    "avg": 72.76,
-   "price": 75.33000183105469,
+   "price": 75.10350036621094,
    "stop": 72.76,
    "target": 78.0347,
    "half_done": true,
    "opened": "2026-11-05",
-   "pl_krw": 96676,
-   "pl_pct": 3.53,
-   "price_age_min": 0.5
-  },
-  {
-   "code": "PEP",
-   "name": "PepsiCo, Inc.",
-   "ccy": "USD",
-   "q": 104,
-   "avg": 141.22,
-   "price": 144.2100067138672,
-   "stop": 134.599,
-   "target": 154.462,
-   "half_done": false,
-   "opened": "2026-11-07",
-   "pl_krw": 417766,
-   "pl_pct": 2.12,
-   "price_age_min": 0.5
+   "pl_krw": 87638,
+   "pl_pct": 3.22,
+   "price_age_min": 0.4
   },
   {
    "code": "323410",
@@ -79,7 +64,7 @@
    "opened": "2026-11-12",
    "pl_krw": 376200,
    "pl_pct": 10.84,
-   "price_age_min": 0.5
+   "price_age_min": 0.4
   },
   {
    "code": "BEPC",
@@ -87,14 +72,14 @@
    "ccy": "USD",
    "q": 269,
    "avg": 30.7,
-   "price": 31.114999771118164,
+   "price": 31.149999618530273,
    "stop": 28.9076,
    "target": 34.2848,
    "half_done": false,
    "opened": "2026-11-13",
-   "pl_krw": 149978,
-   "pl_pct": 1.35,
-   "price_age_min": 0.5
+   "pl_krw": 161672,
+   "pl_pct": 1.47,
+   "price_age_min": 0.4
   },
   {
    "code": "WWD",
@@ -102,14 +87,14 @@
    "ccy": "USD",
    "q": 7,
    "avg": 322.325,
-   "price": 344.19000244140625,
+   "price": 344.5799865722656,
    "stop": 322.325,
    "target": 373.694,
    "half_done": true,
    "opened": "2026-11-16",
-   "pl_krw": 205625,
-   "pl_pct": 6.78,
-   "price_age_min": 0.5
+   "pl_krw": 208063,
+   "pl_pct": 6.9,
+   "price_age_min": 0.3
   },
   {
    "code": "097950",
@@ -124,7 +109,7 @@
    "opened": "2026-11-20",
    "pl_krw": 202100,
    "pl_pct": 2.57,
-   "price_age_min": 0.5
+   "price_age_min": 0.3
   },
   {
    "code": "COLL",
@@ -132,14 +117,14 @@
    "ccy": "USD",
    "q": 204,
    "avg": 25.325,
-   "price": 24.545000076293945,
+   "price": 24.350000381469727,
    "stop": 23.5582,
    "target": 28.8587,
    "half_done": false,
    "opened": "2026-11-21",
-   "pl_krw": -213773,
-   "pl_pct": -3.08,
-   "price_age_min": 0.5
+   "pl_krw": -265647,
+   "pl_pct": -3.85,
+   "price_age_min": 0.3
   },
   {
    "code": "ADC",
@@ -147,14 +132,14 @@
    "ccy": "USD",
    "q": 74,
    "avg": 71.41,
-   "price": 73.41500091552734,
+   "price": 73.4000015258789,
    "stop": 68.8512,
    "target": 76.5276,
    "half_done": false,
    "opened": "2026-11-21",
-   "pl_krw": 199331,
-   "pl_pct": 2.81,
-   "price_age_min": 0.5
+   "pl_krw": 196678,
+   "pl_pct": 2.79,
+   "price_age_min": 0.3
   },
   {
    "code": "T",
@@ -162,14 +147,14 @@
    "ccy": "USD",
    "q": 324,
    "avg": 22.97,
-   "price": 23.270000457763672,
+   "price": 23.145599365234375,
    "stop": 21.8435,
    "target": 25.2229,
    "half_done": false,
    "opened": "2026-11-27",
-   "pl_krw": 130585,
-   "pl_pct": 1.31,
-   "price_age_min": 0.4
+   "pl_krw": 75987,
+   "pl_pct": 0.76,
+   "price_age_min": 0.3
   }
  ],
  "pending": [
@@ -228,25 +213,25 @@
    "basis": "↗ 돌파후 진행(승률↓) · ③ 돌파후 횡보(대기) · 저점권32% · 체크3/6 · 손절폭4.9%"
   }
  ],
- "trades": 69,
- "win_trades": 33,
+ "trades": 70,
+ "win_trades": 34,
  "pos_cap_pct": 33.3,
  "cap_violations": [],
  "rule_violations": [],
- "fx": 1343.47,
+ "fx": 1335.58,
  "stats": {
   "all": {
-   "n": 69,
-   "win": 33,
-   "win_rate": 48,
-   "avg_r": -0.08
+   "n": 70,
+   "win": 34,
+   "win_rate": 49,
+   "avg_r": -0.07
   },
   "by_mode": {
    "full": {
-    "n": 38,
-    "win": 17,
-    "win_rate": 45,
-    "avg_r": -0.11
+    "n": 39,
+    "win": 18,
+    "win_rate": 46,
+    "avg_r": -0.1
    },
    "half": {
     "n": 21,
@@ -262,10 +247,10 @@
    }
   },
   "fresh": {
-   "n": 67,
-   "win": 32,
-   "win_rate": 48,
-   "avg_r": -0.08
+   "n": 68,
+   "win": 33,
+   "win_rate": 49,
+   "avg_r": -0.07
   },
   "stale": {
    "n": 2,
@@ -275,10 +260,10 @@
   },
   "by_stage": {
    "3": {
-    "n": 67,
-    "win": 32,
-    "win_rate": 48,
-    "avg_r": -0.07
+    "n": 68,
+    "win": 33,
+    "win_rate": 49,
+    "avg_r": -0.06
    },
    "4": {
     "n": 2,
@@ -295,16 +280,52 @@
     "avg_r": -0.33
    },
    "USD": {
-    "n": 56,
-    "win": 29,
-    "win_rate": 52,
-    "avg_r": -0.02
+    "n": 57,
+    "win": 30,
+    "win_rate": 53,
+    "avg_r": -0.01
    }
   },
-  "slip_entry_pct": -0.38,
+  "slip_entry_pct": -0.37,
   "slip_stop_pct": -0.75
  },
  "closed": [
+  {
+   "code": "PEP",
+   "name": "PepsiCo, Inc.",
+   "ccy": "USD",
+   "ctx": {
+    "mode": "full",
+    "fresh": true,
+    "stage": 3,
+    "rp": 37,
+    "rec": 4,
+    "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권37% · 체크4/6 · 손절폭4.7%"
+   },
+   "plan": {
+    "entry": 141.22,
+    "stop": 134.599,
+    "target": 154.462,
+    "pb": 134.6116,
+    "tactic": "full"
+   },
+   "fill": {
+    "avg": 141.22,
+    "q": 104
+   },
+   "exits": [
+    {
+     "d": "2026-11-28",
+     "q": 104,
+     "price": 144.51,
+     "note": "타임 스탑(+1R 미도달)"
+    }
+   ],
+   "opened": "2026-11-07",
+   "closed": "2026-11-28",
+   "pl": 456981,
+   "r": 0.49
+  },
   {
    "code": "ZTS",
    "name": "Zoetis Inc.",
@@ -1408,42 +1429,6 @@
    "closed": "2026-10-07",
    "pl": -262145,
    "r": -0.27
-  },
-  {
-   "code": "GBCI",
-   "name": "Glacier Bancorp, Inc.",
-   "ccy": "USD",
-   "ctx": {
-    "mode": "full",
-    "fresh": true,
-    "stage": 3,
-    "rp": 29,
-    "rec": 4,
-    "basis": "🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권29% · 체크4/6 · 손절폭4.0%"
-   },
-   "plan": {
-    "entry": 44.17,
-    "stop": 42.3931,
-    "target": 47.7239,
-    "pb": 43.433,
-    "tactic": "full"
-   },
-   "fill": {
-    "avg": 44.17,
-    "q": 133
-   },
-   "exits": [
-    {
-     "d": "2026-10-01",
-     "q": 133,
-     "price": 42.37,
-     "note": "손절"
-    }
-   ],
-   "opened": "2026-09-29",
-   "closed": "2026-10-01",
-   "pl": -324526,
-   "r": -1.01
   }
  ],
  "hist": [
@@ -2030,9 +2015,27 @@
   {
    "d": "2026-11-27",
    "v": 98236955
+  },
+  {
+   "d": "2026-11-28",
+   "v": 97780664
   }
  ],
  "log": [
+  {
+   "d": "2026-11-28",
+   "type": "sell",
+   "code": "PEP",
+   "name": "PepsiCo, Inc.",
+   "q": 104,
+   "price": 144.51,
+   "ccy": "USD",
+   "amt": 20072484,
+   "note": "타임 스탑(+1R 미도달)",
+   "pl": 456981,
+   "pl_pct": 2.3,
+   "r": 0.49
+  },
   {
    "d": "2026-11-27",
    "type": "buy",
@@ -2669,20 +2672,6 @@
    "note": "반반 1차 — 🔥 갓 전환(추세선 부근) · ③ 돌파후 횡보(대기) · 저점권37% · 체크5/6 · 손절폭3.6%",
    "stop": 68.6849,
    "target": 76.4702
-  },
-  {
-   "d": "2026-10-30",
-   "type": "sell",
-   "code": "AES",
-   "name": "The AES Corporation",
-   "q": 11,
-   "price": 15.0377,
-   "ccy": "USD",
-   "amt": 221255,
-   "note": "타임 스탑(+1R 미도달)",
-   "pl": 1732,
-   "pl_pct": 0.8,
-   "r": 0.26
   }
  ],
  "lane": "fast",
