@@ -1,10 +1,10 @@
 {
- "generated_at": "2026-11-27T10:48:45.420687+09:00",
+ "generated_at": "2026-11-27T11:14:17.013107+09:00",
  "updated": "2026-11-27",
  "start": 100000000,
  "cash": 18300409,
- "equity": 98011167,
- "ret_pct": -1.99,
+ "equity": 98023917,
+ "ret_pct": -1.98,
  "positions": [
   {
    "code": "CRAI",
@@ -19,7 +19,7 @@
    "opened": "2026-10-01",
    "pl_krw": 1390760,
    "pl_pct": 39.36,
-   "price_age_min": 7.3
+   "price_age_min": 32.8
   },
   {
    "code": "COST",
@@ -34,7 +34,7 @@
    "opened": "2026-10-07",
    "pl_krw": 193157,
    "pl_pct": 15.25,
-   "price_age_min": 6.5
+   "price_age_min": 32.0
   },
   {
    "code": "PEG",
@@ -49,7 +49,7 @@
    "opened": "2026-11-05",
    "pl_krw": 91410,
    "pl_pct": 3.34,
-   "price_age_min": 6.5
+   "price_age_min": 32.0
   },
   {
    "code": "PEP",
@@ -64,7 +64,7 @@
    "opened": "2026-11-07",
    "pl_krw": 378643,
    "pl_pct": 1.92,
-   "price_age_min": 6.4
+   "price_age_min": 32.0
   },
   {
    "code": "323410",
@@ -72,14 +72,14 @@
    "ccy": "KRW",
    "q": 171,
    "avg": 20300.0,
-   "price": 22200.0,
-   "stop": 20426.1689,
+   "price": 22350.0,
+   "stop": 20526.1689,
    "target": 22731.7747,
    "half_done": true,
    "opened": "2026-11-12",
-   "pl_krw": 324900,
-   "pl_pct": 9.36,
-   "price_age_min": 6.4
+   "pl_krw": 350550,
+   "pl_pct": 10.1,
+   "price_age_min": 8.2
   },
   {
    "code": "BEPC",
@@ -94,7 +94,7 @@
    "opened": "2026-11-13",
    "pl_krw": 57823,
    "pl_pct": 0.52,
-   "price_age_min": 8.2
+   "price_age_min": 33.7
   },
   {
    "code": "WWD",
@@ -109,7 +109,7 @@
    "opened": "2026-11-16",
    "pl_krw": 205625,
    "pl_pct": 6.78,
-   "price_age_min": 10.5
+   "price_age_min": 36.0
   },
   {
    "code": "097950",
@@ -117,14 +117,14 @@
    "ccy": "KRW",
    "q": 43,
    "avg": 183200.0,
-   "price": 187500.0,
+   "price": 187200.0,
    "stop": 172500.5864,
    "target": 204598.8272,
    "half_done": false,
    "opened": "2026-11-20",
-   "pl_krw": 184900,
-   "pl_pct": 2.35,
-   "price_age_min": 10.5
+   "pl_krw": 172000,
+   "pl_pct": 2.18,
+   "price_age_min": 7.8
   },
   {
    "code": "COLL",
@@ -139,7 +139,7 @@
    "opened": "2026-11-21",
    "pl_krw": -89072,
    "pl_pct": -1.28,
-   "price_age_min": 6.4
+   "price_age_min": 32.0
   },
   {
    "code": "ADC",
@@ -154,7 +154,7 @@
    "opened": "2026-11-21",
    "pl_krw": 189886,
    "pl_pct": 2.67,
-   "price_age_min": 10.5
+   "price_age_min": 36.1
   },
   {
    "code": "T",
@@ -169,7 +169,7 @@
    "opened": "2026-11-27",
    "pl_krw": 0,
    "pl_pct": -0.0,
-   "price_age_min": 10.5
+   "price_age_min": 36.0
   }
  ],
  "pending": [
@@ -2029,7 +2029,7 @@
   },
   {
    "d": "2026-11-27",
-   "v": 98011167
+   "v": 98023917
   }
  ],
  "log": [
