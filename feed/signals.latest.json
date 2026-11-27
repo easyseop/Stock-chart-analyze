@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated_at": "2026-11-27T09:23:24+09:00",
+ "generated_at": "2026-11-27T09:31:16+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "a_ablation": [
   {
@@ -54,14 +54,14 @@
  ],
  "shelf_debug": {
   "ok": 7,
-  "watch": 65,
+  "watch": 66,
   "reasons": {
-   "밸류영역 밖(지지대 아님)": 588,
-   "추락 중(범위 1%)": 248,
-   "추락 중(범위 2%)": 206,
-   "추락 중(범위 0%)": 201,
-   "추락 중(범위 4%)": 187,
-   "추락 중(범위 3%)": 182,
+   "밸류영역 밖(지지대 아님)": 589,
+   "추락 중(범위 1%)": 241,
+   "추락 중(범위 2%)": 200,
+   "추락 중(범위 0%)": 199,
+   "추락 중(범위 4%)": 190,
+   "추락 중(범위 3%)": 179,
    "매물대 정보 없음": 163,
    "추락 중(범위 5%)": 155
   }
@@ -77,22 +77,50 @@
    "stage": 3,
    "price": 249500.0,
    "entry": 249500.0,
-   "stop": 227572.715,
-   "target": 293354.5701,
+   "stop": 228353.2353,
+   "target": 291793.5294,
    "shares_1pct": 4,
    "range_pos": 0.3147,
    "norm": 4.7,
    "bear_share": 0.25,
    "fresh": true,
-   "break_gap": 0.0396,
+   "break_gap": 0.0461,
    "earnings_d": null,
    "tactic": {
-    "stop_pct": 8.8,
+    "stop_pct": 8.5,
     "pb_price": 236616.0,
-    "pb_stop_pct": 3.8,
+    "pb_stop_pct": 3.5,
     "mode": "pullback",
     "label": "⏳ 눌림 지정가만",
-    "desc": "지금 추격 금지(손절폭 8.8% · 단기 이격) — <b>236,616원 눌림 지정가만</b>. 눌리면 손절폭 3.8%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
+    "desc": "지금 추격 금지(손절폭 8.5%) — <b>236,616원 눌림 지정가만</b>. 눌리면 손절폭 3.5%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
+   }
+  },
+  {
+   "id": "111770-2026-11-27-now",
+   "code": "111770",
+   "name": "영원무역",
+   "ccy": "KRW",
+   "group": "now",
+   "entry_kind": "now",
+   "stage": 3,
+   "price": 71500.0,
+   "entry": 71500.0,
+   "stop": 65502.4871,
+   "target": 83495.0258,
+   "shares_1pct": 16,
+   "range_pos": 0.1501,
+   "norm": -0.0,
+   "bear_share": 0.25,
+   "fresh": true,
+   "break_gap": 0.0281,
+   "earnings_d": null,
+   "tactic": {
+    "stop_pct": 8.4,
+    "pb_price": 66186.9444,
+    "pb_stop_pct": 1.0,
+    "mode": "pullback",
+    "label": "⏳ 눌림 지정가만",
+    "desc": "지금 추격 금지(손절폭 8.4%) — <b>66,187원 눌림 지정가만</b>. 눌리면 손절폭 1.0%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
    }
   },
   {
@@ -152,34 +180,6 @@
    }
   },
   {
-   "id": "204320-2026-11-27-now",
-   "code": "204320",
-   "name": "HL만도",
-   "ccy": "KRW",
-   "group": "now",
-   "entry_kind": "now",
-   "stage": 3,
-   "price": 33400.0,
-   "entry": 33400.0,
-   "stop": 29438.0338,
-   "target": 41323.9323,
-   "shares_1pct": 25,
-   "range_pos": 0.074,
-   "norm": -55.7,
-   "bear_share": 0.5,
-   "fresh": true,
-   "break_gap": 0.0342,
-   "earnings_d": null,
-   "tactic": {
-    "stop_pct": 11.9,
-    "pb_price": 29875.0,
-    "pb_stop_pct": 1.5,
-    "mode": "pullback",
-    "label": "⏳ 눌림 지정가만",
-    "desc": "지금 추격 금지(손절폭 11.9% · 단기 이격) — <b>29,875원 눌림 지정가만</b>. 눌리면 손절폭 1.5%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
-   }
-  },
-  {
    "id": "T-2026-11-27-now",
    "code": "T",
    "name": "AT&T Inc.",
@@ -205,34 +205,6 @@
     "mode": "half",
     "label": "⚖ 반반 진입",
     "desc": "손절폭 4.9% · 돌파후 진행 — 절반은 현재가, 절반은 눌림 $22.16 지정가(거기선 손절폭 1.4%)"
-   }
-  },
-  {
-   "id": "039490-2026-11-27-now",
-   "code": "039490",
-   "name": "키움증권",
-   "ccy": "KRW",
-   "group": "now",
-   "entry_kind": "now",
-   "stage": 3,
-   "price": 204000.0,
-   "entry": 204000.0,
-   "stop": 181703.6795,
-   "target": 248592.641,
-   "shares_1pct": 4,
-   "range_pos": 0.0756,
-   "norm": -23.6,
-   "bear_share": 0.375,
-   "fresh": false,
-   "break_gap": 0.0812,
-   "earnings_d": null,
-   "tactic": {
-    "stop_pct": 10.9,
-    "pb_price": null,
-    "pb_stop_pct": null,
-    "mode": "pullback",
-    "label": "⏳ 눌림 지정가만",
-    "desc": "지금 추격 금지(손절폭 10.9% · 돌파후 진행) — 받칠 지지에 눌릴 때까지 대기"
    }
   },
   {
@@ -365,46 +337,6 @@
    "runup252": -0.0721,
    "fresh": false,
    "tactic": "shadow"
-  },
-  {
-   "id": "EIX-2026-11-27-shelf-watch",
-   "code": "EIX",
-   "name": "Edison International",
-   "ccy": "USD",
-   "group": "shelf_watch",
-   "entry_kind": "shelf_watch",
-   "stage": 0,
-   "price": 63.39,
-   "entry": 63.39,
-   "stop": 60.2504,
-   "target": 79.7125,
-   "shares_1pct": 0,
-   "range_pos": 0.4027,
-   "norm": 2.5,
-   "bear_share": 0.375,
-   "shelf": {
-    "poc": 72.0825,
-    "val": 58.0942,
-    "vah": 79.7125,
-    "rr": 5.2,
-    "overhead": 0.477,
-    "reason": "반등 미확인(거래량)",
-    "history_bars": 1987,
-    "profile_pnl_proxy": -0.0157,
-    "runup252": 0.0836,
-    "checks": {
-     "터치": true,
-     "회복": true,
-     "상단마감": true,
-     "거래량": false,
-     "신저가아님": true
-    }
-   },
-   "fresh": false,
-   "break_gap": null,
-   "earnings_d": null,
-   "tactic": "watch",
-   "trend_above_200": false
   },
   {
    "id": "ROL-2026-11-27-shelf-watch",
@@ -565,6 +497,46 @@
    "earnings_d": null,
    "tactic": "watch",
    "trend_above_200": true
+  },
+  {
+   "id": "018260-2026-11-27-shelf-watch",
+   "code": "018260",
+   "name": "삼성에스디에스",
+   "ccy": "KRW",
+   "group": "shelf_watch",
+   "entry_kind": "shelf_watch",
+   "stage": 0,
+   "price": 196500.0,
+   "entry": 196500.0,
+   "stop": 174832.0,
+   "target": 231950.0,
+   "shares_1pct": 0,
+   "range_pos": 0.2079,
+   "norm": -9.4,
+   "bear_share": 0.375,
+   "shelf": {
+    "poc": 171350.0,
+    "val": 171350.0,
+    "vah": 231950.0,
+    "rr": 1.64,
+    "overhead": 0.53,
+    "reason": "반등 미확인(거래량)",
+    "history_bars": 1938,
+    "profile_pnl_proxy": -0.0677,
+    "runup252": 0.2048,
+    "checks": {
+     "터치": true,
+     "회복": true,
+     "상단마감": true,
+     "거래량": false,
+     "신저가아님": true
+    }
+   },
+   "fresh": false,
+   "break_gap": null,
+   "earnings_d": null,
+   "tactic": "watch",
+   "trend_above_200": false
   },
   {
    "id": "LCII-2026-11-27-shelf-watch",
@@ -1735,6 +1707,34 @@
    "tactic": null
   },
   {
+   "id": "023530-2026-11-27-watch",
+   "code": "023530",
+   "name": "롯데쇼핑",
+   "ccy": "KRW",
+   "group": "watch",
+   "entry_kind": "now",
+   "stage": 2,
+   "price": 79700.0,
+   "entry": 79700.0,
+   "stop": 71079.7706,
+   "target": 96940.4587,
+   "shares_1pct": 11,
+   "range_pos": 0.0831,
+   "norm": -35.8,
+   "bear_share": 0.375,
+   "fresh": true,
+   "break_gap": 0.0066,
+   "earnings_d": null,
+   "tactic": {
+    "stop_pct": 10.8,
+    "pb_price": 76520.0,
+    "pb_stop_pct": 7.1,
+    "mode": "pullback",
+    "label": "⏳ 눌림 지정가만",
+    "desc": "지금 추격 금지(손절폭 10.8%) — <b>76,520원 눌림 지정가만</b>. 눌리면 손절폭 7.1%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
+   }
+  },
+  {
    "id": "ASTE-2026-11-27-watch",
    "code": "ASTE",
    "name": "Astec Industries, Inc.",
@@ -1844,6 +1844,34 @@
     "mode": "pullback",
     "label": "⏳ 눌림 지정가만",
     "desc": "지금 추격 금지(손절폭 10.0% · 단기 이격) — <b>$30.62 눌림 지정가만</b>. 눌리면 손절폭 9.2%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
+   }
+  },
+  {
+   "id": "042660-2026-11-27-watch",
+   "code": "042660",
+   "name": "한화오션",
+   "ccy": "KRW",
+   "group": "watch",
+   "entry_kind": "now",
+   "stage": 2,
+   "price": 42350.0,
+   "entry": 42350.0,
+   "stop": 36825.5582,
+   "target": 53398.8836,
+   "shares_1pct": 18,
+   "range_pos": 0.0247,
+   "norm": -68.9,
+   "bear_share": 0.5,
+   "fresh": true,
+   "break_gap": 0.0244,
+   "earnings_d": null,
+   "tactic": {
+    "stop_pct": 13.0,
+    "pb_price": 39500.0,
+    "pb_stop_pct": 6.8,
+    "mode": "pullback",
+    "label": "⏳ 눌림 지정가만",
+    "desc": "지금 추격 금지(손절폭 13.0%) — <b>39,500원 눌림 지정가만</b>. 눌리면 손절폭 6.8%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
    }
   },
   {
@@ -2075,6 +2103,34 @@
     "mode": "full",
     "label": "⚡ 즉시 분할",
     "desc": "손절폭 3.7%로 타이트 — 현재가에서 1~2회 분할 매수. 기다리는 이득보다 놓치는 비용이 큼"
+   }
+  },
+  {
+   "id": "088980-2026-11-27-watch",
+   "code": "088980",
+   "name": "맥쿼리인프라",
+   "ccy": "KRW",
+   "group": "watch",
+   "entry_kind": "now",
+   "stage": 1,
+   "price": 9620.0,
+   "entry": 9620.0,
+   "stop": 9322.3999,
+   "target": 10215.2002,
+   "shares_1pct": 336,
+   "range_pos": 0.1167,
+   "norm": -3.8,
+   "bear_share": 0.25,
+   "fresh": true,
+   "break_gap": -0.018,
+   "earnings_d": null,
+   "tactic": {
+    "stop_pct": 3.1,
+    "pb_price": 9444.8889,
+    "pb_stop_pct": 1.3,
+    "mode": "full",
+    "label": "⚡ 즉시 분할",
+    "desc": "손절폭 3.1%로 타이트 — 현재가에서 1~2회 분할 매수. 기다리는 이득보다 놓치는 비용이 큼"
    }
   },
   {
@@ -2421,34 +2477,6 @@
    }
   },
   {
-   "id": "023530-2026-11-27-watch",
-   "code": "023530",
-   "name": "롯데쇼핑",
-   "ccy": "KRW",
-   "group": "watch",
-   "entry_kind": "now",
-   "stage": 1,
-   "price": 79400.0,
-   "entry": 79400.0,
-   "stop": 70316.6761,
-   "target": 97566.6479,
-   "shares_1pct": 11,
-   "range_pos": 0.081,
-   "norm": -24.5,
-   "bear_share": 0.375,
-   "fresh": true,
-   "break_gap": -0.012,
-   "earnings_d": null,
-   "tactic": {
-    "stop_pct": 11.4,
-    "pb_price": 76520.0,
-    "pb_stop_pct": 8.1,
-    "mode": "pullback",
-    "label": "⏳ 눌림 지정가만",
-    "desc": "지금 추격 금지(손절폭 11.4%) — <b>76,520원 눌림 지정가만</b>. 눌리면 손절폭 8.1%로 줄어 같은 리스크로 더 담김. 안 오면 놓친 것(손실 아님)"
-   }
-  },
-  {
    "id": "MMYT-2026-11-27-watch",
    "code": "MMYT",
    "name": "MakeMyTrip Limited",
@@ -2558,6 +2586,34 @@
     "mode": "half",
     "label": "⚖ 반반 진입",
     "desc": "손절폭 6.7% — 절반은 현재가, 절반은 눌림 $84.32 지정가(거기선 손절폭 1.6%)"
+   }
+  },
+  {
+   "id": "000270-2026-11-27-watch",
+   "code": "000270",
+   "name": "기아",
+   "ccy": "KRW",
+   "group": "watch",
+   "entry_kind": "now",
+   "stage": 1,
+   "price": 94600.0,
+   "entry": 94600.0,
+   "stop": 85414.4756,
+   "target": 112971.0487,
+   "shares_1pct": 10,
+   "range_pos": 0.0839,
+   "norm": -36.1,
+   "bear_share": 0.375,
+   "fresh": true,
+   "break_gap": -0.0142,
+   "earnings_d": null,
+   "tactic": {
+    "stop_pct": 9.7,
+    "pb_price": null,
+    "pb_stop_pct": null,
+    "mode": "pullback",
+    "label": "⏳ 눌림 지정가만",
+    "desc": "지금 추격 금지(손절폭 9.7% · 단기 이격) — 받칠 지지에 눌릴 때까지 대기"
    }
   },
   {
@@ -2953,27 +3009,6 @@
    "tactic": null
   },
   {
-   "id": "008770-2026-11-27-watch",
-   "code": "008770",
-   "name": "호텔신라",
-   "ccy": "KRW",
-   "group": "watch",
-   "entry_kind": "breakout",
-   "stage": 3,
-   "price": 38750.0,
-   "entry": 39400.0,
-   "stop": 36432.4231,
-   "target": 45335.1537,
-   "shares_1pct": 33,
-   "range_pos": 0.1356,
-   "norm": -0.0,
-   "bear_share": 0.375,
-   "fresh": false,
-   "break_gap": 0.154,
-   "earnings_d": null,
-   "tactic": null
-  },
-  {
    "id": "TU-2026-11-27-watch",
    "code": "TU",
    "name": "Telus Corporation",
@@ -2995,6 +3030,48 @@
    "tactic": null
   },
   {
+   "id": "008770-2026-11-27-watch",
+   "code": "008770",
+   "name": "호텔신라",
+   "ccy": "KRW",
+   "group": "watch",
+   "entry_kind": "breakout",
+   "stage": 3,
+   "price": 39200.0,
+   "entry": 39400.0,
+   "stop": 36515.8215,
+   "target": 45168.357,
+   "shares_1pct": 34,
+   "range_pos": 0.1479,
+   "norm": -1.9,
+   "bear_share": 0.5,
+   "fresh": false,
+   "break_gap": 0.1763,
+   "earnings_d": null,
+   "tactic": null
+  },
+  {
+   "id": "039490-2026-11-27-watch",
+   "code": "039490",
+   "name": "키움증권",
+   "ccy": "KRW",
+   "group": "watch",
+   "entry_kind": "pullback",
+   "stage": 3,
+   "price": 210000.0,
+   "entry": 178400.0,
+   "stop": 156696.2738,
+   "target": 221807.4524,
+   "shares_1pct": 4,
+   "range_pos": 0.0933,
+   "norm": -14.2,
+   "bear_share": 0.25,
+   "fresh": false,
+   "break_gap": 0.1261,
+   "earnings_d": null,
+   "tactic": null
+  },
+  {
    "id": "STC-2026-11-27-watch",
    "code": "STC",
    "name": "Stewart Information Services Corporation",
@@ -3012,6 +3089,27 @@
    "bear_share": 0.375,
    "fresh": false,
    "break_gap": 0.1026,
+   "earnings_d": null,
+   "tactic": null
+  },
+  {
+   "id": "204320-2026-11-27-watch",
+   "code": "204320",
+   "name": "HL만도",
+   "ccy": "KRW",
+   "group": "watch",
+   "entry_kind": "pullback",
+   "stage": 3,
+   "price": 35150.0,
+   "entry": 29875.0,
+   "stop": 25938.8886,
+   "target": 37747.2229,
+   "shares_1pct": 25,
+   "range_pos": 0.1094,
+   "norm": -45.9,
+   "bear_share": 0.375,
+   "fresh": false,
+   "break_gap": 0.1029,
    "earnings_d": null,
    "tactic": null
   }
