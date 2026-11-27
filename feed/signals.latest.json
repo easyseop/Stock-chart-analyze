@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated_at": "2026-11-28T07:06:49+09:00",
+ "generated_at": "2026-11-28T07:45:33+09:00",
  "note": "차트 기반 시그널 — 주문 전 가격·체결가능성 재확인 필수. 투자권유 아님.",
  "a_ablation": [
   {
@@ -983,8 +983,8 @@
    "stage": 3,
    "price": 28.53,
    "entry": 28.74,
-   "stop": 27.3628,
-   "target": 31.4944,
+   "stop": 27.3621,
+   "target": 31.4959,
    "shares_1pct": 72,
    "range_pos": 0.4581,
    "norm": 2.5,
@@ -2075,8 +2075,8 @@
    "stage": 1,
    "price": 228.48,
    "entry": 232.58,
-   "stop": 219.2771,
-   "target": 259.1858,
+   "stop": 219.2785,
+   "target": 259.1829,
    "shares_1pct": 7,
    "range_pos": 0.4976,
    "norm": -3.8,
